@@ -7,7 +7,7 @@
 #include "DataFormat/rawdigit.h"
 //#include "Utils/NDArrayConverter.h"
 #include "DataFormat/hit.h"
-#include "DataFormat/wire.h"
+
 namespace larlite {
 
   void LArImageHit::store_clusters(storage_manager* storage) const

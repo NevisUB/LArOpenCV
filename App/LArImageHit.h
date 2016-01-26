@@ -12,8 +12,8 @@
 
     @{*/
 
-#ifndef LARLITE_LARIMAGEHIT_H
-#define LARLITE_LARIMAGEHIT_H
+#ifndef __LARLITE_LARIMAGEHIT_H__
+#define __LARLITE_LARIMAGEHIT_H__
 
 #include "Analysis/ana_base.h"
 #include "Core/ImageManager.h"
@@ -30,7 +30,8 @@ namespace larlite {
   public:
 
     /// Default constructor
-    LArImageHit() : LArImageClusterBase(){}
+    LArImageHit() : LArImageClusterBase()
+    {}
 
     /// Default destructor
     virtual ~LArImageHit(){}

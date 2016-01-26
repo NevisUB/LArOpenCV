@@ -6,7 +6,7 @@
 
 namespace larlite {
 
-  LArImageClusterBase::LArImageClusterBase()
+  LArImageClusterBase::LArImageClusterBase() : ana_base()
   {
     _name="LArImageMaker";
     _fout=0;
