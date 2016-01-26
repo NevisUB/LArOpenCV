@@ -6,7 +6,7 @@
 DICT  = LArOpenCV_CoreDict
 SHLIB = libLArOpenCV_Core.so
 SOURCES = $(filter-out $(DICT).cxx, $(wildcard *.cxx))
-FMWK_HEADERS = LinkDef.h $(DICT).h NDArrayConverter.h
+FMWK_HEADERS = LinkDef.h $(DICT).h
 HEADERS = $(filter-out $(FMWK_HEADERS), $(wildcard *.h))
 OBJECTS = $(SOURCES:.cxx=.o)
 

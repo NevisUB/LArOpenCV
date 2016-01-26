@@ -203,8 +203,8 @@ namespace larlite {
     }
 
     if(_rawdigit_img_mgr) _rawdigit_img_mgr->clear();
-    if(_wire_img_mgr) _wire_img_mgr->clear();
-    if(_hit_img_mgr) _hit_img_mgr->clear();
+    if(_wire_img_mgr)     _wire_img_mgr->clear();
+    if(_hit_img_mgr)      _hit_img_mgr->clear();
     
     return true;
   }

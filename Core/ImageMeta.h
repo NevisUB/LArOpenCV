@@ -22,7 +22,7 @@
 
 namespace larcaffe {
 
-  class Iamge2D;
+  class Image2D;
   /**
      \class ImageMeta
      A simple class to store image's meta data including\n
