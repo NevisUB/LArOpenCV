@@ -7,8 +7,11 @@ if len(sys.argv) < 2:
     sys.stderr.write(msg)
     sys.exit(1)
 
+import ROOT
+#ROOT.gSystem.Load("libLArOpenCV_ImageCluster")
+#ROOT.gSystem.Load("libLArOpenCV_App")
 from larlite import larlite as fmwk
-from ROOT import larcv
+
 # Create ana_processor instance
 my_proc = fmwk.ana_processor()
 

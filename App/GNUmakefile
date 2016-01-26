@@ -14,8 +14,9 @@ OBJECTS = $(SOURCES:.cxx=.o)
 INCFLAGS  = -I.                       #Include itself
 INCFLAGS += $(shell basictool-config --includes)
 INCFLAGS += $(shell larlite-config --includes)
+INCFLAGS += -I$(LARLITE_USERDEVDIR)/LArOpenCV
 INCFLAGS += -I$(OPENCV_INCDIR)
-INCFLAGS += -I../
+#INCFLAGS += -I../
 
 # platform-specific options
 OSNAME          = $(shell uname -s)
@@ -27,7 +28,7 @@ LDFLAGS += $(shell basictool-config --libs)
 LDFLAGS += $(shell larlite-config --libs)
 LDFLAGS += $(shell python-config --ldflags)
 LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_highgui -lopencv_imgcodecs
-LDFLAGS += -L$(LARLITE_LIBDIR) -lLArOpenCV_Core -lLArOpenCV_Utils -lLArOpenCV_ImageCluster
+LDFLAGS += -L$(LARLITE_LIBDIR) -lLArOpenCV_ImageCluster -lLArOpenCV_Utils -lLArOpenCV_Core
 
 # call kernel specific compiler setup
 include $(LARLITE_BASEDIR)/Makefile/Makefile.${OSNAME}

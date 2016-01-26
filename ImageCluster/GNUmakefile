@@ -14,7 +14,7 @@ OBJECTS = $(SOURCES:.cxx=.o)
 INCFLAGS  = -I.                       #Include itself
 INCFLAGS += $(shell basictool-config --includes)
 INCFLAGS += -I$(OPENCV_INCDIR)
-INCFLAGS += -I../
+INCFLAGS += -I$(LARLITE_USERDEVDIR)/LArOpenCV
 
 # platform-specific options
 OSNAME          = $(shell uname -s)

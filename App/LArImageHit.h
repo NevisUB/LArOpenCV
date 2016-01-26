@@ -17,7 +17,7 @@
 
 #include "Analysis/ana_base.h"
 #include "Core/ImageManager.h"
-#include "LArImageClusterBase.h"
+#include "App/LArImageClusterBase.h"
 
 namespace larlite {
 
