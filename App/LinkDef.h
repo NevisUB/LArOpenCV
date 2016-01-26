@@ -9,8 +9,9 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class larlite::LArImageMaker+;
 #pragma link C++ class larlite::LArImageClusterBase+;
+#pragma link C++ class larlite::LArImageWire+;
+#pragma link C++ class larlite::LArImageHit+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
 

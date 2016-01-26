@@ -20,7 +20,7 @@ endif
 #
 # Define directories to be compile upon a global "make"...
 #
-SUBDIRS := Core Utils ImageCluster #ADD_NEW_SUBDIR ... do not remove this comment from this line
+SUBDIRS := Core Utils ImageCluster App #ADD_NEW_SUBDIR ... do not remove this comment from this line
 
 #####################################################################################
 #

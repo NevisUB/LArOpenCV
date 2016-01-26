@@ -39,29 +39,42 @@ namespace larlite {
     /** IMPLEMENT in LArImageClusterBase.cc!
         Initialization method to be called before the analysis event loop.
     */ 
-    virtual bool initialize();
+    bool initialize();
 
     /** IMPLEMENT in LArImageClusterBase.cc! 
         Analyze a data event-by-event  
     */
-    virtual bool analyze(storage_manager* storage);
+    bool analyze(storage_manager* storage);
 
     /** IMPLEMENT in LArImageClusterBase.cc! 
         Finalize method to be called after all events processed.
     */
-    virtual bool finalize();
+    bool finalize();
 
     void set_producer(const std::string producer="")
     { _producer = producer; }
 
-    larcv::ImageClusterManager& AlgoManager() { return _alg_mgr; }
+    larcv::ImageClusterManager& algo_manager(size_t plane_id);
+
+    const std::vector<larcv::ImageClusterManager>& algo_manager_set() const;
+
+    void set_config(const std::string fname)
+    { _config_file = fname; }
+
+    void store_original_image(bool store=true) { _store_original_img=store; }
+
+  private:
+
+    std::string _config_file;
+    std::vector<larcv::ImageClusterManager> _alg_mgr_v;
 
   protected:
-
+    virtual void store_clusters(storage_manager* storage) const = 0;
+    virtual void extract_image(storage_manager* storage) = 0;
     ::larcv::ImageManager _img_mgr;
-    ::larcv::ImageClusterManager _alg_mgr;
+    ::larcv::ImageManager _orig_img_mgr;
     std::string _producer;
-
+    bool _store_original_img;
   };
 }
 #endif
