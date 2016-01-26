@@ -96,7 +96,8 @@ namespace larlite {
       
       if(y>=nticks || x>=nwires) throw std::exception();
       
-      //std::cout<<"Inserting " << x << " " << y << " @ " << wid.Plane << std::endl;
+      std::cout<<"Inserting " << x << " " << y << " @ " << wid.Plane << std::endl;
+
       
       mat.at<float>(x,y) = mat.at<float>(x,y) + (float)(h.Integral());
     }

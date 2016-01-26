@@ -1,0 +1,11 @@
+SmoothBinaryCluster :
+{
+    DilationSize : 5
+    DilationIterations : 2
+    
+    BlurSize : 5
+    
+    Thresh : 1
+    ThreshMaxVal : 255
+    
+}

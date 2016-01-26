@@ -39,6 +39,7 @@ namespace larcv {
     ImageClusterManager(const std::string name="ImageClusterManager")
       : _name(name)
       , _configured(false)
+      , _orig_meta(1,1,1,1,1,1)
     {}
     
     /// Default destructor
