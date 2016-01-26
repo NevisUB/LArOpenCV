@@ -8,7 +8,7 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 from larlite import larlite as fmwk
-
+from ROOT import larcv
 # Create ana_processor instance
 my_proc = fmwk.ana_processor()
 
@@ -24,8 +24,12 @@ my_proc.set_ana_output_file("from_test_ana_you_can_remove_me.root");
 
 # Attach an analysis unit ... here we use a base class which does nothing.
 # Replace with your analysis unit if you wish.
-myunit = fmwk.LArImageMaker()
-myunit.set_producers("","","gaushit")
+myunit = fmwk.LArImageHit()
+myunit.set_producer("gaushit")
+myunit.algo_manager(0).AddAlgo(larcv.EmptyClusterImage())
+myunit.algo_manager(1).AddAlgo(larcv.EmptyClusterImage())
+myunit.algo_manager(2).AddAlgo(larcv.EmptyClusterImage())
+myunit.set_config_file("image_cluster.fcl")
 my_proc.add_process(myunit)
 
 print
