@@ -2,58 +2,71 @@
 #define LARLITE_LARIMAGECLUSTERBASE_CXX
 
 #include "LArImageClusterBase.h"
+#include "LArUtil/Geometry.h"
 
 namespace larlite {
 
+  LArImageClusterBase::LArImageClusterBase()
+  {
+    _name="LArImageMaker";
+    _fout=0;
+    _producer="";
+    _config_file="";
+    _alg_mgr_v.resize( ::larutil::Geometry::GetME()->Nplanes() );
+    _store_original_img=false;
+  }
+
+  const std::vector<larcv::ImageClusterManager>& LArImageClusterBase::algo_manager_set() const
+  { return _alg_mgr_v; }
+  
+  larcv::ImageClusterManager& LArImageClusterBase::algo_manager(size_t plane_id)
+  {
+    if(plane_id >= _alg_mgr_v.size()) throw ::larcv::larbys("ImageClusterManager not found (invalid plane ID)!");
+    return _alg_mgr_v[plane_id];
+  }
+
   bool LArImageClusterBase::initialize() {
 
-    //
-    // This function is called in the beggining of event loop
-    // Do all variable initialization you wish to do here.
-    // If you have a histogram to fill in the event loop, for example,
-    // here is a good place to create one on the heap (i.e. "new TH1D"). 
-    //
+    if(_producer.empty()) throw ::larcv::larbys("No producer specified...");
+
+    for(auto& mgr : _alg_mgr_v) mgr.Configure(_config_file);
 
     return true;
   }
   
   bool LArImageClusterBase::analyze(storage_manager* storage) {
-  
-    //
-    // Do your event-by-event analysis here. This function is called for 
-    // each event in the loop. You have "storage" pointer which contains 
-    // event-wise data. To see what is available, check the "Manual.pdf":
-    //
-    // http://microboone-docdb.fnal.gov:8080/cgi-bin/ShowDocument?docid=3183
-    // 
-    // Or you can refer to Base/DataFormatConstants.hh for available data type
-    // enum values. Here is one example of getting PMT waveform collection.
-    //
-    // event_fifo* my_pmtfifo_v = (event_fifo*)(storage->get_data(DATA::PMFIFO));
-    //
-    // if( event_fifo )
-    //
-    //   std::cout << "Event ID: " << my_pmtfifo_v->event_id() << std::endl;
-    //
-  
+
+    _img_mgr.clear();
+    _orig_img_mgr.clear();
+
+    this->extract_image(storage);
+
+    if(_store_original_img) {
+      for(size_t plane=0; plane<_img_mgr.size(); ++plane) {
+	::cv::Mat img;
+	_img_mgr.img_at(plane).copyTo(img);
+	_orig_img_mgr.push_back(img,_img_mgr.meta_at(plane));
+      }
+    }
+
+    if(_img_mgr.size() != _alg_mgr_v.size()) throw ::larcv::larbys("# of imaged created != # of planes!");
+
+    for(size_t plane = 0; plane < _alg_mgr_v.size(); ++plane) {
+
+      auto& alg_mgr = _alg_mgr_v[plane];
+      auto const& img = _img_mgr.img_at(plane);
+      auto const& meta = _img_mgr.meta_at(plane);
+      alg_mgr.Process(img,meta);
+      
+    }
+      
+    this->store_clusters(storage);
+
     return true;
   }
 
   bool LArImageClusterBase::finalize() {
-
-    // This function is called at the end of event loop.
-    // Do all variable finalization you wish to do here.
-    // If you need, you can store your ROOT class instance in the output
-    // file. You have an access to the output file through "_fout" pointer.
-    //
-    // Say you made a histogram pointer h1 to store. You can do this:
-    //
-    // if(_fout) { _fout->cd(); h1->Write(); }
-    //
-    // else 
-    //   print(MSG::ERROR,__FUNCTION__,"Did not find an output file pointer!!! File not opened?");
-    //
-  
+    
     return true;
   }
 
