@@ -4,7 +4,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include "ImageClusterManager.h"
 #include "Core/larbys.h"
-
+#include "ImageClusterFactory.h"
 namespace larcv {
 
   ImageClusterManager::ImageClusterManager(const std::string name)
@@ -35,6 +35,19 @@ namespace larcv {
     return _alg_v[id];
   }
 
+  ImageClusterBase* ImageClusterManager::GetAlg(const std::string name) const
+  {
+    return GetAlg(GetAlgID(name));
+  }
+
+  AlgorithmID_t ImageClusterManager::GetAlgID(const std::string name) const
+  {
+    auto iter = _alg_m.find(name);
+    if(iter == _alg_m.end()) return kINVALID_ALGO_ID;
+    return (*iter).second;
+  }
+
+  /*
   AlgorithmID_t ImageClusterManager::AddAlg(ImageClusterBase* alg)
   {
     if(!alg) throw larbys("Cannot add nullptr!");
@@ -42,13 +55,37 @@ namespace larcv {
     _alg_v.push_back(alg);
     return (_alg_v.size() - 1);
   }
-
+  */
+  
   void ImageClusterManager::Configure(const ::fcllite::PSet& main_cfg)
   {
     LARCV_DEBUG((*this)) << "start" << std::endl;
     _profile = main_cfg.get<bool>("Profile");
 
     this->set_verbosity((msg::Level_t)(main_cfg.get<unsigned short>("Verbosity",(unsigned short)(this->logger().level()))));
+
+    std::vector<std::string> instance_type_v = main_cfg.get<std::vector<std::string> >("AlgoType");
+    std::vector<std::string> instance_name_v = main_cfg.get<std::vector<std::string> >("AlgoName");
+
+    if(instance_type_v.size() != instance_name_v.size()) {
+      LARCV_CRITICAL((*this)) << "AlgoType and AlgoName config parameters have different length! "
+			      << "(" << instance_type_v.size() << " vs. " << instance_name_v.size() << ")" << std::endl;
+      throw larbys();
+    }
+
+    _alg_v.clear();
+    _alg_m.clear();
+    for(size_t i=0; i<instance_type_v.size(); ++i) {
+      auto const& name = instance_name_v[i];
+      auto const& type = instance_type_v[i];
+      if(_alg_m.find(name) != _alg_m.end()) {
+	LARCV_CRITICAL((*this)) << "Duplicate algorithm name found!" << std::endl;
+	throw larbys("Duplicate algorithm name found!");
+      }
+
+      _alg_m[name] = _alg_v.size();
+      _alg_v.push_back(ImageClusterFactory::get().create(type,name));
+    }
 
     for(auto& ptr : _alg_v) {
       ptr->Profile(_profile);

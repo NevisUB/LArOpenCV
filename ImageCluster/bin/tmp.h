@@ -1,9 +1,9 @@
 /**
- * \file ToyImageCluster.h
+ * \file ClassName.h
  *
  * \ingroup ImageCluster
  * 
- * \brief Class def header for a class ToyImageCluster
+ * \brief Class def header for a class ClassName
  *
  * @author kazuhiro
  */
@@ -11,26 +11,26 @@
 /** \addtogroup ImageCluster
 
     @{*/
-#ifndef __TOYIMAGECLUSTER_H__
-#define __TOYIMAGECLUSTER_H__
+#ifndef __CLASSNAME_H__
+#define __CLASSNAME_H__
 
 #include "ImageClusterBase.h"
 
 namespace larcv {
   /**
-     \class ToyImageCluster
+     \class ClassName
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class ToyImageCluster : public larcv::ImageClusterBase {
+  class ClassName : public larcv::ImageClusterBase {
     
   public:
     
     /// Default constructor
-    ToyImageCluster(const std::string name="ToyImageCluster") : ImageClusterBase(name)
+    ClassName(const std::string name="ClassName") : ImageClusterBase(name)
     {}
     
     /// Default destructor
-    ~ToyImageCluster(){}
+    ~ClassName(){}
 
   protected:
 
@@ -48,14 +48,14 @@ namespace larcv {
 
   };
 
-  class ToyImageClusterFactory : public ImageClusterFactoryBase {
+  class ClassNameFactory : public ImageClusterFactoryBase {
   public:
-    ToyImageClusterFactory() { ImageClusterFactory::get().add_factory("ToyImageCluster",this); }
-    ~ToyImageClusterFactory() {}
-    ImageClusterBase* create(const std::string instance_name) { return new ToyImageCluster(instance_name); }
+    ClassNameFactory() { ImageClusterFactory::get().add_factory("ClassName",this); }
+    ~ClassNameFactory() {}
+    ImageClusterBase* create(const std::string instance_name) { return new ClassName(instance_name); }
   };
 
-  static ToyImageClusterFactory __global_ToyImageClusterFactory__;
+  static ClassNameFactory __global_ClassNameFactory__;
 }
 #endif
 /** @} */ // end of doxygen group 

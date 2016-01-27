@@ -13,11 +13,13 @@ ImageClusterManager: {
 
   Verbosity: 1
   Profile: true
-
-  EmptyImageCluster: {
+  AlgoType: [EmptyImageCluster,ToyImageCluster]
+  AlgoName: [MyEmpty,MyToy]
+    
+  MyEmpty: {
   }
 
-  ToyImageCluster: {
+  MyToy: {
     Verbosity: 1
     CannyParams: [10,100,3]
   }

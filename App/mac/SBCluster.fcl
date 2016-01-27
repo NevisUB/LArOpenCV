@@ -1,0 +1,30 @@
+
+LArImageHit: {
+  # LArImageClusterBase config
+  Profile: true
+  StoreOriginalImage: false
+  Producer: gaushit
+  # LArImageHit config
+  Q2Gray: 5
+}
+
+# ImageClusterManager config
+ImageClusterManager: {
+
+  Verbosity: 1
+  Profile: true
+  AlgoType: [SBCluster]
+  AlgoName: [Vic]
+
+  Vic:{
+    Verbosity: 1
+    DilationSize : 5
+    DilationIterations : 2
+
+    BlurSize : 5
+
+    Thresh : 1
+    ThreshMaxVal : 255
+  }
+
+}

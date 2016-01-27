@@ -2,8 +2,6 @@
 #define __EMPTYIMAGECLUSTER_CXX__
 
 #include "EmptyImageCluster.h"
-#include "Core/larbys.h"
-#include <opencv2/imgproc/imgproc.hpp>
 namespace larcv{
 
   void EmptyImageCluster::_Configure_(const ::fcllite::PSet &pset)

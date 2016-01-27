@@ -28,7 +28,7 @@ namespace larlite {
 
     ::fcllite::ConfigManager cfg_mgr(_name);
     
-    cfg_mgr.AddCfgFile(_name + ".fcl");
+    cfg_mgr.AddCfgFile(_config_file);
 
     auto const& main_cfg = cfg_mgr.Config().get_pset(_name);
 

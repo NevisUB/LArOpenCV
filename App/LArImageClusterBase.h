@@ -57,12 +57,15 @@ namespace larlite {
 
     const std::string& producer() const { return _producer; }
 
+    void set_config(const std::string cfg_file) {_config_file=cfg_file;}
+
   private:
     std::vector<larcv::ImageClusterManager> _alg_mgr_v;
     ::larcv::ImageManager _orig_img_mgr;
     bool _store_original_img;
     std::string _producer;
     bool _profile;
+    std::string _config_file;
     double _process_count;
     double _process_time_image_extraction;
     double _process_time_analyze;
@@ -74,7 +77,7 @@ namespace larlite {
     virtual void store_clusters(storage_manager* storage) = 0;
     virtual void extract_image(storage_manager* storage) = 0;
     ::larcv::ImageManager _img_mgr;
-
+    
   };
 }
 #endif

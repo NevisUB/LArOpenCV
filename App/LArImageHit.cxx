@@ -60,7 +60,7 @@ namespace larlite {
     for(size_t plane=0; plane<alg_mgr_v.size(); ++plane) {
       nclusters_v[plane] = alg_mgr_v[plane].Clusters().size();
       _num_clusters_v[plane] += nclusters_v[plane];
-      nclusters_total += nclusters_v.back();
+      nclusters_total += nclusters_v[plane];
     }
 
     AssSet_t ass_set;
@@ -86,7 +86,7 @@ namespace larlite {
       
       size_t cindex = cid;
       for(size_t plane=0; plane<wid.Plane; ++plane) cindex += nclusters_v[plane];
-      
+
       ass_set[cindex].push_back(hindex);
     }
 

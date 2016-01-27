@@ -42,9 +42,17 @@ namespace larcv {
     float _thresh;
     float _thresh_maxval;
     
-
-
   };
+
+  class SBClusterFactory : public ImageClusterFactoryBase {
+  public:
+    SBClusterFactory() { ImageClusterFactory::get().add_factory("SBCluster",this); }
+    ~SBClusterFactory() {}
+    ImageClusterBase* create(const std::string instance_name) { return new SBCluster(instance_name); }
+  };
+
+  static SBClusterFactory __global_SBClusterFactory__;
+  
 }
 #endif
 /** @} */ // end of doxygen group 
