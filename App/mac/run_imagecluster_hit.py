@@ -26,9 +26,9 @@ my_proc.set_ana_output_file("from_test_ana_you_can_remove_me.root");
 # Attach an analysis unit ... here we use a base class which does nothing.
 # Replace with your analysis unit if you wish.
 myunit = fmwk.LArImageHit()
-myunit.algo_manager(0).AddAlg(larcv.EmptyImageCluster())
-myunit.algo_manager(1).AddAlg(larcv.EmptyImageCluster())
-myunit.algo_manager(2).AddAlg(larcv.EmptyImageCluster())
+myunit.algo_manager(0).AddAlg(larcv.ToyImageCluster())
+myunit.algo_manager(1).AddAlg(larcv.ToyImageCluster())
+myunit.algo_manager(2).AddAlg(larcv.ToyImageCluster())
 my_proc.add_process(myunit)
 
 print
@@ -36,7 +36,7 @@ print  "Finished configuring ana_processor. Start event loop!"
 print
 
 # Let's run it.
-my_proc.run();
+my_proc.run(0,10);
 
 # done!
 print

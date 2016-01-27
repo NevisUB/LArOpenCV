@@ -32,6 +32,9 @@ namespace larlite {
     /// Default constructor
     LArImageHit(const std::string name="LArImageHit")
       : LArImageClusterBase(name)
+      , _num_stored(0)
+      , _charge_to_gray_scale(10)
+      , _num_clusters_v()
       , _num_unclustered_hits_v()
       , _num_clustered_hits_v()
     {}
@@ -47,8 +50,12 @@ namespace larlite {
 
     void _Report_() const;
 
-  private:
+    void _Configure_(const ::fcllite::PSet &pset);
 
+  private:
+    size_t _num_stored;
+    double _charge_to_gray_scale;
+    std::vector<size_t> _num_clusters_v;
     std::vector<size_t> _num_unclustered_hits_v;
     std::vector<size_t> _num_clustered_hits_v;
     

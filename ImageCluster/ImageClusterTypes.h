@@ -11,7 +11,7 @@ namespace larcv {
   /// A cluster's unique identifier within larcv::ClusterImageManager
   typedef size_t ClusterID_t;
   /// A 2D contour type
-  typedef std::vector<cv::Point2d> Contour_t;
+  typedef std::vector<cv::Point> Contour_t;
   /// A set of 2D contours
   typedef std::vector<larcv::Contour_t> ContourArray_t;
   /// A constant to signify invalid "id" in general

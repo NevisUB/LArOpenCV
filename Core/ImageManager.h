@@ -18,6 +18,7 @@
 #include <opencv2/core/core.hpp>
 #include <iostream>
 #include <vector>
+#include "laropencv_base.h"
 #include "larbys.h"
 #include "ImageMeta.h"
 namespace larcv  {
@@ -27,12 +28,12 @@ namespace larcv  {
      In future this class will implement its own I/O structure so that analyzers can simply \n
      read/analyze/store image from ROOT file instead of converting from LArSoft/LArLite data file.
   */
-  class ImageManager {
+  class ImageManager : public laropencv_base{
     
   public:
     
     /// Default constructor
-    ImageManager(){}
+    ImageManager(const std::string name="ImageManager") : laropencv_base(name) {}
     
     /// Default destructor
     ~ImageManager(){}

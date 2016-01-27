@@ -1,4 +1,4 @@
-SmoothBinaryCluster :
+SBCluster :
 {
     DilationSize : 5
     DilationIterations : 2

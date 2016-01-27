@@ -3,7 +3,6 @@
 
 #include "LArImageWire.h"
 #include "LArUtil/Geometry.h"
-#include "LArUtil/DetectorProperties.h"
 #include "DataFormat/wire.h"
 namespace larlite {
 
@@ -19,9 +18,7 @@ namespace larlite {
   void LArImageWire::extract_image(storage_manager* storage)
   {
     auto const& geom = ::larutil::Geometry::GetME();
-    auto const& detp = ::larutil::DetectorProperties::GetME();
     const size_t nplanes = geom->Nplanes();
-    const size_t nadcs = detp->NumberTimeSamples();
 
     auto ev_wire = storage->get_data<event_wire>(producer());
 

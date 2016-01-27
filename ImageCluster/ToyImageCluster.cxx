@@ -6,7 +6,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 namespace larcv{
 
-  void ToyImageCluster::Configure(const ::fcllite::PSet &pset)
+  void ToyImageCluster::_Configure_(const ::fcllite::PSet &pset)
   {
     _canny_params = pset.get<std::vector<double> >("CannyParams");
     if(_canny_params.size() != 3) throw larbys("CannyParams must be length 3 vector!");
@@ -25,7 +25,7 @@ namespace larcv{
     ::cv::findContours(blurred_img,result,cv_hierarchy_v,
 		       CV_RETR_EXTERNAL,
 		       CV_CHAIN_APPROX_SIMPLE);
-
+    //std::cout<<result.size()<<std::endl;
     return result;
   }
 

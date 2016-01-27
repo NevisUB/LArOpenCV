@@ -21,10 +21,10 @@ for x in xrange(len(sys.argv)-1):
 my_proc.set_io_mode(fmwk.storage_manager.kREAD)
  
 myunit = fmwk.LArImageHit()
-myunit.set_producer("gaushit")
-myunit.set_config  ("ImageCluster/mac/SBCluster.fcl")
+# myunit.set_producer("gaushit")
+# myunit.set_config  ("ImageCluster/mac/SBCluster.fcl")
 
-sb_algo = larcv.SmoothBinaryCluster()
+sb_algo = larcv.SBCluster()
 
 plane_mgr0 = myunit.algo_manager(0);
 plane_mgr0.AddAlg(sb_algo)
@@ -38,6 +38,6 @@ plane_mgr2.AddAlg(sb_algo)
 
 my_proc.add_process(myunit)
 
-my_proc.process_event()
+my_proc.run()
 
 sys.exit(0)

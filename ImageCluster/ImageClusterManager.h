@@ -31,16 +31,12 @@ namespace larcv {
      meta data for an original image that contains image origin (left bottom corner) in the original coordinate, the width \n
      and height of an image, etc. + updated meta data from each algorithm execution.
   */
-  class ImageClusterManager{
+  class ImageClusterManager : public laropencv_base{
     
   public:
     
     /// Default constructor
-    ImageClusterManager(const std::string name="ImageClusterManager")
-      : _name(name)
-      , _configured(false)
-      , _profile(true)
-    {Reset();}
+    ImageClusterManager(const std::string name="ImageClusterManager");
     
     /// Default destructor
     ~ImageClusterManager(){}

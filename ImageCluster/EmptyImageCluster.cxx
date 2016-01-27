@@ -6,7 +6,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 namespace larcv{
 
-  void EmptyImageCluster::Configure(const ::fcllite::PSet &pset)
+  void EmptyImageCluster::_Configure_(const ::fcllite::PSet &pset)
   {}
 
   ContourArray_t EmptyImageCluster::_Process_(const larcv::ContourArray_t& clusters,

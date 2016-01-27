@@ -39,6 +39,8 @@ namespace larlite {
 
     void _Report_() const {}
 
+    void _Configure_(const ::fcllite::PSet&) {}
+
     void store_clusters(storage_manager* storage);
 
     void extract_image(storage_manager* storage);

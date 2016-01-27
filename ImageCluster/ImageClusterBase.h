@@ -17,6 +17,7 @@
 #include <iostream>
 #include "FhiclLite/PSet.h"
 #include "Core/ImageMeta.h"
+#include "Core/laropencv_base.h"
 #include "Utils/Watch.h"
 #include "ImageClusterTypes.h"
 namespace larcv {
@@ -31,14 +32,14 @@ namespace larcv {
      clusters from it. See larcv::ImageClusterManager for more details.\n\n
 
      Configuration parameters are passed via fhicllite::PSet (which is constructed via larcv::ImageClusterManager) \n
-     and a derived class must implement ImageClusterBase::Configure abstruct method. An execution of an algorithm \n
+     and a derived class must implement ImageClusterBase::_Configure_ abstruct method. An execution of an algorithm \n
      is done inside an abstract method ImageClusterBase::_Process_ method which must be implemented in a child class. \n
      A cluster is represented as a 2D contour (larcv::Contour_t). The execution method recieves 3 inputs: 0) a set of \n
      pre-defined clusters (typically a set of clusters created by the previous algorithm in a chain executed by \n
      larcv::ImageClusterManager), 1) cv::Mat representing 2D image, and 2) larcv::ImageMeta which contains meta data \n
      of 1) and should be updated to interpret the algorithm's return larcv::Contour_t if needed. \n \n
   */
-  class ImageClusterBase {
+  class ImageClusterBase : public laropencv_base{
     
   public:
     
@@ -52,7 +53,7 @@ namespace larcv {
     const std::string& Name() const { return _name; };
 
     /// Configuration method
-    virtual void Configure(const ::fcllite::PSet &pset) = 0;
+    void Configure(const ::fcllite::PSet &pset);
 
     /// Profile flag setter
     void Profile(bool doit=true) { _profile = doit; }
@@ -70,6 +71,9 @@ namespace larcv {
     double ProcessTime() const { return _proc_time; }
 
   protected:
+
+    /// Inherited class configuration method
+    virtual void _Configure_(const ::fcllite::PSet &pset) = 0;
 
     /**
        Execution method: given previous algorithm's output clusters, image, and metadata to be updated, produce clusters. \n

@@ -1,4 +1,3 @@
-
 LArImageHit: {
   # LArImageClusterBase config
   Profile: true
@@ -14,12 +13,17 @@ ImageClusterManager: {
   Verbosity: 1
   Profile: true
 
-  EmptyImageCluster: {
-  }
 
-  ToyImageCluster: {
+  SBCluster: {
     Verbosity: 1
-    CannyParams: [10,100,3]
+    DilationSize : 5
+    DilationIterations : 2
+    
+    BlurSize : 5
+    
+    Thresh : 1
+    ThreshMaxVal : 255
+
   }
 
 }

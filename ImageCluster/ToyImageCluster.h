@@ -32,10 +32,10 @@ namespace larcv {
     /// Default destructor
     ~ToyImageCluster(){}
 
-    /// Configuration method
-    void Configure(const ::fcllite::PSet &pset);
-
   protected:
+
+    /// Configuration method
+    void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
     larcv::ContourArray_t _Process_(const larcv::ContourArray_t& clusters,
