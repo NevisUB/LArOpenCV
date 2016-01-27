@@ -200,13 +200,13 @@ namespace larcv {
 
     auto const& origin = meta.origin();
 
-    if(x < origin.x || x > (origin.x + meta.width())) return result;
+   if(x < origin.x || x > (origin.x + meta.width())) return result;
 
     if(y < origin.y || x > (origin.y + meta.height())) return result;
 
     //std::cout<<"Inspecting a point "<<x<<" : "<<y<<" ... ";
 
-    auto pt = ::cv::Point2d((x-origin.x)/meta.pixel_width(),(y-origin.y)/meta.pixel_height());
+    auto pt = ::cv::Point2d((y-origin.y)/meta.pixel_height(), (x-origin.x)/meta.pixel_width()); 
 
     //std::cout<<pt.x<<" : "<<pt.y<<std::endl;
 
