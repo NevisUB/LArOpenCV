@@ -61,8 +61,8 @@ namespace larcaffe {
     double height           () const { return _height; }
     size_t num_pixel_row    () const { return _width_npixel;      }
     size_t num_pixel_column () const { return _height_npixel;     }
-    double pixel_width      () const { return _width / _width_npixel;     } 
-    double pixel_height     () const { return _height / _height_npixel;   }
+    double pixel_width      () const { return (_width_npixel ? _width / _width_npixel : 0.);     } 
+    double pixel_height     () const { return (_height_npixel ? _height / _height_npixel : 0.);   }
     /// Provide relative horizontal coordinate of the center of a specified pixel row
     double pixel_relative_x(size_t w) const { return pixel_width  () * ((double)w + 0.5); }
     /// Provide relative vertical coordinate of the center of a specified pixel column
@@ -74,8 +74,8 @@ namespace larcaffe {
     /// Change # of vertical/horizontal pixels in meta data
     void update(const size_t width_npixel, const size_t height_npixel)
     {
-      if( !width_npixel  ) throw larbys("Number of pixels must be non-zero (width)");
-      if( !height_npixel ) throw larbys("Number of pixels must be non-zero (height)");
+      //if( !width_npixel  ) throw larbys("Number of pixels must be non-zero (width)");
+      //if( !height_npixel ) throw larbys("Number of pixels must be non-zero (height)");
       _width_npixel  = width_npixel;
       _height_npixel = height_npixel;
     }

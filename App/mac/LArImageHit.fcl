@@ -1,0 +1,18 @@
+
+LArImageHit: {
+
+  Profile: true
+  StoreOriginalImage: false
+  Producer: gaushit
+
+}
+
+ImageClusterManager: {
+
+  Profile: true
+
+  EmptyImageCluster: {
+  }
+  
+
+}
