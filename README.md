@@ -2,7 +2,8 @@
 
 Someone update this README!
 
-- To get started... 
+- To get started...
+
 0. Look at setup_laropencv.sh (or source it if you trust it).
 1. Need to compile UserDev/BasicTool before compiling LArOpenCV
 2. "make -j" @ base dir LArOpenCV
