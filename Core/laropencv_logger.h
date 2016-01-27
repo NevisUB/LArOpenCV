@@ -31,7 +31,7 @@ namespace larcv {
 #define LARCV_NORMAL(obj)   if(obj.logger().normal())   obj.logger().send(::larcaffe::msg::kNORMAL,   __FUNCTION__                  )
 #define LARCV_WARNING(obj)  if(obj.logger().warning())  obj.logger().send(::larcaffe::msg::kWARNING,  __FUNCTION__                  )
 #define LARCV_ERROR(obj)    if(obj.logger().error())    obj.logger().send(::larcaffe::msg::kERROR,    __FUNCTION__,__LINE__         )
-#define LARCV_CRITICAL(obj) if(obj.logger().critical()) obj.logger().send(::larcaffe::msg::kCRITICAL, __FUNCTION__,__LINE__,__FILE__)
+#define LARCV_CRITICAL(obj) obj.logger().send(::larcaffe::msg::kCRITICAL, __FUNCTION__,__LINE__,__FILE__)
 #endif
 /** @} */ // end of doxygen group 
 

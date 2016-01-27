@@ -14,7 +14,7 @@ ImageClusterManager: {
   Verbosity: 1
   Profile: true
   AlgoType: [EmptyImageCluster,ToyImageCluster]
-  AlgoName: [MyEmpty,MyToy]
+  AlgoName: [MyEmpty,MyEmpty]
 
   MyEmpty: {
   }
