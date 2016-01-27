@@ -48,13 +48,20 @@ namespace larcv {
 
   };
 
+  /**
+     \class larcv::ToyImageClusterFactory
+     \brief A concrete factory class for larcv::ToyImageCluster
+   */
   class ToyImageClusterFactory : public ImageClusterFactoryBase {
   public:
+    /// ctor
     ToyImageClusterFactory() { ImageClusterFactory::get().add_factory("ToyImageCluster",this); }
+    /// dtor
     ~ToyImageClusterFactory() {}
+    /// creation method
     ImageClusterBase* create(const std::string instance_name) { return new ToyImageCluster(instance_name); }
   };
-
+  /// Global larcv::ToyImageClusterFactory to register ImageClusterFactory
   static ToyImageClusterFactory __global_ToyImageClusterFactory__;
 }
 #endif

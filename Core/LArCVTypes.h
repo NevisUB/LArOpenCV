@@ -36,6 +36,7 @@ namespace larcv {
   /// Stolen from larcaffe
   typedef ::larcaffe::Point2D Point2D;
 
+  /// Namespace for larcv message related types
   namespace msg{
     typedef ::larcaffe::msg::Level_t Level_t;
   }

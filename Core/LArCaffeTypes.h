@@ -14,6 +14,7 @@ namespace larcaffe {
 
   //const unsigned int kINVALID_UINT = std::numeric_limits<unsigned int>::max();
 
+  /// Namespace for larcaffe message related types
   namespace msg {
 
     enum Level_t { kDEBUG, kINFO, kNORMAL, kWARNING, kERROR, kCRITICAL, kMSG_TYPE_MAX };
