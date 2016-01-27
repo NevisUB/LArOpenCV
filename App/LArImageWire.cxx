@@ -6,6 +6,11 @@
 #include "DataFormat/wire.h"
 namespace larlite {
 
+  void LArImageWire::_Configure_(const ::fcllite::PSet &pset)
+  {
+    _charge_to_gray_scale = pset.get<double>("Q2Gray");
+  }
+
   void LArImageWire::store_clusters(storage_manager* storage)
   {
     static bool warn_once = false;
@@ -57,7 +62,7 @@ namespace larlite {
       if(!nticks || !nwires)
 	_img_mgr.push_back(cv::Mat(),meta);
       else
-	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_32FC1, cvScalar(0.)),meta);
+	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
     }
     
     for(auto const& wire_data : *ev_wire) {
@@ -76,7 +81,11 @@ namespace larlite {
 	for(size_t adc_index=0; adc_index < roi.size(); ++adc_index) {
 	  size_t x = wid.Wire - wire_range.first;
 	  size_t y = start_tick + adc_index - tick_range.first;
-	  mat.at<float>(x,y) = mat.at<float>(x,y) + roi[adc_index];
+	  double q = roi[adc_index] / _charge_to_gray_scale;
+	  q += (double)(mat.at<unsigned char>(x,y));
+	  if(q<0) q=0.;
+	  if(q>255) q=255;
+	  mat.at<unsigned char>(x,y) = (unsigned char)((int)q);
 	}
       }
     }

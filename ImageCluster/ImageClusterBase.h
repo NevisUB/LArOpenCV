@@ -20,6 +20,7 @@
 #include "Core/laropencv_base.h"
 #include "Utils/Watch.h"
 #include "ImageClusterTypes.h"
+#include "ImageClusterFactory.h"
 namespace larcv {
   /**
      \class ImageClusterBase
@@ -98,6 +99,7 @@ namespace larcv {
 
     bool _profile;       ///< measure process time if profile flag is on
   };
+
 }
 #endif
 /** @} */ // end of doxygen group 

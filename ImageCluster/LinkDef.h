@@ -15,7 +15,10 @@
 #pragma link C++ class larcv::ImageClusterManager+;
 #pragma link C++ class larcv::ToyImageCluster+;
 #pragma link C++ class larcv::EmptyImageCluster+;
+#pragma link C++ class larcv::ImageClusterFactory+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
+
 
 

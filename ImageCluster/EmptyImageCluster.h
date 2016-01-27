@@ -47,6 +47,15 @@ namespace larcv {
     std::vector<double> _canny_params;
 
   };
+
+  class EmptyImageClusterFactory : public ImageClusterFactoryBase {
+  public:
+    EmptyImageClusterFactory() { ImageClusterFactory::get().add_factory("EmptyImageCluster",this); }
+    ~EmptyImageClusterFactory() {}
+    ImageClusterBase* create() { return new EmptyImageCluster; }
+  };
+
+  static EmptyImageClusterFactory __global_EmptyImageClusterFactory__;
 }
 #endif
 /** @} */ // end of doxygen group 
