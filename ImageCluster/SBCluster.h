@@ -43,14 +43,20 @@ namespace larcv {
     float _thresh_maxval;
     
   };
-
+  /**
+     \class larcv::SBClusterFactory
+     \brief A concrete factory class for larcv::SBCluster
+   */
   class SBClusterFactory : public ImageClusterFactoryBase {
   public:
+    /// ctor
     SBClusterFactory() { ImageClusterFactory::get().add_factory("SBCluster",this); }
+    /// dtor
     ~SBClusterFactory() {}
+    /// create method
     ImageClusterBase* create(const std::string instance_name) { return new SBCluster(instance_name); }
   };
-
+  /// Global larcv::SBClusterFactory to register ImageClusterFactory
   static SBClusterFactory __global_SBClusterFactory__;
   
 }

@@ -48,13 +48,20 @@ namespace larcv {
 
   };
 
+  /**
+     \class larcv::EmptyImageClusterFactory
+     \brief A concrete factory class for larcv::EmptyImageCluster
+   */
   class EmptyImageClusterFactory : public ImageClusterFactoryBase {
   public:
+    /// ctor
     EmptyImageClusterFactory() { ImageClusterFactory::get().add_factory("EmptyImageCluster",this); }
+    /// dtor
     ~EmptyImageClusterFactory() {}
+    /// creation method
     ImageClusterBase* create(const std::string instance_name) { return new EmptyImageCluster(instance_name); }
   };
-
+  /// Global larcv::EmptyImageClusterFactory to register ImageClusterFactory
   static EmptyImageClusterFactory __global_EmptyImageClusterFactory__;
 }
 #endif

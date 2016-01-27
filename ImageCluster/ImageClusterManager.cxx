@@ -82,7 +82,7 @@ namespace larcv {
 	LARCV_CRITICAL((*this)) << "Duplicate algorithm name found!" << std::endl;
 	throw larbys("Duplicate algorithm name found!");
       }
-
+      
       _alg_m[name] = _alg_v.size();
       _alg_v.push_back(ImageClusterFactory::get().create(type,name));
     }

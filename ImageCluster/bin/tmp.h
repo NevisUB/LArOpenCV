@@ -47,14 +47,21 @@ namespace larcv {
     std::vector<double> _canny_params;
 
   };
-
+  
+  /**
+     \class larcv::ClassNameFactory
+     \brief A concrete factory class for larcv::ClassName
+   */
   class ClassNameFactory : public ImageClusterFactoryBase {
   public:
+    /// ctor
     ClassNameFactory() { ImageClusterFactory::get().add_factory("ClassName",this); }
+    /// dtor
     ~ClassNameFactory() {}
+    /// creation method
     ImageClusterBase* create(const std::string instance_name) { return new ClassName(instance_name); }
   };
-
+  /// Global larcv::ClassNameFactory to register ImageClusterFactory
   static ClassNameFactory __global_ClassNameFactory__;
 }
 #endif
