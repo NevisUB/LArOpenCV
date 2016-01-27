@@ -46,9 +46,13 @@ namespace larcv {
     /// Clears attributes except for _name
     void Reset();
     /// Algorithm adder: returns a unique identifier with which you can retrieve back
-    AlgorithmID_t AddAlg(ImageClusterBase* alg);
-    /// Algorithm getter via unique identifier
+    //AlgorithmID_t AddAlg(ImageClusterBase* alg); // deprecated: use configuration method + factory
+    /// Algorithm getter via unique identifier (AlgorithmID_t)
     ImageClusterBase* GetAlg(const AlgorithmID_t id) const;
+    /// Algorithm getter via unique identifier (string name)
+    ImageClusterBase* GetAlg(const std::string name) const;
+    /// Algorithm ID getter via unique identifier (string name)
+    AlgorithmID_t GetAlgID(const std::string name) const;
     /// Read-in configuration object & enforce configurations to algorithms
     void Configure(const ::fcllite::PSet& main_cfg);
     /// Execute algorithms to construct clusters + corresponding meta data
@@ -71,6 +75,8 @@ namespace larcv {
     bool _configured;
     /// Array of algorithms to be executed
     std::vector<larcv::ImageClusterBase*> _alg_v;
+    /// Map of algorithm instance name to ID
+    std::map<std::string,larcv::AlgorithmID_t> _alg_m;
     /// Array of resulting clusters per algorithms
     std::vector<larcv::ContourArray_t> _clusters_v;
     /// Array of meta data: one per set of clusters (updated by each algorithm)
