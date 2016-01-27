@@ -1,18 +1,25 @@
 
 LArImageHit: {
-
+  # LArImageClusterBase config
   Profile: true
   StoreOriginalImage: false
   Producer: gaushit
-
+  # LArImageHit config
+  Q2Gray: 10
 }
 
+# ImageClusterManager config
 ImageClusterManager: {
 
+  Verbosity: 1
   Profile: true
 
   EmptyImageCluster: {
   }
-  
+
+  ToyImageCluster: {
+    Verbosity: 1
+    CannyParams: [10,100,3]
+  }
 
 }

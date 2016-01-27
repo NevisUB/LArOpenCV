@@ -40,6 +40,8 @@ namespace larlite {
     _process_time_analyze = 0;
     _process_time_cluster_storage = 0;
 
+    this->_Configure_(main_cfg);
+
     if(_producer.empty()) throw ::larcv::larbys("No producer specified...");
 
     for(auto& mgr : _alg_mgr_v) mgr.Configure(cfg_mgr.Config().get_pset(mgr.Name()));

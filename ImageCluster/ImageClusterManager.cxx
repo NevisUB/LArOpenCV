@@ -7,13 +7,26 @@
 
 namespace larcv {
 
+  ImageClusterManager::ImageClusterManager(const std::string name)
+    : laropencv_base(name)
+    , _name(name)
+    , _configured(false)
+    , _profile(true)
+  {
+    LARCV_DEBUG((*this)) << "start" << std::endl;
+    Reset();
+    LARCV_DEBUG((*this)) << "end" << std::endl;
+  }
+  
   void ImageClusterManager::Reset()
   {
+    LARCV_DEBUG((*this)) << "start" << std::endl;
     _configured = false;
     _alg_v.clear();
     _clusters_v.clear();
     _process_count=0;
     _process_time=0;
+    LARCV_DEBUG((*this)) << "end" << std::endl;
   }
 
   ImageClusterBase* ImageClusterManager::GetAlg(const AlgorithmID_t id) const
@@ -32,14 +45,18 @@ namespace larcv {
 
   void ImageClusterManager::Configure(const ::fcllite::PSet& main_cfg)
   {
-
+    LARCV_DEBUG((*this)) << "start" << std::endl;
     _profile = main_cfg.get<bool>("Profile");
 
+    this->set_verbosity((msg::Level_t)(main_cfg.get<unsigned short>("Verbosity",(unsigned short)(this->logger().level()))));
+
     for(auto& ptr : _alg_v) {
-      ptr->Configure(main_cfg.get_pset(ptr->Name()));
       ptr->Profile(_profile);
+      ptr->set_verbosity(this->logger().level());
+      ptr->Configure(main_cfg.get_pset(ptr->Name()));
     }
     _configured=true;
+    LARCV_DEBUG((*this)) << "end" << std::endl;
   }
 
   void ImageClusterManager::Report() const
@@ -57,6 +74,8 @@ namespace larcv {
 
   void ImageClusterManager::Process(const ::cv::Mat& img, const ImageMeta& meta)
   {
+    LARCV_DEBUG((*this)) << "start" << std::endl;
+    
     if(!_configured) throw larbys("Must Configure() before Process()!");
 
     if(meta.num_pixel_row()!=img.rows)
@@ -105,6 +124,7 @@ namespace larcv {
 
     _process_time += _watch.WallTime();
     ++_process_count;
+    LARCV_DEBUG((*this)) << "end" << std::endl;
   }
   
   const ImageMeta& ImageClusterManager::MetaData(const AlgorithmID_t alg_id) const
@@ -147,7 +167,11 @@ namespace larcv {
 
     if(y < origin.y || x > (origin.y + meta.height())) return result;
 
-    auto pt = ::cv::Point2d((x-origin.x)/meta.pixel_width(),(y-origin.y)/meta.pixel_width());
+    //std::cout<<"Inspecting a point "<<x<<" : "<<y<<" ... ";
+
+    auto pt = ::cv::Point2d((x-origin.x)/meta.pixel_width(),(y-origin.y)/meta.pixel_height());
+
+    //std::cout<<pt.x<<" : "<<pt.y<<std::endl;
 
     for(size_t id=0; id<clusters.size(); ++id) {
 

@@ -5,6 +5,7 @@
 #include <limits>
 #include <climits>
 
+#include "LArCaffeTypes.h"
 /**
    \namespace larcaffe
    C++ namespace for developping LArTPC software interface to deep learning tool caffe
@@ -35,6 +36,9 @@ namespace larcv {
   /// Stolen from larcaffe
   typedef ::larcaffe::Point2D Point2D;
 
+  namespace msg{
+    typedef ::larcaffe::msg::Level_t Level_t;
+  }
 }
 
 #endif
