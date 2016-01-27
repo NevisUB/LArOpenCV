@@ -52,7 +52,7 @@ namespace larcv {
   public:
     ToyImageClusterFactory() { ImageClusterFactory::get().add_factory("ToyImageCluster",this); }
     ~ToyImageClusterFactory() {}
-    ImageClusterBase* create() { return new ToyImageCluster; }
+    ImageClusterBase* create(const std::string instance_name) { return new ToyImageCluster(instance_name); }
   };
 
   static ToyImageClusterFactory __global_ToyImageClusterFactory__;

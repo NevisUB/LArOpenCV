@@ -52,7 +52,7 @@ namespace larcv {
   public:
     ClassNameFactory() { ImageClusterFactory::get().add_factory("ClassName",this); }
     ~ClassNameFactory() {}
-    ImageClusterBase* create() { return new ClassName; }
+    ImageClusterBase* create(const std::string instance_name) { return new ClassName(instance_name); }
   };
 
   static ClassNameFactory __global_ClassNameFactory__;

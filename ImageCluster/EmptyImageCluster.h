@@ -52,7 +52,7 @@ namespace larcv {
   public:
     EmptyImageClusterFactory() { ImageClusterFactory::get().add_factory("EmptyImageCluster",this); }
     ~EmptyImageClusterFactory() {}
-    ImageClusterBase* create() { return new EmptyImageCluster; }
+    ImageClusterBase* create(const std::string instance_name) { return new EmptyImageCluster(instance_name); }
   };
 
   static EmptyImageClusterFactory __global_EmptyImageClusterFactory__;
