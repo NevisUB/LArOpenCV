@@ -4,7 +4,7 @@ name=sys.argv[1]
 print
 print 'Generating a source code for new ClusterImage algorithm',name
 source_path = os.path.dirname(__file__)
-source_path = os.getcwd() + source_path
+source_path = os.getcwd() + "/" + source_path + "/"
 target_path = source_path + '../'
 
 print 'Target path:',target_path
