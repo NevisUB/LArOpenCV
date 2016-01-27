@@ -4,7 +4,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include "ImageClusterManager.h"
 #include "Core/larbys.h"
-#include "FhiclLite/ConfigManager.h"
+
 namespace larcv {
 
   void ImageClusterManager::Reset()
@@ -12,6 +12,8 @@ namespace larcv {
     _configured = false;
     _alg_v.clear();
     _clusters_v.clear();
+    _process_count=0;
+    _process_time=0;
   }
 
   ImageClusterBase* ImageClusterManager::GetAlg(const AlgorithmID_t id) const
@@ -28,18 +30,29 @@ namespace larcv {
     return (_alg_v.size() - 1);
   }
 
-  void ImageClusterManager::Configure(const std::string cfg_file)
+  void ImageClusterManager::Configure(const ::fcllite::PSet& main_cfg)
   {
-    ::fcllite::ConfigManager cfg_mgr(Name());
-    
-    cfg_mgr.AddCfgFile(cfg_file);
 
-    auto const& main_cfg = cfg_mgr.Config();
+    _profile = main_cfg.get<bool>("Profile");
 
-    for(auto& ptr : _alg_v)
+    for(auto& ptr : _alg_v) {
       ptr->Configure(main_cfg.get_pset(ptr->Name()));
-
+      ptr->Profile(_profile);
+    }
     _configured=true;
+  }
+
+  void ImageClusterManager::Report() const
+  {
+    
+    std::cout << "  ================== " << Name() << " Profile Report ==================" << std::endl
+	      << "  # Process call = " << _process_count << " ... Total time = " << _process_time << " [s]" << std::endl;
+    for(auto const& ptr : _alg_v) {
+      std::cout << Form("  \033[93m%-20s\033[00m ... # call %-5zu ... total time %g [s] ... average time %g [s/process]",
+			ptr->Name().c_str(), ptr->ProcessCount(), ptr->ProcessTime(), ptr->ProcessTime() / (double)(ptr->ProcessCount()))
+		<< std::endl;
+    }
+    
   }
 
   void ImageClusterManager::Process(const ::cv::Mat& img, const ImageMeta& meta)
@@ -49,9 +62,11 @@ namespace larcv {
     if(meta.num_pixel_row()!=img.rows)
       throw larbys("Provided metadata has incorrect # horizontal pixels w.r.t. image!");
 
-    if(meta.num_pixel_column()!=img.rows)
+    if(meta.num_pixel_column()!=img.cols)
       throw larbys("Provided metadata has incorrect # vertical pixels w.r.t. image!");
 
+    _watch.Start();
+    
     _orig_meta = meta;
     _meta_v.clear();
     _clusters_v.clear();
@@ -87,8 +102,11 @@ namespace larcv {
       }
 
     }
-  }
 
+    _process_time += _watch.WallTime();
+    ++_process_count;
+  }
+  
   const ImageMeta& ImageClusterManager::MetaData(const AlgorithmID_t alg_id) const
   {
     if(alg_id < _meta_v.size()) return _meta_v[alg_id];
@@ -96,7 +114,7 @@ namespace larcv {
     throw larbys("Execution of an algorithm not yet done!");
   }
   
-  const Contour_t& ImageClusterManager::Cluster(const AlgorithmID_t alg_id, const ClusterID_t cluster_id) const
+  const Contour_t& ImageClusterManager::Cluster(const ClusterID_t cluster_id, const AlgorithmID_t alg_id) const
   {
     auto const& clusters = Clusters(alg_id);
     if(cluster_id >= clusters.size()) throw larbys("Invalid cluster ID requested");
@@ -106,7 +124,7 @@ namespace larcv {
   const ContourArray_t& ImageClusterManager::Clusters(const AlgorithmID_t alg_id) const
   {
     if(alg_id < _clusters_v.size()) return _clusters_v[alg_id];
-    if(alg_id >= _alg_v.size()) throw larbys("Invalid algorithm ID requested");
+    if(alg_id == kINVALID_ALGO_ID && _clusters_v.size()) return _clusters_v.back();
     throw larbys("Execution of an algorithm not yet done!");
   }
   

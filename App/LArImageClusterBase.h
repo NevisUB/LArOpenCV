@@ -30,7 +30,7 @@ namespace larlite {
   public:
 
     /// Default constructor
-    LArImageClusterBase();
+    LArImageClusterBase(const std::string name="LArImageClusterBase");
 
     /// Default destructor
     virtual ~LArImageClusterBase(){}
@@ -51,30 +51,29 @@ namespace larlite {
     */
     bool finalize();
 
-    void set_producer(const std::string producer="")
-    { _producer = producer; }
-
     larcv::ImageClusterManager& algo_manager(size_t plane_id);
 
     const std::vector<larcv::ImageClusterManager>& algo_manager_set() const;
 
-    void set_config(const std::string fname)
-    { _config_file = fname; }
-
-    void store_original_image(bool store=true) { _store_original_img=store; }
+    const std::string& producer() const { return _producer; }
 
   private:
-
-    std::string _config_file;
     std::vector<larcv::ImageClusterManager> _alg_mgr_v;
-
+    ::larcv::ImageManager _orig_img_mgr;
+    bool _store_original_img;
+    std::string _producer;
+    bool _profile;
+    double _process_count;
+    double _process_time_image_extraction;
+    double _process_time_analyze;
+    double _process_time_cluster_storage;
+    void Report() const;
   protected:
-    virtual void store_clusters(storage_manager* storage) const = 0;
+    virtual void _Report_() const = 0;
+    virtual void store_clusters(storage_manager* storage) = 0;
     virtual void extract_image(storage_manager* storage) = 0;
     ::larcv::ImageManager _img_mgr;
-    ::larcv::ImageManager _orig_img_mgr;
-    std::string _producer;
-    bool _store_original_img;
+
   };
 }
 #endif

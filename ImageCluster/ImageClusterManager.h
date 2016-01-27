@@ -39,8 +39,8 @@ namespace larcv {
     ImageClusterManager(const std::string name="ImageClusterManager")
       : _name(name)
       , _configured(false)
-      , _orig_meta(1,1,1,1,1,1)
-    {}
+      , _profile(true)
+    {Reset();}
     
     /// Default destructor
     ~ImageClusterManager(){}
@@ -53,19 +53,21 @@ namespace larcv {
     AlgorithmID_t AddAlg(ImageClusterBase* alg);
     /// Algorithm getter via unique identifier
     ImageClusterBase* GetAlg(const AlgorithmID_t id) const;
-    /// Read-in configuration file from the argument & enforce configurations to algorithms
-    void Configure(const std::string config_file="");
+    /// Read-in configuration object & enforce configurations to algorithms
+    void Configure(const ::fcllite::PSet& main_cfg);
     /// Execute algorithms to construct clusters + corresponding meta data
     void Process(const ::cv::Mat& img, const larcv::ImageMeta& meta);
     /// Accessor to a specific meta data constructed by an algorithm (via algorithm id)
     const ImageMeta& MetaData(const AlgorithmID_t alg_id) const;
     /// Accessor to a specific cluster constructed by an algorithm (via algorithm + cluster id)
-    const Contour_t& Cluster(const AlgorithmID_t alg_id, const ClusterID_t cluster_id) const;
+    const Contour_t& Cluster(const ClusterID_t cluster_id, const AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
     /// Accessor to a set of clusters constructed by an algorithm (via algorithm id)
-    const ContourArray_t& Clusters(const AlgorithmID_t alg_id) const;
+    const ContourArray_t& Clusters(const AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
     /// For a specified algorithm, find a cluster that contains coordinate (x,y). By default "last algorithm" is used.
     ClusterID_t ClusterID(const double x, const double y, AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
-
+    /// Report process summary
+    void Report() const;
+    
   private:
     /// Name identifier: used to fetch a block of configuration parameters
     std::string _name;
@@ -79,7 +81,14 @@ namespace larcv {
     std::vector<larcv::ImageMeta> _meta_v;
     /// Original meta data
     larcv::ImageMeta _orig_meta;
-
+    /// Boolean flag to measure process time + report
+    bool _profile;
+    /// Stopwatch
+    Watch _watch;
+    /// Process counter (cumulative)
+    size_t _process_count;
+    /// Process time (cumulative)
+    double _process_time;
   };
 }
 #endif

@@ -54,6 +54,9 @@ namespace larcv {
     /// Configuration method
     virtual void Configure(const ::fcllite::PSet &pset) = 0;
 
+    /// Profile flag setter
+    void Profile(bool doit=true) { _profile = doit; }
+
     /**
        @brief wrapper execution method: internally executes _Process_ function (see there for details)
     */
@@ -61,8 +64,10 @@ namespace larcv {
 				  const ::cv::Mat& img,
 				  larcv::ImageMeta& meta);
 
-    /// Process time getter
-    double AverageProcessTime() const { return _proc_time / _proc_count; }
+    /// Process count
+    size_t ProcessCount() const { return _proc_count; }
+    /// Process time
+    double ProcessTime() const { return _proc_time; }
 
   protected:
 
@@ -85,8 +90,9 @@ namespace larcv {
 
     double _proc_time;   ///< algorithm execution time record (cumulative)
 
-    double _proc_count;  ///< algorithm execution counter (cumulative)
+    size_t _proc_count;  ///< algorithm execution counter (cumulative)
 
+    bool _profile;       ///< measure process time if profile flag is on
   };
 }
 #endif

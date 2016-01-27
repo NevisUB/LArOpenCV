@@ -7,7 +7,7 @@
 #include "DataFormat/wire.h"
 namespace larlite {
 
-  void LArImageWire::store_clusters(storage_manager* storage) const
+  void LArImageWire::store_clusters(storage_manager* storage)
   {
     static bool warn_once = false;
     if(!warn_once) {
@@ -23,7 +23,7 @@ namespace larlite {
     const size_t nplanes = geom->Nplanes();
     const size_t nadcs = detp->NumberTimeSamples();
 
-    auto ev_wire = storage->get_data<event_wire>(_producer);
+    auto ev_wire = storage->get_data<event_wire>(producer());
 
     if(!ev_wire) throw DataFormatException("Could not locate Wire data product!");
     
@@ -55,9 +55,12 @@ namespace larlite {
       auto const& tick_range = tick_range_v[plane];
       size_t nticks = tick_range.second - tick_range.first + 2;
       size_t nwires = wire_range.second - wire_range.first + 2;
-      ::cv::Mat mat(nwires, nticks, CV_32FC1, cvScalar(0.));
       ::larcv::ImageMeta meta((double)nwires,(double)nticks,nwires,nticks,wire_range.first,tick_range.first);
-      _img_mgr.push_back(mat,meta);
+      
+      if(!nticks || !nwires)
+	_img_mgr.push_back(cv::Mat(),meta);
+      else
+	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_32FC1, cvScalar(0.)),meta);
     }
     
     for(auto const& wire_data : *ev_wire) {

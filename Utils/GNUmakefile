@@ -14,7 +14,7 @@ OBJECTS = $(SOURCES:.cxx=.o)
 INCFLAGS  = -I.                       #Include itself
 INCFLAGS += $(shell python-config --includes)
 INCFLAGS += -I$(shell python -c "import numpy; print numpy.get_include()")
-INCFLAGS += -I../
+INCFLAGS += -I$(LARLITE_USERDEVDIR)/LArOpenCV
 INCFLAGS += -I$(OPENCV_INCDIR)
 
 # platform-specific options

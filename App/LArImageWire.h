@@ -30,14 +30,16 @@ namespace larlite {
   public:
 
     /// Default constructor
-    LArImageWire() : LArImageClusterBase() {}
+    LArImageWire(const std::string name="LArImageWire") : LArImageClusterBase(name) {}
 
     /// Default destructor
     virtual ~LArImageWire(){}
 
   protected:
 
-    void store_clusters(storage_manager* storage) const;
+    void _Report_() const {}
+
+    void store_clusters(storage_manager* storage);
 
     void extract_image(storage_manager* storage);
   };
