@@ -18,6 +18,8 @@ INCFLAGS += -I$(LARLITE_USERDEVDIR)/LArOpenCV
 INCFLAGS += -I$(OPENCV_INCDIR)
 #INCFLAGS += -I../
 
+CFLAGS += $(shell pkg-config --cflags)
+
 # platform-specific options
 OSNAME          = $(shell uname -s)
 HOST            = $(shell uname -n)
@@ -29,6 +31,7 @@ LDFLAGS += $(shell larlite-config --libs)
 LDFLAGS += $(shell python-config --ldflags)
 LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_highgui -lopencv_imgcodecs
 LDFLAGS += -L$(LARLITE_LIBDIR) -lLArOpenCV_ImageCluster -lLArOpenCV_Utils -lLArOpenCV_Core
+LDFLAGS += $(shell pkg-config --libs opencv)
 
 # call kernel specific compiler setup
 include $(LARLITE_BASEDIR)/Makefile/Makefile.${OSNAME}

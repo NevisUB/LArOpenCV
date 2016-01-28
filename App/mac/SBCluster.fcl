@@ -14,7 +14,7 @@ ImageClusterManager: {
 
   Verbosity: 1
   Profile:   true  # Time profiles algorithms
-  ShowImage: true  # Display image per process
+  ShowImage: false  # Display image per process
   AlgoType:  [SBCluster]
   AlgoName:  [Vic]
 
