@@ -17,16 +17,16 @@ ImageClusterManager: {
 
   Verbosity: 1
   Profile:   true  # Time profiles algorithms
-  ShowImage: true  # Display image per process
-  AlgoType:  [SBCluster]
-  AlgoName:  [Vic]
+  ShowImage: false  # Display image per process
+  AlgoType:  [SBCluster,CDTrackShower]
+  AlgoName:  [Vic,Vic2]
 
-  ImageClusterViewer: {
-    Verbosity: 0
-    Width:  800
-    Height: 800
-    MinContourArea: 125
-  }
+ ImageClusterViewer: {
+   Verbosity: 0
+   Width:  800
+   Height: 800
+   MinContourArea: 125
+ }
 
   Vic:{
     Verbosity: 1
@@ -37,6 +37,10 @@ ImageClusterManager: {
 
     Thresh : 1
     ThreshMaxVal : 255
+  }
+
+  Vic2:{
+
   }
 
 }
