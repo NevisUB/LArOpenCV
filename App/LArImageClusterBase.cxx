@@ -13,6 +13,7 @@ namespace larlite {
     _producer="";
     _alg_mgr_v.resize( ::larutil::Geometry::GetME()->Nplanes() );
     _store_original_img=false;
+    _contour_tree=nullptr;
   }
 
   const std::vector<larcv::ImageClusterManager>& LArImageClusterBase::algo_manager_set() const
@@ -46,6 +47,16 @@ namespace larlite {
 
     for(auto& mgr : _alg_mgr_v) mgr.Configure(cfg_mgr.Config().get_pset(mgr.Name()));
 
+    if(!_contour_tree){
+      _contour_tree = new TTree("contour_tree","Contour Tree" );
+      _contour_tree->Branch("area",&_area,"area/F");
+      _contour_tree->Branch("perimeter",&_perimeter,"perimeter/F");
+      _contour_tree->Branch("bb_height",&_bb_height,"bb_height/F");
+      _contour_tree->Branch("bb_width",&_bb_width,"bb_width/F");
+      _contour_tree->Branch("max_con_width",&_max_con_width,"max_con_width/F");
+      _contour_tree->Branch("min_con_width",&_min_con_width,"min_con_width/F");
+      }
+
     return true;
   }
   
@@ -78,8 +89,23 @@ namespace larlite {
       if(!meta.num_pixel_row() || !meta.num_pixel_column()) continue;
       
       alg_mgr.Process(img,meta);
-      
+      auto & clus = alg_mgr.Clusters() ;
+      for(int j=0; j<clus.size(); j++){
+        
+        _filler.Fill(clus[j]);
+         
+       }
     }
+
+    for(int i=0; i<_filler.Areas().size(); i++){
+      _area = _filler.Areas()[i] ;
+      _perimeter = _filler.Perimeters()[i];
+      _bb_height = _filler.BBHeights()[i];
+      _bb_width = _filler.BBWidths()[i];
+      _max_con_width = _filler.MaxContourWidths()[i];
+      _min_con_width = _filler.MinContourWidths()[i];
+      _contour_tree->Fill();
+      }
 
     watch_one.Start();
     this->store_clusters(storage);
@@ -120,6 +146,12 @@ namespace larlite {
       _alg_mgr_v[plane].Report();
       std::cout << std::endl;
     }
+
+   if(_fout){
+    _fout->cd();
+    _contour_tree->Write();
+    }   
+
     return true;
   }
 

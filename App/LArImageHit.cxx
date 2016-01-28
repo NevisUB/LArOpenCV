@@ -14,7 +14,10 @@ namespace larlite {
   void LArImageHit::_Configure_(const ::fcllite::PSet &pset)
   {
     _charge_to_gray_scale = pset.get<double>("Q2Gray");
-    _charge_threshold = pset.get<double>("QMin");
+    _downsample           = pset.get<bool>("DownSample");
+    _nbins                = pset.get<int>("NBins");
+//    _charge_threshold = pset.get<double>("QMin");
+
   }
 
   void LArImageHit::_Report_() const
@@ -146,13 +149,20 @@ namespace larlite {
       auto const& tick_range = tick_range_v[plane];
       size_t nticks = tick_range.second - tick_range.first + 2;
       size_t nwires = wire_range.second - wire_range.first + 2;
-      ::larcv::ImageMeta meta((double)nwires,(double)nticks,nwires,nticks,wire_range.first,tick_range.first);
+      if(_downsample){
+        ::larcv::ImageMeta meta((double)nwires,(double)nticks,_nbins,_nbins,wire_range.first,tick_range.first);
+        _img_mgr.push_back(::cv::Mat(_nbins,_nbins, CV_8UC1, cvScalar(0.)),meta);
+	}
+      else
+        {
+        ::larcv::ImageMeta meta((double)nwires,(double)nticks,nwires,nticks,wire_range.first,tick_range.first);
+        _img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
+	}
       
       //if(!nticks || !nwires)
       //_img_mgr.push_back(cv::Mat(),meta);
       //else
       //_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_32FC1, cvScalar(0.)),meta);
-      _img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
       //_img_mgr->emplace_back(std::move(mat));
       /*
       std::cout << "Creating ... " << wire_range.first << " => " << wire_range.second << " ... " << nwires
@@ -182,7 +192,17 @@ namespace larlite {
       size_t y = (size_t)(h.PeakTime()+0.5) - tick_range.first;
       size_t x = wid.Wire - wire_range.first;
       
-      if(y>=nticks || x>=nwires) throw std::exception();
+      if(_downsample){
+
+        auto div_x = float(nwires) / _nbins;
+        auto div_y = float(nticks) / _nbins;
+ 
+        y /= div_y;
+        x /= div_x;
+
+        }
+      else
+        if(y>=nticks || x>=nwires) throw std::exception();
       
       //std::cout<<"Inserting " << x << " " << y << " @ " << wid.Plane << std::endl;
       double charge = h.Integral() / _charge_to_gray_scale;

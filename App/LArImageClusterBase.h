@@ -18,6 +18,8 @@
 #include "Analysis/ana_base.h"
 #include "Core/ImageManager.h"
 #include "ImageCluster/ImageClusterManager.h"
+#include "ImageCluster/ImageClusterViewer.h"
+#include "ImageCluster/FillImageClusterVariables.h"
 
 namespace larlite {
 
@@ -60,6 +62,7 @@ namespace larlite {
     void set_config(const std::string cfg_file) {_config_file=cfg_file;}
 
   private:
+
     std::vector<larcv::ImageClusterManager> _alg_mgr_v;
     ::larcv::ImageManager _orig_img_mgr;
     bool _store_original_img;
@@ -71,7 +74,19 @@ namespace larlite {
     double _process_time_analyze;
     double _process_time_cluster_storage;
     void Report() const;
+
+    larcv::FillImageClusterVariables _filler; 
+    TTree * _contour_tree; 
+
+    float _area ;
+    float _perimeter ;
+    float _bb_height ;
+    float _bb_width ;
+    float _max_con_width ;
+    float _min_con_width ;
+
   protected:
+
     virtual void _Report_() const = 0;
     virtual void _Configure_(const ::fcllite::PSet&) = 0;
     virtual void store_clusters(storage_manager* storage) = 0;
