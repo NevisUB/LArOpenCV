@@ -13,12 +13,24 @@ namespace larcv {
     , _name(name)
     , _display_width(800)
     , _display_height(800)
+    , _min_contour_area(125)
   {}
   
   void ImageClusterViewer::Configure(const ::fcllite::PSet& cfg)
   {
-    _display_width  = cfg.get<size_t>("Width");
-    _display_height = cfg.get<size_t>("Height");
+    _display_width    = cfg.get<size_t>("Width");
+    _display_height   = cfg.get<size_t>("Height");
+    _min_contour_area = cfg.get<double>("MinContourArea");
+    /*
+    if(_display_ratio<0.5) {
+      LARCV_WARNING((*this)) << "Ratio cannot be smaller than 0.5 (setting to 0.5...)" << std::endl;
+      _display_ratio = 0.5;
+    }
+    if(_display_ratio>2.0) {
+      LARCV_WARNING((*this)) << "Ratio cannot be larger than 2.0 (ssetting to 2.0...)" << std::endl;
+      _display_ratio = 2.0;
+    }
+    */
     this->set_verbosity((msg::Level_t)(cfg.get<unsigned short>("Verbosity",3)));
   }
 
@@ -46,9 +58,12 @@ namespace larcv {
     // 0) Register original image
     std::vector<cv::Mat> result_image_v;
     ::cv::Mat orig_image;
-    ::cv::cvtColor(img,orig_image,CV_GRAY2RGB);
-    size_t imshow_width  = (orig_image.rows > _display_width  ? _display_width  : orig_image.rows);
-    size_t imshow_height = (orig_image.cols > _display_height ? _display_height : orig_image.cols);
+    //::cv::cvtColor(img,orig_image,CV_GRAY2RGB);
+    img.copyTo(orig_image);
+    //size_t imshow_width  = (orig_image.rows > _display_width  ? _display_width  : orig_image.rows);
+    //size_t imshow_height = (orig_image.cols > _display_height ? _display_height : orig_image.cols);
+    size_t imshow_width  = _display_width;
+    size_t imshow_height = _display_height;
     LARCV_INFO((*this)) << "Original size: " << orig_image.rows << " : " << orig_image.cols
 			<< " ... "
 			<< "Resizing: " << imshow_width << " : " << imshow_height << std::endl;
@@ -61,7 +76,7 @@ namespace larcv {
       LARCV_DEBUG((*this)) << "Creating images for " << contours.size() << " contours..." << std::endl;
       
       // Find bounding box limits
-      auto rect = BoundingBox(contours);
+      auto rect = BoundingBox(contours,_min_contour_area);
       LARCV_DEBUG((*this)) << "Bounding box: "
 			   << rect.x << " => " << rect.x + rect.width
 			   << " : "
@@ -80,8 +95,8 @@ namespace larcv {
 
       // Only show relevant area
       result_image = result_image(rect).clone();      
-      imshow_width  = (result_image.rows > _display_width  ? _display_width  : result_image.rows);
-      imshow_height = (result_image.cols > _display_height ? _display_height : result_image.cols);
+      //imshow_width  = (result_image.rows > _display_width  ? _display_width  : result_image.rows);
+      //imshow_height = (result_image.cols > _display_height ? _display_height : result_image.cols);
       LARCV_INFO((*this)) << "Original size: " << img.rows << " : " << img.cols
 			  << " ... "
 			  << "Bounded size : " << result_image.rows << " : " << result_image.cols
