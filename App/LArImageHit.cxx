@@ -112,7 +112,7 @@ namespace larlite {
       }
     }
     if(ev_ass)
-      ev_ass->set_association(ev_cluster->id(),ev_ass->id(),ass_set);
+      ev_ass->set_association(ev_cluster->id(),ev_hit->id(),ass_set);
   }
 
   void LArImageHit::extract_image(storage_manager* storage)
