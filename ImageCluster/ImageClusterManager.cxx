@@ -187,7 +187,6 @@ namespace larcv {
 	  drawContours( result_image, contours, cindex, color, 2, 8, ::cv::noArray(), 0, ::cv::Point() );
 	  for(auto const& contour : contours) {
 	    ::cv::Rect bb = ::cv::boundingRect( ::cv::Mat(contour) );
-	    std::cout<<bb.x<<" => "<<bb.x+bb.width<<" : "<<bb.y<<" => "<<bb.y+bb.height<<std::endl;
 	    if(bb.x < imshow_xmin) imshow_xmin=bb.x;
 	    if(bb.y < imshow_ymin) imshow_ymin=bb.y;
 	    if(bb.x+bb.width > imshow_xmax) imshow_xmax=bb.x + bb.width;
@@ -215,13 +214,12 @@ namespace larcv {
 	bb[2].x = bb[3].x = imshow_xmax;
 	bb[1].y = bb[2].y = imshow_ymax;
       }
-      std::cout<<img.cols<<" : "<<img.rows<<" ... "<<bb[0].x<<" : "<<bb[0].y<<" ... "<<bb[2].x<<" : "<<bb[2].y<<std::endl;
       /// Show in a window
       for(size_t img_index=0; img_index<result_image_v.size(); ++img_index) {
 	auto& img = result_image_v[img_index];
 	if(img_index) img = CreateSubMatRef(bb,img);
 	const size_t imshow_width  = (img.rows > imshow_rows ? imshow_rows : img.rows);
-	const size_t imshow_height = (img.cols > imshow_rows ? imshow_rows : img.cols);
+	const size_t imshow_height = (img.cols > imshow_cols ? imshow_cols : img.cols);
 	::cv::resize(img,img,::cv::Size(imshow_width,imshow_height),0,0,::cv::INTER_AREA);
 	auto const& window_name = window_name_v[img_index];
 	::cv::namedWindow(window_name.c_str(), CV_WINDOW_NORMAL);
