@@ -11,8 +11,6 @@ namespace larcv{
     _blur_y          = pset.get<int> ("BlurY");
     _thresh        = pset.get<float> ("Thresh");
     _threshMaxVal  = pset.get<float> ("ThreshMaxVal");
-    _dilation_size = pset.get<float> ("DilationSize");
-    _dilation_iter = pset.get<float> ("DilationIter");
   }
 
   ContourArray_t TCluster::_Process_(const larcv::ContourArray_t& clusters,

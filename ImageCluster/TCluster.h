@@ -33,9 +33,7 @@ namespace larcv {
        _blur_x(3),
        _blur_y(3),
        _thresh(1),
-       _threshMaxVal(255),
-       _dilation_size(5),
-       _dilation_iter(2)
+       _threshMaxVal(255)
     {}
     
     /// Default destructor
@@ -59,8 +57,6 @@ namespace larcv {
     int _blur_y;
     int _thresh;
     int _threshMaxVal;
-    int _dilation_size;
-    int _dilation_iter; 
 
   };
 
