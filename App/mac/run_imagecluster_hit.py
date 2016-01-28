@@ -23,19 +23,20 @@ if not cfg.endswith('.fcl'):
 for x in xrange(len(sys.argv)-2):
     my_proc.add_input_file(sys.argv[x+2])
 
+print sys.argv
+
 # Specify IO mode
-my_proc.set_io_mode(fmwk.storage_manager.kREAD)
+my_proc.set_io_mode(fmwk.storage_manager.kBOTH)
 
 # Specify output root file name
 my_proc.set_ana_output_file("from_test_ana_you_can_remove_me.root");
+my_proc.set_output_file("aho.root");
 
 # Attach an analysis unit ... here we use a base class which does nothing.
 # Replace with your analysis unit if you wish.
+
 myunit = fmwk.LArImageHit()
 myunit.set_config(cfg)
-#myunit.algo_manager(0).AddAlg(larcv.ToyImageCluster())
-#myunit.algo_manager(1).AddAlg(larcv.ToyImageCluster())
-#myunit.algo_manager(2).AddAlg(larcv.ToyImageCluster())
 my_proc.add_process(myunit)
 
 print
