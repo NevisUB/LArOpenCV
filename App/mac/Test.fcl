@@ -13,9 +13,16 @@ LArImageHit: {
 ImageClusterManager: {
 
   Verbosity: 1
-  Profile: true
-  AlgoType: [EmptyImageCluster,ToyImageCluster]
-  AlgoName: [MyEmpty,MyToy]
+  Profile:   true
+  ShowImage: true
+  AlgoType:  [EmptyImageCluster,ToyImageCluster]
+  AlgoName:  [MyEmpty,MyToy]
+
+  ImageClusterViewer: {
+    Verbosity: 0
+    Width:  800
+    Height: 800
+  }
     
   MyEmpty: {
   }

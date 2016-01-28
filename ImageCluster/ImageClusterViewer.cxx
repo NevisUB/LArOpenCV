@@ -1,0 +1,115 @@
+#ifndef __IMAGECLUSTERVIEWER_CXX__
+#define __IMAGECLUSTERVIEWER_CXX__
+
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include "ImageClusterViewer.h"
+#include "Core/larbys.h"
+#include "Utilities.h"
+namespace larcv {
+
+  ImageClusterViewer::ImageClusterViewer(const std::string name)
+    : laropencv_base(name)
+    , _name(name)
+    , _display_width(800)
+    , _display_height(800)
+  {}
+  
+  void ImageClusterViewer::Configure(const ::fcllite::PSet& cfg)
+  {
+    _display_width  = cfg.get<size_t>("Width");
+    _display_height = cfg.get<size_t>("Height");
+    this->set_verbosity((msg::Level_t)(cfg.get<unsigned short>("Verbosity",3)));
+  }
+
+  void ImageClusterViewer::Display(const ::cv::Mat& img,
+				   const std::vector<larcv::ContourArray_t>& contours_v,
+				   const std::vector<std::string>& display_name_v)
+  {
+    if(contours_v.size() != display_name_v.size()) {
+      LARCV_CRITICAL((*this)) << "Provided number of cluster sets and display names do not match!" << std::endl;
+      throw larbys();
+    }
+
+    if(contours_v.empty()) {
+      LARCV_WARNING((*this)) << "Nothing to display..." << std::endl;
+      return;
+    }
+    
+    //
+    // How it works: Make all images to display in a vector then call imshow at once later.
+    // 0) Register original image w/o any contour
+    // 1) Find BoundingBox per set of contours (i.e. per algorithm) to display & prepare specific cv::Mat
+    // 2) Display
+    //
+    
+    // 0) Register original image
+    std::vector<cv::Mat> result_image_v;
+    ::cv::Mat orig_image;
+    ::cv::cvtColor(img,orig_image,CV_GRAY2RGB);
+    size_t imshow_width  = (orig_image.rows > _display_width  ? _display_width  : orig_image.rows);
+    size_t imshow_height = (orig_image.cols > _display_height ? _display_height : orig_image.cols);
+    LARCV_INFO((*this)) << "Original size: " << orig_image.rows << " : " << orig_image.cols
+			<< " ... "
+			<< "Resizing: " << imshow_width << " : " << imshow_height << std::endl;
+    ::cv::resize(orig_image,orig_image,::cv::Size(imshow_width,imshow_height),0,0,::cv::INTER_AREA);
+    result_image_v.emplace_back(orig_image);
+
+    // 1) Find BoundingBox per set of contours (i.e. per algorithm) to display & prepare specific cv::Mat
+    for(auto const& contours : contours_v) {
+
+      LARCV_DEBUG((*this)) << "Creating images for " << contours.size() << " contours..." << std::endl;
+      
+      // Find bounding box limits
+      auto rect = BoundingBox(contours);
+      LARCV_DEBUG((*this)) << "Bounding box: "
+			   << rect.x << " => " << rect.x + rect.width
+			   << " : "
+			   << rect.y << " => " << rect.y + rect.height << std::endl;
+
+      // Prepare Mat
+      ::cv::Mat result_image;
+      ::cv::cvtColor(img,result_image,CV_GRAY2RGB);
+
+      // Draw contours
+      ::cv::RNG rng;
+      for(size_t cindex=0; cindex < contours.size(); ++cindex) {
+	::cv::Scalar color = ::cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+	drawContours( result_image, contours, cindex, color, 2, 8, ::cv::noArray(), 0, ::cv::Point() );
+      }
+
+      // Only show relevant area
+      result_image = result_image(rect).clone();      
+      imshow_width  = (result_image.rows > _display_width  ? _display_width  : result_image.rows);
+      imshow_height = (result_image.cols > _display_height ? _display_height : result_image.cols);
+      LARCV_INFO((*this)) << "Original size: " << img.rows << " : " << img.cols
+			  << " ... "
+			  << "Bounded size : " << result_image.rows << " : " << result_image.cols
+			  << " ... "
+			  << "Resizing: " << imshow_width << " : " << imshow_height << std::endl;
+      
+      ::cv::resize(result_image,result_image,::cv::Size(imshow_width,imshow_height),0,0,::cv::INTER_AREA);
+      result_image_v.emplace_back(result_image);
+    }
+
+    // 2) Display
+    for(size_t i=0; i<result_image_v.size(); ++i) {
+      std::string name = "Original";
+      if(i) name = display_name_v[i-1];
+
+      auto const& image = result_image_v[i];
+      ::cv::namedWindow(name, CV_WINDOW_NORMAL);
+      ::cv::imshow(name, image);
+    }
+
+    cvWaitKey(0);
+
+    for(size_t i=0; i<result_image_v.size(); ++i) {
+      std::string name = "Original";
+      if(i) name = display_name_v[i-1];
+      cvDestroyWindow(name.c_str());
+    }
+  }
+}
+
+#endif

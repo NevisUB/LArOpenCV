@@ -18,8 +18,10 @@
 //#pragma link C++ class larcv::SmoothBinaryCluster+;
 #pragma link C++ class larcv::SBCluster+;
 #pragma link C++ class larcv::ImageClusterFactory+;
+#pragma link C++ class larcv::ImageClusterViewer+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
 
 
 

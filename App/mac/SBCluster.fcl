@@ -5,18 +5,24 @@ LArImageHit: {
   StoreOriginalImage: false
   Producer: gaushit
   # LArImageHit config
-  Q2Gray: 5
-  QMin: 5
+  Q2Gray: 5 # convert Hit::Integral to a unit gray scale
+  QMin: 5   # min. threshold for Hit::Integral to make it into an image
 }
 
 # ImageClusterManager config
 ImageClusterManager: {
 
   Verbosity: 1
-  Profile: true
-  ShowImage: true
-  AlgoType: [SBCluster]
-  AlgoName: [Vic]
+  Profile:   true  # Time profiles algorithms
+  ShowImage: true  # Display image per process
+  AlgoType:  [SBCluster]
+  AlgoName:  [Vic]
+
+  ImageClusterViewer: {
+    Verbosity: 0
+    Width:  800
+    Height: 800
+  }
 
   Vic:{
     Verbosity: 1

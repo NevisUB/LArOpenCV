@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include "ImageClusterBase.h"
+#include "ImageClusterViewer.h"
 namespace larcv {
   /**
      \class ImageClusterManager
@@ -93,6 +94,8 @@ namespace larcv {
     double _process_time;
     /// Boolean to stop & show image at the end of process
     bool _show_image;
+    /// Viewer instance
+    ImageClusterViewer _viewer;
   };
 }
 #endif

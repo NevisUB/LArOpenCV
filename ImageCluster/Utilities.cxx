@@ -7,6 +7,24 @@
 #include "Utilities.h"
 namespace larcv {
 
+  ::cv::Rect BoundingBox(const larcv::ContourArray_t& clusters)
+  {
+    int bb_xmin = INT_MAX;
+    int bb_ymin = INT_MAX;
+    int bb_xmax = 0;
+    int bb_ymax = 0;
+    for(auto const& c : clusters) {
+      auto rect = BoundingBox(c);
+      if(rect.x < bb_xmin) bb_xmin = rect.x;
+      if(rect.y < bb_ymin) bb_ymin = rect.y;
+      if(rect.x+rect.width+1  > bb_xmax) bb_xmax = rect.x + rect.width + 1;
+      if(rect.y+rect.height+1 > bb_ymax) bb_ymax = rect.y + rect.height + 1;
+    }
+    if(bb_xmin == INT_MAX) bb_xmin = 0;
+    if(bb_ymin == INT_MAX) bb_ymin = 0;
+    return ::cv::Rect(bb_xmin,bb_ymin,bb_xmax-bb_xmin,bb_ymax-bb_ymin);
+  }
+  
   ::cv::Rect BoundingBox(const larcv::Contour_t& cluster)
   {
     if(cluster.size()<2)
@@ -25,10 +43,14 @@ namespace larcv {
       if(pt.y > y_max) y_max = pt.y;
 
     }
-
+    if(x_min) x_min -=1;
+    if(y_min) y_min -=1;
+    x_max +=1;
+    y_max +=1;
+    
     return ::cv::Rect( x_min, y_min,
-		       x_max - x_min + 1,
-		       y_max - y_min + 1);
+		       x_max - x_min,
+		       y_max - y_min);
   }
 
   ::cv::Mat CreateSubMatRef(const larcv::Contour_t& cluster, cv::Mat& img)
