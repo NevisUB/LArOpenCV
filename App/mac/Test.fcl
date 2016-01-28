@@ -22,6 +22,7 @@ ImageClusterManager: {
     Verbosity: 0
     Width:  800
     Height: 800
+    MinContourArea: 125
   }
     
   MyEmpty: {

@@ -5,7 +5,7 @@
 
 namespace larcv {
 
-  ::cv::Rect BoundingBox(const larcv::ContourArray_t& clusters);
+  ::cv::Rect BoundingBox(const larcv::ContourArray_t& clusters, const double min_area=-1);
 
   ::cv::Rect BoundingBox(const larcv::Contour_t& cluster);
   

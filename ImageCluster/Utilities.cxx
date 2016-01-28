@@ -7,13 +7,14 @@
 #include "Utilities.h"
 namespace larcv {
 
-  ::cv::Rect BoundingBox(const larcv::ContourArray_t& clusters)
+  ::cv::Rect BoundingBox(const larcv::ContourArray_t& clusters, const double min_area)
   {
     int bb_xmin = INT_MAX;
     int bb_ymin = INT_MAX;
     int bb_xmax = 0;
     int bb_ymax = 0;
     for(auto const& c : clusters) {
+      if(::cv::contourArea(c)<min_area) continue;
       auto rect = BoundingBox(c);
       if(rect.x < bb_xmin) bb_xmin = rect.x;
       if(rect.y < bb_ymin) bb_ymin = rect.y;

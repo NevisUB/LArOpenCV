@@ -49,7 +49,7 @@ namespace larcv {
     std::string _name;      ///< self name
     size_t _display_width;  ///< Display width
     size_t _display_height; ///< Display height
-    
+    double _min_contour_area; ///< Min. area threshold for contour to be displaied 
   };
 }
 #endif

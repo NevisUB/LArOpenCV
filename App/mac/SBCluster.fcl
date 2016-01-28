@@ -5,8 +5,8 @@ LArImageHit: {
   StoreOriginalImage: false
   Producer: gaushit
   # LArImageHit config
-  Q2Gray: 5 # convert Hit::Integral to a unit gray scale
-  QMin: 5   # min. threshold for Hit::Integral to make it into an image
+  Q2Gray: 0.1 # convert Hit::Integral to a unit gray scale
+  QMin: 3   # min. threshold for Hit::Integral to make it into an image
 }
 
 # ImageClusterManager config
@@ -22,6 +22,7 @@ ImageClusterManager: {
     Verbosity: 0
     Width:  800
     Height: 800
+    MinContourArea: 125
   }
 
   Vic:{

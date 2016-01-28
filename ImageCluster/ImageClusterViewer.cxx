@@ -13,12 +13,14 @@ namespace larcv {
     , _name(name)
     , _display_width(800)
     , _display_height(800)
+    , _min_contour_area(125)
   {}
   
   void ImageClusterViewer::Configure(const ::fcllite::PSet& cfg)
   {
     _display_width  = cfg.get<size_t>("Width");
     _display_height = cfg.get<size_t>("Height");
+    _min_contour_area = cfg.get<double>("MinContourArea");
     this->set_verbosity((msg::Level_t)(cfg.get<unsigned short>("Verbosity",3)));
   }
 
@@ -46,7 +48,8 @@ namespace larcv {
     // 0) Register original image
     std::vector<cv::Mat> result_image_v;
     ::cv::Mat orig_image;
-    ::cv::cvtColor(img,orig_image,CV_GRAY2RGB);
+    //::cv::cvtColor(img,orig_image,CV_GRAY2RGB);
+    img.copyTo(orig_image);
     size_t imshow_width  = (orig_image.rows > _display_width  ? _display_width  : orig_image.rows);
     size_t imshow_height = (orig_image.cols > _display_height ? _display_height : orig_image.cols);
     LARCV_INFO((*this)) << "Original size: " << orig_image.rows << " : " << orig_image.cols
@@ -61,7 +64,7 @@ namespace larcv {
       LARCV_DEBUG((*this)) << "Creating images for " << contours.size() << " contours..." << std::endl;
       
       // Find bounding box limits
-      auto rect = BoundingBox(contours);
+      auto rect = BoundingBox(contours,_min_contour_area);
       LARCV_DEBUG((*this)) << "Bounding box: "
 			   << rect.x << " => " << rect.x + rect.width
 			   << " : "
