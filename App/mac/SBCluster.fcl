@@ -6,6 +6,7 @@ LArImageHit: {
   Producer: gaushit
   # LArImageHit config
   Q2Gray: 5
+  QMin: 5
 }
 
 # ImageClusterManager config
@@ -13,6 +14,7 @@ ImageClusterManager: {
 
   Verbosity: 1
   Profile: true
+  ShowImage: true
   AlgoType: [SBCluster]
   AlgoName: [Vic]
 

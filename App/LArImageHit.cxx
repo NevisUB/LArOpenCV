@@ -14,6 +14,7 @@ namespace larlite {
   void LArImageHit::_Configure_(const ::fcllite::PSet &pset)
   {
     _charge_to_gray_scale = pset.get<double>("Q2Gray");
+    _charge_threshold = pset.get<double>("QMin");
   }
 
   void LArImageHit::_Report_() const
@@ -125,9 +126,11 @@ namespace larlite {
     std::vector< std::pair<size_t,size_t> > tick_range_v(nplanes,std::pair<size_t,size_t>(1e12,0));
     
     for(auto const& h : *ev_hit) {
+
+      if(h.Integral() < _charge_threshold) continue;
       
       auto const& wid = h.WireID();
-      
+
       auto& wire_range = wire_range_v[wid.Plane];
       if(wire_range.first  > wid.Wire) wire_range.first  = wid.Wire;
       if(wire_range.second < wid.Wire) wire_range.second = wid.Wire;

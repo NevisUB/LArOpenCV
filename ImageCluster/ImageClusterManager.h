@@ -91,6 +91,8 @@ namespace larcv {
     size_t _process_count;
     /// Process time (cumulative)
     double _process_time;
+    /// Boolean to stop & show image at the end of process
+    bool _show_image;
   };
 }
 #endif

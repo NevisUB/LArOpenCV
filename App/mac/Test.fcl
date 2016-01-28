@@ -6,6 +6,7 @@ LArImageHit: {
   Producer: gaushit
   # LArImageHit config
   Q2Gray: 10
+  QMin: 5
 }
 
 # ImageClusterManager config

@@ -2,9 +2,11 @@
 #define __IMAGECLUSTERMANAGER_CXX__
 
 #include <opencv2/imgproc/imgproc.hpp>
+#include "opencv2/highgui/highgui.hpp"
 #include "ImageClusterManager.h"
 #include "Core/larbys.h"
 #include "ImageClusterFactory.h"
+#include "Utilities.h"
 namespace larcv {
 
   ImageClusterManager::ImageClusterManager(const std::string name)
@@ -63,6 +65,8 @@ namespace larcv {
     _profile = main_cfg.get<bool>("Profile");
 
     this->set_verbosity((msg::Level_t)(main_cfg.get<unsigned short>("Verbosity",(unsigned short)(this->logger().level()))));
+
+    _show_image = main_cfg.get<bool>("ShowImage",false);
 
     std::vector<std::string> instance_type_v = main_cfg.get<std::vector<std::string> >("AlgoType");
     std::vector<std::string> instance_name_v = main_cfg.get<std::vector<std::string> >("AlgoName");
@@ -129,6 +133,21 @@ namespace larcv {
     _clusters_v.reserve(_alg_v.size());
     _meta_v.reserve(_alg_v.size());
 
+    std::vector<cv::Mat> result_image_v;
+    const size_t imshow_rows=800;
+    const size_t imshow_cols=800;
+    size_t imshow_xmin=1e12;
+    size_t imshow_ymin=1e12;
+    size_t imshow_xmax=0;
+    size_t imshow_ymax=0;
+    if(_show_image) {
+      result_image_v.reserve(_alg_v.size()+1);
+      //std::cout<<imshow_row_scale<<" : "<<imshow_col_scale<<std::endl;
+      ::cv::Mat orig_image;
+      ::cv::cvtColor(img,orig_image,CV_GRAY2RGB);
+      result_image_v.push_back(orig_image);
+    }
+
     for(auto& alg_ptr : _alg_v) {
       
       if(!alg_ptr) throw larbys("Invalid algorithm pointer!");
@@ -157,8 +176,68 @@ namespace larcv {
 	throw larbys();
       }
 
+      if(_show_image) {
+	/// Draw contours
+	::cv::RNG rng;
+	::cv::Mat result_image;
+	::cv::cvtColor(img,result_image,CV_GRAY2RGB);
+	auto const& contours = _clusters_v.back();
+	for( size_t cindex = 0; cindex< contours.size(); cindex++ ) {
+	  ::cv::Scalar color = ::cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+	  drawContours( result_image, contours, cindex, color, 2, 8, ::cv::noArray(), 0, ::cv::Point() );
+	  for(auto const& contour : contours) {
+	    ::cv::Rect bb = ::cv::boundingRect( ::cv::Mat(contour) );
+	    std::cout<<bb.x<<" => "<<bb.x+bb.width<<" : "<<bb.y<<" => "<<bb.y+bb.height<<std::endl;
+	    if(bb.x < imshow_xmin) imshow_xmin=bb.x;
+	    if(bb.y < imshow_ymin) imshow_ymin=bb.y;
+	    if(bb.x+bb.width > imshow_xmax) imshow_xmax=bb.x + bb.width;
+	    if(bb.y+bb.height > imshow_ymax) imshow_ymax=bb.y + bb.height;
+	  }
+	}
+	result_image_v.emplace_back(result_image);
+      }
     }
 
+    if(_show_image) {
+      std::vector<std::string> window_name_v;
+      window_name_v.push_back("Original Image");
+      for(size_t alg_index=0; alg_index<_alg_v.size(); ++alg_index) 
+	window_name_v.push_back(_alg_v[alg_index]->Name() + " Clusters (" + std::to_string(alg_index) + ")");
+
+      larcv::Contour_t bb;
+      bb.push_back(::cv::Point(0,0));
+      bb.push_back(::cv::Point(0,img.cols));
+      bb.push_back(::cv::Point(img.rows,img.cols));
+      bb.push_back(::cv::Point(img.rows,0));
+      if(imshow_xmax) {
+	bb[0].x = bb[1].x = imshow_xmin;
+	bb[0].y = bb[3].y = imshow_ymin;
+	bb[2].x = bb[3].x = imshow_xmax;
+	bb[1].y = bb[2].y = imshow_ymax;
+      }
+      std::cout<<img.cols<<" : "<<img.rows<<" ... "<<bb[0].x<<" : "<<bb[0].y<<" ... "<<bb[2].x<<" : "<<bb[2].y<<std::endl;
+      /// Show in a window
+      for(size_t img_index=0; img_index<result_image_v.size(); ++img_index) {
+	auto& img = result_image_v[img_index];
+	if(img_index) img = CreateSubMatRef(bb,img);
+	const size_t imshow_width  = (img.rows > imshow_rows ? imshow_rows : img.rows);
+	const size_t imshow_height = (img.cols > imshow_rows ? imshow_rows : img.cols);
+	::cv::resize(img,img,::cv::Size(imshow_width,imshow_height),0,0,::cv::INTER_AREA);
+	auto const& window_name = window_name_v[img_index];
+	::cv::namedWindow(window_name.c_str(), CV_WINDOW_NORMAL);
+	::cv::imshow(window_name.c_str(), img);
+	//::cv::resizeWindow(window_name.c_str(), 800, 600);
+      }
+
+      cvWaitKey(0);
+
+      for(size_t img_index=0; img_index<result_image_v.size(); ++img_index) {
+	auto const& window_name = window_name_v[img_index];
+	cvDestroyWindow(window_name.c_str());
+      }
+      window_name_v.clear();
+      result_image_v.clear();
+    }
     _process_time += _watch.WallTime();
     ++_process_count;
     LARCV_DEBUG((*this)) << "end" << std::endl;
