@@ -58,6 +58,8 @@ namespace larcv {
     void Configure(const ::fcllite::PSet& main_cfg);
     /// Execute algorithms to construct clusters + corresponding meta data
     void Process(const ::cv::Mat& img, const larcv::ImageMeta& meta);
+    /// Finalize after multiple Process call
+    void Finalize(TFile* file=nullptr);
     /// Accessor to a specific meta data constructed by an algorithm (via algorithm id)
     const ImageMeta& MetaData(const AlgorithmID_t alg_id) const;
     /// Accessor to a specific cluster constructed by an algorithm (via algorithm + cluster id)

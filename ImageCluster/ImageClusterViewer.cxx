@@ -57,9 +57,26 @@ namespace larcv {
     
     // 0) Register original image
     std::vector<cv::Mat> result_image_v;
-    ::cv::Mat orig_image;
-    //::cv::cvtColor(img,orig_image,CV_GRAY2RGB);
-    img.copyTo(orig_image);
+    ::cv::Mat orig_image(img.size(),CV_8UC3);
+    //::cv::Mat orig_image;
+    //img.copyTo(orig_image);
+    double minVal;
+    double maxVal;
+    minMaxLoc(img, &minVal, &maxVal);
+    for(int j=0;j<img.rows;j++) {
+      for (int i=0;i<img.cols;i++) {
+	double q = img.at<unsigned char>(j,i);
+	q *= 255.*255.*255./maxVal;
+	int b = ((int)q)/(255*255);
+	int g = ((int)q - b*255*255)/(255);
+	int r = ((int)q - b*255*255 - g*255);
+	orig_image.at<unsigned char>(j,i,0) = (unsigned char)r;
+	orig_image.at<unsigned char>(j,i,1) = (unsigned char)g;
+	orig_image.at<unsigned char>(j,i,2) = (unsigned char)b;
+      }
+    }
+    std::cout<<minVal<<" => "<<maxVal<<std::endl;
+    //::cv::cvtColor(orig_image,orig_image,CV_GRAY2RGB);
     //size_t imshow_width  = (orig_image.rows > _display_width  ? _display_width  : orig_image.rows);
     //size_t imshow_height = (orig_image.cols > _display_height ? _display_height : orig_image.cols);
     size_t imshow_width  = _display_width;
@@ -68,6 +85,7 @@ namespace larcv {
 			<< " ... "
 			<< "Resizing: " << imshow_width << " : " << imshow_height << std::endl;
     ::cv::resize(orig_image,orig_image,::cv::Size(imshow_width,imshow_height),0,0,::cv::INTER_AREA);
+    //::cv::bitwise_not (orig_image,orig_image);
     result_image_v.emplace_back(orig_image);
 
     // 1) Find BoundingBox per set of contours (i.e. per algorithm) to display & prepare specific cv::Mat
@@ -104,6 +122,7 @@ namespace larcv {
 			  << "Resizing: " << imshow_width << " : " << imshow_height << std::endl;
       
       ::cv::resize(result_image,result_image,::cv::Size(imshow_width,imshow_height),0,0,::cv::INTER_AREA);
+      ::cv::bitwise_not(result_image,result_image);
       result_image_v.emplace_back(result_image);
     }
 
