@@ -18,7 +18,7 @@ namespace larcv{
 					  const ::cv::Mat& img,
 					  larcv::ImageMeta& meta)
   {
-
+    
     std::vector<std::vector<int> > hullpts_v; hullpts_v.resize(clusters.size());
     std::vector<std::vector<::cv::Vec4i> >    defects_v; defects_v.resize(clusters.size());
       

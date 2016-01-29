@@ -17,6 +17,7 @@ namespace larcv{
 					    larcv::ImageMeta& meta)
   {
 
+    
     //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
     
     //cluster == contour
@@ -66,6 +67,9 @@ namespace larcv{
 	eigen_val[i]  = pca_ana.eigenvalues.at<double>(0, i);
       }
 
+      _eval1 = eigen_val[0];
+      _eval2 = eigen_val[1];
+
       //Do something
       
     }
@@ -74,8 +78,8 @@ namespace larcv{
     std::swap(cntr_pt_v   ,_cntr_pt_v);
     std::swap(eigen_vecs_v,_eigen_vecs_v);
     std::swap(eigen_val_v ,_eigen_val_v);
-      
-      
+
+          
     return clusters;
 
 

@@ -15,6 +15,9 @@
 #define __PCATRACKSHOWER_H__
 
 #include "ImageClusterBase.h"
+#include "TFile.h"
+#include "TTree.h"
+
 
 namespace larcv {
   /**
@@ -26,7 +29,10 @@ namespace larcv {
   public:
     
     /// Default constructor
-    PCATrackShower(const std::string name="PCATrackShower") : ImageClusterBase(name)
+    PCATrackShower(const std::string name="PCATrackShower") :
+      ImageClusterBase(name),
+      _outfile(nullptr),
+      _outtree(nullptr)
     {}
     
     /// Default destructor
@@ -49,7 +55,11 @@ namespace larcv {
     
   private:
 
+    TFile* _outfile;
+    TTree* _outtree;
 
+    double _eval1;
+    double _eval2;
   };
   
   /**
