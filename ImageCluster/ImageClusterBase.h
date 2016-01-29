@@ -15,6 +15,7 @@
 #define __IMAGECLUSTERBASE_H__
 
 #include <iostream>
+#include <TFile.h>
 #include "FhiclLite/PSet.h"
 #include "Core/ImageMeta.h"
 #include "Core/laropencv_base.h"
@@ -65,6 +66,9 @@ namespace larcv {
     larcv::ContourArray_t Process(const larcv::ContourArray_t& clusters,
 				  const ::cv::Mat& img,
 				  larcv::ImageMeta& meta);
+
+    /// Finalize after (possibly multiple) process call. Handed TFile may be used to store objects.
+    virtual void Finalize(TFile*) = 0;
 
     /// Process count
     size_t ProcessCount() const { return _proc_count; }

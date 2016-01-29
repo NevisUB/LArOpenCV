@@ -32,6 +32,8 @@ my_proc.set_io_mode(fmwk.storage_manager.kBOTH)
 my_proc.set_ana_output_file("from_test_ana_you_can_remove_me.root");
 my_proc.set_output_file("aho.root");
 
+my_proc.set_output_file("out.root")
+
 # Attach an analysis unit ... here we use a base class which does nothing.
 # Replace with your analysis unit if you wish.
 

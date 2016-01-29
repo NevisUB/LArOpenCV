@@ -32,6 +32,9 @@ namespace larcv {
     /// Default destructor
     ~ClassName(){}
 
+    /// Finalize after (possily multiple) Process call. TFile may be used to write output.
+    void Finalize(TFile*) {}
+
   protected:
 
     /// Configuration method
@@ -44,7 +47,6 @@ namespace larcv {
     
   private:
 
-    
   };
   
   /**

@@ -18,7 +18,8 @@ ImageClusterManager: {
   Verbosity: 1
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
-  AlgoType:  [SBCluster,CDTrackShower]
+
+AlgoType:  [SBCluster,CDTrackShower]
   AlgoName:  [Vic,Vic2]
 
  ImageClusterViewer: {

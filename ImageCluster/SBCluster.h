@@ -24,6 +24,8 @@ namespace larcv {
     /// Default destructor
     virtual ~SBCluster(){}
 
+    /// Finalize after process
+    void Finalize(TFile*) {}
 
   protected:
 

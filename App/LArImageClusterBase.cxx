@@ -148,8 +148,9 @@ namespace larlite {
     }
 
    if(_fout){
-    _fout->cd();
-    _contour_tree->Write();
+     _fout->cd();
+     for(auto& mgr : _alg_mgr_v) mgr.Finalize(_fout);
+     _contour_tree->Write();
     }   
 
     return true;

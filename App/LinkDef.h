@@ -13,6 +13,7 @@
 #pragma link C++ class larlite::LArImageWire+;
 #pragma link C++ class larlite::LArImageHit+;
 #pragma link C++ class larlite::LArImageClusterBase+;
+#pragma link C++ class larlite::LArDownImage+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
 

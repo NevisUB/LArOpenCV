@@ -32,6 +32,9 @@ namespace larcv {
     /// Default destructor
     ~EmptyImageCluster(){}
 
+    /// Finalize after process
+    void Finalize(TFile*) {}
+
   protected:
 
     /// Configuration method

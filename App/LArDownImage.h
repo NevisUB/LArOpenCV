@@ -1,47 +1,50 @@
 /**
- * \file LArImageHit.h
+ * \file LArDownImage.h
  *
  * \ingroup Play
  * 
- * \brief Class def header for a class LArImageHit
+ * \brief Class def header for a class LArDownImage
  *
- * @author kazuhiro
+ * @author Ariana Hackenburg 
  */
 
 /** \addtogroup Play
 
     @{*/
 
-#ifndef __LARLITE_LARIMAGEHIT_H__
-#define __LARLITE_LARIMAGEHIT_H__
+#ifndef __LARLITE_LARDOWNIMAGE_H__
+#define __LARLITE_LARDOWNIMAGE_H__
 
 #include "Analysis/ana_base.h"
 #include "Core/ImageManager.h"
 #include "App/LArImageClusterBase.h"
+#include "opencv2/core/mat.hpp"
 
 namespace larlite {
 
   /**
-     \class LArImageHit
+     \class LArDownImage
      User custom analysis class made by SHELL_USER_NAME
    */
-  class LArImageHit : public LArImageClusterBase {
+  class LArDownImage : public LArImageClusterBase {
   
   public:
 
     /// Default constructor
-    LArImageHit(const std::string name="LArImageHit")
+    LArDownImage(const std::string name="LArDownImage")
       : LArImageClusterBase(name)
       , _num_stored(0)
       , _charge_to_gray_scale(10)
       , _charge_threshold(5)
+      , _downsample(false)
+      , _nbins(200)
       , _num_clusters_v()
       , _num_unclustered_hits_v()
       , _num_clustered_hits_v()
     {}
 
     /// Default destructor
-    virtual ~LArImageHit(){}
+    virtual ~LArDownImage(){}
 
   protected:
 
@@ -57,6 +60,8 @@ namespace larlite {
     size_t _num_stored;
     double _charge_to_gray_scale;
     double _charge_threshold;
+    bool   _downsample ;
+    int    _nbins;
     std::vector<size_t> _num_clusters_v;
     std::vector<size_t> _num_unclustered_hits_v;
     std::vector<size_t> _num_clustered_hits_v;

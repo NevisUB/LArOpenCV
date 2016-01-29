@@ -1,12 +1,12 @@
 
-LArImageHit: {
+LArDownImage: {
   # LArImageClusterBase config
   Profile: true
   StoreOriginalImage: false
   Producer: gaushit
   # LArImageHit config
   Q2Gray: 5
-  DownSample: false
+  DownSample: true 
   NBins:  200
 }
 
@@ -15,8 +15,17 @@ ImageClusterManager: {
 
   Verbosity: 1
   Profile: true
+  ShowImage: false 
   AlgoType: [TCluster]
   AlgoName: [TCluster]
+
+  ImageClusterViewer: {
+    Verbosity: 0
+    Width:  200 
+    Height: 200 
+    MinContourArea: 125 
+  }
+
 
   TCluster: {
     Verbosity: 1
