@@ -32,8 +32,9 @@ namespace larcv {
     /// Default destructor
     ~PCATrackShower(){}
     
-    
-    
+    std::vector<Point2D> _cntr_pt_v;
+    std::vector<std::vector<Point2D> > _eigen_vecs_v;
+    std::vector<std::vector<double> >  _eigen_val_v;
 
     
   protected:

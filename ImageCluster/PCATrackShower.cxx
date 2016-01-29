@@ -21,8 +21,20 @@ namespace larcv{
     
     //cluster == contour
 
-    for(const auto& cluster : clusters) {
 
+    std::vector<Point2D> cntr_pt_v; cntr_pt_v.resize(clusters.size());
+    std::vector<std::vector<Point2D> > eigen_vecs_v; eigen_vecs_v.resize(clusters.size());
+    std::vector<std::vector<double> >  eigen_val_v; eigen_val_v.resize(clusters.size());
+    
+    
+    //for(const auto& cluster : clusters) {
+    for(unsigned i = 0; i < clusters.size(); ++i) {
+
+      auto& cluster    = clusters[i];
+      auto& cntr_pt    = cntr_pt_v[i];
+      auto& eigen_vecs = eigen_vecs_v[i];
+      auto& eigen_val  = eigen_val_v[i];
+      
       // PCA ana requies MAT object w/ data sitting in rows, 2 columns
       // 1 for each ``feature" or coordinate
       
@@ -40,13 +52,14 @@ namespace larcv{
 
       //Center point
       // ::cv::Point
-      Point2D cntr_pt( pca_ana.mean.at<double>(0,0),
-		       pca_ana.mean.at<double>(0,1) );
+      cntr_pt = Point2D( pca_ana.mean.at<double>(0,0),
+			 pca_ana.mean.at<double>(0,1) );
       
 
       //Principle directions (vec) and relative lengths (vals)
-      std::vector<Point2D> eigen_vecs(2);
-      std::vector<double>  eigen_val (2);
+      eigen_vecs.resize(2);
+      eigen_val.resize (2);
+      
       for (unsigned i = 0; i < 2; ++i) {
 	eigen_vecs[i] = Point2D(pca_ana.eigenvectors.at<double>(i, 0),
 				pca_ana.eigenvectors.at<double>(i, 1));
@@ -57,8 +70,12 @@ namespace larcv{
       
     }
 
-    
 
+    std::swap(cntr_pt_v   ,_cntr_pt_v);
+    std::swap(eigen_vecs_v,_eigen_vecs_v);
+    std::swap(eigen_val_v ,_eigen_val_v);
+      
+      
     return clusters;
 
 
