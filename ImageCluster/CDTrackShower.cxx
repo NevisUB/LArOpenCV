@@ -19,8 +19,8 @@ namespace larcv{
 					  larcv::ImageMeta& meta)
   {
 
-    std::vector<std::vector<int> >       hullpts_v; hullpts_v.resize(clusters.size());
-    std::vector<std::vector<cv::Vec4i> > defects_v; defects_v.resize(clusters.size());
+    std::vector<std::vector<int> > hullpts_v; hullpts_v.resize(clusters.size());
+    std::vector<std::vector<::cv::Vec4i> >    defects_v; defects_v.resize(clusters.size());
       
 
     for (unsigned i = 0; i < clusters.size(); ++i ) {
@@ -30,9 +30,7 @@ namespace larcv{
 	
       ::cv::convexHull(cluster,hullpts);
       hullpts.push_back(hullpts.at(0)); // odd that this is needed to close up the hull
-
       ::cv::convexityDefects(cluster,hullpts,defects);
-      
     }
 
     //How to determine if it's track shower?
@@ -40,7 +38,9 @@ namespace larcv{
     
     //output contours
     ContourArray_t ctor_v;    
-    
+
+    std::swap(hullpts_v,_hullpts_v);
+    std::swap(defects_v,_defects_v);
 
     return clusters;
   }

@@ -32,6 +32,10 @@ namespace larcv {
     /// Default destructor
     ~CDTrackShower(){}
 
+    std::vector<std::vector<::cv::Vec4i> >  _defects_v;
+    std::vector<std::vector<int> >          _hullpts_v;
+    
+    
   protected:
 
     /// Configuration method
