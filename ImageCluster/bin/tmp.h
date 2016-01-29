@@ -44,8 +44,7 @@ namespace larcv {
     
   private:
 
-    std::vector<double> _canny_params;
-
+    
   };
   
   /**

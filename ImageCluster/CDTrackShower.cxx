@@ -32,9 +32,8 @@ namespace larcv{
       hullpts.push_back(hullpts.at(0)); // odd that this is needed to close up the hull
 
       ::cv::convexityDefects(cluster,hullpts,defects);
-
+      
     }
-
 
     //How to determine if it's track shower?
     //

@@ -5,7 +5,7 @@
  * 
  * \brief Class def header for a class CDTrackShower
  *
- * @author kazuhiro
+ * @author vic
  */
 
 /** \addtogroup ImageCluster
@@ -43,15 +43,13 @@ namespace larcv {
 				    larcv::ImageMeta& meta);
     
   private:
-
-    std::vector<double> _canny_params;
-
+    
   };
   
   /**
      \class larcv::CDTrackShowerFactory
      \brief A concrete factory class for larcv::CDTrackShower
-   */
+  */
   class CDTrackShowerFactory : public ImageClusterFactoryBase {
   public:
     /// ctor
