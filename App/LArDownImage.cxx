@@ -18,7 +18,6 @@ namespace larlite {
   void LArDownImage::_Configure_(const ::fcllite::PSet &pset)
   {
     _charge_to_gray_scale = pset.get<double>("Q2Gray");
-    _downsample           = pset.get<bool>("DownSample");
     _nbins                = pset.get<int>("NBins");
 //    _charge_threshold = pset.get<double>("QMin");
 
@@ -116,8 +115,6 @@ namespace larlite {
 
           ::cv::Point2d point (time,wire);
 
-//          std::pair<int,int> point ( wire, time);
-
           if ( ::cv::pointPolygonTest(c,point,false) < 0 ) continue;
 
           // At this point we've found at least 1 hit inside this contour!
@@ -139,7 +136,6 @@ namespace larlite {
             my_ass.emplace_back(one_ass);
             temp_contour_index = contour_index ;
 
-            //std::cout<<"So far have "<<out_cluster->size()<<" outgoing clusters, and assoc size of "<<my_ass.size()<<" (they should match)."<<std::endl;
             }
 
           used_hits[hit_index] = h ;
