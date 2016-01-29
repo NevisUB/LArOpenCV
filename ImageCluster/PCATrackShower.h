@@ -15,7 +15,6 @@
 #define __PCATRACKSHOWER_H__
 
 #include "ImageClusterBase.h"
-#include "TFile.h"
 #include "TTree.h"
 
 
@@ -31,18 +30,22 @@ namespace larcv {
     /// Default constructor
     PCATrackShower(const std::string name="PCATrackShower") :
       ImageClusterBase(name),
-      _outfile(nullptr),
       _outtree(nullptr)
     {}
     
     /// Default destructor
     ~PCATrackShower(){}
+
+  private:
+    TTree* _outtree;
+
+  public:
+    void Finalize(TFile* fout) { _outtree->Write(); }
     
     std::vector<Point2D> _cntr_pt_v;
     std::vector<std::vector<Point2D> > _eigen_vecs_v;
     std::vector<std::vector<double> >  _eigen_val_v;
 
-    
   protected:
 
     /// Configuration method
@@ -54,12 +57,11 @@ namespace larcv {
 				    larcv::ImageMeta& meta);
     
   private:
-
-    TFile* _outfile;
-    TTree* _outtree;
+    
 
     double _eval1;
     double _eval2;
+    
   };
   
   /**

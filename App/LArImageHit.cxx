@@ -8,6 +8,7 @@
 #include "DataFormat/hit.h"
 #include "DataFormat/cluster.h"
 #include "DataFormat/event_ass.h"
+#include "Core/larbys.h"
 
 namespace larlite {
 
@@ -118,7 +119,7 @@ namespace larlite {
     
     auto const& geom = ::larutil::Geometry::GetME();
     const size_t nplanes = geom->Nplanes();
-
+    
     auto ev_hit = storage->get_data<event_hit>(producer());
 
     if(ev_hit==nullptr) throw DataFormatException("Could not locate hit data product!");
@@ -148,7 +149,11 @@ namespace larlite {
       size_t nticks = tick_range.second - tick_range.first + 2;
       size_t nwires = wire_range.second - wire_range.first + 2;
       ::larcv::ImageMeta meta((double)nwires,(double)nticks,nwires,nticks,wire_range.first,tick_range.first);
-      _img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
+      
+      if ( nwires >= 1e10 || nticks >= 1e10 )
+	_img_mgr.push_back(::cv::Mat(),::larcv::ImageMeta());
+      else
+	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
       
       //if(!nticks || !nwires)
       //_img_mgr.push_back(cv::Mat(),meta);
@@ -183,7 +188,7 @@ namespace larlite {
       size_t y = (size_t)(h.PeakTime()+0.5) - tick_range.first;
       size_t x = wid.Wire - wire_range.first;
       
-      if(y>=nticks || x>=nwires) throw std::exception();
+      if(y>=nticks || x>=nwires)  { std::cout << "\tignoring hit... \n"; continue; throw ::larcv::larbys("AH!"); }
       
       //std::cout<<"Inserting " << x << " " << y << " @ " << wid.Plane << std::endl;
       double charge = h.Integral() / _charge_to_gray_scale;

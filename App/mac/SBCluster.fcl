@@ -19,8 +19,8 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-AlgoType:  [SBCluster,CDTrackShower]
-  AlgoName:  [Vic,Vic2]
+  AlgoType:  [SBCluster,CDTrackShower,PCATrackShower]
+  AlgoName:  [sbc,cdts,pcats]
 
  ImageClusterViewer: {
    Verbosity: 0
@@ -29,7 +29,7 @@ AlgoType:  [SBCluster,CDTrackShower]
    MinContourArea: 125
  }
 
-  Vic:{
+   sbc:{
     Verbosity: 1
     DilationSize : 5
     DilationIterations : 2
@@ -40,8 +40,8 @@ AlgoType:  [SBCluster,CDTrackShower]
     ThreshMaxVal : 255
   }
 
-  Vic2:{
-
-  }
+  cdts : { }
+  
+  pcats : { }
 
 }

@@ -15,6 +15,7 @@
 #define __CDTRACKSHOWER_H__
 
 #include "ImageClusterBase.h"
+#include "TTree.h"
 
 namespace larcv {
   /**
@@ -26,12 +27,20 @@ namespace larcv {
   public:
     
     /// Default constructor
-    CDTrackShower(const std::string name="CDTrackShower") : ImageClusterBase(name)
+    CDTrackShower(const std::string name="CDTrackShower")
+      : ImageClusterBase(name),
+	_outtree(nullptr)
     {}
     
     /// Default destructor
     ~CDTrackShower(){}
 
+  private:
+    TTree *_outtree;
+
+  public:
+    void Finalize(TFile* fout) { _outtree->Write(); }
+    
     std::vector<std::vector<::cv::Vec4i> >  _defects_v;
     std::vector<std::vector<int> >          _hullpts_v;
     
@@ -47,6 +56,8 @@ namespace larcv {
 				    larcv::ImageMeta& meta);
     
   private:
+
+    std::vector<double> _defects_dists;
     
   };
   

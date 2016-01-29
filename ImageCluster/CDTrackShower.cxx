@@ -7,11 +7,8 @@ namespace larcv{
 
   void CDTrackShower::_Configure_(const ::fcllite::PSet &pset)
   {
-
-
-
-
-
+    _outtree = new TTree("CD","CD");
+    _outtree->Branch("_defects_dists" , "std::vector<double>" , &_defects_dists);
   }
   
   ContourArray_t CDTrackShower::_Process_(const larcv::ContourArray_t& clusters,
@@ -31,19 +28,24 @@ namespace larcv{
       ::cv::convexHull(cluster,hullpts);
       hullpts.push_back(hullpts.at(0)); // odd that this is needed to close up the hull
       ::cv::convexityDefects(cluster,hullpts,defects);
-    }
 
-    //How to determine if it's track shower?
-    //
-    
-    //output contours
-    ContourArray_t ctor_v;    
+      _defects_dists.clear();
+      
+      for( auto & d : defects ) 
+	_defects_dists.push_back(  ( (float) d[3] ) / 256.0 );
+
+      _outtree->Fill();
+    }
 
     std::swap(hullpts_v,_hullpts_v);
     std::swap(defects_v,_defects_v);
 
+    
+    
     return clusters;
   }
+
+
 
 }
 #endif

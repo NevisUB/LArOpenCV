@@ -7,9 +7,11 @@ namespace larcv{
 
   void PCATrackShower::_Configure_(const ::fcllite::PSet &pset)
   {
-
-    
-
+    _outtree = new TTree("PCA","PCA");
+      
+    _outtree->Branch("_eval1",&_eval1,"eval1/D");
+    _outtree->Branch("_eval2",&_eval2,"eval2/D");
+      
   }
 
   ContourArray_t PCATrackShower::_Process_(const larcv::ContourArray_t& clusters,
@@ -59,7 +61,7 @@ namespace larcv{
 
       //Principle directions (vec) and relative lengths (vals)
       eigen_vecs.resize(2);
-      eigen_val.resize (2);
+      eigen_val.resize(2);
       
       for (unsigned i = 0; i < 2; ++i) {
 	eigen_vecs[i] = Point2D(pca_ana.eigenvectors.at<double>(i, 0),
@@ -70,6 +72,7 @@ namespace larcv{
       _eval1 = eigen_val[0];
       _eval2 = eigen_val[1];
 
+      _outtree->Fill();
       //Do something
       
     }
@@ -84,6 +87,8 @@ namespace larcv{
 
 
   }
+
+
 
 }
 #endif
