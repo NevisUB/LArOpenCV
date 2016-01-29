@@ -22,7 +22,7 @@ namespace larcv {
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
   class ToyImageCluster : public larcv::ImageClusterBase {
-    
+
   public:
     
     /// Default constructor
@@ -31,6 +31,9 @@ namespace larcv {
     
     /// Default destructor
     ~ToyImageCluster(){}
+
+    /// Finalize after process
+    void Finalize(TFile*) {}
 
   protected:
 

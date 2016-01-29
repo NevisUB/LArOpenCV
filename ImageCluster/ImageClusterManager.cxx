@@ -30,6 +30,12 @@ namespace larcv {
     LARCV_DEBUG((*this)) << "end" << std::endl;
   }
 
+  void ImageClusterManager::Finalize(TFile* file)
+  {
+    for(auto& alg : _alg_v) alg->Finalize(file);
+    _configured = false;
+  }
+
   ImageClusterBase* ImageClusterManager::GetAlg(const AlgorithmID_t id) const
   {
     if(id >= _alg_v.size()) throw larbys("Invalid algorithm ID requested...");

@@ -40,6 +40,9 @@ namespace larcv {
     /// Default destructor
     ~TCluster(){}
 
+    /// Finalize after process
+    void Finalize(TFile*) {}
+
   protected:
 
     /// Configuration method
