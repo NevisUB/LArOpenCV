@@ -22,8 +22,10 @@
 //#pragma link C++ class larcv::TCluster+;
 #pragma link C++ class larcv::FillImageClusterVariables+;
 #pragma link C++ class larcv::CDTrackShower+;
+#pragma link C++ class larcv::PCATrackShower+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
 
 
 
