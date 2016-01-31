@@ -45,12 +45,15 @@ namespace larcv {
 
   private:
     TTree* _outtree;
-
+    
   public:
     
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
     void Finalize(TFile* _fout) {  _outtree->Write(); }
 
+
+    std::vector<std::vector<std::array<int,4> > > _houghs_v;
+    
   protected:
 
     /// Configuration method
@@ -60,10 +63,10 @@ namespace larcv {
     larcv::ContourArray_t _Process_(const larcv::ContourArray_t& clusters,
 				    const ::cv::Mat& img,
 				    larcv::ImageMeta& meta);
+    
 
 
 
-    std::vector<std::vector<std::array<int,4> > > _houghs_v;    
 
   private:
 

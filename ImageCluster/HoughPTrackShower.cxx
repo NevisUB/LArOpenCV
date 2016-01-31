@@ -29,15 +29,23 @@ namespace larcv {
     houghs_v.resize(clusters.size());
     
     for(int i = 0; i < clusters.size(); ++i) {
-
+      
       auto& cluster = clusters[i];
       auto& houghs  = houghs_v[i];
 
       std::vector<::cv::Vec4i> lines;
 
-      ::cv::HoughLinesP(::cv::Mat(cluster), lines, _hough_rho, _pi/180.0,
-      			_hough_threshold, _hough_min_line_length, _hough_max_line_gap);
+      //works but subMat has different coordinates than img -.-
+      
+      ::cv::Rect rect = ::cv::boundingRect(cluster);
+      ::cv::Mat subMat(img, rect);
 
+      ::cv::HoughLinesP(subMat, lines, _hough_rho, _pi/180.0,
+      			_hough_threshold, _hough_min_line_length, _hough_max_line_gap);
+      
+
+      
+      
       houghs.resize(lines.size());
 
       for(int j = 0; j < lines.size(); ++j )
