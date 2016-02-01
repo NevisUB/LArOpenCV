@@ -197,9 +197,11 @@ namespace larcv{
       //implement truncated mean again... )
 
       //start left to right
+      trunk_index = {0,0};
+      
       j = 0;
       int k = 0;	
-
+      
       for(j = 0 ; j < ddd.size(); ++j) {
 	if ( ddd[j].second > _trunk_deviation )
 	  break;
@@ -213,13 +215,13 @@ namespace larcv{
 
       k = (ddd.size() - 1 - k);
       
-      trunk_index = 0;
-      
       if ( j < k )
-	trunk_index = ddd.size() - 1 - k;
+	trunk_index = { ddd.size() - 1 - k, ddd.size() - 1 };
+      else if ( j == k )
+	trunk_index = { 0 , 0 };
       else 
-	trunk_index = j;
-
+	trunk_index = { 0 , j };
+      
 
       _eval1 = eigen_val[0];
       _eval2 = eigen_val[1];

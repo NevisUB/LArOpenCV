@@ -1,12 +1,3 @@
-
-# coding: utf-8
-
-# In[1]:
-
-
-
-# In[1]:
-
 import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
@@ -106,20 +97,16 @@ while ( my_proc.process_event() ) :
         ax.add_collection(lc)
         ax.set_xlim(line[0]-5,line[2]+5)
         
-        print tidx
-        if ( tidx == ddd.size() ) :
-            tidx -= 1
         print ddd.size()
+        print tidx.first
+        print tidx.second
+        
+        ax.plot([ddd[tidx.first].first ,ddd[tidx.second].first],
+                [(line[3]-line[1])/(line[2]-line[0])*ddd[tidx.first ].first  + line[1],
+                 (line[3]-line[1])/(line[2]-line[0])*ddd[tidx.second].first  + line[1]],
+                 '-',color='orange',lw=30,alpha=0.5)
 
-        if ddd[tidx].first < center_pt.x:
-            ax.plot([line[0],ddd[tidx].first],
-                    [line[1],(line[3]-line[1])/(line[2]-line[0])*ddd[tidx].first + line[1]] ,
-                    '-',color='orange',lw=30,alpha=0.5)
-        else:
-            ax.plot([ddd[tidx].first,line[2]],
-                    [(line[3]-line[1])/(line[2]-line[0])*ddd[tidx].first + line[1],line[3]] ,
-                    '-',color='orange',lw=30,alpha=0.5)
-            
+        
         
         ax = plt.subplot(2,1,2)
 

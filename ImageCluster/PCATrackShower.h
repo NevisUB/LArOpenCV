@@ -72,7 +72,7 @@ namespace larcv {
 
     std::vector< std::vector< std::pair<int,double> > > _ddd_v;
 
-    std::vector<int> _trunk_index_v;
+    std::vector<std::pair<int,int> > _trunk_index_v;
     
   protected:
 

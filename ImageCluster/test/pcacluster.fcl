@@ -42,8 +42,11 @@ ImageClusterManager: {
 
   pcatrackshower:{
 
-  MinTrunkLength : 1
-  TrunkDeviation : 150	
-     }
+  MinTrunkLength   : 1
+  TrunkDeviation   : 150	
+  MinTrunkEdgeDist : 5
+
+  }
+
 
 }
