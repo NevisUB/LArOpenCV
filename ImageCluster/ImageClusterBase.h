@@ -22,6 +22,7 @@
 #include "Utils/Watch.h"
 #include "ImageClusterTypes.h"
 #include "ImageClusterFactory.h"
+
 namespace larcv {
   /**
      \class ImageClusterBase

@@ -66,7 +66,7 @@ while ( my_proc.process_event() ) :
         
         print lines
         lc = mc.LineCollection(lines, linewidths=5,color='blue',alpha=0.7)
-        ax.plot(xy1[:,0],xy1[:,1],color='red')
+        plt.plot(xy1[:,0],xy1[:,1],color='red')
         ax.add_collection(lc)
         ax.autoscale()
         plt.show()

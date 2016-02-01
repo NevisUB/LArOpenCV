@@ -13,6 +13,8 @@ OBJECTS = $(SOURCES:.cxx=.o)
 # include options for this package
 INCFLAGS  = -I.                       #Include itself
 INCFLAGS += $(shell basictool-config --includes)
+INCFLAGS += $(shell python-config --includes)
+INCFLAGS += -I$(shell python -c "import numpy; print numpy.get_include()")
 INCFLAGS += -I$(OPENCV_INCDIR)
 INCFLAGS += -I$(LARLITE_USERDEVDIR)/LArOpenCV
 

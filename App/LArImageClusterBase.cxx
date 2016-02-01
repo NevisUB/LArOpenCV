@@ -4,6 +4,7 @@
 #include "LArImageClusterBase.h"
 #include "LArUtil/Geometry.h"
 #include "FhiclLite/ConfigManager.h"
+
 namespace larlite {
 
   LArImageClusterBase::LArImageClusterBase(const std::string name) : ana_base()
@@ -47,15 +48,15 @@ namespace larlite {
 
     for(auto& mgr : _alg_mgr_v) mgr.Configure(cfg_mgr.Config().get_pset(mgr.Name()));
 
-    if(!_contour_tree){
-      _contour_tree = new TTree("contour_tree","Contour Tree" );
-      _contour_tree->Branch("area",&_area,"area/F");
-      _contour_tree->Branch("perimeter",&_perimeter,"perimeter/F");
-      _contour_tree->Branch("bb_height",&_bb_height,"bb_height/F");
-      _contour_tree->Branch("bb_width",&_bb_width,"bb_width/F");
-      _contour_tree->Branch("max_con_width",&_max_con_width,"max_con_width/F");
-      _contour_tree->Branch("min_con_width",&_min_con_width,"min_con_width/F");
-      }
+    // if(!_contour_tree){
+    //   _contour_tree = new TTree("contour_tree","Contour Tree" );
+    //   _contour_tree->Branch("area",&_area,"area/F");
+    //   _contour_tree->Branch("perimeter",&_perimeter,"perimeter/F");
+    //   _contour_tree->Branch("bb_height",&_bb_height,"bb_height/F");
+    //   _contour_tree->Branch("bb_width",&_bb_width,"bb_width/F");
+    //   _contour_tree->Branch("max_con_width",&_max_con_width,"max_con_width/F");
+    //   _contour_tree->Branch("min_con_width",&_min_con_width,"min_con_width/F");
+    //   }
 
     return true;
   }
@@ -97,15 +98,15 @@ namespace larlite {
        }
     }
 
-    for(int i=0; i<_filler.Areas().size(); i++){
-      _area = _filler.Areas()[i] ;
-      _perimeter = _filler.Perimeters()[i];
-      _bb_height = _filler.BBHeights()[i];
-      _bb_width = _filler.BBWidths()[i];
-      _max_con_width = _filler.MaxContourWidths()[i];
-      _min_con_width = _filler.MinContourWidths()[i];
-      _contour_tree->Fill();
-      }
+    // for(int i=0; i<_filler.Areas().size(); i++){
+    //   _area = _filler.Areas()[i] ;
+    //   _perimeter = _filler.Perimeters()[i];
+    //   _bb_height = _filler.BBHeights()[i];
+    //   _bb_width = _filler.BBWidths()[i];
+    //   _max_con_width = _filler.MaxContourWidths()[i];
+    //   _min_con_width = _filler.MinContourWidths()[i];
+    //   _contour_tree->Fill();
+    //   }
 
     watch_one.Start();
     this->store_clusters(storage);
@@ -150,7 +151,7 @@ namespace larlite {
    if(_fout){
      _fout->cd();
      for(auto& mgr : _alg_mgr_v) mgr.Finalize(_fout);
-     _contour_tree->Write();
+     // _contour_tree->Write();
     }   
 
     return true;

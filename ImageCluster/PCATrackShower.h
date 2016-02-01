@@ -16,6 +16,18 @@
 
 #include "ImageClusterBase.h"
 #include "TTree.h"
+#include <array>
+
+
+struct _object;
+typedef _object PyObject;
+
+#ifndef __CINT__
+#include "Python.h"
+#include "numpy/arrayobject.h"
+#endif
+
+#include "Utils/NDArrayConverter.h"
 
 
 namespace larcv {
@@ -30,7 +42,9 @@ namespace larcv {
     /// Default constructor
     PCATrackShower(const std::string name="PCATrackShower") :
       ImageClusterBase(name),
-      _outtree(nullptr)
+      _outtree(nullptr),
+      _min_trunk_length(1),
+      _trunk_deviation(10)
     {}
     
     /// Default destructor
@@ -45,7 +59,21 @@ namespace larcv {
     std::vector<Point2D> _cntr_pt_v;
     std::vector<std::vector<Point2D> > _eigen_vecs_v;
     std::vector<std::vector<double> >  _eigen_val_v;
+    
+    int SumImageSize() { return _subMat_v.size(); }
+      
+    PyObject* GetSubImage(int i)
+    { ::larcv::convert::NDArrayConverter converter; return converter.toNDArray( _subMat_v.at(i) ); }
 
+    std::vector<std::array<double,4> > _line_v;
+
+    std::vector<std::vector<std::array<double,4> > > _dlines_v;
+    std::vector<std::vector<double > > _ddists_v;
+
+    std::vector< std::vector< std::pair<int,double> > > _ddd_v;
+
+    std::vector<int> _trunk_index_v;
+    
   protected:
 
     /// Configuration method
@@ -57,11 +85,22 @@ namespace larcv {
 				    larcv::ImageMeta& meta);
     
   private:
-    
 
+    int _min_trunk_length;
+    double _trunk_deviation;
+ 
+    
     double _eval1;
     double _eval2;
     
+    double _area;
+    double _perimeter;
+
+    std::vector<::cv::Mat> _subMat_v;
+    std::vector<double> _dists_v;
+
+
+
   };
   
   /**

@@ -40,8 +40,10 @@ ImageClusterManager: {
     ThreshMaxVal : 255
   }
 
-   pcatrackshower:{
+  pcatrackshower:{
 
-  }
+  MinTrunkLength : 1
+  TrunkDeviation : 150	
+     }
 
 }

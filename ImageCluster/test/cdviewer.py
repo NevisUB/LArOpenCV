@@ -96,10 +96,10 @@ for i in xrange(nclusters):
     pxy = np.array(pxy)
     
     lc = mc.LineCollection(lines, linewidths=10,color='green',alpha=0.7)
-    ax.plot(xy1[:,0],xy1[:,1],'-',color='red')
-    ax.plot(xy2[:,0],xy2[:,1],'-',color='blue')
+    plt.plot(xy1[:,0],xy1[:,1],'-',color='red')
+    plt.plot(xy2[:,0],xy2[:,1],'-',color='blue')
     ax.add_collection(lc)
-    ax.plot(pxy[:,0],pxy[:,1],'o',color='purple')
+    plt.plot(pxy[:,0],pxy[:,1],'o',color='purple')
     ax.autoscale()
 
     plt.show()

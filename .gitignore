@@ -18,3 +18,7 @@
 *.pcm
 *.swp
 laropencv_doc/
+*.pdf
+*.png
+*.eps
+*.ipynb

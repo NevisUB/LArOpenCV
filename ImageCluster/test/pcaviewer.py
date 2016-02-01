@@ -1,12 +1,3 @@
-
-# coding: utf-8
-
-# In[1]:
-
-
-
-# In[1]:
-
 import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,7 +15,7 @@ my_proc = fmwk.ana_processor()
 # Config file
 cfg="pcacluster.fcl"
 
-my_proc.add_input_file("/Users/vgenty/Desktop/single_mu.root")
+my_proc.add_input_file("/Users/vgenty/Desktop/single_e.root")
 
 my_proc.set_io_mode(fmwk.storage_manager.kREAD)
 

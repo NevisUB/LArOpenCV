@@ -42,6 +42,10 @@ ImageClusterManager: {
 
   cdts : { }
   
-  pcats : { }
+  pcats : {
+
+    MinTrunkLength : 1
+    TrunkDeviation : 10	
+}
 
 }

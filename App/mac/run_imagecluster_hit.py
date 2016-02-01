@@ -15,24 +15,22 @@ my_proc = fmwk.ana_processor()
 
 # Config file
 cfg=sys.argv[1]
+name=sys.argv[2]
 if not cfg.endswith('.fcl'):
     print 'Config file needs to end with \'.fcl\' extension (sorry bad joke)'
     sys.exit(1)
 
 # Set input root file
-for x in xrange(len(sys.argv)-2):
-    my_proc.add_input_file(sys.argv[x+2])
+for x in xrange(len(sys.argv)-3):
+    my_proc.add_input_file(sys.argv[x+3])
 
-print sys.argv
 
 # Specify IO mode
-my_proc.set_io_mode(fmwk.storage_manager.kBOTH)
+my_proc.set_io_mode(fmwk.storage_manager.kREAD)
 
 # Specify output root file name
-my_proc.set_ana_output_file("from_test_ana_you_can_remove_me.root");
-my_proc.set_output_file("aho.root");
-
-my_proc.set_output_file("out.root")
+my_proc.set_ana_output_file("aho_ana_output_%s.root" % name);
+# my_proc.set_output_file("aho_output.root"); 
 
 # Attach an analysis unit ... here we use a base class which does nothing.
 # Replace with your analysis unit if you wish.
@@ -46,7 +44,8 @@ print  "Finished configuring ana_processor. Start event loop!"
 print
 
 # Let's run it.
-my_proc.run(0,10);
+#my_proc.run(0,10);
+my_proc.run()
 
 # done!
 print
