@@ -43,6 +43,7 @@ while ( my_proc.process_event() ) :
     dlines        = pcatrackshower._dlines_v;
     ddds          = pcatrackshower._ddd_v;
     trunk_idx     = pcatrackshower._trunk_index_v;
+    pearsons_rv   = pcatrackshower._pearsons_r_v;
     
     nclusters = clusters.size()
     
@@ -63,6 +64,7 @@ while ( my_proc.process_event() ) :
         dline     = dlines[i]
         ddd       = ddds[i]
         tidx      = trunk_idx[i]
+        pr        = pearsons_rv[i]
         
         if ddd.size() < 20:
             continue
@@ -117,7 +119,7 @@ while ( my_proc.process_event() ) :
             x.append(d.first); y.append(d.second)
 
         ax.plot(x,y,'-')
-
+        print " IN PYTHON PEARSONS R for this TRUNK IS",pr
         plt.show()
         
 

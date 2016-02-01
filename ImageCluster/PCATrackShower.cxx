@@ -62,6 +62,9 @@ namespace larcv{
     
     _trunk_index_v.clear();
     _trunk_index_v.resize(clusters.size());
+
+    _pearsons_r_v.clear();
+    _pearsons_r_v.resize(clusters.size());
     
     for(unsigned i = 0; i < clusters.size(); ++i) {
 
@@ -74,8 +77,9 @@ namespace larcv{
       auto& dlines     = _dlines_v[i];
       auto& ddists     = _ddists_v[i];
       auto& ddd        = _ddd_v[i];
-      auto &trunk_index= _trunk_index_v[i];
-
+      auto& trunk_index= _trunk_index_v[i];
+      auto& pearsons_r = _pearsons_r_v[i];
+	
       //Lets get subimage that only includes this cluster
       //and the points in immediate vicinity
       ::cv::Rect rect = ::cv::boundingRect(cluster);
@@ -147,17 +151,19 @@ namespace larcv{
       ddists.reserve(locations.size());
       _dists_v.clear();
       ddd.clear();
+      
       std::map<int,double> ordered_dist;
+      std::map<int,int>    ordered_pts;
+
       int j = 0;
 
       //lets try to find how far away the points are to the line
       for(const auto& loc : locations) {
-
+	
 	//is this point in the contour, if not continue
 	if ( ::cv::pointPolygonTest(cluster_s, loc,false) < 0 )
 	  continue;
 	  
-	
 	//real time collision detection page 128
 	//closest point on line
 	auto ax = line[0];
@@ -165,8 +171,8 @@ namespace larcv{
 	auto bx = line[2];
 	auto by = line[3];
 	
-	auto abx  = bx-ax;
-	auto aby  = by-ay;
+	auto abx = bx-ax;
+	auto aby = by-ay;
 
 	auto& lx = loc.x;
 	auto& ly = loc.y;
@@ -175,54 +181,82 @@ namespace larcv{
 	auto dx = ax + t * abx;
 	auto dy = ay + t * aby;
 	auto dist = (dx-lx)*(dx-lx) + (dy-ly)*(dy-ly) ; //squared dis
-
-
+	
 	dlines.push_back( { (double)lx, (double)ly, dx, dy } );
 	ddists.push_back( dist );
 	_dists_v.push_back(ddists[j]);
 	
 	ordered_dist[lx] = dist;
+	ordered_pts [lx] = ly;
 	++j;
 	
       }
 
+      // you must have atleast 10 points to proceed...
+      
+      if ( dlines.size() < 10 )
+	continue;
+	
+      
       //lets march through the line left to right
       //put the points in ddd for python
+      std::vector<int>  opts_x; opts_x.reserve(ordered_dist.size());
+      std::vector<int>  opts_y; opts_y.reserve(ordered_dist.size());
       
-      for(auto& pt: ordered_dist)
-	ddd.emplace_back(pt.first,pt.second);
-      
+      for(auto& pt: ordered_dist) {
+	ddd.emplace_back(   pt.first,pt.second  );
+	opts_x.push_back(      pt.first         );
+	opts_y.push_back( ordered_pts[pt.first] );
+      }
       
       //find the trunk with this info (hopefully wont have to
       //implement truncated mean again... )
-
+      
       //start left to right
       trunk_index = {0,0};
       
       j = 0;
-      int k = 0;	
+      int k  = 0;	
       
-      for(j = 0 ; j < ddd.size(); ++j) {
+      for(j = 0 ; j < ddd.size(); ++j) 
 	if ( ddd[j].second > _trunk_deviation )
 	  break;
-      }
 
-      
-      for(k = ddd.size() - 1; k >= 0; --k) {
+      for(k = ddd.size() - 1; k >= 0; --k) 
 	if ( ddd[k].second > _trunk_deviation )
 	  break;
-      }
 
+      if ( j >= ddd.size() ) j = ddd.size() - 1;
+      if (     k <=  0     ) k = 0;
+
+      std::cout << "\t==> j = " << j << " ddd.size() " << ddd.size() << "\n";
+      
       k = (ddd.size() - 1 - k);
       
       if ( j < k )
-	trunk_index = { ddd.size() - 1 - k, ddd.size() - 1 };
+	trunk_index = { ddd.size() - 1 - k, ddd.size() - 1 }; // trunk is on the right
       else if ( j == k )
-	trunk_index = { 0 , 0 };
+	trunk_index = { 0 , 0 }; // no trunk
       else 
-	trunk_index = { 0 , j };
+	trunk_index = { 0 , j }; // trunk is on the left
       
+      // Should we reject bad trunks? This probably involves some fit?
+      // the showering region needs enough hits with enough sparsity
+      // to be actual shower like
+      
+      auto co = cov  (opts_x,opts_y,trunk_index.first,trunk_index.second);
+      auto sx = stdev(opts_x,trunk_index.first,trunk_index.second);
+      auto sy = stdev(opts_y,trunk_index.first,trunk_index.second);
 
+      if ( trunk_index.first != trunk_index.second)
+	pearsons_r =  co / ( sx * sy );
+      else
+	pearsons_r = 0;
+
+      std::cout << "\t==> co : " << co << " sx : "
+		<< sx << " sy : " << sy << " pearsons_r : "
+		<< pearsons_r << "\n";
+      
       _eval1 = eigen_val[0];
       _eval2 = eigen_val[1];
       
@@ -230,16 +264,66 @@ namespace larcv{
       _perimeter = (double) ::cv::arcLength(cluster,1);
       
       _outtree->Fill();
-
+      
     }
-
-
+    
 
 
     return ctor_v;
 
 
   }
+
+
+
+  double PCATrackShower::stdev( std::vector<int>& data,
+				size_t start, size_t end )
+  {
+    if (start < 0)          { std::cout << "stdev: start < 0"; std::exception();         }
+    if (end >= data.size()) { std::cout << "stdev: end > data.size()"; std::exception(); }
+    
+    double result = 0.0;
+    auto    avg   = mean(data,start,end);
+    
+    for(int i = start; i <= end; ++i)
+      result += (data[i] - avg)*(data[i] - avg);
+    
+    return std::sqrt(result/((double)(end - start)));
+  }
+
+
+  double PCATrackShower::cov ( std::vector<int>& data1,
+			       std::vector<int>& data2,
+			       size_t start, size_t end )
+  {
+
+    if( data1.size() != data2.size() ) { std::cout << "cov : data not the same"; std::exception();}
+    if (start < 0)          { std::cout << "cov: start < 0"; std::exception();         }
+    if (end >= data1.size()) { std::cout << "cov: end > data1.size()"; std::exception(); }
+    if (end >= data2.size()) { std::cout << "cov: end > data1.size()"; std::exception(); }
+    
+    double result = 0.0;
+    auto   mean1  = mean(data1,start,end);
+    auto   mean2  = mean(data2,start,end);
+    
+    for(int i = start; i <= end; ++i)
+      result += (data1[i] - mean1)*(data2[i] - mean2);
+    
+    return result/((double)(end - start));
+  }
+  
+  double PCATrackShower::mean( std::vector<int>& data,
+			       size_t start, size_t end )
+  {
+    double result = 0.0;
+    if (start < 0)          { std::cout << "mean: start < 0"; std::exception();         }
+    if (end >= data.size()) { std::cout << "mean :end > data.size()"; std::exception(); }
+    
+    for(int i = start; i <= end; ++i)
+      result += data[i];
+    
+    return result / ((double)( end - start ));
+  }  
 
 }
 #endif

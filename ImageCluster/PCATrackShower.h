@@ -73,8 +73,9 @@ namespace larcv {
     std::vector< std::vector< std::pair<int,double> > > _ddd_v;
 
     std::vector<std::pair<int,int> > _trunk_index_v;
+    std::vector<double> _pearsons_r_v;
     
-  protected:
+      protected:
 
     /// Configuration method
     void _Configure_(const ::fcllite::PSet &pset);
@@ -99,8 +100,16 @@ namespace larcv {
     std::vector<::cv::Mat> _subMat_v;
     std::vector<double> _dists_v;
 
-
-
+    double stdev( std::vector<int>& data,
+		  size_t start, size_t end );
+    
+    double cov ( std::vector<int>& data1,
+		 std::vector<int>& data2,
+		 size_t start, size_t end ) ; 
+   
+    double mean( std::vector<int>& data,
+		 size_t start, size_t end );
+      
   };
   
   /**
