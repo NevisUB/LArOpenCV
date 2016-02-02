@@ -87,7 +87,7 @@ namespace larcv{
               min_width = dist_travelled ;
           }
 
-        if( area > _area_separation && (max_width/min_width) > _ratio_separation)
+        if( area > _area_separation && (max_width/min_width) >= _ratio_separation)
          shower_v.push_back(cv_contour);
         else if( area > _area_separation && (max_width/min_width) < _ratio_separation)
          track_v.push_back(cv_contour);
