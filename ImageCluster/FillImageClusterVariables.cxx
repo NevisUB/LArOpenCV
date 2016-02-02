@@ -15,6 +15,7 @@ namespace larcv {
     _min_con_width_v.clear();
    
     _shower_v.clear();
+    _track_v.clear();
     _satellite_v.clear();
 
    }
@@ -104,8 +105,11 @@ namespace larcv {
 
 	if( area > _area_separation && (max_width/min_width) > _ratio_separation) 
 	 _shower_v.push_back(cv_contour);
+        else if( area > _area_separation && (max_width/min_width) < _ratio_separation) 
+         _track_v.push_back(cv_contour);
 	else
 	 _satellite_v.push_back(cv_contour);
+
 
       }
   }

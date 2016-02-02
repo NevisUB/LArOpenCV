@@ -5,7 +5,7 @@
  * 
  * \brief Class def header for a class FillImageClusterVariables
  *
- * @author ah673
+ * @author ariana Hackenburg
  */
 
 /** \addtogroup ImageCluster
@@ -57,6 +57,8 @@ public:
 
   ContourArray_t Showers() { return _shower_v; }
 
+  ContourArray_t Tracks() { return _track_v; }
+
   void Clear() ;
 
 private:
@@ -70,6 +72,7 @@ private:
 
   ContourArray_t _satellite_v ;
   ContourArray_t _shower_v ;
+  ContourArray_t _track_v;
 
   float _area_separation ;
   float _ratio_separation ;
