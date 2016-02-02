@@ -15,8 +15,8 @@ ImageClusterManager: {
   Verbosity: 1
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
-  AlgoType:  [SBCluster]
-  AlgoName:  [Vic]
+  AlgoType:  [SBCluster,TrackShower]
+  AlgoName:  [Vic,TrackShower]
 
   ImageClusterViewer: {
     Verbosity: 0
@@ -34,6 +34,12 @@ ImageClusterManager: {
 
     Thresh : 1
     ThreshMaxVal : 255
+  }
+
+  TrackShower:{
+    AreaCut : 1850
+    RatioCut : 3
+    ShowerTrackSat : 1 # 0 returns tracks, 1 returns showers, 2 returns satellites
   }
 
 }
