@@ -37,7 +37,7 @@ namespace larcv{
     ContourArray_t ctor_v;    
 
 
-    //Most of these are diagnistics...
+    //All of these are diagnostics for the python view program
     _subMat_v.clear();
     _dists_v.clear();
     
@@ -70,21 +70,22 @@ namespace larcv{
 
     _trunk_len_v.clear();
     _trunk_len_v.resize(clusters.size());
+    // End diagnostics
     
     for(unsigned i = 0; i < clusters.size(); ++i) {
 
-      auto& cluster    = clusters[i];
+      auto& cluster    =  clusters[i];
       auto& cntr_pt    = _cntr_pt_v[i];
       auto& eigen_vecs = _eigen_vecs_v[i];
       auto& eigen_val  = _eigen_val_v[i];
       auto& line       = _line_v[i];
       
-      auto& dlines     = _dlines_v[i];
-      auto& ddists     = _ddists_v[i];
-      auto& ddd        = _ddd_v[i];
-      auto& trunk_index= _trunk_index_v[i];
-      auto& pearsons_r = _pearsons_r_v[i];
-      auto& trunk_len  = _trunk_len_v[i];
+      auto& dlines     = _dlines_v[i];      //start/end pts of hit to axis line
+      auto& ddists     = _ddists_v[i];      //squared distance to line unordered
+      auto& ddd        = _ddd_v[i];         //squared distance to line in order of hitx
+      auto& trunk_index= _trunk_index_v[i]; //index trunk end point (pair)
+      auto& pearsons_r = _pearsons_r_v[i];  //linearity
+      auto& trunk_len  = _trunk_len_v[i];   //length of trunk
       
       //Lets get subimage that only includes this cluster
       //and the points in immediate vicinity
@@ -106,8 +107,7 @@ namespace larcv{
       //shift it down
       for(auto &pt : cluster_s) { pt.x -= rect.x; pt.y -= rect.y; }
       ctor_v.emplace_back(cluster_s);
-      //just checked it works fine
-
+      
       
       // PCA ana requies MAT object w/ data sitting in rows, 2 columns
       // 1 for each ``feature" or coordinate
@@ -198,16 +198,15 @@ namespace larcv{
 	
       }
 
-      // you must have atleast 10 points to proceed...
-      
+      // you must have atleast 10 points to proceed or trunk is useless
       if ( dlines.size() < 10 )
 	continue;
 	
       
       //lets march through the line left to right
-      //put the points in ddd for python
-      std::vector<int>  opts_x; opts_x.reserve(ordered_dist.size());
-      std::vector<int>  opts_y; opts_y.reserve(ordered_dist.size());
+      //put the points in ddd for python opts holds ordered hits
+      std::vector<int> opts_x; opts_x.reserve(ordered_dist.size());
+      std::vector<int> opts_y; opts_y.reserve(ordered_dist.size());
       
       for(auto& pt: ordered_dist) {
 	ddd.emplace_back(   pt.first,pt.second  );
@@ -215,8 +214,7 @@ namespace larcv{
 	opts_y.push_back( ordered_pts[pt.first] );
       }
       
-      //find the trunk with this info (hopefully wont have to
-      //implement truncated mean again... )
+      //find the trunk with this info 
       
       //start left to right
       trunk_index = {0,0};
@@ -234,8 +232,6 @@ namespace larcv{
 
       if ( j >= ddd.size() ) j = ddd.size() - 1;
       if (     k <=  0     ) k = 0;
-
-      // std::cout << "\t==> j = " << j << " ddd.size() " << ddd.size() << "\n";
       
       k = (ddd.size() - 1 - k);
       
@@ -254,7 +250,7 @@ namespace larcv{
       auto sx = stdev(opts_x,trunk_index.first,trunk_index.second);
       auto sy = stdev(opts_y,trunk_index.first,trunk_index.second);
 
-      if ( trunk_index.first != trunk_index.second)
+      if ( trunk_index.first != trunk_index.second) // trunk exists
 	pearsons_r =  co / ( sx * sy );
       else
 	pearsons_r = 0;
@@ -265,14 +261,14 @@ namespace larcv{
 
       _trunk_cov    = pearsons_r;
       _trunk_length = std::sqrt( std::pow(opts_x.at( trunk_index.second ) - opts_x.at( trunk_index.first ),2.0) +
-				 std::pow(opts_y.at( trunk_index.second ) - opts_y.at( trunk_index.first ) ,2.0) );
+				 std::pow(opts_y.at( trunk_index.second ) - opts_y.at( trunk_index.first ),2.0) );
       trunk_len = _trunk_length;
 	
       _eval1 = eigen_val[0];
       _eval2 = eigen_val[1];
       
       _area      = (double) ::cv::contourArea(cluster);
-      _perimeter = (double) ::cv::arcLength(cluster,1);
+      _perimeter = (double) ::cv::arcLength  (cluster,1);
       
       _outtree->Fill();
       
@@ -309,7 +305,7 @@ namespace larcv{
   {
 
     if( data1.size() != data2.size() ) { std::cout << "cov : data not the same"; std::exception();}
-    if (start < 0)          { std::cout << "cov: start < 0"; std::exception();         }
+    if (start < 0)           { std::cout << "cov: start < 0"; std::exception();         }
     if (end >= data1.size()) { std::cout << "cov: end > data1.size()"; std::exception(); }
     if (end >= data2.size()) { std::cout << "cov: end > data1.size()"; std::exception(); }
     
