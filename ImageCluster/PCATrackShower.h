@@ -59,7 +59,7 @@ namespace larcv {
     std::vector<Point2D> _cntr_pt_v;
     std::vector<std::vector<Point2D> > _eigen_vecs_v;
     std::vector<std::vector<double> >  _eigen_val_v;
-    
+
     int SumImageSize() { return _subMat_v.size(); }
       
     PyObject* GetSubImage(int i)
@@ -74,9 +74,10 @@ namespace larcv {
 
     std::vector<std::pair<int,int> > _trunk_index_v;
     std::vector<double> _pearsons_r_v;
+    std::vector<double> _trunk_len_v;
     
-      protected:
-
+  protected:
+    
     /// Configuration method
     void _Configure_(const ::fcllite::PSet &pset);
 
@@ -87,9 +88,11 @@ namespace larcv {
     
   private:
 
-    int _min_trunk_length;
+    int    _min_trunk_length;
     double _trunk_deviation;
- 
+
+    double _trunk_length;
+    double _trunk_cov;
     
     double _eval1;
     double _eval2;

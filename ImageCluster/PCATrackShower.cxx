@@ -20,7 +20,9 @@ namespace larcv{
     
     _outtree->Branch("_area",&_area,"area/D");
     _outtree->Branch("_perimeter",&_perimeter,"perimeter/D");
-    
+
+    _outtree->Branch("_trunk_length",&_trunk_length,"trunk_length/D");
+    _outtree->Branch("_trunk_cov",&_trunk_cov,"trunk_cov/D");
   }
 
   ContourArray_t PCATrackShower::_Process_(const larcv::ContourArray_t& clusters,
@@ -65,6 +67,9 @@ namespace larcv{
 
     _pearsons_r_v.clear();
     _pearsons_r_v.resize(clusters.size());
+
+    _trunk_len_v.clear();
+    _trunk_len_v.resize(clusters.size());
     
     for(unsigned i = 0; i < clusters.size(); ++i) {
 
@@ -73,18 +78,19 @@ namespace larcv{
       auto& eigen_vecs = _eigen_vecs_v[i];
       auto& eigen_val  = _eigen_val_v[i];
       auto& line       = _line_v[i];
-
+      
       auto& dlines     = _dlines_v[i];
       auto& ddists     = _ddists_v[i];
       auto& ddd        = _ddd_v[i];
       auto& trunk_index= _trunk_index_v[i];
       auto& pearsons_r = _pearsons_r_v[i];
-	
+      auto& trunk_len  = _trunk_len_v[i];
+      
       //Lets get subimage that only includes this cluster
       //and the points in immediate vicinity
       ::cv::Rect rect = ::cv::boundingRect(cluster);
       ::cv::Mat subMat(img, rect);
-
+      
       //subMat holds pixels in the bounding rectangle
       //around the given contour. We can make a line from principle eigenvector
       //and compute the distance to this line of the hits may be weighted by
@@ -229,7 +235,7 @@ namespace larcv{
       if ( j >= ddd.size() ) j = ddd.size() - 1;
       if (     k <=  0     ) k = 0;
 
-      std::cout << "\t==> j = " << j << " ddd.size() " << ddd.size() << "\n";
+      // std::cout << "\t==> j = " << j << " ddd.size() " << ddd.size() << "\n";
       
       k = (ddd.size() - 1 - k);
       
@@ -253,10 +259,15 @@ namespace larcv{
       else
 	pearsons_r = 0;
 
-      std::cout << "\t==> co : " << co << " sx : "
-		<< sx << " sy : " << sy << " pearsons_r : "
-		<< pearsons_r << "\n";
-      
+      // std::cout << "\t==> co : " << co << " sx : "
+      // 		<< sx << " sy : " << sy << " pearsons_r : "
+      // 		<< pearsons_r << "\n";
+
+      _trunk_cov    = pearsons_r;
+      _trunk_length = std::sqrt( std::pow(opts_x.at( trunk_index.second ) - opts_x.at( trunk_index.first ),2.0) +
+				 std::pow(opts_y.at( trunk_index.second ) - opts_y.at( trunk_index.first ) ,2.0) );
+      trunk_len = _trunk_length;
+	
       _eval1 = eigen_val[0];
       _eval2 = eigen_val[1];
       

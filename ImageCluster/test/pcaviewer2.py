@@ -16,7 +16,8 @@ my_proc = fmwk.ana_processor()
 cfg="pcacluster.fcl"
 
 for i in xrange(1,10):
-    my_proc.add_input_file("/Volumes/Slow/uboone_data/01292015/e/larlite_reco2d_000%d.root" % i)
+    my_proc.add_input_file( "/Volumes/Slow/uboone_data/pi0/larlite_reco2d_00%d.root" % i )
+    #my_proc.add_input_file("/Volumes/Slow/uboone_data/01292015/e/larlite_reco2d_000%d.root" % i)
 
 
 my_proc.set_io_mode(fmwk.storage_manager.kREAD)
@@ -44,6 +45,7 @@ while ( my_proc.process_event() ) :
     ddds          = pcatrackshower._ddd_v;
     trunk_idx     = pcatrackshower._trunk_index_v;
     pearsons_rv   = pcatrackshower._pearsons_r_v;
+    trunk_len_v   = pcatrackshower._trunk_len_v;
     
     nclusters = clusters.size()
     
@@ -55,7 +57,6 @@ while ( my_proc.process_event() ) :
 
     for i in xrange(nclusters):
 
-        
         cluster   = clusters[i]
         center_pt = center_points[i]
         eigen_val = eigen_vals[i]
@@ -65,10 +66,24 @@ while ( my_proc.process_event() ) :
         ddd       = ddds[i]
         tidx      = trunk_idx[i]
         pr        = pearsons_rv[i]
-        
-        if ddd.size() < 20:
+        tl        = trunk_len_v[i]
+
+        # 10 hits for me to care
+        if ddd.size() < 10:
             continue
 
+        # Trunk found is maybe too linear
+        if np.abs(pr) > 0.99:
+            continue
+
+        # No trunk found
+        if np.abs(pr) == 0.0:
+            continue
+
+        # No length
+        if tl == 0.0:
+            continue
+        
         ax = plt.subplot(2,1,1)
         xy1 = []
 
