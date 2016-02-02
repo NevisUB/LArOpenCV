@@ -22,7 +22,7 @@ namespace larcv {
 
   void FillImageClusterVariables::Fill(ContourArray_t cv_contour_v){
 
-//    Clear();
+    Clear();
 
     for(auto const & cv_contour : cv_contour_v){
 
