@@ -27,7 +27,7 @@ namespace larcv {
     
     /// Default constructor
     TrackShower(const std::string name="TrackShower") : ImageClusterBase(name)
-    { _area_separation = 1850; _ratio_separation = 3; }
+    { _area_separation = 1850; _ratio_separation = 3; _track_shower_sat = 1; }
     
     /// Default destructor
     ~TrackShower(){}
@@ -51,7 +51,7 @@ namespace larcv {
 
     float _area_separation ;
     float _ratio_separation ;
-    int   _shower_track_sat ;
+    int   _track_shower_sat ;
 
   };
   

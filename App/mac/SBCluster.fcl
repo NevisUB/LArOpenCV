@@ -39,7 +39,7 @@ ImageClusterManager: {
   TrackShower:{
     AreaCut : 1850
     RatioCut : 3
-    ShowerTrackSat : 1 # 0 returns tracks, 1 returns showers, 2 returns satellites
+    TrackShowerSat : 1 # 0 returns tracks, 1 returns showers, 2 returns satellites
   }
 
 }
