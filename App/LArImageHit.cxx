@@ -148,7 +148,12 @@ namespace larlite {
       size_t nticks = tick_range.second - tick_range.first + 2;
       size_t nwires = wire_range.second - wire_range.first + 2;
       ::larcv::ImageMeta meta((double)nwires,(double)nticks,nwires,nticks,wire_range.first,tick_range.first);
-      _img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
+      //_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
+
+       if ( nwires >= 1e10 || nticks >= 1e10 )                                            
+         _img_mgr.push_back(::cv::Mat(),::larcv::ImageMeta());                            
+       else                                                                               
+         _img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
       
       //if(!nticks || !nwires)
       //_img_mgr.push_back(cv::Mat(),meta);

@@ -5,7 +5,26 @@
 
 namespace larcv {
 
-  void FillImageClusterVariables::Fill(Contour_t cv_contour){
+  void FillImageClusterVariables::Clear(){
+
+    _area_v.clear();
+    _perimeter_v.clear();
+    _bb_height_v.clear();
+    _bb_width_v.clear();
+    _max_con_width_v.clear();
+    _min_con_width_v.clear();
+   
+    _shower_v.clear();
+    _satellite_v.clear();
+
+   }
+
+
+  void FillImageClusterVariables::Fill(ContourArray_t cv_contour_v){
+
+//    Clear();
+
+    for(auto const & cv_contour : cv_contour_v){
 
         cv::RotatedRect rect0 = cv::minAreaRect(cv::Mat(cv_contour));
         cv::Point2f vertices[4];
@@ -82,6 +101,13 @@ namespace larcv {
         _bb_width_v.push_back(bb_width);
         _max_con_width_v.push_back(max_width);
         _min_con_width_v.push_back(min_width);
+
+	if( area > _area_separation && (max_width/min_width) > _ratio_separation) 
+	 _shower_v.push_back(cv_contour);
+	else
+	 _satellite_v.push_back(cv_contour);
+
+      }
   }
 
 }

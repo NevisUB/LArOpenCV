@@ -34,12 +34,12 @@ class FillImageClusterVariables{
 public:
 
   /// Default constructor
-  FillImageClusterVariables(){}
+  FillImageClusterVariables(){ _area_separation = 1850 ; _ratio_separation = 3.; }
 
   /// Default destructor
   ~FillImageClusterVariables(){}
 
-  void Fill( Contour_t cv_contour ); //std::vector<::cv::Point>& cv_contour ) ;
+  void Fill( ContourArray_t cv_contour ); //std::vector<::cv::Point>& cv_contour ) ;
 
   std::vector<float> Areas() { return _area_v ; }
 
@@ -53,6 +53,12 @@ public:
 
   std::vector<float> MinContourWidths() { return _min_con_width_v; }
 
+  ContourArray_t Satellites() { return _satellite_v; }
+
+  ContourArray_t Showers() { return _shower_v; }
+
+  void Clear() ;
+
 private:
 
   std::vector<float> _area_v ;
@@ -61,6 +67,12 @@ private:
   std::vector<float> _bb_width_v ;
   std::vector<float> _max_con_width_v ;
   std::vector<float> _min_con_width_v ;
+
+  ContourArray_t _satellite_v ;
+  ContourArray_t _shower_v ;
+
+  float _area_separation ;
+  float _ratio_separation ;
 
   };
 
