@@ -81,7 +81,7 @@ namespace larlite {
 
     if(_img_mgr.size() != _alg_mgr_v.size()) throw ::larcv::larbys("# of imaged created != # of planes!");
 
-    _filler.Clear() ;
+    //_filler.Clear() ;
     for(size_t plane = 0; plane < _alg_mgr_v.size(); ++plane) {
 
       auto& alg_mgr = _alg_mgr_v[plane];
@@ -92,7 +92,7 @@ namespace larlite {
       alg_mgr.Process(img,meta);
 
       auto & clus = alg_mgr.Clusters() ;
-      _filler.Fill(clus);
+      //_filler.Fill(clus);
     }
 
 //    for(int i=0; i<_filler.Areas().size(); i++){
