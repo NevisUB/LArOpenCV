@@ -49,7 +49,7 @@ namespace larcv {
     
     /// Default destructor
     ~PCATrackShower(){}
-
+    
   private:
     TTree* _outtree;
 
@@ -59,9 +59,9 @@ namespace larcv {
     std::vector<Point2D> _cntr_pt_v;
     std::vector<std::vector<Point2D> > _eigen_vecs_v;
     std::vector<std::vector<double> >  _eigen_val_v;
-
+    
     int SumImageSize() { return _subMat_v.size(); }
-      
+    
     PyObject* GetSubImage(int i)
     { ::larcv::convert::NDArrayConverter converter; return converter.toNDArray( _subMat_v.at(i) ); }
 
