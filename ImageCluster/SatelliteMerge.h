@@ -5,7 +5,7 @@
  * 
  * \brief Class def header for a class SatelliteMerge
  *
- * @author kazuhiro
+ * @author vic
  */
 
 /** \addtogroup ImageCluster
@@ -35,6 +35,8 @@ namespace larcv {
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
     void Finalize(TFile*) {}
 
+    std::vector<Contour_t> _secret_initial_sats;
+    
   protected:
 
     /// Configuration method
@@ -47,7 +49,14 @@ namespace larcv {
     
   private:
 
+    double _area_separation;
+    double _min_sat_dist;
+    double _min_shower_dist;
+    double _density;         
 
+    void _combine_two_contours(const larcv::Contour_t& c1, const larcv::Contour_t& c2, larcv::Contour_t& c3);
+    double _pt_distance       (const larcv::Contour_t& c1, const larcv::Contour_t& c2);
+    
   };
   
   /**

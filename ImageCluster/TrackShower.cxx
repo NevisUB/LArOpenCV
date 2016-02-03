@@ -10,7 +10,7 @@ namespace larcv{
 
     _area_separation  = pset.get<int> ("AreaCut");
     _ratio_separation = pset.get<int> ("RatioCut");
-    _shower_track_sat = pset.get<int>("ShowerTrackSat");
+    _shower_track_sat = pset.get<int> ("ShowerTrackSat");
 
   }
 
@@ -96,14 +96,20 @@ namespace larcv{
       }
 
    std::cout<<"Shower, track, satellite size: "<<shower_v.size()<<", "<<track_v.size()<<", "<<satellite_v.size()<<std::endl ;
- 
-  if( _shower_track_sat == 1)
-    return shower_v ; 
-  else if( !_shower_track_sat )
-    return track_v ;
-  else 
-    return satellite_v; 
+   
+   ContourArray_t shower_sats_v; shower_sats_v.reserve(shower_v.size() + satellite_v.size());
+   for(auto& shower : shower_v)    shower_sats_v.emplace_back( shower );
+   for(auto& sats   : satellite_v) shower_sats_v.emplace_back( sats  );
+	 
+   if( _shower_track_sat == 2)
+     return shower_sats_v;
+   else if( _shower_track_sat == 1)
+     return shower_v ; 
+   else if( !_shower_track_sat ) //0 ?
+     return track_v ;
+   else 
+     return satellite_v; 
   }
-
+  
 }
 #endif

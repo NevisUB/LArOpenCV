@@ -22,7 +22,6 @@
 //#pragma link C++ class larcv::TCluster+;
 #pragma link C++ class larcv::FillImageClusterVariables+;
 #pragma link C++ class larcv::SatelliteMerge+;
-#pragma link C++ class larcv::SatelliteMergeVecDensity+;
 #pragma link C++ class larcv::TrackShower+;
 
 //ADD_NEW_CLASS ... do not change this line

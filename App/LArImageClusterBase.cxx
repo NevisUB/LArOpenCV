@@ -47,15 +47,15 @@ namespace larlite {
 
     for(auto& mgr : _alg_mgr_v) mgr.Configure(cfg_mgr.Config().get_pset(mgr.Name()));
 
-    if(!_contour_tree){
-      _contour_tree = new TTree("contour_tree","Contour Tree" );
-      _contour_tree->Branch("area",&_area,"area/F");
-      _contour_tree->Branch("perimeter",&_perimeter,"perimeter/F");
-      _contour_tree->Branch("bb_height",&_bb_height,"bb_height/F");
-      _contour_tree->Branch("bb_width",&_bb_width,"bb_width/F");
-      _contour_tree->Branch("max_con_width",&_max_con_width,"max_con_width/F");
-      _contour_tree->Branch("min_con_width",&_min_con_width,"min_con_width/F");
-      }
+    // if(!_contour_tree){
+    //   _contour_tree = new TTree("contour_tree","Contour Tree" );
+    //   _contour_tree->Branch("area",&_area,"area/F");
+    //   _contour_tree->Branch("perimeter",&_perimeter,"perimeter/F");
+    //   _contour_tree->Branch("bb_height",&_bb_height,"bb_height/F");
+    //   _contour_tree->Branch("bb_width",&_bb_width,"bb_width/F");
+    //   _contour_tree->Branch("max_con_width",&_max_con_width,"max_con_width/F");
+    //   _contour_tree->Branch("min_con_width",&_min_con_width,"min_con_width/F");
+    //   }
 
     return true;
   }
