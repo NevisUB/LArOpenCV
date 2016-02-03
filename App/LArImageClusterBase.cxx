@@ -91,7 +91,7 @@ namespace larlite {
       
       alg_mgr.Process(img,meta);
 
-      auto & clus = alg_mgr.Clusters() ;
+      // auto & clus = alg_mgr.Clusters() ;
       //_filler.Fill(clus);
     }
 

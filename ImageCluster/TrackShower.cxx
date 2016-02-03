@@ -10,8 +10,8 @@ namespace larcv{
 
     _area_separation  = pset.get<int> ("AreaCut");
     _ratio_separation = pset.get<int> ("RatioCut");
-    _shower_track_sat = pset.get<int> ("ShowerTrackSat");
-
+    _track_shower_sat = pset.get<int>("TrackShowerSat");
+    
   }
 
 
@@ -87,7 +87,7 @@ namespace larcv{
               min_width = dist_travelled ;
           }
 
-        if( area > _area_separation && (max_width/min_width) > _ratio_separation)
+        if( area > _area_separation && (max_width/min_width) >= _ratio_separation)
          shower_v.push_back(cv_contour);
         else if( area > _area_separation && (max_width/min_width) < _ratio_separation)
          track_v.push_back(cv_contour);
@@ -95,20 +95,21 @@ namespace larcv{
          satellite_v.push_back(cv_contour);
       }
 
-   std::cout<<"Shower, track, satellite size: "<<shower_v.size()<<", "<<track_v.size()<<", "<<satellite_v.size()<<std::endl ;
+   // std::cout<<"Shower, track, satellite size: "<<shower_v.size()<<", "<<track_v.size()<<", "<<satellite_v.size()<<std::endl ;
    
    ContourArray_t shower_sats_v; shower_sats_v.reserve(shower_v.size() + satellite_v.size());
    for(auto& shower : shower_v)    shower_sats_v.emplace_back( shower );
    for(auto& sats   : satellite_v) shower_sats_v.emplace_back( sats  );
 	 
-   if( _shower_track_sat == 2)
+   if( _track_shower_sat == 2)
      return shower_sats_v;
-   else if( _shower_track_sat == 1)
+   else if( _track_shower_sat == 1)
      return shower_v ; 
-   else if( !_shower_track_sat ) //0 ?
+   else if( !_track_shower_sat ) //0 ?
      return track_v ;
    else 
      return satellite_v; 
+
   }
   
 }

@@ -18,7 +18,7 @@ namespace larcv{
 					   larcv::ImageMeta& meta)
   {
     
-    _secret_initial_sats.clear();
+    // _secret_initial_sats.clear();
     std::vector<larcv::Contour_t> satellite_v; satellite_v.reserve(clusters.size());
     std::vector<larcv::Contour_t> shower_v;    shower_v.reserve(clusters.size());
     
@@ -29,7 +29,7 @@ namespace larcv{
       else
 	satellite_v.push_back(cv_contour);
 
-      _secret_initial_sats.push_back(cv_contour);
+      // _secret_initial_sats.push_back(cv_contour);
     }
 
     
@@ -97,7 +97,7 @@ namespace larcv{
       if ( !n_merged  ) merging = false;
     }
 
-    return sats_v;
+    // return sats_v;
 
     
     //We have merged, now decide something. Are we close enough to a larger cluster? Does out convex hull overlap
@@ -144,12 +144,12 @@ namespace larcv{
       std::swap(tmp_showers_,tmp_showers);
       std::swap(tmp_sats_   ,tmp_sats   );
       
-      if (!n_merged) merging = false;
+      if ( ! n_merged ) merging = false;
       
     }
     
-    for(auto& shower : tmp_showers) out_ctors.emplace_back( shower);
-    for(auto& sat    : tmp_sats)    out_ctors.emplace_back( sat   );
+    for(auto& shower : tmp_showers) out_ctors.emplace_back( shower );
+    for(auto& sat    : tmp_sats)    out_ctors.emplace_back( sat    );
     
     return out_ctors;
   }

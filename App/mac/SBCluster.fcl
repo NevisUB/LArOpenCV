@@ -15,8 +15,11 @@ ImageClusterManager: {
   Verbosity: 1
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
-  AlgoType:  [SBCluster,TrackShower]
-  AlgoName:  [Vic,TrackShower]
+  AlgoType:  [SBCluster,SatelliteMerge]
+  AlgoName:  [sbcluster,satellitemerge]
+
+  # AlgoType:  [SBCluster]
+  # AlgoName:  [sbcluster]
 
   ImageClusterViewer: {
     Verbosity: 0
@@ -25,7 +28,7 @@ ImageClusterManager: {
     MinContourArea: 125
   }
 
-  Vic:{
+ sbcluster:{
     Verbosity: 1
     DilationSize : 5
     DilationIterations : 2
@@ -36,10 +39,17 @@ ImageClusterManager: {
     ThreshMaxVal : 255
   }
 
-  TrackShower:{
+  trackshower:{
     AreaCut : 1850
     RatioCut : 3
-    ShowerTrackSat : 1 # 0 returns tracks, 1 returns showers, 2 returns satellites
+    TrackShowerSat : 2 # 0 returns tracks, 1 returns showers, 2 returns satellites
+  }
+
+  satellitemerge: {
+    AreaCut: 1850
+    MinSatDistance: 50
+    MinShowerDistance: 25
+    ContourDensity:50 # unused
   }
 
 }
