@@ -214,17 +214,17 @@ namespace larcv {
     if(alg_id == kINVALID_ALGO_ID) alg_id = _clusters_v.size() - 1;
 
     auto const& clusters = _clusters_v[alg_id];
-
+    
     auto const& meta = _meta_v[alg_id];
-
+    
     auto const& origin = meta.origin();
-
-   if(x < origin.x || x > (origin.x + meta.width())) return result;
-
+    
+    if(x < origin.x || x > (origin.x + meta.width())) return result;
+    
     if(y < origin.y || x > (origin.y + meta.height())) return result;
-
+    
     //std::cout<<"Inspecting a point "<<x<<" : "<<y<<" ... ";
-
+    
     auto pt = ::cv::Point2d((y-origin.y)/meta.pixel_height(), (x-origin.x)/meta.pixel_width()); 
 
     //std::cout<<pt.x<<" : "<<pt.y<<std::endl;
@@ -234,14 +234,14 @@ namespace larcv {
       auto const& c = clusters[id];
       
       double inside = ::cv::pointPolygonTest(c,pt,false);
-
+      
       if(inside < 0) continue;
-
+      
       result = id;
-
+      
       break;
     }
-
+    
     return result;
   }
 }

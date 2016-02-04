@@ -25,6 +25,8 @@
 #pragma link C++ class larcv::PCAProjection+;
 // #pragma link C++ class larcv::HoughTrackShower+;
 // #pragma link C++ class larcv::HoughPTrackShower+;
+#pragma link C++ class larcv::SatelliteMerge+;
+>>>>>>> sattelite_merge
 #pragma link C++ class larcv::TrackShower+;
 
 //ADD_NEW_CLASS ... do not change this line

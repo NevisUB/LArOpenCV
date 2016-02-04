@@ -19,7 +19,7 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  AlgoType: [SBCluster,PCAProjection]
+AlgoType: [SBCluster,PCAProjection]
   AlgoName: [sbc,pca]
 
  ImageClusterViewer: {
@@ -29,28 +29,33 @@ ImageClusterManager: {
    MinContourArea: 125
  }
 
-   sbc:{
-    Verbosity: 1
-    DilationSize : 5
-    DilationIterations : 2
+  sbc:{
+  Verbosity: 1
+  DilationSize : 5
+  DilationIterations : 2
+  BlurSize : 5
+  Thresh : 1
+  ThreshMaxVal : 255
 
-    BlurSize : 5
-
-    Thresh : 1
-    ThreshMaxVal : 255
   }
-
-
+	  
   pca : {
     MinTrunkLength   : 1
     TrunkDeviation   : 150	
     MinTrunkEdgeDist : 5
   }
 
-  TrackShower:{
+  Trackshower:{
     AreaCut : 1850
     RatioCut : 3
-    TrackShowerSat : 1 # 0 returns tracks, 1 returns showers, 2 returns satellites
+    TrackShowerSat : 2 # 0 returns tracks, 1 returns showers, 2 returns satellites
+  }
+
+  satellitemerge: {
+    AreaCut: 1850
+    MinSatDistance: 50
+    MinShowerDistance: 25
+    ContourDensity:50 # unused
   }
 
 

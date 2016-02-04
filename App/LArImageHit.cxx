@@ -94,7 +94,7 @@ namespace larlite {
     }
 
     auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
-    auto ev_ass     = storage->get_data<event_ass>("ImageClusterHit");
+    auto ev_ass     = storage->get_data<event_ass>    ("ImageClusterHit");
     if(ev_cluster) {
       ev_cluster->reserve(nclusters_total);
       for(size_t plane=0; plane<nclusters_v.size(); ++plane) {
@@ -112,6 +112,7 @@ namespace larlite {
     }
     if(ev_ass)
       ev_ass->set_association(ev_cluster->id(),ev_hit->id(),ass_set);
+    
   }
 
   void LArImageHit::extract_image(storage_manager* storage)
@@ -188,7 +189,8 @@ namespace larlite {
       size_t y = (size_t)(h.PeakTime()+0.5) - tick_range.first;
       size_t x = wid.Wire - wire_range.first;
       
-      if(y>=nticks || x>=nwires)  { std::cout << "\tignoring hit... \n"; continue; throw ::larcv::larbys("AH!"); }
+      //if(y>=nticks || x>=nwires) { throw std::exception(); }
+      if(y>=nticks || x>=nwires) { std::cout << "\t==> Skipping hit\n"; continue; } // skip this hit
       
       //std::cout<<"Inserting " << x << " " << y << " @ " << wid.Plane << std::endl;
       double charge = h.Integral() / _charge_to_gray_scale;

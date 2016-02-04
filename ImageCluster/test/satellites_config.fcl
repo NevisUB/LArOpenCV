@@ -1,0 +1,56 @@
+
+LArImageHit: {
+  # LArImageClusterBase config
+  Profile: true
+  StoreOriginalImage: false
+  Producer: gaushit
+  # LArImageHit config
+  Q2Gray: 0.1 # convert Hit::Integral to a unit gray scale
+  QMin: 3   # min. threshold for Hit::Integral to make it into an image
+}
+
+# ImageClusterManager config
+ImageClusterManager: {
+
+  Verbosity: 1
+  Profile:   true  # Time profiles algorithms
+  ShowImage: false  # Display image per process
+  AlgoType:  [SBCluster,TrackShower,SatelliteMerge]
+  AlgoName:  [sbc,ts,sm]
+
+ ImageClusterViewer: {
+     Verbosity: 0
+     Width:  800
+     Height: 800
+     MinContourArea: 125
+ }
+
+  sbc:{
+      Verbosity: 1
+      DilationSize : 5
+      DilationIterations : 2
+
+      BlurSize : 5
+      Thresh : 1
+      ThreshMaxVal : 255
+      }
+
+  ts:{
+      AreaCut : 1850
+      RatioCut : 3
+
+      # 2 shower+satts 0 returns tracks, 1 returns showers, (3) returns satellites
+      
+      ShowerTrackSat : 2 
+  }
+
+  sm : {
+  
+     AreaCut: 1850
+     MinSatDistance: 50
+     MinShowerDistance: 25
+     ContourDensity:50 # unused
+   
+   }
+
+}
