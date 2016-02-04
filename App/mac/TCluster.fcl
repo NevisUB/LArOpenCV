@@ -6,8 +6,17 @@ LArDownImage: {
   Producer: gaushit
   # LArImageHit config
   Q2Gray: 5
-  DownSample: true 
-  NBins:  200
+  NBinsX:  300
+  NBinsY:  600
+}
+
+LArImageHit: {
+  # LArImageClusterBase config
+  Profile: true
+  StoreOriginalImage: false
+  Producer: gaushit
+  # LArImageHit config
+  Q2Gray: 5
 }
 
 # ImageClusterManager config
@@ -21,19 +30,21 @@ ImageClusterManager: {
 
   ImageClusterViewer: {
     Verbosity: 0
-    Width:  200 
-    Height: 200 
+    Width:  700 
+    Height: 400 
     MinContourArea: 125 
   }
 
 
   TCluster: {
     Verbosity: 1
-    BlurX : 5 
+    BlurX : 8 
     BlurY : 5 
 
-    Thresh : 1
+    Thresh : 0.1 
     ThreshMaxVal : 255
+    ResizeX : 700 
+    ResizeY : 400 
   }
 
 }

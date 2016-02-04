@@ -82,6 +82,7 @@ namespace larlite {
 
     if(_img_mgr.size() != _alg_mgr_v.size()) throw ::larcv::larbys("# of imaged created != # of planes!");
 
+    //_filler.Clear() ;
     for(size_t plane = 0; plane < _alg_mgr_v.size(); ++plane) {
 
       auto& alg_mgr = _alg_mgr_v[plane];
@@ -90,23 +91,21 @@ namespace larlite {
       if(!meta.num_pixel_row() || !meta.num_pixel_column()) continue;
       
       alg_mgr.Process(img,meta);
+
       auto & clus = alg_mgr.Clusters() ;
-      for(int j=0; j<clus.size(); j++){
-        
-        _filler.Fill(clus[j]);
-         
-       }
+      //_filler.Fill(clus);
     }
 
-    // for(int i=0; i<_filler.Areas().size(); i++){
-    //   _area = _filler.Areas()[i] ;
-    //   _perimeter = _filler.Perimeters()[i];
-    //   _bb_height = _filler.BBHeights()[i];
-    //   _bb_width = _filler.BBWidths()[i];
-    //   _max_con_width = _filler.MaxContourWidths()[i];
-    //   _min_con_width = _filler.MinContourWidths()[i];
-    //   _contour_tree->Fill();
-    //   }
+    //    for(int i=0; i<_filler.Areas().size(); i++){
+    //      _area = _filler.Areas()[i] ;
+    //      _perimeter = _filler.Perimeters()[i];
+    //      _bb_height = _filler.BBHeights()[i];
+    //      _bb_width = _filler.BBWidths()[i];
+    //      _max_con_width = _filler.MaxContourWidths()[i];
+    //      _min_con_width = _filler.MinContourWidths()[i];
+    //      _contour_tree->Fill();
+    //      }
+
 
     watch_one.Start();
     this->store_clusters(storage);
@@ -151,7 +150,8 @@ namespace larlite {
    if(_fout){
      _fout->cd();
      for(auto& mgr : _alg_mgr_v) mgr.Finalize(_fout);
-     // _contour_tree->Write();
+     //_contour_tree->Write();
+
     }   
 
     return true;

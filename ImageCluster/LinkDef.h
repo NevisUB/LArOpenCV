@@ -13,26 +13,21 @@
 #pragma link C++ class larcv::ContourArray_t+;
 #pragma link C++ class larcv::ImageClusterBase+;
 #pragma link C++ class larcv::ImageClusterManager+;
-#pragma link C++ class larcv::EmptyImageCluster+;
-#pragma link C++ class larcv::ToyImageCluster+;
+//#pragma link C++ class larcv::EmptyImageCluster+;
+//#pragma link C++ class larcv::ToyImageCluster+;
 //#pragma link C++ class larcv::SmoothBinaryCluster+;
 #pragma link C++ class larcv::SBCluster+;
 #pragma link C++ class larcv::ImageClusterFactory+;
 #pragma link C++ class larcv::ImageClusterViewer+;
 //#pragma link C++ class larcv::TCluster+;
 #pragma link C++ class larcv::FillImageClusterVariables+;
-#pragma link C++ class larcv::CDTrackShower+;
-#pragma link C++ class larcv::PCATrackShower+;
-#pragma link C++ class larcv::HoughTrackShower+;
-#pragma link C++ class larcv::HoughPTrackShower+;
+// #pragma link C++ class larcv::CDTrackShower+;
+#pragma link C++ class larcv::PCAProjection+;
+// #pragma link C++ class larcv::HoughTrackShower+;
+// #pragma link C++ class larcv::HoughPTrackShower+;
+#pragma link C++ class larcv::TrackShower+;
+
 //ADD_NEW_CLASS ... do not change this line
 #endif
-
-
-
-
-
-
-
 
 

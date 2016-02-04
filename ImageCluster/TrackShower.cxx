@@ -1,50 +1,42 @@
-#ifndef FILLIMAGECLUSTERVARIABLES_CXX
-#define FILLIMAGECLUSTERVARIABLES_CXX
+#ifndef __TRACKSHOWER_CXX__
+#define __TRACKSHOWER_CXX__
 
-#include "FillImageClusterVariables.h"
+#include "TrackShower.h"
 
-namespace larcv {
+namespace larcv{
 
-  void FillImageClusterVariables::Clear(){
+  void TrackShower::_Configure_(const ::fcllite::PSet &pset)
+  {
 
-    _area_v.clear();
-    _perimeter_v.clear();
-    _bb_height_v.clear();
-    _bb_width_v.clear();
-    _max_con_width_v.clear();
-    _min_con_width_v.clear();
-   
-    _shower_v.clear();
-    _track_v.clear();
-    _satellite_v.clear();
+    _area_separation  = pset.get<int> ("AreaCut");
+    _ratio_separation = pset.get<int> ("RatioCut");
+    _track_shower_sat = pset.get<int>("TrackShowerSat");
 
-   }
+  }
 
 
-  void FillImageClusterVariables::Fill(ContourArray_t cv_contour_v){
+  ContourArray_t TrackShower::_Process_(const larcv::ContourArray_t& clusters,
+					    const ::cv::Mat& img,
+					    larcv::ImageMeta& meta)
+  { 
 
-    Clear();
+   ContourArray_t satellite_v ;
+   ContourArray_t shower_v ;
+   ContourArray_t track_v ;
 
-    for(auto const & cv_contour : cv_contour_v){
+   for(auto const & cv_contour : clusters){
 
         cv::RotatedRect rect0 = cv::minAreaRect(cv::Mat(cv_contour));
         cv::Point2f vertices[4];
         rect0.points(vertices);
         auto rect = rect0.size; 
-
-        // Fill the easy ones first
         auto area   = ::cv::contourArea(cv_contour);
-        auto perimeter = ::cv::arcLength(cv_contour,1);
-        auto bb_height = ( rect.height > rect.width ? rect.height : rect.width );
-        auto bb_width  = ( rect.height > rect.width ? rect.width : rect.height );
-        //auto rect = ::cv::boundingRect(cv_contour);
-        //auto ellipse = ::cv::fitEllipse(cv_contour);
 
-        //
+        //  
         // Between points 0,1 and 1,2 , find max distance; this will be outer
         // loop. At each walk along length (outer loop), we'll walk along the 
         // width and eventually store max and min widths.
-        //
+        //  
         int step1 = 80; 
         int step2 = 80; 
         float maxDist = 0;  
@@ -60,13 +52,14 @@ namespace larcv {
           minDist = dist2;
           dir1 = std::make_pair((vertices[0].x - vertices[1].x)/step1, (vertices[0].y - vertices[1].y)/step1);
           dir2 = std::make_pair((vertices[2].x - vertices[1].x)/step2, (vertices[2].y - vertices[1].y)/step2);
-          }   
+  
+           }
          else{
           maxDist = dist2;
           minDist = dist1;
           dir1 = std::make_pair((vertices[2].x - vertices[1].x)/step1, (vertices[2].y - vertices[1].y)/step1);
           dir2 = std::make_pair((vertices[0].x - vertices[1].x)/step2, (vertices[0].y - vertices[1].y)/step2);
-           }   
+           }
 
         float dist_travelled = 0 ;
         float max_width = 0;
@@ -94,24 +87,22 @@ namespace larcv {
               min_width = dist_travelled ;
           }
 
-        //std::cout<<"And the max dist is... "<<max_width<<", "<<min_width<<std::endl ;
-
-        _area_v.push_back(area);
-        _perimeter_v.push_back(perimeter);
-        _bb_height_v.push_back(bb_height);
-        _bb_width_v.push_back(bb_width);
-        _max_con_width_v.push_back(max_width);
-        _min_con_width_v.push_back(min_width);
-
-	if( area > _area_separation && (max_width/min_width) > _ratio_separation) 
-	 _shower_v.push_back(cv_contour);
-        else if( area > _area_separation && (max_width/min_width) < _ratio_separation) 
-         _track_v.push_back(cv_contour);
-	else
-	 _satellite_v.push_back(cv_contour);
-
-
+        if( area > _area_separation && (max_width/min_width) >= _ratio_separation)
+         shower_v.push_back(cv_contour);
+        else if( area > _area_separation && (max_width/min_width) < _ratio_separation)
+         track_v.push_back(cv_contour);
+        else
+         satellite_v.push_back(cv_contour);
       }
+
+    //std::cout<<"Shower, track, satellite size: "<<shower_v.size()<<", "<<track_v.size()<<", "<<satellite_v.size()<<std::endl ;
+ 
+  if( _track_shower_sat == 1)
+    return shower_v ; 
+  else if( !_track_shower_sat )
+    return track_v ;
+  else 
+    return satellite_v; 
   }
 
 }

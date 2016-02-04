@@ -39,7 +39,6 @@ namespace larcv{
 
     std::swap(hullpts_v,_hullpts_v);
     std::swap(defects_v,_defects_v);
-
     
     
     return clusters;

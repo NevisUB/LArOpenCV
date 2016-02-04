@@ -15,7 +15,7 @@ namespace larlite {
   void LArImageHit::_Configure_(const ::fcllite::PSet &pset)
   {
     _charge_to_gray_scale = pset.get<double>("Q2Gray");
-//    _charge_threshold = pset.get<double>("QMin");
+    //    _charge_threshold = pset.get<double>("QMin");
 
   }
 

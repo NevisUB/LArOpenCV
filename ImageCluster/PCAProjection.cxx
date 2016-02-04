@@ -1,0 +1,274 @@
+#ifndef __PCAPROJECTION_CXX__
+#define __PCAPROJECTION_CXX__
+
+#include "PCAProjection.h"
+
+namespace larcv{
+
+  void PCAProjection::_Configure_(const ::fcllite::PSet &pset)
+  {
+
+    _min_trunk_length = pset.get<int>    ("MinTrunkLength");
+    _trunk_deviation  = pset.get<double> ("TrunkDeviation");
+    
+    _outtree = new TTree("PCA","PCA");
+    
+    _outtree->Branch("_eval1",&_eval1,"eval1/D");
+    _outtree->Branch("_eval2",&_eval2,"eval2/D");
+
+    _outtree->Branch("_area",&_area,"area/D");
+    _outtree->Branch("_perimeter",&_perimeter,"perimeter/D");
+
+    _outtree->Branch("_trunk_length",&_trunk_length,"trunk_length/D");
+    _outtree->Branch("_trunk_cov",&_trunk_cov,"trunk_cov/D");
+  }
+
+  ContourArray_t PCAProjection::_Process_(const larcv::ContourArray_t& clusters,
+					   const ::cv::Mat& img,
+					   larcv::ImageMeta& meta)
+  {
+
+    //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
+    
+    //cluster == contour
+    ContourArray_t ctor_v;    
+    clear_vars();
+    
+    //All of these are diagnostics for the python view program
+    for(unsigned i = 0; i < clusters.size(); ++i) {
+
+      auto& cluster    =  clusters[i];
+      auto& cntr_pt    = _cntr_pt;
+      auto& eigen_vecs = _eigen_vecs;
+      auto& eigen_val  = _eigen_val;
+      auto& line       = _line;      
+      
+      auto& trunk_index= _trunk_index; //index trunk end point (pair)
+      auto& pearsons_r = _pearsons_r;  //linearity
+
+      //Lets get subimage that only includes this cluster
+      //and the points in immediate vicinity
+      ::cv::Rect rect = ::cv::boundingRect(cluster);
+      ::cv::Mat subMat(img, rect);
+      
+      //subMat holds pixels in the bounding rectangle
+      //around the given contour. We can make a line from principle eigenvector
+      //and compute the distance to this line of the hits may be weighted by
+      //charge at some point?
+      
+      //make a copy cluster_s = shifted clusters to the bounding box
+      auto cluster_s = cluster;
+
+      //shift it down
+      for(auto &pt : cluster_s) { pt.x -= rect.x; pt.y -= rect.y; }
+      ctor_v.emplace_back(cluster_s);
+      
+      // PCA ana requies MAT object w/ data sitting in rows, 2 columns
+      // 1 for each ``feature" or coordinate
+      ::cv::Mat ctor_pts(cluster_s.size(), 2, CV_64FC1);
+      
+      for (unsigned i = 0; i < ctor_pts.rows; ++i)
+	{
+	  ctor_pts.at<double>(i, 0) = cluster_s[i].x;
+	  ctor_pts.at<double>(i, 1) = cluster_s[i].y;
+	}
+
+      //Perform PCA analysis
+      ::cv::PCA pca_ana(ctor_pts, ::cv::Mat(), CV_PCA_DATA_AS_ROW,0); // maxComponents = 0 (retain all)
+
+      //Center point
+      // ::cv::Point
+      cntr_pt = Point2D( pca_ana.mean.at<double>(0,0),
+			 pca_ana.mean.at<double>(0,1) );
+      
+
+      //Principle directions (vec) and relative lengths (vals)
+      eigen_vecs.resize(2);
+      eigen_val.resize (2);
+      
+      for (unsigned i = 0; i < 2; ++i) {
+	eigen_vecs[i] = Point2D(pca_ana.eigenvectors.at<double>(i, 0),
+				pca_ana.eigenvectors.at<double>(i, 1));
+	eigen_val[i]  = pca_ana.eigenvalues.at<double>(0, i);
+      }
+      
+      
+      //Get the nonzero locations of the pixels in this subimage
+      //these are the "hits"
+      std::vector<::cv::Point> locations;
+      ::cv::findNonZero(subMat, locations);
+      
+      //take principle eigenvector (the first one)
+      //and get the line that best represents the shower
+      //this line passes through center point and is principle eigenvec
+      line[0] = 0;
+      line[1] = cntr_pt.y + ( (0 - cntr_pt.x) / eigen_vecs[0].x ) * eigen_vecs[0].y;
+      line[2] = rect.width;
+      line[3] = cntr_pt.y + ( (rect.width - cntr_pt.x) / eigen_vecs[0].x) * eigen_vecs[0].y;
+
+      
+      std::map<int,double> odist; // ordered left to right closest distance to line
+      std::map<int,int>    opts;  // ordered points (hit x, hit y)
+
+      int nhits = 0;
+
+      //lets try to find how far away the points are to the line
+      for(const auto& loc : locations) {
+	
+	//is this point in the contour, if not continue
+	if ( ::cv::pointPolygonTest(cluster_s, loc,false) < 0 )
+	  continue;
+	  
+	//real time collision detection page 128
+	//closest point on line
+	auto ax = line[0];
+	auto ay = line[1];
+	auto bx = line[2];
+	auto by = line[3];
+	
+	auto abx = bx-ax;
+	auto aby = by-ay;
+
+	auto& lx = loc.x;
+	auto& ly = loc.y;
+	
+	auto t = ( (lx-ax)*abx + (ly-ay)*aby ) / (abx*abx + aby*aby);
+	auto dx = ax + t * abx;
+	auto dy = ay + t * aby;
+	auto dist = (dx-lx)*(dx-lx) + (dy-ly)*(dy-ly) ; //squared dis
+
+	odist[lx] = dist; // ordered set of distance by wire number
+	opts [lx] = ly;   // ordered set of mapped X->Y values
+	++nhits;
+	
+      }
+
+      // you must have atleast 10 points to proceed or trunk is useless
+      if ( nhits < 10 ) // j == number of points in cluster
+	continue;
+      
+      
+      //lets march through the line left to right
+      //put the points in ddd for python opts holds ordered hits
+      std::vector<int> opts_x; opts_x.reserve(odist.size());
+      std::vector<int> opts_y; opts_y.reserve(odist.size());
+
+      std::vector<double> dists; dists.reserve(nhits); // dists ordered as vector
+      
+      for(auto& pt: odist) {
+	dists.push_back(  pt.second      );
+	opts_x.push_back( pt.first       );
+	opts_y.push_back( opts[pt.first] );
+      }
+      
+      //find the trunk with this info 
+      
+      //start left to right
+      trunk_index = {0,0};
+      
+      int k  = 0;	
+      int j  = 0;
+      
+      for(j = 0 ; j < dists.size(); ++j) 
+	if ( dists[j] > _trunk_deviation )
+	  break;
+
+      for(k = dists.size() - 1; k >= 0; --k) 
+	if ( dists[k] > _trunk_deviation )
+	  break;
+
+      if ( j >= dists.size() ) j = dists.size() - 1;
+      if (     k <=  0       ) k = 0;
+      
+      k = (dists.size() - 1 - k);
+      
+      if ( j < k )
+	trunk_index = { dists.size() - 1 - k, dists.size() - 1 }; // trunk is on the right
+      else if ( j == k )
+	trunk_index = { 0 , 0 }; // no trunk on either side
+      else 
+	trunk_index = { 0 , j }; // trunk is on the left
+      
+      // Should we reject bad trunks? This probably involves some fit?
+      // the showering region needs enough hits with enough sparsity
+      // to be actual shower like
+      
+      auto co = cov  (opts_x,opts_y,trunk_index.first,trunk_index.second);
+      auto sx = stdev(opts_x,trunk_index.first,trunk_index.second);
+      auto sy = stdev(opts_y,trunk_index.first,trunk_index.second);
+
+      if ( trunk_index.first != trunk_index.second) // trunk exists
+	pearsons_r =  co / ( sx * sy );
+      else
+	pearsons_r = 0;
+
+      _trunk_cov    = pearsons_r;
+      _trunk_length = std::sqrt( std::pow(opts_x.at( trunk_index.second ) - opts_x.at( trunk_index.first ),2.0) +
+				 std::pow(opts_y.at( trunk_index.second ) - opts_y.at( trunk_index.first ),2.0) );
+     
+      _eval1 = eigen_val[0];
+      _eval2 = eigen_val[1];
+      
+      _area      = (double) ::cv::contourArea(cluster);
+      _perimeter = (double) ::cv::arcLength  (cluster,1);
+      
+      _outtree->Fill();
+      
+    }
+    
+
+    return ctor_v;
+
+
+  }
+
+
+
+  double PCAProjection::stdev( std::vector<int>& data,
+				size_t start, size_t end )
+  {
+    
+    double result = 0.0;
+    auto    avg   = mean(data,start,end);
+    
+    for(int i = start; i <= end; ++i)
+      result += (data[i] - avg)*(data[i] - avg);
+    
+    return std::sqrt(result/((double)(end - start)));
+  }
+
+
+  double PCAProjection::cov ( std::vector<int>& data1,
+			       std::vector<int>& data2,
+			       size_t start, size_t end )
+  {
+
+    double result = 0.0;
+    auto   mean1  = mean(data1,start,end);
+    auto   mean2  = mean(data2,start,end);
+    
+    for(int i = start; i <= end; ++i)
+      result += (data1[i] - mean1)*(data2[i] - mean2);
+    
+    return result/((double)(end - start));
+  }
+  
+  double PCAProjection::mean( std::vector<int>& data,
+			       size_t start, size_t end )
+  {
+    double result = 0.0;
+    
+    for(int i = start; i <= end; ++i)
+      result += data[i];
+    
+    return result / ((double)( end - start ));
+  }  
+
+  void PCAProjection::clear_vars() {
+
+    _eigen_vecs.clear();
+    _eigen_val.clear();
+    
+  }
+}
+#endif

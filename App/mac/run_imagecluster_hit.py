@@ -13,9 +13,10 @@ from ROOT import larcv
 # Create ana_processor instance
 my_proc = fmwk.ana_processor()
 
+print sys.argv
 # Config file
-cfg=sys.argv[1]
-name=sys.argv[2]
+cfg  = sys.argv[1]
+name = sys.argv[2]
 if not cfg.endswith('.fcl'):
     print 'Config file needs to end with \'.fcl\' extension (sorry bad joke)'
     sys.exit(1)
@@ -44,8 +45,8 @@ print  "Finished configuring ana_processor. Start event loop!"
 print
 
 # Let's run it.
-#my_proc.run(0,10);
-my_proc.run()
+my_proc.run(0,10);
+#my_proc.run()
 
 # done!
 print
