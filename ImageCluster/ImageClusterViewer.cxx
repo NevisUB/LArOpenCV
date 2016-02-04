@@ -84,6 +84,10 @@ namespace larcv {
     LARCV_INFO((*this)) << "Original size: " << orig_image.rows << " : " << orig_image.cols
 			<< " ... "
 			<< "Resizing: " << imshow_width << " : " << imshow_height << std::endl;
+
+    if(!orig_image.rows || !orig_image.cols) return;
+    if(!imshow_width || !imshow_height) return;
+
     ::cv::resize(orig_image,orig_image,::cv::Size(imshow_width,imshow_height),0,0,::cv::INTER_AREA);
     //::cv::bitwise_not (orig_image,orig_image);
     result_image_v.emplace_back(orig_image);
@@ -120,9 +124,10 @@ namespace larcv {
 			  << "Bounded size : " << result_image.rows << " : " << result_image.cols
 			  << " ... "
 			  << "Resizing: " << imshow_width << " : " << imshow_height << std::endl;
-      
-      ::cv::resize(result_image,result_image,::cv::Size(imshow_width,imshow_height),0,0,::cv::INTER_AREA);
-      ::cv::bitwise_not(result_image,result_image);
+      if(imshow_width && imshow_height && result_image.rows && result_image.cols) {
+	::cv::resize(result_image,result_image,::cv::Size(imshow_width,imshow_height),0,0,::cv::INTER_AREA);
+	::cv::bitwise_not(result_image,result_image);
+      }
       result_image_v.emplace_back(result_image);
     }
 
@@ -132,8 +137,10 @@ namespace larcv {
       if(i) name = display_name_v[i-1];
 
       auto const& image = result_image_v[i];
-      ::cv::namedWindow(name, CV_WINDOW_NORMAL);
-      ::cv::imshow(name, image);
+      if(image.rows>0 && image.cols>0) {
+	::cv::namedWindow(name, CV_WINDOW_NORMAL);
+	::cv::imshow(name, image);
+      }
     }
 
     cvWaitKey(0);

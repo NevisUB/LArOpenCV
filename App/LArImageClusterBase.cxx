@@ -106,7 +106,6 @@ namespace larlite {
     //      _contour_tree->Fill();
     //      }
 
-
     watch_one.Start();
     this->store_clusters(storage);
     _process_time_cluster_storage += watch_one.WallTime();
