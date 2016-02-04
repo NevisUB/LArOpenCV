@@ -217,7 +217,8 @@ namespace larcv{
     }
     
 
-    return ctor_v;
+    //just return the clusters
+    return clusters;
 
 
   }
