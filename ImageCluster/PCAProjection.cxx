@@ -10,6 +10,9 @@ namespace larcv{
 
     _min_trunk_length = pset.get<int>    ("MinTrunkLength");
     _trunk_deviation  = pset.get<double> ("TrunkDeviation");
+    _closeness        = pset.get<double> ("Closeness");
+
+
     
     _outtree = new TTree("PCA","PCA");
     
@@ -21,11 +24,12 @@ namespace larcv{
 
     _outtree->Branch("_trunk_length",&_trunk_length,"trunk_length/D");
     _outtree->Branch("_trunk_cov",&_trunk_cov,"trunk_cov/D");
+    
   }
 
   ContourArray_t PCAProjection::_Process_(const larcv::ContourArray_t& clusters,
-					   const ::cv::Mat& img,
-					   larcv::ImageMeta& meta)
+					  const ::cv::Mat& img,
+					  larcv::ImageMeta& meta)
   {
 
     //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
@@ -33,8 +37,9 @@ namespace larcv{
     //cluster == contour
     ContourArray_t ctor_v;    
     clear_vars();
-    
+    _cparms_v.reserve(clusters.size());
     //All of these are diagnostics for the python view program
+
     for(unsigned i = 0; i < clusters.size(); ++i) {
 
       auto& cluster    =  clusters[i];
@@ -67,15 +72,14 @@ namespace larcv{
       // 1 for each ``feature" or coordinate
       ::cv::Mat ctor_pts(cluster_s.size(), 2, CV_64FC1);
       
-      for (unsigned i = 0; i < ctor_pts.rows; ++i)
-	{
-	  ctor_pts.at<double>(i, 0) = cluster_s[i].x;
-	  ctor_pts.at<double>(i, 1) = cluster_s[i].y;
-	}
-
+      for (unsigned i = 0; i < ctor_pts.rows; ++i) {
+	ctor_pts.at<double>(i, 0) = cluster_s[i].x;
+	ctor_pts.at<double>(i, 1) = cluster_s[i].y;
+      }
+      
       //Perform PCA analysis
       ::cv::PCA pca_ana(ctor_pts, ::cv::Mat(), CV_PCA_DATA_AS_ROW,0); // maxComponents = 0 (retain all)
-
+      
       //Center point
       // ::cv::Point
       cntr_pt = Point2D( pca_ana.mean.at<double>(0,0),
@@ -105,7 +109,7 @@ namespace larcv{
       line[1] = cntr_pt.y + ( (0 - cntr_pt.x) / eigen_vecs[0].x ) * eigen_vecs[0].y;
       line[2] = rect.width;
       line[3] = cntr_pt.y + ( (rect.width - cntr_pt.x) / eigen_vecs[0].x) * eigen_vecs[0].y;
-
+      
       
       std::map<int,double> odist; // ordered left to right closest distance to line
       std::map<int,int>    opts;  // ordered points (hit x, hit y)
@@ -118,7 +122,7 @@ namespace larcv{
 	//is this point in the contour, if not continue
 	if ( ::cv::pointPolygonTest(cluster_s, loc,false) < 0 )
 	  continue;
-	  
+	
 	//real time collision detection page 128
 	//closest point on line
 	auto ax = line[0];
@@ -205,18 +209,45 @@ namespace larcv{
       _trunk_cov    = pearsons_r;
       _trunk_length = std::sqrt( std::pow(opts_x.at( trunk_index.second ) - opts_x.at( trunk_index.first ),2.0) +
 				 std::pow(opts_y.at( trunk_index.second ) - opts_y.at( trunk_index.first ),2.0) );
-     
+      
       _eval1 = eigen_val[0];
       _eval2 = eigen_val[1];
       
       _area      = (double) ::cv::contourArea(cluster);
       _perimeter = (double) ::cv::arcLength  (cluster,1);
+
+      _cparms_v.emplace_back(i,
+			     _trunk_length,
+			     _trunk_cov,
+			     _eval1,
+			     _eval2,
+			     _area,
+			     _perimeter,
+			     opts_x.at(trunk_index.first),
+			     opts_y.at(trunk_index.first),
+			     eigen_vecs[0].x,
+			     eigen_vecs[0].y);
+			     
       
       _outtree->Fill();
       
     }
     
+    for (int i = 0; i < _cparms_v.size(); ++i) {
+      for (int j = 0; j < _cparms_v.size(); ++j) {
 
+      auto& cparm1 = _cparms_v[i];
+      auto& cparm2 = _cparms_v[j];
+      
+      std::cout << std::sqrt( std::pow( cparm1.startx_ - cparm2.startx_,2) +
+			      std::pow( cparm1.starty_ - cparm2.starty_,2) ) << std::endl;
+      
+      }
+    }
+
+    
+    
+    
     //just return the clusters
     return clusters;
 
@@ -226,7 +257,7 @@ namespace larcv{
 
 
   double PCAProjection::stdev( std::vector<int>& data,
-				size_t start, size_t end )
+			       size_t start, size_t end )
   {
     
     double result = 0.0;
@@ -240,10 +271,10 @@ namespace larcv{
 
 
   double PCAProjection::cov ( std::vector<int>& data1,
-			       std::vector<int>& data2,
-			       size_t start, size_t end )
+			      std::vector<int>& data2,
+			      size_t start, size_t end )
   {
-
+    
     double result = 0.0;
     auto   mean1  = mean(data1,start,end);
     auto   mean2  = mean(data2,start,end);
@@ -255,7 +286,7 @@ namespace larcv{
   }
   
   double PCAProjection::mean( std::vector<int>& data,
-			       size_t start, size_t end )
+			      size_t start, size_t end )
   {
     double result = 0.0;
     
@@ -269,7 +300,8 @@ namespace larcv{
 
     _eigen_vecs.clear();
     _eigen_val.clear();
-    
+
+    _cparms_v.clear();
   }
 }
 #endif

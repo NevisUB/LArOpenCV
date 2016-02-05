@@ -16,6 +16,8 @@
 
 #include "ImageClusterBase.h"
 #include "TTree.h"
+#include "ClusterParams.h"
+
 #include <array>
 
 
@@ -33,7 +35,8 @@ namespace larcv {
       ImageClusterBase(name),
       _outtree(nullptr),
       _min_trunk_length(1),
-      _trunk_deviation(10)
+      _trunk_deviation(10),
+      _closeness(10)
     {}
     
     /// Default destructor
@@ -56,7 +59,7 @@ namespace larcv {
 				    larcv::ImageMeta& meta);
     
   private:
-
+    
 
 
     //Doesn't have to be so heavy
@@ -80,6 +83,8 @@ namespace larcv {
     double _area;
     double _perimeter;
 
+    double _closeness;
+    
     double stdev( std::vector<int>& data,
 		  size_t start, size_t end );
     
@@ -91,6 +96,9 @@ namespace larcv {
 		 size_t start, size_t end );
 
     void clear_vars();
+
+    std::vector<ClusterParams> _cparms_v;
+    
   };
   
   /**
