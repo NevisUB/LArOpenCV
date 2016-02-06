@@ -19,7 +19,7 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-AlgoType: [SBCluster,PCAProjection]
+  AlgoType: [SBCluster,PCASegmentation]
   AlgoName: [sbc,pca]
 
  ImageClusterViewer: {
@@ -43,6 +43,10 @@ AlgoType: [SBCluster,PCAProjection]
     MinTrunkLength   : 1
     TrunkDeviation   : 150	
     MinTrunkEdgeDist : 5
+    Closeness : 10
+
+    NSegmentsX : 6
+    NSegmentsY : 6
   }
 
   Trackshower:{

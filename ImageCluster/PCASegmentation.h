@@ -1,9 +1,9 @@
 /**
- * \file PCAProjection.h
+ * \file PCASegmentation.h
  *
  * \ingroup ImageCluster
  * 
- * \brief Class def header for a class PCAProjection
+ * \brief Class def header for a class PCASegmentation
  *
  * @author vic
  */
@@ -11,8 +11,8 @@
 /** \addtogroup ImageCluster
 
     @{*/
-#ifndef __PCAPROJECTION_H__
-#define __PCAPROJECTION_H__
+#ifndef __PCASEGMENTATION_H__
+#define __PCASEGMENTATION_H__
 
 #include "ImageClusterBase.h"
 #include "TTree.h"
@@ -23,15 +23,15 @@
 
 namespace larcv {
   /**
-     \class PCAProjection
+     \class PCASegmentation
      @brief A brief
   */
-  class PCAProjection : public larcv::ImageClusterBase {
+  class PCASegmentation : public larcv::ImageClusterBase {
     
   public:
     
     /// Default constructor
-    PCAProjection(const std::string name="PCAProjection") :
+    PCASegmentation(const std::string name="PCASegmentation") :
       ImageClusterBase(name),
       _outtree(nullptr),
       _min_trunk_length(1),
@@ -40,14 +40,15 @@ namespace larcv {
     {}
     
     /// Default destructor
-    ~PCAProjection(){}
+    ~PCASegmentation(){}
     
   private:
     TTree* _outtree;
 
   public:
     void Finalize(TFile* fout) { _outtree->Write(); }
-    
+
+    std::vector<ClusterParams> _cparms_v;
   protected:
     
     /// Configuration method
@@ -58,10 +59,15 @@ namespace larcv {
 				    const ::cv::Mat& img,
 				    larcv::ImageMeta& meta);
     
-  private:
+
+
+
     
+  private:
+    std::pair<double,double> closest_point_on_line(std::array<double,4>& line,int lx,int ly);    
+    double distance_to_line(std::array<double,4>& line,int lx,int ly);
 
-
+      
     //Doesn't have to be so heavy
     Point2D _cntr_pt;
     std::vector<Point2D> _eigen_vecs;
@@ -69,6 +75,10 @@ namespace larcv {
     std::array<double,4> _line;
     std::pair<int,int> _trunk_index;
 
+
+    int _segments_x;
+    int _segments_y;
+    
     double _pearsons_r;
     
     int    _min_trunk_length;
@@ -97,25 +107,27 @@ namespace larcv {
 
     void clear_vars();
 
-    std::vector<ClusterParams> _cparms_v;
-    
+    bool pca_line(const ::cv::Mat& subimg,
+		  Contour_t cluster_s,
+		  const ::cv::Rect& rect,
+		  std::vector<double>& line);
   };
   
   /**
-     \class larcv::PCAProjectionFactory
-     \brief A concrete factory class for larcv::PCAProjection
+     \class larcv::PCASegmentationFactory
+     \brief A concrete factory class for larcv::PCASegmentation
    */
-  class PCAProjectionFactory : public ImageClusterFactoryBase {
+  class PCASegmentationFactory : public ImageClusterFactoryBase {
   public:
     /// ctor
-    PCAProjectionFactory() { ImageClusterFactory::get().add_factory("PCAProjection",this); }
+    PCASegmentationFactory() { ImageClusterFactory::get().add_factory("PCASegmentation",this); }
     /// dtor
-    ~PCAProjectionFactory() {}
+    ~PCASegmentationFactory() {}
     /// creation method
-    ImageClusterBase* create(const std::string instance_name) { return new PCAProjection(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new PCASegmentation(instance_name); }
   };
-  /// Global larcv::PCAProjectionFactory to register ImageClusterFactory
-  static PCAProjectionFactory __global_PCAProjectionFactory__;
+  /// Global larcv::PCASegmentationFactory to register ImageClusterFactory
+  static PCASegmentationFactory __global_PCASegmentationFactory__;
 }
 #endif
 /** @} */ // end of doxygen group 

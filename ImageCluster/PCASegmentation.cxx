@@ -1,11 +1,11 @@
-#ifndef __PCAPROJECTION_CXX__
-#define __PCAPROJECTION_CXX__
+#ifndef __PCASEGMENTATION_CXX__
+#define __PCASEGMENTATION_CXX__
 
-#include "PCAProjection.h"
+#include "PCASegmentation.h"
 
 namespace larcv{
 
-  void PCAProjection::_Configure_(const ::fcllite::PSet &pset)
+  void PCASegmentation::_Configure_(const ::fcllite::PSet &pset)
   {
 
     _min_trunk_length = pset.get<int>    ("MinTrunkLength");
@@ -13,6 +13,9 @@ namespace larcv{
     _closeness        = pset.get<double> ("Closeness");
 
 
+    _segments_x = pset.get<int> ("NSegmentsX");
+    _segments_y = pset.get<int> ("NSegmentsY");
+    
     
     _outtree = new TTree("PCA","PCA");
     
@@ -24,10 +27,11 @@ namespace larcv{
 
     _outtree->Branch("_trunk_length",&_trunk_length,"trunk_length/D");
     _outtree->Branch("_trunk_cov",&_trunk_cov,"trunk_cov/D");
+
     
   }
 
-  ContourArray_t PCAProjection::_Process_(const larcv::ContourArray_t& clusters,
+  ContourArray_t PCASegmentation::_Process_(const larcv::ContourArray_t& clusters,
 					  const ::cv::Mat& img,
 					  larcv::ImageMeta& meta)
   {
@@ -55,7 +59,42 @@ namespace larcv{
       //and the points in immediate vicinity
       ::cv::Rect rect = ::cv::boundingRect(cluster);
       ::cv::Mat subMat(img, rect);
-      
+
+      double nsegments_x = 5;
+      double nsegments_y = 5;
+
+      std::vector<::cv::Rect> rec;
+      std::vector<std::vector<double> > llines;
+	  
+      for(unsigned i = 0; i < nsegments_x; ++i) {
+	for(unsigned j = 0; j < nsegments_y; ++j) {
+	  auto dx = rect.width  / nsegments_x;
+	  auto dy = rect.height / nsegments_y;
+
+	  auto x  = i * dx;
+	  auto y  = j * dy;
+
+	  ::cv::Rect r(x + rect.x,y + rect.y,dx,dy);
+	  ::cv::Mat subMat(img, r);
+	  std::vector<double> line; line.resize(4);
+	  
+	  Contour_t roi_contour; roi_contour.reserve(cluster.size());
+	  for(const auto& pt : cluster)
+	    if ( (pt.x - r.x) <= r.width && (pt.x - r.x) >= 0 )
+	      if ( (pt.y - r.y) <= r.height && (pt.y - r.y) >= 0 )
+		roi_contour.emplace_back(pt);
+
+	  if ( roi_contour.size() == 0 )
+	    continue;
+	  
+	  if( ! pca_line(subMat,roi_contour,r,line) )
+	    continue;
+	  
+	  rec.emplace_back(r);	  
+	  llines.emplace_back(line);
+	}
+      }
+
       //subMat holds pixels in the bounding rectangle
       //around the given contour. We can make a line from principle eigenvector
       //and compute the distance to this line of the hits may be weighted by
@@ -63,7 +102,7 @@ namespace larcv{
       
       //make a copy cluster_s = shifted clusters to the bounding box
       auto cluster_s = cluster;
-
+      
       //shift it down
       for(auto &pt : cluster_s) { pt.x -= rect.x; pt.y -= rect.y; }
       ctor_v.emplace_back(cluster_s);
@@ -110,43 +149,34 @@ namespace larcv{
       line[2] = rect.width;
       line[3] = cntr_pt.y + ( (rect.width - cntr_pt.x) / eigen_vecs[0].x) * eigen_vecs[0].y;
       
-      
       std::map<int,double> odist; // ordered left to right closest distance to line
       std::map<int,int>    opts;  // ordered points (hit x, hit y)
-
-      int nhits = 0;
-
-      //lets try to find how far away the points are to the line
-      for(const auto& loc : locations) {
+      std::map<int,std::pair<int,int> >    cpts;  // closest points (ordered on line)
 	
+      int nhits = 0;
+      
+      //find how far away the points are to the line
+      std::vector<std::pair<int,int> > hits;
+      std::vector<int> charge;
+      for(const auto& loc : locations) {
+
 	//is this point in the contour, if not continue
 	if ( ::cv::pointPolygonTest(cluster_s, loc,false) < 0 )
 	  continue;
 	
-	//real time collision detection page 128
-	//closest point on line
-	auto ax = line[0];
-	auto ay = line[1];
-	auto bx = line[2];
-	auto by = line[3];
+	charge.push_back( (int) subMat.at<uchar>(loc.y,loc.x) );
 	
-	auto abx = bx-ax;
-	auto aby = by-ay;
-
-	auto& lx = loc.x;
-	auto& ly = loc.y;
+	auto dist     = distance_to_line     (line,loc.x,loc.y);
+	auto close_pt = closest_point_on_line(line,loc.x,loc.y);
 	
-	auto t = ( (lx-ax)*abx + (ly-ay)*aby ) / (abx*abx + aby*aby);
-	auto dx = ax + t * abx;
-	auto dy = ay + t * aby;
-	auto dist = (dx-lx)*(dx-lx) + (dy-ly)*(dy-ly) ; //squared dis
-
-	odist[lx] = dist; // ordered set of distance by wire number
-	opts [lx] = ly;   // ordered set of mapped X->Y values
+	odist[close_pt.first] = dist;    // ordered set of distance by wire number
+	opts [loc.x]          = loc.y;   // ordered set of mapped X->Y values
+	cpts [close_pt.first] = std::make_pair(loc.x,loc.y);
+	hits.emplace_back(loc.x + rect.x, loc.y + rect.y);
 	++nhits;
-	
+       
       }
-
+      
       // you must have atleast 10 points to proceed or trunk is useless
       if ( nhits < 10 ) // j == number of points in cluster
 	continue;
@@ -159,10 +189,10 @@ namespace larcv{
 
       std::vector<double> dists; dists.reserve(nhits); // dists ordered as vector
       
-      for(auto& pt: odist) {
-	dists.push_back(  pt.second      );
-	opts_x.push_back( pt.first       );
-	opts_y.push_back( opts[pt.first] );
+      for(auto& pt: cpts) {
+	dists.push_back ( odist[pt.first]  );
+	opts_x.push_back( pt.second.first  );
+	opts_y.push_back( pt.second.second );
       }
       
       //find the trunk with this info 
@@ -172,11 +202,12 @@ namespace larcv{
       
       int k  = 0;	
       int j  = 0;
+      int y  = 0;
       
       for(j = 0 ; j < dists.size(); ++j) 
 	if ( dists[j] > _trunk_deviation )
 	  break;
-
+      
       for(k = dists.size() - 1; k >= 0; --k) 
 	if ( dists[k] > _trunk_deviation )
 	  break;
@@ -186,12 +217,20 @@ namespace larcv{
       
       k = (dists.size() - 1 - k);
       
-      if ( j < k )
-	trunk_index = { dists.size() - 1 - k, dists.size() - 1 }; // trunk is on the right
-      else if ( j == k )
+      if ( j < k ) {
+	trunk_index = { dists.size() - 1 - k, dists.size() - 1}; // trunk is on the right
+	std::cout << "\t==> Trunk is on the right...\n";
+      }
+      else if ( j == k ) {
+	std::cout << "\t==> NO trunk is found...\n";
 	trunk_index = { 0 , 0 }; // no trunk on either side
-      else 
+	//ignore this cluster...
+	continue;
+      }
+      else  {
 	trunk_index = { 0 , j }; // trunk is on the left
+	std::cout << "\t==> Trunk is on the left\n";
+      }
       
       // Should we reject bad trunks? This probably involves some fit?
       // the showering region needs enough hits with enough sparsity
@@ -206,28 +245,45 @@ namespace larcv{
       else
 	pearsons_r = 0;
 
-      _trunk_cov    = pearsons_r;
+      _trunk_cov    = std::abs(pearsons_r);
       _trunk_length = std::sqrt( std::pow(opts_x.at( trunk_index.second ) - opts_x.at( trunk_index.first ),2.0) +
 				 std::pow(opts_y.at( trunk_index.second ) - opts_y.at( trunk_index.first ),2.0) );
       
-      _eval1 = eigen_val[0];
-      _eval2 = eigen_val[1];
+      auto normal = std::sqrt( eigen_val[0]*eigen_val[0] + eigen_val[1]*eigen_val[1] ) ;
+      
+      _eval1 = eigen_val[0] / normal;
+      _eval2 = eigen_val[1] / normal;
       
       _area      = (double) ::cv::contourArea(cluster);
       _perimeter = (double) ::cv::arcLength  (cluster,1);
 
+      auto shower_len   = std::sqrt(rect.width*rect.width + rect.height*rect.height);
+      auto eigen_normal = std::sqrt(std::pow(eigen_vecs[0].x,2) + std::pow(eigen_vecs[0].y,2));
+
+      
+      int start_idx = trunk_index.first == 0 ? trunk_index.first : trunk_index.second;
+
+      
+      std::vector<double> lline = {line[0] + rect.x,line[1] + rect.y,line[2]+rect.x,line[3]+rect.y};
       _cparms_v.emplace_back(i,
 			     _trunk_length,
 			     _trunk_cov,
+			     shower_len,
 			     _eval1,
 			     _eval2,
 			     _area,
 			     _perimeter,
-			     opts_x.at(trunk_index.first),
-			     opts_y.at(trunk_index.first),
-			     eigen_vecs[0].x,
-			     eigen_vecs[0].y);
-			     
+			     opts_x.at(start_idx) + rect.x,
+			     opts_y.at(start_idx) + rect.y,
+			     eigen_vecs[0].x / eigen_normal,
+			     eigen_vecs[0].y / eigen_normal,
+			     nhits,
+			     hits,
+			     lline,
+			     charge,
+			     rec,
+			     llines);
+      
       
       _outtree->Fill();
       
@@ -235,17 +291,21 @@ namespace larcv{
     
     for (int i = 0; i < _cparms_v.size(); ++i) {
       for (int j = 0; j < _cparms_v.size(); ++j) {
+	
+	if ( i == j ) continue;
+	
+	auto& cparm1 = _cparms_v[i];
+	auto& cparm2 = _cparms_v[j];
 
-      auto& cparm1 = _cparms_v[i];
-      auto& cparm2 = _cparms_v[j];
-      
-      std::cout << std::sqrt( std::pow( cparm1.startx_ - cparm2.startx_,2) +
-			      std::pow( cparm1.starty_ - cparm2.starty_,2) ) << std::endl;
-      
+	if (cparm1.trunk_cov_ == 0) continue;
+	if (cparm2.trunk_cov_ == 0) continue;
+	
+	
+	cparm1.compare(cparm2);
+	
+	
       }
     }
-
-    
     
     
     //just return the clusters
@@ -256,7 +316,7 @@ namespace larcv{
 
 
 
-  double PCAProjection::stdev( std::vector<int>& data,
+  double PCASegmentation::stdev( std::vector<int>& data,
 			       size_t start, size_t end )
   {
     
@@ -269,10 +329,10 @@ namespace larcv{
     return std::sqrt(result/((double)(end - start)));
   }
 
-
-  double PCAProjection::cov ( std::vector<int>& data1,
-			      std::vector<int>& data2,
-			      size_t start, size_t end )
+  
+  double PCASegmentation::cov ( std::vector<int>& data1,
+				std::vector<int>& data2,
+				size_t start, size_t end )
   {
     
     double result = 0.0;
@@ -285,8 +345,8 @@ namespace larcv{
     return result/((double)(end - start));
   }
   
-  double PCAProjection::mean( std::vector<int>& data,
-			      size_t start, size_t end )
+  double PCASegmentation::mean( std::vector<int>& data,
+				size_t start, size_t end )
   {
     double result = 0.0;
     
@@ -296,12 +356,104 @@ namespace larcv{
     return result / ((double)( end - start ));
   }  
 
-  void PCAProjection::clear_vars() {
+  void PCASegmentation::clear_vars() {
 
     _eigen_vecs.clear();
     _eigen_val.clear();
 
     _cparms_v.clear();
   }
+
+  double PCASegmentation::distance_to_line(std::array<double,4>& line,int lx,int ly) {
+
+    //real time collision detection page 128
+    //closest point on line
+    auto ax = line[0];
+    auto ay = line[1];
+    auto bx = line[2];
+    auto by = line[3];
+	
+    auto abx = bx-ax;
+    auto aby = by-ay;
+	
+    auto t = ( (lx-ax)*abx + (ly-ay)*aby ) / (abx*abx + aby*aby);
+    auto dx = ax + t * abx;
+    auto dy = ay + t * aby;
+    auto dist = (dx-lx)*(dx-lx) + (dy-ly)*(dy-ly); //squared distance
+    return dist;
+  }
+  
+  std::pair<double,double> PCASegmentation::closest_point_on_line(std::array<double,4>& line,int lx,int ly) {
+
+    //real time collision detection page 128
+    //closest point on line
+    auto ax = line[0];
+    auto ay = line[1];
+    auto bx = line[2];
+    auto by = line[3];
+	
+    auto abx = bx-ax;
+    auto aby = by-ay;
+	
+    auto t = ( (lx-ax)*abx + (ly-ay)*aby ) / (abx*abx + aby*aby);
+    auto dx = ax + t * abx;
+    auto dy = ay + t * aby;
+
+    return std::make_pair(dx,dy);
+  }
+
+  bool PCASegmentation::pca_line(const ::cv::Mat& subimg,
+				 Contour_t cluster_s,
+				 const ::cv::Rect& rect,
+				 std::vector<double>& line) {
+    
+    
+    //shift it down, yes I want explicit copy of the contour...
+    for(auto &pt : cluster_s) { pt.x -= rect.x; pt.y -= rect.y; }
+    ::cv::Mat ctor_pts(cluster_s.size(), 2, CV_64FC1);
+	
+    std::vector<::cv::Point> locations;
+    ::cv::findNonZero(subimg, locations);
+
+    if ( locations.size() == 0 ) 
+      { std::cout<<"No contours in this sub image...\n"; return false; }
+    
+
+    for (unsigned i = 0; i < ctor_pts.rows; ++i) {
+      ctor_pts.at<double>(i, 0) = cluster_s[i].x;
+      ctor_pts.at<double>(i, 1) = cluster_s[i].y;
+    }
+      
+    ::cv::PCA pca_ana(ctor_pts, ::cv::Mat(), CV_PCA_DATA_AS_ROW,0);
+      
+    //Center point
+    // ::cv::Point
+    auto cntr_pt = Point2D( pca_ana.mean.at<double>(0,0),
+			    pca_ana.mean.at<double>(0,1) );
+    
+
+    //Principle directions (vec) and relative lengths (vals)
+    std::vector<Point2D> eigen_vecs;
+    std::vector<double>  eigen_val;
+    
+    eigen_vecs.resize(2);
+    eigen_val.resize (2);
+      
+    for (unsigned i = 0; i < 2; ++i) {
+      eigen_vecs[i] = Point2D(pca_ana.eigenvectors.at<double>(i, 0),
+			      pca_ana.eigenvectors.at<double>(i, 1));
+      eigen_val[i]  = pca_ana.eigenvalues.at<double>(0, i);
+    }
+
+
+    line[0] = 0 + rect.x;
+    line[1] = cntr_pt.y + ( (0 - cntr_pt.x) / eigen_vecs[0].x ) * eigen_vecs[0].y + rect.y;
+    line[2] = rect.width + rect.x;
+    line[3] = cntr_pt.y + ( (rect.width - cntr_pt.x) / eigen_vecs[0].x) * eigen_vecs[0].y + rect.y;
+    
+    return true;
+  }
+  
 }
+
 #endif
