@@ -16,7 +16,8 @@ namespace larcv{
     _segments_x = pset.get<int> ("NSegmentsX");
     _segments_y = pset.get<int> ("NSegmentsY");
     
-    
+    _nhits_cut  = pset.get<int> ("NHitsCut");
+      
     _outtree = new TTree("PCA","PCA");
     
     _outtree->Branch("_eval1",&_eval1,"eval1/D");
@@ -32,8 +33,8 @@ namespace larcv{
   }
 
   ContourArray_t PCASegmentation::_Process_(const larcv::ContourArray_t& clusters,
-					  const ::cv::Mat& img,
-					  larcv::ImageMeta& meta)
+					    const ::cv::Mat& img,
+					    larcv::ImageMeta& meta)
   {
 
     //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
@@ -65,7 +66,9 @@ namespace larcv{
 
       std::vector<::cv::Rect> rec;
       std::vector<std::vector<double> > llines;
-	  
+      std::vector<int> ccharge;
+      std::vector<std::pair<double,double> > mean_loc;
+
       for(unsigned i = 0; i < nsegments_x; ++i) {
 	for(unsigned j = 0; j < nsegments_y; ++j) {
 	  auto dx = rect.width  / nsegments_x;
@@ -78,23 +81,81 @@ namespace larcv{
 	  ::cv::Mat subMat(img, r);
 	  std::vector<double> line; line.resize(4);
 	  
-	  Contour_t roi_contour; roi_contour.reserve(cluster.size());
-	  for(const auto& pt : cluster)
-	    if ( (pt.x - r.x) <= r.width && (pt.x - r.x) >= 0 )
-	      if ( (pt.y - r.y) <= r.height && (pt.y - r.y) >= 0 )
-		roi_contour.emplace_back(pt);
+	  // Contour_t roi_contour; roi_contour.reserve(cluster.size());
+	  // for(const auto& pt : cluster)
+	  //   if ( (pt.x - r.x) <= r.width && (pt.x - r.x) >= 0 )
+	  //     if ( (pt.y - r.y) <= r.height && (pt.y - r.y) >= 0 )
+	  // 	roi_contour.emplace_back(pt);
+	  // if ( roi_contour.size() == 0 )
+	  //   continue;
+	  
+	  Contour_t locations;
+	  Contour_t inside_locations;
+	  
+	  ::cv::findNonZero(subMat, locations);
 
-	  if ( roi_contour.size() == 0 )
+	  if ( locations.size() == 0 ) 
 	    continue;
 	  
-	  if( ! pca_line(subMat,roi_contour,r,line) )
+	  for(auto& loc : locations) {
+	    //must be "in" the contour...
+	    loc.x += r.x;
+	    loc.y += r.y;
+	    
+	    if ( ::cv::pointPolygonTest(cluster, loc ,false) < 0 )
+	      continue;
+	    
+	    loc.x -= r.x;
+	    loc.y -= r.y;
+	    
+	    inside_locations.emplace_back(loc);
+	  }
+
+	  if ( inside_locations.size() == 0 ) 
+	    continue;
+
+	  if ( inside_locations.size() <= _nhits_cut )
 	    continue;
 	  
+	  if( ! pca_line(subMat,inside_locations,r,line) ) // only scary part is contour may be "tangled?"
+	    continue;
+
+
+	  mean_loc.push_back( get_mean_loc  (r,inside_locations) );
+	  ccharge.push_back ( get_charge_sum(subMat,inside_locations) );
 	  rec.emplace_back(r);	  
 	  llines.emplace_back(line);
 	}
       }
+      
+      //weighted mean...
+      double mean_slope = 0.0;
+      double mean_x = 0.0;
+      double mean_y = 0.0;
+      double sum_charge = 0.0;
+      for(int i = 0; i < llines.size(); ++i) {
+	auto& li = llines.at(i);
+	
+	auto slope = ( (double) li[3] - (double) li[1] )/((double) li[2] - (double) li[0]);
+	std::cout << slope << "\n";
+	sum_charge += ccharge[i];
+	mean_slope += slope*ccharge[i];
+	mean_x += mean_loc[i].first *ccharge[i];
+	mean_y += mean_loc[i].second*ccharge[i];
+      }
 
+      mean_slope /= sum_charge;
+      mean_x     /= sum_charge;
+      mean_y     /= sum_charge;
+
+      std::vector<double> meanline; meanline.resize(4);
+      
+      meanline[0] = rect.x;
+      meanline[1] = mean_y + ( (0 - mean_x) / 1.0 ) * mean_slope + rect.y;
+      meanline[2] = rect.x + rect.width;
+      meanline[3] = mean_y + ( (rect.width - mean_x) / 1.0) * mean_slope + rect.y;
+
+      
       //subMat holds pixels in the bounding rectangle
       //around the given contour. We can make a line from principle eigenvector
       //and compute the distance to this line of the hits may be weighted by
@@ -282,7 +343,8 @@ namespace larcv{
 			     lline,
 			     charge,
 			     rec,
-			     llines);
+			     llines,
+			     meanline);
       
       
       _outtree->Fill();
@@ -409,14 +471,11 @@ namespace larcv{
     
     
     //shift it down, yes I want explicit copy of the contour...
-    for(auto &pt : cluster_s) { pt.x -= rect.x; pt.y -= rect.y; }
+
+    //put this back in if using ACTUAL CONTOUR ROI
+    //for(auto &pt : cluster_s) { pt.x -= rect.x; pt.y -= rect.y; }
     ::cv::Mat ctor_pts(cluster_s.size(), 2, CV_64FC1);
 	
-    std::vector<::cv::Point> locations;
-    ::cv::findNonZero(subimg, locations);
-
-    if ( locations.size() == 0 ) 
-      { std::cout<<"No contours in this sub image...\n"; return false; }
     
 
     for (unsigned i = 0; i < ctor_pts.rows; ++i) {
@@ -450,8 +509,25 @@ namespace larcv{
     line[1] = cntr_pt.y + ( (0 - cntr_pt.x) / eigen_vecs[0].x ) * eigen_vecs[0].y + rect.y;
     line[2] = rect.width + rect.x;
     line[3] = cntr_pt.y + ( (rect.width - cntr_pt.x) / eigen_vecs[0].x) * eigen_vecs[0].y + rect.y;
-    
+
     return true;
+  }
+
+  std::pair<double,double> PCASegmentation::get_mean_loc(const ::cv::Rect& rect,
+							 const Contour_t& pts ) {
+    
+    double mean_x = 0.0;
+    double mean_y = 0.0;
+    
+    for(const auto& pt : pts) { mean_x += pt.x;  mean_y += pt.y; }
+    
+    return {mean_x / ( (double) pts.size() ),mean_y / ( (double) pts.size() )};
+  }
+  
+  int PCASegmentation::get_charge_sum(const ::cv::Mat& subImg, const Contour_t& pts ) {
+    int charge_sum = 0;
+    for(const auto& pt : pts ) charge_sum += (int) subImg.at<uchar>(pt.y,pt.x);
+    return charge_sum;
   }
   
 }

@@ -78,6 +78,8 @@ namespace larcv {
 
     int _segments_x;
     int _segments_y;
+
+    int _nhits_cut;
     
     double _pearsons_r;
     
@@ -111,6 +113,12 @@ namespace larcv {
 		  Contour_t cluster_s,
 		  const ::cv::Rect& rect,
 		  std::vector<double>& line);
+
+    int get_charge_sum(const ::cv::Mat& subImg,
+		       const Contour_t& pts);
+
+    std::pair<double,double> get_mean_loc(const ::cv::Rect& rect,
+					  const Contour_t& pts );
   };
   
   /**

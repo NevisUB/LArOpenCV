@@ -35,7 +35,8 @@ namespace larcv {
 		  std::vector<double> line,
 		  std::vector<int> charge,
 		  std::vector<::cv::Rect> rect,
-		  std::vector<std::vector<double> > llines) :
+		  std::vector<std::vector<double> > llines,
+		  std::vector<double> meanline) :
       
       in_index_(in_index),
       trunk_length_(trunk_length),
@@ -54,7 +55,9 @@ namespace larcv {
       line_(line),
       charge_(charge),
       rect_(rect),
-      llines_(llines)
+      llines_(llines),
+      meanline_(meanline)
+      
     {}      
 
     ~ClusterParams(){}
@@ -80,6 +83,7 @@ namespace larcv {
     std::vector<int> charge_;
     std::vector<::cv::Rect> rect_;
     std::vector<std::vector<double> > llines_;
+    std::vector<double> meanline_;
   };
 }
 #endif
