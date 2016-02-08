@@ -68,7 +68,8 @@ namespace larcv{
       std::vector<std::vector<double> > llines;
       std::vector<int> ccharge;
       std::vector<std::pair<double,double> > mean_loc;
-
+      std::vector<double> covar_loc;
+      
       for(unsigned i = 0; i < nsegments_x; ++i) {
 	for(unsigned j = 0; j < nsegments_y; ++j) {
 	  auto dx = rect.width  / nsegments_x;
@@ -121,8 +122,9 @@ namespace larcv{
 	    continue;
 
 
-	  mean_loc.push_back( get_mean_loc  (r,inside_locations) );
-	  ccharge.push_back ( get_charge_sum(subMat,inside_locations) );
+	  mean_loc.push_back ( get_mean_loc  (r,inside_locations) );
+	  covar_loc.push_back( get_roi_cov   (inside_locations) );
+	  ccharge.push_back  ( get_charge_sum(subMat,inside_locations) );
 	  rec.emplace_back(r);	  
 	  llines.emplace_back(line);
 	}
@@ -137,25 +139,35 @@ namespace larcv{
 	auto& li = llines.at(i);
 	
 	auto slope = ( (double) li[3] - (double) li[1] )/((double) li[2] - (double) li[0]);
-	std::cout << slope << "\n";
+
 	sum_charge += ccharge[i];
 	mean_slope += slope*ccharge[i];
+
 	mean_x += mean_loc[i].first *ccharge[i];
 	mean_y += mean_loc[i].second*ccharge[i];
       }
+
 
       mean_slope /= sum_charge;
       mean_x     /= sum_charge;
       mean_y     /= sum_charge;
 
-      std::vector<double> meanline; meanline.resize(4);
+      mean_x -= rect.x;
+      mean_y -= rect.y;
       
+      std::vector<double> meanline; meanline.resize(4);
+
       meanline[0] = rect.x;
       meanline[1] = mean_y + ( (0 - mean_x) / 1.0 ) * mean_slope + rect.y;
       meanline[2] = rect.x + rect.width;
       meanline[3] = mean_y + ( (rect.width - mean_x) / 1.0) * mean_slope + rect.y;
 
       
+      mean_x += rect.x;
+      mean_y += rect.y;
+
+
+
       //subMat holds pixels in the bounding rectangle
       //around the given contour. We can make a line from principle eigenvector
       //and compute the distance to this line of the hits may be weighted by
@@ -344,7 +356,10 @@ namespace larcv{
 			     charge,
 			     rec,
 			     llines,
-			     meanline);
+			     meanline,
+			     mean_x,
+			     mean_y,
+			     covar_loc);
       
       
       _outtree->Fill();
@@ -381,6 +396,8 @@ namespace larcv{
   double PCASegmentation::stdev( std::vector<int>& data,
 			       size_t start, size_t end )
   {
+
+    if ( (end - start) <=0 ) return 0.0;
     
     double result = 0.0;
     auto    avg   = mean(data,start,end);
@@ -396,6 +413,8 @@ namespace larcv{
 				std::vector<int>& data2,
 				size_t start, size_t end )
   {
+
+    if ( (end - start) <= 0 ) return 0.0;
     
     double result = 0.0;
     auto   mean1  = mean(data1,start,end);
@@ -410,6 +429,7 @@ namespace larcv{
   double PCASegmentation::mean( std::vector<int>& data,
 				size_t start, size_t end )
   {
+    if ( (end - start) <= 0 ) return 0.0;
     double result = 0.0;
     
     for(int i = start; i <= end; ++i)
@@ -474,9 +494,9 @@ namespace larcv{
 
     //put this back in if using ACTUAL CONTOUR ROI
     //for(auto &pt : cluster_s) { pt.x -= rect.x; pt.y -= rect.y; }
+
     ::cv::Mat ctor_pts(cluster_s.size(), 2, CV_64FC1);
 	
-    
 
     for (unsigned i = 0; i < ctor_pts.rows; ++i) {
       ctor_pts.at<double>(i, 0) = cluster_s[i].x;
@@ -521,7 +541,7 @@ namespace larcv{
     
     for(const auto& pt : pts) { mean_x += pt.x;  mean_y += pt.y; }
     
-    return {mean_x / ( (double) pts.size() ),mean_y / ( (double) pts.size() )};
+    return { mean_x / ( (double) pts.size() ) + rect.x,mean_y / ( (double) pts.size() ) + rect.y};
   }
   
   int PCASegmentation::get_charge_sum(const ::cv::Mat& subImg, const Contour_t& pts ) {
@@ -529,7 +549,26 @@ namespace larcv{
     for(const auto& pt : pts ) charge_sum += (int) subImg.at<uchar>(pt.y,pt.x);
     return charge_sum;
   }
-  
+
+  double PCASegmentation::get_roi_cov(const Contour_t & pts) {
+
+    std::vector<int> x_; x_.resize(pts.size()); 
+    std::vector<int> y_; y_.resize(pts.size());
+    for(unsigned i = 0; i < pts.size(); ++i)
+      { x_[i] = pts[i].x; y_[i] = pts[i].y; }
+    
+    double pearsons_r;
+    auto co = cov  (x_,y_,0,pts.size());
+    auto sx = stdev(x_,   0,pts.size());
+    auto sy = stdev(y_,   0,pts.size());
+
+    if ( sx != 0 && sy != 0) // trunk exists
+      pearsons_r =  co / ( sx * sy );
+    else
+      pearsons_r = 0;
+    
+    return pearsons_r;
+  }
 }
 
 #endif

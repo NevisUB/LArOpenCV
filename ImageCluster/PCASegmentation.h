@@ -24,7 +24,7 @@
 namespace larcv {
   /**
      \class PCASegmentation
-     @brief A brief
+     @brief A class with segmented PCA
   */
   class PCASegmentation : public larcv::ImageClusterBase {
     
@@ -119,6 +119,8 @@ namespace larcv {
 
     std::pair<double,double> get_mean_loc(const ::cv::Rect& rect,
 					  const Contour_t& pts );
+
+    double get_roi_cov(const Contour_t & pts);
   };
   
   /**

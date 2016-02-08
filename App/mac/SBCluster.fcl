@@ -48,7 +48,7 @@ ImageClusterManager: {
     NSegmentsX : 6
     NSegmentsY : 6
 
-    NHitsCut : 4
+    NHitsCut : 3
   }
 
   Trackshower:{
