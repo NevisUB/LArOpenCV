@@ -16,8 +16,9 @@ namespace larcv{
     _segments_x = pset.get<int> ("NSegmentsX");
     _segments_y = pset.get<int> ("NSegmentsY");
     
-    _nhits_cut  = pset.get<int> ("NHitsCut");
-      
+    _nhits_cut  = pset.get<int>   ("NHitsCut");
+    _angle_cut  = pset.get<double>("AngleCut");
+    
     _outtree = new TTree("PCA","PCA");
     
     _outtree->Branch("_eval1",&_eval1,"eval1/D");
@@ -31,10 +32,10 @@ namespace larcv{
 
     
   }
-
+  
   ContourArray_t PCASegmentationCombine::_Process_(const larcv::ContourArray_t& clusters,
-					    const ::cv::Mat& img,
-					    larcv::ImageMeta& meta)
+						   const ::cv::Mat& img,
+						   larcv::ImageMeta& meta)
   {
 
     //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
@@ -67,16 +68,20 @@ namespace larcv{
       std::vector<int> ccharge;
       std::vector<std::pair<double,double> > mean_loc;
       std::vector<double> covar_loc;
-      std::map<int,std::vector<double> > neighbors;
-      std::vector<double> slopes;
-      
+      std::map<int,std::vector<int> > neighbors;
+
+      // we need a way for a box to tell what his neighbors are
+      // we can do this based on ij indexing. Give me location on
+      // the grid of the box (i,j) i will tell you who your neighbors
+      // are in the std::vector of boxes
       int ijvec[_segments_x+2][_segments_y+2];
-      for(int i = 0; i < _segments_x+2; ++i)
-	for(int j = 0; j < _segments_y+2; ++j)
+
+      for(int i = 0; i < _segments_x + 2; ++i)
+	for(int j = 0; j < _segments_y + 2; ++j)
 	  ijvec[i][j] = -1;
       
       int ij = 0;
-      std::cout << "\t==> segmenting\n";
+
       for(unsigned i = 1; i <= _segments_x; ++i) {
 	for(unsigned j = 1; j <= _segments_y; ++j) {
 
@@ -128,8 +133,8 @@ namespace larcv{
 	  ccharge.push_back  ( get_charge_sum(subMat,inside_locations) );
 	  rec.emplace_back(r);	  
 	  llines.emplace_back(line);
-	  slopes.push_back( ( (double) line[3] - (double) line[1] ) / ( (double) line[2] - (double) line[0] ) );
 	  ijvec[i][j] = ij; ++ij;
+	  
 	}
       }
       
@@ -138,7 +143,7 @@ namespace larcv{
       for(unsigned i = 1; i <= _segments_x; ++i) {
 	for(unsigned j = 1; j <= _segments_y; ++j) {
 
-	  if ( ijvec[i][j] < 0 )
+	  if ( ijvec[i][j] < 0 ) // this box doesn't exist
 	    continue;
 
 	  // 8 cases to check neighbors... disgusting
@@ -166,49 +171,51 @@ namespace larcv{
 	  if ( ijvec[i-1][j+1] >= 0  )
 	    neighbors[ ijvec[i][j] ].push_back(ijvec[i-1][j+1]);
 	}
+
       }
 
       std::cout << "========================\n";
       for(int i = 0; i < _segments_x+2; ++i){
-	for(int j = 0; j < _segments_y+2; ++j) 
-	  std::cout << ijvec[i][j] << " ";
-	std::cout<< "\n";
+      	for(int j = 0; j < _segments_y+2; ++j) 
+      	  std::cout << ijvec[i][j] << " ";
+      	std::cout<< "\n";
       }
       std::cout << "========================\n";
 	
-      double angle_cut = 15; //degrees
-      std::map<int,std::vector<int> > combined;
-      angle_cut *= 3.14159/180.0;
+      double angle_cut = _angle_cut; //degrees
+      std::map<int,std::vector<int> > combined; //combined boxes
+      angle_cut *= 3.14159/180.0; //to radians
 
       std::map<int,bool> used; for(int i = 0; i < ij; ++i) { used[i] = false; }
 
-      std::cout << "\t==> ij is " << ij << "\n";
-      
+      // we can make this recursive
       // loop over the squares and get neighbors
-      for (int i = 0; i < ij; ++i) {
+      std::cout << " I have " << llines.size() << " number of boxes\n";
+      
+      if ( llines.size() > 1 ) {
+	
+	for (int i = 0; i < llines.size(); ++i) {
+	
+	  if ( used[i] ) continue;
+	
+	  const auto& line1 = llines.at(i);
+	  used[i] = true;
 
-	if ( used[i] ) continue;
-	std::cout << " i: " << i << "\n";		 
-	const auto& line1 = llines.at(i);
-	  
-	for(const auto& n : neighbors[i]) { // std::vector of neighbors
-	  std::cout << " n: " << n << "\n";		 
-	  if ( used[n] ) continue;
-	  
-	  const auto& line2 = llines.at(n);
-
-	  auto cos_angle = compute_angle(line1,line2);
-	  
-	  if ( std::acos(cos_angle) <= angle_cut ) { //angle between PCA lines //use acos since it returns smallest angle
-	    combined[i].push_back(n);
-	    used[i] = true; used[n] = true;
-	  }
-	  
+	  connect(line1,llines,used,neighbors,combined,i,i,angle_cut);
+	  std::cout << "Moving to next line...\n\n";
 	}
 
+	std::cout << "Finished connecting..." << "\n";
+	std::cout << "\n\n";
+	for(const auto& k : combined) {
+	  std::cout << "\t key: " << k.first << " : {";
+	  for(const auto& kk : k.second) {
+	    std::cout << kk << ",";
+	  }
+	  std::cout << "}\n";
+	}
       }
-
-
+      
       //weighted mean...
       double mean_slope = 0.0;
       double mean_x = 0.0;
@@ -260,7 +267,6 @@ namespace larcv{
       
       // PCA ana requies MAT object w/ data sitting in rows, 2 columns
       // 1 for each ``feature" or coordinate
-      std::cout << "\t==> ctor_pts\n";
       ::cv::Mat ctor_pts(cluster_s.size(), 2, CV_64FC1);
       
       for (unsigned i = 0; i < ctor_pts.rows; ++i) {
@@ -371,17 +377,14 @@ namespace larcv{
       
       if ( j < k ) {
 	trunk_index = { dists.size() - 1 - k, dists.size() - 1}; // trunk is on the right
-	std::cout << "\t==> Trunk is on the right...\n";
       }
       else if ( j == k ) {
-	std::cout << "\t==> NO trunk is found...\n";
 	trunk_index = { 0 , 0 }; // no trunk on either side
 	//ignore this cluster...
 	continue;
       }
       else  {
 	trunk_index = { 0 , j }; // trunk is on the left
-	std::cout << "\t==> Trunk is on the left\n";
       }
       
       // Should we reject bad trunks? This probably involves some fit?
@@ -655,7 +658,7 @@ namespace larcv{
 
   double PCASegmentationCombine::compute_angle(const std::vector<double>& line1,
 					       const std::vector<double>& line2) {
-
+    
     auto ax = line1[2] - line1[0];
     auto ay = line1[3] - line1[1];
     auto sq = std::sqrt(ax*ax + ay*ay);
@@ -673,6 +676,46 @@ namespace larcv{
     return ax*bx + ay*by;
     
   }
+
+  
+  void PCASegmentationCombine::connect(const std::vector<double>& line,
+				       const std::vector<std::vector<double> >& llines,
+				       std::map<int,bool>& used,
+				       const std::map<int,std::vector<int> >& neighbors,
+				       std::map<int,std::vector<int> >& combined,
+				       int i,int k,
+				       double angle_cut) {
+    
+    std::cout << "\t==> " << __FUNCTION__ << " i = " << i << " k = " << k << "\n";
+    // bool connections = false;
+
+    if ( neighbors.count(k) <= 0 )
+      { std::cout << "No neighbors\n"; return; }
+    
+    for(const auto& n : neighbors.at(k)) { // std::vector of neighbors
+      
+      if ( used[n] ) continue;
+
+      std::cout << "\t k: " << k << " checking n: " << n << "\n";
+      
+      const auto& line2 = llines.at(n);
+      auto cos_angle = compute_angle(line,line2);
+      
+      if ( std::acos(cos_angle) >= angle_cut ) //angle between PCA lines //use acos since it returns smallest angle
+	continue;
+      
+      std::cout << "\t angles are compatible.. combining \n";
+      combined[i].push_back(n);
+      used[n] = true;
+      
+      connect(line2,llines,used,neighbors,combined,i,n,angle_cut);
+    }
+    
+    std::cout << "No more connections...\n";
+    return;
+      
+  }
+        
 }
 
 #endif

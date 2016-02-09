@@ -96,6 +96,8 @@ namespace larcv {
     double _perimeter;
 
     double _closeness;
+    double _angle_cut;
+    
     
     double stdev( std::vector<int>& data,
 		  size_t start, size_t end );
@@ -124,6 +126,16 @@ namespace larcv {
 
     double compute_angle(const std::vector<double>& line1,
 			 const std::vector<double>& line2);
+
+    void connect(const std::vector<double>& line,
+		 const std::vector<std::vector<double> >& llines,
+		 std::map<int,bool>& used,
+		 const std::map<int,std::vector<int> >& neighbors,
+		 std::map<int,std::vector<int> >& combined,
+		 int i,int k,
+		 double angle_cut);
+    
+
   };
   
   /**
