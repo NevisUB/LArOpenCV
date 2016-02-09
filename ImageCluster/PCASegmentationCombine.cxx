@@ -171,7 +171,7 @@ namespace larcv{
       
 
       double angle_cut = 15; //degrees
-
+      std::map<int,std::vector<int> > combined;
       angle_cut *= 3.14159/180.0;
 
       std::map<int,bool> used; for(int i = 0; i < ij; ++i) { used[i] = false; }
@@ -190,11 +190,10 @@ namespace larcv{
 	  const auto& line2 = llines.at(n);
 
 	  auto cos_angle = compute_angle(line1,line2);
-
-	  if ( cos_angle <= std::cos(angle_cut) ) { //angle between PCA lines
-
-	    //do something
-
+	  
+	  if ( std::acos(cos_angle) <= angle_cut ) { //angle between PCA lines //use acos since it returns smallest angle
+	    combined[i].append(n);
+	    used[i] = true; used[n] = true;
 	  }
 	  
 	}
@@ -430,7 +429,8 @@ namespace larcv{
 			     meanline,
 			     mean_x,
 			     mean_y,
-			     covar_loc);
+			     covar_loc,
+			     combined);
       
       
       _outtree->Fill();
