@@ -121,6 +121,9 @@ namespace larcv {
 					  const Contour_t& pts );
 
     double get_roi_cov(const Contour_t & pts);
+
+    double compute_angle(const std::vector<double>& line1,
+			 const std::vector<double>& line2);
   };
   
   /**

@@ -61,17 +61,26 @@ namespace larcv{
       ::cv::Rect rect = ::cv::boundingRect(cluster);
       ::cv::Mat subMat(img, rect);
 
-      double nsegments_x = 5;
-      double nsegments_y = 5;
-
+      
       std::vector<::cv::Rect> rec;
       std::vector<std::vector<double> > llines;
       std::vector<int> ccharge;
       std::vector<std::pair<double,double> > mean_loc;
       std::vector<double> covar_loc;
+      std::map<int,std::vector<double> > neighbors;
+      std::vector<double> slopes;
       
-      for(unsigned i = 0; i < nsegments_x; ++i) {
-	for(unsigned j = 0; j < nsegments_y; ++j) {
+      int ijvec[nsegments_x+2][nsegments_y+2];
+      for(int i = 0; i < nsegments_x+2; ++i)
+	for(int j = 0; j < nsegments_y+2; ++j)
+	  ijvec[i][j] = -1;
+      
+      int ij = 0;
+      for(unsigned i = 1; i <= nsegments_x; ++i) {
+	for(unsigned j = 1; j <= nsegments_y; ++j) {
+
+	  ijvec[1][1] = -1;
+	  
 	  auto dx = rect.width  / nsegments_x;
 	  auto dy = rect.height / nsegments_y;
 
@@ -81,14 +90,6 @@ namespace larcv{
 	  ::cv::Rect r(x + rect.x,y + rect.y,dx,dy);
 	  ::cv::Mat subMat(img, r);
 	  std::vector<double> line; line.resize(4);
-	  
-	  // Contour_t roi_contour; roi_contour.reserve(cluster.size());
-	  // for(const auto& pt : cluster)
-	  //   if ( (pt.x - r.x) <= r.width && (pt.x - r.x) >= 0 )
-	  //     if ( (pt.y - r.y) <= r.height && (pt.y - r.y) >= 0 )
-	  // 	roi_contour.emplace_back(pt);
-	  // if ( roi_contour.size() == 0 )
-	  //   continue;
 	  
 	  Contour_t locations;
 	  Contour_t inside_locations;
@@ -120,15 +121,86 @@ namespace larcv{
 	  
 	  if( ! pca_line(subMat,inside_locations,r,line) ) // only scary part is contour may be "tangled?"
 	    continue;
-
-
+	  
+	  
 	  mean_loc.push_back ( get_mean_loc  (r,inside_locations) );
 	  covar_loc.push_back( get_roi_cov   (inside_locations) );
 	  ccharge.push_back  ( get_charge_sum(subMat,inside_locations) );
 	  rec.emplace_back(r);	  
 	  llines.emplace_back(line);
+	  slopes.push_back( ( (double) line[3] - (double) line[1] ) / ( (double) line[2] - (double) line[0] ) );
+	  ijvec[i][j] = ij; ++ij;
 	}
       }
+      
+      //We will try to connect adjacent boxes
+      
+      for(unsigned i = 1; i <= nsegments_x; ++i) {
+	for(unsigned j = 1; j <= nsegments_y; ++j) {
+
+	  if ( ijvec[i][j] < 0 )
+	    continue;
+
+
+	  // 8 cases to check neighbors... disgusting
+	  if ( ijvec[i-1][j] >= 0  )
+	    neighbors[ ijvec[i][j] ].push_back(ijvec[i-1][j]);
+
+	  if ( ijvec[i-1][j-1] >= 0  )
+	    neighbors[ ijvec[i][j-1] ].push_back(ijvec[i-1][j-1]);
+
+	  if ( ijvec[i][j-1] >= 0  )
+	    neighbors[ ijvec[i][j] ].push_back(ijvec[i][j-1]);
+
+	  if ( ijvec[i+1][j] >= 0  )
+	    neighbors[ ijvec[i][j] ].push_back(ijvec[i+1][j+1]);
+
+	  if ( ijvec[i+1][j+1] >= 0  )
+	    neighbors[ ijvec[i][j] ].push_back(ijvec[i+1][j+1]);
+
+	  if ( ijvec[i][j+1] >= 0  )
+	    neighbors[ ijvec[i][j] ].push_back(ijvec[i][j+1]);
+
+	  if ( ijvec[i+1][j-1] >= 0  )
+	    neighbors[ ijvec[i][j] ].push_back(ijvec[i+1][j-1]);
+
+	  if ( ijvec[i-1][j+1] >= 0  )
+	    neighbors[ ijvec[i][j] ].push_back(ijvec[i-1][j+1]);
+	}
+      }
+      
+
+      double angle_cut = 15; //degrees
+
+      angle_cut *= 3.14159/180.0;
+
+      std::map<int,bool> used; for(int i = 0; i < ij; ++i) { used[i] = false; }
+
+      // loop over the squares and get neighbors
+      for (int i = 0; i < ij; ++i) {
+
+	if ( used[i] ) continue;
+		 
+	const auto& line1 = llines.at(i);
+	  
+	for(const auto& n : neighbors[i]) { // std::vector of neighbors
+
+	  if ( used[n] ) continue;
+	  
+	  const auto& line2 = llines.at(n);
+
+	  auto cos_angle = compute_angle(line1,line2);
+
+	  if ( cos_angle <= std::cos(angle_cut) ) { //angle between PCA lines
+
+	    //do something
+
+	  }
+	  
+	}
+      }
+      
+
       
       //weighted mean...
       double mean_slope = 0.0;
@@ -165,29 +237,6 @@ namespace larcv{
       
       mean_x += rect.x;
       mean_y += rect.y;
-
-
-
-
-
-      //We will try to connect adjacent boxes
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
 
 
       //subMat holds pixels in the bounding rectangle
@@ -416,7 +465,7 @@ namespace larcv{
 
 
   double PCASegmentationCombine::stdev( std::vector<int>& data,
-			       size_t start, size_t end )
+					size_t start, size_t end )
   {
 
     if ( (end - start) <=0 ) return 0.0;
@@ -425,37 +474,37 @@ namespace larcv{
     auto    avg   = mean(data,start,end);
     
     for(int i = start; i <= end; ++i)
-      result += (data[i] - avg)*(data[i] - avg);
+      result += (data.at(i) - avg)*(data.at(i) - avg);
     
     return std::sqrt(result/((double)(end - start)));
   }
 
   
   double PCASegmentationCombine::cov ( std::vector<int>& data1,
-				std::vector<int>& data2,
-				size_t start, size_t end )
+				       std::vector<int>& data2,
+				       size_t start, size_t end )
   {
-
-    if ( (end - start) <= 0 ) return 0.0;
+    
+    if ( start == end ) return 0.0;
     
     double result = 0.0;
     auto   mean1  = mean(data1,start,end);
     auto   mean2  = mean(data2,start,end);
     
     for(int i = start; i <= end; ++i)
-      result += (data1[i] - mean1)*(data2[i] - mean2);
+      result += (data1.at(i) - mean1)*(data2.at(i) - mean2);
     
     return result/((double)(end - start));
   }
   
   double PCASegmentationCombine::mean( std::vector<int>& data,
-				size_t start, size_t end )
+				       size_t start, size_t end )
   {
-    if ( (end - start) <= 0 ) return 0.0;
+    if ( start == end ) return 0.0;
     double result = 0.0;
     
     for(int i = start; i <= end; ++i)
-      result += data[i];
+      result += data.at(i);
     
     return result / ((double)( end - start ));
   }  
@@ -488,7 +537,7 @@ namespace larcv{
   }
   
   std::pair<double,double> PCASegmentationCombine::closest_point_on_line(std::array<double,4>& line,int lx,int ly) {
-
+    
     //real time collision detection page 128
     //closest point on line
     auto ax = line[0];
@@ -507,9 +556,9 @@ namespace larcv{
   }
 
   bool PCASegmentationCombine::pca_line(const ::cv::Mat& subimg,
-				 Contour_t cluster_s,
-				 const ::cv::Rect& rect,
-				 std::vector<double>& line) {
+					Contour_t cluster_s,
+					const ::cv::Rect& rect,
+					std::vector<double>& line) {
     
     
     //shift it down, yes I want explicit copy of the contour...
@@ -556,7 +605,7 @@ namespace larcv{
   }
 
   std::pair<double,double> PCASegmentationCombine::get_mean_loc(const ::cv::Rect& rect,
-							 const Contour_t& pts ) {
+								const Contour_t& pts ) {
     
     double mean_x = 0.0;
     double mean_y = 0.0;
@@ -580,9 +629,9 @@ namespace larcv{
       { x_[i] = pts[i].x; y_[i] = pts[i].y; }
     
     double pearsons_r;
-    auto co = cov  (x_,y_,0,pts.size());
-    auto sx = stdev(x_,   0,pts.size());
-    auto sy = stdev(y_,   0,pts.size());
+    auto co = cov  (x_,y_,0,pts.size() - 1);
+    auto sx = stdev(x_,   0,pts.size() - 1);
+    auto sy = stdev(y_,   0,pts.size() - 1);
 
     if ( sx != 0 && sy != 0) // trunk exists
       pearsons_r =  co / ( sx * sy );
@@ -590,6 +639,27 @@ namespace larcv{
       pearsons_r = 0;
     
     return pearsons_r;
+  }
+
+  double PCASegmentationCombine::compute_angle(const std::vector<double>& line1,
+					       const std::vector<double>& line2) {
+
+    auto ax = line1[2] - line1[0];
+    auto ay = line1[3] - line1[1];
+    auto sq = std::sqrt(ax*ax + ay*ay);
+
+    ax /= sq;
+    ay /= sq;
+
+    auto bx = line2[2] - line2[0];
+    auto by = line2[3] - line2[1];
+    sq = std::sqrt(bx*bx + by*by);
+
+    bx /= sq;
+    by /= sq;
+
+    return ax*bx + ay*by;
+    
   }
 }
 
