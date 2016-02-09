@@ -19,8 +19,8 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  AlgoType: [SBCluster,PCASegmentation]
-  AlgoName: [sbc,pca]
+  AlgoType: [SBCluster,PCASegmentationCombine]
+  AlgoName: [sbc,pcac]
 
  ImageClusterViewer: {
    Verbosity: 0
@@ -39,7 +39,7 @@ ImageClusterManager: {
 
   }
 	  
-  pca : {
+  pcac : {
     MinTrunkLength   : 1
     TrunkDeviation   : 150	
     MinTrunkEdgeDist : 5

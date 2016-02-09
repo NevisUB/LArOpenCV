@@ -70,23 +70,24 @@ namespace larcv{
       std::map<int,std::vector<double> > neighbors;
       std::vector<double> slopes;
       
-      int ijvec[nsegments_x+2][nsegments_y+2];
-      for(int i = 0; i < nsegments_x+2; ++i)
-	for(int j = 0; j < nsegments_y+2; ++j)
+      int ijvec[_segments_x+2][_segments_y+2];
+      for(int i = 0; i < _segments_x+2; ++i)
+	for(int j = 0; j < _segments_y+2; ++j)
 	  ijvec[i][j] = -1;
       
       int ij = 0;
-      for(unsigned i = 1; i <= nsegments_x; ++i) {
-	for(unsigned j = 1; j <= nsegments_y; ++j) {
+      std::cout << "\t==> segmenting\n";
+      for(unsigned i = 1; i <= _segments_x; ++i) {
+	for(unsigned j = 1; j <= _segments_y; ++j) {
 
-	  ijvec[1][1] = -1;
+	  ijvec[i][j] = -1;
 	  
-	  auto dx = rect.width  / nsegments_x;
-	  auto dy = rect.height / nsegments_y;
+	  auto dx = rect.width  /  _segments_x;
+	  auto dy = rect.height /  _segments_y;
 
-	  auto x  = i * dx;
-	  auto y  = j * dy;
-
+	  auto x  = (i-1) * dx;
+	  auto y  = (j-1) * dy;
+	  
 	  ::cv::Rect r(x + rect.x,y + rect.y,dx,dy);
 	  ::cv::Mat subMat(img, r);
 	  std::vector<double> line; line.resize(4);
@@ -122,7 +123,6 @@ namespace larcv{
 	  if( ! pca_line(subMat,inside_locations,r,line) ) // only scary part is contour may be "tangled?"
 	    continue;
 	  
-	  
 	  mean_loc.push_back ( get_mean_loc  (r,inside_locations) );
 	  covar_loc.push_back( get_roi_cov   (inside_locations) );
 	  ccharge.push_back  ( get_charge_sum(subMat,inside_locations) );
@@ -135,25 +135,24 @@ namespace larcv{
       
       //We will try to connect adjacent boxes
       
-      for(unsigned i = 1; i <= nsegments_x; ++i) {
-	for(unsigned j = 1; j <= nsegments_y; ++j) {
+      for(unsigned i = 1; i <= _segments_x; ++i) {
+	for(unsigned j = 1; j <= _segments_y; ++j) {
 
 	  if ( ijvec[i][j] < 0 )
 	    continue;
-
 
 	  // 8 cases to check neighbors... disgusting
 	  if ( ijvec[i-1][j] >= 0  )
 	    neighbors[ ijvec[i][j] ].push_back(ijvec[i-1][j]);
 
 	  if ( ijvec[i-1][j-1] >= 0  )
-	    neighbors[ ijvec[i][j-1] ].push_back(ijvec[i-1][j-1]);
+	    neighbors[ ijvec[i][j] ].push_back(ijvec[i-1][j-1]);
 
 	  if ( ijvec[i][j-1] >= 0  )
 	    neighbors[ ijvec[i][j] ].push_back(ijvec[i][j-1]);
 
 	  if ( ijvec[i+1][j] >= 0  )
-	    neighbors[ ijvec[i][j] ].push_back(ijvec[i+1][j+1]);
+	    neighbors[ ijvec[i][j] ].push_back(ijvec[i+1][j]);
 
 	  if ( ijvec[i+1][j+1] >= 0  )
 	    neighbors[ ijvec[i][j] ].push_back(ijvec[i+1][j+1]);
@@ -168,23 +167,32 @@ namespace larcv{
 	    neighbors[ ijvec[i][j] ].push_back(ijvec[i-1][j+1]);
 	}
       }
-      
 
+      std::cout << "========================\n";
+      for(int i = 0; i < _segments_x+2; ++i){
+	for(int j = 0; j < _segments_y+2; ++j) 
+	  std::cout << ijvec[i][j] << " ";
+	std::cout<< "\n";
+      }
+      std::cout << "========================\n";
+	
       double angle_cut = 15; //degrees
       std::map<int,std::vector<int> > combined;
       angle_cut *= 3.14159/180.0;
 
       std::map<int,bool> used; for(int i = 0; i < ij; ++i) { used[i] = false; }
 
+      std::cout << "\t==> ij is " << ij << "\n";
+      
       // loop over the squares and get neighbors
       for (int i = 0; i < ij; ++i) {
 
 	if ( used[i] ) continue;
-		 
+	std::cout << " i: " << i << "\n";		 
 	const auto& line1 = llines.at(i);
 	  
 	for(const auto& n : neighbors[i]) { // std::vector of neighbors
-
+	  std::cout << " n: " << n << "\n";		 
 	  if ( used[n] ) continue;
 	  
 	  const auto& line2 = llines.at(n);
@@ -192,15 +200,15 @@ namespace larcv{
 	  auto cos_angle = compute_angle(line1,line2);
 	  
 	  if ( std::acos(cos_angle) <= angle_cut ) { //angle between PCA lines //use acos since it returns smallest angle
-	    combined[i].append(n);
+	    combined[i].push_back(n);
 	    used[i] = true; used[n] = true;
 	  }
 	  
 	}
-      }
-      
 
-      
+      }
+
+
       //weighted mean...
       double mean_slope = 0.0;
       double mean_x = 0.0;
@@ -252,6 +260,7 @@ namespace larcv{
       
       // PCA ana requies MAT object w/ data sitting in rows, 2 columns
       // 1 for each ``feature" or coordinate
+      std::cout << "\t==> ctor_pts\n";
       ::cv::Mat ctor_pts(cluster_s.size(), 2, CV_64FC1);
       
       for (unsigned i = 0; i < ctor_pts.rows; ++i) {
@@ -601,6 +610,9 @@ namespace larcv{
     line[2] = rect.width + rect.x;
     line[3] = cntr_pt.y + ( (rect.width - cntr_pt.x) / eigen_vecs[0].x) * eigen_vecs[0].y + rect.y;
 
+
+
+    
     return true;
   }
 
