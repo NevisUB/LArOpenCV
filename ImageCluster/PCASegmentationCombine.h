@@ -17,6 +17,7 @@
 #include "ImageClusterBase.h"
 #include "TTree.h"
 #include "ClusterParams.h"
+#include "PCABox.h"
 
 #include <array>
 
@@ -114,7 +115,9 @@ namespace larcv {
     bool pca_line(const ::cv::Mat& subimg,
 		  Contour_t cluster_s,
 		  const ::cv::Rect& rect,
-		  std::vector<double>& line);
+		  std::vector<double>& line,
+		  Point2D& e_vec,
+		  Point2D& e_center);
 
     int get_charge_sum(const ::cv::Mat& subImg,
 		       const Contour_t& pts);
@@ -124,11 +127,11 @@ namespace larcv {
 
     double get_roi_cov(const Contour_t & pts);
 
-    double compute_angle(const std::vector<double>& line1,
-			 const std::vector<double>& line2);
+    double compute_angle(const Point2D& line1,
+			 const Point2D& line2);
 
-    void connect(const std::vector<double>& line,
-		 const std::vector<std::vector<double> >& llines,
+    void connect(const PCABox& box,                  //incoming box to compare too
+		 const std::vector<PCABox>& boxes,   //list of all boxes
 		 std::map<int,bool>& used,
 		 const std::map<int,std::vector<int> >& neighbors,
 		 std::map<int,std::vector<int> >& combined,

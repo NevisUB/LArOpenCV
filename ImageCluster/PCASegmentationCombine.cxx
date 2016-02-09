@@ -68,8 +68,9 @@ namespace larcv{
       std::vector<int> ccharge;
       std::vector<std::pair<double,double> > mean_loc;
       std::vector<double> covar_loc;
+      std::vector<PCABox> boxes;
       std::map<int,std::vector<int> > neighbors;
-
+      
       // we need a way for a box to tell what his neighbors are
       // we can do this based on ij indexing. Give me location on
       // the grid of the box (i,j) i will tell you who your neighbors
@@ -124,17 +125,24 @@ namespace larcv{
 
 	  if ( inside_locations.size() <= _nhits_cut )
 	    continue;
+
+	  Point2D e_vec;
+	  Point2D e_center;
 	  
-	  if( ! pca_line(subMat,inside_locations,r,line) ) // only scary part is contour may be "tangled?"
+	  if( ! pca_line(subMat,inside_locations,
+			 r,line,e_vec,e_center) ) // only scary part is contour may be "tangled" ?
 	    continue;
 	  
+	  auto cov = get_roi_cov(inside_locations);
+	  
 	  mean_loc.push_back ( get_mean_loc  (r,inside_locations) );
-	  covar_loc.push_back( get_roi_cov   (inside_locations) );
+	  covar_loc.push_back( cov );
 	  ccharge.push_back  ( get_charge_sum(subMat,inside_locations) );
 	  rec.emplace_back(r);	  
 	  llines.emplace_back(line);
-	  ijvec[i][j] = ij; ++ij;
+	  boxes.emplace_back(e_vec,e_center,cov,r);
 	  
+	  ijvec[i][j] = ij; ++ij;
 	}
       }
       
@@ -190,21 +198,21 @@ namespace larcv{
 
       // we can make this recursive
       // loop over the squares and get neighbors
-      std::cout << " I have " << llines.size() << " number of boxes\n";
+      std::cout << " I have " << boxes.size() << " number of boxes\n";
       
       if ( llines.size() > 1 ) {
 	
-	for (int i = 0; i < llines.size(); ++i) {
+	for (int i = 0; i < boxes.size(); ++i) {
 	
 	  if ( used[i] ) continue;
 	
-	  const auto& line1 = llines.at(i);
+	  const auto& box = boxes.at(i);
 	  used[i] = true;
 
-	  connect(line1,llines,used,neighbors,combined,i,i,angle_cut);
+	  connect(box,boxes,used,neighbors,combined,i,i,angle_cut);
 	  std::cout << "Moving to next line...\n\n";
 	}
-
+	
 	std::cout << "Finished connecting..." << "\n";
 	std::cout << "\n\n";
 	for(const auto& k : combined) {
@@ -215,6 +223,34 @@ namespace larcv{
 	  std::cout << "}\n";
 	}
       }
+      
+      
+      
+      
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ///////////////////////////////////////////////
+      ////////////////OLD CODE///////////////////////
+      ///////////////////////////////////////////////
+      
       
       //weighted mean...
       double mean_slope = 0.0;
@@ -570,28 +606,29 @@ namespace larcv{
   bool PCASegmentationCombine::pca_line(const ::cv::Mat& subimg,
 					Contour_t cluster_s,
 					const ::cv::Rect& rect,
-					std::vector<double>& line) {
+					std::vector<double>& line,
+					Point2D& e_vec,
+					Point2D& e_center) {
     
     
     //shift it down, yes I want explicit copy of the contour...
-
+    
     //put this back in if using ACTUAL CONTOUR ROI
     //for(auto &pt : cluster_s) { pt.x -= rect.x; pt.y -= rect.y; }
 
     ::cv::Mat ctor_pts(cluster_s.size(), 2, CV_64FC1);
-	
-
+    
     for (unsigned i = 0; i < ctor_pts.rows; ++i) {
       ctor_pts.at<double>(i, 0) = cluster_s[i].x;
       ctor_pts.at<double>(i, 1) = cluster_s[i].y;
     }
-      
+    
     ::cv::PCA pca_ana(ctor_pts, ::cv::Mat(), CV_PCA_DATA_AS_ROW,0);
       
     //Center point
     // ::cv::Point
-    auto cntr_pt = Point2D( pca_ana.mean.at<double>(0,0),
-			    pca_ana.mean.at<double>(0,1) );
+    e_center = Point2D( pca_ana.mean.at<double>(0,0),
+			pca_ana.mean.at<double>(0,1) );
     
 
     //Principle directions (vec) and relative lengths (vals)
@@ -607,14 +644,13 @@ namespace larcv{
       eigen_val[i]  = pca_ana.eigenvalues.at<double>(0, i);
     }
 
-
+    e_vec = eigen_vecs[0];
+    
     line[0] = 0 + rect.x;
-    line[1] = cntr_pt.y + ( (0 - cntr_pt.x) / eigen_vecs[0].x ) * eigen_vecs[0].y + rect.y;
+    line[1] = e_center.y + ( (0 - e_center.x) / eigen_vecs[0].x ) * eigen_vecs[0].y + rect.y;
     line[2] = rect.width + rect.x;
-    line[3] = cntr_pt.y + ( (rect.width - cntr_pt.x) / eigen_vecs[0].x) * eigen_vecs[0].y + rect.y;
-
-
-
+    line[3] = e_center.y + ( (rect.width - e_center.x) / eigen_vecs[0].x) * eigen_vecs[0].y + rect.y;
+    
     
     return true;
   }
@@ -656,19 +692,19 @@ namespace larcv{
     return pearsons_r;
   }
 
-  double PCASegmentationCombine::compute_angle(const std::vector<double>& line1,
-					       const std::vector<double>& line2) {
+  double PCASegmentationCombine::compute_angle(const Point2D& line1,
+					       const Point2D& line2) {
     
-    auto ax = line1[2] - line1[0];
-    auto ay = line1[3] - line1[1];
+    auto ax = line1.x;
+    auto ay = line1.y;
     auto sq = std::sqrt(ax*ax + ay*ay);
 
     ax /= sq;
     ay /= sq;
 
-    auto bx = line2[2] - line2[0];
-    auto by = line2[3] - line2[1];
-    sq = std::sqrt(bx*bx + by*by);
+    auto bx = line2.x;
+    auto by = line2.y;
+    sq      = std::sqrt(bx*bx + by*by);
 
     bx /= sq;
     by /= sq;
@@ -678,9 +714,9 @@ namespace larcv{
   }
 
   
-  void PCASegmentationCombine::connect(const std::vector<double>& line,
-				       const std::vector<std::vector<double> >& llines,
-				       std::map<int,bool>& used,
+  void PCASegmentationCombine::connect(const PCABox& box,                  //incoming line to compare too
+				       const std::vector<PCABox>& boxes,   //reference to all the lines
+				       std::map<int,bool>& used,           //used lines
 				       const std::map<int,std::vector<int> >& neighbors,
 				       std::map<int,std::vector<int> >& combined,
 				       int i,int k,
@@ -695,20 +731,26 @@ namespace larcv{
     for(const auto& n : neighbors.at(k)) { // std::vector of neighbors
       
       if ( used[n] ) continue;
-
+      
       std::cout << "\t k: " << k << " checking n: " << n << "\n";
       
-      const auto& line2 = llines.at(n);
-      auto cos_angle = compute_angle(line,line2);
-      
-      if ( std::acos(cos_angle) >= angle_cut ) //angle between PCA lines //use acos since it returns smallest angle
+      const auto& box2 = boxes.at(n);
+
+      //Here you make the decision if you should connected the boxes or not
+
+      //check the angle
+      auto cos_angle = compute_angle(box.e_vec_,box2.e_vec_);
+      if ( std::acos(cos_angle) > angle_cut ) //angle between PCA lines //use acos since it returns smallest angle
+	continue;
+
+      //PCA line must intersect the next segment
+      if ( ! box.intersect(box2) )
 	continue;
       
-      std::cout << "\t angles are compatible.. combining \n";
       combined[i].push_back(n);
       used[n] = true;
       
-      connect(line2,llines,used,neighbors,combined,i,n,angle_cut);
+      connect(box2,boxes,used,neighbors,combined,i,n,angle_cut);
     }
     
     std::cout << "No more connections...\n";
