@@ -23,12 +23,14 @@
 #pragma link C++ class larcv::FillImageClusterVariables+;
 // #pragma link C++ class larcv::CDTrackShower+;
 #pragma link C++ class larcv::ClusterParams+;
-#pragma link C++ class larcv::PCAProjection+;
+#pragma link C++ class larcv::PCABox+;
+//#pragma link C++ class larcv::PCAProjection+;
 // #pragma link C++ class larcv::HoughTrackShower+;
 // #pragma link C++ class larcv::HoughPTrackShower+;
 #pragma link C++ class larcv::SatelliteMerge+;
 #pragma link C++ class larcv::TrackShower+;
-#pragma link C++ class larcv::PCASegmentation+;
+//#pragma link C++ class larcv::PCASegmentation+;
+#pragma link C++ class larcv::PCASegmentationCombine+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

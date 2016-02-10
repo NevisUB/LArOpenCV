@@ -39,7 +39,8 @@ namespace larcv {
 		  std::vector<double> meanline,
 		  double meanx,
 		  double meany,
-		  std::vector<double> covar) :
+		  std::vector<double> covar,
+		  std::map<int,std::vector<int> > combined) :
       
       in_index_(in_index),
       trunk_length_(trunk_length),
@@ -62,7 +63,8 @@ namespace larcv {
       meanline_(meanline),
       meanx_(meanx),
       meany_(meany),
-      covar_(covar)
+      covar_(covar),
+      combined_(combined)
     {}      
 
     ~ClusterParams(){}
@@ -94,6 +96,7 @@ namespace larcv {
     double meany_;
 
     std::vector<double> covar_;
+    std::map<int,std::vector<int> > combined_;
   };
 }
 #endif

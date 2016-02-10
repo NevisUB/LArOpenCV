@@ -19,8 +19,8 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  AlgoType: [SBCluster,PCASegmentation]
-  AlgoName: [sbc,pca]
+  AlgoType: [SBCluster,PCASegmentationCombine]
+  AlgoName: [sbc,pcac]
 
  ImageClusterViewer: {
    Verbosity: 0
@@ -39,7 +39,7 @@ ImageClusterManager: {
 
   }
 	  
-  pca : {
+  pcac : {
     MinTrunkLength   : 1
     TrunkDeviation   : 150	
     MinTrunkEdgeDist : 5
@@ -48,7 +48,8 @@ ImageClusterManager: {
     NSegmentsX : 6
     NSegmentsY : 6
 
-    NHitsCut : 3
+    NHitsCut : 3  # min number of hits in segment (>= actually)
+    AngleCut : 10 # degrees
   }
 
   Trackshower:{
