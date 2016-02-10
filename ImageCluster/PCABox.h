@@ -20,12 +20,16 @@ namespace larcv {
     PCABox(Point2D e_vec,
 	   Point2D e_center,
 	   double  cov,
+	   std::vector<double> line,
 	   ::cv::Rect box) :
-      e_vec_    ( e_vec    ),
-      e_center_ ( e_center ),
-      cov_      ( cov      ),
-      box_      ( box      ),
-      angle_cut_( -1       )
+      e_vec_     ( e_vec    ),
+      e_center_  ( e_center ),
+      cov_       ( cov      ),
+      line_      ( line     ),
+      box_       ( box      ),
+      angle_cut_ ( -1       ),
+      n_hits_    ( -1       ),
+      charge_sum_( -1       )
     {}
     
     //destructor
@@ -36,10 +40,14 @@ namespace larcv {
     Point2D e_center_;
 
     double cov_;
+
+    std::vector<double> line_;
     
     ::cv::Rect box_;
 
-    void SetAngleCut(double a) { angle_cut_ = a; }
+    void SetAngleCut (double a) { angle_cut_ = a; }
+    void SetChargeSum(double c) { charge_sum_= c; }
+    void SetNHits    (int    h) { n_hits_    = h; }
     
     // should we use polymorphism here? It's hard to say
     // since PCASegmentation object is created by factory.
@@ -55,7 +63,8 @@ namespace larcv {
     bool check_angle  (const PCABox& other) const;
 
     double angle_cut_;
-    
+    double charge_sum_;
+    int n_hits_;
   };
 
 }

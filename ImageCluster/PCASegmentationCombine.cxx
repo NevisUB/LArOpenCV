@@ -30,8 +30,8 @@ namespace larcv{
 
     _outtree->Branch("_trunk_length",&_trunk_length,"trunk_length/D");
     _outtree->Branch("_trunk_cov",&_trunk_cov,"trunk_cov/D");
-
     
+
   }
   
   ContourArray_t PCASegmentationCombine::_Process_(const larcv::ContourArray_t& clusters,
@@ -53,7 +53,7 @@ namespace larcv{
       auto& cntr_pt    = _cntr_pt;
       auto& eigen_vecs = _eigen_vecs;
       auto& eigen_val  = _eigen_val;
-      auto& line       = _line;      
+      auto& lline      = _line;      
       
       auto& trunk_index= _trunk_index; //index trunk end point (pair)
       auto& pearsons_r = _pearsons_r;  //linearity
@@ -63,12 +63,7 @@ namespace larcv{
       ::cv::Rect rect = ::cv::boundingRect(cluster);
       ::cv::Mat subMat(img, rect);
 
-      
-      std::vector<::cv::Rect> rec;
-      std::vector<std::vector<double> > llines;
-      std::vector<int> ccharge;
       std::vector<std::pair<double,double> > mean_loc;
-      std::vector<double> covar_loc;
       std::vector<PCABox> boxes;
       std::map<int,std::vector<int> > neighbors;
       
@@ -133,15 +128,15 @@ namespace larcv{
 	  if( ! pca_line(subMat,inside_locations,
 			 r,line,e_vec,e_center) ) // only scary part is contour may be "tangled" ?
 	    continue;
+
 	  
 	  auto cov = get_roi_cov(inside_locations);
 	  
-	  mean_loc.push_back ( get_mean_loc  (r,inside_locations) );
-	  covar_loc.push_back( cov );
-	  ccharge.push_back  ( get_charge_sum(subMat,inside_locations) );
-	  rec.emplace_back(r);	  
-	  llines.emplace_back(line);
-	  boxes.emplace_back(e_vec,e_center,cov, r + rect.tl() );
+	  // mean_loc.push_back ( get_mean_loc  (r,inside_locations) );
+	  // covar_loc.push_back( cov );
+	  //ccharge.push_back  ( get_charge_sum(subMat,inside_locations) );
+	  //line = {line[0] + r.x,line[1] + r.y,line[2]+r.x,line[3]+r.y};
+	  boxes.emplace_back(e_vec,e_center,cov,line,r);
 	  
 	  ijvec[i][j] = ij; ++ij;
 	}
@@ -207,7 +202,7 @@ namespace larcv{
       // have to set the intersection angle
       for(auto& box : boxes) box.SetAngleCut(angle_cut);
       
-      if ( llines.size() > 1 ) {
+      if ( boxes.size() > 1 ) {
 	
 	for (int i = 0; i < boxes.size(); ++i) {
 	
@@ -236,43 +231,13 @@ namespace larcv{
       ////////////////OLD CODE///////////////////////
       ///////////////////////////////////////////////
       
-      
-      //weighted mean...
-      double mean_slope = 0.0;
-      double mean_x = 0.0;
-      double mean_y = 0.0;
-      double sum_charge = 0.0;
-      for(int i = 0; i < llines.size(); ++i) {
-	auto& li = llines.at(i);
-	
-	auto slope = ( (double) li[3] - (double) li[1] )/((double) li[2] - (double) li[0]);
-
-	sum_charge += ccharge[i];
-	mean_slope += slope*ccharge[i];
-
-	mean_x += mean_loc[i].first *ccharge[i];
-	mean_y += mean_loc[i].second*ccharge[i];
-      }
 
 
-      mean_slope /= sum_charge;
-      mean_x     /= sum_charge;
-      mean_y     /= sum_charge;
 
-      mean_x -= rect.x;
-      mean_y -= rect.y;
-      
-      std::vector<double> meanline; meanline.resize(4);
 
-      meanline[0] = rect.x;
-      meanline[1] = mean_y + ( (0 - mean_x) / 1.0 ) * mean_slope + rect.y;
-      meanline[2] = rect.x + rect.width;
-      meanline[3] = mean_y + ( (rect.width - mean_x) / 1.0) * mean_slope + rect.y;
+
 
       
-      mean_x += rect.x;
-      mean_y += rect.y;
-
 
       //subMat holds pixels in the bounding rectangle
       //around the given contour. We can make a line from principle eigenvector
@@ -323,20 +288,17 @@ namespace larcv{
       //take principle eigenvector (the first one)
       //and get the line that best represents the shower
       //this line passes through center point and is principle eigenvec
-      line[0] = 0;
-      line[1] = cntr_pt.y + ( (0 - cntr_pt.x) / eigen_vecs[0].x ) * eigen_vecs[0].y;
-      line[2] = rect.width;
-      line[3] = cntr_pt.y + ( (rect.width - cntr_pt.x) / eigen_vecs[0].x) * eigen_vecs[0].y;
+      lline[0] = 0;
+      lline[1] = cntr_pt.y + ( (0 - cntr_pt.x) / eigen_vecs[0].x ) * eigen_vecs[0].y;
+      lline[2] = rect.width;
+      lline[3] = cntr_pt.y + ( (rect.width - cntr_pt.x) / eigen_vecs[0].x) * eigen_vecs[0].y;
       
-      std::map<int,double> odist; // ordered left to right closest distance to line
-      std::map<int,int>    opts;  // ordered points (hit x, hit y)
-      std::map<int,std::pair<int,int> >    cpts;  // closest points (ordered on line)
-	
       int nhits = 0;
       
       //find how far away the points are to the line
       std::vector<std::pair<int,int> > hits;
       std::vector<int> charge;
+      
       for(const auto& loc : locations) {
 
 	//is this point in the contour, if not continue
@@ -344,13 +306,6 @@ namespace larcv{
 	  continue;
 	
 	charge.push_back( (int) subMat.at<uchar>(loc.y,loc.x) );
-	
-	auto dist     = distance_to_line     (line,loc.x,loc.y);
-	auto close_pt = closest_point_on_line(line,loc.x,loc.y);
-	
-	odist[close_pt.first] = dist;    // ordered set of distance by wire number
-	opts [loc.x]          = loc.y;   // ordered set of mapped X->Y values
-	cpts [close_pt.first] = std::make_pair(loc.x,loc.y);
 	hits.emplace_back(loc.x + rect.x, loc.y + rect.y);
 	++nhits;
        
@@ -360,70 +315,7 @@ namespace larcv{
       if ( nhits < 10 ) // j == number of points in cluster
 	continue;
       
-      
-      //lets march through the line left to right
-      //put the points in ddd for python opts holds ordered hits
-      std::vector<int> opts_x; opts_x.reserve(odist.size());
-      std::vector<int> opts_y; opts_y.reserve(odist.size());
-
-      std::vector<double> dists; dists.reserve(nhits); // dists ordered as vector
-      
-      for(auto& pt: cpts) {
-	dists.push_back ( odist[pt.first]  );
-	opts_x.push_back( pt.second.first  );
-	opts_y.push_back( pt.second.second );
-      }
-      
       //find the trunk with this info 
-      
-      //start left to right
-      trunk_index = {0,0};
-      
-      int k  = 0;	
-      int j  = 0;
-      int y  = 0;
-      
-      for(j = 0 ; j < dists.size(); ++j) 
-	if ( dists[j] > _trunk_deviation )
-	  break;
-      
-      for(k = dists.size() - 1; k >= 0; --k) 
-	if ( dists[k] > _trunk_deviation )
-	  break;
-
-      if ( j >= dists.size() ) j = dists.size() - 1;
-      if (     k <=  0       ) k = 0;
-      
-      k = (dists.size() - 1 - k);
-      
-      if ( j < k ) {
-	trunk_index = { dists.size() - 1 - k, dists.size() - 1}; // trunk is on the right
-      }
-      else if ( j == k ) {
-	trunk_index = { 0 , 0 }; // no trunk on either side
-	//ignore this cluster...
-	continue;
-      }
-      else  {
-	trunk_index = { 0 , j }; // trunk is on the left
-      }
-      
-      // Should we reject bad trunks? This probably involves some fit?
-      // the showering region needs enough hits with enough sparsity
-      // to be actual shower like
-      
-      auto co = cov  (opts_x,opts_y,trunk_index.first,trunk_index.second);
-      auto sx = stdev(opts_x,trunk_index.first,trunk_index.second);
-      auto sy = stdev(opts_y,trunk_index.first,trunk_index.second);
-
-      if ( trunk_index.first != trunk_index.second) // trunk exists
-	pearsons_r =  co / ( sx * sy );
-      else
-	pearsons_r = 0;
-
-      _trunk_cov    = std::abs(pearsons_r);
-      _trunk_length = std::sqrt( std::pow(opts_x.at( trunk_index.second ) - opts_x.at( trunk_index.first ),2.0) +
-				 std::pow(opts_y.at( trunk_index.second ) - opts_y.at( trunk_index.first ),2.0) );
       
       auto normal = std::sqrt( eigen_val[0]*eigen_val[0] + eigen_val[1]*eigen_val[1] ) ;
       
@@ -432,37 +324,21 @@ namespace larcv{
       
       _area      = (double) ::cv::contourArea(cluster);
       _perimeter = (double) ::cv::arcLength  (cluster,1);
-
-      auto shower_len   = std::sqrt(rect.width*rect.width + rect.height*rect.height);
+      
       auto eigen_normal = std::sqrt(std::pow(eigen_vecs[0].x,2) + std::pow(eigen_vecs[0].y,2));
-
       
-      int start_idx = trunk_index.first == 0 ? trunk_index.first : trunk_index.second;
-
-      
-      std::vector<double> lline = {line[0] + rect.x,line[1] + rect.y,line[2]+rect.x,line[3]+rect.y};
       _cparms_v.emplace_back(i,
-			     _trunk_length,
-			     _trunk_cov,
-			     shower_len,
 			     _eval1,
 			     _eval2,
 			     _area,
 			     _perimeter,
-			     opts_x.at(start_idx) + rect.x,
-			     opts_y.at(start_idx) + rect.y,
 			     eigen_vecs[0].x / eigen_normal,
 			     eigen_vecs[0].y / eigen_normal,
 			     nhits,
 			     hits,
 			     lline,
 			     charge,
-			     rec,
-			     llines,
-			     meanline,
-			     mean_x,
-			     mean_y,
-			     covar_loc,
+			     boxes,
 			     combined);
       
       
@@ -478,10 +354,6 @@ namespace larcv{
 	auto& cparm1 = _cparms_v[i];
 	auto& cparm2 = _cparms_v[j];
 
-	if (cparm1.trunk_cov_ == 0) continue;
-	if (cparm2.trunk_cov_ == 0) continue;
-	
-	
 	cparm1.compare(cparm2);
 	
 	
@@ -504,9 +376,12 @@ namespace larcv{
     _eigen_val.clear();
 
     _cparms_v.clear();
+
+    _line.resize(4);
+    _line.clear();
   }
 
-  double PCASegmentationCombine::distance_to_line(std::array<double,4>& line,int lx,int ly) {
+  double PCASegmentationCombine::distance_to_line(std::vector<double>& line,int lx,int ly) {
 
     //real time collision detection page 128
     //closest point on line
@@ -525,7 +400,7 @@ namespace larcv{
     return dist;
   }
   
-  std::pair<double,double> PCASegmentationCombine::closest_point_on_line(std::array<double,4>& line,int lx,int ly) {
+  std::pair<double,double> PCASegmentationCombine::closest_point_on_line(std::vector<double>& line,int lx,int ly) {
     
     //real time collision detection page 128
     //closest point on line
@@ -604,7 +479,7 @@ namespace larcv{
   }
 
   std::pair<double,double> PCASegmentationCombine::get_mean_loc(const ::cv::Rect& rect,
-								const Contour_t& pts ) {
+								const Contour_t&  pts ) {
     
     double mean_x = 0.0;
     double mean_y = 0.0;

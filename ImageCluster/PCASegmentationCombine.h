@@ -19,8 +19,6 @@
 #include "ClusterParams.h"
 #include "PCABox.h"
 
-#include <array>
-
 
 namespace larcv {
   /**
@@ -50,6 +48,7 @@ namespace larcv {
     void Finalize(TFile* fout) { _outtree->Write(); }
 
     std::vector<ClusterParams> _cparms_v;
+    
   protected:
     
     /// Configuration method
@@ -65,15 +64,15 @@ namespace larcv {
 
     
   private:
-    std::pair<double,double> closest_point_on_line(std::array<double,4>& line,int lx,int ly);    
-    double distance_to_line(std::array<double,4>& line,int lx,int ly);
+    std::pair<double,double> closest_point_on_line(std::vector<double>& line,int lx,int ly);    
+    double distance_to_line(std::vector<double>& line,int lx,int ly);
 
       
     //Doesn't have to be so heavy
     Point2D _cntr_pt;
     std::vector<Point2D> _eigen_vecs;
     std::vector<double>  _eigen_val;
-    std::array<double,4> _line;
+    std::vector<double>  _line;
     std::pair<int,int> _trunk_index;
 
 
