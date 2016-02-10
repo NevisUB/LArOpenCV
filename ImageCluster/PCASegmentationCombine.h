@@ -99,17 +99,6 @@ namespace larcv {
     double _closeness;
     double _angle_cut;
     
-    
-    double stdev( std::vector<int>& data,
-		  size_t start, size_t end );
-    
-    double cov ( std::vector<int>& data1,
-		 std::vector<int>& data2,
-		 size_t start, size_t end ) ; 
-    
-    double mean( std::vector<int>& data,
-		 size_t start, size_t end );
-
     void clear_vars();
 
     bool pca_line(const ::cv::Mat& subimg,
@@ -118,25 +107,22 @@ namespace larcv {
 		  std::vector<double>& line,
 		  Point2D& e_vec,
 		  Point2D& e_center);
-
+    
     int get_charge_sum(const ::cv::Mat& subImg,
 		       const Contour_t& pts);
-
+    
     std::pair<double,double> get_mean_loc(const ::cv::Rect& rect,
 					  const Contour_t& pts );
 
     double get_roi_cov(const Contour_t & pts);
 
-    double compute_angle(const Point2D& line1,
-			 const Point2D& line2);
-
+    
     void connect(const PCABox& box,                  //incoming box to compare too
 		 const std::vector<PCABox>& boxes,   //list of all boxes
 		 std::map<int,bool>& used,
 		 const std::map<int,std::vector<int> >& neighbors,
 		 std::map<int,std::vector<int> >& combined,
-		 int i,int k,
-		 double angle_cut);
+		 int i,int k);
     
 
   };

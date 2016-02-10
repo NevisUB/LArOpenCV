@@ -21,10 +21,11 @@ namespace larcv {
 	   Point2D e_center,
 	   double  cov,
 	   ::cv::Rect box) :
-      e_vec_   ( e_vec    ),
-      e_center_( e_center ),
-      cov_     ( cov      ),
-      box_     ( box      )
+      e_vec_    ( e_vec    ),
+      e_center_ ( e_center ),
+      cov_      ( cov      ),
+      box_      ( box      ),
+      angle_cut_( -1       )
     {}
     
     //destructor
@@ -38,7 +39,22 @@ namespace larcv {
     
     ::cv::Rect box_;
 
-    bool intersect(const PCABox& other) const;
+    void SetAngleCut(double a) { angle_cut_ = a; }
+    
+    // should we use polymorphism here? It's hard to say
+    // since PCASegmentation object is created by factory.
+    // So to specify PCABox child and runtime means
+    // we probably need {\it another} factory to create
+    // PCABox instance. Let's not waste time
+    bool compatible(const PCABox& other) const;
+    
+
+  private:
+    //what you want to check, just add function here until we abstract
+    bool intersect    (const PCABox& other) const;
+    bool check_angle  (const PCABox& other) const;
+
+    double angle_cut_;
     
   };
 

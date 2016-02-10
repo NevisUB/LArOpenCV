@@ -2,6 +2,7 @@
 #define __PCASEGMENTATIONCOMBINE_CXX__
 
 #include "PCASegmentationCombine.h"
+#include "PCAUtilities.h"
 
 namespace larcv{
 
@@ -140,7 +141,7 @@ namespace larcv{
 	  ccharge.push_back  ( get_charge_sum(subMat,inside_locations) );
 	  rec.emplace_back(r);	  
 	  llines.emplace_back(line);
-	  boxes.emplace_back(e_vec,e_center,cov,r);
+	  boxes.emplace_back(e_vec,e_center,cov, r + rect.tl() );
 	  
 	  ijvec[i][j] = ij; ++ij;
 	}
@@ -182,6 +183,9 @@ namespace larcv{
 
       }
 
+      if ( boxes.size() == 0 )
+	continue;
+      
       std::cout << "========================\n";
       for(int i = 0; i < _segments_x+2; ++i){
       	for(int j = 0; j < _segments_y+2; ++j) 
@@ -199,6 +203,9 @@ namespace larcv{
       // we can make this recursive
       // loop over the squares and get neighbors
       std::cout << " I have " << boxes.size() << " number of boxes\n";
+
+      // have to set the intersection angle
+      for(auto& box : boxes) box.SetAngleCut(angle_cut);
       
       if ( llines.size() > 1 ) {
 	
@@ -209,7 +216,7 @@ namespace larcv{
 	  const auto& box = boxes.at(i);
 	  used[i] = true;
 
-	  connect(box,boxes,used,neighbors,combined,i,i,angle_cut);
+	  connect(box,boxes,used,neighbors,combined,i,i);
 	  std::cout << "Moving to next line...\n\n";
 	}
 	
@@ -225,28 +232,6 @@ namespace larcv{
       }
       
       
-      
-      
-      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       ///////////////////////////////////////////////
       ////////////////OLD CODE///////////////////////
       ///////////////////////////////////////////////
@@ -512,50 +497,6 @@ namespace larcv{
 
 
 
-  double PCASegmentationCombine::stdev( std::vector<int>& data,
-					size_t start, size_t end )
-  {
-
-    if ( (end - start) <=0 ) return 0.0;
-    
-    double result = 0.0;
-    auto    avg   = mean(data,start,end);
-    
-    for(int i = start; i <= end; ++i)
-      result += (data.at(i) - avg)*(data.at(i) - avg);
-    
-    return std::sqrt(result/((double)(end - start)));
-  }
-
-  
-  double PCASegmentationCombine::cov ( std::vector<int>& data1,
-				       std::vector<int>& data2,
-				       size_t start, size_t end )
-  {
-    
-    if ( start == end ) return 0.0;
-    
-    double result = 0.0;
-    auto   mean1  = mean(data1,start,end);
-    auto   mean2  = mean(data2,start,end);
-    
-    for(int i = start; i <= end; ++i)
-      result += (data1.at(i) - mean1)*(data2.at(i) - mean2);
-    
-    return result/((double)(end - start));
-  }
-  
-  double PCASegmentationCombine::mean( std::vector<int>& data,
-				       size_t start, size_t end )
-  {
-    if ( start == end ) return 0.0;
-    double result = 0.0;
-    
-    for(int i = start; i <= end; ++i)
-      result += data.at(i);
-    
-    return result / ((double)( end - start ));
-  }  
 
   void PCASegmentationCombine::clear_vars() {
 
@@ -643,8 +584,15 @@ namespace larcv{
 			      pca_ana.eigenvectors.at<double>(i, 1));
       eigen_val[i]  = pca_ana.eigenvalues.at<double>(0, i);
     }
-
+    
     e_vec = eigen_vecs[0];
+
+    auto& ax = e_vec.x;
+    auto& ay = e_vec.y;
+    auto  sq = std::sqrt(ax*ax + ay*ay);
+
+    ax /= sq;
+    ay /= sq;
     
     line[0] = 0 + rect.x;
     line[1] = e_center.y + ( (0 - e_center.x) / eigen_vecs[0].x ) * eigen_vecs[0].y + rect.y;
@@ -692,35 +640,13 @@ namespace larcv{
     return pearsons_r;
   }
 
-  double PCASegmentationCombine::compute_angle(const Point2D& line1,
-					       const Point2D& line2) {
-    
-    auto ax = line1.x;
-    auto ay = line1.y;
-    auto sq = std::sqrt(ax*ax + ay*ay);
-
-    ax /= sq;
-    ay /= sq;
-
-    auto bx = line2.x;
-    auto by = line2.y;
-    sq      = std::sqrt(bx*bx + by*by);
-
-    bx /= sq;
-    by /= sq;
-
-    return ax*bx + ay*by;
-    
-  }
-
   
   void PCASegmentationCombine::connect(const PCABox& box,                  //incoming line to compare too
 				       const std::vector<PCABox>& boxes,   //reference to all the lines
 				       std::map<int,bool>& used,           //used lines
 				       const std::map<int,std::vector<int> >& neighbors,
 				       std::map<int,std::vector<int> >& combined,
-				       int i,int k,
-				       double angle_cut) {
+				       int i,int k) {
     
     std::cout << "\t==> " << __FUNCTION__ << " i = " << i << " k = " << k << "\n";
     // bool connections = false;
@@ -737,20 +663,13 @@ namespace larcv{
       const auto& box2 = boxes.at(n);
 
       //Here you make the decision if you should connected the boxes or not
-
-      //check the angle
-      auto cos_angle = compute_angle(box.e_vec_,box2.e_vec_);
-      if ( std::acos(cos_angle) > angle_cut ) //angle between PCA lines //use acos since it returns smallest angle
-	continue;
-
-      //PCA line must intersect the next segment
-      if ( ! box.intersect(box2) )
+      if ( ! box.compatible(box2) )
 	continue;
       
       combined[i].push_back(n);
       used[n] = true;
       
-      connect(box2,boxes,used,neighbors,combined,i,n,angle_cut);
+      connect(box2,boxes,used,neighbors,combined,i,n);
     }
     
     std::cout << "No more connections...\n";
