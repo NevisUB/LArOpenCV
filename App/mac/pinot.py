@@ -15,6 +15,8 @@ import ROOT
 from larlite import larlite as fmwk
 from ROOT import larcv
 
+from methods import *
+
 my_proc = fmwk.ana_processor()
 
 # Config file
@@ -55,6 +57,9 @@ while ( my_proc.process_event() ) :
         charge  = params.charge_
         boxes   = params.boxes_
         combine = params.combined_
+
+        if hits.size() < 10 :
+            continue
         
         xy1 = []
 
@@ -86,34 +91,54 @@ while ( my_proc.process_event() ) :
         #ax.plot(params.startx_,params.starty_,'o')
         #ax.plot(params.meanx_,params.meany_,'o',lw=10,color="blue")
 
+        print "I have " + str( boxes.size() ) + " boxes..."
         for r in xrange(boxes.size()): # same size as number of boxes right...
             box   = boxes[r]
             re    = box.box_
-            lline = box.line_
-            
-            cov = np.abs(box.cov_)
 
+            # print "Its subdivided?: " + str(box.subdivided_)
+            # print "Its empty?:      " + str(box.empty_)
+            # print "subboxes.size()  " + str(box.subboxes_.size())
+            
+            # if box.subdivided_ == True:
+                
+            #     print "Its subdivided..."
+                
+            #     subboxes   = box.subboxes_;
+            #     n_subboxes = subboxes.size();
+
+            #     for i in xrange(n_subboxes) :
+            #         subbox = subboxes[i]
+
+            #         if subbox.empty_ == True:
+            #             print "It's empty..."
+            #             continue
+
+            #         subline = subbox.line_
+            #         subre   = subbox.box_
+
+            #         rectangle = plt.Rectangle((subre.x, subre.y), subre.width, subre.height, color="green",alpha=0.1)
+            #         ax.add_patch(rectangle)
+                    
+            #         xes, yes = get_bounded_line(subline,subre)
+            #         ax.plot(xes,yes,'-',color='blue',lw=2)
+                    
+            #         ax.plot(subbox.e_center_.x+re.x,subbox.e_center_.y+re.y,'o',color='pink')
+
+            #         # ctors = subbox.pts_; npts = ctors.size();
+            #         # ww = []; tt = []
+            #         # for i in xrange(npts):
+            #         #     pt = ctors[i]
+            #         #     ww.append(pt.x+re.x); tt.append(pt.y+re.y)
+
+            #         # ax.plot(ww,tt,'o',color='pink',alpha=1,markersize=7)
+            # else :
+            cov = np.abs(box.cov_)
+            
             rectangle = plt.Rectangle((re.x, re.y), re.width, re.height, fc=str(cov),alpha=0.2)
             ax.add_patch(rectangle)
-        
-            #ax.plot([re.x,re.x + re.width,re.x+re.width,re.x,re.x],
-            #        [re.y,re.y,re.y+re.height,re.y+re.height,re.y],color='green')
-
-            slope  = ( lline[3] - lline[1] ) / ( lline[2] - lline[0] )
-            yinter = lline[1]
-            
-            xx = np.arange(lline[0],lline[2],0.1)
-            yy = ( xx - re.x )*slope + yinter
-
-            xx = xx.tolist()
-            yy = yy.tolist()
-            
-            xes = [x for x in xx if yy[ xx.index(x) ] >= re.y and yy[ xx.index(x) ] <= (re.y + re.height) ]
-            yes = [y for y in yy if y >= re.y and y <= (re.y + re.height)]
-            
-            xes = np.array(xes)
-            yes = np.array(yes)
-            
+                
+            xes,yes = get_bounded_line(box.line_,re)
             ax.plot(xes,yes,'-',color='red',lw=2)
 
         for i in xrange(boxes.size()) :

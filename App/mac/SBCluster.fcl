@@ -49,8 +49,10 @@ ImageClusterManager: {
     NSegmentsY : 6
 
     NHitsCut : 3  # min number of hits in segment (>= actually)
-    AngleCut : 10 # degrees
-  }
+    AngleCut : 20 # degrees
+
+    CovSubDivide : 0.5
+    }
 
   Trackshower:{
     AreaCut : 1850

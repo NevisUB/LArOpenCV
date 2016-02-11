@@ -1,3 +1,4 @@
+//by vic
 #ifndef __PCASEGMENTATIONCOMBINE_CXX__
 #define __PCASEGMENTATIONCOMBINE_CXX__
 
@@ -19,6 +20,8 @@ namespace larcv{
     
     _nhits_cut  = pset.get<int>   ("NHitsCut");
     _angle_cut  = pset.get<double>("AngleCut");
+
+    _cov_breakup= pset.get<double>("CovSubDivide");
     
     _outtree = new TTree("PCA","PCA");
     
@@ -28,9 +31,8 @@ namespace larcv{
     _outtree->Branch("_area",&_area,"area/D");
     _outtree->Branch("_perimeter",&_perimeter,"perimeter/D");
 
-    _outtree->Branch("_trunk_length",&_trunk_length,"trunk_length/D");
-    _outtree->Branch("_trunk_cov",&_trunk_cov,"trunk_cov/D");
-    
+    // _outtree->Branch("_trunk_length",&_trunk_length,"trunk_length/D");
+    // _outtree->Branch("_trunk_cov",&_trunk_cov,"trunk_cov/D");
 
   }
   
@@ -47,15 +49,14 @@ namespace larcv{
     _cparms_v.reserve(clusters.size());
     //All of these are diagnostics for the python view program
 
-    for(unsigned i = 0; i < clusters.size(); ++i) {
+    for(unsigned u = 0; u < clusters.size(); ++u) {
 
-      auto& cluster    =  clusters[i];
+      auto& cluster    =  clusters[u];
       auto& cntr_pt    = _cntr_pt;
       auto& eigen_vecs = _eigen_vecs;
       auto& eigen_val  = _eigen_val;
       auto& lline      = _line;      
       
-      auto& trunk_index= _trunk_index; //index trunk end point (pair)
       auto& pearsons_r = _pearsons_r;  //linearity
 
       //Lets get subimage that only includes this cluster
@@ -71,24 +72,21 @@ namespace larcv{
       // we can do this based on ij indexing. Give me location on
       // the grid of the box (i,j) i will tell you who your neighbors
       // are in the std::vector of boxes
-      int ijvec[_segments_x+2][_segments_y+2];
+      //SCRAP THIS 
 
-      for(int i = 0; i < _segments_x + 2; ++i)
-	for(int j = 0; j < _segments_y + 2; ++j)
-	  ijvec[i][j] = -1;
-      
-      int ij = 0;
+      double angle_cut = _angle_cut; //degrees
+      angle_cut *= 3.14159/180.0; //to radians
 
-      for(unsigned i = 1; i <= _segments_x; ++i) {
-	for(unsigned j = 1; j <= _segments_y; ++j) {
 
-	  ijvec[i][j] = -1;
-	  
-	  auto dx = rect.width  /  _segments_x;
-	  auto dy = rect.height /  _segments_y;
+      auto dx = rect.width  /  _segments_x;
+      auto dy = rect.height /  _segments_y;
 
-	  auto x  = (i-1) * dx;
-	  auto y  = (j-1) * dy;
+      for(unsigned i = 0; i < _segments_x; ++i) {
+	for(unsigned j = 0; j < _segments_y; ++j) {
+
+
+	  auto x  = i * dx;
+	  auto y  = j * dy;
 	  
 	  ::cv::Rect r(x + rect.x,y + rect.y,dx,dy);
 	  ::cv::Mat subMat(img, r);
@@ -115,104 +113,81 @@ namespace larcv{
 	    
 	    inside_locations.emplace_back(loc);
 	  }
-
+	  
 	  if ( inside_locations.size() == 0 ) 
 	    continue;
-
+	  
 	  if ( inside_locations.size() <= _nhits_cut )
 	    continue;
-
+	  
 	  Point2D e_vec;
 	  Point2D e_center;
 	  
-	  if( ! pca_line(subMat,inside_locations,
+	  if( ! pca_line(inside_locations,
 			 r,line,e_vec,e_center) ) // only scary part is contour may be "tangled" ?
 	    continue;
-
 	  
 	  auto cov = get_roi_cov(inside_locations);
+	  PCABox box(e_vec,e_center,cov,line,inside_locations,r);
+	  box.SetAngleCut(angle_cut);
 	  
-	  // mean_loc.push_back ( get_mean_loc  (r,inside_locations) );
-	  // covar_loc.push_back( cov );
-	  //ccharge.push_back  ( get_charge_sum(subMat,inside_locations) );
-	  //line = {line[0] + r.x,line[1] + r.y,line[2]+r.x,line[3]+r.y};
-	  boxes.emplace_back(e_vec,e_center,cov,line,r);
+
+	  if ( std::abs(box.cov_) < 0.75 ) {
+
+	    box.SubDivide(4);
+
+	    for(auto& b: box.subboxes_) {
+	      if ( ! b.empty_ ) {
+	  	b.SetAngleCut(angle_cut);
+	  	boxes.emplace_back(b);
+	      }
+	    }
+	  }
+	  else
+	    boxes.emplace_back(box);
 	  
-	  ijvec[i][j] = ij; ++ij;
 	}
       }
+
       
-      //We will try to connect adjacent boxes
       
-      for(unsigned i = 1; i <= _segments_x; ++i) {
-	for(unsigned j = 1; j <= _segments_y; ++j) {
-
-	  if ( ijvec[i][j] < 0 ) // this box doesn't exist
-	    continue;
-
-	  // 8 cases to check neighbors... disgusting
-	  if ( ijvec[i-1][j] >= 0  )
-	    neighbors[ ijvec[i][j] ].push_back(ijvec[i-1][j]);
-
-	  if ( ijvec[i-1][j-1] >= 0  )
-	    neighbors[ ijvec[i][j] ].push_back(ijvec[i-1][j-1]);
-
-	  if ( ijvec[i][j-1] >= 0  )
-	    neighbors[ ijvec[i][j] ].push_back(ijvec[i][j-1]);
-
-	  if ( ijvec[i+1][j] >= 0  )
-	    neighbors[ ijvec[i][j] ].push_back(ijvec[i+1][j]);
-
-	  if ( ijvec[i+1][j+1] >= 0  )
-	    neighbors[ ijvec[i][j] ].push_back(ijvec[i+1][j+1]);
-
-	  if ( ijvec[i][j+1] >= 0  )
-	    neighbors[ ijvec[i][j] ].push_back(ijvec[i][j+1]);
-
-	  if ( ijvec[i+1][j-1] >= 0  )
-	    neighbors[ ijvec[i][j] ].push_back(ijvec[i+1][j-1]);
-
-	  if ( ijvec[i-1][j+1] >= 0  )
-	    neighbors[ ijvec[i][j] ].push_back(ijvec[i-1][j+1]);
-	}
-
-      }
-
       if ( boxes.size() == 0 )
 	continue;
       
-      std::cout << "========================\n";
-      for(int i = 0; i < _segments_x+2; ++i){
-      	for(int j = 0; j < _segments_y+2; ++j) 
-      	  std::cout << ijvec[i][j] << " ";
-      	std::cout<< "\n";
-      }
-      std::cout << "========================\n";
+
+
+      for(unsigned b1 = 0; b1 < boxes.size(); ++b1) {
+	auto& box1 = boxes[b1];
+	box1.expand(2,2);
 	
-      double angle_cut = _angle_cut; //degrees
-      std::map<int,std::vector<int> > combined; //combined boxes
-      angle_cut *= 3.14159/180.0; //to radians
+	for(unsigned b2 = 0; b2 < boxes.size(); ++b2) {
 
-      std::map<int,bool> used; for(int i = 0; i < ij; ++i) { used[i] = false; }
+	  if ( b1 == b2 ) continue;
 
-      // we can make this recursive
-      // loop over the squares and get neighbors
-      std::cout << " I have " << boxes.size() << " number of boxes\n";
+	  auto& box2 = boxes[b2];
 
-      // have to set the intersection angle
-      for(auto& box : boxes) box.SetAngleCut(angle_cut);
+	  if ( box1.touching(box2) ) {
+	    std::cout << "\t==> b1: " << b1 << " b2: " << b2 << " touch\n";
+	    neighbors[b1].push_back(b2);
+	  }
+	  
+	}
+	
+      }
+      
+      std::map<int,std::vector<int> > combined; //combined boxes            
+      std::map<int,bool> used; for(int i = 0; i < boxes.size(); ++i) { used[i] = false; }
       
       if ( boxes.size() > 1 ) {
 	
 	for (int i = 0; i < boxes.size(); ++i) {
-	
+	  
 	  if ( used[i] ) continue;
 	
 	  const auto& box = boxes.at(i);
 	  used[i] = true;
 
 	  connect(box,boxes,used,neighbors,combined,i,i);
-	  std::cout << "Moving to next line...\n\n";
 	}
 	
 	std::cout << "Finished connecting..." << "\n";
@@ -224,19 +199,14 @@ namespace larcv{
 	  }
 	  std::cout << "}\n";
 	}
+	
       }
+      
       
       
       ///////////////////////////////////////////////
       ////////////////OLD CODE///////////////////////
       ///////////////////////////////////////////////
-      
-
-
-
-
-
-
       
 
       //subMat holds pixels in the bounding rectangle
@@ -327,7 +297,7 @@ namespace larcv{
       
       auto eigen_normal = std::sqrt(std::pow(eigen_vecs[0].x,2) + std::pow(eigen_vecs[0].y,2));
       
-      _cparms_v.emplace_back(i,
+      _cparms_v.emplace_back(u,
 			     _eval1,
 			     _eval2,
 			     _area,
@@ -346,19 +316,19 @@ namespace larcv{
       
     }
     
-    for (int i = 0; i < _cparms_v.size(); ++i) {
-      for (int j = 0; j < _cparms_v.size(); ++j) {
+    // for (int i = 0; i < _cparms_v.size(); ++i) {
+    //   for (int j = 0; j < _cparms_v.size(); ++j) {
 	
-	if ( i == j ) continue;
+    // 	if ( i == j ) continue;
 	
-	auto& cparm1 = _cparms_v[i];
-	auto& cparm2 = _cparms_v[j];
+    // 	auto& cparm1 = _cparms_v[i];
+    // 	auto& cparm2 = _cparms_v[j];
 
-	cparm1.compare(cparm2);
+    // 	cparm1.compare(cparm2);
 	
 	
-      }
-    }
+    //   }
+    // }
     
     
     //just return the clusters
@@ -381,139 +351,7 @@ namespace larcv{
     _line.clear();
   }
 
-  double PCASegmentationCombine::distance_to_line(std::vector<double>& line,int lx,int ly) {
 
-    //real time collision detection page 128
-    //closest point on line
-    auto ax = line[0];
-    auto ay = line[1];
-    auto bx = line[2];
-    auto by = line[3];
-	
-    auto abx = bx-ax;
-    auto aby = by-ay;
-	
-    auto t = ( (lx-ax)*abx + (ly-ay)*aby ) / (abx*abx + aby*aby);
-    auto dx = ax + t * abx;
-    auto dy = ay + t * aby;
-    auto dist = (dx-lx)*(dx-lx) + (dy-ly)*(dy-ly); //squared distance
-    return dist;
-  }
-  
-  std::pair<double,double> PCASegmentationCombine::closest_point_on_line(std::vector<double>& line,int lx,int ly) {
-    
-    //real time collision detection page 128
-    //closest point on line
-    auto ax = line[0];
-    auto ay = line[1];
-    auto bx = line[2];
-    auto by = line[3];
-	
-    auto abx = bx-ax;
-    auto aby = by-ay;
-	
-    auto t = ( (lx-ax)*abx + (ly-ay)*aby ) / (abx*abx + aby*aby);
-    auto dx = ax + t * abx;
-    auto dy = ay + t * aby;
-
-    return std::make_pair(dx,dy);
-  }
-
-  bool PCASegmentationCombine::pca_line(const ::cv::Mat& subimg,
-					Contour_t cluster_s,
-					const ::cv::Rect& rect,
-					std::vector<double>& line,
-					Point2D& e_vec,
-					Point2D& e_center) {
-    
-    
-    //shift it down, yes I want explicit copy of the contour...
-    
-    //put this back in if using ACTUAL CONTOUR ROI
-    //for(auto &pt : cluster_s) { pt.x -= rect.x; pt.y -= rect.y; }
-
-    ::cv::Mat ctor_pts(cluster_s.size(), 2, CV_64FC1);
-    
-    for (unsigned i = 0; i < ctor_pts.rows; ++i) {
-      ctor_pts.at<double>(i, 0) = cluster_s[i].x;
-      ctor_pts.at<double>(i, 1) = cluster_s[i].y;
-    }
-    
-    ::cv::PCA pca_ana(ctor_pts, ::cv::Mat(), CV_PCA_DATA_AS_ROW,0);
-      
-    //Center point
-    // ::cv::Point
-    e_center = Point2D( pca_ana.mean.at<double>(0,0),
-			pca_ana.mean.at<double>(0,1) );
-    
-
-    //Principle directions (vec) and relative lengths (vals)
-    std::vector<Point2D> eigen_vecs;
-    std::vector<double>  eigen_val;
-    
-    eigen_vecs.resize(2);
-    eigen_val.resize (2);
-      
-    for (unsigned i = 0; i < 2; ++i) {
-      eigen_vecs[i] = Point2D(pca_ana.eigenvectors.at<double>(i, 0),
-			      pca_ana.eigenvectors.at<double>(i, 1));
-      eigen_val[i]  = pca_ana.eigenvalues.at<double>(0, i);
-    }
-    
-    e_vec = eigen_vecs[0];
-
-    auto& ax = e_vec.x;
-    auto& ay = e_vec.y;
-    auto  sq = std::sqrt(ax*ax + ay*ay);
-
-    ax /= sq;
-    ay /= sq;
-    
-    line[0] = 0 + rect.x;
-    line[1] = e_center.y + ( (0 - e_center.x) / eigen_vecs[0].x ) * eigen_vecs[0].y + rect.y;
-    line[2] = rect.width + rect.x;
-    line[3] = e_center.y + ( (rect.width - e_center.x) / eigen_vecs[0].x) * eigen_vecs[0].y + rect.y;
-    
-    
-    return true;
-  }
-
-  std::pair<double,double> PCASegmentationCombine::get_mean_loc(const ::cv::Rect& rect,
-								const Contour_t&  pts ) {
-    
-    double mean_x = 0.0;
-    double mean_y = 0.0;
-    
-    for(const auto& pt : pts) { mean_x += pt.x;  mean_y += pt.y; }
-    
-    return { mean_x / ( (double) pts.size() ) + rect.x,mean_y / ( (double) pts.size() ) + rect.y};
-  }
-  
-  int PCASegmentationCombine::get_charge_sum(const ::cv::Mat& subImg, const Contour_t& pts ) {
-    int charge_sum = 0;
-    for(const auto& pt : pts ) charge_sum += (int) subImg.at<uchar>(pt.y,pt.x);
-    return charge_sum;
-  }
-
-  double PCASegmentationCombine::get_roi_cov(const Contour_t & pts) {
-
-    std::vector<int> x_; x_.resize(pts.size()); 
-    std::vector<int> y_; y_.resize(pts.size());
-    for(unsigned i = 0; i < pts.size(); ++i)
-      { x_[i] = pts[i].x; y_[i] = pts[i].y; }
-    
-    double pearsons_r;
-    auto co = cov  (x_,y_,0,pts.size() - 1);
-    auto sx = stdev(x_,   0,pts.size() - 1);
-    auto sy = stdev(y_,   0,pts.size() - 1);
-
-    if ( sx != 0 && sy != 0) // trunk exists
-      pearsons_r =  co / ( sx * sy );
-    else
-      pearsons_r = 0;
-    
-    return pearsons_r;
-  }
 
   
   void PCASegmentationCombine::connect(const PCABox& box,                  //incoming line to compare too
@@ -523,17 +361,12 @@ namespace larcv{
 				       std::map<int,std::vector<int> >& combined,
 				       int i,int k) {
     
-    std::cout << "\t==> " << __FUNCTION__ << " i = " << i << " k = " << k << "\n";
-    // bool connections = false;
-
     if ( neighbors.count(k) <= 0 )
-      { std::cout << "No neighbors\n"; return; }
+      return;
     
     for(const auto& n : neighbors.at(k)) { // std::vector of neighbors
       
       if ( used[n] ) continue;
-      
-      std::cout << "\t k: " << k << " checking n: " << n << "\n";
       
       const auto& box2 = boxes.at(n);
 
@@ -547,7 +380,6 @@ namespace larcv{
       connect(box2,boxes,used,neighbors,combined,i,n);
     }
     
-    std::cout << "No more connections...\n";
     return;
       
   }

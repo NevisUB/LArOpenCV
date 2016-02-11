@@ -1,18 +1,7 @@
-/**
- * \file PCASegmentationCombine.h
- *
- * \ingroup ImageCluster
- * 
- * \brief Class def header for a class PCASegmentationCombine
- *
- * @author vic
- */
-
-/** \addtogroup ImageCluster
-
-    @{*/
+//by vic
 #ifndef __PCASEGMENTATIONCOMBINE_H__
 #define __PCASEGMENTATIONCOMBINE_H__
+
 
 #include "ImageClusterBase.h"
 #include "TTree.h"
@@ -64,9 +53,6 @@ namespace larcv {
 
     
   private:
-    std::pair<double,double> closest_point_on_line(std::vector<double>& line,int lx,int ly);    
-    double distance_to_line(std::vector<double>& line,int lx,int ly);
-
       
     //Doesn't have to be so heavy
     Point2D _cntr_pt;
@@ -75,6 +61,7 @@ namespace larcv {
     std::vector<double>  _line;
     std::pair<int,int> _trunk_index;
 
+    double _cov_breakup;
 
     int _segments_x;
     int _segments_y;
@@ -99,21 +86,6 @@ namespace larcv {
     double _angle_cut;
     
     void clear_vars();
-
-    bool pca_line(const ::cv::Mat& subimg,
-		  Contour_t cluster_s,
-		  const ::cv::Rect& rect,
-		  std::vector<double>& line,
-		  Point2D& e_vec,
-		  Point2D& e_center);
-    
-    int get_charge_sum(const ::cv::Mat& subImg,
-		       const Contour_t& pts);
-    
-    std::pair<double,double> get_mean_loc(const ::cv::Rect& rect,
-					  const Contour_t& pts );
-
-    double get_roi_cov(const Contour_t & pts);
 
     
     void connect(const PCABox& box,                  //incoming box to compare too
