@@ -130,22 +130,9 @@ namespace larcv{
 	  auto cov = get_roi_cov(inside_locations);
 	  PCABox box(e_vec,e_center,cov,line,inside_locations,r);
 	  box.SetAngleCut(angle_cut);
+	  check_linearity(box,angle_cut,0.9,boxes,2);
 	  
-
-	  if ( std::abs(box.cov_) < 0.75 ) {
-
-	    box.SubDivide(4);
-
-	    for(auto& b: box.subboxes_) {
-	      if ( ! b.empty_ ) {
-	  	b.SetAngleCut(angle_cut);
-	  	boxes.emplace_back(b);
-	      }
-	    }
-	  }
-	  else
-	    boxes.emplace_back(box);
-	  
+	 
 	}
       }
 
@@ -155,21 +142,19 @@ namespace larcv{
 	continue;
       
 
-
       for(unsigned b1 = 0; b1 < boxes.size(); ++b1) {
 	auto& box1 = boxes[b1];
 	box1.expand(2,2);
 	
 	for(unsigned b2 = 0; b2 < boxes.size(); ++b2) {
-
+	  
 	  if ( b1 == b2 ) continue;
 
 	  auto& box2 = boxes[b2];
 
-	  if ( box1.touching(box2) ) {
-	    std::cout << "\t==> b1: " << b1 << " b2: " << b2 << " touch\n";
+	  if ( box1.touching(box2) ) 
 	    neighbors[b1].push_back(b2);
-	  }
+	  
 	  
 	}
 	
@@ -190,18 +175,17 @@ namespace larcv{
 	  connect(box,boxes,used,neighbors,combined,i,i);
 	}
 	
-	std::cout << "Finished connecting..." << "\n";
-	std::cout << "\n\n";
-	for(const auto& k : combined) {
-	  std::cout << "\t key: " << k.first << " : {";
-	  for(const auto& kk : k.second) {
-	    std::cout << kk << ",";
-	  }
-	  std::cout << "}\n";
-	}
+	// std::cout << "Finished connecting..." << "\n";
+	// std::cout << "\n\n";
+	// for(const auto& k : combined) {
+	//   std::cout << "\t key: " << k.first << " : {";
+	//   for(const auto& kk : k.second) {
+	//     std::cout << kk << ",";
+	//   }
+	//   std::cout << "}\n";
+	// }
 	
-      }
-      
+      }      
       
       
       ///////////////////////////////////////////////
@@ -270,7 +254,7 @@ namespace larcv{
       std::vector<int> charge;
       
       for(const auto& loc : locations) {
-
+	
 	//is this point in the contour, if not continue
 	if ( ::cv::pointPolygonTest(cluster_s, loc,false) < 0 )
 	  continue;
@@ -383,7 +367,46 @@ namespace larcv{
     return;
       
   }
-        
+
+  //check_linearity(box,angle_cut,0.75,boxes);
+  void PCASegmentationCombine::check_linearity(PCABox& box, double angle_cut, double cov_cut, std::vector<PCABox>& boxes,int ndivisions) {
+
+    if ( ! ndivisions )
+      { box.SetAngleCut(angle_cut); boxes.emplace_back(box); return; }
+
+    --ndivisions;
+	
+    if ( std::abs(box.cov_) < cov_cut ) {
+
+      box.SubDivide(4);
+
+      if ( box.subdivided_ ) {
+
+	for(auto& b: box.subboxes_) {
+
+	  if ( b.empty_ )
+	    continue;
+
+	  check_linearity(b,angle_cut,cov_cut,boxes,ndivisions);
+
+	  // b.SetAngleCut(angle_cut);
+	  // boxes.emplace_back(b);
+	  
+	}
+	
+      }
+      else
+	{ box.SetAngleCut(angle_cut); boxes.emplace_back(box); }
+      
+    }
+    else
+      { box.SetAngleCut(angle_cut); boxes.emplace_back(box); }
+  
+  
+  }
+    
+	  
+
 }
 
 #endif

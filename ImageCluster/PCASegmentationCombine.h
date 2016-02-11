@@ -95,7 +95,8 @@ namespace larcv {
 		 std::map<int,std::vector<int> >& combined,
 		 int i,int k);
     
-
+    void check_linearity(PCABox& box, double angle_cut, double cov_cut, std::vector<PCABox>& boxes,int ndivisions);
+    
   };
   
   /**

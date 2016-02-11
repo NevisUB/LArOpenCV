@@ -107,7 +107,7 @@ namespace larcv {
   }
 
   bool PCABox::touching(const PCABox& other) const {
-    std::cout << "dbox..." << dbox_ << " other.box_ " << other.box_ << "\n";
+    // std::cout << "dbox..." << dbox_ << " other.box_ " << other.box_ << "\n";
     auto overlap = dbox_ & other.box_;
     
     if ( overlap.area() )
