@@ -130,7 +130,7 @@ namespace larcv{
 	  auto cov = get_roi_cov(inside_locations);
 	  PCABox box(e_vec,e_center,cov,line,inside_locations,r);
 	  box.SetAngleCut(angle_cut);
-	  check_linearity(box,angle_cut,0.9,boxes,2);
+	  check_linearity(box,angle_cut,0.75,boxes,2);
 	  
 	 
 	}
@@ -175,15 +175,15 @@ namespace larcv{
 	  connect(box,boxes,used,neighbors,combined,i,i);
 	}
 	
-	// std::cout << "Finished connecting..." << "\n";
-	// std::cout << "\n\n";
-	// for(const auto& k : combined) {
-	//   std::cout << "\t key: " << k.first << " : {";
-	//   for(const auto& kk : k.second) {
-	//     std::cout << kk << ",";
-	//   }
-	//   std::cout << "}\n";
-	// }
+	std::cout << "Finished connecting..." << "\n";
+	std::cout << "\n\n";
+	for(const auto& k : combined) {
+	  std::cout << "\t key: " << k.first << " : {";
+	  for(const auto& kk : k.second) {
+	    std::cout << kk << ",";
+	  }
+	  std::cout << "}\n";
+	}
 	
       }      
       
