@@ -25,56 +25,57 @@ namespace larcv {
 	   double  cov,
 	   std::vector<double> line,
 	   Contour_t points, // this should be reference(!)
-	   ::cv::Rect box) :
-      e_vec_     ( e_vec    ),
-      e_center_  ( e_center ),
-      cov_       ( cov      ),
-      line_      ( line     ),
-      pts_       ( points   ),
-      box_       ( box      ),
-      angle_cut_ ( -1       ),
-      n_hits_    ( -1       ),
-      charge_sum_( -1       ),
-      subdivided_( false    ),
-      empty_     ( false    )
+	   ::cv::Rect box,
+	   double angle_cut,
+	   double cov_cut,
+	   int subhits_cut) :
+      e_vec_      ( e_vec       ),
+      e_center_   ( e_center    ),
+      cov_        ( cov         ),
+      line_       ( line        ),
+      pts_        ( points      ),
+      box_        ( box         ),
+      angle_cut_  ( angle_cut   ),
+      cov_cut_    ( cov_cut     ),
+      subhits_cut_( subhits_cut ),
+      charge_sum_ ( -1          ),
+      subdivided_ ( false       ),
+      empty_      ( false       )
     {}
     
     //destructor
     ~PCABox(){}
-
+    
     //not wasting time with std::pair sorry
     Point2D e_vec_;
     Point2D e_center_;
     
     double cov_;
-
+    
     std::vector<double> line_;
-
+    
     Contour_t pts_;
     
     ::cv::Rect box_;
     ::cv::Rect dbox_;
-
-
+    
+    double angle_cut_;
+    double cov_cut_;
+    int    subhits_cut_;
     
     void expand(short i, short j);
 
-    void SetAngleCut   (double a) { angle_cut_ = a; }
     void SetChargeSum  (double c) { charge_sum_= c; }
-    void SetNHits      (int    h) { n_hits_    = h; }
-
+    
     // only filled if subdivided
     void SubDivide(short divisions);
 
     bool subdivided_;
 
     std::vector<PCABox> subboxes_;
-
+    
     bool empty_;
     
-    // { 0 == bl,1 == tl,2 == br,4 == tr }
-
-
     // should we use polymorphism here? It's hard to say
     // since PCASegmentation object is created by factory.
     // So to specify PCABox child and runtime means
@@ -89,7 +90,6 @@ namespace larcv {
     bool check_angle  (const PCABox& other) const;
 
     
-    double angle_cut_;
     double charge_sum_;
     int n_hits_;
   };

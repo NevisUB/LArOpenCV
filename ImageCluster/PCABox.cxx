@@ -31,8 +31,6 @@ namespace larcv {
 
     auto cos_angle =  ax*bx + ay*by;
 
-    if ( angle_cut_ < 0 ) { std::cout << "Call SetAngleCut()\n"; throw std::exception(); }
-    
     if ( std::acos(cos_angle) <= angle_cut_ ) //angle between PCA lines //use acos since it returns smallest angle
       return true;
 
@@ -89,7 +87,7 @@ namespace larcv {
 	if ( inside_pts.size() == 0 ) 
 	  { subboxes_.emplace_back(PCABox()); continue; }
 	
-	if ( inside_pts.size() <= 2 ) // hardcode warning must have more than 3 hits or this is useless
+	if ( inside_pts.size() < subhits_cut_ ) // hardcode warning must have more than 3 hits or this is useless
 	  { subboxes_.emplace_back(PCABox()); continue; }
 	
 	Point2D e_vec;
@@ -98,8 +96,9 @@ namespace larcv {
 	auto q = pca_line(inside_pts,box_,r,line,e_vec,e_center);
 	
 	auto cov = get_roi_cov(inside_pts);
-	subboxes_.emplace_back(e_vec,e_center,cov,line,inside_pts,r + box_.tl());
-
+	subboxes_.emplace_back(e_vec,e_center,cov,line,inside_pts,r + box_.tl(),
+			       angle_cut_,cov_cut_,subhits_cut_); //passing these parameters around is such a waste
+	
 	subdivided_ = true;
       }
     }

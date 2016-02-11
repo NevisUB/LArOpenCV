@@ -61,12 +61,13 @@ namespace larcv {
     std::vector<double>  _line;
     std::pair<int,int> _trunk_index;
 
-    double _cov_breakup;
+    double _cov_cut;
 
     int _segments_x;
     int _segments_y;
 
     int _nhits_cut;
+    int _sub_nhits_cut;
     
     double _pearsons_r;
     
@@ -95,7 +96,7 @@ namespace larcv {
 		 std::map<int,std::vector<int> >& combined,
 		 int i,int k);
     
-    void check_linearity(PCABox& box, double angle_cut, double cov_cut, std::vector<PCABox>& boxes,int ndivisions);
+    void check_linearity(PCABox& box, std::vector<PCABox>& boxes,int ndivisions);
     
   };
   

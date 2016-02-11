@@ -19,9 +19,10 @@ namespace larcv{
     _segments_y = pset.get<int> ("NSegmentsY");
     
     _nhits_cut  = pset.get<int>   ("NHitsCut");
+    _sub_nhits_cut  = pset.get<int>   ("NSubHitsCut");
     _angle_cut  = pset.get<double>("AngleCut");
 
-    _cov_breakup= pset.get<double>("CovSubDivide");
+    _cov_cut  = pset.get<double>("CovSubDivide");
     
     _outtree = new TTree("PCA","PCA");
     
@@ -47,7 +48,6 @@ namespace larcv{
     ContourArray_t ctor_v;    
     clear_vars();
     _cparms_v.reserve(clusters.size());
-    //All of these are diagnostics for the python view program
 
     for(unsigned u = 0; u < clusters.size(); ++u) {
 
@@ -60,22 +60,16 @@ namespace larcv{
       auto& pearsons_r = _pearsons_r;  //linearity
 
       //Lets get subimage that only includes this cluster
-      //and the points in immediate vicinity
+      //and the points in immediate vicinity (ROI)
       ::cv::Rect rect = ::cv::boundingRect(cluster);
       ::cv::Mat subMat(img, rect);
 
       std::vector<std::pair<double,double> > mean_loc;
       std::vector<PCABox> boxes;
       std::map<int,std::vector<int> > neighbors;
-      
-      // we need a way for a box to tell what his neighbors are
-      // we can do this based on ij indexing. Give me location on
-      // the grid of the box (i,j) i will tell you who your neighbors
-      // are in the std::vector of boxes
-      //SCRAP THIS 
 
       double angle_cut = _angle_cut; //degrees
-      angle_cut *= 3.14159/180.0; //to radians
+      angle_cut *= 3.14159/180.0;    //to radians
 
 
       auto dx = rect.width  /  _segments_x;
@@ -117,7 +111,7 @@ namespace larcv{
 	  if ( inside_locations.size() == 0 ) 
 	    continue;
 	  
-	  if ( inside_locations.size() <= _nhits_cut )
+	  if ( inside_locations.size() < _nhits_cut )
 	    continue;
 	  
 	  Point2D e_vec;
@@ -128,21 +122,23 @@ namespace larcv{
 	    continue;
 	  
 	  auto cov = get_roi_cov(inside_locations);
-	  PCABox box(e_vec,e_center,cov,line,inside_locations,r);
-	  box.SetAngleCut(angle_cut);
-	  check_linearity(box,angle_cut,0.75,boxes,2);
+	  PCABox box(e_vec,e_center,cov,line,inside_locations,r,
+		     angle_cut,_cov_cut,_sub_nhits_cut);
+
+	  //do subdivision recusively if the box has low linearity...
+	  check_linearity(box,boxes,2);
 	  
-	 
 	}
       }
-
+      
       
       
       if ( boxes.size() == 0 )
 	continue;
       
-
+      
       for(unsigned b1 = 0; b1 < boxes.size(); ++b1) {
+	
 	auto& box1 = boxes[b1];
 	box1.expand(2,2);
 	
@@ -168,10 +164,10 @@ namespace larcv{
 	for (int i = 0; i < boxes.size(); ++i) {
 	  
 	  if ( used[i] ) continue;
-	
+	  
 	  const auto& box = boxes.at(i);
 	  used[i] = true;
-
+	  
 	  connect(box,boxes,used,neighbors,combined,i,i);
 	}
 	
@@ -369,14 +365,14 @@ namespace larcv{
   }
 
   //check_linearity(box,angle_cut,0.75,boxes);
-  void PCASegmentationCombine::check_linearity(PCABox& box, double angle_cut, double cov_cut, std::vector<PCABox>& boxes,int ndivisions) {
+  void PCASegmentationCombine::check_linearity(PCABox& box, std::vector<PCABox>& boxes,int ndivisions) {
 
     if ( ! ndivisions )
-      { box.SetAngleCut(angle_cut); boxes.emplace_back(box); return; }
+      { boxes.emplace_back(box); return; }
 
     --ndivisions;
 	
-    if ( std::abs(box.cov_) < cov_cut ) {
+    if ( std::abs(box.cov_) < box.cov_cut_ ) {
 
       box.SubDivide(4);
 
@@ -387,20 +383,17 @@ namespace larcv{
 	  if ( b.empty_ )
 	    continue;
 
-	  check_linearity(b,angle_cut,cov_cut,boxes,ndivisions);
-
-	  // b.SetAngleCut(angle_cut);
-	  // boxes.emplace_back(b);
+	  check_linearity(b,boxes,ndivisions);
 	  
 	}
 	
       }
       else
-	{ box.SetAngleCut(angle_cut); boxes.emplace_back(box); }
+	boxes.emplace_back(box);
       
     }
     else
-      { box.SetAngleCut(angle_cut); boxes.emplace_back(box); }
+      boxes.emplace_back(box);
   
   
   }
