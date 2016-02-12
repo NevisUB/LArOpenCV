@@ -10,7 +10,6 @@ namespace larcv{
   void PCASegmentationCombine::_Configure_(const ::fcllite::PSet &pset)
   {
 
-
     //Deprecated
     _min_trunk_length = pset.get<int>    ("MinTrunkLength");
     _trunk_deviation  = pset.get<double> ("TrunkDeviation");
@@ -43,7 +42,7 @@ namespace larcv{
 						   const ::cv::Mat& img,
 						   larcv::ImageMeta& meta)
   {
-
+    
     //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
     
     //cluster == contour
@@ -55,7 +54,7 @@ namespace larcv{
     angle_cut *= 3.14159/180.0;    //to radians
 
     for(unsigned u = 0; u < clusters.size(); ++u) {
-
+      
       auto& cluster    =  clusters[u];
       auto& cntr_pt    = _cntr_pt;
       auto& eigen_vecs = _eigen_vecs;
@@ -63,7 +62,7 @@ namespace larcv{
       auto& lline      = _line;      
       
       auto& pearsons_r = _pearsons_r;  //linearity
-
+      
       //Lets get subimage that only includes this cluster
       //and the points in immediate vicinity (ROI)
       ::cv::Rect rect = ::cv::boundingRect(cluster);
@@ -82,7 +81,7 @@ namespace larcv{
 	  auto y  = j * dy;
 	  
 	  ::cv::Rect r(x + rect.x,y + rect.y,dx,dy);
-	  ::cv::Mat subMat(img, r);
+	  ::cv::Mat subM(img, r);
 
 	  std::vector<double> line; line.resize(4);
 	  
@@ -105,7 +104,7 @@ namespace larcv{
 	    
 	    loc.x -= r.x;
 	    loc.y -= r.y;
-	    
+
 	    inside_locations.emplace_back(loc);
 	  }
 	  
@@ -119,11 +118,10 @@ namespace larcv{
 
 	  // fille line, e_vec, e_center
 	  pca_line(inside_locations,r,line,e_vec,e_center);
-
+	  
 	  //covariance of this box
 	  auto cov = get_roi_cov(inside_locations);
-
-
+	  
 	  //New box object
 	  PCABox box(e_vec,e_center,cov,line,inside_locations,r,
 		     angle_cut,_cov_cut,_sub_nhits_cut);
@@ -133,8 +131,7 @@ namespace larcv{
 	  
 	}
       }
-      
-      
+            
       
       for(unsigned b1 = 0; b1 < boxes.size(); ++b1) {
 	
@@ -144,71 +141,70 @@ namespace larcv{
 	for(unsigned b2 = 0; b2 < boxes.size(); ++b2) {
 	  
 	  if ( b1 == b2 ) continue;
-
+	  
 	  auto& box2 = boxes[b2];
 	  
 	  if ( box1.touching(box2) ) 
 	    neighbors[b1].push_back(b2);
-	  
 	}
 	
       }
-
-
+      
+      
       // kazu suggests we are allowed to jump across empty boxes
       // this will become recursive I hope
-
+      
       for(unsigned b = 0; b < boxes.size(); ++b) {
 	auto& box = boxes[b];
 
-	//its empty, move on
+	//i'm empty, move on
 	if ( box.empty_ ) continue;
 	
 	//no neighbors anyways, move on
 	if ( neighbors.count(b) <= 0 ) continue;
 
-	auto& neighbor = neighbors[b];
-  	
 	//my neighbors
+	auto& neighbor = neighbors[b];
+
 	for(auto& n : neighbor) {
-	  	  
+	  
 	  // no neighbors, move on
 	  if ( neighbors.count(n) <= 0 ) continue;
 	  
-	  // box NOT empty, i DONT want it's neighbors
+	  // this box NOT empty, i DONT want it's neighbors
 	  if ( ! boxes.at(n).empty_ ) continue;
-
+	  
 	  // this box is empty, loop over its neighbors
 	  for ( const auto& en : neighbors[n] ) {
 
 	    // I don't wany myself, move on
 	    if ( en == b ) continue;
-		
+	    
 	    // has no neighbors, move on
 	    if ( neighbors.count(en) <= 0 ) continue;
 	    
 	    // its empty, i DONT want your neighbors ( depth == 1 for now)
 	    if ( boxes.at(en).empty_ ) continue;
 	    
-	    //I have you already, movie on
+	    //I have you already, move on
 	    if( std::find(neighbor.begin(), neighbor.end(), en) != neighbor.end())
 	      continue;
 
-	    //i don't have you as a neighbor, give me that
+	    //I don't have you as a neighbor, give me that
 	    neighbor.push_back(en);
 
 	  }//end empty neighbors
-	    
+	  
 	}//end my neighbors
-
-      } // end ridiculous logic
+	
+      }// end ridiculous logic
 
 
       int empty = 0;
       std::map<int,std::vector<int> > combined; //combined boxes            
       std::map<int,bool> used;
       for(int i = 0; i < boxes.size(); ++i) { used[i] = false; if (boxes[i].empty_) { used[i] = true; ++empty; } }
-
+      
       if ( boxes.size() == empty ) // all boxes are empty
 	continue;
 
@@ -235,14 +231,41 @@ namespace larcv{
 	  std::cout << "}\n";
 	}
 	
-      }      
+      }     
+
+
+      //At this point we have some idea about "connectedness". 
       
+
+      //lets set the charge sum first
+      //
+      std::cout << "\n\n\n\ndoing charge sum... subMat..." << subMat.size() << "\n";;
+      std::cout << "subMat " << subMat << std::endl;
+      
+      for( auto& box : boxes ) {
+
+	if ( box.empty_ ) continue;
+	
+	for ( const auto &pt : box.pts_ ) 
+	  box.charge_sum_ += (int) subMat.at<uchar>(pt.y,pt.x);
+
+      }
+	
+	
+
+      //return the index in combined that we choose as the shower axis
+      //what condition do we set?
+      auto axis = decide_axis(boxes,combined);
+      
+
+
+
+
       
       ///////////////////////////////////////////////
       ////////////////OLD CODE///////////////////////
       ///////////////////////////////////////////////
       
-
       //subMat holds pixels in the bounding rectangle
       //around the given contour. We can make a line from principle eigenvector
       //and compute the distance to this line of the hits may be weighted by
@@ -320,7 +343,6 @@ namespace larcv{
 	continue;
       
       //find the trunk with this info 
-      
       auto normal = std::sqrt( eigen_val[0]*eigen_val[0] + eigen_val[1]*eigen_val[1] ) ;
       
       _eval1 = eigen_val[0] / normal;
@@ -347,7 +369,6 @@ namespace larcv{
       
       
       _outtree->Fill();
-      
     }
     
     //just return the clusters
@@ -355,10 +376,9 @@ namespace larcv{
 
   }
 
-
-
+  
   void PCASegmentationCombine::clear_vars() {
-
+    
     _eigen_vecs.clear();
     _eigen_val.clear();
 
@@ -377,6 +397,7 @@ namespace larcv{
 				       std::map<int,std::vector<int> >& combined,
 				       int i,int k) {
     
+
     if ( neighbors.count(k) <= 0 ) 
       return;
     
@@ -387,7 +408,7 @@ namespace larcv{
       const auto& box2 = boxes.at(n);
       
       //Here you make the decision if you should connected the boxes or not
-      if ( ! box.compatible(box2) )
+      if ( !compatible(box,box2) )
 	continue;
       
       combined[i].push_back(n);
@@ -410,11 +431,11 @@ namespace larcv{
     
     if ( std::abs(box.cov_) < box.cov_cut_ ) {
       
-      box.SubDivide(4);
+      auto subboxes = sub_divide(box,4);
       
       if ( box.subdivided_ ) {
 
-	for(auto& b: box.subboxes_) {
+	for(auto& b: subboxes) {
 
 	  if ( b.empty_ ) {  boxes.emplace_back(b); continue; }
 
@@ -432,11 +453,9 @@ namespace larcv{
       boxes.emplace_back(box);
     }
   
-  
   }
 
-	  
-
+  
 }
 
 #endif

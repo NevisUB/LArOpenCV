@@ -6,10 +6,9 @@
 #include <cmath>
 #include <utility>
 
-#include "ImageClusterTypes.h"
-
+#include "PCABox.h"
 //maybe redundant
- #include <opencv2/opencv.hpp>
+#include <opencv2/opencv.hpp>
 
 namespace larcv {
     
@@ -49,5 +48,13 @@ namespace larcv {
   double distance_to_line(std::vector<double>& line,int lx,int ly);
 
   Point2D intersection_point(const std::vector<double>& l1, const std::vector<int> l2);
+
+  bool compatible (const PCABox& b1, const PCABox& b2);
+  bool intersect  (const PCABox& b1, const PCABox& b2);
+  bool check_angle(const PCABox& b1, const PCABox& b2);
+  
+  std::vector<PCABox> sub_divide(PCABox& box, short divisions);
+  int decide_axis(std::vector<PCABox>& boxes, std::map<int,std::vector<int> > connections);
+  
 }
 #endif

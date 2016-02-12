@@ -8,8 +8,8 @@
 
 #include "Core/ImageMeta.h"
 #include "Core/laropencv_base.h"
-#include "PCAUtilities.h"
 
+#include "ImageClusterTypes.h"
 
 namespace larcv {
   
@@ -43,7 +43,7 @@ namespace larcv {
       angle_cut_  ( angle_cut   ),
       cov_cut_    ( cov_cut     ),
       subhits_cut_( subhits_cut ),
-      charge_sum_ ( -1          ),
+      charge_sum_ ( 0           ),
       subdivided_ ( false       ),
       empty_      ( false       )
     {}
@@ -73,11 +73,12 @@ namespace larcv {
     // void SetChargeSum  (double c) { charge_sum_= c; }
     
     // only filled if subdivided
-    void SubDivide(short divisions);
+    // void SubDivide(short divisions);
     bool subdivided_;
-    std::vector<PCABox> subboxes_;
+    // std::vector<PCABox> subboxes_;
     bool empty_;
-    
+
+    double charge_sum_;
     // should we use polymorphism here? It's hard to say
     // since PCASegmentation object is created by factory.
     // So to specify PCABox child at runtime means
@@ -85,18 +86,14 @@ namespace larcv {
     // PCABox instance just to abstract compatible/touching function.
     // Let's not waste time, just do it
     
-    bool compatible(const PCABox& other) const;
+    // bool compatible(const PCABox& other) const;
     bool touching  (const PCABox& other) const;
 		  
   private:
-
     //what you want to check in compatible function,
     //just add function here until we abstract (will move to utilities)
-    
-    bool intersect    (const PCABox& other) const;
-    bool check_angle  (const PCABox& other) const;
 
-    double charge_sum_;
+
     //int n_hits_;
   };
 

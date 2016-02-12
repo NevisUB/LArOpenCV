@@ -140,8 +140,8 @@ while ( my_proc.process_event() ) :
             ##vic
             cov = np.abs(box.cov_)
             
-            rectangle = plt.Rectangle((re.x, re.y), re.width, re.height, fc=str(cov),alpha=0.2)
-            ax.add_patch(rectangle)
+            # rectangle = plt.Rectangle((re.x, re.y), re.width, re.height, fc=str(cov),alpha=0.2)
+            # ax.add_patch(rectangle)
                 
             xes,yes = get_bounded_line(box.line_,re)
             ax.plot(xes,yes,'-',color='red',lw=2)
@@ -158,16 +158,21 @@ while ( my_proc.process_event() ) :
             color=np.random.rand(3,1)
             fi = boxes[i].box_
 
-            ax.plot([fi.x,fi.x + fi.width,fi.x+fi.width,fi.x,fi.x],
-                    [fi.y,fi.y,fi.y+fi.height,fi.y+fi.height,fi.y],color=color,lw=2)
+            rectangle = plt.Rectangle((fi.x, fi.y), fi.width, fi.height, fc=color,alpha=0.2)
+            ax.add_patch(rectangle)
+            
+            # ax.plot([fi.x,fi.x + fi.width,fi.x+fi.width,fi.x,fi.x],
+            #         [fi.y,fi.y,fi.y+fi.height,fi.y+fi.height,fi.y],color=color,lw=2)
             
             for cb in xrange(c.size()) :
                 con = c[cb]
 
                 re = boxes[con].box_
+                rectangle = plt.Rectangle((re.x, re.y), re.width, re.height, fc=color,alpha=0.2)
+                ax.add_patch(rectangle)
                 
-                ax.plot([re.x,re.x + re.width,re.x+re.width,re.x,re.x],
-                        [re.y,re.y,re.y+re.height,re.y+re.height,re.y],color=color,lw=2)
+                # ax.plot([re.x,re.x + re.width,re.x+re.width,re.x,re.x],
+                #         [re.y,re.y,re.y+re.height,re.y+re.height,re.y],color=color,lw=2)
         
         #plt.savefig("oo%d.png" % we, format='png', dpi=1000)
         plt.show()

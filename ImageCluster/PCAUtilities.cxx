@@ -3,6 +3,7 @@
 #define __IMAGECLUSTER_PCAUTILITIES_CXX__
 
 #include "PCAUtilities.h"
+#include "PCAPath.h"
 
 namespace larcv {
 
@@ -149,6 +150,7 @@ namespace larcv {
       pearsons_r = 0;
     
     return pearsons_r;
+
   }
 
   
@@ -204,6 +206,7 @@ namespace larcv {
 
   
   int get_charge_sum(const ::cv::Mat& subImg, const Contour_t& pts ) {
+
     int charge_sum = 0;
     for(const auto& pt : pts ) charge_sum += (int) subImg.at<uchar>(pt.y,pt.x);
     return charge_sum;
@@ -223,6 +226,137 @@ namespace larcv {
     pt.y = ( (x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-y3*x4) ) / denom;
     
     return pt;
+    
+  }
+
+  bool check_angle(const PCABox& b1, const PCABox& b2) {
+    
+    auto& ax = b1.e_vec_.x;
+    auto& ay = b1.e_vec_.y;
+
+    auto& bx = b2.e_vec_.x;
+    auto& by = b2.e_vec_.y;
+
+    auto cos_angle =  ax*bx + ay*by;
+
+    if ( std::acos(cos_angle) <= b1.angle_cut_ ) //angle between PCA lines //use acos since it returns smallest angle
+      return true;
+
+    return false;
+
+  }
+
+  
+  bool intersect(const PCABox& b1, const PCABox& b2){ 
+    //Does the other PCABox line intersect me?
+
+    const auto& b1line = b1.line_;
+    const auto& b2box  = b2.box_;
+
+    auto ledge = intersection_point(b1line, { b2box.x,b2box.y,b2box.x,b2box.y + b2box.height});
+    if ( ledge.y >= b2box.y && ledge.y <= b2box.y+b2box.height)
+      return true;
+	      
+    auto redge = intersection_point(b1line, { b2box.x+b2box.width,b2box.y,b2box.x+b2box.width,b2box.y+b2box.height});
+    if ( redge.y >= b2box.y && redge.y <= b2box.y+b2box.height)
+      return true;
+    
+    auto tedge = intersection_point(b1line, { b2box.x,b2box.y+b2box.height,b2box.x+b2box.width,b2box.y+b2box.height});
+    if ( tedge.x >= b2box.x && tedge.x <= b2box.x+b2box.width)
+      return true;
+    
+    auto bedge = intersection_point(b1line, { b2box.x,b2box.y,b2box.x+b2box.width,b2box.y});
+    if ( bedge.x >= b2box.x && bedge.x <= b2box.x+b2box.width)
+      return true;
+    
+    return false;
+  }
+
+  bool compatible(const PCABox& b1, const PCABox& b2) {
+
+    if ( ! check_angle(b1,b2) )
+      return false;
+    
+    if ( ! intersect(b1,b2) )
+      return false;
+
+    if ( ! intersect(b2,b1) )
+      return false;
+    
+    return true;
+  }
+
+  std::vector<PCABox> sub_divide(PCABox& box, short divisions) {
+    
+    std::vector<PCABox> subboxes; subboxes.reserve(divisions);
+    
+    //auto& subboxes = box.subboxes_;
+    auto& thebox   = box.box_;
+    
+    auto dx = thebox.width  /  2;
+    auto dy = thebox.height /  2;
+    
+    for(unsigned i = 0; i < 2; ++i) {
+      for(unsigned j = 0; j < 2; ++j) {
+	
+	auto x  = i * dx;
+	auto y  = j * dy;
+	
+	::cv::Rect r(x,y,dx,dy);
+	std::vector<double> line; line.resize(4);
+	  
+	Contour_t inside_pts; inside_pts.reserve(box.pts_.size());
+		
+	for(auto& pt : box.pts_) 
+	  if ( r.contains(pt) )
+	    inside_pts.emplace_back(pt);
+	  
+	if ( inside_pts.size() == 0 ) 
+	  { subboxes.emplace_back(r + thebox.tl()); continue; }
+	
+	if ( inside_pts.size() < box.subhits_cut_ ) 
+	  { subboxes.emplace_back(r + thebox.tl()); continue; }
+	
+	Point2D e_vec, e_center;
+	
+	pca_line(inside_pts,thebox,r,line,e_vec,e_center);
+	
+	auto cov = get_roi_cov(inside_pts);
+	subboxes.emplace_back(e_vec,e_center,cov,line,inside_pts,r + thebox.tl(),
+			      box.angle_cut_,box.cov_cut_,box.subhits_cut_); //passing these parameters around is such a waste
+	
+	box.subdivided_ = true;
+      }
+    }
+
+    return subboxes;
+  }
+  
+  
+  int decide_axis(std::vector<PCABox>& boxes, std::map<int,std::vector<int> > connections) {
+
+    std::vector<PCAPath> paths; paths.resize(connections.size());
+    std::cout << "boxes size... " <<boxes.size() << "\n";
+    std::cout << "connect size.." << connections.size() << "\n";
+      
+    int counter = 0;
+
+    for( const auto& index: connections ) {
+      auto& path = paths[counter];
+      path.seed_ = index.first;
+
+      path.push_back(&boxes[index.first]);
+      
+      for( const auto& c : index.second)
+
+	path.push_back(&boxes[c]);
+
+      path.Fill();
+
+      ++counter;
+      
+    }
+
     
   }
   

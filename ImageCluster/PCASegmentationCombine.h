@@ -8,7 +8,6 @@
 #include "ClusterParams.h"
 #include "PCABox.h"
 
-
 namespace larcv {
   /**
      \class PCASegmentationCombine
