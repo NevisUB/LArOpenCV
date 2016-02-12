@@ -96,6 +96,9 @@ while ( my_proc.process_event() ) :
             box   = boxes[r]
             re    = box.box_
 
+            if box.empty_ :
+                continue;
+            
             # print "Its subdivided?: " + str(box.subdivided_)
             # print "Its empty?:      " + str(box.empty_)
             # print "subboxes.size()  " + str(box.subboxes_.size())
@@ -133,6 +136,8 @@ while ( my_proc.process_event() ) :
 
             #         # ax.plot(ww,tt,'o',color='pink',alpha=1,markersize=7)
             # else :
+
+            ##vic
             cov = np.abs(box.cov_)
             
             rectangle = plt.Rectangle((re.x, re.y), re.width, re.height, fc=str(cov),alpha=0.2)
@@ -142,12 +147,17 @@ while ( my_proc.process_event() ) :
             ax.plot(xes,yes,'-',color='red',lw=2)
 
         for i in xrange(boxes.size()) :
+
+            if boxes[i].empty_ :
+                continue;
+            
             c = combine[i]
             if c.size() == 0:
                 continue;
             
             color=np.random.rand(3,1)
             fi = boxes[i].box_
+
             ax.plot([fi.x,fi.x + fi.width,fi.x+fi.width,fi.x,fi.x],
                     [fi.y,fi.y,fi.y+fi.height,fi.y+fi.height,fi.y],color=color,lw=2)
             

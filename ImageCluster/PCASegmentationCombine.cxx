@@ -10,20 +10,24 @@ namespace larcv{
   void PCASegmentationCombine::_Configure_(const ::fcllite::PSet &pset)
   {
 
+
+    //Deprecated
     _min_trunk_length = pset.get<int>    ("MinTrunkLength");
     _trunk_deviation  = pset.get<double> ("TrunkDeviation");
     _closeness        = pset.get<double> ("Closeness");
 
-
+    //How many pixes for initial subdivision
     _segments_x = pset.get<int> ("NSegmentsX");
     _segments_y = pset.get<int> ("NSegmentsY");
-    
-    _nhits_cut  = pset.get<int>   ("NHitsCut");
-    _sub_nhits_cut  = pset.get<int>   ("NSubHitsCut");
-    _angle_cut  = pset.get<double>("AngleCut");
 
-    _cov_cut  = pset.get<double>("CovSubDivide");
-    
+
+    //various arbys cold cuts
+    _nhits_cut     = pset.get<int>   ("NHitsCut"   );
+    _sub_nhits_cut = pset.get<int>   ("NSubHitsCut");
+    _angle_cut     = pset.get<double>("AngleCut"   );
+    _cov_cut       = pset.get<double>("CovSubDivide");
+
+    //output tree
     _outtree = new TTree("PCA","PCA");
     
     _outtree->Branch("_eval1",&_eval1,"eval1/D");
@@ -32,8 +36,6 @@ namespace larcv{
     _outtree->Branch("_area",&_area,"area/D");
     _outtree->Branch("_perimeter",&_perimeter,"perimeter/D");
 
-    // _outtree->Branch("_trunk_length",&_trunk_length,"trunk_length/D");
-    // _outtree->Branch("_trunk_cov",&_trunk_cov,"trunk_cov/D");
 
   }
   
@@ -48,6 +50,9 @@ namespace larcv{
     ContourArray_t ctor_v;    
     clear_vars();
     _cparms_v.reserve(clusters.size());
+
+    double angle_cut = _angle_cut; //degrees
+    angle_cut *= 3.14159/180.0;    //to radians
 
     for(unsigned u = 0; u < clusters.size(); ++u) {
 
@@ -64,26 +69,21 @@ namespace larcv{
       ::cv::Rect rect = ::cv::boundingRect(cluster);
       ::cv::Mat subMat(img, rect);
 
-      std::vector<std::pair<double,double> > mean_loc;
       std::vector<PCABox> boxes;
       std::map<int,std::vector<int> > neighbors;
-
-      double angle_cut = _angle_cut; //degrees
-      angle_cut *= 3.14159/180.0;    //to radians
-
 
       auto dx = rect.width  /  _segments_x;
       auto dy = rect.height /  _segments_y;
 
       for(unsigned i = 0; i < _segments_x; ++i) {
 	for(unsigned j = 0; j < _segments_y; ++j) {
-
-
+	  
 	  auto x  = i * dx;
 	  auto y  = j * dy;
 	  
 	  ::cv::Rect r(x + rect.x,y + rect.y,dx,dy);
 	  ::cv::Mat subMat(img, r);
+
 	  std::vector<double> line; line.resize(4);
 	  
 	  Contour_t locations;
@@ -95,7 +95,8 @@ namespace larcv{
 	    continue;
 	  
 	  for(auto& loc : locations) {
-	    //must be "in" the contour...
+
+	    //hit must be "in" the contour
 	    loc.x += r.x;
 	    loc.y += r.y;
 	    
@@ -109,32 +110,30 @@ namespace larcv{
 	  }
 	  
 	  if ( inside_locations.size() == 0 ) 
-	    continue;
+	    { boxes.emplace_back(r); continue; }
 	  
 	  if ( inside_locations.size() < _nhits_cut )
-	    continue;
+	    { boxes.emplace_back(r); continue; }
 	  
-	  Point2D e_vec;
-	  Point2D e_center;
-	  
-	  if( ! pca_line(inside_locations,
-			 r,line,e_vec,e_center) ) // only scary part is contour may be "tangled" ?
-	    continue;
-	  
+	  Point2D e_vec,e_center;
+
+	  // fille line, e_vec, e_center
+	  pca_line(inside_locations,r,line,e_vec,e_center);
+
+	  //covariance of this box
 	  auto cov = get_roi_cov(inside_locations);
+
+
+	  //New box object
 	  PCABox box(e_vec,e_center,cov,line,inside_locations,r,
 		     angle_cut,_cov_cut,_sub_nhits_cut);
-
+	  
 	  //do subdivision recusively if the box has low linearity...
 	  check_linearity(box,boxes,2);
 	  
 	}
       }
       
-      
-      
-      if ( boxes.size() == 0 )
-	continue;
       
       
       for(unsigned b1 = 0; b1 < boxes.size(); ++b1) {
@@ -147,25 +146,80 @@ namespace larcv{
 	  if ( b1 == b2 ) continue;
 
 	  auto& box2 = boxes[b2];
-
+	  
 	  if ( box1.touching(box2) ) 
 	    neighbors[b1].push_back(b2);
-	  
 	  
 	}
 	
       }
-      
+
+
+      // kazu suggests we are allowed to jump across empty boxes
+      // this will become recursive I hope
+
+      for(unsigned b = 0; b < boxes.size(); ++b) {
+	auto& box = boxes[b];
+
+	//its empty, move on
+	if ( box.empty_ ) continue;
+	
+	//no neighbors anyways, move on
+	if ( neighbors.count(b) <= 0 ) continue;
+
+	auto& neighbor = neighbors[b];
+  	
+	//my neighbors
+	for(auto& n : neighbor) {
+	  	  
+	  // no neighbors, move on
+	  if ( neighbors.count(n) <= 0 ) continue;
+	  
+	  // box NOT empty, i DONT want it's neighbors
+	  if ( ! boxes.at(n).empty_ ) continue;
+
+	  // this box is empty, loop over its neighbors
+	  for ( const auto& en : neighbors[n] ) {
+
+	    // I don't wany myself, move on
+	    if ( en == b ) continue;
+		
+	    // has no neighbors, move on
+	    if ( neighbors.count(en) <= 0 ) continue;
+	    
+	    // its empty, i DONT want your neighbors ( depth == 1 for now)
+	    if ( boxes.at(en).empty_ ) continue;
+	    
+	    //I have you already, movie on
+	    if( std::find(neighbor.begin(), neighbor.end(), en) != neighbor.end())
+	      continue;
+
+	    //i don't have you as a neighbor, give me that
+	    neighbor.push_back(en);
+
+	  }//end empty neighbors
+	    
+	}//end my neighbors
+
+      } // end ridiculous logic
+
+
+      int empty = 0;
       std::map<int,std::vector<int> > combined; //combined boxes            
-      std::map<int,bool> used; for(int i = 0; i < boxes.size(); ++i) { used[i] = false; }
-      
-      if ( boxes.size() > 1 ) {
+      std::map<int,bool> used;
+      for(int i = 0; i < boxes.size(); ++i) { used[i] = false; if (boxes[i].empty_) { used[i] = true; ++empty; } }
+
+      if ( boxes.size() == empty ) // all boxes are empty
+	continue;
+
+      if ( (boxes.size() - empty) > 1 ) { // better be at least two non-empty boxes
 	
 	for (int i = 0; i < boxes.size(); ++i) {
 	  
 	  if ( used[i] ) continue;
 	  
 	  const auto& box = boxes.at(i);
+
 	  used[i] = true;
 	  
 	  connect(box,boxes,used,neighbors,combined,i,i);
@@ -296,27 +350,10 @@ namespace larcv{
       
     }
     
-    // for (int i = 0; i < _cparms_v.size(); ++i) {
-    //   for (int j = 0; j < _cparms_v.size(); ++j) {
-	
-    // 	if ( i == j ) continue;
-	
-    // 	auto& cparm1 = _cparms_v[i];
-    // 	auto& cparm2 = _cparms_v[j];
-
-    // 	cparm1.compare(cparm2);
-	
-	
-    //   }
-    // }
-    
-    
     //just return the clusters
     return clusters;
 
-
   }
-
 
 
 
@@ -332,7 +369,6 @@ namespace larcv{
   }
 
 
-
   
   void PCASegmentationCombine::connect(const PCABox& box,                  //incoming line to compare too
 				       const std::vector<PCABox>& boxes,   //reference to all the lines
@@ -341,15 +377,15 @@ namespace larcv{
 				       std::map<int,std::vector<int> >& combined,
 				       int i,int k) {
     
-    if ( neighbors.count(k) <= 0 )
+    if ( neighbors.count(k) <= 0 ) 
       return;
     
     for(const auto& n : neighbors.at(k)) { // std::vector of neighbors
       
       if ( used[n] ) continue;
-      
+      std::cout << "n : " << n << std::endl;
       const auto& box2 = boxes.at(n);
-
+      
       //Here you make the decision if you should connected the boxes or not
       if ( ! box.compatible(box2) )
 	continue;
@@ -364,40 +400,41 @@ namespace larcv{
       
   }
 
-  //check_linearity(box,angle_cut,0.75,boxes);
   void PCASegmentationCombine::check_linearity(PCABox& box, std::vector<PCABox>& boxes,int ndivisions) {
 
+    //don't try divide anymore, just keep it
     if ( ! ndivisions )
       { boxes.emplace_back(box); return; }
-
+    
     --ndivisions;
-	
+    
     if ( std::abs(box.cov_) < box.cov_cut_ ) {
-
+      
       box.SubDivide(4);
-
+      
       if ( box.subdivided_ ) {
 
 	for(auto& b: box.subboxes_) {
 
-	  if ( b.empty_ )
-	    continue;
+	  if ( b.empty_ ) {  boxes.emplace_back(b); continue; }
 
 	  check_linearity(b,boxes,ndivisions);
 	  
 	}
-	
-      }
-      else
+      } else {
+	//nothing happened when I tried to subdivide, it's a box with
+	//bad linearity, lets just call this box "empty?"
+	// box.empty_ = true;
 	boxes.emplace_back(box);
-      
-    }
-    else
+      }
+    } else { 
+      // pass linearity test, this is a "good" box
       boxes.emplace_back(box);
+    }
   
   
   }
-    
+
 	  
 
 }

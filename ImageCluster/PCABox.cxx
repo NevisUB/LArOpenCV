@@ -16,7 +16,7 @@ namespace larcv {
 
     if ( ! other.intersect(*this) )
       return false;
-
+    
     return true;
   }
   
@@ -63,12 +63,12 @@ namespace larcv {
   }
   
   void PCABox::SubDivide(short divisions) {
-
+    
     subboxes_.reserve(divisions);
     
     auto dx = box_.width  /  2;
     auto dy = box_.height /  2;
-
+    
     for(unsigned i = 0; i < 2; ++i) {
       for(unsigned j = 0; j < 2; ++j) {
 	
@@ -85,15 +85,14 @@ namespace larcv {
 	    inside_pts.emplace_back(pt);
 	  
 	if ( inside_pts.size() == 0 ) 
-	  { subboxes_.emplace_back(PCABox()); continue; }
+	  { subboxes_.emplace_back(r + box_.tl()); continue; }
 	
-	if ( inside_pts.size() < subhits_cut_ ) // hardcode warning must have more than 3 hits or this is useless
-	  { subboxes_.emplace_back(PCABox()); continue; }
+	if ( inside_pts.size() < subhits_cut_ ) 
+	  { subboxes_.emplace_back(r + box_.tl()); continue; }
 	
-	Point2D e_vec;
-	Point2D e_center;
+	Point2D e_vec, e_center;
 	
-	auto q = pca_line(inside_pts,box_,r,line,e_vec,e_center);
+	pca_line(inside_pts,box_,r,line,e_vec,e_center);
 	
 	auto cov = get_roi_cov(inside_pts);
 	subboxes_.emplace_back(e_vec,e_center,cov,line,inside_pts,r + box_.tl(),
@@ -106,19 +105,20 @@ namespace larcv {
   }
 
   bool PCABox::touching(const PCABox& other) const {
-
+    
     auto overlap = dbox_ & other.box_;
     
     if ( overlap.area() )
+
       return true;
-		 
+
     return false;
 
   }
 
   void PCABox::expand(short i, short j) {
     
-    dbox_ = box_ - ::cv::Point(i,j);
+    dbox_  = box_ - ::cv::Point(i,j);
     dbox_ += ::cv::Size(2*i,2*j);
     
   }

@@ -24,25 +24,24 @@ namespace larcv {
 		::std::vector<int>& data2,
 		size_t start, size_t end );
 
-  bool pca_line(Contour_t cluster_s,
+  void pca_line(Contour_t cluster_s,
 		const ::cv::Rect& rect,
 		std::vector<double>& line,
 		Point2D& e_vec,
 		Point2D& e_center);
-
   
-  bool pca_line(Contour_t cluster_s,
+  void pca_line(Contour_t cluster_s,
 		const ::cv::Rect& roi,
 		const ::cv::Rect& rect,
 		std::vector<double>& line,
 		Point2D& e_vec,
 		Point2D& e_center);
-      
+  
   double get_roi_cov(const Contour_t & pts);
 
   std::pair<double,double> get_mean_loc(const ::cv::Rect& rect,
 					const Contour_t&  pts );
-
+  
   int get_charge_sum(const ::cv::Mat& subImg, const Contour_t& pts );
 
   std::pair<double,double> closest_point_on_line(std::vector<double>& line,int lx,int ly);

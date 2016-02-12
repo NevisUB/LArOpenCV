@@ -17,8 +17,13 @@ namespace larcv {
 
   public:
     
-    //needed default ctor
-    PCABox() : empty_(true), subdivided_(false) {}
+    PCABox() {}
+    
+    PCABox(::cv::Rect box) :
+      box_       ( box   ),
+      empty_     ( true  ),
+      subdivided_( false )
+    {}
     
     PCABox(Point2D e_vec,
 	   Point2D e_center,
@@ -57,7 +62,7 @@ namespace larcv {
     Contour_t pts_;
     
     ::cv::Rect box_;
-    ::cv::Rect dbox_;
+    ::cv::Rect dbox_; //dilated box for intersection
     
     double angle_cut_;
     double cov_cut_;
@@ -65,33 +70,34 @@ namespace larcv {
     
     void expand(short i, short j);
 
-    void SetChargeSum  (double c) { charge_sum_= c; }
+    // void SetChargeSum  (double c) { charge_sum_= c; }
     
     // only filled if subdivided
     void SubDivide(short divisions);
-
     bool subdivided_;
-
     std::vector<PCABox> subboxes_;
-    
     bool empty_;
     
     // should we use polymorphism here? It's hard to say
     // since PCASegmentation object is created by factory.
-    // So to specify PCABox child and runtime means
+    // So to specify PCABox child at runtime means
     // we probably need {\it another} factory to create
-    // PCABox instance. Let's not waste time
+    // PCABox instance just to abstract compatible/touching function.
+    // Let's not waste time, just do it
+    
     bool compatible(const PCABox& other) const;
     bool touching  (const PCABox& other) const;
 		  
   private:
-    //what you want to check, just add function here until we abstract
+
+    //what you want to check in compatible function,
+    //just add function here until we abstract (will move to utilities)
+    
     bool intersect    (const PCABox& other) const;
     bool check_angle  (const PCABox& other) const;
 
-    
     double charge_sum_;
-    int n_hits_;
+    //int n_hits_;
   };
 
 }

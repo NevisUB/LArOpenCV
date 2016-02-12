@@ -51,7 +51,7 @@ namespace larcv {
     return result / ((double)( end - start ));
   }  
   
-  bool pca_line(Contour_t cluster_s,
+  void pca_line(Contour_t cluster_s,
 		const ::cv::Rect& roi, // assumes this is ROI coming in...
 		std::vector<double>& line,
 		Point2D& e_vec,
@@ -84,18 +84,18 @@ namespace larcv {
     line[2] = roi.width + roi.x;
     line[3] = e_center.y + ( (roi.width - e_center.x) / e_vec.x) * e_vec.y + roi.y;
     
-    return true;
+
   }
   
-  bool pca_line(Contour_t cluster_s,
+  void pca_line(Contour_t cluster_s,
 		const ::cv::Rect& roi,
 		const ::cv::Rect& rect,
 		std::vector<double>& line,
 		Point2D& e_vec,
 		Point2D& e_center) {
-      
+    
     ::cv::Mat ctor_pts(cluster_s.size(), 2, CV_64FC1);
-      
+    
     for (unsigned i = 0; i < ctor_pts.rows; ++i) {
       ctor_pts.at<double>(i, 0) = cluster_s[i].x;
       ctor_pts.at<double>(i, 1) = cluster_s[i].y;
@@ -114,7 +114,7 @@ namespace larcv {
 
     auto cx = e_center.x;
     auto cy = e_center.y;
-
+    
     auto  sq = std::sqrt(ax*ax + ay*ay);
     
     ax /= sq;
@@ -124,10 +124,10 @@ namespace larcv {
     line[1] = cy + ( (rect.x - cx) / e_vec.x ) * e_vec.y ;
     line[2] = rect.x + rect.width;
     line[3] = cy + ( (rect.x + rect.width - cx) / e_vec.x ) * e_vec.y;
-    
+
+    //need ``master" roi to put the line in the right spot
     line = {line[0]+roi.x,line[1]+roi.y,line[2]+roi.x,line[3]+roi.y};
-		     
-    return true;
+
   }
 
   
@@ -142,7 +142,7 @@ namespace larcv {
     auto co = cov  (x_,y_,0,pts.size() - 1);
     auto sx = stdev(x_,   0,pts.size() - 1);
     auto sy = stdev(y_,   0,pts.size() - 1);
-
+    
     if ( sx != 0 && sy != 0) // trunk exists
       pearsons_r =  co / ( sx * sy );
     else
@@ -151,7 +151,7 @@ namespace larcv {
     return pearsons_r;
   }
 
-
+  
   double distance_to_line(std::vector<double>& line,int lx,int ly) {
 
     //real time collision detection page 128
@@ -201,6 +201,7 @@ namespace larcv {
     
     return { mean_x / ( (double) pts.size() ) + rect.x,mean_y / ( (double) pts.size() ) + rect.y};
   }
+
   
   int get_charge_sum(const ::cv::Mat& subImg, const Contour_t& pts ) {
     int charge_sum = 0;
