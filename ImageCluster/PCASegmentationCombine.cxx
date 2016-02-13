@@ -88,7 +88,7 @@ namespace larcv{
 	  Contour_t locations;
 	  Contour_t inside_locations;
 	  
-	  ::cv::findNonZero(subMat, locations);
+	  ::cv::findNonZero(subM, locations);
 
 	  if ( locations.size() == 0 ) 
 	    continue;
@@ -101,10 +101,10 @@ namespace larcv{
 	    
 	    if ( ::cv::pointPolygonTest(cluster, loc ,false) < 0 )
 	      continue;
-	    
+
 	    loc.x -= r.x;
 	    loc.y -= r.y;
-
+	    
 	    inside_locations.emplace_back(loc);
 	  }
 	  
@@ -115,7 +115,7 @@ namespace larcv{
 	    { boxes.emplace_back(r); continue; }
 	  
 	  Point2D e_vec,e_center;
-
+	  
 	  // fille line, e_vec, e_center
 	  pca_line(inside_locations,r,line,e_vec,e_center);
 	  
@@ -123,8 +123,8 @@ namespace larcv{
 	  auto cov = get_roi_cov(inside_locations);
 	  
 	  //New box object
-	  PCABox box(e_vec,e_center,cov,line,inside_locations,r,
-		     angle_cut,_cov_cut,_sub_nhits_cut);
+	  PCABox box(e_vec,e_center,cov,line,inside_locations,
+		     r,r,angle_cut,_cov_cut,_sub_nhits_cut);
 	  
 	  //do subdivision recusively if the box has low linearity...
 	  check_linearity(box,boxes,2);
@@ -239,28 +239,31 @@ namespace larcv{
 
       //lets set the charge sum first
       //
-      std::cout << "\n\n\n\ndoing charge sum... subMat..." << subMat.size() << "\n";;
-      std::cout << "subMat " << subMat << std::endl;
       
       for( auto& box : boxes ) {
 
 	if ( box.empty_ ) continue;
-	
-	for ( const auto &pt : box.pts_ ) 
-	  box.charge_sum_ += (int) subMat.at<uchar>(pt.y,pt.x);
 
+	for ( const auto &pt : box.pts_ )  {
+	  std::cout << "point: " << pt + box.parent_roi_.tl() << " ROI " << box.parent_roi_
+	  	    << " charge " << (int) img.at<uchar>(pt.y + box.parent_roi_.y,pt.x + box.parent_roi_.x) << " subdivided " << box.subdivided_ << "\n";
+	  
+	  box.charge_sum_ += (int) img.at<uchar>(pt.y + box.parent_roi_.y,
+						 pt.x + box.parent_roi_.x);
+	  
+	}
       }
-	
-	
+
+    
 
       //return the index in combined that we choose as the shower axis
       //what condition do we set?
-      auto axis = decide_axis(boxes,combined);
+      if ( combined.size() == 0 ) 	continue;
+
       
-
-
-
-
+      auto axis = decide_axis(boxes,combined);
+      std::cout << "axis: " << axis << "\n";
+      
       
       ///////////////////////////////////////////////
       ////////////////OLD CODE///////////////////////
@@ -365,7 +368,8 @@ namespace larcv{
 			     lline,
 			     charge,
 			     boxes,
-			     combined);
+			     combined,
+			     axis);
       
       
       _outtree->Fill();
@@ -404,7 +408,7 @@ namespace larcv{
     for(const auto& n : neighbors.at(k)) { // std::vector of neighbors
       
       if ( used[n] ) continue;
-      std::cout << "n : " << n << std::endl;
+
       const auto& box2 = boxes.at(n);
       
       //Here you make the decision if you should connected the boxes or not

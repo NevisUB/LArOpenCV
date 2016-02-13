@@ -31,6 +31,7 @@ namespace larcv {
 	   std::vector<double> line,
 	   Contour_t points, // this should be reference(!)
 	   ::cv::Rect box,
+	   ::cv::Rect parent_roi,
 	   double angle_cut,
 	   double cov_cut,
 	   int subhits_cut) :
@@ -40,6 +41,7 @@ namespace larcv {
       line_       ( line        ),
       pts_        ( points      ),
       box_        ( box         ),
+      parent_roi_ ( parent_roi  ),
       angle_cut_  ( angle_cut   ),
       cov_cut_    ( cov_cut     ),
       subhits_cut_( subhits_cut ),
@@ -62,6 +64,8 @@ namespace larcv {
     Contour_t pts_;
     
     ::cv::Rect box_;
+    ::cv::Rect parent_roi_;
+    
     ::cv::Rect dbox_; //dilated box for intersection
     
     double angle_cut_;

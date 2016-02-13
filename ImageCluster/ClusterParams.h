@@ -31,7 +31,8 @@ namespace larcv {
 		  std::vector<double> line,
 		  std::vector<int> charge,
 		  std::vector<PCABox> boxes,
-		  std::map<int,std::vector<int> > combined) :
+		  std::map<int,std::vector<int> > combined,
+		  int chosen) :
       
       in_index_(in_index),
       eval1_(eval1),
@@ -45,7 +46,8 @@ namespace larcv {
       line_(line),
       charge_(charge),
       boxes_(boxes),
-      combined_(combined)
+      combined_(combined),
+      chosen_(chosen)
     {}      
 
     ~ClusterParams(){}
@@ -60,6 +62,8 @@ namespace larcv {
     double eigendirx_;
     double eigendiry_;
 
+    int chosen_;
+    
     int nhits_;
     std::vector<std::pair<int,int> > hits_;
     std::vector<double> line_;

@@ -51,6 +51,39 @@ namespace larcv {
     
     return result / ((double)( end - start ));
   }  
+
+
+  void pca_line(Contour_t cluster_s,
+		Point2D& e_vec,
+		Point2D& e_center) {
+    
+    ::cv::Mat ctor_pts(cluster_s.size(), 2, CV_64FC1);
+    
+    for (unsigned i = 0; i < ctor_pts.rows; ++i) {
+      ctor_pts.at<double>(i, 0) = cluster_s[i].x;
+      ctor_pts.at<double>(i, 1) = cluster_s[i].y;
+    }
+    
+    ::cv::PCA pca_ana(ctor_pts, ::cv::Mat(), CV_PCA_DATA_AS_ROW,0);
+
+    e_center = Point2D( pca_ana.mean.at<double>(0,0),
+			pca_ana.mean.at<double>(0,1) );
+    
+    e_vec    = Point2D( pca_ana.eigenvectors.at<double>(0,0),
+			pca_ana.eigenvectors.at<double>(0,1) );
+    
+    auto& ax = e_vec.x;
+    auto& ay = e_vec.y;
+    auto  sq = std::sqrt(ax*ax + ay*ay);
+    
+    ax /= sq;
+    ay /= sq;
+
+  }
+
+
+
+
   
   void pca_line(Contour_t cluster_s,
 		const ::cv::Rect& roi, // assumes this is ROI coming in...
@@ -209,6 +242,7 @@ namespace larcv {
 
     int charge_sum = 0;
     for(const auto& pt : pts ) charge_sum += (int) subImg.at<uchar>(pt.y,pt.x);
+
     return charge_sum;
   }
 
@@ -306,7 +340,7 @@ namespace larcv {
 	std::vector<double> line; line.resize(4);
 	  
 	Contour_t inside_pts; inside_pts.reserve(box.pts_.size());
-		
+	
 	for(auto& pt : box.pts_) 
 	  if ( r.contains(pt) )
 	    inside_pts.emplace_back(pt);
@@ -322,7 +356,8 @@ namespace larcv {
 	pca_line(inside_pts,thebox,r,line,e_vec,e_center);
 	
 	auto cov = get_roi_cov(inside_pts);
-	subboxes.emplace_back(e_vec,e_center,cov,line,inside_pts,r + thebox.tl(),
+	subboxes.emplace_back(e_vec,e_center,cov,line,inside_pts,
+			      r + thebox.tl(),thebox,
 			      box.angle_cut_,box.cov_cut_,box.subhits_cut_); //passing these parameters around is such a waste
 	
 	box.subdivided_ = true;
@@ -338,26 +373,31 @@ namespace larcv {
     std::vector<PCAPath> paths; paths.resize(connections.size());
     std::cout << "boxes size... " <<boxes.size() << "\n";
     std::cout << "connect size.." << connections.size() << "\n";
-      
+    
     int counter = 0;
-
+    
     for( const auto& index: connections ) {
       auto& path = paths[counter];
       path.seed_ = index.first;
-
+      
       path.push_back(&boxes[index.first]);
       
       for( const auto& c : index.second)
-
+	
 	path.push_back(&boxes[c]);
-
+      
       path.Fill();
-
+      
       ++counter;
       
     }
-
     
+    std::sort( paths.begin(), paths.end(), []( const PCAPath& l, const PCAPath& r )
+	       {
+		 return l.cw_cov_ < r.cw_cov_ ;
+	       });
+    
+    return paths.back().seed_;
   }
   
 }

@@ -99,44 +99,6 @@ while ( my_proc.process_event() ) :
             if box.empty_ :
                 continue;
             
-            # print "Its subdivided?: " + str(box.subdivided_)
-            # print "Its empty?:      " + str(box.empty_)
-            # print "subboxes.size()  " + str(box.subboxes_.size())
-            
-            # if box.subdivided_ == True:
-                
-            #     print "Its subdivided..."
-                
-            #     subboxes   = box.subboxes_;
-            #     n_subboxes = subboxes.size();
-
-            #     for i in xrange(n_subboxes) :
-            #         subbox = subboxes[i]
-
-            #         if subbox.empty_ == True:
-            #             print "It's empty..."
-            #             continue
-
-            #         subline = subbox.line_
-            #         subre   = subbox.box_
-
-            #         rectangle = plt.Rectangle((subre.x, subre.y), subre.width, subre.height, color="green",alpha=0.1)
-            #         ax.add_patch(rectangle)
-                    
-            #         xes, yes = get_bounded_line(subline,subre)
-            #         ax.plot(xes,yes,'-',color='blue',lw=2)
-                    
-            #         ax.plot(subbox.e_center_.x+re.x,subbox.e_center_.y+re.y,'o',color='pink')
-
-            #         # ctors = subbox.pts_; npts = ctors.size();
-            #         # ww = []; tt = []
-            #         # for i in xrange(npts):
-            #         #     pt = ctors[i]
-            #         #     ww.append(pt.x+re.x); tt.append(pt.y+re.y)
-
-            #         # ax.plot(ww,tt,'o',color='pink',alpha=1,markersize=7)
-            # else :
-
             ##vic
             cov = np.abs(box.cov_)
             
@@ -146,6 +108,9 @@ while ( my_proc.process_event() ) :
             xes,yes = get_bounded_line(box.line_,re)
             ax.plot(xes,yes,'-',color='red',lw=2)
 
+
+        doit = False
+        
         for i in xrange(boxes.size()) :
 
             if boxes[i].empty_ :
@@ -157,23 +122,39 @@ while ( my_proc.process_event() ) :
             
             color=np.random.rand(3,1)
             fi = boxes[i].box_
+            ec = 'None'
 
-            rectangle = plt.Rectangle((fi.x, fi.y), fi.width, fi.height, fc=color,alpha=0.2)
+            print "i: %d, params.chosen_ %d " % (i,params.chosen_)
+
+            doit = False
+
+            
+            if i == params.chosen_:
+                rectangle = plt.Rectangle((fi.x, fi.y), fi.width, fi.height, fc='white',ec='black',alpha=1,lw=3)
+                ax.add_patch(rectangle)
+                doit = True;
+
+                
+            rectangle = plt.Rectangle((fi.x, fi.y), fi.width, fi.height, fc=color,ec=None,alpha=0.2,lw=2)
             ax.add_patch(rectangle)
-            
-            # ax.plot([fi.x,fi.x + fi.width,fi.x+fi.width,fi.x,fi.x],
-            #         [fi.y,fi.y,fi.y+fi.height,fi.y+fi.height,fi.y],color=color,lw=2)
-            
+
+
+                
             for cb in xrange(c.size()) :
                 con = c[cb]
 
                 re = boxes[con].box_
-                rectangle = plt.Rectangle((re.x, re.y), re.width, re.height, fc=color,alpha=0.2)
+
+                if doit:
+                    rectangle = plt.Rectangle((re.x, re.y), re.width, re.height, fc='white',ec='black',alpha=1,lw=3)
+                    ax.add_patch(rectangle)
+            
+                rectangle = plt.Rectangle((re.x, re.y), re.width, re.height, fc=color,ec=None,alpha=0.2,lw=2)
                 ax.add_patch(rectangle)
-                
-                # ax.plot([re.x,re.x + re.width,re.x+re.width,re.x,re.x],
-                #         [re.y,re.y,re.y+re.height,re.y+re.height,re.y],color=color,lw=2)
         
+            
+            
+            
         #plt.savefig("oo%d.png" % we, format='png', dpi=1000)
         plt.show()
         #we += 1

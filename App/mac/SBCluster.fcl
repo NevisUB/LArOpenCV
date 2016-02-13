@@ -5,7 +5,7 @@ LArImageHit: {
   StoreOriginalImage: false
   Producer: gaushit
   # LArImageHit config
-  Q2Gray: 0.1 # convert Hit::Integral to a unit gray scale
+  Q2Gray: 5 # convert Hit::Integral to a unit gray scale
   QMin: 3   # min. threshold for Hit::Integral to make it into an image
   DownSample: false
   NBins: 200

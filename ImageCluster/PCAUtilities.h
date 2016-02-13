@@ -24,6 +24,11 @@ namespace larcv {
 		size_t start, size_t end );
 
   void pca_line(Contour_t cluster_s,
+		Point2D& e_vec,
+		Point2D& e_center);
+    
+  
+  void pca_line(Contour_t cluster_s,
 		const ::cv::Rect& rect,
 		std::vector<double>& line,
 		Point2D& e_vec,

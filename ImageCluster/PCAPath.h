@@ -10,33 +10,44 @@ namespace larcv {
 
   public:
 
-    PCAPath() :
-      total_area_(0),
-      avg_area_(0),
-      charge_sum_(0),
-      cw_covariance_(0),
-      cw_slope_(0),
-      cw_area_(0),
-      n_points_(0),
-      point_density_(0)
+    PCAPath()
     {}
 
     ~PCAPath(){}
 
     size_t seed_;
-    int    n_points_;
-    
+
+
+    /////////*********/////////
+    void Fill();
+
     double total_area_;
     double avg_area_;
-    double charge_sum_;
-    double cw_covariance_;
-    double cw_slope_;
     double cw_area_;
+    
+    double total_charge_;
+    double avg_charge_;
 
+    double total_cov_;
+    double avg_cov_;
+    double cw_cov_;
+
+    double total_slope_;
+    double avg_slope_;
+    double cw_slope_;
+
+    int total_points_;
+    int avg_points_;
+    
     double point_density_;
+    /////////*********/////////
+    
+    /////////*********/////////
+    void CombinedPCA();
+    double combined_cov_;
     
     
-    void Fill();
+    /////////*********/////////
     
   };
 }
