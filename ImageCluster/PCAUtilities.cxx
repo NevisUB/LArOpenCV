@@ -3,57 +3,90 @@
 #define __IMAGECLUSTER_PCAUTILITIES_CXX__
 
 #include "PCAUtilities.h"
+#include "StatUtilities.h"
+
 #include "PCAPath.h"
 
 namespace larcv {
 
-  double stdev( ::std::vector<int>& data,
-		size_t start, size_t end )
-  {
 
-    if ( (end - start) <=0 ) return 0.0;
-    
-    double result = 0.0;
-    auto    avg   = mean(data,start,end);
-    
-    for(int i = start; i <= end; ++i)
-      result += (data.at(i) - avg)*(data.at(i) - avg);
-    
-    return ::std::sqrt(result/((double)(end - start)));
+  double roi_d_to_line(const std::vector<double>& line,int lx,int ly) {
+
+    //real time collision detection page 128
+    //closest point on line
+    auto& ax = line[0];
+    auto& ay = line[1];
+    auto& bx = line[2];
+    auto& by = line[3];
+	
+    auto abx = bx-ax;
+    auto aby = by-ay;
+	
+    auto t = ( (lx-ax)*abx + (ly-ay)*aby ) / (abx*abx + aby*aby);
+    auto dx = ax + t * abx;
+    auto dy = ay + t * aby;
+    auto dist = (dx-lx)*(dx-lx) + (dy-ly)*(dy-ly); //squared distance
+    return std::sqrt( dist );
   }
 
-  
-  double cov ( ::std::vector<int>& data1,
-	       ::std::vector<int>& data2,
-	       size_t start, size_t end )
-  {
+  double roi_d_to_line(const Point2D& dir, const Point2D& pt,int lx,int ly) {
+
+    //real time collision detection page 128
+    //closest point on line
+    auto& ax = pt.x;
+    auto& ay = pt.y;
+    auto  bx = pt.x + dir.x;
+    auto  by = pt.y + dir.y;
+	
+    auto abx = bx-ax;
+    auto aby = by-ay;
+	
+    auto t = ( (lx-ax)*abx + (ly-ay)*aby ) / (abx*abx + aby*aby);
+    auto dx = ax + t * abx;
+    auto dy = ay + t * aby;
+    auto dist = (dx-lx)*(dx-lx) + (dy-ly)*(dy-ly); //squared distance
+    return std::sqrt( dist );
+  }
+
+  double total_d_pca(const PCABox& box) {
+    double tot = 0.0;
     
-    if ( start == end ) return 0.0;
+    for(const auto& pt : box.pts_)
+      tot += roi_d_to_line(box.line_,pt.x + box.parent_roi_.x,pt.y + box.parent_roi_.y);
+
+    return tot;
     
-    double result = 0.0;
-    auto   mean1  = mean(data1,start,end);
-    auto   mean2  = mean(data2,start,end);
+  }
+
+
+  double total_cw_d_pca(const PCABox& box) {
+    double tot = 0.0;
+
+    for(unsigned i = 0; i < box.pts_.size(); ++i) {
+      auto& pt = box.pts_   [i];
+      auto& ch = box.charge_[i];
+      
+      tot += ch * roi_d_to_line(box.line_,pt.x + box.parent_roi_.x,pt.y + box.parent_roi_.y);
+    }
     
-    for(int i = start; i <= end; ++i)
-      result += (data1.at(i) - mean1)*(data2.at(i) - mean2);
+    return tot;
     
-    return result/((double)(end - start));
   }
   
-  double mean( ::std::vector<int>& data,
-	       size_t start, size_t end )
-  {
-    if ( start == end ) return 0.0;
-    double result = 0.0;
-    
-    for(int i = start; i <= end; ++i)
-      result += data.at(i);
-    
-    return result / ((double)( end - start ));
-  }  
+  double avg_d_pca(const PCABox& box) {
+    return total_d_pca(box) / ( (double) box.pts_.size() );
+  }
+  
+  double cw_d_pca(const PCABox& box) {
+    if ( ! box.charge_.size() ) { std::cout << "Set charge first\n"; throw std::exception(); }
 
+    double cs = static_cast<double>( box.charge_sum() );
 
-  void pca_line(Contour_t cluster_s,
+    return total_cw_d_pca(box) / cs;
+  }
+  
+  
+  void pca_line(const Contour_t& cluster_s,
 		Point2D& e_vec,
 		Point2D& e_center) {
     
@@ -82,10 +115,8 @@ namespace larcv {
   }
 
 
-
-
   
-  void pca_line(Contour_t cluster_s,
+  void pca_line(const Contour_t& cluster_s,
 		const ::cv::Rect& roi, // assumes this is ROI coming in...
 		std::vector<double>& line,
 		Point2D& e_vec,
@@ -117,11 +148,9 @@ namespace larcv {
     line[1] = e_center.y + ( (0 - e_center.x) / e_vec.x ) * e_vec.y + roi.y;
     line[2] = roi.width + roi.x;
     line[3] = e_center.y + ( (roi.width - e_center.x) / e_vec.x) * e_vec.y + roi.y;
-    
-
   }
   
-  void pca_line(Contour_t cluster_s,
+  void pca_line(const Contour_t& cluster_s,
 		const ::cv::Rect& roi,
 		const ::cv::Rect& rect,
 		std::vector<double>& line,
@@ -164,47 +193,6 @@ namespace larcv {
 
   }
 
-  
-  double get_roi_cov(const Contour_t & pts) {
-
-    std::vector<int> x_; x_.resize(pts.size()); 
-    std::vector<int> y_; y_.resize(pts.size());
-    for(unsigned i = 0; i < pts.size(); ++i)
-      { x_[i] = pts[i].x; y_[i] = pts[i].y; }
-    
-    double pearsons_r;
-    auto co = cov  (x_,y_,0,pts.size() - 1);
-    auto sx = stdev(x_,   0,pts.size() - 1);
-    auto sy = stdev(y_,   0,pts.size() - 1);
-    
-    if ( sx != 0 && sy != 0) // trunk exists
-      pearsons_r =  co / ( sx * sy );
-    else
-      pearsons_r = 0;
-    
-    return pearsons_r;
-
-  }
-
-  
-  double distance_to_line(std::vector<double>& line,int lx,int ly) {
-
-    //real time collision detection page 128
-    //closest point on line
-    auto ax = line[0];
-    auto ay = line[1];
-    auto bx = line[2];
-    auto by = line[3];
-	
-    auto abx = bx-ax;
-    auto aby = by-ay;
-	
-    auto t = ( (lx-ax)*abx + (ly-ay)*aby ) / (abx*abx + aby*aby);
-    auto dx = ax + t * abx;
-    auto dy = ay + t * aby;
-    auto dist = (dx-lx)*(dx-lx) + (dy-ly)*(dy-ly); //squared distance
-    return dist;
-  }
   
   std::pair<double,double> closest_point_on_line(std::vector<double>& line,int lx,int ly) {
     
@@ -286,7 +274,7 @@ namespace larcv {
 
     const auto& b1line = b1.line_;
     const auto& b2box  = b2.box_;
-
+    
     auto ledge = intersection_point(b1line, { b2box.x,b2box.y,b2box.x,b2box.y + b2box.height});
     if ( ledge.y >= b2box.y && ledge.y <= b2box.y+b2box.height)
       return true;
@@ -355,8 +343,7 @@ namespace larcv {
 	
 	pca_line(inside_pts,thebox,r,line,e_vec,e_center);
 	
-	auto cov = get_roi_cov(inside_pts);
-	subboxes.emplace_back(e_vec,e_center,cov,line,inside_pts,
+	subboxes.emplace_back(e_vec,e_center,line,inside_pts,
 			      r + thebox.tl(),thebox,
 			      box.angle_cut_,box.cov_cut_,box.subhits_cut_); //passing these parameters around is such a waste
 	
@@ -371,8 +358,6 @@ namespace larcv {
   int decide_axis(std::vector<PCABox>& boxes, std::map<int,std::vector<int> > connections) {
 
     std::vector<PCAPath> paths; paths.resize(connections.size());
-    std::cout << "boxes size... " <<boxes.size() << "\n";
-    std::cout << "connect size.." << connections.size() << "\n";
     
     int counter = 0;
     

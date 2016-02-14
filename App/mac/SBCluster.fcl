@@ -19,7 +19,7 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  AlgoType: [SBCluster,PCASegmentationCombine]
+  AlgoType: [SBCluster,PCASegmentation]
   AlgoName: [sbc,pcac]
 
  ImageClusterViewer: {
@@ -50,7 +50,7 @@ ImageClusterManager: {
 
     NHitsCut    : 3  # min number of hits in segment
     NSubHitsCut : 2  # min number of hits in sub segment
-    AngleCut    : 20 # degrees
+    AngleCut    : 15 # degrees
 
     CovSubDivide : 0.75
 

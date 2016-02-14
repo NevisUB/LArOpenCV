@@ -1,13 +1,13 @@
 //by vic
-#ifndef __PCASEGMENTATIONCOMBINE_CXX__
-#define __PCASEGMENTATIONCOMBINE_CXX__
+#ifndef __PCASEGMENTATION_CXX__
+#define __PCASEGMENTATION_CXX__
 
-#include "PCASegmentationCombine.h"
+#include "PCASegmentation.h"
 #include "PCAUtilities.h"
 
 namespace larcv{
 
-  void PCASegmentationCombine::_Configure_(const ::fcllite::PSet &pset)
+  void PCASegmentation::_Configure_(const ::fcllite::PSet &pset)
   {
 
     //Deprecated
@@ -38,7 +38,7 @@ namespace larcv{
 
   }
   
-  ContourArray_t PCASegmentationCombine::_Process_(const larcv::ContourArray_t& clusters,
+  ContourArray_t PCASegmentation::_Process_(const larcv::ContourArray_t& clusters,
 						   const ::cv::Mat& img,
 						   larcv::ImageMeta& meta)
   {
@@ -119,11 +119,8 @@ namespace larcv{
 	  // fille line, e_vec, e_center
 	  pca_line(inside_locations,r,line,e_vec,e_center);
 	  
-	  //covariance of this box
-	  auto cov = get_roi_cov(inside_locations);
-	  
 	  //New box object
-	  PCABox box(e_vec,e_center,cov,line,inside_locations,
+	  PCABox box(e_vec,e_center,line,inside_locations,
 		     r,r,angle_cut,_cov_cut,_sub_nhits_cut);
 	  
 	  //do subdivision recusively if the box has low linearity...
@@ -233,7 +230,7 @@ namespace larcv{
 	
       }     
 
-
+      
       //At this point we have some idea about "connectedness". 
       
 
@@ -243,13 +240,13 @@ namespace larcv{
       for( auto& box : boxes ) {
 
 	if ( box.empty_ ) continue;
-
+	
 	for ( const auto &pt : box.pts_ )  {
-	  std::cout << "point: " << pt + box.parent_roi_.tl() << " ROI " << box.parent_roi_
-	  	    << " charge " << (int) img.at<uchar>(pt.y + box.parent_roi_.y,pt.x + box.parent_roi_.x) << " subdivided " << box.subdivided_ << "\n";
+	  // std::cout << "point: " << pt + box.parent_roi_.tl() << " ROI " << box.parent_roi_
+	  // 	    << " charge " << (int) img.at<uchar>(pt.y + box.parent_roi_.y,pt.x + box.parent_roi_.x) << " subdivided " << box.subdivided_ << "\n";
 	  
-	  box.charge_sum_ += (int) img.at<uchar>(pt.y + box.parent_roi_.y,
-						 pt.x + box.parent_roi_.x);
+	  box.charge_.push_back( (int) img.at<uchar>(pt.y + box.parent_roi_.y,
+						     pt.x + box.parent_roi_.x) ); 
 	  
 	}
       }
@@ -381,7 +378,7 @@ namespace larcv{
   }
 
   
-  void PCASegmentationCombine::clear_vars() {
+  void PCASegmentation::clear_vars() {
     
     _eigen_vecs.clear();
     _eigen_val.clear();
@@ -394,7 +391,7 @@ namespace larcv{
 
 
   
-  void PCASegmentationCombine::connect(const PCABox& box,                  //incoming line to compare too
+  void PCASegmentation::connect(const PCABox& box,                  //incoming line to compare too
 				       const std::vector<PCABox>& boxes,   //reference to all the lines
 				       std::map<int,bool>& used,           //used lines
 				       const std::map<int,std::vector<int> >& neighbors,
@@ -425,7 +422,7 @@ namespace larcv{
       
   }
 
-  void PCASegmentationCombine::check_linearity(PCABox& box, std::vector<PCABox>& boxes,int ndivisions) {
+  void PCASegmentation::check_linearity(PCABox& box, std::vector<PCABox>& boxes,int ndivisions) {
 
     //don't try divide anymore, just keep it
     if ( ! ndivisions )

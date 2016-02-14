@@ -40,12 +40,18 @@ namespace larcv {
     int avg_points_;
     
     double point_density_;
+
+    double total_d_pca_;
+    double avg_d_pca_;
+    double cw_d_pca_;
     /////////*********/////////
     
     /////////*********/////////
     void CombinedPCA();
     double combined_cov_;
-    
+    double combined_total_d_pca_;
+    double combined_avg_d_pca_;
+    double combined_cw_d_pca_;
     
     /////////*********/////////
     

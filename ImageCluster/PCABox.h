@@ -5,11 +5,14 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <numeric>
 
 #include "Core/ImageMeta.h"
 #include "Core/laropencv_base.h"
 
 #include "ImageClusterTypes.h"
+
+#include "StatUtilities.h"
 
 namespace larcv {
   
@@ -27,7 +30,6 @@ namespace larcv {
     
     PCABox(Point2D e_vec,
 	   Point2D e_center,
-	   double  cov,
 	   std::vector<double> line,
 	   Contour_t points, // this should be reference(!)
 	   ::cv::Rect box,
@@ -37,7 +39,6 @@ namespace larcv {
 	   int subhits_cut) :
       e_vec_      ( e_vec       ),
       e_center_   ( e_center    ),
-      cov_        ( cov         ),
       line_       ( line        ),
       pts_        ( points      ),
       box_        ( box         ),
@@ -45,10 +46,9 @@ namespace larcv {
       angle_cut_  ( angle_cut   ),
       cov_cut_    ( cov_cut     ),
       subhits_cut_( subhits_cut ),
-      charge_sum_ ( 0           ),
       subdivided_ ( false       ),
       empty_      ( false       )
-    {}
+    { cov_ = roi_cov(pts_); }
     
     //destructor
     ~PCABox(){}
@@ -60,6 +60,9 @@ namespace larcv {
     double cov_;
     
     std::vector<double> line_;
+
+    std::vector<int> charge_;
+    int charge_sum() const { return std::accumulate(charge_.begin(),charge_.end(),0); }
     
     Contour_t pts_;
     
@@ -82,7 +85,6 @@ namespace larcv {
     // std::vector<PCABox> subboxes_;
     bool empty_;
 
-    double charge_sum_;
     // should we use polymorphism here? It's hard to say
     // since PCASegmentation object is created by factory.
     // So to specify PCABox child at runtime means
@@ -92,13 +94,11 @@ namespace larcv {
     
     // bool compatible(const PCABox& other) const;
     bool touching  (const PCABox& other) const;
-		  
+
+  protected:
+
   private:
-    //what you want to check in compatible function,
-    //just add function here until we abstract (will move to utilities)
-
-
-    //int n_hits_;
+    
   };
 
 }
