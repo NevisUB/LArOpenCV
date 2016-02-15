@@ -11,9 +11,18 @@ namespace larcv{
     _area_separation  = pset.get<int> ("AreaCut");
     _ratio_separation = pset.get<int> ("RatioCut");
     _track_shower_sat = pset.get<int>("TrackShowerSat");
+
+    if(!_contour_tree){
+      _contour_tree = new TTree("contour_tree","Contour Tree" );
+      _contour_tree->Branch("area",&_area,"area/F");
+      _contour_tree->Branch("perimeter",&_perimeter,"perimeter/F");
+      _contour_tree->Branch("bb_height",&_bb_height,"bb_height/F");
+      _contour_tree->Branch("bb_width",&_bb_width,"bb_width/F");
+      _contour_tree->Branch("max_con_width",&_max_con_width,"max_con_width/F");
+      _contour_tree->Branch("min_con_width",&_min_con_width,"min_con_width/F");
+    }
     
   }
-
 
   ContourArray_t TrackShower::_Process_(const larcv::ContourArray_t& clusters,
 					    const ::cv::Mat& img,
@@ -30,7 +39,15 @@ namespace larcv{
         cv::Point2f vertices[4];
         rect0.points(vertices);
         auto rect = rect0.size; 
-        auto area   = ::cv::contourArea(cv_contour);
+        auto area = ::cv::contourArea(cv_contour);
+        auto perimeter = ::cv::arcLength(cv_contour,1);
+        auto bb_height = ( rect.height > rect.width ? rect.height : rect.width );
+        auto bb_width  = ( rect.height > rect.width ? rect.width : rect.height );
+
+        _area      = area;  
+        _perimeter = perimeter;
+        _bb_height = bb_height ;
+        _bb_width  = bb_width;
 
         //  
         // Between points 0,1 and 1,2 , find max distance; this will be outer
@@ -87,12 +104,18 @@ namespace larcv{
               min_width = dist_travelled ;
           }
 
+        _max_con_width = max_width;
+        _min_con_width = min_width;
+
         if( area > _area_separation && (max_width/min_width) >= _ratio_separation)
          shower_v.push_back(cv_contour);
         else if( area > _area_separation && (max_width/min_width) < _ratio_separation)
          track_v.push_back(cv_contour);
         else
          satellite_v.push_back(cv_contour);
+      
+        _contour_tree->Fill();
+ 
       }
 
    // std::cout<<"Shower, track, satellite size: "<<shower_v.size()<<", "<<track_v.size()<<", "<<satellite_v.size()<<std::endl ;
@@ -105,11 +128,19 @@ namespace larcv{
      return shower_sats_v;
    else if( _track_shower_sat == 1)
      return shower_v ; 
-   else if( !_track_shower_sat ) //0 ?
+   else if( _track_shower_sat == 0 ) 
      return track_v ;
    else 
      return satellite_v; 
 
+  }
+
+ void TrackShower::Finalize(TFile* fout){
+   
+   if(fout){
+     fout->cd();
+     _contour_tree->Write();
+      }
   }
   
 }

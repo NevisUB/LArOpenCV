@@ -15,6 +15,7 @@
 #define __TRACKSHOWER_H__
 
 #include "ImageClusterBase.h"
+#include "TTree.h"
 
 namespace larcv {
   /**
@@ -27,7 +28,7 @@ namespace larcv {
     
     /// Default constructor
     TrackShower(const std::string name="TrackShower") : ImageClusterBase(name)
-    { _area_separation = 1850; _ratio_separation = 3; _track_shower_sat = 1; }
+    { _area_separation = 1850; _ratio_separation = 3; _track_shower_sat = 1; _contour_tree=nullptr; }
     
     /// Default destructor
     ~TrackShower(){}
@@ -35,7 +36,7 @@ namespace larcv {
 
 
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
-    void Finalize(TFile*) {}
+    void Finalize(TFile*); 
 
   protected:
 
@@ -52,6 +53,14 @@ namespace larcv {
     float _area_separation ;
     float _ratio_separation ;
     int   _track_shower_sat ;
+
+    TTree * _contour_tree ;
+    float _area ;
+    float _perimeter ;
+    float _min_con_width ;
+    float _max_con_width ;
+    float _bb_height ;
+    float _bb_width ;
 
   };
   

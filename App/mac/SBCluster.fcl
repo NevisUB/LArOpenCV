@@ -23,7 +23,7 @@ ImageClusterManager: {
 
   Verbosity: 1
   Profile:   true  # Time profiles algorithms
-  ShowImage: true  # Display image per process
+  ShowImage: false # Display image per process
 
 AlgoType: [SBCluster,PCAProjection]
   AlgoName: [sbc,pca]
@@ -54,7 +54,7 @@ AlgoType: [SBCluster,PCAProjection]
   Trackshower:{
     AreaCut : 1850
     RatioCut : 3
-    TrackShowerSat : 2 # 0 returns tracks, 1 returns showers, 2 returns satellites
+    TrackShowerSat : 2 # 0 returns tracks, 1 returns showers, 2 returns satellites+showers
   }
 
   satellitemerge: {

@@ -20,7 +20,6 @@
 #pragma link C++ class larcv::ImageClusterFactory+;
 #pragma link C++ class larcv::ImageClusterViewer+;
 //#pragma link C++ class larcv::TCluster+;
-#pragma link C++ class larcv::FillImageClusterVariables+;
 // #pragma link C++ class larcv::CDTrackShower+;
 #pragma link C++ class larcv::PCAProjection+;
 // #pragma link C++ class larcv::HoughTrackShower+;
