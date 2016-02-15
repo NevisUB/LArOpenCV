@@ -44,6 +44,9 @@ namespace larcv {
     double total_d_pca_;
     double avg_d_pca_;
     double cw_d_pca_;
+
+    Point2D avg_center_pca;
+    Point2D cw_center_pca;
     /////////*********/////////
     
     /////////*********/////////
@@ -52,6 +55,10 @@ namespace larcv {
     double combined_total_d_pca_;
     double combined_avg_d_pca_;
     double combined_cw_d_pca_;
+
+
+    Point2D combined_e_vec_;
+    Point2D combined_e_center_;
     
     /////////*********/////////
     

@@ -6,7 +6,8 @@
 #include <cmath>
 #include <utility>
 
-#include "PCABox.h"
+#include "PCAPath.h"
+// #include "PCABox.h"
 //maybe redundant
 #include <opencv2/opencv.hpp>
 
@@ -56,7 +57,8 @@ namespace larcv {
   
   std::vector<PCABox> sub_divide(PCABox& box, short divisions);
 
-  int decide_axis(std::vector<PCABox>& boxes, std::map<int,std::vector<int> > connections);
+  // int decide_axis(std::vector<PCABox>& boxes, std::map<int,std::vector<int> > connections);
+  PCAPath decide_axis(std::vector<PCABox>& boxes, std::map<int,std::vector<int> > connections);
   
 }
 #endif

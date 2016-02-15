@@ -9,7 +9,8 @@
 #include "Core/ImageMeta.h"
 #include "Core/laropencv_base.h"
 
-#include "PCABox.h"
+//#include "PCABox.h"
+#include "PCAPath.h"
 
 namespace larcv {
   
@@ -32,7 +33,8 @@ namespace larcv {
 		  std::vector<int> charge,
 		  std::vector<PCABox> boxes,
 		  std::map<int,std::vector<int> > combined,
-		  int chosen) :
+		  PCAPath path
+		  ) :
       
       in_index_(in_index),
       eval1_(eval1),
@@ -47,8 +49,8 @@ namespace larcv {
       charge_(charge),
       boxes_(boxes),
       combined_(combined),
-      chosen_(chosen)
-    {}      
+      path_(path)
+    {}
 
     ~ClusterParams(){}
 
@@ -62,15 +64,17 @@ namespace larcv {
     double eigendirx_;
     double eigendiry_;
 
-    int chosen_;
-    
     int nhits_;
+
     std::vector<std::pair<int,int> > hits_;
     std::vector<double> line_;
     std::vector<int> charge_;
 
     std::vector<PCABox> boxes_;
     std::map<int,std::vector<int> > combined_;
+
+    PCAPath path_;
+    
   };
 }
 #endif

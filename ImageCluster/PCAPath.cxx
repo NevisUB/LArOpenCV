@@ -8,6 +8,7 @@
 
 namespace larcv {
 
+  // just calculate everything who knows what we will need
   void PCAPath::Fill() {
     
     for(const auto& box : *this ) {
@@ -29,7 +30,14 @@ namespace larcv {
 
       total_d_pca_ += total_d_pca   ( *box );
       cw_d_pca_    += total_cw_d_pca( *box );
-            
+
+	
+      avg_center_pca.x += box->e_center_.x + box->parent_roi_.x;
+      avg_center_pca.y += box->e_center_.y + box->parent_roi_.y;
+
+      cw_center_pca.x += charge_sum * ( box->e_center_.x + box->parent_roi_.x );
+      cw_center_pca.y += charge_sum * ( box->e_center_.y + box->parent_roi_.y );
+      
     }
 
     double nboxes = (double) this->size(); 
@@ -40,6 +48,12 @@ namespace larcv {
     avg_points_ = total_points_ / nboxes;
     avg_d_pca_  = total_d_pca_  / (double) total_points_;
 
+    avg_center_pca.x /= nboxes;
+    avg_center_pca.y /= nboxes;
+
+    cw_center_pca.x /= total_charge_;
+    cw_center_pca.y /= total_charge_;
+    
     cw_area_   /= total_charge_;
     // cw_cov_    /= total_charge_;
     cw_slope_  /= total_charge_;
@@ -58,14 +72,12 @@ namespace larcv {
       for( auto& pt : box->pts_ )
 	combined.emplace_back(pt + box->parent_roi_.tl());
 
-
     combined_cov_ = roi_cov(combined);
     
-    Point2D e_vec, e_center;
-    pca_line(combined,e_vec,e_center);
-
+    pca_line(combined,combined_e_vec_,combined_e_center_);
+    
     for (const auto& pt : combined )
-      combined_total_d_pca_ += roi_d_to_line(e_vec,e_center,pt.x,pt.y);
+      combined_total_d_pca_ += roi_d_to_line(combined_e_vec_,combined_e_center_,pt.x,pt.y);
 
     combined_avg_d_pca_ = combined_total_d_pca_ / ( (double) combined.size() );
 					     

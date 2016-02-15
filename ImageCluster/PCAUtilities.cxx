@@ -5,7 +5,7 @@
 #include "PCAUtilities.h"
 #include "StatUtilities.h"
 
-#include "PCAPath.h"
+
 
 namespace larcv {
 
@@ -355,8 +355,9 @@ namespace larcv {
   }
   
   
-  int decide_axis(std::vector<PCABox>& boxes, std::map<int,std::vector<int> > connections) {
-
+  //int decide_axis(std::vector<PCABox>& boxes, std::map<int,std::vector<int> > connections) {
+  PCAPath decide_axis(std::vector<PCABox>& boxes, std::map<int,std::vector<int> > connections) {
+      
     std::vector<PCAPath> paths; paths.resize(connections.size());
     
     int counter = 0;
@@ -372,6 +373,7 @@ namespace larcv {
 	path.push_back(&boxes[c]);
       
       path.Fill();
+      path.CombinedPCA();
       
       ++counter;
       
@@ -382,7 +384,7 @@ namespace larcv {
 		 return l.cw_cov_ < r.cw_cov_ ;
 	       });
     
-    return paths.back().seed_;
+    return paths.back();
   }
   
 }

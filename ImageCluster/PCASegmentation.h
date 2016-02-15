@@ -69,6 +69,8 @@ namespace larcv {
     int _sub_nhits_cut;
     
     double _pearsons_r;
+
+    int _n_divisions;
     
     int    _min_trunk_length;
     double _trunk_deviation;

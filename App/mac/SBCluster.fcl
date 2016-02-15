@@ -20,7 +20,7 @@ ImageClusterManager: {
   ShowImage: false  # Display image per process
 
   AlgoType: [SBCluster,PCASegmentation]
-  AlgoName: [sbc,pcac]
+  AlgoName: [sbc,pcas]
 
  ImageClusterViewer: {
    Verbosity: 0
@@ -39,7 +39,7 @@ ImageClusterManager: {
 
   }
 	  
-  pcac : {
+  pcas : {
     MinTrunkLength   : 1
     TrunkDeviation   : 150	
     MinTrunkEdgeDist : 5
@@ -50,8 +50,9 @@ ImageClusterManager: {
 
     NHitsCut    : 3  # min number of hits in segment
     NSubHitsCut : 2  # min number of hits in sub segment
-    AngleCut    : 15 # degrees
-
+    AngleCut    : 10 # degrees
+    NDivisions  : 2  # number of times to subdivide the segments
+    
     CovSubDivide : 0.75
 
     }

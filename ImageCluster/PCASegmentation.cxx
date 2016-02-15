@@ -4,6 +4,7 @@
 
 #include "PCASegmentation.h"
 #include "PCAUtilities.h"
+#include "PCAPath.h"
 
 namespace larcv{
 
@@ -18,14 +19,15 @@ namespace larcv{
     //How many pixes for initial subdivision
     _segments_x = pset.get<int> ("NSegmentsX");
     _segments_y = pset.get<int> ("NSegmentsY");
-
-
+    
+    
     //various arbys cold cuts
     _nhits_cut     = pset.get<int>   ("NHitsCut"   );
     _sub_nhits_cut = pset.get<int>   ("NSubHitsCut");
     _angle_cut     = pset.get<double>("AngleCut"   );
     _cov_cut       = pset.get<double>("CovSubDivide");
-
+    _n_divisions   = pset.get<int>   ("NDivisions" );
+    
     //output tree
     _outtree = new TTree("PCA","PCA");
     
@@ -39,8 +41,8 @@ namespace larcv{
   }
   
   ContourArray_t PCASegmentation::_Process_(const larcv::ContourArray_t& clusters,
-						   const ::cv::Mat& img,
-						   larcv::ImageMeta& meta)
+					    const ::cv::Mat& img,
+					    larcv::ImageMeta& meta)
   {
     
     //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
@@ -124,7 +126,7 @@ namespace larcv{
 		     r,r,angle_cut,_cov_cut,_sub_nhits_cut);
 	  
 	  //do subdivision recusively if the box has low linearity...
-	  check_linearity(box,boxes,2);
+	  check_linearity(box,boxes,_n_divisions);
 	  
 	}
       }
@@ -218,15 +220,15 @@ namespace larcv{
 	  connect(box,boxes,used,neighbors,combined,i,i);
 	}
 	
-	std::cout << "Finished connecting..." << "\n";
-	std::cout << "\n\n";
-	for(const auto& k : combined) {
-	  std::cout << "\t key: " << k.first << " : {";
-	  for(const auto& kk : k.second) {
-	    std::cout << kk << ",";
-	  }
-	  std::cout << "}\n";
-	}
+	// std::cout << "Finished connecting..." << "\n";
+	// std::cout << "\n\n";
+	// for(const auto& k : combined) {
+	//   std::cout << "\t key: " << k.first << " : {";
+	//   for(const auto& kk : k.second) {
+	//     std::cout << kk << ",";
+	//   }
+	//   std::cout << "}\n";
+	// }
 	
       }     
 
@@ -241,14 +243,12 @@ namespace larcv{
 
 	if ( box.empty_ ) continue;
 	
-	for ( const auto &pt : box.pts_ )  {
-	  // std::cout << "point: " << pt + box.parent_roi_.tl() << " ROI " << box.parent_roi_
-	  // 	    << " charge " << (int) img.at<uchar>(pt.y + box.parent_roi_.y,pt.x + box.parent_roi_.x) << " subdivided " << box.subdivided_ << "\n";
+	for ( const auto &pt : box.pts_ )  
 	  
 	  box.charge_.push_back( (int) img.at<uchar>(pt.y + box.parent_roi_.y,
 						     pt.x + box.parent_roi_.x) ); 
-	  
-	}
+	
+	
       }
 
     
@@ -258,8 +258,10 @@ namespace larcv{
       if ( combined.size() == 0 ) 	continue;
 
       
-      auto axis = decide_axis(boxes,combined);
-      std::cout << "axis: " << axis << "\n";
+      // auto axis = decide_axis(boxes,combined);
+      // std::cout << "axis: " << axis << "\n";
+
+      auto paths = decide_axis(boxes,combined);
       
       
       ///////////////////////////////////////////////
@@ -366,7 +368,8 @@ namespace larcv{
 			     charge,
 			     boxes,
 			     combined,
-			     axis);
+			     paths
+			     );
       
       
       _outtree->Fill();
