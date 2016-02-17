@@ -5,7 +5,7 @@ LArImageHit: {
   StoreOriginalImage: false
   Producer: gaushit
   # LArImageHit config
-  Q2Gray: 0.1 # convert Hit::Integral to a unit gray scale
+  Q2Gray: 5 # convert Hit::Integral to a unit gray scale
   QMin: 3   # min. threshold for Hit::Integral to make it into an image
 }
 
@@ -23,10 +23,12 @@ ImageClusterManager: {
 
   Verbosity: 1
   Profile:   true  # Time profiles algorithms
-  ShowImage: false # Display image per process
+  ShowImage: false  # Display image per process
+  # AlgoType: [SBCluster,PCASegmentation]
+  # AlgoName: [sbc,pcas]
 
-AlgoType: [SBCluster,PCAProjection]
-  AlgoName: [sbc,pca]
+   AlgoType: [SBCluster]
+   AlgoName: [sbc]
 
  ImageClusterViewer: {
    Verbosity: 0
@@ -45,11 +47,21 @@ AlgoType: [SBCluster,PCAProjection]
 
   }
 	  
-  pca : {
-    MinTrunkLength   : 1
-    TrunkDeviation   : 150	
-    MinTrunkEdgeDist : 5
-  }
+  pcas : {
+
+    NSegmentsX : 6
+    NSegmentsY : 6
+
+    NHitsCut        : 3  # min number of hits in segment
+    NSubHitsCut     : 2  # min number of hits in sub segment
+    AngleCut        : 10 # degrees
+    NDivisions      : 2  # number of times to subdivide the segments
+    AllowEmptyCross : 1 # if an empty box is between two "good" boxes, should we be able to cross?
+    MinClusterSize  : 10 # min number of hits in cluster to actually care
+        
+    CovSubDivide : 0.75
+
+    }
 
   Trackshower:{
     AreaCut : 1850

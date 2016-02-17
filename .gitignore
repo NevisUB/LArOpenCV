@@ -22,3 +22,4 @@ laropencv_doc/
 *.png
 *.eps
 *.ipynb
+*.pyc
