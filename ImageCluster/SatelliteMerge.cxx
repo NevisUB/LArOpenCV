@@ -24,12 +24,12 @@ namespace larcv{
     
     for(auto & cv_contour : clusters) {
       auto area   = ::cv::contourArea(cv_contour);
+
       if ( area > _area_separation )
 	shower_v.push_back(cv_contour);
       else
 	satellite_v.push_back(cv_contour);
 
-      // _secret_initial_sats.push_back(cv_contour);
     }
 
     

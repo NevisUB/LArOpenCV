@@ -23,8 +23,8 @@ my_proc = fmwk.ana_processor()
 cfg="SBCluster.fcl"
 
 for i in xrange(0,10):
-    my_proc.add_input_file( "/Volumes/Slow/uboone_data/pi0/larlite_reco2d_01%d.root" % i )
-    my_proc.add_input_file( "/Volumes/Slow/uboone_data/pi0/larlite_mcinfo_01%d.root" % i )    
+    my_proc.add_input_file( "/Users/vgenty/data/larlite_reco2d_01%d.root" % i )
+    my_proc.add_input_file( "/Users/vgenty/data/larlite_mcinfo_01%d.root" % i )    
     
 
 my_proc.set_io_mode(fmwk.storage_manager.kREAD)

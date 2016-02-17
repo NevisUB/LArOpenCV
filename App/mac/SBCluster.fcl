@@ -48,11 +48,13 @@ ImageClusterManager: {
     NSegmentsX : 6
     NSegmentsY : 6
 
-    NHitsCut    : 3  # min number of hits in segment
-    NSubHitsCut : 2  # min number of hits in sub segment
-    AngleCut    : 10 # degrees
-    NDivisions  : 2  # number of times to subdivide the segments
-    
+    NHitsCut        : 3  # min number of hits in segment
+    NSubHitsCut     : 2  # min number of hits in sub segment
+    AngleCut        : 10 # degrees
+    NDivisions      : 2  # number of times to subdivide the segments
+    AllowEmptyCross : 1 # if an empty box is between two "good" boxes, should we be able to cross?
+    MinClusterSize  : 10 # min number of hits in cluster to actually care
+        
     CovSubDivide : 0.75
 
     }

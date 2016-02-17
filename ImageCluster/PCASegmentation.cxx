@@ -27,7 +27,11 @@ namespace larcv{
     _angle_cut     = pset.get<double>("AngleCut"   );
     _cov_cut       = pset.get<double>("CovSubDivide");
     _n_divisions   = pset.get<int>   ("NDivisions" );
+    _n_clustersize = pset.get<int>   ("MinClusterSize");
     
+    //do you want to be able to connect by crossing empty boxes?
+    _allow_cross_empties = pset.get<bool> ("AllowEmptyCross");
+   
     //output tree
     _outtree = new TTree("PCA","PCA");
     
@@ -130,7 +134,9 @@ namespace larcv{
 	  
 	}
       }
-            
+
+
+      
       
       for(unsigned b1 = 0; b1 < boxes.size(); ++b1) {
 	
@@ -151,54 +157,10 @@ namespace larcv{
       
       
       // kazu suggests we are allowed to jump across empty boxes
-      // this will become recursive I hope
+      // this will become recursive I hope, lets decide yes or no to jump neighbors
+      if ( _allow_cross_empties )
+	cross_empty_neighbors(boxes,neighbors);
       
-      for(unsigned b = 0; b < boxes.size(); ++b) {
-	auto& box = boxes[b];
-
-	//i'm empty, move on
-	if ( box.empty_ ) continue;
-	
-	//no neighbors anyways, move on
-	if ( neighbors.count(b) <= 0 ) continue;
-
-	//my neighbors
-	auto& neighbor = neighbors[b];
-
-	for(auto& n : neighbor) {
-	  
-	  // no neighbors, move on
-	  if ( neighbors.count(n) <= 0 ) continue;
-	  
-	  // this box NOT empty, i DONT want it's neighbors
-	  if ( ! boxes.at(n).empty_ ) continue;
-	  
-	  // this box is empty, loop over its neighbors
-	  for ( const auto& en : neighbors[n] ) {
-
-	    // I don't wany myself, move on
-	    if ( en == b ) continue;
-	    
-	    // has no neighbors, move on
-	    if ( neighbors.count(en) <= 0 ) continue;
-	    
-	    // its empty, i DONT want your neighbors ( depth == 1 for now)
-	    if ( boxes.at(en).empty_ ) continue;
-	    
-	    //I have you already, move on
-	    if( std::find(neighbor.begin(), neighbor.end(), en) != neighbor.end())
-	      continue;
-
-	    //I don't have you as a neighbor, give me that
-	    neighbor.push_back(en);
-
-	  }//end empty neighbors
-	  
-	}//end my neighbors
-	
-      }// end ridiculous logic
-
-
       int empty = 0;
       std::map<int,std::vector<int> > combined; //combined boxes            
       std::map<int,bool> used;
@@ -237,7 +199,7 @@ namespace larcv{
       
 
       //lets set the charge sum first
-      //
+      //per box
       
       for( auto& box : boxes ) {
 
@@ -255,12 +217,11 @@ namespace larcv{
 
       //return the index in combined that we choose as the shower axis
       //what condition do we set?
-      if ( combined.size() == 0 ) 	continue;
+      if ( combined.size() == 0 ) continue;
 
-      
-      // auto axis = decide_axis(boxes,combined);
-      // std::cout << "axis: " << axis << "\n";
 
+      //decide the shower axis via some combination of everything
+      //you see in PCAPath.cxx
       auto paths = decide_axis(boxes,combined);
       
       
@@ -341,7 +302,7 @@ namespace larcv{
       }
       
       // you must have atleast 10 points to proceed or trunk is useless
-      if ( nhits < 10 ) // j == number of points in cluster
+      if ( nhits < _n_clustersize ) // j == number of points in cluster
 	continue;
       
       //find the trunk with this info 
@@ -354,7 +315,9 @@ namespace larcv{
       _perimeter = (double) ::cv::arcLength  (cluster,1);
       
       auto eigen_normal = std::sqrt(std::pow(eigen_vecs[0].x,2) + std::pow(eigen_vecs[0].y,2));
-      
+
+
+      // this is the only way you can get shit into python at this point
       _cparms_v.emplace_back(u,
 			     _eval1,
 			     _eval2,
@@ -375,7 +338,8 @@ namespace larcv{
       _outtree->Fill();
     }
     
-    //just return the clusters
+
+    //just return the clusters you didn't do anything...
     return clusters;
 
   }
@@ -459,7 +423,57 @@ namespace larcv{
   
   }
 
-  
+
+
+  void PCASegmentation::cross_empty_neighbors(const std::vector<PCABox>& boxes,
+					      std::map<int,std::vector<int> >& neighbors) {
+    
+
+    for(unsigned b = 0; b < boxes.size(); ++b) {
+      auto& box = boxes[b];
+      
+      //i'm empty, move on
+      if ( box.empty_ ) continue;
+	
+      //no neighbors anyways, move on
+      if ( neighbors.count(b) <= 0 ) continue;
+
+      //my neighbors
+      auto& neighbor = neighbors[b];
+
+      for(auto& n : neighbor) {
+	  
+	// no neighbors, move on
+	if ( neighbors.count(n) <= 0 ) continue;
+	  
+	// this box NOT empty, i DONT want it's neighbors
+	if ( ! boxes.at(n).empty_ ) continue;
+	  
+	// this box is empty, loop over its neighbors
+	for ( const auto& en : neighbors[n] ) {
+
+	  // I don't wany myself, move on
+	  if ( en == b ) continue;
+	    
+	  // has no neighbors, move on
+	  if ( neighbors.count(en) <= 0 ) continue;
+	    
+	  // its empty, i DONT want your neighbors ( depth == 1 for now)
+	  if ( boxes.at(en).empty_ ) continue;
+	    
+	  //I have you already, move on
+	  if( std::find(neighbor.begin(), neighbor.end(), en) != neighbor.end())
+	    continue;
+
+	  //I don't have you as a neighbor, give me that
+	  neighbor.push_back(en);
+
+	}//end empty neighbors
+	  
+      }//end my neighbors
+	
+    }// end ridiculous logic
+  }
 }
 
 #endif
