@@ -12,19 +12,20 @@ namespace larcv{
     _min_shower_dist  = pset.get<double> ( "MinShowerDistance" );
     _density          = pset.get<double> ( "ContourDensity"    );
   }
-
+  
   ContourArray_t SatelliteMerge::_Process_(const larcv::ContourArray_t& clusters,
 					   const ::cv::Mat& img,
 					   larcv::ImageMeta& meta)
   {
     
-    // _secret_initial_sats.clear();
+
+    _secret_initial_sats.clear();
     std::vector<larcv::Contour_t> satellite_v; satellite_v.reserve(clusters.size());
     std::vector<larcv::Contour_t> shower_v;    shower_v.reserve(clusters.size());
     
     for(auto & cv_contour : clusters) {
       auto area   = ::cv::contourArea(cv_contour);
-
+      
       if ( area > _area_separation )
 	shower_v.push_back(cv_contour);
       else
@@ -32,7 +33,7 @@ namespace larcv{
 
     }
 
-    
+    _secret_initial_sats = satellite_v;
     //Can we group the sattelites? Lets associate them based on closest distance.
     
     std::vector<larcv::Contour_t> sats_v;
@@ -43,114 +44,109 @@ namespace larcv{
     std::vector<::cv::Point> c3;
     std::vector<cv::Point> hull; hull.reserve( sats_v.size() );
     
-    std::map<size_t,bool> used;
-
-    bool merging  = true;
+    std::map<size_t,bool> used_shower;
+    std::map<size_t,bool> used_sats;
+      
+    bool still_merging  = true;
     int  n_merged = 0;
 
+    //pair-wise still_merging
 
-    
-    while ( merging ) {
+    while ( still_merging ) {
 
       n_merged = 0;
-      used.clear();
+      used_sats.clear();
       sats_comb_v.clear();
-      for(unsigned k = 0; k < sats_v.size(); ++k) used[k] = false;
+
+      for(unsigned k = 0; k < sats_v.size(); ++k) used_sats[k] = false;
       
       for(unsigned i = 0; i < sats_v.size(); ++i) {
 	for(unsigned j = 0; j < sats_v.size(); ++j) {
-	
+	  
 	  if ( i == j ) continue;
-	  if (  used[i] || used[j] ) continue;
-	
-	  hull.clear();
+	  if (  used_sats[i] || used_sats[j] ) continue;
+
+	  
 	  c3.clear();
 	    
 	  auto& c1 = sats_v[i]; auto& c2 = sats_v[j];
 	
 	  if ( _pt_distance(c1,c2) < _min_sat_dist ) {  // combine them
-
+	    
 	    _combine_two_contours(c1,c2,c3);
+	    
 	    //auto c3 = ::cv::Mat(c1) + ::cv::Mat(c2);
-	    // convexHull( ::cv::Mat(c3), hull, false );
+	    //convexHull( ::cv::Mat(c3), hull, false );
 	    n_merged++;
 	  }
 	  else
 	    continue;
 	  
-	  used[i] = true;
-	  used[j] = true;
-
+	  used_sats[i] = true; used_sats[j] = true;
+	  
 	  // sats_comb_v.emplace_back(hull);
 	  sats_comb_v.emplace_back(c3);
 	  
 	}
       }
-      
-      for(auto& u : used) {
+
+      for(auto& u : used_sats) {
 	if ( u.second ) continue;
 	sats_comb_v.emplace_back(sats_v.at(u.first));
       }
       
       std::swap(sats_v,sats_comb_v);
       
-      if ( !n_merged  ) merging = false;
+      if ( ! n_merged  ) still_merging = false;
     }
 
-    // return sats_v;
-
-    
     //We have merged, now decide something. Are we close enough to a larger cluster? Does out convex hull overlap
     //a bigger ``shower cluster" ? These are just ideas
-    
     ContourArray_t out_ctors;
+    std::map< int, std::vector<int> > showers_to_combine;
 
-    auto tmp_showers = shower_v;
-    auto tmp_sats    = sats_v;
-
-    ContourArray_t tmp_showers_; tmp_showers_.reserve(shower_v.size());
-    ContourArray_t tmp_sats_;    tmp_sats_   .reserve(shower_v.size());
+    used_shower.clear();
+    used_sats  .clear();
     
-    int dmin = 9e10;
-
-    merging  = false;
+    for(unsigned i = 0; i < shower_v.size(); ++i) used_shower[i] = false;
+    for(unsigned i = 0; i < sats_v.size();   ++i) used_sats  [i] = false;
     
-    while ( merging ) {
-
-      tmp_showers_.clear();
-      tmp_sats_   .clear();
-      n_merged = 0;
+    if (shower_v.size() ) {
+	    
+      used_sats.clear();
+      used_shower.clear();
       
-      for(auto& sats  : tmp_sats) {
-	// get the closest ``shower" -- this is more subtle I think than I realize
-
-	dmin = 9e10;
-	Contour_t* shower;
-
-	for(auto& sh : tmp_showers) {
-	  auto d = _pt_distance(sh,sats);
-	  if (d < dmin) { dmin = d; shower = &sh; }
+      int dmin = 9e6;
+      int s;
+      for( int j = 0; j < sats_v.size(); ++j ) {
+	auto& sat = sats_v[j];
+	dmin = 9e6;
+	s    = -1;
+	
+	for(int i  = 0; i < shower_v.size(); ++i ){
+	  auto& sh = shower_v[i];
+	  auto d   = _pt_distance(sh,sat);
+	  if (d < dmin) { dmin = d; s = i; }
 	}
-      
-	if ( dmin < _min_shower_dist ) {
-	  _combine_two_contours(sats,*shower,c3);
-	  tmp_showers_.emplace_back(c3);
-	  n_merged++;
-	}
-	else
-	  tmp_sats_.emplace_back(sats);
+
+	if (s < 0) { std::cout << "bad s...\n"; throw std::exception(); }
+	
+	if ( dmin < _min_shower_dist )
+	  { showers_to_combine[s].push_back(j); used_shower[s] = true; used_sats[j] = true; }
+	
       }
-
-      std::swap(tmp_showers_,tmp_showers);
-      std::swap(tmp_sats_   ,tmp_sats   );
-      
-      if ( ! n_merged ) merging = false;
-      
     }
+
+    for(auto& shower : showers_to_combine)
+      for(auto& index: shower.second)
+	{ _combine_two_contours(shower_v[shower.first],sats_v[index],c3); out_ctors.emplace_back(c3); }
     
-    for(auto& shower : tmp_showers) out_ctors.emplace_back( shower );
-    for(auto& sat    : tmp_sats)    out_ctors.emplace_back( sat    );
-    
+    for(auto& ushow : used_shower)
+      { if ( ushow.second ) continue; out_ctors.emplace_back( shower_v[ ushow.first ] ); }
+
+    for(auto& usats : used_sats)
+      { if ( usats.second ) continue; out_ctors.emplace_back( sats_v[ usats.first] ); }
+
     return out_ctors;
   }
 
@@ -160,11 +156,10 @@ namespace larcv{
     c3.insert( c3.end(), c1.begin(), c1.end() );
     c3.insert( c3.end(), c2.begin(), c2.end() );
   }
+
   
   double SatelliteMerge::_pt_distance(const larcv::Contour_t& c1, const larcv::Contour_t& c2) {
     double min_d = 9e10;
-
-    
     //returns closes distance between pts on contours
     //I think I overcount right? c1.x - c2.x and c2.x - c1.x whatever...
     for(const auto& pt1 : c1) {

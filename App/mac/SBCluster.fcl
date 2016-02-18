@@ -27,8 +27,8 @@ ImageClusterManager: {
   # AlgoType: [SBCluster,PCASegmentation]
   # AlgoName: [sbc,pcas]
 
-   AlgoType: [SBCluster]
-   AlgoName: [sbc]
+   AlgoType: [SBCluster,SatelliteMerge]
+   AlgoName: [sbc,satellitemerge]
 
  ImageClusterViewer: {
    Verbosity: 0

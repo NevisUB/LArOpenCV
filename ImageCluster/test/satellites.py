@@ -16,7 +16,7 @@ my_proc = fmwk.ana_processor()
 cfg="satellites_config.fcl"
 
 for i in xrange(1,10):
-    my_proc.add_input_file( "/Volumes/Slow/uboone_data/pi0/larlite_reco2d_00%d.root" % i )
+    my_proc.add_input_file( "~/data/larlite_reco2d_00%d.root" % i )
     #my_proc.add_input_file("/Volumes/Slow/uboone_data/01292015/e/larlite_reco2d_000%d.root" % i)
 
 
@@ -31,19 +31,21 @@ my_proc.add_process(myunit)
 while ( my_proc.process_event() ) :
     print "Next event...\n";
 
-    manager  = myunit.algo_manager(0)
+    manager  = myunit.algo_manager(2)
     clusters = manager.Clusters()
 
-    satellitemerge = manager.GetAlg(2)
+    satellitemerge = manager.GetAlg(1)
     sic = satellitemerge._secret_initial_sats
-    in_clusters = sic.size()
-    out_clusters= clusters.size()
+    in_clusters  = sic.size()
+    out_clusters = clusters.size()
 
     print "In : %d   Out: %d " % (in_clusters,out_clusters)
 
     fig, ax = plt.subplots(figsize=(10,6))
 
     xy = []
+
+    print "We found...%d" % clusters.size()
     for n in xrange(clusters.size()):
         cluster = clusters[n]
         i = []
@@ -53,12 +55,12 @@ while ( my_proc.process_event() ) :
             i.append(pt.x)
             j.append(pt.y)
 
-            
         xy.append((i,j))
 
     for p in xy:
-        ax.plot(p[0],p[1],'-',color='blue',lw=2)
+        ax.plot(p[0],p[1],'-',color='blue',lw=5)
 
+    
     yx = []
     for n in xrange(sic.size()):
         cluster = sic[n]
@@ -68,7 +70,6 @@ while ( my_proc.process_event() ) :
             pt = cluster[p]
             i.append(pt.x)
             j.append(pt.y)
-
             
         yx.append((i,j))
 
