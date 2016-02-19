@@ -1,7 +1,5 @@
 # LArOpenCV
 
-Someone update this README!
-
 - To get started...
 
 1. Look at setup_laropencv.sh (or source it if you trust it).
