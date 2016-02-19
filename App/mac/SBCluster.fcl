@@ -66,7 +66,7 @@ ImageClusterManager: {
   Trackshower:{
     AreaCut : 1850
     RatioCut : 3
-    TrackShowerSat : 2 # 0 returns tracks, 1 returns showers, 2 returns satellites+showers
+    TrackShowerSat : 2 # 0 returns tracks, 1 returns showers, 2 returns satellites+showers, 3 returns everything
   }
 
   satellitemerge: {

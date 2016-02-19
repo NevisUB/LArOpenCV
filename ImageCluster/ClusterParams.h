@@ -20,6 +20,7 @@ namespace larcv {
 
     ClusterParams() {}
     
+    //Useful for PCA
     ClusterParams(int    in_index,
 		  double eval1,
 		  double eval2,
@@ -52,6 +53,29 @@ namespace larcv {
       path_(path)
     {}
 
+    //Useful for start point finding
+    ClusterParams(int    in_index,
+		  double area,
+		  double perimeter,
+		  double eigendirx,
+		  double eigendiry,
+		  int nhits,
+		  std::vector<std::pair<int,int> > hits,
+		  std::vector<std::pair<double,double> > startend,
+		  std::vector<cv::Point2f> rectangle
+		  ) :
+      
+      in_index_(in_index),
+      area_(area),
+      perimeter_(perimeter),
+      eigendirx_(eigendirx),
+      eigendiry_(eigendiry),
+      nhits_(nhits),
+      hits_(hits),
+      startend_(startend),
+      rectangle_(rectangle)
+    {}
+
     ~ClusterParams(){}
 
     void compare(const ClusterParams& cparm2);
@@ -74,6 +98,11 @@ namespace larcv {
     std::map<int,std::vector<int> > combined_;
 
     PCAPath path_;
+
+    //ahack
+    std::vector<std::pair<double,double>> startend_;
+    std::vector<cv::Point2f> rectangle_;
+
     
   };
 }

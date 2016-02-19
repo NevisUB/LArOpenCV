@@ -20,6 +20,8 @@ namespace larcv{
       _contour_tree->Branch("bb_width",&_bb_width,"bb_width/F");
       _contour_tree->Branch("max_con_width",&_max_con_width,"max_con_width/F");
       _contour_tree->Branch("min_con_width",&_min_con_width,"min_con_width/F");
+      _contour_tree->Branch("angle",&_angle,"angle/F");
+      _contour_tree->Branch("angle",&_angle,"angle/F");
     }
     
   }
@@ -29,11 +31,36 @@ namespace larcv{
 					    larcv::ImageMeta& meta)
   { 
 
+   _cparms_v.clear();
+   _cparms_v.reserve(clusters.size());
+
    ContourArray_t satellite_v ;
    ContourArray_t shower_v ;
    ContourArray_t track_v ;
 
-   for(auto const & cv_contour : clusters){
+   for(size_t k = 0; k < clusters.size(); k++){
+       
+      auto cv_contour = clusters[k];
+      //Get hits 
+      ::cv::Rect rect00 = ::cv::boundingRect(cv_contour);
+      ::cv::Mat subMat(img, rect00);
+
+      std::vector<::cv::Point> locations;
+      ::cv::findNonZero(subMat, locations);  
+
+      auto contour_temp = cv_contour;
+      for(auto &pt : contour_temp ) { pt.x -= rect00.x; pt.y -= rect00.y; }
+      
+      std::vector<std::pair<int,int> > hits;
+      int nhits = 0;
+    
+      for(const auto& loc : locations) {
+        if ( ::cv::pointPolygonTest(contour_temp, loc,false) < 0 ) 
+          continue;
+   
+        hits.emplace_back(loc.x + rect00.x, loc.y + rect00.y);
+        ++nhits;
+      }   
 
         cv::RotatedRect rect0 = cv::minAreaRect(cv::Mat(cv_contour));
         cv::Point2f vertices[4];
@@ -44,10 +71,15 @@ namespace larcv{
         auto bb_height = ( rect.height > rect.width ? rect.height : rect.width );
         auto bb_width  = ( rect.height > rect.width ? rect.width : rect.height );
 
+        std::vector<cv::Point2f> rectangle = { vertices[0], vertices[1],vertices[2],vertices[3] };
+
         _area      = area;  
         _perimeter = perimeter;
         _bb_height = bb_height ;
         _bb_width  = bb_width;
+	_angle     = rect0.angle;
+
+        if(area < 1850) continue;
 
         //  
         // Between points 0,1 and 1,2 , find max distance; this will be outer
@@ -56,36 +88,45 @@ namespace larcv{
         //  
         int step1 = 80; 
         int step2 = 80; 
-        float maxDist = 0;  
-        float minDist = 0;  
         std::pair<float,float> dir1;
         std::pair<float,float> dir2;
 
         auto dist1  = pow(pow(vertices[0].x-vertices[1].x,2) + pow(vertices[0].y - vertices[1].y,2),0.5);
         auto dist2  = pow(pow(vertices[2].x-vertices[1].x,2) + pow(vertices[2].y - vertices[1].y,2),0.5);
 
+        float maxDist = 0;  
+        float minDist = 0;  
+
+        int i0(0), i1(1), i2(2);
+
         if( dist1 > dist2 ){
           maxDist = dist1;
           minDist = dist2;
-          dir1 = std::make_pair((vertices[0].x - vertices[1].x)/step1, (vertices[0].y - vertices[1].y)/step1);
-          dir2 = std::make_pair((vertices[2].x - vertices[1].x)/step2, (vertices[2].y - vertices[1].y)/step2);
-  
-           }
+          }
          else{
           maxDist = dist2;
           minDist = dist1;
-          dir1 = std::make_pair((vertices[2].x - vertices[1].x)/step1, (vertices[2].y - vertices[1].y)/step1);
-          dir2 = std::make_pair((vertices[0].x - vertices[1].x)/step2, (vertices[0].y - vertices[1].y)/step2);
+          i0 = 2; i2 = 0;
            }
 
-        float dist_travelled = 0 ;
-        float max_width = 0;
-        float min_width = 10000;
+        dir1 = std::make_pair((vertices[i0].x - vertices[i1].x)/step1, (vertices[i0].y - vertices[i1].y)/step1);
+        dir2 = std::make_pair((vertices[i2].x - vertices[i1].x)/step2, (vertices[i2].y - vertices[i1].y)/step2);
+	::cv::Point2d start_point( vertices[i1].x , vertices[i1].y  );
+	::cv::Point2d end_point  ( vertices[i0].x , vertices[i0].y );
 
         ::cv::Point2d new_point1 ;
         ::cv::Point2d new_point2 ;
 
+        float max_width = 0;
+        float min_width = 10000;
+
+        float dist_travelled = 0 ;
+	float max_long_dist = 0;
+	float min_long_dist = 0;
+        float long_dist_travelled = 0;
+
         for(int i=1; i<step1-1; i+=2){
+	    long_dist_travelled += maxDist/step1 ;
             new_point1.x = vertices[1].x + i*dir1.first ;
             new_point1.y = vertices[1].y + i*dir1.second ;
             dist_travelled = 0 ;
@@ -97,12 +138,78 @@ namespace larcv{
               if ( ::cv::pointPolygonTest(cv_contour,new_point2,false) >= 0 )
                 dist_travelled += minDist/step2 ;
               }
-            if( dist_travelled > max_width )
+            if( dist_travelled > max_width ){
               max_width = dist_travelled ;
+	      max_long_dist = long_dist_travelled;
+	      }
 
-            if( dist_travelled < min_width && dist_travelled != 0)
+            if( dist_travelled < min_width && dist_travelled != 0){
+              min_long_dist = long_dist_travelled;
               min_width = dist_travelled ;
+              }
+
           }
+
+        bool switched = 0;
+        if( max_long_dist /(maxDist / 2) < 0.5 ) {
+          auto temp = start_point ;
+	  start_point = end_point ;
+	  end_point = temp;
+          switched = 1 ;
+	  }
+
+        std::vector<cv::Point2d> find_end;
+        std::vector<cv::Point2d> find_start ;
+
+        int it = 0; 
+        while((!find_end.size() || !find_start.size()) && it < 10){
+
+          start_point.x += pow(-1,switched)*dir1.first ;
+          start_point.y += pow(-1,switched)*dir1.second ;
+
+          end_point.x -= pow(-1,switched)*dir1.first ;
+          end_point.y -= pow(-1,switched)*dir1.second ;
+
+          for(int j=0; j<step2; j+=1){
+            
+            start_point.x += dir2.first ;
+            start_point.y += dir2.second;
+
+            end_point.x += dir2.first ;
+            end_point.y += dir2.second;
+
+            if ( ::cv::pointPolygonTest(cv_contour,start_point,false) >= 0 )
+              find_start.push_back(start_point);
+
+            if ( ::cv::pointPolygonTest(cv_contour,end_point,false) >= 0 )
+              find_end.push_back(end_point);
+            }
+           it++;
+         }
+
+        cv::Point2d new_point3; 
+        cv::Point2d new_point4 ;
+          
+         for(int k = 0; k < find_start.size(); k++){
+           new_point3.x += find_start[k].x / find_start.size();
+           new_point3.y += find_start[k].y / find_start.size() ;
+            }
+
+         for(int k = 0; k < find_end.size(); k++){
+           new_point4.x += find_end[k].x / find_end.size();
+           new_point4.y += find_end[k].y / find_end.size() ;
+            }
+
+
+        std::vector< std::pair<double,double> > start_end ;     
+        start_end.push_back(std::make_pair(new_point3.x,new_point3.y));
+        start_end.push_back(std::make_pair(new_point4.x,new_point4.y));
+         
+	 if(_angle != 0 && area > 1850){
+	   //auto angle2 = atan2(dir1.second,dir2.first) ;
+           //std::cout<<"Max long dist travelened: "<<max_long_dist<<", "<<maxDist/2 <<std::endl ;
+           std::cout<<"Percent : "<<(max_long_dist)/(maxDist/2)*100<<"\%, "<<area<<std::endl ;
+	   }
 
         _max_con_width = max_width;
         _min_con_width = min_width;
@@ -115,21 +222,36 @@ namespace larcv{
          satellite_v.push_back(cv_contour);
       
         _contour_tree->Fill();
+
+     // this is the only way you can get shit into python at this point
+      _cparms_v.emplace_back(k,
+                             _area,
+                             _perimeter,
+                             dir1.first/maxDist,
+                             dir1.second/maxDist,
+                             nhits,
+                             hits,
+                             start_end,
+                             rectangle
+                             );  
  
       }
 
-   // std::cout<<"Shower, track, satellite size: "<<shower_v.size()<<", "<<track_v.size()<<", "<<satellite_v.size()<<std::endl ;
+//   std::cout<<"Shower, track, satellite size: "<<shower_v.size()<<", "<<track_v.size()<<", "<<satellite_v.size()<<std::endl ;
    
    ContourArray_t shower_sats_v; shower_sats_v.reserve(shower_v.size() + satellite_v.size());
    for(auto& shower : shower_v)    shower_sats_v.emplace_back( shower );
    for(auto& sats   : satellite_v) shower_sats_v.emplace_back( sats  );
 	 
+  
    if( _track_shower_sat == 2)
      return shower_sats_v;
    else if( _track_shower_sat == 1)
      return shower_v ; 
    else if( _track_shower_sat == 0 ) 
      return track_v ;
+   else if( _track_shower_sat == 3)
+     return clusters;
    else 
      return satellite_v; 
 
