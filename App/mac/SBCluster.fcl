@@ -25,8 +25,8 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  AlgoType: [SBCluster,PCAOverall,PiZeroFilter]
-  AlgoName: [sbc,pcao,pizerofilter]
+  ClusterAlgoType: [SBCluster,PCAOverall,PiZeroFilter]
+  ClusterAlgoName: [sbc,pcao,pizerofilter]
 
   MatchAlgoType: []
   MatchAlgoName: []
@@ -83,7 +83,7 @@ ImageClusterManager: {
 
   pcao: {
 
-    NMinInsideHits: 3
+    NMinInsideHits: 2
 
   }
 
@@ -92,6 +92,5 @@ ImageClusterManager: {
     NHitsCut: 3
 
   }
-
 
 }

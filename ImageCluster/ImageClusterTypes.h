@@ -13,8 +13,10 @@ namespace larcv {
   };
 
   /// larcv::ImageClusterBase inherit algorithm's unique identifier within larcv::ClusterImageManager
-  typedef size_t AlgorithmID_t;  
-  /// A cluster's unique identifier within larcv::ClusterImageManager
+  typedef size_t AlgorithmID_t;
+  /// A image's unique identifier within larcv::ImageClusterManager
+  typedef size_t ImageID_t;
+  /// A cluster's unique identifier within larcv::ImageClusterManager
   typedef size_t ClusterID_t;
   /// A 2D contour type
   typedef std::vector<cv::Point> Contour_t;

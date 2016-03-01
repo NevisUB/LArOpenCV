@@ -79,8 +79,8 @@ namespace larlite {
       auto const& meta = _img_mgr.meta_at(plane);
       if(!meta.num_pixel_row() || !meta.num_pixel_column()) continue;
       
-      alg_mgr.Process(img,meta);
-
+      alg_mgr.Add(img,meta);
+      alg_mgr.Process();
     }
 
     watch_one.Start();
