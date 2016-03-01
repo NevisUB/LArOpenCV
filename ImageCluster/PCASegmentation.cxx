@@ -23,6 +23,7 @@ namespace larcv{
     _cov_cut       = pset.get<double>("CovSubDivide");
     _n_divisions   = pset.get<int>   ("NDivisions" );
     _n_clustersize = pset.get<int>   ("MinClusterSize");
+    _n_path_size   = pset.get<int>   ("MinPathSize");
     
     //do you want to be able to connect by crossing empty boxes?
     _allow_cross_empties = pset.get<bool> ("AllowEmptyCross");
@@ -30,8 +31,8 @@ namespace larcv{
     //output tree
     _outtree = new TTree("PCA","PCA");
     
-    _outtree->Branch("_eval1",&_eval1,"eval1/D");
-    _outtree->Branch("_eval2",&_eval2,"eval2/D");
+    // _outtree->Branch("_eval1",&_eval1,"eval1/D");
+    // _outtree->Branch("_eval2",&_eval2,"eval2/D");
 
     _outtree->Branch("_area",&_area,"area/D");
     _outtree->Branch("_perimeter",&_perimeter,"perimeter/D");
@@ -39,30 +40,26 @@ namespace larcv{
 
   }
   
-  Cluster2DArray_t PCASegmentation::_Process_(const larcv::Cluster2DArray_t& clusters,
-					      const ::cv::Mat& img,
-					      larcv::ImageMeta& meta)
+  larcv::Cluster2DArray_t PCASegmentation::_Process_(const larcv::Cluster2DArray_t& clusters,
+						     const ::cv::Mat& img,
+						     larcv::ImageMeta& meta)
   {
-    
+    clear_vars();
     //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
     
     //cluster == contour
-    ContourArray_t ctor_v;    
-    clear_vars();
+    //ContourArray_t ctor_v;    
     _cparms_v.reserve(clusters.size());
 
     double angle_cut = _angle_cut; //degrees
     angle_cut *= 3.14159/180.0;    //to radians
 
+    bool bad = false;
+    
     for(unsigned u = 0; u < clusters.size(); ++u) {
+      bad = false;
       
       auto& cluster    =  clusters[u]._contour;
-      auto& cntr_pt    = _cntr_pt;
-      auto& eigen_vecs = _eigen_vecs;
-      auto& eigen_val  = _eigen_val;
-      auto& lline      = _line;      
-      
-      auto& pearsons_r = _pearsons_r;  //linearity
       
       //Lets get subimage that only includes this cluster
       //and the points in immediate vicinity (ROI)
@@ -131,7 +128,7 @@ namespace larcv{
       }
 
 
-      
+      //connect the boxes that are touching each other
       
       for(unsigned b1 = 0; b1 < boxes.size(); ++b1) {
 	
@@ -158,10 +155,15 @@ namespace larcv{
       
       int empty = 0;
       std::map<int,std::vector<int> > combined; //combined boxes            
-      std::map<int,bool> used;
-      for(int i = 0; i < boxes.size(); ++i) { used[i] = false; if (boxes[i].empty_) { used[i] = true; ++empty; } }
+      std::map<int,bool> used; //seen boxes
+
+      for(int i = 0; i < boxes.size(); ++i) {
+	used[i] = false;
+	if (boxes[i].empty_)
+	  { used[i] = true; ++empty; }
+      }
       
-      if ( boxes.size() == empty ) // all boxes are empty
+      if ( boxes.size() == empty ) // all boxes are empty, continue
 	continue;
 
       if ( (boxes.size() - empty) > 1 ) { // better be at least two non-empty boxes
@@ -173,10 +175,11 @@ namespace larcv{
 	  const auto& box = boxes.at(i);
 
 	  used[i] = true;
-	  
+
+	  //connect the boxes with criteria specified in PCAUtilities connect function
 	  connect(box,boxes,used,neighbors,combined,i,i);
 	}
-	
+
 	// std::cout << "Finished connecting..." << "\n";
 	// std::cout << "\n\n";
 	// for(const auto& k : combined) {
@@ -191,143 +194,88 @@ namespace larcv{
 
       
       //At this point we have some idea about "connectedness". 
-      
 
-      //lets set the charge sum first
-      //per box
-      
+      //lets set the charge per box first
       for( auto& box : boxes ) {
-
+	
 	if ( box.empty_ ) continue;
 	
 	for ( const auto &pt : box.pts_ )  
 	  
 	  box.charge_.push_back( (int) img.at<uchar>(pt.y + box.parent_roi_.y,
 						     pt.x + box.parent_roi_.x) ); 
-	
-	
       }
 
-    
-
-      //return the index in combined that we choose as the shower axis
-      //what condition do we set?
-      if ( combined.size() == 0 ) continue;
-
-
+      // no boxes were "combined" with connection function, continue for now
+      if ( combined.size() == 0 ) { continue; }    
+      
       //decide the shower axis via some combination of everything
       //you see in PCAPath.cxx
       auto paths = decide_axis(boxes,combined);
-      
-      
-      ///////////////////////////////////////////////
-      ////////////////OLD CODE///////////////////////
-      ///////////////////////////////////////////////
-      
-      //subMat holds pixels in the bounding rectangle
-      //around the given contour. We can make a line from principle eigenvector
-      //and compute the distance to this line of the hits may be weighted by
-      //charge at some point?
-      
-      //make a copy cluster_s = shifted clusters to the bounding box
-      auto cluster_s = cluster;
-      
-      //shift it down
-      for(auto &pt : cluster_s) { pt.x -= rect.x; pt.y -= rect.y; }
-      ctor_v.emplace_back(cluster_s);
-      
-      // PCA ana requies MAT object w/ data sitting in rows, 2 columns
-      // 1 for each ``feature" or coordinate
-      ::cv::Mat ctor_pts(cluster_s.size(), 2, CV_64FC1);
-      
-      for (unsigned i = 0; i < ctor_pts.rows; ++i) {
-	ctor_pts.at<double>(i, 0) = cluster_s[i].x;
-	ctor_pts.at<double>(i, 1) = cluster_s[i].y;
-      }
-      
-      //Perform PCA analysis
-      ::cv::PCA pca_ana(ctor_pts, ::cv::Mat(), CV_PCA_DATA_AS_ROW,0); // maxComponents = 0 (retain all)
-      
-      //Center point
-      // ::cv::Point
-      cntr_pt = Point2D( pca_ana.mean.at<double>(0,0),
-			 pca_ana.mean.at<double>(0,1) );
-      
 
-      //Principle directions (vec) and relative lengths (vals)
-      eigen_vecs.resize(2);
-      eigen_val.resize (2);
+      //need atleast this many boxes in path to care about it... or drop the cluster
+      if (paths.size() < _n_path_size)  bad = true; //continue;
+
+
+
+      //
+      // Old code from original, it works so i don't change
+      //
       
-      for (unsigned i = 0; i < 2; ++i) {
-	eigen_vecs[i] = Point2D(pca_ana.eigenvectors.at<double>(i, 0),
-				pca_ana.eigenvectors.at<double>(i, 1));
-	eigen_val[i]  = pca_ana.eigenvalues.at<double>(0, i);
-      }
-      
-      
-      //Get the nonzero locations of the pixels in this subimage
-      //these are the "hits"
+      // Look at the overall cluster
+      auto cluster_s = cluster;
+      for(auto &pt : cluster_s) { pt.x -= rect.x; pt.y -= rect.y; }
+
+      Point2D e_vec,e_center;
+      pca_line(cluster_s,e_vec,e_center);
+
+      // for the viewer...
       std::vector<::cv::Point> locations;
       ::cv::findNonZero(subMat, locations);
-      
-      //take principle eigenvector (the first one)
-      //and get the line that best represents the shower
-      //this line passes through center point and is principle eigenvec
-      lline[0] = 0;
-      lline[1] = cntr_pt.y + ( (0 - cntr_pt.x) / eigen_vecs[0].x ) * eigen_vecs[0].y;
-      lline[2] = rect.width;
-      lline[3] = cntr_pt.y + ( (rect.width - cntr_pt.x) / eigen_vecs[0].x) * eigen_vecs[0].y;
-      
-      int nhits = 0;
-      
-      //find how far away the points are to the line
+
       std::vector<std::pair<int,int> > hits;
       std::vector<int> charge;
-      
       for(const auto& loc : locations) {
-	
-	//is this point in the contour, if not continue
 	if ( ::cv::pointPolygonTest(cluster_s, loc,false) < 0 )
 	  continue;
 	
 	charge.push_back( (int) subMat.at<uchar>(loc.y,loc.x) );
 	hits.emplace_back(loc.x + rect.x, loc.y + rect.y);
-	++nhits;
        
       }
       
       // you must have atleast 10 points to proceed or trunk is useless
-      if ( nhits < _n_clustersize ) // j == number of points in cluster
+      if ( hits.size() < _n_clustersize ) // j == number of points in cluster
 	continue;
-      
-      //find the trunk with this info 
-      auto normal = std::sqrt( eigen_val[0]*eigen_val[0] + eigen_val[1]*eigen_val[1] ) ;
-      
-      _eval1 = eigen_val[0] / normal;
-      _eval2 = eigen_val[1] / normal;
+
+      auto nhits = hits.size();
       
       _area      = (double) ::cv::contourArea(cluster);
       _perimeter = (double) ::cv::arcLength  (cluster,1);
       
-      auto eigen_normal = std::sqrt(std::pow(eigen_vecs[0].x,2) + std::pow(eigen_vecs[0].y,2));
 
+      auto bbox = ::cv::minAreaRect(cluster);
+      ::cv::Point2f verticies[4]; // stupid, why cant I pass stack pointer around it's sad
+      bbox.points(verticies);
+      std::vector<::cv::Point2f> v; v.resize(4); 
+      for(int r=0;r<4;++r) v[r] = verticies[r];
+      
+      paths.CheckMinAreaRect(bbox);
 
-      // this is the only way you can get shit into python at this point
+      // this is the only way you can get shit into python at this point      
       _cparms_v.emplace_back(u,
-			     _eval1,
-			     _eval2,
+			     bad,
 			     _area,
 			     _perimeter,
-			     eigen_vecs[0].x / eigen_normal,
-			     eigen_vecs[0].y / eigen_normal,
+			     e_vec.x,
+			     e_vec.y,
 			     nhits,
 			     hits,
-			     lline,
 			     charge,
 			     boxes,
 			     combined,
-			     paths
-			     );
+			     paths,
+			     v);
       
       
       _outtree->Fill();
@@ -341,14 +289,7 @@ namespace larcv{
 
   
   void PCASegmentation::clear_vars() {
-    
-    _eigen_vecs.clear();
-    _eigen_val.clear();
-
     _cparms_v.clear();
-
-    _line.resize(4);
-    _line.clear();
   }
 
 

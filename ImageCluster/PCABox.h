@@ -48,7 +48,9 @@ namespace larcv {
       subhits_cut_( subhits_cut ),
       subdivided_ ( false       ),
       empty_      ( false       )
-    { cov_ = roi_cov(pts_); }
+    {
+      cov_      = roi_cov  (pts_);
+    }
     
     //destructor
     ~PCABox(){}
@@ -68,12 +70,14 @@ namespace larcv {
     
     ::cv::Rect box_;
     ::cv::Rect parent_roi_;
-    
-    ::cv::Rect dbox_; //dilated box for intersection
+    ::cv::Rect dbox_; //dilated box for intersection condition
     
     double angle_cut_;
     double cov_cut_;
     int    subhits_cut_;
+    
+    Point2D cw_center_;
+    Point2D avg_center_;
     
     void expand(short i, short j);
 
@@ -94,7 +98,7 @@ namespace larcv {
     
     // bool compatible(const PCABox& other) const;
     bool touching  (const PCABox& other) const;
-
+    
   protected:
 
   private:

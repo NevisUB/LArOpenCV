@@ -320,6 +320,13 @@ namespace larcv {
 
     LARCV_DEBUG((*this)) << "end" << std::endl;
   }
+
+  size_t ImageClusterManager::NumClusters(const AlgorithmID_t alg_id) const
+  {
+    AlgorithmID_t target_alg_id = (alg_id != kINVALID_ALGO_ID ? alg_id : _clusters_v_v.size()-1);
+    if(alg_id >= _clusters_v_v.size()) throw larbys("Invalid algorithm ID requested");
+    return (_clusters_v_v[target_alg_id].back().back().ID() + 1);
+  }
   
   const ImageMeta& ImageClusterManager::MetaData(const ImageID_t img_id, const AlgorithmID_t alg_id) const
   {

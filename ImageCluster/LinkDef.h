@@ -23,27 +23,15 @@
 #pragma link C++ class larcv::ImageClusterViewer+;
 
 #pragma link C++ class larcv::Cluster2D+;
-#pragma link C++ class larcv::ClusterParams+;
-
-//#pragma link C++ class larcv::EmptyImageCluster+;
-//#pragma link C++ class larcv::ToyImageCluster+;
-//#pragma link C++ class larcv::SmoothBinaryCluster+;
 #pragma link C++ class larcv::SBCluster+;
-//#pragma link C++ class larcv::TCluster+;
-// #pragma link C++ class larcv::CDTrackShower+;
-// #pragma link C++ class larcv::HoughTrackShower+;
-// #pragma link C++ class larcv::HoughPTrackShower+;
 #pragma link C++ class larcv::SatelliteMerge+;
 #pragma link C++ class larcv::TrackShower+;
 
+#pragma link C++ class larcv::ClusterParams+;
 #pragma link C++ class larcv::PCABox+;
 #pragma link C++ class larcv::PCAPath+;
 #pragma link C++ class larcv::PCASegmentation+;
 
-#pragma link C++ class larcv::aho+;
-#pragma link C++ class larcv::aho+;
-#pragma link C++ class larcv::aho+;
-#pragma link C++ class larcv::aho+;
 #pragma link C++ class larcv::PCAOverall+;
 //ADD_NEW_CLASS ... do not change this line
 #endif

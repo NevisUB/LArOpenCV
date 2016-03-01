@@ -41,13 +41,14 @@ namespace larcv {
 
     Contour_t _contour;
 
-    
+    std::vector<::cv::Point> _insideHits;
     int _numHits;
-
+    
     Point2D _centerPt;
     Point2D _eigenVecFirst;
     Point2D _eigenVecSecond;
-
+    Point2D _startPt;
+    
   private:
 
     ClusterID_t _id;

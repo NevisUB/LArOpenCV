@@ -75,6 +75,8 @@ namespace larcv {
     void Process();
     /// Finalize after multiple Process call
     void Finalize(TFile* file=nullptr);
+    /// Accessor to total number of clusters
+    size_t NumClusters(const AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
     /// Accessor to a specific meta data constructed by an algorithm (via algorithm id)
     const ImageMeta& MetaData(const ImageID_t img_id, const AlgorithmID_t alg_id) const;
     /// Accessor to a specific cluster constructed by an algorithm (via algorithm + cluster id)

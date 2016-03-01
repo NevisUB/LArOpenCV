@@ -22,35 +22,38 @@ namespace larcv {
     
     //Useful for PCA
     ClusterParams(int    in_index,
-		  double eval1,
-		  double eval2,
+		  bool   bad,
+		  //double eval1,
+		  //double eval2,
 		  double area,
 		  double perimeter,
 		  double eigendirx,
 		  double eigendiry,
 		  int nhits,
 		  std::vector<std::pair<int,int> > hits,
-		  std::vector<double> line,
+		  //std::vector<double> line,
 		  std::vector<int> charge,
 		  std::vector<PCABox> boxes,
 		  std::map<int,std::vector<int> > combined,
-		  PCAPath path
-		  ) :
+		  PCAPath path,
+		  std::vector<::cv::Point2f> bbox) :
       
       in_index_(in_index),
-      eval1_(eval1),
-      eval2_(eval2),
+      bad_(bad),
+      // eval1_(eval1),
+      // eval2_(eval2),
       area_(area),
       perimeter_(perimeter),
       eigendirx_(eigendirx),
       eigendiry_(eigendiry),
       nhits_(nhits),
       hits_(hits),
-      line_(line),
+      //line_(line),
       charge_(charge),
       boxes_(boxes),
       combined_(combined),
-      path_(path)
+      path_(path),
+      bbox_(bbox)
     {}
 
     //Useful for start point finding
@@ -87,7 +90,7 @@ namespace larcv {
     double perimeter_;
     double eigendirx_;
     double eigendiry_;
-
+    bool bad_;
     int nhits_;
 
     std::vector<std::pair<int,int> > hits_;
@@ -97,6 +100,8 @@ namespace larcv {
     std::vector<PCABox> boxes_;
     std::map<int,std::vector<int> > combined_;
 
+    std::vector<::cv::Point2f> bbox_;
+    
     PCAPath path_;
 
     //ahack
