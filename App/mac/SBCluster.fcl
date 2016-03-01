@@ -89,7 +89,7 @@ ImageClusterManager: {
 
   pizerofilter: {
 
-    NHitsCut: 3
+    NHitsCut: 10
     BackStartPoint: 100
 
   }
