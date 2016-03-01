@@ -59,8 +59,18 @@ namespace larcv {
 
     Point2D combined_e_vec_;
     Point2D combined_e_center_;
-    
     /////////*********/////////
+    
+
+    /////////*********/////////
+    void CheckMinAreaRect(const ::cv::RotatedRect& rr);
+    
+    ::cv::Rect far_from_center_;
+    Point2D e_vec_far_;
+    Point2D point_closest_to_edge_;
+    /////////*********/////////
+
+    
     
   };
 }

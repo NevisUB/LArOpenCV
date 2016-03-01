@@ -27,6 +27,5 @@ namespace larcv {
     
   }
 
-
 }
 #endif

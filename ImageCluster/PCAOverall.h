@@ -27,7 +27,9 @@ namespace larcv {
   public:
     
     /// Default constructor
-    PCAOverall(const std::string name="PCAOverall") : ClusterAlgoBase(name)
+    PCAOverall(const std::string name="PCAOverall") :
+      ClusterAlgoBase(name),
+      _nMinInsideHits(0)
     {}
     
     /// Default destructor
@@ -48,6 +50,8 @@ namespace larcv {
     
   private:
 
+    int _nMinInsideHits;
+    
   };
   
   /**

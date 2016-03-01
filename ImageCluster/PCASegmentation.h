@@ -2,12 +2,13 @@
 #ifndef __PCASEGMENTATION_H__
 #define __PCASEGMENTATION_H__
 
-
 #include "ClusterAlgoBase.h"
+#include "ClusterAlgoFactory.h"
+
 #include "TTree.h"
 #include "ClusterParams.h"
 #include "PCABox.h"
-#include "ClusterAlgoFactory.h"
+
 namespace larcv {
   /**
      \class PCASegmentation
@@ -77,6 +78,7 @@ namespace larcv {
 
     bool _allow_cross_empties;
     int _n_clustersize;
+    int _n_path_size;
     
     void clear_vars();
 
@@ -113,7 +115,7 @@ namespace larcv {
     /// creation method
     ClusterAlgoBase* create(const std::string instance_name) { return new PCASegmentation(instance_name); }
   };
-  /// Global larcv::PCASegmentationFactory to register ClusterAlgoFactory
+  /// Global larcv::PCASegmentationFactory to register ImageClusterFactory
   static PCASegmentationFactory __global_PCASegmentationFactory__;
 }
 #endif
