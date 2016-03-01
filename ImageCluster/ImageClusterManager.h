@@ -17,6 +17,7 @@
 #include <iostream>
 #include "ClusterAlgoBase.h"
 #include "MatchAlgoBase.h"
+#include "ReClusterAlgoBase.h"
 #include "ImageClusterViewer.h"
 
 namespace larcv {
@@ -52,16 +53,20 @@ namespace larcv {
     ClusterAlgoBase* GetClusterAlg(const AlgorithmID_t id) const;
     /// Algorithm getter via unique identifier (string name)
     ClusterAlgoBase* GetClusterAlg(const std::string name) const;
+    /// Clustering algorithm ID getter via unique identifier (string name)
+    AlgorithmID_t GetClusterAlgID(const std::string name) const;
     /// Matching agorithm getter via unique identifier (AlgorithmID_t)
     MatchAlgoBase* GetMatchAlg(const AlgorithmID_t id) const;
     /// Matching algorithm getter via unique identifier (string name)
     MatchAlgoBase* GetMatchAlg(const std::string name) const;
+    /// Matching algorithm ID getter via unique identifier (string name)
+    AlgorithmID_t GetMatchAlgID(const std::string name) const;
     /// Re-Clustering algorithm getter via unique identifier (AlgorithmID_t)
-    //ReClusterAlgoBase* GetReClusterAlg(const AlgorithmID_t id) const;
+    ReClusterAlgoBase* GetReClusterAlg(const AlgorithmID_t id) const;
     /// Re-Clustering algorithm getter via unique identifier (string name)
-    //ReClusterAlgoBase* GetReClusterAlg(const std::string name) const;
-    /// Algorithm ID getter via unique identifier (string name)
-    AlgorithmID_t GetAlgID(const std::string name) const;
+    ReClusterAlgoBase* GetReClusterAlg(const std::string name) const;
+    /// Re-Clustering algorithm ID getter via unique identifier (string name)
+    AlgorithmID_t GetReClusterAlgID(const std::string name) const;
     /// Read-in configuration object & enforce configurations to algorithms
     void Configure(const ::fcllite::PSet& main_cfg);
     /// Execute algorithms to construct clusters + corresponding meta data
@@ -88,6 +93,8 @@ namespace larcv {
     std::vector<larcv::ClusterAlgoBase*> _cluster_alg_v;
     /// Array of matching algorithms to be executed
     std::vector<larcv::MatchAlgoBase*> _match_alg_v;
+    /// Array of re-clustering algorithms to be executed
+    std::vector<larcv::ReClusterAlgoBase*> _recluster_alg_v;
     /// Map of clustering algorithm instance name to ID
     std::map<std::string,larcv::AlgorithmID_t> _cluster_alg_m;
     /// Map of matching algorithm instance name to ID

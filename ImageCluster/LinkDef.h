@@ -14,6 +14,7 @@
 #pragma link C++ class larcv::ImageClusterBase+;
 #pragma link C++ class larcv::ClusterAlgoBase+;
 #pragma link C++ class larcv::MatchAlgoBase+;
+#pragma link C++ class larcv::ReClusterAlgoBase+;
 
 #pragma link C++ class larcv::ClusterAlgoFactory+;
 #pragma link C++ class larcv::MatchAlgoFactory+;
