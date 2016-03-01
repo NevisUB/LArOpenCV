@@ -81,6 +81,7 @@ namespace larlite {
       
       alg_mgr.Add(img,meta);
       alg_mgr.Process();
+      std::cout<<"Matched pairs: "<<alg_mgr.BookKeeper().GetResult().size()<<std::endl;
     }
 
     watch_one.Start();

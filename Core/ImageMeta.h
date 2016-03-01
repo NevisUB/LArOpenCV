@@ -43,10 +43,12 @@ namespace larcaffe {
     /// Default constructor: width, height, and origin coordinate won't be modifiable 
     ImageMeta(const double width=0., const double height=0.,
 	      const size_t width_npixel=0., const size_t height_npixel=0,
-	      const double origin_x=0., const double origin_y=0.)
+	      const double origin_x=0., const double origin_y=0.,
+	      const size_t plane=::larcv::kINVALID_SIZE)
       : _origin(origin_x,origin_y)
       , _width(width)
       , _height(height)
+      , _plane(plane)
     {
       if( width  < 0. ) throw larbys("Width must be a positive floating point!");
       if( height < 0. ) throw larbys("Height must be a positive floating point!");
@@ -57,6 +59,7 @@ namespace larcaffe {
     ~ImageMeta(){}
 
     const Point2D& origin   () const { return _origin; }
+    size_t plane            () const { return _plane;  }
     double width            () const { return _width;  }
     double height           () const { return _height; }
     size_t num_pixel_row    () const { return _width_npixel;      }
@@ -90,7 +93,7 @@ namespace larcaffe {
     double _height;            ///< Vertical size of an image in double floating precision (in original coordinate unit size)
     size_t _width_npixel;      ///< # of pixels in horizontal axis
     size_t _height_npixel;     ///< # of pixels in vertical axis
-    
+    size_t _plane;             ///< unique plane ID number
   };
 
 }

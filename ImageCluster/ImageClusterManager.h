@@ -19,6 +19,7 @@
 #include "MatchAlgoBase.h"
 #include "ReClusterAlgoBase.h"
 #include "ImageClusterViewer.h"
+#include "MatchBookKeeper.h"
 
 namespace larcv {
   /**
@@ -45,28 +46,22 @@ namespace larcv {
     /// Default destructor
     ~ImageClusterManager(){}
 
+    void Test();
+
     /// Name accessor, used to identify a block of configuration parameters via fhicl
     const std::string& Name() const { return _name; }
     /// Clears attributes except for _name
     void Reset();
     /// Algorithm getter via unique identifier (AlgorithmID_t)
-    ClusterAlgoBase* GetClusterAlg(const AlgorithmID_t id) const;
+    const ClusterAlgoBase& GetClusterAlg(const AlgorithmID_t id) const;
     /// Algorithm getter via unique identifier (string name)
-    ClusterAlgoBase* GetClusterAlg(const std::string name) const;
+    const ClusterAlgoBase& GetClusterAlg(const std::string name) const;
     /// Clustering algorithm ID getter via unique identifier (string name)
     AlgorithmID_t GetClusterAlgID(const std::string name) const;
-    /// Matching agorithm getter via unique identifier (AlgorithmID_t)
-    MatchAlgoBase* GetMatchAlg(const AlgorithmID_t id) const;
-    /// Matching algorithm getter via unique identifier (string name)
-    MatchAlgoBase* GetMatchAlg(const std::string name) const;
-    /// Matching algorithm ID getter via unique identifier (string name)
-    AlgorithmID_t GetMatchAlgID(const std::string name) const;
-    /// Re-Clustering algorithm getter via unique identifier (AlgorithmID_t)
-    ReClusterAlgoBase* GetReClusterAlg(const AlgorithmID_t id) const;
-    /// Re-Clustering algorithm getter via unique identifier (string name)
-    ReClusterAlgoBase* GetReClusterAlg(const std::string name) const;
-    /// Re-Clustering algorithm ID getter via unique identifier (string name)
-    AlgorithmID_t GetReClusterAlgID(const std::string name) const;
+    /// Matching agorithm getter
+    const MatchAlgoBase& GetMatchAlg() const;
+    /// ReClustering algorithm getter
+    const ReClusterAlgoBase& GetReClusterAlg() const;
     /// Read-in configuration object & enforce configurations to algorithms
     void Configure(const ::fcllite::PSet& main_cfg);
     /// Execute algorithms to construct clusters + corresponding meta data
@@ -87,7 +82,8 @@ namespace larcv {
     ClusterID_t ClusterID(const double x, const double y, AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
     /// Report process summary
     void Report() const;
-    
+    /// Match result getter
+    const MatchBookKeeper& BookKeeper() const { return _book_keeper; }
   private:
     /// Name identifier: used to fetch a block of configuration parameters
     std::string _name;
@@ -96,15 +92,11 @@ namespace larcv {
     /// Array of clustering algorithms to be executed
     std::vector<larcv::ClusterAlgoBase*> _cluster_alg_v;
     /// Array of matching algorithms to be executed
-    std::vector<larcv::MatchAlgoBase*> _match_alg_v;
+    larcv::MatchAlgoBase* _match_alg;
     /// Array of re-clustering algorithms to be executed
-    std::vector<larcv::ReClusterAlgoBase*> _recluster_alg_v;
+    larcv::ReClusterAlgoBase* _recluster_alg;
     /// Map of clustering algorithm instance name to ID
     std::map<std::string,larcv::AlgorithmID_t> _cluster_alg_m;
-    /// Map of matching algorithm instance name to ID
-    std::map<std::string,larcv::AlgorithmID_t> _match_alg_m;
-    /// Map of reclustering algorithm instance name to ID
-    std::map<std::string,larcv::AlgorithmID_t> _recluster_alg_m;
     /// Array of images
     std::vector<cv::Mat> _raw_img_v;
     /// Array of metadata
@@ -125,6 +117,8 @@ namespace larcv {
     bool _show_image;
     /// Viewer instance
     ImageClusterViewer _viewer;
+    /// MatchBookKeeper
+    MatchBookKeeper _book_keeper;
   };
 }
 #endif

@@ -22,12 +22,11 @@ namespace larcv {
     LARCV_DEBUG((*this)) << "end" << std::endl;
   }
 
-  double MatchAlgoBase::Process(const larcv::Cluster2DArray_t& clusters,
-				larcv::ImageMeta& meta)
+  double MatchAlgoBase::Process(const larcv::Cluster2DPtrArray_t& clusters)
   {
-    if(!Profile()) return this->_Process_(clusters,meta);
+    if(!Profile()) return this->_Process_(clusters);
     _watch.Start();
-    auto result = this->_Process_(clusters,meta);
+    auto result = this->_Process_(clusters);
     _proc_time += _watch.WallTime();
     ++_proc_count;
     return result;

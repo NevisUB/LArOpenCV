@@ -28,11 +28,11 @@ ImageClusterManager: {
   ClusterAlgoType: [SBCluster,PCAOverall,PiZeroFilter]
   ClusterAlgoName: [sbc,pcao,pizerofilter]
 
-  MatchAlgoType: []
-  MatchAlgoName: []
+  MatchAlgoType: ""
+  MatchAlgoName: ""
 
-  ReClusterAlgoType: []
-  ReClusterAlgoName: []
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
 
 
  ImageClusterViewer: {
