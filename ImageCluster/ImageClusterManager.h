@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include "ClusterAlgoBase.h"
+#include "MatchAlgoBase.h"
 #include "ImageClusterViewer.h"
 
 namespace larcv {
@@ -51,6 +52,14 @@ namespace larcv {
     ClusterAlgoBase* GetClusterAlg(const AlgorithmID_t id) const;
     /// Algorithm getter via unique identifier (string name)
     ClusterAlgoBase* GetClusterAlg(const std::string name) const;
+    /// Matching agorithm getter via unique identifier (AlgorithmID_t)
+    MatchAlgoBase* GetMatchAlg(const AlgorithmID_t id) const;
+    /// Matching algorithm getter via unique identifier (string name)
+    MatchAlgoBase* GetMatchAlg(const std::string name) const;
+    /// Re-Clustering algorithm getter via unique identifier (AlgorithmID_t)
+    //ReClusterAlgoBase* GetReClusterAlg(const AlgorithmID_t id) const;
+    /// Re-Clustering algorithm getter via unique identifier (string name)
+    //ReClusterAlgoBase* GetReClusterAlg(const std::string name) const;
     /// Algorithm ID getter via unique identifier (string name)
     AlgorithmID_t GetAlgID(const std::string name) const;
     /// Read-in configuration object & enforce configurations to algorithms
@@ -75,10 +84,16 @@ namespace larcv {
     std::string _name;
     /// Boolean flag to enforce Configure method to be called before Process.
     bool _configured;
-    /// Array of algorithms to be executed
-    std::vector<larcv::ClusterAlgoBase*> _alg_v;
-    /// Map of algorithm instance name to ID
-    std::map<std::string,larcv::AlgorithmID_t> _alg_m;
+    /// Array of clustering algorithms to be executed
+    std::vector<larcv::ClusterAlgoBase*> _cluster_alg_v;
+    /// Array of matching algorithms to be executed
+    std::vector<larcv::MatchAlgoBase*> _match_alg_v;
+    /// Map of clustering algorithm instance name to ID
+    std::map<std::string,larcv::AlgorithmID_t> _cluster_alg_m;
+    /// Map of matching algorithm instance name to ID
+    std::map<std::string,larcv::AlgorithmID_t> _match_alg_m;
+    /// Map of reclustering algorithm instance name to ID
+    std::map<std::string,larcv::AlgorithmID_t> _recluster_alg_m;
     /// Array of resulting clusters per algorithms
     std::vector<larcv::Cluster2DArray_t> _clusters_v;
     /// Array of meta data: one per set of clusters (updated by each algorithm)

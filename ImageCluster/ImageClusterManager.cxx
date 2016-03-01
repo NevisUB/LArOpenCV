@@ -23,7 +23,7 @@ namespace larcv {
   {
     LARCV_DEBUG((*this)) << "start" << std::endl;
     _configured = false;
-    _alg_v.clear();
+    _cluster_alg_v.clear();
     _clusters_v.clear();
     _process_count=0;
     _process_time=0;
@@ -32,14 +32,14 @@ namespace larcv {
 
   void ImageClusterManager::Finalize(TFile* file)
   {
-    for(auto& alg : _alg_v) alg->Finalize(file);
+    for(auto& alg : _cluster_alg_v) alg->Finalize(file);
     _configured = false;
   }
 
   ClusterAlgoBase* ImageClusterManager::GetClusterAlg(const AlgorithmID_t id) const
   {
-    if(id >= _alg_v.size()) throw larbys("Invalid algorithm ID requested...");
-    return _alg_v[id];
+    if(id >= _cluster_alg_v.size()) throw larbys("Invalid algorithm ID requested...");
+    return _cluster_alg_v[id];
   }
 
   ClusterAlgoBase* ImageClusterManager::GetClusterAlg(const std::string name) const
@@ -47,10 +47,21 @@ namespace larcv {
     return GetClusterAlg(GetAlgID(name));
   }
 
+  MatchAlgoBase* ImageClusterManager::GetMatchAlg(const AlgorithmID_t id) const
+  {
+    if(id >= _match_alg_v.size()) throw larbys("Invalid algorithm ID requested...");
+    return _match_alg_v[id];
+  }
+
+  MatchAlgoBase* ImageClusterManager::GetMatchAlg(const std::string name) const
+  {
+    return GetMatchAlg(GetAlgID(name));
+  }
+
   AlgorithmID_t ImageClusterManager::GetAlgID(const std::string name) const
   {
-    auto iter = _alg_m.find(name);
-    if(iter == _alg_m.end()) return kINVALID_ALGO_ID;
+    auto iter = _cluster_alg_m.find(name);
+    if(iter == _cluster_alg_m.end()) return kINVALID_ALGO_ID;
     return (*iter).second;
   }
 
@@ -59,8 +70,8 @@ namespace larcv {
   {
     if(!alg) throw larbys("Cannot add nullptr!");
     if(_configured) throw larbys("Cannot add algo after configured! (call Reset())");
-    _alg_v.push_back(alg);
-    return (_alg_v.size() - 1);
+    _cluster_alg_v.push_back(alg);
+    return (_cluster_alg_v.size() - 1);
   }
   */
   
@@ -85,21 +96,21 @@ namespace larcv {
       throw larbys();
     }
 
-    _alg_v.clear();
-    _alg_m.clear();
+    _cluster_alg_v.clear();
+    _cluster_alg_m.clear();
     for(size_t i=0; i<instance_type_v.size(); ++i) {
       auto const& name = instance_name_v[i];
       auto const& type = instance_type_v[i];
-      if(_alg_m.find(name) != _alg_m.end()) {
+      if(_cluster_alg_m.find(name) != _cluster_alg_m.end()) {
 	LARCV_CRITICAL((*this)) << "Duplicate algorithm name found!" << std::endl;
 	throw larbys("Duplicate algorithm name found!");
       }
       
-      _alg_m[name] = _alg_v.size();
-      _alg_v.push_back(ClusterAlgoFactory::get().create(type,name));
+      _cluster_alg_m[name] = _cluster_alg_v.size();
+      _cluster_alg_v.push_back(ClusterAlgoFactory::get().create(type,name));
     }
 
-    for(auto& ptr : _alg_v) {
+    for(auto& ptr : _cluster_alg_v) {
       ptr->Profile(_profile);
       ptr->set_verbosity(this->logger().level());
       ptr->Configure(main_cfg.get_pset(ptr->Name()));
@@ -113,7 +124,7 @@ namespace larcv {
     
     std::cout << "  ================== " << Name() << " Profile Report ==================" << std::endl
 	      << "  # Process call = " << _process_count << " ... Total time = " << _process_time << " [s]" << std::endl;
-    for(auto const& ptr : _alg_v) {
+    for(auto const& ptr : _cluster_alg_v) {
       std::cout << Form("  \033[93m%-20s\033[00m ... # call %-5zu ... total time %g [s] ... average time %g [s/process]",
 			ptr->Name().c_str(), ptr->ProcessCount(), ptr->ProcessTime(), ptr->ProcessTime() / (double)(ptr->ProcessCount()))
 		<< std::endl;
@@ -138,14 +149,18 @@ namespace larcv {
     _orig_meta = meta;
     _meta_v.clear();
     _clusters_v.clear();
-    _clusters_v.reserve(_alg_v.size());
-    _meta_v.reserve(_alg_v.size());
+    _clusters_v.reserve(_cluster_alg_v.size());
+    _meta_v.reserve(_cluster_alg_v.size());
 
-    for(auto& alg_ptr : _alg_v) {
+    //
+    // First-pass clustering
+    //
+
+    for(auto& alg_ptr : _cluster_alg_v) {
       
       if(!alg_ptr) throw larbys("Invalid algorithm pointer!");
 
-      if(alg_ptr == _alg_v.front()) {
+      if(alg_ptr == _cluster_alg_v.front()) {
 
 	Cluster2DArray_t clusters;
 	_meta_v.push_back(_orig_meta);
@@ -175,8 +190,8 @@ namespace larcv {
     ++_process_count;
 
     if(_show_image) {
-      std::vector<std::string> window_name_v(_alg_v.size());
-      for(size_t i=0; i<_alg_v.size(); ++i) window_name_v[i] = _alg_v[i]->Name();
+      std::vector<std::string> window_name_v(_cluster_alg_v.size());
+      for(size_t i=0; i<_cluster_alg_v.size(); ++i) window_name_v[i] = _cluster_alg_v[i]->Name();
       //ContourArray_t contours_v;
       //contours_v.reserve(_clusters_v.size());
       //for(auto const& c : _clusters_v) contours_v.push_back(c._contour);
