@@ -44,14 +44,14 @@ namespace larlite {
   void LArImageHit::store_clusters(storage_manager* storage)
   {
     ++_num_stored;
-    
+
     auto geom = ::larutil::Geometry::GetME();
     if(_num_clusters_v.empty()){
       _num_clusters_v.resize(geom->Nplanes(),0);
       _num_clustered_hits_v.resize(geom->Nplanes(),0);
       _num_unclustered_hits_v.resize(geom->Nplanes(),0);
     }
-    
+
     auto ev_hit = storage->get_data<event_hit>(producer());
     
     if(!ev_hit) throw DataFormatException("Could not locate hit data product!");
@@ -60,20 +60,23 @@ namespace larlite {
 
     std::vector<size_t> nclusters_v(alg_mgr_v.size(),0);
     size_t nclusters_total=0;
+
     for(size_t plane=0; plane<alg_mgr_v.size(); ++plane) {
+
       try{
 	nclusters_v[plane] = alg_mgr_v[plane].NumClusters();
       }catch(const ::larcv::larbys& err) {
 	nclusters_v[plane] = 0;
       }
+
       _num_clusters_v[plane] += nclusters_v[plane];
-      nclusters_total += nclusters_v[plane];
+      nclusters_total        += nclusters_v[plane];
+
     }
 
     AssSet_t ass_set;
     ass_set.resize(nclusters_total);
     for(auto& ass_unit : ass_set) ass_unit.reserve(100);
-    
     for(size_t hindex=0; hindex<ev_hit->size(); ++hindex) {
 
       auto const& h = (*ev_hit)[hindex];
@@ -116,7 +119,6 @@ namespace larlite {
     }
     if(ev_ass)
       ev_ass->set_association(ev_cluster->id(),ev_hit->id(),ass_set);
-    
   }
 
   void LArImageHit::extract_image(storage_manager* storage)
