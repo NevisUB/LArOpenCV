@@ -62,7 +62,8 @@ namespace larcv {
 		  int nhits,
 		  std::vector<std::pair<int,int> > hits,
 		  std::vector<std::pair<double,double> > startend,
-		  std::vector<cv::Point2f> rectangle
+		  std::vector<cv::Point2f> rectangle,
+		  double angle
 		  ) :
       
       in_index_(in_index),
@@ -73,7 +74,8 @@ namespace larcv {
       nhits_(nhits),
       hits_(hits),
       startend_(startend),
-      rectangle_(rectangle)
+      rectangle_(rectangle),
+      angle_(angle)
     {}
 
     ~ClusterParams(){}
@@ -102,6 +104,7 @@ namespace larcv {
     //ahack
     std::vector<std::pair<double,double>> startend_;
     std::vector<cv::Point2f> rectangle_;
+    double angle_;
 
     
   };

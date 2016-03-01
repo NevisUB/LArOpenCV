@@ -21,7 +21,6 @@ namespace larcv{
       _contour_tree->Branch("max_con_width",&_max_con_width,"max_con_width/F");
       _contour_tree->Branch("min_con_width",&_min_con_width,"min_con_width/F");
       _contour_tree->Branch("angle",&_angle,"angle/F");
-      _contour_tree->Branch("angle",&_angle,"angle/F");
     }
     
   }
@@ -41,15 +40,17 @@ namespace larcv{
    for(size_t k = 0; k < clusters.size(); k++){
        
       auto cv_contour = clusters[k];
+      auto area = ::cv::contourArea(cv_contour);
       //Get hits 
-      ::cv::Rect rect00 = ::cv::boundingRect(cv_contour);
-      ::cv::Mat subMat(img, rect00);
+      //::cv::Rect rect00 = ::cv::boundingRect(cv_contour);
+      //::cv::Mat subMat(img, rect00);
 
       std::vector<::cv::Point> locations;
-      ::cv::findNonZero(subMat, locations);  
+      ::cv::findNonZero(img, locations);  
+      //::cv::findNonZero(subMat, locations);  
 
       auto contour_temp = cv_contour;
-      for(auto &pt : contour_temp ) { pt.x -= rect00.x; pt.y -= rect00.y; }
+      //for(auto &pt : contour_temp) { pt.x -= rect00.x; pt.y -= rect00.y; }
       
       std::vector<std::pair<int,int> > hits;
       int nhits = 0;
@@ -58,7 +59,8 @@ namespace larcv{
         if ( ::cv::pointPolygonTest(contour_temp, loc,false) < 0 ) 
           continue;
    
-        hits.emplace_back(loc.x + rect00.x, loc.y + rect00.y);
+        //hits.emplace_back(loc.x + rect00.x, loc.y + rect00.y);
+        hits.emplace_back(loc.x, loc.y);
         ++nhits;
       }   
 
@@ -66,7 +68,7 @@ namespace larcv{
         cv::Point2f vertices[4];
         rect0.points(vertices);
         auto rect = rect0.size; 
-        auto area = ::cv::contourArea(cv_contour);
+
         auto perimeter = ::cv::arcLength(cv_contour,1);
         auto bb_height = ( rect.height > rect.width ? rect.height : rect.width );
         auto bb_width  = ( rect.height > rect.width ? rect.width : rect.height );
@@ -77,9 +79,8 @@ namespace larcv{
         _perimeter = perimeter;
         _bb_height = bb_height ;
         _bb_width  = bb_width;
-	_angle     = rect0.angle;
 
-        if(area < 1850) continue;
+        if(area < 900) continue;
 
         //  
         // Between points 0,1 and 1,2 , find max distance; this will be outer
@@ -151,11 +152,13 @@ namespace larcv{
           }
 
         bool switched = 0;
-        if( max_long_dist /(maxDist / 2) < 0.5 ) {
+        if( max_long_dist /(maxDist / 2) < 0.349 ) {
           auto temp = start_point ;
 	  start_point = end_point ;
 	  end_point = temp;
           switched = 1 ;
+	  //if(area > 900)
+	  //std::cout<<"Swtiching!"<<std::endl;
 	  }
 
         std::vector<cv::Point2d> find_end;
@@ -187,28 +190,32 @@ namespace larcv{
            it++;
          }
 
-        cv::Point2d new_point3; 
-        cv::Point2d new_point4 ;
+        cv::Point2d new_start; 
+        cv::Point2d new_end ;
+
+	//findNewPoint(new_start,find_start);
           
          for(int k = 0; k < find_start.size(); k++){
-           new_point3.x += find_start[k].x / find_start.size();
-           new_point3.y += find_start[k].y / find_start.size() ;
+           new_start.x += find_start[k].x / find_start.size();
+           new_start.y += find_start[k].y / find_start.size() ;
             }
 
          for(int k = 0; k < find_end.size(); k++){
-           new_point4.x += find_end[k].x / find_end.size();
-           new_point4.y += find_end[k].y / find_end.size() ;
+           new_end.x += find_end[k].x / find_end.size();
+           new_end.y += find_end[k].y / find_end.size() ;
             }
 
 
         std::vector< std::pair<double,double> > start_end ;     
-        start_end.push_back(std::make_pair(new_point3.x,new_point3.y));
-        start_end.push_back(std::make_pair(new_point4.x,new_point4.y));
+        start_end.push_back(std::make_pair(new_start.x,new_start.y));
+        start_end.push_back(std::make_pair(new_end.x,new_end.y));
+	
          
-	 if(_angle != 0 && area > 1850){
-	   //auto angle2 = atan2(dir1.second,dir2.first) ;
-           //std::cout<<"Max long dist travelened: "<<max_long_dist<<", "<<maxDist/2 <<std::endl ;
-           std::cout<<"Percent : "<<(max_long_dist)/(maxDist/2)*100<<"\%, "<<area<<std::endl ;
+	 if(area > 900){
+	   _angle = 180 / 3.14 * atan2(new_end.y - new_start.y, new_end.x - new_start.x ) ;
+	   if( _angle < 0 )
+	     _angle = (360 + _angle)  ;
+           //std::cout<<"Percent : "<<(max_long_dist)/(maxDist/2)*100<<"\%, "<<area<<std::endl ;
 	   }
 
         _max_con_width = max_width;
@@ -232,7 +239,8 @@ namespace larcv{
                              nhits,
                              hits,
                              start_end,
-                             rectangle
+                             rectangle,
+			     _angle
                              );  
  
       }
