@@ -39,8 +39,18 @@
 #pragma link C++ class larcv::PCAPath+;
 #pragma link C++ class larcv::PCASegmentation+;
 
+#pragma link C++ class larcv::aho+;
+#pragma link C++ class larcv::aho+;
+#pragma link C++ class larcv::aho+;
+#pragma link C++ class larcv::aho+;
+#pragma link C++ class larcv::PCAOverall+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
+
+
+
+
 
 
 

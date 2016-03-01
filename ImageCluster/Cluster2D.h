@@ -33,6 +33,14 @@ namespace larcv {
     ~Cluster2D(){}
 
     Contour_t _contour;
+
+    
+    int _numHits;
+
+    Point2D _centerPt;
+    Point2D _eigenVecFirst;
+    Point2D _eigenVecSecond;
+    
     
   };
 
