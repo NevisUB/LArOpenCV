@@ -18,13 +18,13 @@ namespace larlite {
   void LArDownImage::_Configure_(const ::fcllite::PSet &pset)
   {
     _charge_to_gray_scale = pset.get<double>("Q2Gray");
-    _nbins                = pset.get<int>("NBins");
-//    _charge_threshold = pset.get<double>("QMin");
-
+    //_nbins_x              = pset.get<int>("NBinsX");
+    //_nbins_y              = pset.get<int>("NBinsY");
   }
 
   void LArDownImage::_Report_() const
   {
+    std::cout << "THE FOLLOWING 2 LINES ARE FROM LARIMAGEHIT--NOT YET ADJUSTED TO REFLECT QUANTITIES RETURNED BY THIS ALG; DO NOT TRUST"<<std::endl ;
     std::cout << "  # of clusters per plane ......... ";
     for(auto const& num : _num_clusters_v) std::cout << Form("%-6zu ",num);
     std::cout << " ... Average (per-event) ";
@@ -58,7 +58,7 @@ namespace larlite {
     
     auto ev_hit = storage->get_data<event_hit>(producer());
     auto out_cluster = storage->get_data<event_cluster>("ImageCluster");
-    auto out_ass     = storage->get_data<event_ass>(out_cluster->name());
+    auto out_ass     = storage->get_data<event_ass>("ImageCluster");
 
     AssSet_t my_ass;
 
@@ -71,13 +71,16 @@ namespace larlite {
 
     std::vector<size_t> nclusters_v(alg_mgr_v.size(),0);
     size_t nclusters_total=0;
+    
+    if (out_cluster){  
+
     for(size_t plane=0; plane<alg_mgr_v.size(); ++plane) {
       nclusters_v[plane] = alg_mgr_v[plane].Clusters().size();
       _num_clusters_v[plane] += nclusters_v[plane];
       nclusters_total += nclusters_v[plane];
       
       auto const & contours = alg_mgr_v[plane].Clusters(); //GetContours(ev_hit);
-      auto const & algID    = alg_mgr_v[plane].GetAlgID("TCluster");
+      auto const & algID    = alg_mgr_v[plane].GetAlgID("sbc");
       auto const & meta     = alg_mgr_v[plane].MetaData(algID); 
 
       filled_contours.reserve(contours.size() + filled_contours.size()) ;      
@@ -107,11 +110,8 @@ namespace larlite {
           // Continue for hit that's not on this plane
           if( h.WireID().Plane != plane) continue;
 
-          auto div_x = meta.width()/_nbins;
-          auto div_y = meta.height()/_nbins;
-
-          int wire = ( h.WireID().Wire - meta.origin().x )/ div_x ;
-          int time = ( h.PeakTime() - meta.origin().y )/ div_y;
+          int wire = ( h.WireID().Wire - meta.origin().x )/  meta.pixel_width() ; 
+          int time = ( h.PeakTime() - meta.origin().y )/ meta.pixel_height() ;  
 
           ::cv::Point2d point (time,wire);
 
@@ -123,13 +123,15 @@ namespace larlite {
 
             filled_contours.emplace_back(contour_index) ;
 
-            cluster cl;
-            cl.set_id(out_cluster->size());
-            cl.set_original_producer("ImageCluster");
-            cl.set_planeID(pID);
-            cl.set_view(geo::View_t(plane));
 
-            out_cluster->emplace_back(cl);
+            ::larlite::cluster cl;
+            //cl.set_original_producer("ImageCluster");
+            cl.set_view(geom->PlaneToView(plane)); //geo::View_t(plane));
+            cl.set_planeID(pID);
+
+            out_cluster->push_back(cl);
+
+            cl.set_id(out_cluster->size());
 
             AssUnit_t one_ass;
             one_ass.reserve(ev_hit->size());
@@ -147,17 +149,13 @@ namespace larlite {
         }
         if(filled_contours.size() > hit_v.size())
           hit_v.emplace_back(n_hits);
-
       }
-
     }// plane loop
+   }// if out_cluster
 
     // Store association
-    out_ass->set_association( out_cluster->id(), ev_hit->id(), my_ass );
-
-    storage->set_id(storage->run_id(),
-                    storage->subrun_id(),
-                    storage->event_id());
+    if(out_ass)
+      out_ass->set_association( out_cluster->id(), ev_hit->id(), my_ass );
 
   }
 
@@ -195,9 +193,14 @@ namespace larlite {
       auto const& tick_range = tick_range_v[plane];
       size_t nticks = tick_range.second - tick_range.first + 2;
       size_t nwires = wire_range.second - wire_range.first + 2;
-      ::larcv::ImageMeta meta((double)nwires,(double)nticks,_nbins,_nbins,wire_range.first,tick_range.first);
-      _img_mgr.push_back(::cv::Mat(_nbins,_nbins, CV_8UC1, cvScalar(0.)),meta);
-      
+      ::larcv::ImageMeta meta((double)nwires,(double)nticks,nwires,nticks,wire_range.first,tick_range.first);
+      //::larcv::ImageMeta meta((double)nwires,(double)nticks,_nbins_x,_nbins_y,wire_range.first,tick_range.first);
+      if ( nwires >= 1e10 || nticks >= 1e10 )
+        _img_mgr.push_back(::cv::Mat(),::larcv::ImageMeta());
+      else
+        _img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
+      //_img_mgr.push_back(::cv::Mat(_nbins_x,_nbins_y, CV_8UC1, cvScalar(0.)),meta);
+
     }
     
     for(auto const& h : *ev_hit) {
@@ -217,11 +220,10 @@ namespace larlite {
       size_t y = (size_t)(h.PeakTime()+0.5) - tick_range.first;
       size_t x = wid.Wire - wire_range.first;
       
-      auto div_x = float(nwires) / _nbins;
-      auto div_y = float(nticks) / _nbins;
- 
-      y /= div_y;
-      x /= div_x;
+      if(y>=nticks || x>=nwires) { std::cout << "\t==> Skipping hit\n"; continue; } // skip this hit
+
+      //y /= ( float(nticks) / _nbins_y ); 
+      //x /= ( float(nwires) / _nbins_x );
 
       double charge = h.Integral() / _charge_to_gray_scale;
       charge += (double)(mat.at<unsigned char>(x,y));

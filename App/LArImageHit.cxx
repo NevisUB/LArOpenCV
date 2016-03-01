@@ -16,7 +16,7 @@ namespace larlite {
   {
     _charge_to_gray_scale = pset.get<double>("Q2Gray");
     //    _charge_threshold = pset.get<double>("QMin");
-
+    
   }
 
   void LArImageHit::_Report_() const

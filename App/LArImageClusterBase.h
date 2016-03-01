@@ -19,7 +19,6 @@
 #include "Core/ImageManager.h"
 #include "ImageCluster/ImageClusterManager.h"
 #include "ImageCluster/ImageClusterViewer.h"
-#include "ImageCluster/FillImageClusterVariables.h"
 
 namespace larlite {
 
@@ -74,16 +73,6 @@ namespace larlite {
     double _process_time_analyze;
     double _process_time_cluster_storage;
     void Report() const;
-
-    larcv::FillImageClusterVariables _filler; 
-    TTree * _contour_tree; 
-
-    float _area ;
-    float _perimeter ;
-    float _bb_height ;
-    float _bb_width ;
-    float _max_con_width ;
-    float _min_con_width ;
 
   protected:
 

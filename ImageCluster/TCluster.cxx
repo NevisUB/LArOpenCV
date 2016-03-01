@@ -45,7 +45,6 @@ namespace larcv{
     ::cv::drawContours( drawing , result, i, color, 2, 8, ::cv::noArray(), 0, ::cv::Point() );
    // ::cv::drawContours( drawing, result, i, color) ;
     std::cout<<"Area is : "<<::cv::contourArea(result[i])<<std::endl;
-//    _filler.Fill(result[i]);
 
     }
     ::cv::imshow( "Contours", drawing);

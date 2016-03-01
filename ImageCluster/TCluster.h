@@ -16,8 +16,8 @@
 
 #include "ImageClusterBase.h"
 #include "ImageClusterViewer.h"
-#include "FillImageClusterVariables.h"
 #include "TClusterVars.h"
+
 namespace larcv {
   /**
      \class TCluster
@@ -55,8 +55,6 @@ namespace larcv {
 				    larcv::ImageMeta& meta);
     
   private:
-
-    larcv::FillImageClusterVariables _filler ;
 
     int _blur_x;
     int _blur_y;

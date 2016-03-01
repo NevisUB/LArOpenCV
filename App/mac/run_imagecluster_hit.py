@@ -27,11 +27,11 @@ for x in xrange(len(sys.argv)-3):
 
 
 # Specify IO mode
-my_proc.set_io_mode(fmwk.storage_manager.kREAD)
+my_proc.set_io_mode(fmwk.storage_manager.kBOTH)
 
 # Specify output root file name
 my_proc.set_ana_output_file("aho_ana_output_%s.root" % name);
-# my_proc.set_output_file("aho_output.root"); 
+my_proc.set_output_file("aho1_output.root"); 
 
 # Attach an analysis unit ... here we use a base class which does nothing.
 # Replace with your analysis unit if you wish.
@@ -45,8 +45,8 @@ print  "Finished configuring ana_processor. Start event loop!"
 print
 
 # Let's run it.
-my_proc.run(0,10);
-#my_proc.run()
+#my_proc.run(0,10);
+my_proc.run()
 
 # done!
 print

@@ -35,7 +35,7 @@ namespace larcv {
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
     void Finalize(TFile*) {}
 
-    // std::vector<Contour_t> _secret_initial_sats;
+    std::vector<Contour_t> _secret_initial_sats;
     
   protected:
 
