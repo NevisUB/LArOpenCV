@@ -13,5 +13,12 @@ namespace larcv {
 
   ::cv::Mat CreateSubMatCopy(const larcv::Contour_t& cluster, const cv::Mat& img);
 
+  unsigned int Factorial(unsigned int n);
+  
+  std::vector<std::vector<size_t> > ClusterCombinations(const std::vector<size_t>& seed);
+
+  std::vector<std::vector<std::pair<size_t,size_t> > > PlaneClusterCombinations(const std::vector<size_t>& seed);
+
+
 }
 #endif

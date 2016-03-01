@@ -8,6 +8,7 @@
 #include "MatchAlgoFactory.h"
 #include "ReClusterAlgoFactory.h"
 #include "Utilities.h"
+
 namespace larcv {
 
   ImageClusterManager::ImageClusterManager(const std::string name)
@@ -15,6 +16,8 @@ namespace larcv {
     , _name(name)
     , _configured(false)
     , _profile(true)
+    , _match_alg(nullptr)
+    , _recluster_alg(nullptr)
   {
     LARCV_DEBUG((*this)) << "start" << std::endl;
     Reset();
@@ -35,18 +38,18 @@ namespace larcv {
   void ImageClusterManager::Finalize(TFile* file)
   {
     for(auto& alg : _cluster_alg_v   ) alg->Finalize(file);
-    for(auto& alg : _match_alg_v     ) alg->Finalize(file);
-    for(auto& alg : _recluster_alg_v ) alg->Finalize(file);
+    _match_alg->Finalize(file);
+    _recluster_alg->Finalize(file);
     _configured = false;
   }
 
-  ClusterAlgoBase* ImageClusterManager::GetClusterAlg(const AlgorithmID_t id) const
+  const ClusterAlgoBase& ImageClusterManager::GetClusterAlg(const AlgorithmID_t id) const
   {
     if(id >= _cluster_alg_v.size()) throw larbys("Invalid algorithm ID requested...");
-    return _cluster_alg_v[id];
+    return *_cluster_alg_v[id];
   }
 
-  ClusterAlgoBase* ImageClusterManager::GetClusterAlg(const std::string name) const
+  const ClusterAlgoBase& ImageClusterManager::GetClusterAlg(const std::string name) const
   {
     return GetClusterAlg(GetClusterAlgID(name));
   }
@@ -58,41 +61,11 @@ namespace larcv {
     return (*iter).second;
   }
 
-  MatchAlgoBase* ImageClusterManager::GetMatchAlg(const AlgorithmID_t id) const
-  {
-    if(id >= _match_alg_v.size()) throw larbys("Invalid algorithm ID requested...");
-    return _match_alg_v[id];
-  }
+  const MatchAlgoBase& ImageClusterManager::GetMatchAlg() const
+  { return *_match_alg; }
 
-  MatchAlgoBase* ImageClusterManager::GetMatchAlg(const std::string name) const
-  {
-    return GetMatchAlg(GetMatchAlgID(name));
-  }
-
-  AlgorithmID_t ImageClusterManager::GetMatchAlgID(const std::string name) const
-  {
-    auto iter = _match_alg_m.find(name);
-    if(iter == _match_alg_m.end()) return kINVALID_ALGO_ID;
-    return (*iter).second;
-  }
-
-  ReClusterAlgoBase* ImageClusterManager::GetReClusterAlg(const AlgorithmID_t id) const
-  {
-    if(id >= _recluster_alg_v.size()) throw larbys("Invalid algorithm ID requested...");
-    return _recluster_alg_v[id];
-  }
-
-  ReClusterAlgoBase* ImageClusterManager::GetReClusterAlg(const std::string name) const
-  {
-    return GetReClusterAlg(GetReClusterAlgID(name));
-  }
-  
-  AlgorithmID_t ImageClusterManager::GetReClusterAlgID(const std::string name) const
-  {
-    auto iter = _recluster_alg_m.find(name);
-    if(iter == _recluster_alg_m.end()) return kINVALID_ALGO_ID;
-    return (*iter).second;
-  }
+  const ReClusterAlgoBase& ImageClusterManager::GetReClusterAlg() const
+  { return *_recluster_alg; }
 
   /*
   AlgorithmID_t ImageClusterManager::AddAlg(ImageClusterBase* alg)
@@ -163,47 +136,24 @@ namespace larcv {
       ptr->Configure(main_cfg.get_pset(ptr->Name()));
     }
 
-    _match_alg_v.clear();
-    _match_alg_m.clear();
-    for(size_t i=0; i<match_instance_type_v.size(); ++i) {
-      auto const& name = match_instance_name_v[i];
-      auto const& type = match_instance_type_v[i];
-      if(_match_alg_m.find(name) != _match_alg_m.end()) {
-	LARCV_CRITICAL((*this)) << "Duplicate algorithm name found!" << std::endl;
-	throw larbys("Duplicate algorithm name found!");
-      }
-      
-      _match_alg_m[name] = _match_alg_v.size();
-      _match_alg_v.push_back(MatchAlgoFactory::get().create(type,name));
+    auto const match_alg_type = main_cfg.get<std::string>("MatchAlgoType","");
+    auto const match_alg_name = main_cfg.get<std::string>("MatchAlgoName","");
+    if(!match_alg_type.empty()) {
+      _match_alg = MatchAlgoFactory::get().create(match_alg_type,match_alg_name);
+      _match_alg->Profile(_profile);
+      _match_alg->set_verbosity(this->logger().level());
+      _match_alg->Configure(main_cfg.get<fcllite::PSet>(_match_alg->Name()));
     }
 
-    for(auto& ptr : _match_alg_v) {
-      ptr->Profile(_profile);
-      ptr->set_verbosity(this->logger().level());
-      ptr->Configure(main_cfg.get_pset(ptr->Name()));
+    auto const recluster_alg_type = main_cfg.get<std::string>("ReClusterAlgoType","");
+    auto const recluster_alg_name = main_cfg.get<std::string>("ReClusterAlgoName","");
+    if(!recluster_alg_type.empty()) {
+      _recluster_alg = ReClusterAlgoFactory::get().create(recluster_alg_type,recluster_alg_name);
+      _recluster_alg->Profile(_profile);
+      _recluster_alg->set_verbosity(this->logger().level());
+      _recluster_alg->Configure(main_cfg.get<fcllite::PSet>(_recluster_alg->Name()));
     }
 
-    _recluster_alg_v.clear();
-    _recluster_alg_m.clear();
-    for(size_t i=0; i<recluster_instance_type_v.size(); ++i) {
-      auto const& name = recluster_instance_name_v[i];
-      auto const& type = recluster_instance_type_v[i];
-      if(_recluster_alg_m.find(name) != _recluster_alg_m.end()) {
-	LARCV_CRITICAL((*this)) << "Duplicate algorithm name found!" << std::endl;
-	throw larbys("Duplicate algorithm name found!");
-      }
-      
-      _recluster_alg_m[name] = _recluster_alg_v.size();
-      _recluster_alg_v.push_back(ReClusterAlgoFactory::get().create(type,name));
-    }
-
-    for(auto& ptr : _recluster_alg_v) {
-      ptr->Profile(_profile);
-      ptr->set_verbosity(this->logger().level());
-      ptr->Configure(main_cfg.get_pset(ptr->Name()));
-    }
-
-    
     _configured=true;
     LARCV_DEBUG((*this)) << "end" << std::endl;
   }
@@ -235,7 +185,7 @@ namespace larcv {
     
     _watch.Start();
 
-    
+    _book_keeper.Reset();
     _meta_v_v.clear();
     _meta_v_v.resize(_cluster_alg_v.size());
     
@@ -288,7 +238,9 @@ namespace larcv {
 	for(size_t cluster_index=0; cluster_index < clusters_v.back().size(); ++cluster_index) {
 	  
 	  auto& c = clusters_v.back()[cluster_index];
-	  c._id = offset + cluster_index;
+	  c._cluster_id = offset + cluster_index;
+	  c._image_id = img_index;
+	  c._plane_id = meta.plane();
 	}
 	
 	// Sanity check on meta data
@@ -301,11 +253,68 @@ namespace larcv {
 	  std::cerr << "Return meta data by " << alg_ptr->Name() << " exceeds original image width!" << std::endl;
 	  throw larbys();
 	}
+      }
+    }
+
+    //
+    // Run matching
+    //
+    if(_match_alg) {
+
+      auto const& clusters_v = _clusters_v_v.back();
+      
+      std::vector< std::vector< const larcv::Cluster2D* > > c_per_plane;
+
+      std::vector< std::vector< const larcv::ImageMeta* > > meta_per_plane;
+
+      for(size_t img_id=0; img_id<clusters_v.size(); ++img_id) {
+
+	auto const& meta = _meta_v_v.back()[img_id];
+	auto const plane = meta.plane();
+
+	if(c_per_plane.size() <= plane) {
+	  c_per_plane.resize(plane+1);
+	  meta_per_plane.resize(plane+1);
+	}
+
+	for(auto const& c : clusters_v[img_id]) {
+	  c_per_plane[plane].push_back((const larcv::Cluster2D*)(&c));
+	  meta_per_plane[plane].push_back((const larcv::ImageMeta*)(&meta));
+	}
 	
       }
 
-    }
+      std::vector<size_t> seed; seed.reserve(c_per_plane.size());
+      for(auto const& c : c_per_plane) seed.push_back(c.size());
 
+      auto comb_v = PlaneClusterCombinations(seed);
+
+      for(auto const& comb : comb_v) {
+
+	//Assemble a vector of clusters
+	std::vector<const larcv::Cluster2D*> input_clusters;
+	std::vector<unsigned int> tmp_index_v;
+	input_clusters.reserve(comb.size());
+	tmp_index_v.reserve(comb.size());
+	
+	for(auto const& cinfo : comb) {
+
+	  auto const& plane = cinfo.first;
+	  auto const& index = cinfo.second;
+
+	  input_clusters.push_back(c_per_plane[plane][index]);
+	  tmp_index_v.push_back(c_per_plane[plane][index]->ClusterID());
+	}
+	
+	auto score = _match_alg->Process(input_clusters);
+
+	if(score>0)
+
+	  _book_keeper.Match(tmp_index_v,score);
+
+      }
+    }
+    
     _process_time += _watch.WallTime();
     ++_process_count;
 
@@ -428,6 +437,21 @@ namespace larcv {
     }
     
     return result;
+  }
+
+  void ImageClusterManager::Test()
+  {
+    std::vector<size_t> seed_v;
+    seed_v.push_back(3);
+    seed_v.push_back(3);
+    seed_v.push_back(3);
+    auto result = PlaneClusterCombinations(seed_v);
+    for(size_t i=0;i<result.size(); ++i) {
+      std::cout<<"Index: "<<i<<" ";
+      for(size_t j=0; j<result[i].size(); ++j)
+	std::cout<<"("<<result[i][j].first<<","<<result[i][j].second<<") ";
+      std::cout<<std::endl;
+    }
   }
 }
 #endif

@@ -30,11 +30,11 @@ ImageClusterManager: {
   ClusterAlgoType: [SBCluster,SatelliteMerge]
   ClusterAlgoName: [sbc,satellitemerge]
 
-  MatchAlgoType: []
-  MatchAlgoName: []
+  MatchAlgoType: ""
+  MatchAlgoName: ""
 
-  ReClusterAlgoType: []
-  ReClusterAlgoName: []
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
 
  ImageClusterViewer: {
    Verbosity: 0
