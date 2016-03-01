@@ -89,8 +89,8 @@ namespace larcv {
     if(_show_image)
       _viewer.Configure(main_cfg.get_pset(_viewer.Name()));
     
-    std::vector<std::string> cluster_instance_type_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoType");
-    std::vector<std::string> cluster_instance_name_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoName");
+    auto cluster_instance_type_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoType");
+    auto cluster_instance_name_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoName");
 
     if(cluster_instance_type_v.size() != cluster_instance_name_v.size()) {
       LARCV_CRITICAL((*this)) << "Clustering: AlgoType and AlgoName config parameters have different length! "
@@ -98,8 +98,8 @@ namespace larcv {
       throw larbys();
     }
 
-    std::vector<std::string> match_instance_type_v = main_cfg.get<std::vector<std::string> >("MatchAlgoType");
-    std::vector<std::string> match_instance_name_v = main_cfg.get<std::vector<std::string> >("MatchAlgoName");
+    auto match_instance_type_v = main_cfg.get<std::string>("MatchAlgoType");
+    auto match_instance_name_v = main_cfg.get<std::string>("MatchAlgoName");
 
     if(match_instance_type_v.size() != match_instance_name_v.size()) {
       LARCV_CRITICAL((*this)) << "Matching: AlgoType and AlgoName config parameters have different length! "
@@ -107,8 +107,8 @@ namespace larcv {
       throw larbys();
     }
 
-    std::vector<std::string> recluster_instance_type_v = main_cfg.get<std::vector<std::string> >("ReClusterAlgoType");
-    std::vector<std::string> recluster_instance_name_v = main_cfg.get<std::vector<std::string> >("ReClusterAlgoName");
+    auto recluster_instance_type_v = main_cfg.get<std::string>("ReClusterAlgoType");
+    auto recluster_instance_name_v = main_cfg.get<std::string>("ReClusterAlgoName");
 
     if(recluster_instance_type_v.size() != recluster_instance_name_v.size()) {
       LARCV_CRITICAL((*this)) << "Re-Clustering: AlgoType and AlgoName config parameters have different length! "

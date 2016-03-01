@@ -83,7 +83,7 @@ namespace larcv {
     /// Report process summary
     void Report() const;
     /// Match result getter
-    const MatchBookKeeper& MatchResult() const { return _book_keeper; }
+    const MatchBookKeeper& BookKeeper() const { return _book_keeper; }
   private:
     /// Name identifier: used to fetch a block of configuration parameters
     std::string _name;
