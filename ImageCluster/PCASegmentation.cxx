@@ -39,9 +39,9 @@ namespace larcv{
 
   }
   
-  ContourArray_t PCASegmentation::_Process_(const larcv::ContourArray_t& clusters,
-					    const ::cv::Mat& img,
-					    larcv::ImageMeta& meta)
+  Cluster2DArray_t PCASegmentation::_Process_(const larcv::Cluster2DArray_t& clusters,
+					      const ::cv::Mat& img,
+					      larcv::ImageMeta& meta)
   {
     
     //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
@@ -56,7 +56,7 @@ namespace larcv{
 
     for(unsigned u = 0; u < clusters.size(); ++u) {
       
-      auto& cluster    =  clusters[u];
+      auto& cluster    =  clusters[u]._contour;
       auto& cntr_pt    = _cntr_pt;
       auto& eigen_vecs = _eigen_vecs;
       auto& eigen_val  = _eigen_val;

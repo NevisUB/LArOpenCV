@@ -20,9 +20,9 @@ namespace larcv {
     // _polygon_e     = pset.get<double>("PolygonEpsilon");
   }
 
-  larcv::ContourArray_t SBCluster::_Process_(const larcv::ContourArray_t& clusters,
-					     const ::cv::Mat& img,
-					     larcv::ImageMeta& meta)
+  larcv::Cluster2DArray_t SBCluster::_Process_(const larcv::Cluster2DArray_t& clusters,
+					       const ::cv::Mat& img,
+					       larcv::ImageMeta& meta)
   {
 
     if ( clusters.size() )
@@ -62,9 +62,14 @@ namespace larcv {
     // for( size_t k = 0; k < ctor_v.size(); k++ )
     //   ::cv::approxPolyDP(ctor_v[k], ctor_result_v[k], _polygon_e, true); //true to close the contours
 
-
     // return ctor_result_v;
-    return ctor_v;
+
+    Cluster2DArray_t result_v;
+    result_v.resize(ctor_v.size());
+
+    for(size_t i=0; i<ctor_v.size(); ++i) std::swap(result_v[i]._contour,ctor_v[i]);
+    
+    return result_v;
     
   }
 

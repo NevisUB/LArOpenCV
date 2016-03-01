@@ -6,6 +6,12 @@
 
 namespace larcv {
 
+  enum ParticleType_t {
+    kUnknown,
+    kPi0,
+    kParticleTypeMax
+  };
+
   /// larcv::ImageClusterBase inherit algorithm's unique identifier within larcv::ClusterImageManager
   typedef size_t AlgorithmID_t;  
   /// A cluster's unique identifier within larcv::ClusterImageManager

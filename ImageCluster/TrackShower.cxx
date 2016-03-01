@@ -26,9 +26,9 @@ namespace larcv{
     
   }
 
-  ContourArray_t TrackShower::_Process_(const larcv::ContourArray_t& clusters,
-					    const ::cv::Mat& img,
-					    larcv::ImageMeta& meta)
+  Cluster2DArray_t TrackShower::_Process_(const larcv::Cluster2DArray_t& clusters,
+					  const ::cv::Mat& img,
+					  larcv::ImageMeta& meta)
   { 
 
    _cparms_v.clear();
@@ -40,7 +40,7 @@ namespace larcv{
 
    for(size_t k = 0; k < clusters.size(); k++){
        
-      auto cv_contour = clusters[k];
+      auto& cv_contour = clusters[k]._contour;
       //Get hits 
       ::cv::Rect rect00 = ::cv::boundingRect(cv_contour);
       ::cv::Mat subMat(img, rect00);
@@ -240,21 +240,34 @@ namespace larcv{
 //   std::cout<<"Shower, track, satellite size: "<<shower_v.size()<<", "<<track_v.size()<<", "<<satellite_v.size()<<std::endl ;
    
    ContourArray_t shower_sats_v; shower_sats_v.reserve(shower_v.size() + satellite_v.size());
-   for(auto& shower : shower_v)    shower_sats_v.emplace_back( shower );
-   for(auto& sats   : satellite_v) shower_sats_v.emplace_back( sats  );
+   for(auto& shower : shower_v)    shower_sats_v.push_back( shower );
+   for(auto& sats   : satellite_v) shower_sats_v.push_back( sats  );
 	 
-  
-   if( _track_shower_sat == 2)
-     return shower_sats_v;
-   else if( _track_shower_sat == 1)
-     return shower_v ; 
-   else if( _track_shower_sat == 0 ) 
-     return track_v ;
-   else if( _track_shower_sat == 3)
-     return clusters;
-   else 
-     return satellite_v; 
 
+   Cluster2DArray_t result;
+
+   if( _track_shower_sat == 2) {
+     result.resize(shower_sats_v.size());
+     for(size_t i=0; i<shower_sats_v.size(); ++i) std::swap(result[i]._contour, shower_sats_v[i]);
+     return result;
+   }
+   else if( _track_shower_sat == 1) {
+     result.resize(shower_v.size());
+     for(size_t i=0; i<shower_v.size(); ++i) std::swap(result[i]._contour, shower_v[i]);
+     return result;
+   }
+   else if( _track_shower_sat == 0 ) {
+     result.resize(track_v.size());
+     for(size_t i=0; i<track_v.size(); ++i) std::swap(result[i]._contour, track_v[i]);
+     return result;
+   }
+   else if( _track_shower_sat == 3) return clusters;
+   else {
+     result.resize(satellite_v.size());
+     for(size_t i=0; i<satellite_v.size(); ++i) std::swap(result[i]._contour, satellite_v[i]);
+     return result;
+   }
+   
   }
 
  void TrackShower::Finalize(TFile* fout){

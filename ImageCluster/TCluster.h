@@ -14,22 +14,21 @@
 #ifndef __TCLUSTER_H__
 #define __TCLUSTER_H__
 
-#include "ImageClusterBase.h"
-#include "ImageClusterViewer.h"
-#include "TClusterVars.h"
+#include "ClusterAlgoBase.h"
+#include "ClusterAlgoFactory.h"
 
 namespace larcv {
   /**
      \class TCluster
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class TCluster : public larcv::ImageClusterBase {
+  class TCluster : public larcv::ClusterAlgoBase {
     
   public:
     
     /// Default constructor
     TCluster(const std::string name="TCluster") : 
-       ImageClusterBase(name),
+       ClusterAlgoBase(name),
        _blur_x(3),
        _blur_y(3),
        _thresh(1),
@@ -50,9 +49,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::ContourArray_t _Process_(const larcv::ContourArray_t& clusters,
-				    const ::cv::Mat& img,
-				    larcv::ImageMeta& meta);
+    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+				      const ::cv::Mat& img,
+				      larcv::ImageMeta& meta);
     
   private:
 
@@ -65,13 +64,11 @@ namespace larcv {
 
   };
 
-  class TClusterFactory : public ImageClusterFactoryBase {
+  class TClusterFactory : public ClusterAlgoFactoryBase {
   public:
-    TClusterFactory() { ImageClusterFactory::get().add_factory("TCluster",this); }
+    TClusterFactory() { ClusterAlgoFactory::get().add_factory("TCluster",this); }
     ~TClusterFactory() {}
-    ImageClusterBase* create(const std::string instance_name) { return new TCluster(instance_name); }
-    /// parameter creator
-    AlgoVarsBase* vars() { return new TClusterVars; }
+    ClusterAlgoBase* create(const std::string instance_name) { return new TCluster(instance_name); }
   };
 
   static TClusterFactory __global_TClusterFactory__;

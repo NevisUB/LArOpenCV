@@ -4,7 +4,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include "ImageClusterManager.h"
 #include "Core/larbys.h"
-#include "ImageClusterFactory.h"
+#include "ClusterAlgoFactory.h"
 #include "Utilities.h"
 namespace larcv {
 
@@ -24,7 +24,6 @@ namespace larcv {
     LARCV_DEBUG((*this)) << "start" << std::endl;
     _configured = false;
     _alg_v.clear();
-    _var_v.clear();
     _clusters_v.clear();
     _process_count=0;
     _process_time=0;
@@ -37,15 +36,15 @@ namespace larcv {
     _configured = false;
   }
 
-  ImageClusterBase* ImageClusterManager::GetAlg(const AlgorithmID_t id) const
+  ClusterAlgoBase* ImageClusterManager::GetClusterAlg(const AlgorithmID_t id) const
   {
     if(id >= _alg_v.size()) throw larbys("Invalid algorithm ID requested...");
     return _alg_v[id];
   }
 
-  ImageClusterBase* ImageClusterManager::GetAlg(const std::string name) const
+  ClusterAlgoBase* ImageClusterManager::GetClusterAlg(const std::string name) const
   {
-    return GetAlg(GetAlgID(name));
+    return GetClusterAlg(GetAlgID(name));
   }
 
   AlgorithmID_t ImageClusterManager::GetAlgID(const std::string name) const
@@ -97,16 +96,12 @@ namespace larcv {
       }
       
       _alg_m[name] = _alg_v.size();
-      _alg_v.push_back(ImageClusterFactory::get().create(type,name));
-      _var_v.push_back(ImageClusterFactory::get().vars(type));
-      _var_v.back()->Reset();
+      _alg_v.push_back(ClusterAlgoFactory::get().create(type,name));
     }
 
     for(auto& ptr : _alg_v) {
       ptr->Profile(_profile);
       ptr->set_verbosity(this->logger().level());
-      ptr->_alg_m = &(this->_alg_m);
-      ptr->_var_v = &(this->_var_v);
       ptr->Configure(main_cfg.get_pset(ptr->Name()));
     }
     _configured=true;
@@ -152,7 +147,7 @@ namespace larcv {
 
       if(alg_ptr == _alg_v.front()) {
 
-	ContourArray_t clusters;
+	Cluster2DArray_t clusters;
 	_meta_v.push_back(_orig_meta);
 	_clusters_v.emplace_back(alg_ptr->Process(clusters,img,_meta_v.back()));
 
@@ -182,7 +177,10 @@ namespace larcv {
     if(_show_image) {
       std::vector<std::string> window_name_v(_alg_v.size());
       for(size_t i=0; i<_alg_v.size(); ++i) window_name_v[i] = _alg_v[i]->Name();
-      _viewer.Display(img,_clusters_v,window_name_v);
+      //ContourArray_t contours_v;
+      //contours_v.reserve(_clusters_v.size());
+      //for(auto const& c : _clusters_v) contours_v.push_back(c._contour);
+      //_viewer.Display(img,contours_v,window_name_v);
     }
 
     LARCV_DEBUG((*this)) << "end" << std::endl;
@@ -195,14 +193,14 @@ namespace larcv {
     throw larbys("Execution of an algorithm not yet done!");
   }
   
-  const Contour_t& ImageClusterManager::Cluster(const ClusterID_t cluster_id, const AlgorithmID_t alg_id) const
+  const Cluster2D& ImageClusterManager::Cluster(const ClusterID_t cluster_id, const AlgorithmID_t alg_id) const
   {
     auto const& clusters = Clusters(alg_id);
     if(cluster_id >= clusters.size()) throw larbys("Invalid cluster ID requested");
     return clusters[cluster_id];
   }
   
-  const ContourArray_t& ImageClusterManager::Clusters(const AlgorithmID_t alg_id) const
+  const Cluster2DArray_t& ImageClusterManager::Clusters(const AlgorithmID_t alg_id) const
   {
     if(alg_id < _clusters_v.size()) return _clusters_v[alg_id];
     if(alg_id == kINVALID_ALGO_ID && _clusters_v.size()) return _clusters_v.back();
@@ -238,7 +236,7 @@ namespace larcv {
 
       auto const& c = clusters[id];
       
-      double inside = ::cv::pointPolygonTest(c,pt,false);
+      double inside = ::cv::pointPolygonTest(c._contour,pt,false);
       
       if(inside < 0) continue;
       
