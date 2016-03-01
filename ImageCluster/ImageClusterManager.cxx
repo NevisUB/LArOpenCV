@@ -5,6 +5,8 @@
 #include "ImageClusterManager.h"
 #include "Core/larbys.h"
 #include "ClusterAlgoFactory.h"
+#include "MatchAlgoFactory.h"
+#include "ReClusterAlgoFactory.h"
 #include "Utilities.h"
 namespace larcv {
 
@@ -46,7 +48,14 @@ namespace larcv {
 
   ClusterAlgoBase* ImageClusterManager::GetClusterAlg(const std::string name) const
   {
-    return GetClusterAlg(GetAlgID(name));
+    return GetClusterAlg(GetClusterAlgID(name));
+  }
+
+  AlgorithmID_t ImageClusterManager::GetClusterAlgID(const std::string name) const
+  {
+    auto iter = _cluster_alg_m.find(name);
+    if(iter == _cluster_alg_m.end()) return kINVALID_ALGO_ID;
+    return (*iter).second;
   }
 
   MatchAlgoBase* ImageClusterManager::GetMatchAlg(const AlgorithmID_t id) const
@@ -57,13 +66,13 @@ namespace larcv {
 
   MatchAlgoBase* ImageClusterManager::GetMatchAlg(const std::string name) const
   {
-    return GetMatchAlg(GetAlgID(name));
+    return GetMatchAlg(GetMatchAlgID(name));
   }
 
-  AlgorithmID_t ImageClusterManager::GetAlgID(const std::string name) const
+  AlgorithmID_t ImageClusterManager::GetMatchAlgID(const std::string name) const
   {
-    auto iter = _cluster_alg_m.find(name);
-    if(iter == _cluster_alg_m.end()) return kINVALID_ALGO_ID;
+    auto iter = _match_alg_m.find(name);
+    if(iter == _match_alg_m.end()) return kINVALID_ALGO_ID;
     return (*iter).second;
   }
 
@@ -75,13 +84,13 @@ namespace larcv {
 
   ReClusterAlgoBase* ImageClusterManager::GetReClusterAlg(const std::string name) const
   {
-    return GetReClusterAlg(GetAlgID(name));
+    return GetReClusterAlg(GetReClusterAlgID(name));
   }
-
-  AlgorithmID_t ImageClusterManager::GetAlgID(const std::string name) const
+  
+  AlgorithmID_t ImageClusterManager::GetReClusterAlgID(const std::string name) const
   {
-    auto iter = _cluster_alg_m.find(name);
-    if(iter == _cluster_alg_m.end()) return kINVALID_ALGO_ID;
+    auto iter = _recluster_alg_m.find(name);
+    if(iter == _recluster_alg_m.end()) return kINVALID_ALGO_ID;
     return (*iter).second;
   }
 
@@ -136,9 +145,9 @@ namespace larcv {
 
     _cluster_alg_v.clear();
     _cluster_alg_m.clear();
-    for(size_t i=0; i<instance_type_v.size(); ++i) {
-      auto const& name = instance_name_v[i];
-      auto const& type = instance_type_v[i];
+    for(size_t i=0; i<cluster_instance_type_v.size(); ++i) {
+      auto const& name = cluster_instance_name_v[i];
+      auto const& type = cluster_instance_type_v[i];
       if(_cluster_alg_m.find(name) != _cluster_alg_m.end()) {
 	LARCV_CRITICAL((*this)) << "Duplicate algorithm name found!" << std::endl;
 	throw larbys("Duplicate algorithm name found!");
@@ -156,9 +165,9 @@ namespace larcv {
 
     _match_alg_v.clear();
     _match_alg_m.clear();
-    for(size_t i=0; i<instance_type_v.size(); ++i) {
-      auto const& name = instance_name_v[i];
-      auto const& type = instance_type_v[i];
+    for(size_t i=0; i<match_instance_type_v.size(); ++i) {
+      auto const& name = match_instance_name_v[i];
+      auto const& type = match_instance_type_v[i];
       if(_match_alg_m.find(name) != _match_alg_m.end()) {
 	LARCV_CRITICAL((*this)) << "Duplicate algorithm name found!" << std::endl;
 	throw larbys("Duplicate algorithm name found!");
@@ -176,9 +185,9 @@ namespace larcv {
 
     _recluster_alg_v.clear();
     _recluster_alg_m.clear();
-    for(size_t i=0; i<instance_type_v.size(); ++i) {
-      auto const& name = instance_name_v[i];
-      auto const& type = instance_type_v[i];
+    for(size_t i=0; i<recluster_instance_type_v.size(); ++i) {
+      auto const& name = recluster_instance_name_v[i];
+      auto const& type = recluster_instance_type_v[i];
       if(_recluster_alg_m.find(name) != _recluster_alg_m.end()) {
 	LARCV_CRITICAL((*this)) << "Duplicate algorithm name found!" << std::endl;
 	throw larbys("Duplicate algorithm name found!");
