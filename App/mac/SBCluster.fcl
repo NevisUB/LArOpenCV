@@ -24,17 +24,16 @@ ImageClusterManager: {
   Verbosity: 1
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
-  # ClusterAlgoType: [SBCluster,PCASegmentation]
-  # ClusterAlgoName: [sbc,pcas]
 
-  ClusterAlgoType: [SBCluster,SatelliteMerge]
-  ClusterAlgoName: [sbc,satellitemerge]
+  AlgoType: [SBCluster,PCAOverall,PiZeroFilter]
+  AlgoName: [sbc,pcao,pizerofilter]
 
   MatchAlgoType: []
   MatchAlgoName: []
 
   ReClusterAlgoType: []
   ReClusterAlgoName: []
+
 
  ImageClusterViewer: {
    Verbosity: 0
@@ -80,6 +79,18 @@ ImageClusterManager: {
     MinSatDistance: 50
     MinShowerDistance: 25
     ContourDensity:50 # unused
+  }
+
+  pcao: {
+
+    NMinInsideHits: 3
+
+  }
+
+  pizerofilter: {
+
+    NHitsCut: 3
+
   }
 
 
