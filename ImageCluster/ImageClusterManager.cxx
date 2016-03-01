@@ -32,7 +32,9 @@ namespace larcv {
 
   void ImageClusterManager::Finalize(TFile* file)
   {
-    for(auto& alg : _cluster_alg_v) alg->Finalize(file);
+    for(auto& alg : _cluster_alg_v   ) alg->Finalize(file);
+    for(auto& alg : _match_alg_v     ) alg->Finalize(file);
+    for(auto& alg : _recluster_alg_v ) alg->Finalize(file);
     _configured = false;
   }
 
@@ -65,6 +67,24 @@ namespace larcv {
     return (*iter).second;
   }
 
+  ReClusterAlgoBase* ImageClusterManager::GetReClusterAlg(const AlgorithmID_t id) const
+  {
+    if(id >= _recluster_alg_v.size()) throw larbys("Invalid algorithm ID requested...");
+    return _recluster_alg_v[id];
+  }
+
+  ReClusterAlgoBase* ImageClusterManager::GetReClusterAlg(const std::string name) const
+  {
+    return GetReClusterAlg(GetAlgID(name));
+  }
+
+  AlgorithmID_t ImageClusterManager::GetAlgID(const std::string name) const
+  {
+    auto iter = _cluster_alg_m.find(name);
+    if(iter == _cluster_alg_m.end()) return kINVALID_ALGO_ID;
+    return (*iter).second;
+  }
+
   /*
   AlgorithmID_t ImageClusterManager::AddAlg(ImageClusterBase* alg)
   {
@@ -87,12 +107,30 @@ namespace larcv {
     if(_show_image)
       _viewer.Configure(main_cfg.get_pset(_viewer.Name()));
     
-    std::vector<std::string> instance_type_v = main_cfg.get<std::vector<std::string> >("AlgoType");
-    std::vector<std::string> instance_name_v = main_cfg.get<std::vector<std::string> >("AlgoName");
+    std::vector<std::string> cluster_instance_type_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoType");
+    std::vector<std::string> cluster_instance_name_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoName");
 
-    if(instance_type_v.size() != instance_name_v.size()) {
-      LARCV_CRITICAL((*this)) << "AlgoType and AlgoName config parameters have different length! "
-			      << "(" << instance_type_v.size() << " vs. " << instance_name_v.size() << ")" << std::endl;
+    if(cluster_instance_type_v.size() != cluster_instance_name_v.size()) {
+      LARCV_CRITICAL((*this)) << "Clustering: AlgoType and AlgoName config parameters have different length! "
+			      << "(" << cluster_instance_type_v.size() << " vs. " << cluster_instance_name_v.size() << ")" << std::endl;
+      throw larbys();
+    }
+
+    std::vector<std::string> match_instance_type_v = main_cfg.get<std::vector<std::string> >("MatchAlgoType");
+    std::vector<std::string> match_instance_name_v = main_cfg.get<std::vector<std::string> >("MatchAlgoName");
+
+    if(match_instance_type_v.size() != match_instance_name_v.size()) {
+      LARCV_CRITICAL((*this)) << "Matching: AlgoType and AlgoName config parameters have different length! "
+			      << "(" << match_instance_type_v.size() << " vs. " << match_instance_name_v.size() << ")" << std::endl;
+      throw larbys();
+    }
+
+    std::vector<std::string> recluster_instance_type_v = main_cfg.get<std::vector<std::string> >("ReClusterAlgoType");
+    std::vector<std::string> recluster_instance_name_v = main_cfg.get<std::vector<std::string> >("ReClusterAlgoName");
+
+    if(recluster_instance_type_v.size() != recluster_instance_name_v.size()) {
+      LARCV_CRITICAL((*this)) << "Re-Clustering: AlgoType and AlgoName config parameters have different length! "
+			      << "(" << recluster_instance_type_v.size() << " vs. " << recluster_instance_name_v.size() << ")" << std::endl;
       throw larbys();
     }
 
@@ -115,6 +153,48 @@ namespace larcv {
       ptr->set_verbosity(this->logger().level());
       ptr->Configure(main_cfg.get_pset(ptr->Name()));
     }
+
+    _match_alg_v.clear();
+    _match_alg_m.clear();
+    for(size_t i=0; i<instance_type_v.size(); ++i) {
+      auto const& name = instance_name_v[i];
+      auto const& type = instance_type_v[i];
+      if(_match_alg_m.find(name) != _match_alg_m.end()) {
+	LARCV_CRITICAL((*this)) << "Duplicate algorithm name found!" << std::endl;
+	throw larbys("Duplicate algorithm name found!");
+      }
+      
+      _match_alg_m[name] = _match_alg_v.size();
+      _match_alg_v.push_back(MatchAlgoFactory::get().create(type,name));
+    }
+
+    for(auto& ptr : _match_alg_v) {
+      ptr->Profile(_profile);
+      ptr->set_verbosity(this->logger().level());
+      ptr->Configure(main_cfg.get_pset(ptr->Name()));
+    }
+
+    _recluster_alg_v.clear();
+    _recluster_alg_m.clear();
+    for(size_t i=0; i<instance_type_v.size(); ++i) {
+      auto const& name = instance_name_v[i];
+      auto const& type = instance_type_v[i];
+      if(_recluster_alg_m.find(name) != _recluster_alg_m.end()) {
+	LARCV_CRITICAL((*this)) << "Duplicate algorithm name found!" << std::endl;
+	throw larbys("Duplicate algorithm name found!");
+      }
+      
+      _recluster_alg_m[name] = _recluster_alg_v.size();
+      _recluster_alg_v.push_back(ReClusterAlgoFactory::get().create(type,name));
+    }
+
+    for(auto& ptr : _recluster_alg_v) {
+      ptr->Profile(_profile);
+      ptr->set_verbosity(this->logger().level());
+      ptr->Configure(main_cfg.get_pset(ptr->Name()));
+    }
+
+    
     _configured=true;
     LARCV_DEBUG((*this)) << "end" << std::endl;
   }
