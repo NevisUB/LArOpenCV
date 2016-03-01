@@ -4,7 +4,7 @@
 #define __SBCLUSTER_H__
 
 #include "ImageClusterBase.h"
-
+#include "SBClusterVars.h"
 namespace larcv {
  
   class SBCluster : public larcv::ImageClusterBase{
@@ -45,6 +45,7 @@ namespace larcv {
     float _thresh_maxval;
     
   };
+
   /**
      \class larcv::SBClusterFactory
      \brief A concrete factory class for larcv::SBCluster
@@ -57,6 +58,8 @@ namespace larcv {
     ~SBClusterFactory() {}
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new SBCluster(instance_name); }
+    /// parameter creator
+    AlgoVarsBase* vars() { return new SBClusterVars; }
   };
   /// Global larcv::SBClusterFactory to register ImageClusterFactory
   static SBClusterFactory __global_SBClusterFactory__;

@@ -15,6 +15,7 @@
 #define __TRACKSHOWER_H__
 
 #include "ImageClusterBase.h"
+#include "TrackShowerVars.h"
 #include "TTree.h"
 #include "ClusterParams.h"
 
@@ -78,6 +79,8 @@ namespace larcv {
     ~TrackShowerFactory() {}
     /// creation method
     ImageClusterBase* create(const std::string instance_name) { return new TrackShower(instance_name); }
+    /// parameter construction
+    AlgoVarsBase* vars() { return new TrackShowerVars; }
   };
   /// Global larcv::TrackShowerFactory to register ImageClusterFactory
   static TrackShowerFactory __global_TrackShowerFactory__;

@@ -18,14 +18,15 @@
 #include <map>
 #include "Core/laropencv_base.h"
 #include "Core/larbys.h"
+
 namespace larcv {
 
   class ImageClusterBase;
-
+  class AlgoVarsBase;
   /**
      \class ImageClusterFactoryBase
      \brief Abstract base class for factory (to be implemented per algorithm)
-   */
+  */
   class ImageClusterFactoryBase {
   public:
     /// Default ctor
@@ -34,6 +35,8 @@ namespace larcv {
     virtual ~ImageClusterFactoryBase(){}
     /// Abstract constructor method
     virtual ImageClusterBase* create(const std::string instance_name) = 0;
+    /// Abstract parameter container constructor method
+    virtual AlgoVarsBase* vars() = 0;
   };
 
   /**
@@ -66,6 +69,15 @@ namespace larcv {
 	return nullptr;
       }
       return (*iter).second->create(instance_name);
+    }
+    /// Factory creation method for an algorithm parameter container
+    AlgoVarsBase* vars(const std::string name) {
+      auto iter = _factory_map.find(name);
+      if(iter == _factory_map.end() || !((*iter).second)) {
+	LARCV_ERROR((*this)) << "Found no registered class " << name << std::endl;
+	return nullptr;
+      }
+      return (*iter).second->vars();
     }
   private:
     /// Static factory container

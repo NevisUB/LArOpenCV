@@ -7,7 +7,7 @@
 #include "TTree.h"
 #include "ClusterParams.h"
 #include "PCABox.h"
-
+#include "PCASegmentationVars.h"
 namespace larcv {
   /**
      \class PCASegmentation
@@ -112,6 +112,8 @@ namespace larcv {
     ~PCASegmentationFactory() {}
     /// creation method
     ImageClusterBase* create(const std::string instance_name) { return new PCASegmentation(instance_name); }
+    /// parameter container creator
+    AlgoVarsBase* vars() { return new PCASegmentationVars; }
   };
   /// Global larcv::PCASegmentationFactory to register ImageClusterFactory
   static PCASegmentationFactory __global_PCASegmentationFactory__;

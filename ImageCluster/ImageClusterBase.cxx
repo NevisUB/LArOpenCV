@@ -11,6 +11,8 @@ namespace larcv {
     , _proc_time(0.)
     , _proc_count(0)
     , _profile(true)
+    , _alg_m(nullptr)
+    , _var_v(nullptr)
   {LARCV_DEBUG((*this)) << "Constructed" << std::endl;}
 
   void ImageClusterBase::Configure(const ::fcllite::PSet& cfg) {
@@ -36,6 +38,19 @@ namespace larcv {
     return result;
   }
 
+  larcv::AlgorithmID_t ImageClusterBase::AlgoID(const std::string algo_name)
+  {
+    if(!_alg_m)
+
+      throw larbys("FMWK not configured to correlated algorithm name and iD!");
+    
+    auto iter = _alg_m->find(algo_name);
+    if(iter == _alg_m->end()) {
+      LARCV_ERROR((*this)) << "Algorithm name " << algo_name << " not found!" << std::endl;
+      throw larbys("Cannot fetch AlgorithmID_t!");
+    }
+    return (*iter).second;
+  }
 }
 
 #endif

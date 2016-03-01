@@ -16,6 +16,7 @@
 
 #include "ImageClusterBase.h"
 #include "ImageClusterViewer.h"
+#include "TClusterVars.h"
 
 namespace larcv {
   /**
@@ -69,6 +70,8 @@ namespace larcv {
     TClusterFactory() { ImageClusterFactory::get().add_factory("TCluster",this); }
     ~TClusterFactory() {}
     ImageClusterBase* create(const std::string instance_name) { return new TCluster(instance_name); }
+    /// parameter creator
+    AlgoVarsBase* vars() { return new TClusterVars; }
   };
 
   static TClusterFactory __global_TClusterFactory__;
