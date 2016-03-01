@@ -26,7 +26,7 @@ namespace larcv {
     LARCV_DEBUG((*this)) << "start" << std::endl;
     _configured = false;
     _cluster_alg_v.clear();
-    _clusters_v.clear();
+    _clusters_v_v.clear();
     _process_count=0;
     _process_time=0;
     LARCV_DEBUG((*this)) << "end" << std::endl;
@@ -221,56 +221,87 @@ namespace larcv {
     
   }
 
-  void ImageClusterManager::Process(const ::cv::Mat& img, const ImageMeta& meta)
+  void ImageClusterManager::Add(const ::cv::Mat& img, const ImageMeta& meta)
+  {
+    _raw_img_v.push_back(img);
+    _raw_meta_v.push_back(meta);
+  }
+  
+  void ImageClusterManager::Process()
   {
     LARCV_DEBUG((*this)) << "start" << std::endl;
     
     if(!_configured) throw larbys("Must Configure() before Process()!");
-
-    if(meta.num_pixel_row()!=img.rows)
-      throw larbys("Provided metadata has incorrect # horizontal pixels w.r.t. image!");
-
-    if(meta.num_pixel_column()!=img.cols)
-      throw larbys("Provided metadata has incorrect # vertical pixels w.r.t. image!");
-
-    _watch.Start();
     
-    _orig_meta = meta;
-    _meta_v.clear();
-    _clusters_v.clear();
-    _clusters_v.reserve(_cluster_alg_v.size());
-    _meta_v.reserve(_cluster_alg_v.size());
+    _watch.Start();
 
-    //
-    // First-pass clustering
-    //
+    
+    _meta_v_v.clear();
+    _meta_v_v.resize(_cluster_alg_v.size());
+    
+    _clusters_v_v.clear();
+    _clusters_v_v.resize(_cluster_alg_v.size());
+    
+    for(size_t img_index=0; img_index<_raw_img_v.size(); ++img_index) {
 
-    for(auto& alg_ptr : _cluster_alg_v) {
+      auto const& meta = _raw_meta_v[img_index];
+      auto const& img  = _raw_img_v[img_index];
+
+      if(meta.num_pixel_row()!=img.rows)
+	throw larbys("Provided metadata has incorrect # horizontal pixels w.r.t. image!");
       
-      if(!alg_ptr) throw larbys("Invalid algorithm pointer!");
+      if(meta.num_pixel_column()!=img.cols)
+	throw larbys("Provided metadata has incorrect # vertical pixels w.r.t. image!");
 
-      if(alg_ptr == _cluster_alg_v.front()) {
+      //
+      // First-pass clustering
+      //
+      
+      for(size_t alg_index=0; alg_index<_cluster_alg_v.size(); ++alg_index) {
 
-	Cluster2DArray_t clusters;
-	_meta_v.push_back(_orig_meta);
-	_clusters_v.emplace_back(alg_ptr->Process(clusters,img,_meta_v.back()));
+	auto& alg_ptr    = _cluster_alg_v[alg_index];
+	auto& meta_v     = _meta_v_v[alg_index];
+	auto& clusters_v = _clusters_v_v[alg_index];
+	
+	if(!alg_ptr) throw larbys("Invalid algorithm pointer!");
+	
+	if(alg_ptr == _cluster_alg_v.front()) {
+	  
+	  Cluster2DArray_t clusters;
+	  meta_v.push_back(meta);
+	  clusters_v.emplace_back(alg_ptr->Process(clusters,img,meta_v.back()));
+	  
+	}else{
+	  
+	  auto const& prev_clusters = _clusters_v_v[alg_index-1][img_index];
+	  auto prev_meta = _meta_v_v[alg_index-1][img_index];
+	  clusters_v.emplace_back(alg_ptr->Process(prev_clusters,img,prev_meta));
+	  meta_v.push_back(prev_meta);
+	}
 
-      }else{
+	// Assign cluster IDs
+	ClusterID_t offset=0;
+	for(size_t clusters_index=0; (clusters_index+1)<clusters_v.size(); ++clusters_index)
 
-	auto const& clusters = _clusters_v.back();
-	_meta_v.push_back(_orig_meta);
-	_clusters_v.emplace_back(alg_ptr->Process(clusters,img,_meta_v.back()));
+	  offset += clusters_v[clusters_index].size();
 
-      }
-      // Sanity check on meta data
-      auto const& result_meta = _meta_v.back();
-      if(result_meta.height() > _orig_meta.height()) {
-	std::cerr << "Return meta data by " << alg_ptr->Name() << " exceeds original image height!" << std::endl;
-	throw larbys();
-      }
-      if(result_meta.width() > _orig_meta.width()) {
-	std::cerr << "Return meta data by " << alg_ptr->Name() << " exceeds original image width!" << std::endl;
-	throw larbys();
+	for(size_t cluster_index=0; cluster_index < clusters_v.back().size(); ++cluster_index) {
+	  
+	  auto& c = clusters_v.back()[cluster_index];
+	  c._id = offset + cluster_index;
+	}
+	
+	// Sanity check on meta data
+	auto const& result_meta = meta_v.back();
+	if(result_meta.height() > meta.height()) {
+	  std::cerr << "Return meta data by " << alg_ptr->Name() << " exceeds original image height!" << std::endl;
+	  throw larbys();
+	}
+	if(result_meta.width() > meta.width()) {
+	  std::cerr << "Return meta data by " << alg_ptr->Name() << " exceeds original image width!" << std::endl;
+	  throw larbys();
+	}
+	
       }
 
     }
@@ -290,25 +321,49 @@ namespace larcv {
     LARCV_DEBUG((*this)) << "end" << std::endl;
   }
   
-  const ImageMeta& ImageClusterManager::MetaData(const AlgorithmID_t alg_id) const
+  const ImageMeta& ImageClusterManager::MetaData(const ImageID_t img_id, const AlgorithmID_t alg_id) const
   {
-    if(alg_id < _meta_v.size()) return _meta_v[alg_id];
-    if(alg_id >= _meta_v.size()) throw larbys("Invalid algorithm ID requested");
-    throw larbys("Execution of an algorithm not yet done!");
+    if(alg_id >= _meta_v_v.size()) throw larbys("Invalid algorithm ID requested");
+    if(img_id >= _meta_v_v[alg_id].size()) throw larbys("Invalid image ID requested");
+
+    return _meta_v_v[alg_id][img_id];
   }
   
   const Cluster2D& ImageClusterManager::Cluster(const ClusterID_t cluster_id, const AlgorithmID_t alg_id) const
   {
-    auto const& clusters = Clusters(alg_id);
-    if(cluster_id >= clusters.size()) throw larbys("Invalid cluster ID requested");
-    return clusters[cluster_id];
+    AlgorithmID_t target_alg_id = (alg_id != kINVALID_ALGO_ID ? alg_id : _clusters_v_v.size()-1);
+
+    if(target_alg_id >= _meta_v_v.size()) throw larbys("Invalid algorithm ID requested");
+
+    auto const& clusters_v = _clusters_v_v[target_alg_id];
+
+    ClusterID_t current_id = 0;
+    for(size_t cluster_index=0; cluster_index < clusters_v.size(); ++cluster_index) {
+
+      auto const& clusters = clusters_v[cluster_index];
+      
+      if(current_id + clusters.size() < cluster_id) {
+	current_id += clusters.size();
+	continue;
+      }
+
+      return clusters[cluster_id - current_id];
+    }
+
+    throw larbys("Invalid cluster ID requested!");
   }
   
-  const Cluster2DArray_t& ImageClusterManager::Clusters(const AlgorithmID_t alg_id) const
+  const Cluster2DArray_t& ImageClusterManager::Clusters(const ImageID_t img_id,const AlgorithmID_t alg_id) const
   {
-    if(alg_id < _clusters_v.size()) return _clusters_v[alg_id];
-    if(alg_id == kINVALID_ALGO_ID && _clusters_v.size()) return _clusters_v.back();
-    throw larbys("Execution of an algorithm not yet done!");
+    AlgorithmID_t target_alg_id = (alg_id != kINVALID_ALGO_ID ? alg_id : _clusters_v_v.size()-1);
+        
+    if(target_alg_id >= _meta_v_v.size()) throw larbys("Invalid algorithm ID requested");
+
+    auto const& clusters_v = _clusters_v_v[target_alg_id];
+
+    if(img_id >= clusters_v.size()) throw larbys("Invalid image ID requested");
+    
+    return clusters_v[img_id];
   }
   
   ClusterID_t ImageClusterManager::ClusterID(const double x, const double y, AlgorithmID_t alg_id) const
@@ -316,37 +371,53 @@ namespace larcv {
 
     ClusterID_t result = kINVALID_CLUSTER_ID;
 
-    if(_clusters_v.empty()) return result;
+    if(_clusters_v_v.empty()) return result;
 
-    if(alg_id == kINVALID_ALGO_ID) alg_id = _clusters_v.size() - 1;
+    if(alg_id == kINVALID_ALGO_ID) alg_id = _clusters_v_v.size() - 1;
 
-    auto const& clusters = _clusters_v[alg_id];
+    auto const& clusters_v = _clusters_v_v[alg_id];
     
-    auto const& meta = _meta_v[alg_id];
-    
-    auto const& origin = meta.origin();
-    
-    if(x < origin.x || x > (origin.x + meta.width())) return result;
-    
-    if(y < origin.y || x > (origin.y + meta.height())) return result;
-    
-    //std::cout<<"Inspecting a point "<<x<<" : "<<y<<" ... ";
-    
-    auto pt = ::cv::Point2d((y-origin.y)/meta.pixel_height(), (x-origin.x)/meta.pixel_width()); 
+    auto const& meta_v = _meta_v_v[alg_id];
 
-    //std::cout<<pt.x<<" : "<<pt.y<<std::endl;
+    ClusterID_t offset=0;
 
-    for(size_t id=0; id<clusters.size(); ++id) {
+    for(size_t img_index=0; img_index < clusters_v.size(); ++img_index) {
 
-      auto const& c = clusters[id];
+      auto const& clusters = clusters_v[img_index];
+      auto const& meta = meta_v[img_index];
+    
+      auto const& origin = meta.origin();
+    
+      if(x < origin.x || x > (origin.x + meta.width())) {
+	offset += clusters.size();
+	continue;
+      }
       
-      double inside = ::cv::pointPolygonTest(c._contour,pt,false);
+      if(y < origin.y || x > (origin.y + meta.height())) {
+	offset += clusters.size();
+	continue;
+      }
+    
+      //std::cout<<"Inspecting a point "<<x<<" : "<<y<<" ... ";
+    
+      auto pt = ::cv::Point2d((y-origin.y)/meta.pixel_height(), (x-origin.x)/meta.pixel_width()); 
+
+      //std::cout<<pt.x<<" : "<<pt.y<<std::endl;
       
-      if(inside < 0) continue;
+      for(size_t id=0; id<clusters.size(); ++id) {
+	
+	auto const& c = clusters[id];
       
-      result = id;
+	double inside = ::cv::pointPolygonTest(c._contour,pt,false);
       
-      break;
+	if(inside < 0) continue;
+      
+	result = id + offset;
+	
+	break;
+      }
+
+      if(result != kINVALID_CLUSTER_ID) break;
     }
     
     return result;
