@@ -17,6 +17,8 @@
 #include <iostream>
 #include "ImageClusterBase.h"
 #include "ImageClusterViewer.h"
+#include "AlgoVarsBase.h"
+
 namespace larcv {
   /**
      \class ImageClusterManager
@@ -78,6 +80,8 @@ namespace larcv {
     bool _configured;
     /// Array of algorithms to be executed
     std::vector<larcv::ImageClusterBase*> _alg_v;
+    /// Array of algorithms' parameter
+    std::vector<larcv::AlgoVarsBase*> _var_v;
     /// Map of algorithm instance name to ID
     std::map<std::string,larcv::AlgorithmID_t> _alg_m;
     /// Array of resulting clusters per algorithms

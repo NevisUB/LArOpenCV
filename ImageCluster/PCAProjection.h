@@ -17,7 +17,7 @@
 #include "ImageClusterBase.h"
 #include "TTree.h"
 #include <array>
-
+#include "PCAProjectionVars.h"
 
 namespace larcv {
   /**
@@ -105,6 +105,8 @@ namespace larcv {
     ~PCAProjectionFactory() {}
     /// creation method
     ImageClusterBase* create(const std::string instance_name) { return new PCAProjection(instance_name); }
+    /// variable container method
+    AlgoVarsBase* vars() { return new PCAProjectionVars; }
   };
   /// Global larcv::PCAProjectionFactory to register ImageClusterFactory
   static PCAProjectionFactory __global_PCAProjectionFactory__;

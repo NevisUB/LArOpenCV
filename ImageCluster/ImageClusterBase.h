@@ -24,6 +24,9 @@
 #include "ImageClusterFactory.h"
 
 namespace larcv {
+
+  class ImageClusterManager;
+  
   /**
      \class ImageClusterBase
      An abstract base class for ImageCluster algorithms. Its role is to construct a set of "cluster" given an image. \n
@@ -43,6 +46,8 @@ namespace larcv {
      of 1) and should be updated to interpret the algorithm's return larcv::Contour_t if needed. \n \n
   */
   class ImageClusterBase : public laropencv_base{
+
+    friend class ImageClusterManager;
     
   public:
     
@@ -73,6 +78,7 @@ namespace larcv {
 
     /// Process count
     size_t ProcessCount() const { return _proc_count; }
+
     /// Process time
     double ProcessTime() const { return _proc_time; }
 
@@ -92,7 +98,30 @@ namespace larcv {
 					    const ::cv::Mat& img,
 					    larcv::ImageMeta& meta) = 0;
 
+    /// Function to fetch algorithm's ID 
+    larcv::AlgorithmID_t AlgoID(const std::string);
+
+    /// Function to fetch algorithm variable (const ref)
+    template <class T>
+    const T& AlgoVars(const larcv::AlgorithmID_t id)
+    {
+      if(!_var_v) throw larbys("FMWK is not yet configured yet!");
+      if(id>= _var_v->size()) throw larbys("Invalid algorithm ID provided for AlgoVars()");
+      return *((T*)(_var_v[id]));
+    }
+
+    /// Function to fetch this algorithm's variable (ref, modifiable)
+    template <class T>
+    T& AlgoVars()
+    {
+      if(!_var_v) throw larbys("FMWK is not yet configured yet!");
+      if(_id>= _var_v->size()) throw larbys("LOGIC ERROR: self ID not found in algorithm ID list...");
+      return *((T*)(_var_v[_id]));
+    }
+    
   private:
+
+    larcv::AlgorithmID_t _id; ///< unique algorithm identifier 
 
     std::string _name;   ///< name identifier, used to fetch configuration
 
@@ -103,6 +132,13 @@ namespace larcv {
     size_t _proc_count;  ///< algorithm execution counter (cumulative)
 
     bool _profile;       ///< measure process time if profile flag is on
+
+    /// Algorithms' name <=> ID conversion map
+    std::map<std::string,larcv::AlgorithmID_t> *_alg_m;
+    
+    /// Other algorithms' variable pointer
+    std::vector<larcv::AlgoVarsBase*> *_var_v;
+
   };
 
 }

@@ -24,6 +24,7 @@ namespace larcv {
     LARCV_DEBUG((*this)) << "start" << std::endl;
     _configured = false;
     _alg_v.clear();
+    _var_v.clear();
     _clusters_v.clear();
     _process_count=0;
     _process_time=0;
@@ -97,11 +98,15 @@ namespace larcv {
       
       _alg_m[name] = _alg_v.size();
       _alg_v.push_back(ImageClusterFactory::get().create(type,name));
+      _var_v.push_back(ImageClusterFactory::get().vars(type));
+      _var_v.back()->Reset();
     }
 
     for(auto& ptr : _alg_v) {
       ptr->Profile(_profile);
       ptr->set_verbosity(this->logger().level());
+      ptr->_alg_m = &(this->_alg_m);
+      ptr->_var_v = &(this->_var_v);
       ptr->Configure(main_cfg.get_pset(ptr->Name()));
     }
     _configured=true;

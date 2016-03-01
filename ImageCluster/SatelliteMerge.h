@@ -15,7 +15,7 @@
 #define __SATELLITEMERGE_H__
 
 #include "ImageClusterBase.h"
-
+#include "SatelliteMergeVars.h"
 namespace larcv {
   /**
      \class SatelliteMerge
@@ -71,6 +71,8 @@ namespace larcv {
     ~SatelliteMergeFactory() {}
     /// creation method
     ImageClusterBase* create(const std::string instance_name) { return new SatelliteMerge(instance_name); }
+    /// parameter construction
+    AlgoVarsBase* vars() { return new SatelliteMergeVars; }
   };
   /// Global larcv::SatelliteMergeFactory to register ImageClusterFactory
   static SatelliteMergeFactory __global_SatelliteMergeFactory__;
