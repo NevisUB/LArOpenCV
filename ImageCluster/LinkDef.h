@@ -33,17 +33,6 @@
 #pragma link C++ class larcv::PCASegmentation+;
 
 #pragma link C++ class larcv::PCAOverall+;
+#pragma link C++ class larcv::PiZeroFilter+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
-
-
-
-
-
-
-
-
-
-
-
-

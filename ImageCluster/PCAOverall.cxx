@@ -15,30 +15,21 @@ namespace larcv{
 					 const ::cv::Mat& img,
 					 larcv::ImageMeta& meta)
   {
+    Cluster2DArray_t out_clusters = clusters;
+    Contour_t all_locations;
+    ::cv::findNonZero(img, all_locations); // get the non zero points
 
-    Cluster2DArray_t out_clusters; out_clusters.resize(clusters.size());
-    
-    //for(auto& cluster : clusters) {
-    for(unsigned i = 0; i < clusters.size(); ++i) {
-
-      auto& cluster = clusters[i];
-      auto& contour = cluster._contour;
-
-      //make a copy into the ouptut
-      auto ocluster = clusters[i];
-      
-      Contour_t all_locations;
-      ::cv::findNonZero(img, all_locations); // get the non zero points
-
-      for(const auto& loc : all_locations) {
-	if ( ::cv::pointPolygonTest(contour,loc,false) < 0 )
+    for(const auto& loc: all_locations) {
+      for(auto& ocluster : out_clusters) {
+	if ( ::cv::pointPolygonTest(ocluster._contour,loc,false) < 0 )
 	  continue;
-	
 	ocluster._insideHits.emplace_back(loc.x, loc.y);
-	
       }
+    }
 
-      ocluster._numHits = cluster._insideHits.size();
+    for(auto& ocluster : out_clusters) {
+
+      ocluster._numHits = ocluster._insideHits.size();
 
       if (ocluster._numHits <= _nMinInsideHits) continue;
       

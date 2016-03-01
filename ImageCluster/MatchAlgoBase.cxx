@@ -26,7 +26,7 @@ namespace larcv {
   {
     if(!Profile()) return this->_Process_(clusters);
     _watch.Start();
-    auto result = this->_Process_(clusters)
+    auto result = this->_Process_(clusters);
     _proc_time += _watch.WallTime();
     ++_proc_count;
     return result;
