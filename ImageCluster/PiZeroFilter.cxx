@@ -36,23 +36,25 @@ namespace larcv{
 	  //eigenVecCenterArray.push_back(clust._centerPt);
 
 
-          for(auto& next_clust : clusters)
+/*          for(auto& next_clust : clusters)
           {
 	    int next_numHits = next_clust._numHits;
 	    
 	    if(next_numHits >= _nhits_cut)
 	    {
-
-	      Point2D sharedPoint = backprojectionpoint(clust._eigenVecFirst, clust._centerPt, next_clust._eigenVecFirst, next_clust._centerPt);
+*/
+//	      Point2D sharedPoint = backprojectionpoint(clust._eigenVecFirst, clust._centerPt, next_clust._eigenVecFirst, next_clust._centerPt);
 	      
-	      double distance1 = distance2D(sharedPoint, clust._startPt);
-              double distance2 = distance2D(sharedPoint, next_clust._startPt);
+//	      double distance1 = distance2D(sharedPoint, clust._startPt);
+//              double distance2 = distance2D(sharedPoint, next_clust._startPt);
 
 
-	      if(std::abs(distance1 - distance2) <= _back_startPt){OutputClusters.push_back(clust);}
+//	      if(std::abs(distance1 - distance2) <= _back_startPt){OutputClusters.push_back(clust);}
 
-	    }
-          }	
+	      OutputClusters.push_back(clust);
+
+//	    }
+//          }	
 	}
       }
  
