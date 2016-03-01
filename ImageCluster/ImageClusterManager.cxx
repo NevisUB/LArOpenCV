@@ -272,23 +272,26 @@ namespace larcv {
 	  clusters_v.emplace_back(alg_ptr->Process(clusters,img,meta_v.back()));
 	  
 	}else{
-	  
+
 	  auto const& prev_clusters = _clusters_v_v[alg_index-1][img_index];
 	  auto prev_meta = _meta_v_v[alg_index-1][img_index];
 	  clusters_v.emplace_back(alg_ptr->Process(prev_clusters,img,prev_meta));
 	  meta_v.push_back(prev_meta);
+	  
 	}
-
+	
 	// Assign cluster IDs
 	ClusterID_t offset=0;
-	for(size_t clusters_index=0; (clusters_index+1)<clusters_v.size(); ++clusters_index)
 
+	for(size_t clusters_index=0; (clusters_index+1)<clusters_v.size(); ++clusters_index)
+	  
 	  offset += clusters_v[clusters_index].size();
 
 	for(size_t cluster_index=0; cluster_index < clusters_v.back().size(); ++cluster_index) {
 	  
 	  auto& c = clusters_v.back()[cluster_index];
 	  c._id = offset + cluster_index;
+
 	}
 	
 	// Sanity check on meta data
@@ -324,8 +327,21 @@ namespace larcv {
   size_t ImageClusterManager::NumClusters(const AlgorithmID_t alg_id) const
   {
     AlgorithmID_t target_alg_id = (alg_id != kINVALID_ALGO_ID ? alg_id : _clusters_v_v.size()-1);
-    if(alg_id >= _clusters_v_v.size()) throw larbys("Invalid algorithm ID requested");
-    return (_clusters_v_v[target_alg_id].back().back().ID() + 1);
+    if(target_alg_id >= _clusters_v_v.size()) throw larbys("Invalid algorithm ID requested");
+
+    auto& clusters_v = _clusters_v_v[target_alg_id];
+
+    if(clusters_v.empty()) return 0; // No image is registered
+
+    for(size_t i=(clusters_v.size()-1); i>=0; --i) {
+
+      if(clusters_v[i].empty()) continue;
+
+      return clusters_v[i].back().ID() + 1;
+
+    }
+    
+    return 0;
   }
   
   const ImageMeta& ImageClusterManager::MetaData(const ImageID_t img_id, const AlgorithmID_t alg_id) const

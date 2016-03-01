@@ -74,8 +74,8 @@ namespace larlite {
     //_filler.Clear() ;
     for(size_t plane = 0; plane < _alg_mgr_v.size(); ++plane) {
 
-      auto& alg_mgr = _alg_mgr_v[plane];
-      auto const& img = _img_mgr.img_at(plane);
+      auto& alg_mgr    = _alg_mgr_v[plane];
+      auto const& img  = _img_mgr.img_at(plane);
       auto const& meta = _img_mgr.meta_at(plane);
       if(!meta.num_pixel_row() || !meta.num_pixel_column()) continue;
       

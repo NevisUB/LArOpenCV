@@ -15,13 +15,10 @@ namespace larcv{
 					 const ::cv::Mat& img,
 					 larcv::ImageMeta& meta)
   {
-    std::cout << "0\n";
     Cluster2DArray_t out_clusters = clusters;
-    std::cout << "a\n";
     Contour_t all_locations;
-    std::cout << "b\n";
     ::cv::findNonZero(img, all_locations); // get the non zero points
-    std::cout << "all_locations.size() " << all_locations.size() << "\n";
+
     for(const auto& loc: all_locations) {
       for(auto& ocluster : out_clusters) {
 	if ( ::cv::pointPolygonTest(ocluster._contour,loc,false) < 0 )
@@ -45,7 +42,6 @@ namespace larcv{
       ocluster._eigenVecSecond = e_vec_second;
 
     }
-    std::cout << "return...\n";
     return out_clusters;
   }
 

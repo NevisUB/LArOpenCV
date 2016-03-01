@@ -14,8 +14,8 @@ namespace larcv{
   }
 
   Cluster2DArray_t PiZeroFilter::_Process_(const larcv::Cluster2DArray_t& clusters,
-					const ::cv::Mat& img,
-					larcv::ImageMeta& meta)
+					   const ::cv::Mat& img,
+					   larcv::ImageMeta& meta)
   { 
 
     Cluster2DArray_t OutputClusters;
