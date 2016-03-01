@@ -82,6 +82,36 @@ namespace larcv {
     combined_avg_d_pca_ = combined_total_d_pca_ / ( (double) combined.size() );
 					     
   }
+
+  void PCAPath::CheckMinAreaRect(const ::cv::RotatedRect& rr) {
+
+    size_t far_from_center;
+    double d = 0.0;
+    for(size_t i=0;i<this->size();++i) {
+      auto& box = this->at(i);
+      
+      ::cv::Point2f bcenter( box->e_center_.x + box->parent_roi_.x, 
+			     box->e_center_.y + box->parent_roi_.y );
+
+      auto dd = dist(rr.center,bcenter);
+      if ( dd > d ) { d = dd; far_from_center = i; }
+    }
+    
+    //the fuck? PCA boxes get destructed BEFORE I try to access them in python?
+    //copy it into public var in PCAPath.... im stupid
+    far_from_center_ = this->at(far_from_center)->box_;
+    e_vec_far_       = this->at(far_from_center)->e_vec_;
+
+
+    //inside this box, get the closest point to the edge...
+    for( const auto& pt : this->at(far_from_center)->pts_ ) {
+
+      
+    }
+    
+  }
+
+
   
 }
 

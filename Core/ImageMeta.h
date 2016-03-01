@@ -90,7 +90,7 @@ namespace larcaffe {
     double _height;            ///< Vertical size of an image in double floating precision (in original coordinate unit size)
     size_t _width_npixel;      ///< # of pixels in horizontal axis
     size_t _height_npixel;     ///< # of pixels in vertical axis
-
+    
   };
 
 }

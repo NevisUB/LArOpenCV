@@ -24,11 +24,17 @@ ImageClusterManager: {
   Verbosity: 1
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
-  # AlgoType: [SBCluster,PCASegmentation]
-  # AlgoName: [sbc,pcas]
+  # ClusterAlgoType: [SBCluster,PCASegmentation]
+  # ClusterAlgoName: [sbc,pcas]
 
-   AlgoType: [SBCluster,SatelliteMerge]
-   AlgoName: [sbc,satellitemerge]
+  ClusterAlgoType: [SBCluster,SatelliteMerge]
+  ClusterAlgoName: [sbc,satellitemerge]
+
+  MatchAlgoType: []
+  MatchAlgoName: []
+
+  ReClusterAlgoType: []
+  ReClusterAlgoName: []
 
  ImageClusterViewer: {
    Verbosity: 0

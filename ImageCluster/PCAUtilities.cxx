@@ -9,7 +9,6 @@
 
 namespace larcv {
 
-
   double roi_d_to_line(const std::vector<double>& line,int lx,int ly) {
 
     //real time collision detection page 128
@@ -114,6 +113,37 @@ namespace larcv {
 
   }
 
+  void pca_line(const Contour_t& cluster_s,
+		Point2D& e_vec_first,
+		Point2D& e_vec_second,
+		Point2D& e_center) {
+    
+    ::cv::Mat ctor_pts(cluster_s.size(), 2, CV_64FC1);
+    
+    for (unsigned i = 0; i < ctor_pts.rows; ++i) {
+      ctor_pts.at<double>(i, 0) = cluster_s[i].x;
+      ctor_pts.at<double>(i, 1) = cluster_s[i].y;
+    }
+    
+    ::cv::PCA pca_ana(ctor_pts, ::cv::Mat(), CV_PCA_DATA_AS_ROW,0);
+
+    e_center = Point2D( pca_ana.mean.at<double>(0,0),
+			pca_ana.mean.at<double>(0,1) );
+    
+    e_vec_first     = Point2D( pca_ana.eigenvectors.at<double>(0,0),
+			       pca_ana.eigenvectors.at<double>(0,1) );
+    
+    e_vec_second    = Point2D( pca_ana.eigenvectors.at<double>(1,0),
+			       pca_ana.eigenvectors.at<double>(1,1) );
+    
+    // auto& ax = e_vec.x;
+    // auto& ay = e_vec.y;
+    // auto  sq = std::sqrt(ax*ax + ay*ay);
+    
+    // ax /= sq;
+    // ay /= sq;
+
+  }
 
   
   void pca_line(const Contour_t& cluster_s,
@@ -374,7 +404,7 @@ namespace larcv {
       
       path.Fill();
       path.CombinedPCA();
-      
+
       ++counter;
       
     }
@@ -386,7 +416,7 @@ namespace larcv {
     
     return paths.back();
   }
-  
+
 }
 
 #endif

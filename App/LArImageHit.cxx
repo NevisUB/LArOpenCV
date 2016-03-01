@@ -62,7 +62,7 @@ namespace larlite {
     size_t nclusters_total=0;
     for(size_t plane=0; plane<alg_mgr_v.size(); ++plane) {
       try{
-	nclusters_v[plane] = alg_mgr_v[plane].Clusters().size();
+	nclusters_v[plane] = alg_mgr_v[plane].NumClusters();
       }catch(const ::larcv::larbys& err) {
 	nclusters_v[plane] = 0;
       }

@@ -2,24 +2,25 @@
 #ifndef __PCASEGMENTATION_H__
 #define __PCASEGMENTATION_H__
 
+#include "ClusterAlgoBase.h"
+#include "ClusterAlgoFactory.h"
 
-#include "ImageClusterBase.h"
 #include "TTree.h"
 #include "ClusterParams.h"
 #include "PCABox.h"
-#include "PCASegmentationVars.h"
+
 namespace larcv {
   /**
      \class PCASegmentation
      @brief A class with segmented PCA
   */
-  class PCASegmentation : public larcv::ImageClusterBase {
+  class PCASegmentation : public larcv::ClusterAlgoBase {
     
   public:
     
     /// Default constructor
     PCASegmentation(const std::string name="PCASegmentation") :
-      ImageClusterBase(name),
+      ClusterAlgoBase(name),
       _outtree(nullptr)
     {}
     
@@ -40,9 +41,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::ContourArray_t _Process_(const larcv::ContourArray_t& clusters,
-				    const ::cv::Mat& img,
-				    larcv::ImageMeta& meta);
+    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+				      const ::cv::Mat& img,
+				      larcv::ImageMeta& meta);
     
     
   private:
@@ -77,6 +78,7 @@ namespace larcv {
 
     bool _allow_cross_empties;
     int _n_clustersize;
+    int _n_path_size;
     
     void clear_vars();
 
@@ -104,16 +106,14 @@ namespace larcv {
      \class larcv::PCASegmentationFactory
      \brief A concrete factory class for larcv::PCASegmentation
    */
-  class PCASegmentationFactory : public ImageClusterFactoryBase {
+  class PCASegmentationFactory : public ClusterAlgoFactoryBase {
   public:
     /// ctor
-    PCASegmentationFactory() { ImageClusterFactory::get().add_factory("PCASegmentation",this); }
+    PCASegmentationFactory() { ClusterAlgoFactory::get().add_factory("PCASegmentation",this); }
     /// dtor
     ~PCASegmentationFactory() {}
     /// creation method
-    ImageClusterBase* create(const std::string instance_name) { return new PCASegmentation(instance_name); }
-    /// parameter container creator
-    AlgoVarsBase* vars() { return new PCASegmentationVars; }
+    ClusterAlgoBase* create(const std::string instance_name) { return new PCASegmentation(instance_name); }
   };
   /// Global larcv::PCASegmentationFactory to register ImageClusterFactory
   static PCASegmentationFactory __global_PCASegmentationFactory__;

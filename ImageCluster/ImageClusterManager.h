@@ -15,9 +15,10 @@
 #define __IMAGECLUSTERMANAGER_H__
 
 #include <iostream>
-#include "ImageClusterBase.h"
+#include "ClusterAlgoBase.h"
+#include "MatchAlgoBase.h"
+#include "ReClusterAlgoBase.h"
 #include "ImageClusterViewer.h"
-#include "AlgoVarsBase.h"
 
 namespace larcv {
   /**
@@ -48,26 +49,40 @@ namespace larcv {
     const std::string& Name() const { return _name; }
     /// Clears attributes except for _name
     void Reset();
-    /// Algorithm adder: returns a unique identifier with which you can retrieve back
-    //AlgorithmID_t AddAlg(ImageClusterBase* alg); // deprecated: use configuration method + factory
     /// Algorithm getter via unique identifier (AlgorithmID_t)
-    ImageClusterBase* GetAlg(const AlgorithmID_t id) const;
+    ClusterAlgoBase* GetClusterAlg(const AlgorithmID_t id) const;
     /// Algorithm getter via unique identifier (string name)
-    ImageClusterBase* GetAlg(const std::string name) const;
-    /// Algorithm ID getter via unique identifier (string name)
-    AlgorithmID_t GetAlgID(const std::string name) const;
+    ClusterAlgoBase* GetClusterAlg(const std::string name) const;
+    /// Clustering algorithm ID getter via unique identifier (string name)
+    AlgorithmID_t GetClusterAlgID(const std::string name) const;
+    /// Matching agorithm getter via unique identifier (AlgorithmID_t)
+    MatchAlgoBase* GetMatchAlg(const AlgorithmID_t id) const;
+    /// Matching algorithm getter via unique identifier (string name)
+    MatchAlgoBase* GetMatchAlg(const std::string name) const;
+    /// Matching algorithm ID getter via unique identifier (string name)
+    AlgorithmID_t GetMatchAlgID(const std::string name) const;
+    /// Re-Clustering algorithm getter via unique identifier (AlgorithmID_t)
+    ReClusterAlgoBase* GetReClusterAlg(const AlgorithmID_t id) const;
+    /// Re-Clustering algorithm getter via unique identifier (string name)
+    ReClusterAlgoBase* GetReClusterAlg(const std::string name) const;
+    /// Re-Clustering algorithm ID getter via unique identifier (string name)
+    AlgorithmID_t GetReClusterAlgID(const std::string name) const;
     /// Read-in configuration object & enforce configurations to algorithms
     void Configure(const ::fcllite::PSet& main_cfg);
     /// Execute algorithms to construct clusters + corresponding meta data
-    void Process(const ::cv::Mat& img, const larcv::ImageMeta& meta);
+    void Add(const ::cv::Mat& img, const larcv::ImageMeta& meta);
+    /// Execute algorithms to construct clusters + corresponding meta data
+    void Process();
     /// Finalize after multiple Process call
     void Finalize(TFile* file=nullptr);
+    /// Accessor to total number of clusters
+    size_t NumClusters(const AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
     /// Accessor to a specific meta data constructed by an algorithm (via algorithm id)
-    const ImageMeta& MetaData(const AlgorithmID_t alg_id) const;
+    const ImageMeta& MetaData(const ImageID_t img_id, const AlgorithmID_t alg_id) const;
     /// Accessor to a specific cluster constructed by an algorithm (via algorithm + cluster id)
-    const Contour_t& Cluster(const ClusterID_t cluster_id, const AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
+    const Cluster2D& Cluster(const ClusterID_t cluster_id, const AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
     /// Accessor to a set of clusters constructed by an algorithm (via algorithm id)
-    const ContourArray_t& Clusters(const AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
+    const Cluster2DArray_t& Clusters(const ImageID_t img_id, const AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
     /// For a specified algorithm, find a cluster that contains coordinate (x,y). By default "last algorithm" is used.
     ClusterID_t ClusterID(const double x, const double y, AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
     /// Report process summary
@@ -78,18 +93,26 @@ namespace larcv {
     std::string _name;
     /// Boolean flag to enforce Configure method to be called before Process.
     bool _configured;
-    /// Array of algorithms to be executed
-    std::vector<larcv::ImageClusterBase*> _alg_v;
-    /// Array of algorithms' parameter
-    std::vector<larcv::AlgoVarsBase*> _var_v;
-    /// Map of algorithm instance name to ID
-    std::map<std::string,larcv::AlgorithmID_t> _alg_m;
-    /// Array of resulting clusters per algorithms
-    std::vector<larcv::ContourArray_t> _clusters_v;
-    /// Array of meta data: one per set of clusters (updated by each algorithm)
-    std::vector<larcv::ImageMeta> _meta_v;
-    /// Original meta data
-    larcv::ImageMeta _orig_meta;
+    /// Array of clustering algorithms to be executed
+    std::vector<larcv::ClusterAlgoBase*> _cluster_alg_v;
+    /// Array of matching algorithms to be executed
+    std::vector<larcv::MatchAlgoBase*> _match_alg_v;
+    /// Array of re-clustering algorithms to be executed
+    std::vector<larcv::ReClusterAlgoBase*> _recluster_alg_v;
+    /// Map of clustering algorithm instance name to ID
+    std::map<std::string,larcv::AlgorithmID_t> _cluster_alg_m;
+    /// Map of matching algorithm instance name to ID
+    std::map<std::string,larcv::AlgorithmID_t> _match_alg_m;
+    /// Map of reclustering algorithm instance name to ID
+    std::map<std::string,larcv::AlgorithmID_t> _recluster_alg_m;
+    /// Array of images
+    std::vector<cv::Mat> _raw_img_v;
+    /// Array of metadata
+    std::vector<larcv::ImageMeta> _raw_meta_v;
+    /// Array of resulting clusters per algorithm per image (outer index = algorithm, inner index = image)
+    std::vector<std::vector<larcv::Cluster2DArray_t> > _clusters_v_v;
+    /// Array of meta data: one per algorithm per image (outer index = algorithm, inner index = image)
+    std::vector<std::vector<larcv::ImageMeta> > _meta_v_v;
     /// Boolean flag to measure process time + report
     bool _profile;
     /// Stopwatch

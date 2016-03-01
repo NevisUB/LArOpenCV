@@ -13,23 +13,22 @@ namespace larcv{
     _density          = pset.get<double> ( "ContourDensity"    );
   }
   
-  ContourArray_t SatelliteMerge::_Process_(const larcv::ContourArray_t& clusters,
-					   const ::cv::Mat& img,
-					   larcv::ImageMeta& meta)
+  Cluster2DArray_t SatelliteMerge::_Process_(const larcv::Cluster2DArray_t& clusters,
+					     const ::cv::Mat& img,
+					     larcv::ImageMeta& meta)
   {
-    
 
     _secret_initial_sats.clear();
     std::vector<larcv::Contour_t> satellite_v; satellite_v.reserve(clusters.size());
     std::vector<larcv::Contour_t> shower_v;    shower_v.reserve(clusters.size());
     
-    for(auto & cv_contour : clusters) {
-      auto area   = ::cv::contourArea(cv_contour);
+    for(auto & cluster : clusters) {
+      auto area   = ::cv::contourArea(cluster._contour);
       
       if ( area > _area_separation )
-	shower_v.push_back(cv_contour);
+	shower_v.push_back(cluster._contour);
       else
-	satellite_v.push_back(cv_contour);
+	satellite_v.push_back(cluster._contour);
 
     }
 
@@ -147,7 +146,12 @@ namespace larcv{
     for(auto& usats : used_sats)
       { if ( usats.second ) continue; out_ctors.emplace_back( sats_v[ usats.first] ); }
 
-    return out_ctors;
+    Cluster2DArray_t result;
+    result.resize(out_ctors.size());
+
+    for(size_t i=0; i<out_ctors.size(); ++i) std::swap(result[i]._contour,out_ctors[i]);
+
+    return result;
   }
 
   void SatelliteMerge::_combine_two_contours(const larcv::Contour_t& c1, const larcv::Contour_t& c2, larcv::Contour_t& c3) {

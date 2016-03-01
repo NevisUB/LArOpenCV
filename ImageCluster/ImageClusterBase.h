@@ -21,7 +21,6 @@
 #include "Core/laropencv_base.h"
 #include "Utils/Watch.h"
 #include "ImageClusterTypes.h"
-#include "ImageClusterFactory.h"
 
 namespace larcv {
 
@@ -60,21 +59,11 @@ namespace larcv {
     /// Name accessor
     const std::string& Name() const { return _name; };
 
-    /// Configuration method
-    void Configure(const ::fcllite::PSet &pset);
-
     /// Profile flag setter
-    void Profile(bool doit=true) { _profile = doit; }
+    void Profile(bool doit) { _profile = doit; }
 
-    /**
-       @brief wrapper execution method: internally executes _Process_ function (see there for details)
-    */
-    larcv::ContourArray_t Process(const larcv::ContourArray_t& clusters,
-				  const ::cv::Mat& img,
-				  larcv::ImageMeta& meta);
-
-    /// Finalize after (possibly multiple) process call. Handed TFile may be used to store objects.
-    virtual void Finalize(TFile*) = 0;
+    /// Profile flag getter
+    bool Profile() const { return _profile; }
 
     /// Process count
     size_t ProcessCount() const { return _proc_count; }
@@ -82,48 +71,13 @@ namespace larcv {
     /// Process time
     double ProcessTime() const { return _proc_time; }
 
+    /// Configuration method
+    virtual void Configure(const ::fcllite::PSet &pset);
+
+    /// Finalize after (possibly multiple) process call. Handed TFile may be used to store objects.
+    virtual void Finalize(TFile*) = 0;
+
   protected:
-
-    /// Inherited class configuration method
-    virtual void _Configure_(const ::fcllite::PSet &pset) = 0;
-
-    /**
-       Execution method: given previous algorithm's output clusters, image, and metadata to be updated, produce clusters. \n
-       Each cluster is represented by larcv::Contour_t. The first argument is clusters created by a previous \n
-       algorithm's execution (ignore if not needed). The second argumnet is the image to be wokred on. The \n
-       third argument is meta data to interpret a returned clusters (i.e. update metadata if return clusters \n
-       do not use the same coordinate reference as provided image, else leave unchanged).
-     */
-    virtual larcv::ContourArray_t _Process_(const larcv::ContourArray_t& clusters,
-					    const ::cv::Mat& img,
-					    larcv::ImageMeta& meta) = 0;
-
-    /// Function to fetch algorithm's ID 
-    larcv::AlgorithmID_t AlgoID(const std::string);
-
-    /// Function to fetch algorithm variable (const ref)
-    template <class T>
-    const T& AlgoVars(const larcv::AlgorithmID_t id)
-    {
-      if(!_var_v) throw larbys("FMWK is not yet configured yet!");
-      if(id>= _var_v->size()) throw larbys("Invalid algorithm ID provided for AlgoVars()");
-      return *((T*)(_var_v[id]));
-    }
-
-    /// Function to fetch this algorithm's variable (ref, modifiable)
-    template <class T>
-    T& AlgoVars()
-    {
-      if(!_var_v) throw larbys("FMWK is not yet configured yet!");
-      if(_id>= _var_v->size()) throw larbys("LOGIC ERROR: self ID not found in algorithm ID list...");
-      return *((T*)(_var_v[_id]));
-    }
-    
-  private:
-
-    larcv::AlgorithmID_t _id; ///< unique algorithm identifier 
-
-    std::string _name;   ///< name identifier, used to fetch configuration
 
     larcv::Watch _watch; ///< algorithm profile stopwatch
 
@@ -131,13 +85,13 @@ namespace larcv {
 
     size_t _proc_count;  ///< algorithm execution counter (cumulative)
 
-    bool _profile;       ///< measure process time if profile flag is on
+  private:
 
-    /// Algorithms' name <=> ID conversion map
-    std::map<std::string,larcv::AlgorithmID_t> *_alg_m;
-    
-    /// Other algorithms' variable pointer
-    std::vector<larcv::AlgoVarsBase*> *_var_v;
+    larcv::AlgorithmID_t _id; ///< unique algorithm identifier 
+
+    std::string _name;   ///< name identifier, used to fetch configuration
+
+    bool _profile;       ///< measure process time if profile flag is on
 
   };
 

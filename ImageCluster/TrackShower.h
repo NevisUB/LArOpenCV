@@ -14,22 +14,21 @@
 #ifndef __TRACKSHOWER_H__
 #define __TRACKSHOWER_H__
 
-#include "ImageClusterBase.h"
-#include "TrackShowerVars.h"
+#include "ClusterAlgoBase.h"
 #include "TTree.h"
 #include "ClusterParams.h"
-
+#include "ClusterAlgoFactory.h"
 namespace larcv {
   /**
      \class TrackShower
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class TrackShower : public larcv::ImageClusterBase {
+  class TrackShower : public larcv::ClusterAlgoBase {
     
   public:
     
     /// Default constructor
-    TrackShower(const std::string name="TrackShower") : ImageClusterBase(name)
+    TrackShower(const std::string name="TrackShower") : ClusterAlgoBase(name)
     { _area_separation = 1850; _ratio_separation = 3; _track_shower_sat = 1; _contour_tree=nullptr; }
     
     /// Default destructor
@@ -46,9 +45,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::ContourArray_t _Process_(const larcv::ContourArray_t& clusters,
-				    const ::cv::Mat& img,
-				    larcv::ImageMeta& meta);
+    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+				      const ::cv::Mat& img,
+				      larcv::ImageMeta& meta);
 
   private:
 
@@ -71,18 +70,16 @@ namespace larcv {
      \class larcv::TrackShowerFactory
      \brief A concrete factory class for larcv::TrackShower
    */
-  class TrackShowerFactory : public ImageClusterFactoryBase {
+  class TrackShowerFactory : public ClusterAlgoFactoryBase {
   public:
     /// ctor
-    TrackShowerFactory() { ImageClusterFactory::get().add_factory("TrackShower",this); }
+    TrackShowerFactory() { ClusterAlgoFactory::get().add_factory("TrackShower",this); }
     /// dtor
     ~TrackShowerFactory() {}
     /// creation method
-    ImageClusterBase* create(const std::string instance_name) { return new TrackShower(instance_name); }
-    /// parameter construction
-    AlgoVarsBase* vars() { return new TrackShowerVars; }
+    ClusterAlgoBase* create(const std::string instance_name) { return new TrackShower(instance_name); }
   };
-  /// Global larcv::TrackShowerFactory to register ImageClusterFactory
+  /// Global larcv::TrackShowerFactory to register ClusterAlgoFactory
   static TrackShowerFactory __global_TrackShowerFactory__;
 }
 #endif

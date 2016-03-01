@@ -24,9 +24,16 @@ ImageClusterManager: {
 
   Verbosity: 1
   Profile: true
-  ShowImage: false 
-  AlgoType: [TCluster]
-  AlgoName: [TCluster]
+  ShowImage: false
+    
+  ClusterAlgoType: [TCluster]
+  ClusterAlgoName: [TCluster]
+
+  MatchAlgoType: [TCluster]
+  MatchAlgoName: [TCluster]
+
+  ReClusterAlgoType: [TCluster]
+  ReClusterAlgoName: [TCluster]
 
   ImageClusterViewer: {
     Verbosity: 0

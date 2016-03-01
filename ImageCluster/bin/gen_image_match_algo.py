@@ -21,8 +21,8 @@ if not os.path.isfile(res_link):
     print 'Error: LinkDef.h not found...'
     sys.exit(1)
     
-tmp_cxx=open(source_path + '/cluster_tmp.cxx','r').read()
-tmp_h=open(source_path + '/cluster_tmp.h','r').read()
+tmp_cxx=open(source_path + '/match_tmp.cxx','r').read()
+tmp_h=open(source_path + '/match_tmp.h','r').read()
 
 tmp_cxx = tmp_cxx.replace('CLASSNAME',name.upper())
 tmp_cxx = tmp_cxx.replace('ClassName',name)
