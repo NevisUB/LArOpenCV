@@ -8,8 +8,7 @@ namespace larcv{
   void ClassName::_Configure_(const ::fcllite::PSet &pset)
   {}
 
-  double ClassName::_Process_(const larcv::Cluster2DArray_t& clusters,
-			      larcv::ImageMeta& meta)
+  double ClassName::_Process_(const larcv::Cluster2DArray_t& clusters)
   { return -1.; }
 
 }
