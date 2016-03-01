@@ -243,6 +243,9 @@ namespace larcv {
 	  c._cluster_id = offset + cluster_index;
 	  c._image_id = img_index;
 	  c._plane_id = meta.plane();
+	  c._origin   = meta.origin();
+	  c._pixel_width = meta.pixel_width();
+	  c._pixel_height = meta.pixel_height();
 	}
 	
 	// Sanity check on meta data

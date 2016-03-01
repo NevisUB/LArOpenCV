@@ -47,6 +47,12 @@ namespace larcv {
     ImageID_t ImageID() const { return _image_id;}
     /// Matched Cluster ID info getter
     const std::vector<larcv::ClusterID_t>& MatchID() const { return _match_v; }
+    /// Origin 2D point getter
+    const Point2D& Origin() const { return _origin; }
+    /// Pixel width size (i.e. X unit length in cm)
+    double PixelWidth() const { return _pixel_width; }
+    /// Pixel height size (i.e. X unit length in cm)
+    double PixelHeight() const { return _pixel_height; }
     
     Contour_t _contour;
 
@@ -63,6 +69,9 @@ namespace larcv {
     ImageID_t   _image_id;
     size_t _plane_id;
     std::vector<larcv::ClusterID_t> _match_v;
+    Point2D _origin;
+    double _pixel_width;
+    double _pixel_height;
   };
 
   typedef std::vector<larcv::Cluster2D> Cluster2DArray_t;
