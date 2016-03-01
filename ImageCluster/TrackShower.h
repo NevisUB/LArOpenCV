@@ -34,14 +34,7 @@ namespace larcv {
     /// Default destructor
     ~TrackShower(){}
 
-
-    float GetSW () { return _s_w; }
-    float GetST () { return _s_t; }
-    float GetEW () { return _e_w; }
-    float GetET () { return _e_t; }
-
     std::vector<ClusterParams> _cparms_v;
-
 
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
     void Finalize(TFile*); 
@@ -70,11 +63,6 @@ namespace larcv {
     float _bb_height ;
     float _bb_width ;
     float _angle ;
-
-    float _s_t;
-    float _s_w;
-    float _e_t;
-    float _e_w;
 
   };
   
