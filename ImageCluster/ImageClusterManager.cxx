@@ -32,6 +32,13 @@ namespace larcv {
     _clusters_v_v.clear();
     _process_count=0;
     _process_time=0;
+
+    _raw_img_v.clear();
+    _raw_meta_v.clear();
+    _cluster_alg_m.clear();
+    _meta_v_v.clear();
+    _book_keeper.Reset();
+    
     LARCV_DEBUG((*this)) << "end" << std::endl;
   }
 
@@ -41,6 +48,15 @@ namespace larcv {
     _match_alg->Finalize(file);
     //_recluster_alg->Finalize(file);
     _configured = false;
+  }
+
+  void ImageClusterManager::ClearData()
+  {
+    _raw_img_v.clear();
+    _raw_meta_v.clear();
+    _clusters_v_v.clear();
+    _meta_v_v.clear();
+    _book_keeper.Reset();
   }
 
   const ClusterAlgoBase& ImageClusterManager::GetClusterAlg(const AlgorithmID_t id) const

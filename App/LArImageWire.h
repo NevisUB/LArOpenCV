@@ -45,6 +45,8 @@ namespace larlite {
 
     void extract_image(storage_manager* storage);
 
+    void AnalyzeImageCluster(storage_manager* storage) {}
+
     double _charge_to_gray_scale;
   };
 }

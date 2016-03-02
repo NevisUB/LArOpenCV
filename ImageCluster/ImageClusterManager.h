@@ -52,6 +52,8 @@ namespace larcv {
     const std::string& Name() const { return _name; }
     /// Clears attributes except for _name
     void Reset();
+    /// Clears data
+    void ClearData();
     /// Algorithm getter via unique identifier (AlgorithmID_t)
     const ClusterAlgoBase& GetClusterAlg(const AlgorithmID_t id) const;
     /// Algorithm getter via unique identifier (string name)
@@ -84,6 +86,10 @@ namespace larcv {
     void Report() const;
     /// Match result getter
     const MatchBookKeeper& BookKeeper() const { return _book_keeper; }
+    /// Original input image getter
+    const std::vector<cv::Mat> InputImages() const { return _raw_img_v; }
+    /// Original image metadata getter
+    const std::vector<larcv::ImageMeta> InputImageMetas() const { return _raw_meta_v; }
   private:
     /// Name identifier: used to fetch a block of configuration parameters
     std::string _name;

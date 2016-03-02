@@ -50,6 +50,8 @@ namespace larlite {
 
     void _Configure_(const ::fcllite::PSet &pset);
 
+    void AnalyzeImageCluster(storage_manager* storage);
+
   private:
     size_t _num_stored;
     double _charge_to_gray_scale;
