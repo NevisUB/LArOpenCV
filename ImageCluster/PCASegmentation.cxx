@@ -38,12 +38,7 @@ namespace larcv{
     //Make the big copy
     Cluster2DArray_t oclusters; oclusters.reserve(clusters.size());
     _pcapaths.clear();
-
-    //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
     
-    //cluster == contour
-    //ContourArray_t ctor_v;    
-  
     double angle_cut = _angle_cut; //degrees
     angle_cut *= 3.14159/180.0;    //to radians
 
@@ -56,7 +51,7 @@ namespace larcv{
       
     for(unsigned u = 0; u < clusters.size(); ++u) {
       bad = false;
-      if ( clusters[u]._numHits < _n_clustersize ) continue;
+      
 
       Cluster2D ocluster = clusters[u];
 
@@ -65,8 +60,12 @@ namespace larcv{
 	  continue;
 	ocluster._insideHits.emplace_back(loc.x, loc.y);
       }
-     
-      auto& cluster      = ocluster._contour;
+
+      ocluster._numHits = ocluster._insideHits.size();
+      
+      if ( ocluster._numHits < _n_clustersize ) continue;
+
+      auto& cluster = ocluster._contour;
 
       //Lets get subimage that only includes this cluster
       //and the points in immediate vicinity (ROI)
