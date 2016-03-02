@@ -28,11 +28,11 @@ ImageClusterManager: {
   ClusterAlgoType: [SBCluster,PCASegmentation,PiZeroFilter]
   ClusterAlgoName: [sbc,pcas,pizerofilter]
 
-  MatchAlgoType: MatchTimeOverlap
-  MatchAlgoName: mto
+#  MatchAlgoType: MatchTimeOverlap
+#  MatchAlgoName: mto
 
-  ReClusterAlgoType: ""
-  ReClusterAlgoName: ""
+#  ReClusterAlgoType: ""
+#  ReClusterAlgoName: ""
 
 
  ImageClusterViewer: {
@@ -93,13 +93,15 @@ ImageClusterManager: {
   pizerofilter: {
     NHitsCut: 10
     BackStartPoint: 100
+    MaxRadLength: 40
+    MinArea: 1
   }
 
-   mto : {
-     RatioCut : 0.001
-     StartTimeCut : 5
-     RequireThreePlanes : 1
-    }
+#  mto: {
+#    RatioCut : 0.001
+#    StartTimeCut : 5
+#    RequireThreePlanes : 1
+#  }
 
 
 }

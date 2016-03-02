@@ -10,6 +10,8 @@ namespace larcv{
 
     _nhits_cut = pset.get<int> ("NHitsCut");
     _back_startPt = pset.get<double> ("BackStartPoint");
+    _min_area = pset.get<double> ("MinArea");
+    _max_rad_length = pset.get<double> ("MaxRadLength");
 
   }
 
@@ -19,47 +21,54 @@ namespace larcv{
   { 
 
     Cluster2DArray_t OutputClusters;
-    std::vector<Point2D> eigenVecFirstArray;
-    std::vector<Point2D> eigenVecCenterArray;
+    std::vector<int> OutputClustersID;
 
-    //for(int clust = 0; clust < clusters.size(); clust++)
-    for(auto& clust : clusters)
+    if(clusters.empty())
     {
+      return clusters;
+    }
 
-	int numHits = clust._numHits;
+    for(int i = 0; i < clusters.size()-1; i++)
+    {
+	int numHits = clusters.at(i)._numHits;
 
 	//If cluster has hits >= defined minimum number of hits fill new cluster array
 	if(numHits >= _nhits_cut)
 	{
-
-          //eigenVecFirstArray.push_back(clust._eigenVecFirst); 
-	  //eigenVecCenterArray.push_back(clust._centerPt);
-
-
-/*          for(auto& next_clust : clusters)
+	  for(int j = i+1; j < clusters.size(); j++)
           {
-	    int next_numHits = next_clust._numHits;
+	    int next_numHits = clusters.at(j)._numHits;
 	    
 	    if(next_numHits >= _nhits_cut)
 	    {
-*/
-//	      Point2D sharedPoint = backprojectionpoint(clust._eigenVecFirst, clust._centerPt, next_clust._eigenVecFirst, next_clust._centerPt);
-	      
-//	      double distance1 = distance2D(sharedPoint, clust._startPt);
-//              double distance2 = distance2D(sharedPoint, next_clust._startPt);
+	      Point2D sharedPoint = backprojectionpoint(clusters.at(i)._eigenVecFirst, clusters.at(i)._startPt,
+				    clusters.at(j)._eigenVecFirst, clusters.at(j)._startPt);
 
 
-//	      if(std::abs(distance1 - distance2) <= _back_startPt){OutputClusters.push_back(clust);}
+	      double distance1 = distance2D(sharedPoint, clusters.at(i)._startPt);
+              double distance2 = distance2D(sharedPoint, clusters.at(j)._startPt);
 
-	      OutputClusters.push_back(clust);
 
-//	    }
-//          }	
+	      std::cout << "Distances: " << distance1 << ", " << distance2 << std::endl;
+
+
+	      //Make sure distance from back projected vertex from PCA
+	      //is equal to or shorter than maximum radiation length
+//	      if(std::abs(distance1) <=  _max_rad_length && std::abs(distance2) <= _max_rad_length)
+//	      {
+		OutputClustersID.push_back(clusters.at(i).ClusterID());
+	        OutputClustersID.push_back(clusters.at(j).ClusterID());
+//	      }
+
+	    }
+          }	
 	}
       }
- 
-    return OutputClusters;
+    if(!OutputClustersID.empty())std::cout << "Number of Cluster Pairs: " << OutputClustersID.size()/2 << std::endl;
 
+    OutputClusters.push_back(clusters.at(0));
+
+    return OutputClusters;
   }
 
 
@@ -93,7 +102,12 @@ namespace larcv{
   double PiZeroFilter::distance2D( Point2D point1, Point2D point2)
   {
 
-    double length = std::sqrt( (point2.x - point1.x)*(point2.x - point1.x) + (point2.y - point1.y)*(point2.y - point1.y));
+    double length = 0;
+
+    double length2 = (point2.x - point1.x)*(point2.x - point1.x)/(meta.PixelWidth()*meta.PixelWidth()) 
+		   + (point2.y - point1.y)*(point2.y - point1.y)/(meta.PixelHeight()*meta.PixelHeight());
+
+    if(length2 != 0){length = std::sqrt(length2);}
 
     return length;
 

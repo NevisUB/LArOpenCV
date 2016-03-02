@@ -49,7 +49,10 @@ namespace larcv {
 
     int _nhits_cut;
     double _back_startPt;  
-  
+    double _min_area;
+    double _max_rad_length; 
+
+
   private:
 
     Point2D backprojectionpoint(Point2D point1, Point2D point2, Point2D point3, Point2D point4);
