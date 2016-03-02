@@ -133,7 +133,8 @@ namespace larcv {
       
     }
 
-    point_closest_to_edge_ = Point2D(cpt->x,cpt->y);
+    point_closest_to_edge_ = Point2D(cpt->x + far_from_center_.x,
+				     cpt->y + far_from_center_.y);
     
   }
 

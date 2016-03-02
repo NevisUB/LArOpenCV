@@ -52,10 +52,10 @@ while( my_proc.process_event() ) :
             print "BAD PLANEID"
             print cluster.PlaneID()
             continue
-        
+
         ax = axx[cluster.PlaneID()]
 
-        contour = manager.Cluster(c,algid)._contour
+        contour = cluster._contour
 
         if contour.size() == 0:
             print "CLUSTER OF ZERO SIZE FOUND!"
@@ -76,6 +76,11 @@ while( my_proc.process_event() ) :
         cy.append(cy[0])
 
         ax.plot(cx,cy,'-',lw=3)
+        ax.plot(cluster._startPt.x,
+                cluster._startPt.y,'o',color='purple')
+
+        ax.plot(cluster._endPt.x,
+                cluster._endPt.y,'o',color='green')
 
     plt.show()
 
