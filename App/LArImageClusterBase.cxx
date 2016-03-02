@@ -48,6 +48,7 @@ namespace larlite {
 
     _img_mgr.clear();
     _orig_img_mgr.clear();
+    _alg_mgr.ClearData();
 
     ::larcv::Watch watch_all, watch_one;
     watch_all.Start();
@@ -87,6 +88,8 @@ namespace larlite {
     ++_process_count;
 
     storage->set_id(storage->run_id(),storage->subrun_id(),storage->event_id());
+
+    AnalyzeImageCluster(storage);
 
     return true;
   }

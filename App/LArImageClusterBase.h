@@ -79,6 +79,7 @@ namespace larlite {
     virtual void _Configure_(const ::fcllite::PSet&) = 0;
     virtual void store_clusters(storage_manager* storage) = 0;
     virtual void extract_image(storage_manager* storage) = 0;
+    virtual void AnalyzeImageCluster(storage_manager* storage) = 0;
     ::larcv::ImageManager _img_mgr;
     
   };

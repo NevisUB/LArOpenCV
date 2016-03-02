@@ -8,10 +8,21 @@ namespace larcv{
   void TrackShower::_Configure_(const ::fcllite::PSet &pset)
   {
 
-    _area_cut  = pset.get<int> ("AreaCut");
+    _area_separation  = pset.get<int> ("AreaCut");
     _ratio_separation = pset.get<int> ("RatioCut");
     _track_shower_sat = pset.get<int>("TrackShowerSat");
 
+    if(!_contour_tree){
+      _contour_tree = new TTree("contour_tree","Contour Tree" );
+      _contour_tree->Branch("area",&_area,"area/F");
+      _contour_tree->Branch("perimeter",&_perimeter,"perimeter/F");
+      _contour_tree->Branch("bb_height",&_bb_height,"bb_height/F");
+      _contour_tree->Branch("bb_width",&_bb_width,"bb_width/F");
+      _contour_tree->Branch("max_con_width",&_max_con_width,"max_con_width/F");
+      _contour_tree->Branch("min_con_width",&_min_con_width,"min_con_width/F");
+      _contour_tree->Branch("angle",&_angle,"angle/F");
+    }
+    
   }
 
   Cluster2DArray_t TrackShower::_Process_(const larcv::Cluster2DArray_t& clusters,
@@ -19,24 +30,30 @@ namespace larcv{
 					  larcv::ImageMeta& meta)
   { 
 
-   Cluster2DArray_t ts_clusters; ts_clusters.reserve(clusters.size());
+   _cparms_v.clear();
+   _cparms_v.reserve(clusters.size());
 
-   Cluster2DArray_t shower_v;
-   Cluster2DArray_t track_v;
-   Cluster2DArray_t satellite_v;
+   ContourArray_t satellite_v ;
+   ContourArray_t shower_v ;
+   ContourArray_t track_v ;
 
    for(size_t k = 0; k < clusters.size(); k++){
        
+      //auto cv_contour = clusters[k];
       auto& cv_contour = clusters[k]._contour;
-
-      Cluster2D ts_cluster = clusters[k];
 
       auto area = ::cv::contourArea(cv_contour);
 
+      //Get hits 
+      //::cv::Rect rect00 = ::cv::boundingRect(cv_contour);
+      //::cv::Mat subMat(img, rect00);
+
       std::vector<::cv::Point> locations;
       ::cv::findNonZero(img, locations);  
+      //::cv::findNonZero(subMat, locations);  
 
       auto contour_temp = cv_contour;
+      //for(auto &pt : contour_temp) { pt.x -= rect00.x; pt.y -= rect00.y; }
       
       std::vector<std::pair<int,int> > hits;
       int nhits = 0;
@@ -45,7 +62,7 @@ namespace larcv{
         if ( ::cv::pointPolygonTest(contour_temp, loc,false) < 0 ) 
           continue;
    
-        ts_cluster._insideHits.emplace_back(loc.x, loc.y);
+        //hits.emplace_back(loc.x + rect00.x, loc.y + rect00.y);
         hits.emplace_back(loc.x, loc.y);
         ++nhits;
       }   
@@ -55,7 +72,18 @@ namespace larcv{
         rect0.points(vertices);
         auto rect = rect0.size; 
 
+        auto perimeter = ::cv::arcLength(cv_contour,1);
+        auto bb_height = ( rect.height > rect.width ? rect.height : rect.width );
+        auto bb_width  = ( rect.height > rect.width ? rect.width : rect.height );
+
         std::vector<cv::Point2f> rectangle = { vertices[0], vertices[1],vertices[2],vertices[3] };
+
+        _area      = area;  
+        _perimeter = perimeter;
+        _bb_height = bb_height ;
+        _bb_width  = bb_width;
+
+        if(area < 900) continue;
 
         //  
         // Between points 0,1 and 1,2 , find max distance; this will be outer
@@ -123,6 +151,7 @@ namespace larcv{
               min_long_dist = long_dist_travelled;
               min_width = dist_travelled ;
               }
+
           }
 
         bool switched = 0;
@@ -131,6 +160,8 @@ namespace larcv{
 	  start_point = end_point ;
 	  end_point = temp;
           switched = 1 ;
+	  //if(area > 900)
+	  //std::cout<<"Swtiching!"<<std::endl;
 	  }
 
         std::vector<cv::Point2d> find_end;
@@ -162,11 +193,11 @@ namespace larcv{
            it++;
          }
 
-        Point2D new_start; 
-        Point2D new_end ;
+        cv::Point2d new_start; 
+        cv::Point2d new_end ;
 
-	double angle ; 
-
+	//findNewPoint(new_start,find_start);
+          
          for(int k = 0; k < find_start.size(); k++){
            new_start.x += find_start[k].x / find_start.size();
            new_start.y += find_start[k].y / find_start.size() ;
@@ -177,49 +208,86 @@ namespace larcv{
            new_end.y += find_end[k].y / find_end.size() ;
             }
 
-	 angle = 180 / 3.14 * atan2(new_end.y - new_start.y, new_end.x - new_start.x ) ;
-	 if( angle < 0 )
-	   angle += 360 ;
-         //std::cout<<"Percent : "<<(max_long_dist)/(maxDist/2)*100<<"\%, "<<area<<std::endl ;
 
-      
-        ts_cluster._startPt   = new_start ; 
-        ts_cluster._endPt     = new_end ;  
-	ts_cluster._angle2D   = angle ;
-        //ts_cluster._sumCharge = (double) sum_charge;
-        ts_cluster._length    = rect.height > rect.width ? rect.height : rect.width;
-        ts_cluster._width     = rect.height > rect.width ? rect.width : rect.height;
-        ts_cluster._area      = ::cv::contourArea(cv_contour);
-        ts_cluster._perimeter = ::cv::arcLength(cv_contour,1);
+        std::vector< std::pair<double,double> > start_end ;     
+        start_end.push_back(std::make_pair(new_start.x,new_start.y));
+        start_end.push_back(std::make_pair(new_end.x,new_end.y));
+	
+         
+	 if(area > 900){
+	   _angle = 180 / 3.14 * atan2(new_end.y - new_start.y, new_end.x - new_start.x ) ;
+	   if( _angle < 0 )
+	     _angle = (360 + _angle)  ;
+           //std::cout<<"Percent : "<<(max_long_dist)/(maxDist/2)*100<<"\%, "<<area<<std::endl ;
+	   }
 
-        ts_clusters.push_back(ts_cluster);
+        _max_con_width = max_width;
+        _min_con_width = min_width;
 
-        if( area > _area_cut){
-	  if ( (max_width/min_width) >= _ratio_separation)
-            shower_v.push_back(ts_cluster);
-          else 
-            track_v.push_back(ts_cluster);
-	  }
+        if( area > _area_separation && (max_width/min_width) >= _ratio_separation)
+         shower_v.push_back(cv_contour);
+        else if( area > _area_separation && (max_width/min_width) < _ratio_separation)
+         track_v.push_back(cv_contour);
         else
-          satellite_v.push_back(ts_cluster);
+         satellite_v.push_back(cv_contour);
+      
+        _contour_tree->Fill();
+
+     // this is the only way you can get shit into python at this point
+      _cparms_v.emplace_back(k,
+                             _area,
+                             _perimeter,
+                             dir1.first/maxDist,
+                             dir1.second/maxDist,
+                             nhits,
+                             hits,
+                             start_end,
+                             rectangle,
+			     _angle
+                             );  
+ 
       }
 
 //   std::cout<<"Shower, track, satellite size: "<<shower_v.size()<<", "<<track_v.size()<<", "<<satellite_v.size()<<std::endl ;
    
-   Cluster2DArray_t shower_sats_v; shower_sats_v.reserve(shower_v.size() + satellite_v.size());
+   ContourArray_t shower_sats_v; shower_sats_v.reserve(shower_v.size() + satellite_v.size());
    for(auto& shower : shower_v)    shower_sats_v.push_back( shower );
    for(auto& sats   : satellite_v) shower_sats_v.push_back( sats  );
+	 
 
-   if( _track_shower_sat == 0 )
-     return shower_v;
-   else if( _track_shower_sat == 1) 
-     return track_v;
-   else if( _track_shower_sat == 2) 
-     return satellite_v;
-   else 
-     return ts_clusters;
+   Cluster2DArray_t result;
+
+   if( _track_shower_sat == 2) {
+     result.resize(shower_sats_v.size());
+     for(size_t i=0; i<shower_sats_v.size(); ++i) std::swap(result[i]._contour, shower_sats_v[i]);
+     return result;
+   }
+   else if( _track_shower_sat == 1) {
+     result.resize(shower_v.size());
+     for(size_t i=0; i<shower_v.size(); ++i) std::swap(result[i]._contour, shower_v[i]);
+     return result;
+   }
+   else if( _track_shower_sat == 0 ) {
+     result.resize(track_v.size());
+     for(size_t i=0; i<track_v.size(); ++i) std::swap(result[i]._contour, track_v[i]);
+     return result;
+   }
+   else if( _track_shower_sat == 3) return clusters;
+   else {
+     result.resize(satellite_v.size());
+     for(size_t i=0; i<satellite_v.size(); ++i) std::swap(result[i]._contour, satellite_v[i]);
+     return result;
+   }
    
   }
 
+ void TrackShower::Finalize(TFile* fout){
+   
+   if(fout){
+     fout->cd();
+     _contour_tree->Write();
+      }
+  }
+  
 }
 #endif

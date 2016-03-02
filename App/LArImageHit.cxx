@@ -204,5 +204,30 @@ namespace larlite {
     
   }
 
+
+  void LArImageHit::AnalyzeImageCluster(storage_manager* storage)
+  {
+    // Get ImageClusterManager instance
+    auto const& alg_mgr = algo_manager();
+    // Original image
+    auto const& img_v   = alg_mgr.InputImages();
+    // Original image meta
+    auto const& meta_v  = alg_mgr.InputImageMetas();
+
+    // Loop over images
+    for(size_t img_id=0; img_id < img_v.size(); ++img_id) {
+
+      // Image & meta object
+      auto const& img  = img_v[img_id];
+      auto const& meta = meta_v[img_id];
+      
+      // Retrieve final clusters on this image
+      auto const& clusters = alg_mgr.Clusters(img_id);
+
+      std::cout << "Image " << img_id << " @ Plane " << meta.plane() << " has " << clusters.size() << " clusters!" << std::endl;
+    }
+
+  }
+
 }
 #endif
