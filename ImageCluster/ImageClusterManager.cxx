@@ -98,24 +98,6 @@ namespace larcv {
       throw larbys();
     }
 
-    auto match_instance_type_v = main_cfg.get<std::string>("MatchAlgoType");
-    auto match_instance_name_v = main_cfg.get<std::string>("MatchAlgoName");
-
-    if(match_instance_type_v.size() != match_instance_name_v.size()) {
-      LARCV_CRITICAL((*this)) << "Matching: AlgoType and AlgoName config parameters have different length! "
-			      << "(" << match_instance_type_v.size() << " vs. " << match_instance_name_v.size() << ")" << std::endl;
-      throw larbys();
-    }
-
-    auto recluster_instance_type_v = main_cfg.get<std::string>("ReClusterAlgoType");
-    auto recluster_instance_name_v = main_cfg.get<std::string>("ReClusterAlgoName");
-
-    if(recluster_instance_type_v.size() != recluster_instance_name_v.size()) {
-      LARCV_CRITICAL((*this)) << "Re-Clustering: AlgoType and AlgoName config parameters have different length! "
-			      << "(" << recluster_instance_type_v.size() << " vs. " << recluster_instance_name_v.size() << ")" << std::endl;
-      throw larbys();
-    }
-
     _cluster_alg_v.clear();
     _cluster_alg_m.clear();
     for(size_t i=0; i<cluster_instance_type_v.size(); ++i) {
@@ -282,41 +264,46 @@ namespace larcv {
 	  meta_per_plane.resize(plane+1);
 	}
 
-	for(auto const& c : clusters_v[img_id]) {
-	  c_per_plane[plane].push_back((const larcv::Cluster2D*)(&c));
+	for(size_t cindex=0; cindex<clusters_v[img_id].size(); ++cindex) {
+	  c_per_plane[plane].push_back((const larcv::Cluster2D*)(&(clusters_v[img_id][cindex])));
 	  meta_per_plane[plane].push_back((const larcv::ImageMeta*)(&meta));
 	}
 	
       }
 
       std::vector<size_t> seed; seed.reserve(c_per_plane.size());
+     
       for(auto const& c : c_per_plane) seed.push_back(c.size());
 
-      auto comb_v = PlaneClusterCombinations(seed);
+      size_t nvalid_planes = 0;
+      for(auto const& v : seed) if(v) nvalid_planes+=1;
 
-      for(auto const& comb : comb_v) {
+      if(nvalid_planes>1) {
 
-	//Assemble a vector of clusters
-	std::vector<const larcv::Cluster2D*> input_clusters;
-	std::vector<unsigned int> tmp_index_v;
-	input_clusters.reserve(comb.size());
-	tmp_index_v.reserve(comb.size());
+	auto comb_v = PlaneClusterCombinations(seed);
 	
-	for(auto const& cinfo : comb) {
-
-	  auto const& plane = cinfo.first;
-	  auto const& index = cinfo.second;
-
-	  input_clusters.push_back(c_per_plane[plane][index]);
-	  tmp_index_v.push_back(c_per_plane[plane][index]->ClusterID());
+	for(auto const& comb : comb_v) {
+	  
+	  //Assemble a vector of clusters
+	  std::vector<const larcv::Cluster2D*> input_clusters;
+	  std::vector<unsigned int> tmp_index_v;
+	  input_clusters.reserve(comb.size());
+	  tmp_index_v.reserve(comb.size());
+	  
+	  for(auto const& cinfo : comb) {
+	    auto const& plane = cinfo.first;
+	    auto const& index = cinfo.second;
+	    input_clusters.push_back(c_per_plane[plane][index]);
+	    tmp_index_v.push_back(c_per_plane[plane][index]->ClusterID());
+	  }
+	  
+	  auto score = _match_alg->Process(input_clusters);
+	  
+	  if(score>0)
+	    
+	    _book_keeper.Match(tmp_index_v,score);
+	  
 	}
-	
-	auto score = _match_alg->Process(input_clusters);
-
-	if(score>0)
-
-	  _book_keeper.Match(tmp_index_v,score);
-
       }
     }
     
@@ -344,7 +331,7 @@ namespace larcv {
 
     if(clusters_v.empty()) return 0; // No image is registered
 
-    for(size_t i=(clusters_v.size()-1); i>=0; --i) {
+    for(int i=(clusters_v.size()-1); i>=0; --i) {
 
       if(clusters_v[i].empty()) continue;
 
