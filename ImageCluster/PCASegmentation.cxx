@@ -47,12 +47,24 @@ namespace larcv{
     angle_cut *= 3.14159/180.0;    //to radians
 
     bool bad = false;
-    
+
+
+    Contour_t all_locations;
+    ::cv::findNonZero(img, all_locations); // get the non zero points
+
+      
     for(unsigned u = 0; u < clusters.size(); ++u) {
       bad = false;
       if ( clusters[u]._numHits < 10 ) { continue; }
 
       Cluster2D ocluster = clusters[u];
+
+      for(const auto& loc: all_locations) {
+	if ( ::cv::pointPolygonTest(ocluster._contour,loc,false) < 0 )
+	  continue;
+	ocluster._insideHits.emplace_back(loc.x, loc.y);
+      }
+     
       
       auto& cluster      = ocluster._contour;
 
@@ -220,7 +232,7 @@ namespace larcv{
       for(int r=0;r<4;++r) v[r] = verticies[r];
 
       path.CheckMinAreaRect(bbox,v);
-
+      
       ocluster._eigenVecFirst = path.combined_e_vec_;
       ocluster._startPt       = path.point_closest_to_edge_;
       ocluster._endPt         = point_farthest_away(ocluster,ocluster._startPt);
@@ -235,17 +247,6 @@ namespace larcv{
       oclusters.emplace_back(ocluster);
     }
 
-      Contour_t all_locations;
-      ::cv::findNonZero(img, all_locations); // get the non zero points
-
-      for(const auto& loc: all_locations) {
-	for(auto& ocluster : oclusters) {
-	  if ( ::cv::pointPolygonTest(ocluster._contour,loc,false) < 0 )
-	    continue;
-	  ocluster._insideHits.emplace_back(loc.x, loc.y);
-	}
-      }
-     
     
       //just return the clusters you didn't do anything...
       // std::cout << "return of PCAS oclusters" << oclusters.size() << "\n";
@@ -370,14 +371,19 @@ namespace larcv{
 
   Point2D PCASegmentation::point_farthest_away(Cluster2D& ocluster,
 					       const Point2D& startpoint) {
-
+    
     ::cv::Point* far_point;
     double d = 0.0;
+    std::cout << "inside hits... " << ocluster._insideHits.size() << "\n";
     for( auto& pt : ocluster._insideHits ) {
       auto dd = dist(startpoint,pt);
+      std::cout << "start x : " << startpoint.x << " start y: " << startpoint.y << "\n";
+      std::cout << pt << "\n";
+      std::cout << "dd : " << dd << "\n";
       if( dd > d ) { d = dd; far_point = &pt; }
     }
-    
+
+    std::cout << "far point x: " << far_point->x << " and far point y " << far_point->y << "\n";
     return Point2D(far_point->x,far_point->y);
     
   }
