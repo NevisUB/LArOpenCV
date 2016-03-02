@@ -374,16 +374,16 @@ namespace larcv{
     
     ::cv::Point* far_point;
     double d = 0.0;
-    std::cout << "inside hits... " << ocluster._insideHits.size() << "\n";
+    //std::cout << "inside hits... " << ocluster._insideHits.size() << "\n";
     for( auto& pt : ocluster._insideHits ) {
       auto dd = dist(startpoint,pt);
-      std::cout << "start x : " << startpoint.x << " start y: " << startpoint.y << "\n";
-      std::cout << pt << "\n";
-      std::cout << "dd : " << dd << "\n";
+      //std::cout << "start x : " << startpoint.x << " start y: " << startpoint.y << "\n";
+      //std::cout << pt << "\n";
+      //std::cout << "dd : " << dd << "\n";
       if( dd > d ) { d = dd; far_point = &pt; }
     }
 
-    std::cout << "far point x: " << far_point->x << " and far point y " << far_point->y << "\n";
+    //std::cout << "far point x: " << far_point->x << " and far point y " << far_point->y << "\n";
     return Point2D(far_point->x,far_point->y);
     
   }
