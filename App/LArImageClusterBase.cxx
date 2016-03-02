@@ -67,16 +67,17 @@ namespace larlite {
     //if(_img_mgr.size() != _alg_mgr_v.size()) throw ::larcv::larbys("# of imaged created != # of planes!");
     
     // for(size_t plane = 0; plane < _alg_mgr_v.size(); ++plane) {
+
     for(size_t plane=0; plane<_img_mgr.size(); ++plane) {
       // auto& alg_mgr    = _alg_mgr_v[plane];
       auto const& img  = _img_mgr.img_at(plane);
       auto const& meta = _img_mgr.meta_at(plane);
       if(!meta.num_pixel_row() || !meta.num_pixel_column()) continue;
-      
       _alg_mgr.Add(img,meta);
-      _alg_mgr.Process();
-      std::cout<<"Matched pairs: "<<_alg_mgr.BookKeeper().GetResult().size()<<std::endl;
     }
+
+    _alg_mgr.Process();
+    std::cout<<"Matched pairs: "<<_alg_mgr.BookKeeper().GetResult().size()<<std::endl;
 
     watch_one.Start();
     this->store_clusters(storage);

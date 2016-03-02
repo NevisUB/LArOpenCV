@@ -113,11 +113,11 @@ namespace larcv {
 
     ::cv::Point* cpt;
     int c = 0;
-    std::cout << "number of points..." << this->at(far_from_center)->pts_.size() << "\n";
+    //std::cout << "number of points..." << this->at(far_from_center)->pts_.size() << "\n";
     for( auto& pt : this->at(far_from_center)->pts_ ) {
       c++;
       d = 9e6;
-      std::cout << "c: " << c << "\n";
+      //std::cout << "c: " << c << "\n";
 
       for (int i = 0; i < pts.size(); ++i) {
 	edgeline.clear();
@@ -131,7 +131,6 @@ namespace larcv {
 	auto dd = roi_d_to_line(edgeline,
 				pt.x + fbox->parent_roi_.x,
 				pt.y + fbox->parent_roi_.y); // get closest edge
-	//std::cout << "dd: " << dd <<"\n";
 	if ( dd < d ) { d = dd; }
       }
 
@@ -139,7 +138,6 @@ namespace larcv {
       
     }
     
-    //std::cout << "ddd: " << ddd << "\n";
     point_closest_to_edge_ = Point2D(cpt->x + fbox->parent_roi_.x,
 				     cpt->y + fbox->parent_roi_.y);
     

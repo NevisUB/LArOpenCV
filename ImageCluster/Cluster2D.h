@@ -67,6 +67,8 @@ namespace larcv {
     Point2D _startPt;
     Point2D _endPt;
 
+    double _angle2D ;
+
     double _sumCharge;
     
     double _length;
