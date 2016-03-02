@@ -56,7 +56,7 @@ namespace larcv {
     Cluster2DArray_t result_v; result_v.resize(ctor_v.size());
 
     for(size_t i=0; i<ctor_v.size(); ++i) std::swap(result_v[i]._contour,ctor_v[i]);
-    std::cout << "results from SB" << result_v.size() << "\n";
+
     return result_v;
     
   }

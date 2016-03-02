@@ -231,14 +231,25 @@ namespace larcv{
       ocluster._width     = rect.height > rect.width ? rect.width : rect.height;
       ocluster._area      = ::cv::contourArea(cluster);
       ocluster._perimeter = ::cv::arcLength(cluster,1);
-      //length of minAreaRect...
 
       oclusters.emplace_back(ocluster);
     }
+
+      Contour_t all_locations;
+      ::cv::findNonZero(img, all_locations); // get the non zero points
+
+      for(const auto& loc: all_locations) {
+	for(auto& ocluster : oclusters) {
+	  if ( ::cv::pointPolygonTest(ocluster._contour,loc,false) < 0 )
+	    continue;
+	  ocluster._insideHits.emplace_back(loc.x, loc.y);
+	}
+      }
+     
     
-    //just return the clusters you didn't do anything...
-    // std::cout << "return of PCAS oclusters" << oclusters.size() << "\n";
-    return oclusters;
+      //just return the clusters you didn't do anything...
+      // std::cout << "return of PCAS oclusters" << oclusters.size() << "\n";
+      return oclusters;
   }
 
   
