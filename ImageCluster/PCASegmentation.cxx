@@ -1,3 +1,5 @@
+
+
 //by vic
 #ifndef __PCASEGMENTATION_CXX__
 #define __PCASEGMENTATION_CXX__
@@ -36,7 +38,6 @@ namespace larcv{
     //Make the big copy
     Cluster2DArray_t oclusters; oclusters.reserve(clusters.size());
 
-
     //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
     
     //cluster == contour
@@ -47,12 +48,14 @@ namespace larcv{
 
     bool bad = false;
     
-    for(unsigned u = 0; u < oclusters.size(); ++u) {
+    for(unsigned u = 0; u < clusters.size(); ++u) {
       bad = false;
+      if ( clusters[u]._numHits < 10 ) { continue; }
 
       Cluster2D ocluster = clusters[u];
-      auto& cluster      = ocluster._contour;
       
+      auto& cluster      = ocluster._contour;
+
       //Lets get subimage that only includes this cluster
       //and the points in immediate vicinity (ROI)
       ::cv::Rect rect = ::cv::boundingRect(cluster);
@@ -119,7 +122,6 @@ namespace larcv{
 	}
       }
 
-
       //connect the boxes that are touching each other
       
       for(unsigned b1 = 0; b1 < boxes.size(); ++b1) {
@@ -138,7 +140,6 @@ namespace larcv{
 	}
 	
       }
-      
       
       // kazu suggests we are allowed to jump across empty boxes
       // this will become recursive I hope, lets decide yes or no to jump neighbors
@@ -206,7 +207,7 @@ namespace larcv{
 
       // no boxes were "combined" with connection function, continue for now
       if ( combined.size() == 0 ) { continue; }    
-      
+
       //decide the shower axis via some combination of everything you see in PCAPath.h
       auto path = decide_axis(boxes,combined);
 
@@ -214,12 +215,12 @@ namespace larcv{
       auto bbox = ::cv::minAreaRect(cluster);
       ::cv::Point2f verticies[4];
       bbox.points(verticies);
-      
+
       std::vector<::cv::Point2f> v; v.resize(4);
       for(int r=0;r<4;++r) v[r] = verticies[r];
 
       path.CheckMinAreaRect(bbox,v);
-      
+
       ocluster._eigenVecFirst = path.combined_e_vec_;
       ocluster._startPt       = path.point_closest_to_edge_;
       ocluster._endPt         = point_farthest_away(ocluster,ocluster._startPt);
@@ -230,14 +231,13 @@ namespace larcv{
       ocluster._width     = rect.height > rect.width ? rect.width : rect.height;
       ocluster._area      = ::cv::contourArea(cluster);
       ocluster._perimeter = ::cv::arcLength(cluster,1);
-
       //length of minAreaRect...
+
       oclusters.emplace_back(ocluster);
     }
     
-
     //just return the clusters you didn't do anything...
-    
+    // std::cout << "return of PCAS oclusters" << oclusters.size() << "\n";
     return oclusters;
   }
 
@@ -307,8 +307,6 @@ namespace larcv{
   
   }
 
-
-
   void PCASegmentation::cross_empty_neighbors(const std::vector<PCABox>& boxes,
 					      std::map<int,std::vector<int> >& neighbors) {
     
@@ -363,12 +361,11 @@ namespace larcv{
 					       const Point2D& startpoint) {
 
     ::cv::Point* far_point;
-    double d = 9e6;
+    double d = 0.0;
     for( auto& pt : ocluster._insideHits ) {
       auto dd = dist(startpoint,pt);
-      if( dd < d ) { d = dd; far_point = &pt; }
+      if( dd > d ) { d = dd; far_point = &pt; }
     }
-    
     
     return Point2D(far_point->x,far_point->y);
     
