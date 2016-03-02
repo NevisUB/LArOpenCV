@@ -110,19 +110,21 @@ namespace larcv {
     std::vector<double> edgeline; edgeline.resize(4);
 
     double ddd = 9e6;
-    ::cv::Point* cpt;
-    for( auto& pt : this->at(far_from_center)->pts_ ) {
 
+    ::cv::Point* cpt;
+    int c = 0;
+    for( auto& pt : this->at(far_from_center)->pts_ ) {
+      c++;
       d = 9e6;
-      
-      for (unsigned i = 0; i < pts.size(); ++i) {
+      for (int i = 0; i < pts.size(); ++i) {
 	edgeline.clear();
 	edgeline[0] = pts[i].x;   edgeline[1] = pts[i].y;
 
-	if ( i+1 == pts.size() ) i = 0; //wrap around!
+	if ( i+1 == pts.size() ) i = -1; //wrap around!
 	
 	edgeline[2] = pts[i+1].x; edgeline[3] = pts[i+1].y;
-
+	i = pts.size() - 1;
+	
 	auto dd = roi_d_to_line(edgeline,pt.x,pt.y); // get closest edge
 	if ( dd < d ) { d = dd; }
       }
