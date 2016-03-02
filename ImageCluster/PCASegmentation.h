@@ -82,7 +82,8 @@ namespace larcv {
     // you can choose in fcl file to cross neighbors or not if they are empty.
     void cross_empty_neighbors(const std::vector<PCABox>& boxes,
 			       std::map<int,std::vector<int> >& neighbors);
-      
+    Point2D point_farthest_away(Cluster2D& ocluster,
+				const Point2D& startpoint);
   };
   
   /**

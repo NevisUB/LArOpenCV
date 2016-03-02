@@ -53,7 +53,6 @@ namespace larcv {
     double PixelWidth() const { return _pixel_width; }
     /// Pixel height size (i.e. X unit length in cm)
     double PixelHeight() const { return _pixel_height; }
-    
 
 
     Contour_t _contour;
@@ -66,6 +65,15 @@ namespace larcv {
     Point2D _eigenVecSecond;
 
     Point2D _startPt;
+    Point2D _endPt;
+
+    double _sumCharge;
+    
+    double _length;
+    double _width;
+    double _area;
+    double _perimeter;
+
     
   private:
     ClusterID_t _cluster_id;

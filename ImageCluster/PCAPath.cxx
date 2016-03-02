@@ -83,10 +83,13 @@ namespace larcv {
 					     
   }
 
-  void PCAPath::CheckMinAreaRect(const ::cv::RotatedRect& rr) {
+  void PCAPath::CheckMinAreaRect(const ::cv::RotatedRect& rr,
+				 const std::vector<::cv::Point2f>& pts) {
 
     size_t far_from_center;
     double d = 0.0;
+
+    // for each box in PCAPath
     for(size_t i=0;i<this->size();++i) {
       auto& box = this->at(i);
       
@@ -101,13 +104,34 @@ namespace larcv {
     //copy it into public var in PCAPath.... im stupid
     far_from_center_ = this->at(far_from_center)->box_;
     e_vec_far_       = this->at(far_from_center)->e_vec_;
+    
 
+    //inside THIS box, get the closest point to the edge...
+    std::vector<double> edgeline; edgeline.resize(4);
 
-    //inside this box, get the closest point to the edge...
-    for( const auto& pt : this->at(far_from_center)->pts_ ) {
+    double ddd = 9e6;
+    ::cv::Point* cpt;
+    for( auto& pt : this->at(far_from_center)->pts_ ) {
 
+      d = 9e6;
+      
+      for (unsigned i = 0; i < pts.size(); ++i) {
+	edgeline.clear();
+	edgeline[0] = pts[i].x;   edgeline[1] = pts[i].y;
+
+	if ( i+1 == pts.size() ) i = 0; //wrap around!
+	
+	edgeline[2] = pts[i+1].x; edgeline[3] = pts[i+1].y;
+
+	auto dd = roi_d_to_line(edgeline,pt.x,pt.y); // get closest edge
+	if ( dd < d ) { d = dd; }
+      }
+
+      if ( d < ddd ) { ddd = d; cpt = &pt; }
       
     }
+
+    point_closest_to_edge_ = Point2D(cpt->x,cpt->y);
     
   }
 

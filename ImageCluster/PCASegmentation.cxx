@@ -34,7 +34,7 @@ namespace larcv{
 						     larcv::ImageMeta& meta)
   {
     //Make the big copy
-    Cluster2DArray_t oclusters = clusters;
+    Cluster2DArray_t oclusters; oclusters.reserve(clusters.size());
 
 
     //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
@@ -50,8 +50,8 @@ namespace larcv{
     for(unsigned u = 0; u < oclusters.size(); ++u) {
       bad = false;
 
-      auto& ccluster   = oclusters[u];
-      auto& cluster    = ccluster._contour;
+      Cluster2D ocluster = clusters[u];
+      auto& cluster      = ocluster._contour;
       
       //Lets get subimage that only includes this cluster
       //and the points in immediate vicinity (ROI)
@@ -188,29 +188,51 @@ namespace larcv{
       //At this point we have some idea about "connectedness". 
 
       //lets set the charge per box first
+      int sum_charge = 0;
       for( auto& box : boxes ) {
 	
 	if ( box.empty_ ) continue;
 	
-	for ( const auto &pt : box.pts_ )  
+	for ( const auto &pt : box.pts_ )  {
+
+	  int charge = (int) img.at<uchar>(pt.y + box.parent_roi_.y,
+					   pt.x + box.parent_roi_.x);
+	  box.charge_.push_back(charge);
+
+	  sum_charge += charge;
 	  
-	  box.charge_.push_back( (int) img.at<uchar>(pt.y + box.parent_roi_.y,
-						     pt.x + box.parent_roi_.x) ); 
+	}
       }
 
       // no boxes were "combined" with connection function, continue for now
       if ( combined.size() == 0 ) { continue; }    
       
-      //decide the shower axis via some combination of everything
-      //you see in PCAPath.cxx
+      //decide the shower axis via some combination of everything you see in PCAPath.h
       auto path = decide_axis(boxes,combined);
-      
-      //need atleast this many boxes in path to care about it... or drop the cluster
-      if (path.size() < _n_path_size)  bad = true; //continue;
 
-      ccluster._eigenVecFirst = path.combined_e_vec_;
-      ccluster._startPt       = path.point_closest_to_edge_;
+      // bounding box considerations to define start point
+      auto bbox = ::cv::minAreaRect(cluster);
+      ::cv::Point2f verticies[4];
+      bbox.points(verticies);
       
+      std::vector<::cv::Point2f> v; v.resize(4);
+      for(int r=0;r<4;++r) v[r] = verticies[r];
+
+      path.CheckMinAreaRect(bbox,v);
+      
+      ocluster._eigenVecFirst = path.combined_e_vec_;
+      ocluster._startPt       = path.point_closest_to_edge_;
+      ocluster._endPt         = point_farthest_away(ocluster,ocluster._startPt);
+
+      ocluster._sumCharge = (double) sum_charge;
+
+      ocluster._length    = rect.height > rect.width ? rect.height : rect.width;
+      ocluster._width     = rect.height > rect.width ? rect.width : rect.height;
+      ocluster._area      = ::cv::contourArea(cluster);
+      ocluster._perimeter = ::cv::arcLength(cluster,1);
+
+      //length of minAreaRect...
+      oclusters.emplace_back(ocluster);
     }
     
 
@@ -336,6 +358,22 @@ namespace larcv{
 	
     }// end ridiculous logic
   }
+
+  Point2D PCASegmentation::point_farthest_away(Cluster2D& ocluster,
+					       const Point2D& startpoint) {
+
+    ::cv::Point* far_point;
+    double d = 9e6;
+    for( auto& pt : ocluster._insideHits ) {
+      auto dd = dist(startpoint,pt);
+      if( dd < d ) { d = dd; far_point = &pt; }
+    }
+    
+    
+    return Point2D(far_point->x,far_point->y);
+    
+  }
+
 }
 
 #endif

@@ -46,6 +46,9 @@ namespace larcv {
 		     
     
   private:
+    float _time_ratio_cut ;
+    float _start_time_cut ;
+    bool _require_3planes;
 
   };
   
