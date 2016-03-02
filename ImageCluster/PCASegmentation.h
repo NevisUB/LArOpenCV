@@ -20,21 +20,17 @@ namespace larcv {
     
     /// Default constructor
     PCASegmentation(const std::string name="PCASegmentation") :
-      ClusterAlgoBase(name),
-      _outtree(nullptr)
+      ClusterAlgoBase(name)
     {}
     
     /// Default destructor
     ~PCASegmentation(){}
     
   private:
-    TTree* _outtree;
 
   public:
-    void Finalize(TFile* fout) { _outtree->Write(); }
+    void Finalize(TFile* fout) { }
 
-    std::vector<ClusterParams> _cparms_v;
-    
   protected:
     
     /// Configuration method
@@ -47,20 +43,12 @@ namespace larcv {
     
     
   private:
-      
-    //depricated (?)
-    Point2D _cntr_pt;
-    std::vector<Point2D> _eigen_vecs;
-    std::vector<double>  _eigen_val;
-    std::vector<double>  _line;
-    std::pair<int,int>  _trunk_index;
-    //depricated (?)
     
     double _cov_cut;
-
+    
     int _segments_x;
     int _segments_y;
-
+    
     int _nhits_cut;
     int _sub_nhits_cut;
     
@@ -68,20 +56,15 @@ namespace larcv {
 
     int _n_divisions;
     
-    double _eval1;
-    double _eval2;
-    
     double _area;
     double _perimeter;
-
+    
     double _angle_cut;
-
+    
     bool _allow_cross_empties;
     int _n_clustersize;
     int _n_path_size;
     
-    void clear_vars();
-
     // recursive connection function which traverses the graph
     // and runs PCAUtilities::connect function while checking
     // PCAUtilities::compatible

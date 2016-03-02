@@ -11,11 +11,11 @@ namespace larcv {
   double cov ( ::std::vector<int>& data1,
 	       ::std::vector<int>& data2,
 	       size_t start, size_t end );
-
+  
   double mean( ::std::vector<int>& data,
 	       size_t start, size_t end );
-
-    
+  
+  
   double meanx( const Contour_t& contour );
   double meany( const Contour_t& contour );
   

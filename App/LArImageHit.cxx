@@ -21,23 +21,23 @@ namespace larlite {
 
   void LArImageHit::_Report_() const
   {
-    std::cout << "  # of clusters per plane ......... ";
-    for(auto const& num : _num_clusters_v) std::cout << Form("%-6zu ",num);
-    std::cout << " ... Average (per-event) ";
-    for(size_t plane=0; plane<_num_clustered_hits_v.size(); ++plane) {
-      double nclusters = _num_clusters_v[plane];
-      std::cout << Form("%g ",nclusters / ((double)(_num_stored)));
-    }
-    std::cout << std::endl;
+    std::cout << "  # of clusters  ......... ";
+     std::cout << Form("%-6zu ",_num_clusters);
 
-    std::cout << "  # of clustered hits per plane ... ";
-    for(auto const& num : _num_clustered_hits_v) std::cout << Form("%-6zu ",num);
+ 
+     std::cout << " ... Average (per-event) ";
+     double nclusters = _num_clusters;
+     std::cout << Form("%g ",nclusters / ((double)(_num_stored)));
+     std::cout << std::endl;
+
+    std::cout << "  # of clustered hits ... ";
+    //for(auto const& num : _num_clustered_hits_v) std::cout << Form("%-6zu ",num);
+    std::cout << Form("%-6zu ",_num_clustered_hits);
+
     std::cout << " ... Fractions: ";
-    for(size_t plane=0; plane<_num_clustered_hits_v.size(); ++plane) {
-      double clustered = _num_clustered_hits_v[plane];
-      double unclustered = _num_unclustered_hits_v[plane];
-      std::cout << Form("%g%% ",clustered/(clustered+unclustered));
-    }
+    double clustered   = _num_clustered_hits;
+    double unclustered = _num_unclustered_hits;
+    std::cout << Form("%g%% ",clustered/(clustered+unclustered));
     std::cout << std::endl;
   }
   
@@ -46,36 +46,31 @@ namespace larlite {
     ++_num_stored;
 
     auto geom = ::larutil::Geometry::GetME();
-    if(_num_clusters_v.empty()){
-      _num_clusters_v.resize(geom->Nplanes(),0);
-      _num_clustered_hits_v.resize(geom->Nplanes(),0);
-      _num_unclustered_hits_v.resize(geom->Nplanes(),0);
+    if(_num_clusters == 0){
+      _num_clusters = 0;
+      _num_clustered_hits = 0;
+      _num_unclustered_hits = 0;
     }
 
     auto ev_hit = storage->get_data<event_hit>(producer());
     
     if(!ev_hit) throw DataFormatException("Could not locate hit data product!");
 
-    auto const& alg_mgr_v = algo_manager_set();
+    auto const& alg_mgr = algo_manager();
 
-    std::vector<size_t> nclusters_v(alg_mgr_v.size(),0);
-    size_t nclusters_total=0;
+    size_t nclusters = 0;
 
-    for(size_t plane=0; plane<alg_mgr_v.size(); ++plane) {
-
-      try{
-	nclusters_v[plane] = alg_mgr_v[plane].NumClusters();
-      }catch(const ::larcv::larbys& err) {
-	nclusters_v[plane] = 0;
-      }
-
-      _num_clusters_v[plane] += nclusters_v[plane];
-      nclusters_total        += nclusters_v[plane];
-
+    try{
+      nclusters = alg_mgr.NumClusters();
+    }catch(const ::larcv::larbys& err) {
+      nclusters = 0;
     }
 
+    _num_clusters = nclusters;
+
     AssSet_t ass_set;
-    ass_set.resize(nclusters_total);
+    ass_set.resize(_num_clusters);
+
     for(auto& ass_unit : ass_set) ass_unit.reserve(100);
     for(size_t hindex=0; hindex<ev_hit->size(); ++hindex) {
 
@@ -83,31 +78,29 @@ namespace larlite {
 
       auto const& wid = h.WireID();
 
-      auto const& alg_mgr = alg_mgr_v[wid.Plane];
-
       auto const& cid = alg_mgr.ClusterID(wid.Wire,h.PeakTime());
 
       if(cid == ::larcv::kINVALID_CLUSTER_ID) {
-	_num_unclustered_hits_v[wid.Plane] += 1;
+	_num_unclustered_hits += 1;
 	continue;
       }
 
-      _num_clustered_hits_v[wid.Plane] += 1;
+      _num_clustered_hits += 1;
       
       size_t cindex = cid;
-      for(size_t plane=0; plane<wid.Plane; ++plane) cindex += nclusters_v[plane];
 
+      //for(size_t plane=0; plane<wid.Plane; ++plane) cindex += nclusters;
+      
       ass_set[cindex].push_back(hindex);
     }
 
     auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
     auto ev_ass     = storage->get_data<event_ass>    ("ImageClusterHit");
     if(ev_cluster) {
-      ev_cluster->reserve(nclusters_total);
-      for(size_t plane=0; plane<nclusters_v.size(); ++plane) {
-	
-	for(size_t cid=0; cid<nclusters_v[plane]; ++cid) {
+      ev_cluster->reserve(nclusters);
 
+      for(size_t plane=0; plane<geom->Nplanes(); ++plane) {
+	for(size_t cid=0; cid<nclusters; ++cid) {	
 	  ::larlite::cluster c;
 	  c.set_view(geom->PlaneToView(plane));
 	  c.set_planeID(geo::PlaneID(0,0,plane));
@@ -117,6 +110,7 @@ namespace larlite {
 	}
       }
     }
+    
     if(ev_ass)
       ev_ass->set_association(ev_cluster->id(),ev_hit->id(),ass_set);
   }

@@ -52,9 +52,7 @@ namespace larlite {
     */
     bool finalize();
 
-    larcv::ImageClusterManager& algo_manager(size_t plane_id);
-
-    const std::vector<larcv::ImageClusterManager>& algo_manager_set() const;
+    larcv::ImageClusterManager& algo_manager();
 
     const std::string& producer() const { return _producer; }
 
@@ -62,8 +60,9 @@ namespace larlite {
 
   private:
 
-    std::vector<larcv::ImageClusterManager> _alg_mgr_v;
+    ::larcv::ImageClusterManager _alg_mgr;
     ::larcv::ImageManager _orig_img_mgr;
+
     bool _store_original_img;
     std::string _producer;
     bool _profile;

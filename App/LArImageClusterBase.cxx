@@ -12,18 +12,11 @@ namespace larlite {
     _name=name;
     _fout=0;
     _producer="";
-    _alg_mgr_v.resize( ::larutil::Geometry::GetME()->Nplanes() );
     _store_original_img=false;
   }
 
-  const std::vector<larcv::ImageClusterManager>& LArImageClusterBase::algo_manager_set() const
-  { return _alg_mgr_v; }
-  
-  larcv::ImageClusterManager& LArImageClusterBase::algo_manager(size_t plane_id)
-  {
-    if(plane_id >= _alg_mgr_v.size()) throw ::larcv::larbys("ImageClusterManager not found (invalid plane ID)!");
-    return _alg_mgr_v[plane_id];
-  }
+  larcv::ImageClusterManager& LArImageClusterBase::algo_manager()
+  { return _alg_mgr; }
 
   bool LArImageClusterBase::initialize() {
 
@@ -45,8 +38,9 @@ namespace larlite {
 
     if(_producer.empty()) throw ::larcv::larbys("No producer specified...");
 
-    for(auto& mgr : _alg_mgr_v) mgr.Configure(cfg_mgr.Config().get_pset(mgr.Name()));
-
+    //for(auto& mgr : _alg_mgr_v) mgr.Configure(cfg_mgr.Config().get_pset(mgr.Name()));
+    _alg_mgr.Configure(cfg_mgr.Config().get_pset(_alg_mgr.Name()));
+    
     return true;
   }
   
@@ -69,19 +63,18 @@ namespace larlite {
       }
     }
 
-    if(_img_mgr.size() != _alg_mgr_v.size()) throw ::larcv::larbys("# of imaged created != # of planes!");
-
-    //_filler.Clear() ;
-    for(size_t plane = 0; plane < _alg_mgr_v.size(); ++plane) {
-
-      auto& alg_mgr    = _alg_mgr_v[plane];
+    //if(_img_mgr.size() != _alg_mgr_v.size()) throw ::larcv::larbys("# of imaged created != # of planes!");
+    
+    // for(size_t plane = 0; plane < _alg_mgr_v.size(); ++plane) {
+    for(size_t plane=0; plane<_img_mgr.size(); ++plane) {
+      // auto& alg_mgr    = _alg_mgr_v[plane];
       auto const& img  = _img_mgr.img_at(plane);
       auto const& meta = _img_mgr.meta_at(plane);
       if(!meta.num_pixel_row() || !meta.num_pixel_column()) continue;
       
-      alg_mgr.Add(img,meta);
-      alg_mgr.Process();
-      std::cout<<"Matched pairs: "<<alg_mgr.BookKeeper().GetResult().size()<<std::endl;
+      _alg_mgr.Add(img,meta);
+      _alg_mgr.Process();
+      std::cout<<"Matched pairs: "<<_alg_mgr.BookKeeper().GetResult().size()<<std::endl;
     }
 
     watch_one.Start();
@@ -118,16 +111,14 @@ namespace larlite {
   bool LArImageClusterBase::finalize() {
 
     Report();
-    for(size_t plane=0; plane < _alg_mgr_v.size(); ++plane) {
-      std::cout << "  \033[95mImageClusterManager\033[00m @ Plane " << plane << std::endl;
-      _alg_mgr_v[plane].Report();
-      std::cout << std::endl;
-    }
+    std::cout << "  \033[95mImageClusterManager\033[00m\n";
+    _alg_mgr.Report();
+    
 
-   if(_fout){
-     _fout->cd();
-     for(auto& mgr : _alg_mgr_v) mgr.Finalize(_fout);
 
+    if(_fout){
+      _fout->cd();
+      _alg_mgr.Finalize(_fout);
     }   
 
     return true;

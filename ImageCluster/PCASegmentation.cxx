@@ -14,8 +14,7 @@ namespace larcv{
     //How many pixes for initial subdivision
     _segments_x = pset.get<int> ("NSegmentsX");
     _segments_y = pset.get<int> ("NSegmentsY");
-    
-    
+      
     //various arbys cold cuts
     _nhits_cut     = pset.get<int>   ("NHitsCut"   );
     _sub_nhits_cut = pset.get<int>   ("NSubHitsCut");
@@ -27,16 +26,6 @@ namespace larcv{
     
     //do you want to be able to connect by crossing empty boxes?
     _allow_cross_empties = pset.get<bool> ("AllowEmptyCross");
-   
-    //output tree
-    _outtree = new TTree("PCA","PCA");
-    
-    // _outtree->Branch("_eval1",&_eval1,"eval1/D");
-    // _outtree->Branch("_eval2",&_eval2,"eval2/D");
-
-    _outtree->Branch("_area",&_area,"area/D");
-    _outtree->Branch("_perimeter",&_perimeter,"perimeter/D");
-
 
   }
   
@@ -44,22 +33,25 @@ namespace larcv{
 						     const ::cv::Mat& img,
 						     larcv::ImageMeta& meta)
   {
-    clear_vars();
+    //Make the big copy
+    Cluster2DArray_t oclusters = clusters;
+
+
     //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
     
     //cluster == contour
     //ContourArray_t ctor_v;    
-    _cparms_v.reserve(clusters.size());
-
+  
     double angle_cut = _angle_cut; //degrees
     angle_cut *= 3.14159/180.0;    //to radians
 
     bool bad = false;
     
-    for(unsigned u = 0; u < clusters.size(); ++u) {
+    for(unsigned u = 0; u < oclusters.size(); ++u) {
       bad = false;
-      
-      auto& cluster    =  clusters[u]._contour;
+
+      auto& ccluster   = oclusters[u];
+      auto& cluster    = ccluster._contour;
       
       //Lets get subimage that only includes this cluster
       //and the points in immediate vicinity (ROI)
@@ -211,95 +203,29 @@ namespace larcv{
       
       //decide the shower axis via some combination of everything
       //you see in PCAPath.cxx
-      auto paths = decide_axis(boxes,combined);
-
+      auto path = decide_axis(boxes,combined);
+      
       //need atleast this many boxes in path to care about it... or drop the cluster
-      if (paths.size() < _n_path_size)  bad = true; //continue;
+      if (path.size() < _n_path_size)  bad = true; //continue;
 
-
-
-      //
-      // Old code from original, it works so i don't change
-      //
+      ccluster._eigenVecFirst = path.combined_e_vec_;
+      ccluster._startPt       = path.point_closest_to_edge_;
       
-      // Look at the overall cluster
-      auto cluster_s = cluster;
-      for(auto &pt : cluster_s) { pt.x -= rect.x; pt.y -= rect.y; }
-
-      Point2D e_vec,e_center;
-      pca_line(cluster_s,e_vec,e_center);
-
-      // for the viewer...
-      std::vector<::cv::Point> locations;
-      ::cv::findNonZero(subMat, locations);
-
-      std::vector<std::pair<int,int> > hits;
-      std::vector<int> charge;
-      for(const auto& loc : locations) {
-	if ( ::cv::pointPolygonTest(cluster_s, loc,false) < 0 )
-	  continue;
-	
-	charge.push_back( (int) subMat.at<uchar>(loc.y,loc.x) );
-	hits.emplace_back(loc.x + rect.x, loc.y + rect.y);
-       
-      }
-      
-      // you must have atleast 10 points to proceed or trunk is useless
-      if ( hits.size() < _n_clustersize ) // j == number of points in cluster
-	continue;
-
-      auto nhits = hits.size();
-      
-      _area      = (double) ::cv::contourArea(cluster);
-      _perimeter = (double) ::cv::arcLength  (cluster,1);
-      
-
-      auto bbox = ::cv::minAreaRect(cluster);
-      ::cv::Point2f verticies[4]; // stupid, why cant I pass stack pointer around it's sad
-      bbox.points(verticies);
-      std::vector<::cv::Point2f> v; v.resize(4); 
-      for(int r=0;r<4;++r) v[r] = verticies[r];
-      
-      paths.CheckMinAreaRect(bbox);
-
-      // this is the only way you can get shit into python at this point      
-      _cparms_v.emplace_back(u,
-			     bad,
-			     _area,
-			     _perimeter,
-			     e_vec.x,
-			     e_vec.y,
-			     nhits,
-			     hits,
-			     charge,
-			     boxes,
-			     combined,
-			     paths,
-			     v);
-      
-      
-      _outtree->Fill();
     }
     
 
     //just return the clusters you didn't do anything...
-    return clusters;
-
+    
+    return oclusters;
   }
-
-  
-  void PCASegmentation::clear_vars() {
-    _cparms_v.clear();
-  }
-
 
   
   void PCASegmentation::connect(const PCABox& box,                  //incoming line to compare too
-				       const std::vector<PCABox>& boxes,   //reference to all the lines
-				       std::map<int,bool>& used,           //used lines
-				       const std::map<int,std::vector<int> >& neighbors,
-				       std::map<int,std::vector<int> >& combined,
-				       int i,int k) {
+				const std::vector<PCABox>& boxes,   //reference to all the lines
+				std::map<int,bool>& used,           //used lines
+				const std::map<int,std::vector<int> >& neighbors,
+				std::map<int,std::vector<int> >& combined,
+				int i,int k) {
     
 
     if ( neighbors.count(k) <= 0 ) 

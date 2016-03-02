@@ -54,14 +54,17 @@ namespace larcv {
     /// Pixel height size (i.e. X unit length in cm)
     double PixelHeight() const { return _pixel_height; }
     
-    Contour_t _contour;
 
+
+    Contour_t _contour;
+    
     std::vector<::cv::Point> _insideHits;
     int _numHits;
     
     Point2D _centerPt;
     Point2D _eigenVecFirst;
     Point2D _eigenVecSecond;
+
     Point2D _startPt;
     
   private:

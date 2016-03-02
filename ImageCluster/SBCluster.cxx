@@ -28,7 +28,6 @@ namespace larcv {
     if ( clusters.size() )
       throw larbys("This algo can only be executed first in algo chain!");
 					
-    
     ::cv::Mat sb_img; //(s)mooth(b)inary image
 
     //Dilate
@@ -54,18 +53,7 @@ namespace larcv {
 		       CV_RETR_EXTERNAL,
 		       CV_CHAIN_APPROX_SIMPLE);
     
-    //Approximate the polygon curve using Douglas-Peucker algorithm
-    
-    // ContourArray_t ctor_result_v;
-    // ctor_result_v.resize(ctor_v.size());
-
-    // for( size_t k = 0; k < ctor_v.size(); k++ )
-    //   ::cv::approxPolyDP(ctor_v[k], ctor_result_v[k], _polygon_e, true); //true to close the contours
-
-    // return ctor_result_v;
-
-    Cluster2DArray_t result_v;
-    result_v.resize(ctor_v.size());
+    Cluster2DArray_t result_v; result_v.resize(ctor_v.size());
 
     for(size_t i=0; i<ctor_v.size(); ++i) std::swap(result_v[i]._contour,ctor_v[i]);
     
