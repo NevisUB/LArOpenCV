@@ -39,7 +39,7 @@ namespace larcv {
   {
     for(auto& alg : _cluster_alg_v   ) alg->Finalize(file);
     _match_alg->Finalize(file);
-    _recluster_alg->Finalize(file);
+    //_recluster_alg->Finalize(file);
     _configured = false;
   }
 
@@ -293,6 +293,9 @@ namespace larcv {
 	  for(auto const& cinfo : comb) {
 	    auto const& plane = cinfo.first;
 	    auto const& index = cinfo.second;
+
+	    if( !c_per_plane[plane].size() ) continue;
+
 	    input_clusters.push_back(c_per_plane[plane][index]);
 	    tmp_index_v.push_back(c_per_plane[plane][index]->ClusterID());
 	  }
