@@ -71,6 +71,7 @@ namespace larcv {
     Point2D point_closest_to_edge_;
     /////////*********/////////
 
+    std::vector<::cv::Rect> chosen_boxes_;
     
     
   };

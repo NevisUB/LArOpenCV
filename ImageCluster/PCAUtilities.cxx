@@ -393,6 +393,7 @@ namespace larcv {
     int counter = 0;
     
     for( const auto& index: connections ) {
+
       auto& path = paths[counter];
       path.seed_ = index.first;
       
@@ -413,8 +414,13 @@ namespace larcv {
 	       {
 		 return l.cw_cov_ < r.cw_cov_ ;
 	       });
-    
-    return paths.back();
+
+    auto& chosen_path = paths.back();
+
+    for ( auto& pcabox : chosen_path )
+      chosen_path.chosen_boxes_.emplace_back(pcabox->box_ + pcabox->parent_roi_.tl());
+
+    return chosen_path;
   }
 
 }

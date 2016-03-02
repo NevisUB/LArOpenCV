@@ -15,8 +15,7 @@ from methods import *
 my_proc = fmwk.ana_processor()
 
 # Config file
-cfg="../../App/mac/SBCluster.fcl"
-
+cfg="../../App/mac/MergingTester.fcl"
 
 algid = int(sys.argv[2])
 
@@ -65,23 +64,43 @@ while( my_proc.process_event() ) :
             print "CLUSTER CONTOUR WAY TOO BIG"
             continue
         
-        
         cx,cy = get_xy(contour)
 
         if  cluster._insideHits.size() > 0:
             px,py = get_xy(cluster._insideHits)
-            ax.plot(px,py,'o',color='black')
+            ax.plot(px,py,'o',color='black',markersize=1)
 
         cx.append(cx[0])
         cy.append(cy[0])
 
         ax.plot(cx,cy,'-',lw=3)
+
         ax.plot(cluster._startPt.x,
-                cluster._startPt.y,'o',color='purple')
+                cluster._startPt.y,'o',color='pink')
 
         ax.plot(cluster._endPt.x,
                 cluster._endPt.y,'o',color='green')
 
+        if algid == 1 : #get by name next time
+            pcas   = manager.GetClusterAlg(algid)
+            paths  = pcas._pcapaths;
+            npaths = paths.size();
+            print "Found npaths...%d" % npaths
+            for p in xrange(npaths):
+                path   = paths[p]
+                nboxes = path.chosen_boxes_.size()
+                print "Found nboxes...%d" % nboxes
+                for b in xrange(nboxes):
+                    box       = path.chosen_boxes_[b]
+                    rectangle = plt.Rectangle((box.x, box.y),
+                                              box.width*10, box.height*10,
+                                              fc='white',ec='black',alpha=1,lw=3)
+                    ax.add_patch(rectangle)
+
+            bbox = cluster._minAreaRect
+            ax.plot([bbox[0].x,bbox[1].x,bbox[2].x,bbox[3].x,bbox[0].x],
+                    [bbox[0].y,bbox[1].y,bbox[2].y,bbox[3].y,bbox[0].y],color='orange',lw=2)
+            
     plt.show()
 
     plt.cla()

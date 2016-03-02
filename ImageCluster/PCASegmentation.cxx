@@ -37,7 +37,8 @@ namespace larcv{
   {
     //Make the big copy
     Cluster2DArray_t oclusters; oclusters.reserve(clusters.size());
-
+    _pcapaths.clear();
+    
     //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
     
     //cluster == contour
@@ -55,7 +56,7 @@ namespace larcv{
       
     for(unsigned u = 0; u < clusters.size(); ++u) {
       bad = false;
-      if ( clusters[u]._numHits < 10 ) { continue; }
+      if ( clusters[u]._numHits < _n_clustersize ) continue;
 
       Cluster2D ocluster = clusters[u];
 
@@ -65,7 +66,6 @@ namespace larcv{
 	ocluster._insideHits.emplace_back(loc.x, loc.y);
       }
      
-      
       auto& cluster      = ocluster._contour;
 
       //Lets get subimage that only includes this cluster
@@ -232,6 +232,7 @@ namespace larcv{
       for(int r=0;r<4;++r) v[r] = verticies[r];
 
       path.CheckMinAreaRect(bbox,v);
+      std::swap(v,ocluster._minAreaRect);
       
       ocluster._eigenVecFirst = path.combined_e_vec_;
       ocluster._startPt       = path.point_closest_to_edge_;
@@ -244,15 +245,17 @@ namespace larcv{
       ocluster._area      = ::cv::contourArea(cluster);
       ocluster._perimeter = ::cv::arcLength(cluster,1);
 
+      _pcapaths.push_back(path);
+      
       oclusters.emplace_back(ocluster);
+      
     }
 
-    
-      //just return the clusters you didn't do anything...
-      // std::cout << "return of PCAS oclusters" << oclusters.size() << "\n";
-      return oclusters;
+    //just return the clusters you didn't do anything...
+    // std::cout << "return of PCAS oclusters" << oclusters.size() << "\n";
+    return oclusters;
   }
-
+  
   
   void PCASegmentation::connect(const PCABox& box,                  //incoming line to compare too
 				const std::vector<PCABox>& boxes,   //reference to all the lines
@@ -374,16 +377,16 @@ namespace larcv{
     
     ::cv::Point* far_point;
     double d = 0.0;
-    std::cout << "inside hits... " << ocluster._insideHits.size() << "\n";
+    // std::cout << "inside hits... " << ocluster._insideHits.size() << "\n";
     for( auto& pt : ocluster._insideHits ) {
       auto dd = dist(startpoint,pt);
-      std::cout << "start x : " << startpoint.x << " start y: " << startpoint.y << "\n";
-      std::cout << pt << "\n";
-      std::cout << "dd : " << dd << "\n";
+      // std::cout << "start x : " << startpoint.x << " start y: " << startpoint.y << "\n";
+      // std::cout << pt << "\n";
+      // std::cout << "dd : " << dd << "\n";
       if( dd > d ) { d = dd; far_point = &pt; }
     }
 
-    std::cout << "far point x: " << far_point->x << " and far point y " << far_point->y << "\n";
+    //std::cout << "far point x: " << far_point->x << " and far point y " << far_point->y << "\n";
     return Point2D(far_point->x,far_point->y);
     
   }
