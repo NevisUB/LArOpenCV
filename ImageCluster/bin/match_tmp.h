@@ -15,6 +15,7 @@
 #define __CLASSNAME_H__
 
 #include "MatchAlgoBase.h"
+#include "MatchAlgoFactory.h"
 
 namespace larcv {
   /**
@@ -41,8 +42,8 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    double _Process_(const larcv::Cluster2D_t& clusters,
-		     larcv::ImageMeta& meta);
+    double _Process_(const larcv::Cluster2DPtrArray_t& clusters);
+
     
   private:
 

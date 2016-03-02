@@ -24,17 +24,16 @@ ImageClusterManager: {
   Verbosity: 1
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
-  # ClusterAlgoType: [SBCluster,PCASegmentation]
-  # ClusterAlgoName: [sbc,pcas]
 
-  ClusterAlgoType: [SBCluster,SatelliteMerge]
-  ClusterAlgoName: [sbc,satellitemerge]
+  ClusterAlgoType: [SBCluster,PCASegmentation,PiZeroFilter]
+  ClusterAlgoName: [sbc,pcas,pizerofilter]
 
-  MatchAlgoType: []
-  MatchAlgoName: []
+  MatchAlgoType: MatchTimeOverlap
+  MatchAlgoName: mto
 
-  ReClusterAlgoType: []
-  ReClusterAlgoName: []
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
+
 
  ImageClusterViewer: {
    Verbosity: 0
@@ -43,28 +42,33 @@ ImageClusterManager: {
    MinContourArea: 125
  }
 
-  sbc:{
-  Verbosity: 1
-  DilationSize : 5
-  DilationIterations : 2
-  BlurSize : 5
-  Thresh : 1
-  ThreshMaxVal : 255
+  mymatcher: {}
+    
+ sbc:{
+
+   Verbosity: 1
+   DilationSize : 5
+   DilationIterations : 2
+   BlurSize : 5
+   Thresh : 1
+   ThreshMaxVal : 255
 
   }
 	  
-  pcas : {
+
+ pcas : {
 
     NSegmentsX : 6
     NSegmentsY : 6
 
     NHitsCut        : 3  # min number of hits in segment
     NSubHitsCut     : 2  # min number of hits in sub segment
-    AngleCut        : 10 # degrees
+    AngleCut        : 20 # degrees
     NDivisions      : 2  # number of times to subdivide the segments
     AllowEmptyCross : 1 # if an empty box is between two "good" boxes, should we be able to cross?
     MinClusterSize  : 10 # min number of hits in cluster to actually care
-        
+    MinPathSize     : 3  # min number of connected boxes...
+
     CovSubDivide : 0.75
 
     }
@@ -81,6 +85,21 @@ ImageClusterManager: {
     MinShowerDistance: 25
     ContourDensity:50 # unused
   }
+
+  pcao: {
+    NMinInsideHits: 2
+  }
+
+  pizerofilter: {
+    NHitsCut: 10
+    BackStartPoint: 100
+  }
+
+   mto : {
+     RatioCut : 0.001
+     StartTimeCut : 5
+     RequireThreePlanes : 1
+    }
 
 
 }

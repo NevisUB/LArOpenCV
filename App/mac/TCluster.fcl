@@ -29,11 +29,11 @@ ImageClusterManager: {
   ClusterAlgoType: [TCluster]
   ClusterAlgoName: [TCluster]
 
-  MatchAlgoType: [TCluster]
-  MatchAlgoName: [TCluster]
+  MatchAlgoType: ""
+  MatchAlgoName: ""
 
-  ReClusterAlgoType: [TCluster]
-  ReClusterAlgoName: [TCluster]
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
 
   ImageClusterViewer: {
     Verbosity: 0

@@ -54,6 +54,11 @@ namespace larcv {
   int get_charge_sum(const ::cv::Mat& subImg, const Contour_t& pts );
 
   inline double dist(const ::cv::Point2f& a, const ::cv::Point2f& b) { return std::sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y)); }
+  inline double dist(const Point2D& a, const ::cv::Point2f& b)       { return std::sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y)); }
+  inline double dist(const ::cv::Point2f& a,const Point2D& b)        { return std::sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y)); }
+  inline double dist(const ::cv::Point2d& a, const ::cv::Point2d& b) { return std::sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y)); }
+  inline double dist(const Point2D& a, const Point2D& b)             { return std::sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y)); }
+
   
   std::pair<double,double> closest_point_on_line(std::vector<double>& line,int lx,int ly);
 
@@ -65,7 +70,6 @@ namespace larcv {
   
   std::vector<PCABox> sub_divide(PCABox& box, short divisions);
 
-  // int decide_axis(std::vector<PCABox>& boxes, std::map<int,std::vector<int> > connections);
   PCAPath decide_axis(std::vector<PCABox>& boxes, std::map<int,std::vector<int> > connections);
 
   

@@ -63,7 +63,8 @@ namespace larcv {
     
 
     /////////*********/////////
-    void CheckMinAreaRect(const ::cv::RotatedRect& rr);
+    void CheckMinAreaRect(const ::cv::RotatedRect& rr,
+			  const std::vector<::cv::Point2f>& pts);
     
     ::cv::Rect far_from_center_;
     Point2D e_vec_far_;

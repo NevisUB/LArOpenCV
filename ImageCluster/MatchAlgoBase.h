@@ -53,8 +53,7 @@ namespace larcv {
     /**
        @brief wrapper execution method: internally executes _Process_ function (see there for details)
     */
-    double Process(const larcv::Cluster2DArray_t& clusters,
-		   larcv::ImageMeta& meta);
+    double Process(const larcv::Cluster2DPtrArray_t& clusters);
 
   protected:
 
@@ -68,8 +67,7 @@ namespace larcv {
        third argument is meta data to interpret a returned clusters (i.e. update metadata if return clusters \n
        do not use the same coordinate reference as provided image, else leave unchanged).
      */
-    virtual double _Process_(const larcv::Cluster2DArray_t& clusters,
-			     larcv::ImageMeta& meta) = 0;
+    virtual double _Process_(const larcv::Cluster2DPtrArray_t& clusters)=0;
     
   };
 
