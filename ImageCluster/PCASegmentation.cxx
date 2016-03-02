@@ -38,7 +38,7 @@ namespace larcv{
     //Make the big copy
     Cluster2DArray_t oclusters; oclusters.reserve(clusters.size());
     _pcapaths.clear();
-    
+
     //http://docs.opencv.org/master/d3/d8d/classcv_1_1PCA.html
     
     //cluster == contour
