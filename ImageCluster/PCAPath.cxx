@@ -103,8 +103,8 @@ namespace larcv {
     //the fuck? PCA boxes get destructed BEFORE I try to access them in python?
     //copy it into public var in PCAPath.... im stupid
     far_from_center_ = this->at(far_from_center)->box_;
+    auto fbox        = this->at(far_from_center);
     e_vec_far_       = this->at(far_from_center)->e_vec_;
-    
 
     //inside THIS box, get the closest point to the edge...
     std::vector<double> edgeline; edgeline.resize(4);
@@ -113,32 +113,36 @@ namespace larcv {
 
     ::cv::Point* cpt;
     int c = 0;
+    //std::cout << "number of points..." << this->at(far_from_center)->pts_.size() << "\n";
     for( auto& pt : this->at(far_from_center)->pts_ ) {
       c++;
       d = 9e6;
+      //std::cout << "c: " << c << "\n";
+
       for (int i = 0; i < pts.size(); ++i) {
 	edgeline.clear();
 	edgeline[0] = pts[i].x;   edgeline[1] = pts[i].y;
-
-	if ( i+1 == pts.size() ) i = -1; //wrap around!
 	
-	edgeline[2] = pts[i+1].x; edgeline[3] = pts[i+1].y;
-	i = pts.size() - 1;
+	if ( i+1 == pts.size() ) // wrap around
+	  { edgeline[2] = pts[0].x; edgeline[3] = pts[0].y; }
+	else
+	  { edgeline[2] = pts[i+1].x; edgeline[3] = pts[i+1].y; }
 	
-	auto dd = roi_d_to_line(edgeline,pt.x,pt.y); // get closest edge
+	auto dd = roi_d_to_line(edgeline,
+				pt.x + fbox->parent_roi_.x,
+				pt.y + fbox->parent_roi_.y); // get closest edge
 	if ( dd < d ) { d = dd; }
       }
 
       if ( d < ddd ) { ddd = d; cpt = &pt; }
       
     }
-
-    point_closest_to_edge_ = Point2D(cpt->x + far_from_center_.x,
-				     cpt->y + far_from_center_.y);
+    
+    point_closest_to_edge_ = Point2D(cpt->x + fbox->parent_roi_.x,
+				     cpt->y + fbox->parent_roi_.y);
     
   }
-
-
+  
   
 }
 

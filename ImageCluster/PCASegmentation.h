@@ -31,6 +31,8 @@ namespace larcv {
   public:
     void Finalize(TFile* fout) { }
 
+    std::vector<PCAPath> _pcapaths; //one for each output contour
+    
   protected:
     
     /// Configuration method

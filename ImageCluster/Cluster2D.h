@@ -76,8 +76,8 @@ namespace larcv {
     double _area;
     double _perimeter;
 
-
-    
+    std::vector<::cv::Point2f> _minAreaRect;
+        
   private:
     ClusterID_t _cluster_id;
     ImageID_t   _image_id;
