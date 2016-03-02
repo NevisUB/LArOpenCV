@@ -56,7 +56,7 @@ namespace larcv {
   private:
 
     Point2D backprojectionpoint(Point2D point1, Point2D point2, Point2D point3, Point2D point4);
-    double distance2D(Point2D point1, Point2D point2);
+    double distance2D(Point2D point1, Point2D point2, double width, double height);
 
   };
   

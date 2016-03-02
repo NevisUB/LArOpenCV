@@ -377,21 +377,12 @@ namespace larcv{
     
     ::cv::Point* far_point;
     double d = 0.0;
-<<<<<<< Updated upstream
     // std::cout << "inside hits... " << ocluster._insideHits.size() << "\n";
     for( auto& pt : ocluster._insideHits ) {
       auto dd = dist(startpoint,pt);
       // std::cout << "start x : " << startpoint.x << " start y: " << startpoint.y << "\n";
       // std::cout << pt << "\n";
       // std::cout << "dd : " << dd << "\n";
-=======
-    //std::cout << "inside hits... " << ocluster._insideHits.size() << "\n";
-    for( auto& pt : ocluster._insideHits ) {
-      auto dd = dist(startpoint,pt);
-     // std::cout << "start x : " << startpoint.x << " start y: " << startpoint.y << "\n";
-     // std::cout << pt << "\n";
-     // std::cout << "dd : " << dd << "\n";
->>>>>>> Stashed changes
       if( dd > d ) { d = dd; far_point = &pt; }
     }
 
