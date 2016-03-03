@@ -9,6 +9,7 @@
 #include "DataFormat/cluster.h"
 #include "DataFormat/event_ass.h"
 #include "Core/larbys.h"
+#include "DataFormat/pfpart.h"
 
 namespace larlite {
 
@@ -58,20 +59,12 @@ namespace larlite {
 
     auto const& alg_mgr = algo_manager();
 
-    size_t nclusters = 0;
+    _num_clusters = alg_mgr.NumClusters();
 
-    try{
-      nclusters = alg_mgr.NumClusters();
-    }catch(const ::larcv::larbys& err) {
-      nclusters = 0;
-    }
+    AssSet_t cluster_ass;
+    cluster_ass.resize(_num_clusters);
 
-    _num_clusters = nclusters;
-
-    AssSet_t ass_set;
-    ass_set.resize(_num_clusters);
-
-    for(auto& ass_unit : ass_set) ass_unit.reserve(100);
+    for(auto& ass_unit : cluster_ass) ass_unit.reserve(100);
     for(size_t hindex=0; hindex<ev_hit->size(); ++hindex) {
 
       auto const& h = (*ev_hit)[hindex];
@@ -91,28 +84,54 @@ namespace larlite {
 
       //for(size_t plane=0; plane<wid.Plane; ++plane) cindex += nclusters;
       
-      ass_set[cindex].push_back(hindex);
+      cluster_ass[cindex].push_back(hindex);
     }
 
     auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
     auto ev_ass     = storage->get_data<event_ass>    ("ImageClusterHit");
     if(ev_cluster) {
-      ev_cluster->reserve(nclusters);
+      ev_cluster->resize(_num_clusters);
 
-      for(size_t plane=0; plane<geom->Nplanes(); ++plane) {
-	for(size_t cid=0; cid<nclusters; ++cid) {	
-	  ::larlite::cluster c;
-	  c.set_view(geom->PlaneToView(plane));
-	  c.set_planeID(geo::PlaneID(0,0,plane));
-	  c.set_id(ev_cluster->size());
+      for(size_t cid=0; cid<_num_clusters; ++cid) {
 
-	  ev_cluster->push_back(c);
+	auto const& image_cluster = alg_mgr.Cluster(cid);
+
+	if(cid != image_cluster.ClusterID()) {
+	  std::cout<<cid<<" vs. "<<image_cluster.ClusterID()<<std::endl;
+	  throw DataFormatException("ClusterID ordering seems inconsistent!");
 	}
+
+	::larlite::cluster c;
+	c.set_view(geom->PlaneToView(image_cluster.PlaneID()));
+	c.set_planeID(geo::PlaneID(0,0,image_cluster.PlaneID()));
+	c.set_id(image_cluster.ClusterID());
+
+	ev_cluster->push_back(c);
       }
+
+      if(ev_ass)
+	ev_ass->set_association(ev_cluster->id(),ev_hit->id(),cluster_ass);
+    }
+
+    auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
+    if(ev_pfpart) {
+      auto const match_info = alg_mgr.BookKeeper().GetResult();
+      AssSet_t pfpart_ass;
+      pfpart_ass.reserve(match_info.size());
+
+      for(size_t pfp_index=0; pfp_index<match_info.size(); ++pfp_index) {
+
+	pfpart p;
+	ev_pfpart->push_back(p);
+	AssUnit_t ass;
+	for(auto const& cid : match_info[pfp_index]) ass.push_back(cid);
+
+	pfpart_ass.push_back(ass);
+      }
+
+      if(ev_ass && ev_cluster) ev_ass->set_association(ev_pfpart->id(),ev_cluster->id(),pfpart_ass);
     }
     
-    if(ev_ass)
-      ev_ass->set_association(ev_cluster->id(),ev_hit->id(),ass_set);
   }
 
   void LArImageHit::extract_image(storage_manager* storage)
@@ -224,7 +243,7 @@ namespace larlite {
       // Retrieve final clusters on this image
       auto const& clusters = alg_mgr.Clusters(img_id);
 
-      std::cout << "Image " << img_id << " @ Plane " << meta.plane() << " has " << clusters.size() << " clusters!" << std::endl;
+      //std::cout << "Image " << img_id << " @ Plane " << meta.plane() << " has " << clusters.size() << " clusters!" << std::endl;
     }
 
   }
