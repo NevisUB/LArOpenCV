@@ -28,6 +28,9 @@ ImageClusterManager: {
   ClusterAlgoType: [SBCluster,PCASegmentation,PiZeroFilter]
   ClusterAlgoName: [sbc,pcas,pizerofilter]
 
+  #ClusterAlgoType: [SBCluster,TrackShower,PiZeroFilter]
+  #ClusterAlgoName: [sbc,Trackshower,pizerofilter]
+
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
 
@@ -74,9 +77,12 @@ ImageClusterManager: {
     }
 
   Trackshower:{
-    AreaCut : 1850
+    AreaCut : 900 
     RatioCut : 3
-    TrackShowerSat : 2 # 0 returns tracks, 1 returns showers, 2 returns satellites+showers, 3 returns everything
+    TrackShowerSat : 0 # 0 returns showers, 1 returns tracks, 2 returns satellites+showers, 3 returns everything
+
+    Step1 : 80
+    Step2 : 80
   }
 
   satellitemerge: {
@@ -98,7 +104,7 @@ ImageClusterManager: {
    mto : {
      RatioCut : 0.001
      StartTimeCut : 5
-     RequireThreePlanes : 1
+     RequireThreePlanes : 0 
     }
 
 
