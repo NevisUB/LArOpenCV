@@ -12,6 +12,9 @@ namespace larcv{
     _back_startPt = pset.get<double> ("BackStartPoint");
     _min_area = pset.get<double> ("MinArea");
     _max_rad_length = pset.get<double> ("MaxRadLength");
+    _width = pset.get<double> ("Width");
+    _height = pset.get<double> ("Height");
+
 
   }
 
@@ -57,8 +60,8 @@ namespace larcv{
 				    			jPoint, clusters.at(j)._startPt);
 
 
-	      double distance1 = distance2D(sharedPoint, clusters.at(i)._startPt, clusters.at(i).PixelWidth(), clusters.at(i).PixelHeight());
-              double distance2 = distance2D(sharedPoint, clusters.at(j)._startPt, clusters.at(j).PixelWidth(), clusters.at(j).PixelHeight());
+	      double distance1 = distance2D(sharedPoint, clusters.at(i)._startPt, _width, _height);
+              double distance2 = distance2D(sharedPoint, clusters.at(j)._startPt, _width, _height);
 
 
 //	      std::cout << "Origin: " << clusters.at(i).Origin().x << ", " << clusters.at(i).Origin().y << std::endl;
@@ -174,8 +177,8 @@ namespace larcv{
 
     double length = 0;
 
-    double length2 = (point2.x - point1.x)*(point2.x - point1.x)/(width*width) 
-		   + (point2.y - point1.y)*(point2.y - point1.y)/(height*height);
+    double length2 = (point2.x - point1.x)*(point2.x - point1.x)*(width*width) 
+		   + (point2.y - point1.y)*(point2.y - point1.y)*(height*height);
 
 //    std::cout << "POINT 2: " << point2.x << ", " << point2.y << std::endl;
 //    std::cout << "POINT 1: " << point1.x << ", " << point1.y << std::endl;

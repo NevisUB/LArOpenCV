@@ -93,15 +93,10 @@ ImageClusterManager: {
   pizerofilter: {
     NHitsCut: 10
     BackStartPoint: 1000
-    MaxRadLength: 40000
+    MaxRadLength: 40
     MinArea: 1
-  }
-
-  pizerofilter2: {
-    NHitsCut: 10
-    BackStartPoint: 1000
-    MaxRadLength: 4000
-    MinArea: 1
+    Width : 0.0557 #cm/time tick
+    Height : 0.3 #cm/wire
   }
 
 #  mto: {
