@@ -377,17 +377,17 @@ namespace larcv {
 
     auto const& clusters_v = _clusters_v_v[target_alg_id];
 
-    ClusterID_t current_id = 0;
+    ClusterID_t offset_id = 0;
     for(size_t cluster_index=0; cluster_index < clusters_v.size(); ++cluster_index) {
 
       auto const& clusters = clusters_v[cluster_index];
       
-      if(current_id + clusters.size() < cluster_id) {
-	current_id += clusters.size();
+      if(offset_id + clusters.size() <= cluster_id) {
+	offset_id += clusters.size();
 	continue;
       }
 
-      return clusters[cluster_id - current_id];
+      return clusters[cluster_id - offset_id];
     }
 
     throw larbys("Invalid cluster ID requested!");

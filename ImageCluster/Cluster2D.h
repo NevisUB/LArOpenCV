@@ -54,6 +54,11 @@ namespace larcv {
     /// Pixel height size (i.e. X unit length in cm)
     double PixelHeight() const { return _pixel_height; }
 
+    //
+    // Data attributes that can be modified by algorithms
+    //
+    ParticleType_t _particle_type;
+
     Contour_t _contour;
 
     std::vector<::cv::Point> _insideHits;
