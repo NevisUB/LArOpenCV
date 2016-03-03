@@ -14,6 +14,7 @@ namespace larcv{
     _max_rad_length = pset.get<double> ("MaxRadLength");
     _width = pset.get<double> ("Width");
     _height = pset.get<double> ("Height");
+
     _attempt_merging = pset.get<bool> ("AttemptMerging");
     _small_dot_prod = pset.get<double> ("SmallDotProduct");
 

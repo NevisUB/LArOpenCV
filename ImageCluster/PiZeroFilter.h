@@ -53,7 +53,9 @@ namespace larcv {
     double _max_rad_length; 
     double _width;
     double _height;
-    bool _attempt_merging;
+
+
+    bool  _attempt_merging;
     double _small_dot_prod;
 
   private:

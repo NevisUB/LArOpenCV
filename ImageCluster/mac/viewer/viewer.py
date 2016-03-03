@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import sys
 
 from larlite import larlite as fmwk
-from ROOT import larcv
 
 from viewer_methods import draw_cluster
 import algo_viewer as av
@@ -49,9 +48,6 @@ while( my_proc.process_event() ) :
     
     for c in xrange(manager.NumClusters(algid)):
 
-    #    if algid == 2 and  c == 0:
-    #        continue
-        
         cluster = manager.Cluster(c,algid)
         
         try:
@@ -59,6 +55,7 @@ while( my_proc.process_event() ) :
                 print "BAD PLANEID"
                 continue
         except ReferenceError:
+            "Reference error that fucking fine"
             continue
 
         ax = axx[cluster.PlaneID()]
