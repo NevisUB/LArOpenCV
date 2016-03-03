@@ -59,18 +59,24 @@ namespace larcv{
               double distance2 = distance2D(sharedPoint, clusters.at(j)._startPt, clusters.at(j).PixelWidth(), clusters.at(j).PixelHeight());
 
 
-	      std::cout << "Origin: " << clusters.at(i).Origin().x << ", " << clusters.at(i).Origin().y << std::endl;
-	      std::cout << "Start: " << clusters.at(i)._startPt.x << ", " << clusters.at(i)._startPt.y << std::endl;
-//	      std::cout << clusters.at(i).PixelWidth() << ", " << clusters.at(i).PixelHeight() << std::endl;
+//	      std::cout << "Origin: " << clusters.at(i).Origin().x << ", " << clusters.at(i).Origin().y << std::endl;
+/*	      std::cout << "Start i: " << clusters.at(i)._startPt.x << ", " << clusters.at(i)._startPt.y << std::endl;
+	      std::cout << "Start j: " << clusters.at(j)._startPt.x << ", " << clusters.at(j)._startPt.y << std::endl;
+	      std::cout << "Next i: " << iPoint.x << ", " << iPoint.y << std::endl;
+	      std::cout << "Next j: " << jPoint.x << ", " << jPoint.y << std::endl;
+	      std::cout << "Share Point: " << sharedPoint.x << ", " << sharedPoint.y << std::endl;
+*///	      std::cout << clusters.at(i).PixelWidth() << ", " << clusters.at(i).PixelHeight() << std::endl;
 //	      std::cout << clusters.at(j).PixelWidth() << ", " << clusters.at(j).PixelHeight() << std::endl;
 
-	      std::cout << "Distances: " << distance1 << ", " << distance2 << std::endl;
+//	      std::cout << "Distances: " << distance1 << ", " << distance2 << std::endl;
 
 
 	      //Make sure distance from back projected vertex from PCA
 	      //is equal to or shorter than maximum radiation length
 //	      if(std::abs(distance1) <=  _max_rad_length && std::abs(distance2) <= _max_rad_length)
 //	      {
+ 	        std::cout << "Distances: " << distance1 << ", " << distance2 << std::endl;
+//	        std::cout << i << ", " << j << std::endl;
 		OutputClustersID.push_back(i);
 	        OutputClustersID.push_back(j);
 //	      }
@@ -81,7 +87,15 @@ namespace larcv{
       }
     if(!OutputClustersID.empty())std::cout << "Number of Cluster Pairs: " << OutputClustersID.size()/2 << std::endl;
 
-    OutputClusters.push_back(clusters.at(0));
+    std::sort(OutputClustersID.begin(), OutputClustersID.end());
+    auto UniqueOutputClustersID = std::unique(OutputClustersID.begin(), OutputClustersID.end());
+    OutputClustersID.erase(UniqueOutputClustersID, OutputClustersID.end());
+
+    for(int clust = 0; clust < OutputClustersID.size(); clust++)
+    {
+//      std::cout << clust << std::endl;
+      OutputClusters.push_back(clusters.at(clust));
+    }
 
     return OutputClusters;
   }
@@ -97,16 +111,23 @@ namespace larcv{
     //Get Slopes
     double slope1 = ((point2.y - point1.y)/(point2.x - point1.x));
     double slope2 = ((point4.y - point3.y)/(point4.x - point3.x));
-   
+  
+//    std::cout << "Slope: " << slope1 << ", " << slope2 << std::endl;
+ 
 
     //Get line intercept
-    double intercept1 = (point1.y - (slope1*point1.x));
-    double intercept2 = (point3.y - (slope2*point3.x));
+//    double intercept1 = (point1.y - (slope1*point1.x));
+//    double intercept2 = (point3.y - (slope2*point3.x));
+
+    double intercept1 = point2.y-(slope1*point2.x);
+    double intercept2 = point4.y-(slope2*point4.x);
+
+//    std::cout << "Intercept: " << intercept1 << ", " << intercept2 << std::endl;
 
     //Find x intersection point
     double x = ((intercept2 - intercept1)/(slope1 - slope2));
     //Find y intersection point
-    double y = ((slope1*intercept2 - slope2*intercept1)/(slope1 - slope2));   
+    double y = slope1*x + intercept1;   
 
     Point2D intersection(x,y);
 
@@ -121,6 +142,9 @@ namespace larcv{
 
     double length2 = (point2.x - point1.x)*(point2.x - point1.x)/(width*width) 
 		   + (point2.y - point1.y)*(point2.y - point1.y)/(height*height);
+
+//    std::cout << "POINT 2: " << point2.x << ", " << point2.y << std::endl;
+//    std::cout << "POINT 1: " << point1.x << ", " << point1.y << std::endl;
 
     if(length2 != 0){length = std::sqrt(length2);}
 
