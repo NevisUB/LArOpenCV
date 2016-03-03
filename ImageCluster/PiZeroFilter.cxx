@@ -21,7 +21,9 @@ namespace larcv{
   { 
 
     Cluster2DArray_t OutputClusters;
+    Cluster2DArray_t Vertex_Clusters;
     std::vector<int> OutputClustersID;
+
 
     if(clusters.empty())
     {
@@ -73,13 +75,24 @@ namespace larcv{
 
 	      //Make sure distance from back projected vertex from PCA
 	      //is equal to or shorter than maximum radiation length
-//	      if(std::abs(distance1) <=  _max_rad_length && std::abs(distance2) <= _max_rad_length)
-//	      {
+	      if(std::abs(distance1) <=  _max_rad_length && std::abs(distance2) <= _max_rad_length)
+	      {
  	        std::cout << "Distances: " << distance1 << ", " << distance2 << std::endl;
 //	        std::cout << i << ", " << j << std::endl;
 		OutputClustersID.push_back(i);
 	        OutputClustersID.push_back(j);
-//	      }
+
+	        Cluster2D OClusteri = clusters.at(i);
+	        OClusteri._vertex_2D = sharedPoint;
+	        Cluster2D OClusterj = clusters.at(j);
+		OClusterj._vertex_2D = sharedPoint;
+		Vertex_Clusters.push_back(OClusteri);
+		Vertex_Clusters.push_back(OClusterj);
+	        
+
+
+
+	      }
 
 	    }
           }	
@@ -94,10 +107,17 @@ namespace larcv{
     for(int clust = 0; clust < OutputClustersID.size(); clust++)
     {
 //      std::cout << clust << std::endl;
-      OutputClusters.push_back(clusters.at(clust));
+      auto a = clusters.at(clust);
+      a._vertex_2D = Point2D(10,10);
+      OutputClusters.emplace_back(a);
     }
 
+
     return OutputClusters;
+
+    std::cout << Vertex_Clusters.size() << std::endl;
+    std::cout << Vertex_Clusters.at(0)._vertex_2D.x << ", " << Vertex_Clusters.at(0)._vertex_2D.y << std::endl;
+    return Vertex_Clusters;
   }
 
 

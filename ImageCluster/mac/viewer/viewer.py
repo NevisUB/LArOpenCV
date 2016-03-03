@@ -12,7 +12,7 @@ import algo_viewer as av
 my_proc = fmwk.ana_processor()
 
 # Config file
-cfg="../../../App/mac/MergingTester.fcl"
+cfg="../../../App/mac/SBCluster.fcl"
 
 algid = int(sys.argv[2])
 
@@ -42,11 +42,11 @@ while( my_proc.process_event() ) :
     axx = {0 : ax0, 1 : ax1, 2: ax2}
 
     algo_drawer = av.AlgoViewer( manager.GetClusterAlg(algid), plt)
-    
+
     for c in xrange(manager.NumClusters(algid)):
 
         cluster = manager.Cluster(c,algid)
-
+        
         if cluster.PlaneID() >= 3:
             print "BAD PLANEID"
             continue
