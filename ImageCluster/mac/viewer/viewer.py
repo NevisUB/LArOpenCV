@@ -29,6 +29,9 @@ while( my_proc.process_event() ) :
     manager  = myunit.algo_manager()
     print "NUMBER OF CLUSTERS", manager.NumClusters()
 
+    if manager.NumClusters() == 2:
+        continue
+    
     if manager.NumClusters() == 0:
         print "No clusters found at all...\n";
         continue
@@ -40,11 +43,15 @@ while( my_proc.process_event() ) :
     ax2 = plt.subplot(3,1,3)
 
     axx = {0 : ax0, 1 : ax1, 2: ax2}
-
+    print manager.GetClusterAlg(algid)
+    
     algo_drawer = av.AlgoViewer( manager.GetClusterAlg(algid), plt)
-
+    
     for c in xrange(manager.NumClusters(algid)):
 
+        if algid == 2 and if c == 0:
+            continue
+        
         cluster = manager.Cluster(c,algid)
         
         if cluster.PlaneID() >= 3:

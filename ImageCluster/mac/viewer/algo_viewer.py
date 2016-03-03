@@ -43,7 +43,9 @@ class AlgoViewer :
                     cluster._endPt.y + ys,'o',color='green',markersize=5)
 
 	if self.name in ["pizerofilter"] :
+
             xs = cluster.Origin().y
             ys = cluster.Origin().x
-	    ax.plot (xs+cluster._vertex_2D.x, ys+cluster._vertex_2D.y)
+	    ax.plot (xs+cluster._vertex_2D.x,
+                     ys+cluster._vertex_2D.y,'o',markersize=10,color='black')
 

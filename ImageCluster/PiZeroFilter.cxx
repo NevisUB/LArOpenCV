@@ -88,32 +88,46 @@ namespace larcv{
 		OClusterj._vertex_2D = sharedPoint;
 		Vertex_Clusters.push_back(OClusteri);
 		Vertex_Clusters.push_back(OClusterj);
-	        
-
-
 
 	      }
-
 	    }
           }	
 	}
       }
-    if(!OutputClustersID.empty())std::cout << "Number of Cluster Pairs: " << OutputClustersID.size()/2 << std::endl;
 
+    if(!OutputClustersID.empty())
+      std::cout << "Number of Cluster Pairs: " << OutputClustersID.size()/2 << std::endl;
+
+    if(OutputClustersID.empty())
+      return Cluster2DArray_t();
+    
     std::sort(OutputClustersID.begin(), OutputClustersID.end());
     auto UniqueOutputClustersID = std::unique(OutputClustersID.begin(), OutputClustersID.end());
     OutputClustersID.erase(UniqueOutputClustersID, OutputClustersID.end());
 
+    // std::cout << "Clusters.size(): " << clusters.size() << std::endl;
+    // std::cout << "OutputClusterID.size(): " << OutputClustersID.size() << std::endl;
+    
     for(int clust = 0; clust < OutputClustersID.size(); clust++)
     {
-//      std::cout << clust << std::endl;
-      auto a = clusters.at(clust);
+      // std::cout << "clus       : " << clust << std::endl;
+      int idx = OutputClustersID.at(clust);
+      // std::cout << "cluster idx: " << idx   << std::endl;
+      auto a = clusters [ idx ];
+      // std::cout << "this ID is... " << a.ClusterID() << std::endl;
       a._vertex_2D = Point2D(10,10);
       OutputClusters.emplace_back(a);
     }
-
-
-    return OutputClusters;
+    
+    // for(auto & o : Vertex_Clusters ) {
+    //   std::cout << o.ClusterID() << " "
+    // 		<< o.PlaneID()   << " "
+    // 		<< o._length     << " "
+    // 		<< o._numHits    << "\n";
+    // }
+	
+    //return OutputClusters;
+    //return clusters;
 
     std::cout << Vertex_Clusters.size() << std::endl;
     std::cout << Vertex_Clusters.at(0)._vertex_2D.x << ", " << Vertex_Clusters.at(0)._vertex_2D.y << std::endl;
