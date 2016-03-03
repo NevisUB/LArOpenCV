@@ -215,8 +215,8 @@ namespace larlite {
       double charge = h.Integral() / _charge_to_gray_scale;
       charge += (double)(mat.at<unsigned char>(x,y));
 
-      if(charge>=255.) charge=255.;
-      if(charge<0.) charge=0.;
+      if(charge >= 255.) charge = 255.;
+      if(charge < 0.)    charge = 0.;
       
       mat.at<unsigned char>(x,y) = (unsigned char)((int)charge);
     }

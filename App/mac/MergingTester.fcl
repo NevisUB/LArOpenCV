@@ -1,0 +1,108 @@
+
+LArImageHit: {
+  # LArImageClusterBase config
+  Profile: true
+  StoreOriginalImage: false
+  Producer: gaushit
+  # LArImageHit config
+  Q2Gray: 5 # convert Hit::Integral to a unit gray scale
+  QMin: 3   # min. threshold for Hit::Integral to make it into an image
+}
+
+LArDownImage: {
+  # LArImageClusterBase config
+  Profile: true
+  StoreOriginalImage: false
+  Producer: gaushit
+  # LArDownImage config
+  Q2Gray: 0.1 
+}
+
+# ImageClusterManager config
+ImageClusterManager: {
+
+  Verbosity: 1
+  Profile:   true  # Time profiles algorithms
+  ShowImage: false  # Display image per process
+
+  ClusterAlgoType: [SBCluster,PCASegmentation]
+  ClusterAlgoName: [sbc,pcas]
+
+  #MatchAlgoType: ""
+  #MatchAlgoName: ""
+
+  MatchAlgoType: MatchTimeOverlap
+  MatchAlgoName: mto
+
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
+
+
+ ImageClusterViewer: {
+   Verbosity: 0
+   Width:  800
+   Height: 800
+   MinContourArea: 125
+ }
+
+  mymatcher: {}
+    
+ sbc:{
+
+   Verbosity: 1
+   DilationSize : 5
+   DilationIterations : 2
+   BlurSize : 5
+   Thresh : 1
+   ThreshMaxVal : 255
+
+  }
+	  
+
+ pcas : {
+
+    NSegmentsX : 6
+    NSegmentsY : 6
+
+    NHitsCut        : 3  # min number of hits in segment
+    NSubHitsCut     : 2  # min number of hits in sub segment
+    AngleCut        : 20 # degrees
+    NDivisions      : 2  # number of times to subdivide the segments
+    AllowEmptyCross : 1 # if an empty box is between two "good" boxes, should we be able to cross?
+    MinClusterSize  : 10 # min number of hits in cluster to actually care
+    MinPathSize     : 3  # min number of connected boxes...
+
+    CovSubDivide : 0.75
+
+    }
+
+  Trackshower:{
+    AreaCut : 1850
+    RatioCut : 3
+    TrackShowerSat : 2 # 0 returns tracks, 1 returns showers, 2 returns satellites+showers, 3 returns everything
+  }
+
+  satellitemerge: {
+    AreaCut: 1850
+    MinSatDistance: 50
+    MinShowerDistance: 25
+    ContourDensity:50 # unused
+  }
+
+  pcao: {
+    NMinInsideHits: 2
+  }
+
+  pizerofilter: {
+    NHitsCut: 10
+    BackStartPoint: 100
+  }
+
+  mto : {
+    RatioCut : 0.001
+    StartTimeCut : 5
+    RequireThreePlanes : 0
+  }
+
+
+}

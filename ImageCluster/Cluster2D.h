@@ -54,9 +54,8 @@ namespace larcv {
     /// Pixel height size (i.e. X unit length in cm)
     double PixelHeight() const { return _pixel_height; }
 
-
     Contour_t _contour;
-    
+
     std::vector<::cv::Point> _insideHits;
     int _numHits;
     
@@ -77,7 +76,8 @@ namespace larcv {
     double _perimeter;
 
     std::vector<::cv::Point2f> _minAreaRect;
-        
+    
+    
   private:
     ClusterID_t _cluster_id;
     ImageID_t   _image_id;
@@ -86,6 +86,7 @@ namespace larcv {
     Point2D _origin;
     double _pixel_width;
     double _pixel_height;
+    
   };
 
   typedef std::vector<larcv::Cluster2D> Cluster2DArray_t;
