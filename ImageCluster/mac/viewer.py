@@ -42,7 +42,8 @@ while( my_proc.process_event() ) :
     ax2 = plt.subplot(3,1,3)
 
     axx = {0 : ax0, 1 : ax1, 2: ax2}
-    
+
+
     for c in xrange(manager.NumClusters(algid)):
 
         cluster = manager.Cluster(c,algid)
@@ -70,9 +71,10 @@ while( my_proc.process_event() ) :
             px,py = get_xy(cluster._insideHits)
             ax.plot(px,py,'o',color='black',markersize=1)
 
+
         cx.append(cx[0])
         cy.append(cy[0])
-
+        
         ax.plot(cx,cy,'-',lw=3)
 
         ax.plot(cluster._startPt.x,
@@ -83,19 +85,18 @@ while( my_proc.process_event() ) :
 
         if algid == 1 : #get by name next time
             pcas   = manager.GetClusterAlg(algid)
-            paths  = pcas._pcapaths;
-            npaths = paths.size();
-            print "Found npaths...%d" % npaths
-            for p in xrange(npaths):
-                path   = paths[p]
-                nboxes = path.chosen_boxes_.size()
-                print "Found nboxes...%d" % nboxes
-                for b in xrange(nboxes):
-                    box       = path.chosen_boxes_[b]
-                    rectangle = plt.Rectangle((box.x, box.y),
-                                              box.width*10, box.height*10,
-                                              fc='white',ec='black',alpha=1,lw=3)
-                    ax.add_patch(rectangle)
+
+            print "pca path size",pcas._pcapaths.size()
+
+            path   = pcas._pcapaths[c];
+            nboxes = path.chosen_boxes_.size()
+
+            for b in xrange(nboxes):
+                box       = path.chosen_boxes_[b]
+                rectangle = plt.Rectangle((box.x, box.y),
+                                          box.width, box.height,
+                                          fc='white',ec='black',alpha=1,lw=3)
+                ax.add_patch(rectangle)
 
             bbox = cluster._minAreaRect
             ax.plot([bbox[0].x,bbox[1].x,bbox[2].x,bbox[3].x,bbox[0].x],

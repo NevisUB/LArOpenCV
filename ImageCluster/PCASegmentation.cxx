@@ -37,7 +37,7 @@ namespace larcv{
   {
     //Make the big copy
     Cluster2DArray_t oclusters; oclusters.reserve(clusters.size());
-    _pcapaths.clear();
+    if ( meta.plane() == 0 ) _pcapaths.clear();
     
     double angle_cut = _angle_cut; //degrees
     angle_cut *= 3.14159/180.0;    //to radians
@@ -252,6 +252,7 @@ namespace larcv{
 
     //just return the clusters you didn't do anything...
     // std::cout << "return of PCAS oclusters" << oclusters.size() << "\n";
+
     return oclusters;
   }
   
