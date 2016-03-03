@@ -238,11 +238,11 @@ namespace larcv {
 	for(size_t cluster_index=0; cluster_index < clusters_v.back().size(); ++cluster_index) {
 	  
 	  auto& c = clusters_v.back()[cluster_index];
-	  c._cluster_id = offset + cluster_index;
-	  c._image_id = img_index;
-	  c._plane_id = meta.plane();
-	  c._origin   = meta.origin();
-	  c._pixel_width = meta.pixel_width();
+	  c._cluster_id   = offset + cluster_index;
+	  c._image_id     = img_index;
+	  c._plane_id     = meta.plane();
+	  c._origin       = meta.origin();
+	  c._pixel_width  = meta.pixel_width();
 	  c._pixel_height = meta.pixel_height();
 	}
 	
@@ -377,17 +377,17 @@ namespace larcv {
 
     auto const& clusters_v = _clusters_v_v[target_alg_id];
 
-    ClusterID_t current_id = 0;
+    ClusterID_t offset_id = 0;
     for(size_t cluster_index=0; cluster_index < clusters_v.size(); ++cluster_index) {
 
       auto const& clusters = clusters_v[cluster_index];
       
-      if(current_id + clusters.size() < cluster_id) {
-	current_id += clusters.size();
+      if(offset_id + clusters.size() <= cluster_id) {
+	offset_id += clusters.size();
 	continue;
       }
 
-      return clusters[cluster_id - current_id];
+      return clusters[cluster_id - offset_id];
     }
 
     throw larbys("Invalid cluster ID requested!");
@@ -406,7 +406,7 @@ namespace larcv {
     return clusters_v[img_id];
   }
   
-  ClusterID_t ImageClusterManager::ClusterID(const double x, const double y, AlgorithmID_t alg_id) const
+  ClusterID_t ImageClusterManager::ClusterID(const double x, const double y, size_t plane, AlgorithmID_t alg_id) const
   {
 
     ClusterID_t result = kINVALID_CLUSTER_ID;
@@ -424,25 +424,31 @@ namespace larcv {
     for(size_t img_index=0; img_index < clusters_v.size(); ++img_index) {
 
       auto const& clusters = clusters_v[img_index];
-      auto const& meta = meta_v[img_index];
-    
+      auto const& meta = meta_v[img_index];    
       auto const& origin = meta.origin();
-    
+
+      if(meta.plane() != plane) continue;
+      if(clusters.empty()) continue;
+      
+      //if(clusters.size() && clusters.front().PlaneID() != plane) {
+      //std::cout<<"fuck you"<<std::endl; throw std::exception();
+      //}
+      
       if(x < origin.x || x > (origin.x + meta.width())) {
 	offset += clusters.size();
 	continue;
       }
       
-      if(y < origin.y || x > (origin.y + meta.height())) {
+      if(y < origin.y || y > (origin.y + meta.height())) {
 	offset += clusters.size();
 	continue;
       }
-    
-      //std::cout<<"Inspecting a point "<<x<<" : "<<y<<" ... ";
+
+      // std::cout<<"Inspecting a point ("<<x<<","<<y<<") ... ";
     
       auto pt = ::cv::Point2d((y-origin.y)/meta.pixel_height(), (x-origin.x)/meta.pixel_width()); 
 
-      //std::cout<<pt.x<<" : "<<pt.y<<std::endl;
+      // std::cout<<"pt...("<<pt.x<<","<<pt.y<<")"<<std::endl;
       
       for(size_t id=0; id<clusters.size(); ++id) {
 	
@@ -451,15 +457,16 @@ namespace larcv {
 	double inside = ::cv::pointPolygonTest(c._contour,pt,false);
       
 	if(inside < 0) continue;
-      
-	result = id + offset;
-	
+	// std::cout << "its inside " << std::endl;
+
+	result = c.ClusterID();
+
 	break;
       }
 
       if(result != kINVALID_CLUSTER_ID) break;
     }
-    
+
     return result;
   }
 

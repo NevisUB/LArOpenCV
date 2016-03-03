@@ -12,6 +12,9 @@ namespace larcv{
     _ratio_separation = pset.get<int> ("RatioCut");
     _track_shower_sat = pset.get<int>("TrackShowerSat");
 
+    _step1 = pset.get<int>("Step1");
+    _step2 = pset.get<int>("Step2");
+
   }
 
   Cluster2DArray_t TrackShower::_Process_(const larcv::Cluster2DArray_t& clusters,
@@ -56,14 +59,15 @@ namespace larcv{
       auto rect = rect0.size; 
 
       std::vector<cv::Point2f> rectangle = { vertices[0], vertices[1],vertices[2],vertices[3] };
-
+      ts_cluster._minAreaRect = rectangle;
+      
       //  
       // Between points 0,1 and 1,2 , find max distance; this will be outer
       // loop. At each walk along length (outer loop), we'll walk along the 
       // width and eventually store max and min widths.
       //  
-      int step1 = 80; 
-      int step2 = 80; 
+      int step1 = _step1; 
+      int step2 = _step2; 
       std::pair<float,float> dir1;
       std::pair<float,float> dir2;
 
@@ -90,15 +94,15 @@ namespace larcv{
       ::cv::Point2d start_point( vertices[i1].x , vertices[i1].y  );
       ::cv::Point2d end_point  ( vertices[i0].x , vertices[i0].y );
 
-      ::cv::Point2d new_point1 ;
-      ::cv::Point2d new_point2 ;
+      ::cv::Point2d new_point1, new_point2;
 
       float max_width = 0;
       float min_width = 10000;
 
-      float dist_travelled = 0 ;
       float max_long_dist = 0;
       float min_long_dist = 0;
+
+      float dist_travelled = 0 ;
       float long_dist_travelled = 0;
 
       for(int i=1; i<step1-1; i+=2){

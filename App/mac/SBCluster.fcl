@@ -1,4 +1,3 @@
-
 LArImageHit: {
   # LArImageClusterBase config
   Profile: true
@@ -25,14 +24,17 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  ClusterAlgoType: [SBCluster,PCASegmentation,PiZeroFilter]
-  ClusterAlgoName: [sbc,pcas,pizerofilter]
+  #ClusterAlgoType: [SBCluster,PCASegmentation,PiZeroFilter]
+  #ClusterAlgoName: [sbc,pcas,pizerofilter]
 
-#  MatchAlgoType: MatchTimeOverlap
-#  MatchAlgoName: mto
+  ClusterAlgoType: [SBCluster,TrackShower,PiZeroFilter]
+  ClusterAlgoName: [sbc,Trackshower,pizerofilter]
 
-#  ReClusterAlgoType: ""
-#  ReClusterAlgoName: ""
+  MatchAlgoType: MatchTimeOverlap
+  MatchAlgoName: mto
+
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
 
 
  ImageClusterViewer: {
@@ -74,9 +76,12 @@ ImageClusterManager: {
     }
 
   Trackshower:{
-    AreaCut : 1850
+    AreaCut : 900 
     RatioCut : 3
-    TrackShowerSat : 2 # 0 returns tracks, 1 returns showers, 2 returns satellites+showers, 3 returns everything
+    TrackShowerSat : 0 # 0 returns showers, 1 returns tracks, 2 returns satellites+showers, 3 returns everything
+
+    Step1 : 80
+    Step2 : 80
   }
 
   satellitemerge: {
@@ -99,11 +104,11 @@ ImageClusterManager: {
     Height : 0.3 #cm/wire
   }
 
-#  mto: {
-#    RatioCut : 0.001
-#    StartTimeCut : 5
-#    RequireThreePlanes : 1
-#  }
+   mto : {
+     RatioCut : 0.001
+     StartTimeCut : 5
+     RequireThreePlanes : 0 
+    }
 
 
 }
