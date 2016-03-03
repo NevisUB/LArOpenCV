@@ -51,12 +51,16 @@ namespace larcv {
     double _back_startPt;  
     double _min_area;
     double _max_rad_length; 
-
+    double _width;
+    double _height;
+    bool _attempt_merging;
+    double _small_dot_prod;
 
   private:
 
     Point2D backprojectionpoint(Point2D point1, Point2D point2, Point2D point3, Point2D point4);
     double distance2D(Point2D point1, Point2D point2, double width, double height);
+    Cluster2DArray_t merging(Cluster2DArray_t filtered);
 
   };
   

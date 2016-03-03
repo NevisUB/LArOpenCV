@@ -49,3 +49,9 @@ class AlgoViewer :
 	    ax.plot (xs+cluster._vertex_2D.x,
                      ys+cluster._vertex_2D.y,'o',markersize=10,color='black')
 
+           # ax.plot(cluster._startPt.x + xs,
+           #        cluster._startPt.y + ys,'o',color='blue',markersize=5)
+
+            ax.plot([cluster._startPt.x + xs,xs+cluster._vertex_2D.x],
+                    [cluster._startPt.y + ys,ys+cluster._vertex_2D.y],'-o',color='pink',lw=3)
+            

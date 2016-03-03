@@ -23,9 +23,9 @@ myunit = fmwk.LArImageHit()
 myunit.set_config(cfg)
 my_proc.add_process(myunit)
 
-
+k = 0 
 while( my_proc.process_event() ) :
-
+    k += 1
     manager  = myunit.algo_manager()
     print "NUMBER OF CLUSTERS", manager.NumClusters()
 
@@ -49,20 +49,25 @@ while( my_proc.process_event() ) :
     
     for c in xrange(manager.NumClusters(algid)):
 
-        if algid == 2 and if c == 0:
-            continue
+    #    if algid == 2 and  c == 0:
+    #        continue
         
         cluster = manager.Cluster(c,algid)
         
-        if cluster.PlaneID() >= 3:
-            print "BAD PLANEID"
+        try:
+            if cluster.PlaneID() >= 3:
+                print "BAD PLANEID"
+                continue
+        except ReferenceError:
             continue
-    
+
         ax = axx[cluster.PlaneID()]
         
         draw_cluster(ax,cluster)
         algo_drawer.draw(ax,cluster,c)
-        
+
+    plt.savefig("aho_%d_%d.pdf" % (k,k), format="pdf",dpi=100)
+
     plt.show()
 
     #All possible ways to close viewer

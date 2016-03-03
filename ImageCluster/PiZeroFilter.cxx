@@ -14,6 +14,8 @@ namespace larcv{
     _max_rad_length = pset.get<double> ("MaxRadLength");
     _width = pset.get<double> ("Width");
     _height = pset.get<double> ("Height");
+    _attempt_merging = pset.get<bool> ("AttemptMerging");
+    _small_dot_prod = pset.get<double> ("SmallDotProduct");
 
 
   }
@@ -64,24 +66,11 @@ namespace larcv{
               double distance2 = distance2D(sharedPoint, clusters.at(j)._startPt, _width, _height);
 
 
-//	      std::cout << "Origin: " << clusters.at(i).Origin().x << ", " << clusters.at(i).Origin().y << std::endl;
-/*	      std::cout << "Start i: " << clusters.at(i)._startPt.x << ", " << clusters.at(i)._startPt.y << std::endl;
-	      std::cout << "Start j: " << clusters.at(j)._startPt.x << ", " << clusters.at(j)._startPt.y << std::endl;
-	      std::cout << "Next i: " << iPoint.x << ", " << iPoint.y << std::endl;
-	      std::cout << "Next j: " << jPoint.x << ", " << jPoint.y << std::endl;
-	      std::cout << "Share Point: " << sharedPoint.x << ", " << sharedPoint.y << std::endl;
-*///	      std::cout << clusters.at(i).PixelWidth() << ", " << clusters.at(i).PixelHeight() << std::endl;
-//	      std::cout << clusters.at(j).PixelWidth() << ", " << clusters.at(j).PixelHeight() << std::endl;
-
-//	      std::cout << "Distances: " << distance1 << ", " << distance2 << std::endl;
-
-
 	      //Make sure distance from back projected vertex from PCA
 	      //is equal to or shorter than maximum radiation length
 	      if(std::abs(distance1) <=  _max_rad_length && std::abs(distance2) <= _max_rad_length)
 	      {
  	        std::cout << "Distances: " << distance1 << ", " << distance2 << std::endl;
-//	        std::cout << i << ", " << j << std::endl;
 		OutputClustersID.push_back(i);
 	        OutputClustersID.push_back(j);
 
@@ -113,28 +102,17 @@ namespace larcv{
     
     for(int clust = 0; clust < OutputClustersID.size(); clust++)
     {
-      // std::cout << "clus       : " << clust << std::endl;
       int idx = OutputClustersID.at(clust);
-      // std::cout << "cluster idx: " << idx   << std::endl;
       auto a = clusters [ idx ];
-      // std::cout << "this ID is... " << a.ClusterID() << std::endl;
       a._vertex_2D = Point2D(10,10);
       OutputClusters.emplace_back(a);
     }
     
-    // for(auto & o : Vertex_Clusters ) {
-    //   std::cout << o.ClusterID() << " "
-    // 		<< o.PlaneID()   << " "
-    // 		<< o._length     << " "
-    // 		<< o._numHits    << "\n";
-    // }
-	
     //return OutputClusters;
-    //return clusters;
 
-    std::cout << Vertex_Clusters.size() << std::endl;
-    std::cout << Vertex_Clusters.at(0)._vertex_2D.x << ", " << Vertex_Clusters.at(0)._vertex_2D.y << std::endl;
-    return Vertex_Clusters;
+    Cluster2DArray_t Merge_Vertex_Clusters;
+    if(_attempt_merging == false){ return Vertex_Clusters;}
+    if(_attempt_merging == true) { merging(Vertex_Clusters); return Merge_Vertex_Clusters;}
   }
 
 
@@ -148,18 +126,10 @@ namespace larcv{
     //Get Slopes
     double slope1 = ((point2.y - point1.y)/(point2.x - point1.x));
     double slope2 = ((point4.y - point3.y)/(point4.x - point3.x));
-  
-//    std::cout << "Slope: " << slope1 << ", " << slope2 << std::endl;
- 
 
     //Get line intercept
-//    double intercept1 = (point1.y - (slope1*point1.x));
-//    double intercept2 = (point3.y - (slope2*point3.x));
-
     double intercept1 = point2.y-(slope1*point2.x);
     double intercept2 = point4.y-(slope2*point4.x);
-
-//    std::cout << "Intercept: " << intercept1 << ", " << intercept2 << std::endl;
 
     //Find x intersection point
     double x = ((intercept2 - intercept1)/(slope1 - slope2));
@@ -169,26 +139,68 @@ namespace larcv{
     Point2D intersection(x,y);
 
     return intersection;
-
   } 
 
   double PiZeroFilter::distance2D( Point2D point1, Point2D point2, double width, double height)
   {
-
     double length = 0;
-
     double length2 = (point2.x - point1.x)*(point2.x - point1.x)*(width*width) 
 		   + (point2.y - point1.y)*(point2.y - point1.y)*(height*height);
-
-//    std::cout << "POINT 2: " << point2.x << ", " << point2.y << std::endl;
-//    std::cout << "POINT 1: " << point1.x << ", " << point1.y << std::endl;
 
     if(length2 != 0){length = std::sqrt(length2);}
 
     return length;
-
   }
 
+  Cluster2DArray_t PiZeroFilter::merging(Cluster2DArray_t filtered)
+  {
+
+    //Check Dot Product
+    int number_clusters = filtered.size();
+
+    double v1v2;
+    double v1;
+    double v2;
+    double phi;
+    double tantheta1;
+    double tantheta2;
+    double ext_boxl1;
+    double ext_boxl2;
+    double ext_boxh1;
+    double ext_boxh2;
+
+    Cluster2DArray_t merged;
+
+    for(int i = 0; i < number_clusters-1; i++)
+    {
+      for(int j = i+1 ; j < number_clusters; j++)
+      {
+
+        v1v2 =  (filtered.at(i)._eigenVecFirst.x*filtered.at(j)._eigenVecFirst.x) +
+		(filtered.at(i)._eigenVecFirst.y*filtered.at(j)._eigenVecFirst.y);
+	 
+        v1 =  std::sqrt((filtered.at(i)._eigenVecFirst.x*filtered.at(i)._eigenVecFirst.x) +
+			(filtered.at(i)._eigenVecFirst.y*filtered.at(i)._eigenVecFirst.y));
+	v2 =  std::sqrt((filtered.at(j)._eigenVecFirst.x*filtered.at(j)._eigenVecFirst.x) +
+			(filtered.at(j)._eigenVecFirst.y*filtered.at(j)._eigenVecFirst.y));
+
+	phi = std::acos(v1v2/(v1*v2));
+	if(phi <= _small_dot_prod)
+	{
+	  tantheta1 = (filtered.at(i)._width/(2*filtered.at(i)._length));
+	  tantheta2 = (filtered.at(j)._width/(2*filtered.at(j)._length));
+
+	  ext_boxl1 = filtered.at(i)._length + _max_rad_length/2;
+	  ext_boxl2 = filtered.at(j)._length + _max_rad_length/2;
+
+	  ext_boxh1 = ext_boxl1 * tantheta1;
+	  ext_boxh2 = ext_boxl2 * tantheta2;
+
+	}
+      }
+    }
+    return merged;
+  }
 }
 
 
