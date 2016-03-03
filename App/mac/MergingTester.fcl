@@ -98,11 +98,11 @@ ImageClusterManager: {
     BackStartPoint: 100
   }
 
-   mto : {
-     RatioCut : 0.001
-     StartTimeCut : 5
-     RequireThreePlanes : 1
-    }
+  mto : {
+    RatioCut : 0.001
+    StartTimeCut : 5
+    RequireThreePlanes : 0
+  }
 
 
 }

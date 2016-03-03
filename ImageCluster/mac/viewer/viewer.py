@@ -12,7 +12,7 @@ import algo_viewer as av
 my_proc = fmwk.ana_processor()
 
 # Config file
-cfg="../../App/mac/MergingTester.fcl"
+cfg="../../../App/mac/MergingTester.fcl"
 
 algid = int(sys.argv[2])
 
