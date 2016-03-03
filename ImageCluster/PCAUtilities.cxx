@@ -418,7 +418,7 @@ namespace larcv {
     auto& chosen_path = paths.back();
 
     for ( auto& pcabox : chosen_path )
-      chosen_path.chosen_boxes_.emplace_back(pcabox->box_ + pcabox->parent_roi_.tl());
+      chosen_path.chosen_boxes_.emplace_back(pcabox->box_);
 
     return chosen_path;
   }
