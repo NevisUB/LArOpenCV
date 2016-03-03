@@ -19,13 +19,16 @@ namespace larcv{
 
   Cluster2DArray_t TrackShower::_Process_(const larcv::Cluster2DArray_t& clusters,
 					  const ::cv::Mat& img,
-					  larcv::ImageMeta& meta)
+					  ::cv::ImageMeta& meta)
   { 
 
     Cluster2DArray_t ts_clusters; ts_clusters.reserve(clusters.size());
 
     Cluster2DArray_t shower_v, track_v, satellite_v;
 
+    std::vector<::cv::Point> locations;
+    ::cv::findNonZero(img, locations);  
+      
     for(size_t k = 0; k < clusters.size(); k++){
        
       auto& cv_contour = clusters[k]._contour;
@@ -34,15 +37,10 @@ namespace larcv{
 
       auto area = ::cv::contourArea(cv_contour);
 
-      std::vector<::cv::Point> locations;
-      ::cv::findNonZero(img, locations);  
-
-      auto contour_temp = cv_contour;
-      
       int sum_charge = 0;
 	
       for(const auto& loc : locations) {
-        if ( ::cv::pointPolygonTest(contour_temp, loc,false) < 0 ) 
+        if ( ::cv::pointPolygonTest(cv_contour, loc,false) < 0 ) 
           continue;
    
         ts_cluster._insideHits.emplace_back(loc.x, loc.y);	
@@ -53,13 +51,13 @@ namespace larcv{
 
       ts_cluster._numHits = ts_cluster._insideHits.size();
 	
-      cv::RotatedRect rect0 = cv::minAreaRect(cv::Mat(cv_contour));
+      cv::RotatedRect rect0 = ::cv::minAreaRect(cv::Mat(cv_contour));
       cv::Point2f vertices[4];
       rect0.points(vertices);
-      auto rect = rect0.size; 
+      auto rect = rect0.size;
 
       std::vector<cv::Point2f> rectangle = { vertices[0], vertices[1],vertices[2],vertices[3] };
-      ts_cluster._minAreaRect = rectangle;
+      std::swap(ts_cluster._minAreaRect,rectangle);
       
       //  
       // Between points 0,1 and 1,2 , find max distance; this will be outer
@@ -71,11 +69,10 @@ namespace larcv{
       std::pair<float,float> dir1;
       std::pair<float,float> dir2;
 
-      auto dist1  = pow(pow(vertices[0].x-vertices[1].x,2) + pow(vertices[0].y - vertices[1].y,2),0.5);
-      auto dist2  = pow(pow(vertices[2].x-vertices[1].x,2) + pow(vertices[2].y - vertices[1].y,2),0.5);
+      auto dist1  = std::sqrt(pow(vertices[0].x-vertices[1].x,2) + pow(vertices[0].y - vertices[1].y,2));
+      auto dist2  = std::sqrt(pow(vertices[2].x-vertices[1].x,2) + pow(vertices[2].y - vertices[1].y,2));
 
-      float maxDist = 0;  
-      float minDist = 0;  
+      float maxDist(0), minDist(0);
 
       int i0(0), i1(1), i2(2);
 
@@ -130,11 +127,11 @@ namespace larcv{
       }
 
       bool switched = 0;
-      if( max_long_dist /(maxDist / 2) < 0.349 ) {
-	auto temp = start_point ;
+      if( max_long_dist / (maxDist / 2) < 0.349 ) {
+	auto temp   = start_point ;
 	start_point = end_point ;
-	end_point = temp;
-	switched = 1 ;
+	end_point   = temp;
+	switched    = 1 ;
       }
 
       std::vector<cv::Point2d> find_end, find_start;
@@ -165,10 +162,9 @@ namespace larcv{
 	it++;
       }
 
-      Point2D new_start; 
-      Point2D new_end ;
+      Point2D new_start, new_end; 
 
-      double angle ; 
+      double angle; 
 
       for(int k = 0; k < find_start.size(); k++){
 	new_start.x += find_start[k].x / find_start.size();
@@ -185,13 +181,13 @@ namespace larcv{
 	angle += 360 ;
       //std::cout<<"Percent : "<<(max_long_dist)/(maxDist/2)*100<<"\%, "<<area<<std::endl ;
       
-      ts_cluster._startPt   = new_start ; 
-      ts_cluster._endPt     = new_end ;  
-      ts_cluster._angle2D   = angle ;
+      ts_cluster._startPt   = new_start; 
+      ts_cluster._endPt     = new_end;  
+      ts_cluster._angle2D   = angle;
       ts_cluster._sumCharge = sum_charge;
       ts_cluster._length    = rect.height > rect.width ? rect.height : rect.width;
       ts_cluster._width     = rect.height > rect.width ? rect.width : rect.height;
-      ts_cluster._area      = ::cv::contourArea(cv_contour);
+      ts_cluster._area      = area;
       ts_cluster._perimeter = ::cv::arcLength(cv_contour,1);
 
       ts_clusters.push_back(ts_cluster);
