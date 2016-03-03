@@ -82,6 +82,8 @@ ImageClusterManager: {
 
     Step1 : 80
     Step2 : 80
+
+    SwitchRatio : 0.349
   }
 
   satellitemerge: {

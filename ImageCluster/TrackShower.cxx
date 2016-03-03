@@ -15,11 +15,13 @@ namespace larcv{
     _step1 = pset.get<int>("Step1");
     _step2 = pset.get<int>("Step2");
 
+    _switch_ratio = pset.get<int>("SwitchRatio");
+
   }
 
   Cluster2DArray_t TrackShower::_Process_(const larcv::Cluster2DArray_t& clusters,
 					  const ::cv::Mat& img,
-					  ::cv::ImageMeta& meta)
+					  larcv::ImageMeta& meta)
   { 
 
     Cluster2DArray_t ts_clusters; ts_clusters.reserve(clusters.size());
@@ -127,7 +129,7 @@ namespace larcv{
       }
 
       bool switched = 0;
-      if( max_long_dist / (maxDist / 2) < 0.349 ) {
+      if( max_long_dist / (maxDist / 2) < _switch_ratio ) {
 	auto temp   = start_point ;
 	start_point = end_point ;
 	end_point   = temp;

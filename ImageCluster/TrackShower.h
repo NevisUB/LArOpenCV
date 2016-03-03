@@ -56,6 +56,8 @@ namespace larcv {
 
     int _step1;
     int _step2;
+
+    float _switch_ratio; 
   };
   
   /**
