@@ -10,6 +10,27 @@ class AlgoViewer :
         
         if self.name in ["sbc"] :
             return
+
+        if self.name in ["Trackshower"] :
+            
+            xs = cluster.Origin().y
+            ys = cluster.Origin().x
+            
+            insidehits = cluster._insideHits
+            px, py     = get_xy_w_offset(insidehits,xs,ys)
+            ax.plot(px,py,'o',markersize=1,color='black')
+            
+            bbox = cluster._minAreaRect
+            if bbox.size() != 0 :
+                ax.plot([bbox[0].x+xs,bbox[1].x+xs,bbox[2].x+xs,bbox[3].x+xs,bbox[0].x+xs],
+                        [bbox[0].y+ys,bbox[1].y+ys,bbox[2].y+ys,bbox[3].y+ys,bbox[0].y+ys],color='orange',lw=2)
+
+            ax.plot(cluster._startPt.x + xs,
+                    cluster._startPt.y + ys,'o',color='pink',markersize=5)
+
+            ax.plot(cluster._endPt.x + xs,
+                    cluster._endPt.y + ys,'o',color='green',markersize=5)
+            
             
         if self.name in ["pcas"] :
 

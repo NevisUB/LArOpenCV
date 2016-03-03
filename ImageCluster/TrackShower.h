@@ -54,6 +54,8 @@ namespace larcv {
     float _ratio_separation ;
     int   _track_shower_sat ;
 
+    int _step1;
+    int _step2;
   };
   
   /**
