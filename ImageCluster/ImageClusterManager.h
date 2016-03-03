@@ -81,7 +81,7 @@ namespace larcv {
     /// Accessor to a set of clusters constructed by an algorithm (via algorithm id)
     const Cluster2DArray_t& Clusters(const ImageID_t img_id, const AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
     /// For a specified algorithm, find a cluster that contains coordinate (x,y). By default "last algorithm" is used.
-    ClusterID_t ClusterID(const double x, const double y, AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
+    ClusterID_t ClusterID(const double x, const double y, size_t plane, AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
     /// Report process summary
     void Report() const;
     /// Match result getter

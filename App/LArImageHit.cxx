@@ -23,7 +23,7 @@ namespace larlite {
   void LArImageHit::_Report_() const
   {
     std::cout << "  # of clusters  ......... ";
-     std::cout << Form("%-6zu ",_num_clusters);
+    std::cout << Form("%-6zu ",_num_clusters);
 
  
      std::cout << " ... Average (per-event) ";
@@ -67,13 +67,14 @@ namespace larlite {
     cluster_ass.resize(_num_clusters);
 
     for(auto& ass_unit : cluster_ass) ass_unit.reserve(100);
+
     for(size_t hindex=0; hindex<ev_hit->size(); ++hindex) {
 
       auto const& h = (*ev_hit)[hindex];
 
       auto const& wid = h.WireID();
 
-      auto const cid = alg_mgr.ClusterID(wid.Wire,h.PeakTime());
+      auto const cid = alg_mgr.ClusterID(wid.Wire,h.PeakTime(),wid.Plane);
 
       if(cid == ::larcv::kINVALID_CLUSTER_ID) {
 	_num_unclustered_hits += 1;
@@ -82,29 +83,25 @@ namespace larlite {
 
       _num_clustered_hits += 1;
       
-      //std::cout<<"  Cluster index: "<<cid<<std::endl;
-      
       cluster_ass[cid].push_back(hindex);
     }
 
     auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
     auto ev_ass     = storage->get_data<event_ass>    ("ImageClusterHit");
     if(ev_cluster) {
-      ev_cluster->resize(_num_clusters);
+      ev_cluster->reserve(_num_clusters);
 
       for(size_t cid=0; cid<_num_clusters; ++cid) {
 
 	auto const& image_cluster = alg_mgr.Cluster(cid);
-
+	
 	if(cid != image_cluster.ClusterID())
-	  //std::cout<<cid<<" vs. "<<image_cluster.ClusterID()<<std::endl;
 	  throw DataFormatException("ClusterID ordering seems inconsistent!");
 
 	::larlite::cluster c;
 	c.set_view(geom->PlaneToView(image_cluster.PlaneID()));
 	c.set_planeID(geo::PlaneID(0,0,image_cluster.PlaneID()));
 	c.set_id(image_cluster.ClusterID());
-
 	ev_cluster->push_back(c);
       }
 
