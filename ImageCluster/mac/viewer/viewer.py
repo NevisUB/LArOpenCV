@@ -41,7 +41,9 @@ while( my_proc.process_event() ) :
     axx = {0 : ax0, 1 : ax1, 2: ax2}
     print manager.GetClusterAlg(algid)
     
-    algo_drawer = av.AlgoViewer( manager.GetClusterAlg(algid), plt)
+    algo_drawer = av.AlgoViewer( manager.GetClusterAlg(algid),
+                                 manager.GetClusterAlg(algid-1),
+                                 plt)
     
     for c in xrange(manager.NumClusters(algid)):
 

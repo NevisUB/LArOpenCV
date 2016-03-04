@@ -1,8 +1,10 @@
 from viewer_methods import get_xy, get_xy_w_offset
 
 class AlgoViewer :
-    def __init__ (self,algo,plt):
-        self.algo = algo
+    def __init__ (self,algo,algo2,plt):
+        self.algo  = algo
+        self.algo2 = algo2
+        
         self.name = algo.Name()
         self.plt  = plt
         
@@ -31,14 +33,18 @@ class AlgoViewer :
                     cluster._endPt.y + ys,'o',color='green',markersize=5)
             
             
-        if self.name in ["pcas"] :
+        if self.name in ["pcas","pizerofilter"] :
 
             insidehits = cluster._insideHits
             px, py     = get_xy_w_offset(insidehits,xs,ys)
             ax.plot(px,py,'o',markersize=1,color='black')
 
+            
+            if cindex >= self.algo2._pcapaths.size():
+                cindex = self.algo2._pcapaths.size() - 1
+                
+            path   = self.algo2._pcapaths[cindex];
 
-            path   = self.algo._pcapaths[cindex];
             nboxes = path.chosen_boxes_.size()
 
             for b in xrange(nboxes):
@@ -58,12 +64,10 @@ class AlgoViewer :
 
             ax.plot(cluster._endPt.x + xs,
                     cluster._endPt.y + ys,'o',color='green',markersize=5)
-
-	if self.name in ["pizerofilter"] :
-
-	    ax.plot (xs+cluster._vertex_2D.x,
+            
+            ax.plot (xs+cluster._vertex_2D.x,
                      ys+cluster._vertex_2D.y,'o',markersize=10,color='black')
-
+            
             ax.plot([cluster._startPt.x + xs,xs+cluster._vertex_2D.x],
                     [cluster._startPt.y + ys,ys+cluster._vertex_2D.y],'-o',color='pink',lw=3)
             
