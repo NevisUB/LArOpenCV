@@ -23,6 +23,9 @@ namespace larcv{
     
     for( unsigned i = 0 ; i < clusters.size(); ++i ) {
       for( unsigned j = 0 ; j < clusters.size(); ++j ) {
+
+	if ( i == j ) continue;
+	
 	auto& s1 = clusters[i]._startPt;
 	auto& s2 = clusters[j]._startPt;
 
