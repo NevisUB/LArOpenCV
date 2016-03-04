@@ -32,7 +32,7 @@ class AlgoViewer :
                     cluster._endPt.y + ys,'o',color='green',markersize=5)
             
             
-        if self.name in ["pcas"] :
+        if self.name in ["pcas","pizerofilter"] :
 
             xs = cluster.Origin().y
             ys = cluster.Origin().x
@@ -43,6 +43,7 @@ class AlgoViewer :
 
 
             path   = self.algo._pcapaths[cindex];
+
             nboxes = path.chosen_boxes_.size()
 
             for b in xrange(nboxes):
@@ -62,17 +63,10 @@ class AlgoViewer :
 
             ax.plot(cluster._endPt.x + xs,
                     cluster._endPt.y + ys,'o',color='green',markersize=5)
-
-	if self.name in ["pizerofilter"] :
-
-            xs = cluster.Origin().y
-            ys = cluster.Origin().x
-	    ax.plot (xs+cluster._vertex_2D.x,
+            
+            ax.plot (xs+cluster._vertex_2D.x,
                      ys+cluster._vertex_2D.y,'o',markersize=10,color='black')
-
-           # ax.plot(cluster._startPt.x + xs,
-           #        cluster._startPt.y + ys,'o',color='blue',markersize=5)
-
+            
             ax.plot([cluster._startPt.x + xs,xs+cluster._vertex_2D.x],
                     [cluster._startPt.y + ys,ys+cluster._vertex_2D.y],'-o',color='pink',lw=3)
             
