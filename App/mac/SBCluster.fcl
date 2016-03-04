@@ -27,8 +27,8 @@ ImageClusterManager: {
   #ClusterAlgoType: [SBCluster,PCASegmentation,PiZeroFilter]
   #ClusterAlgoName: [sbc,pcas,pizerofilter]
 
-  ClusterAlgoType: [SBCluster,TrackShower,PiZeroFilter]
-  ClusterAlgoName: [sbc,Trackshower,pizerofilter]
+  ClusterAlgoType: [SBCluster,TrackShower]
+  ClusterAlgoName: [sbc,Trackshower]
 
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto

@@ -8,7 +8,7 @@ namespace larcv{
   void TrackShower::_Configure_(const ::fcllite::PSet &pset)
   {
 
-    _area_cut  = pset.get<int> ("AreaCut");
+    _area_cut         = pset.get<int> ("AreaCut");
     _ratio_separation = pset.get<int> ("RatioCut");
     _track_shower_sat = pset.get<int>("TrackShowerSat");
 
@@ -48,7 +48,7 @@ namespace larcv{
         ts_cluster._insideHits.emplace_back(loc.x, loc.y);	
 
 	int charge  = (int) img.at<uchar>(loc.y,loc.x);
-	sum_charge += charge;					 
+	sum_charge += charge;
       }   
 
       ts_cluster._numHits = ts_cluster._insideHits.size();
@@ -68,8 +68,7 @@ namespace larcv{
       //  
       int step1 = _step1; 
       int step2 = _step2; 
-      std::pair<float,float> dir1;
-      std::pair<float,float> dir2;
+      std::pair<float,float> dir1,dir2;
 
       auto dist1  = std::sqrt(pow(vertices[0].x-vertices[1].x,2) + pow(vertices[0].y - vertices[1].y,2));
       auto dist2  = std::sqrt(pow(vertices[2].x-vertices[1].x,2) + pow(vertices[2].y - vertices[1].y,2));
@@ -90,6 +89,7 @@ namespace larcv{
 
       dir1 = std::make_pair((vertices[i0].x - vertices[i1].x)/step1, (vertices[i0].y - vertices[i1].y)/step1);
       dir2 = std::make_pair((vertices[i2].x - vertices[i1].x)/step2, (vertices[i2].y - vertices[i1].y)/step2);
+
       ::cv::Point2d start_point( vertices[i1].x , vertices[i1].y  );
       ::cv::Point2d end_point  ( vertices[i0].x , vertices[i0].y );
 

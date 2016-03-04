@@ -11,7 +11,7 @@ import algo_viewer as av
 my_proc = fmwk.ana_processor()
 
 # Config file
-cfg="../../../App/mac/SBCluster.fcl"
+cfg="../../../App/mac/MergingTester.fcl"
 
 algid = int(sys.argv[2])
 
@@ -28,9 +28,6 @@ while( my_proc.process_event() ) :
     manager  = myunit.algo_manager()
     print "NUMBER OF CLUSTERS", manager.NumClusters()
 
-    if manager.NumClusters() == 2:
-        continue
-    
     if manager.NumClusters() == 0:
         print "No clusters found at all...\n";
         continue
@@ -55,7 +52,7 @@ while( my_proc.process_event() ) :
                 print "BAD PLANEID"
                 continue
         except ReferenceError:
-            "Reference error that fucking fine"
+            "__reference_error__"
             continue
 
         ax = axx[cluster.PlaneID()]

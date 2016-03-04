@@ -58,12 +58,15 @@ namespace larcv {
   inline double dist(const ::cv::Point2f& a,const Point2D& b)        { return std::sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y)); }
   inline double dist(const ::cv::Point2d& a, const ::cv::Point2d& b) { return std::sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y)); }
   inline double dist(const Point2D& a, const Point2D& b)             { return std::sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y)); }
+  inline double dist(double x1, double x2, double y1, double y2)     { return std::sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)); }
 
   
   std::pair<double,double> closest_point_on_line(std::vector<double>& line,int lx,int ly);
 
   Point2D intersection_point(const std::vector<double>& l1, const std::vector<int> l2);
-
+  Point2D intersection_point(double x1, double x2, double y1, double y2,
+			     double x3, double x4, double y3, double y4);
+   
   bool compatible (const PCABox& b1, const PCABox& b2);
   bool intersect  (const PCABox& b1, const PCABox& b2);
   bool check_angle(const PCABox& b1, const PCABox& b2);

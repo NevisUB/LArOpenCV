@@ -264,6 +264,18 @@ namespace larcv {
     return charge_sum;
   }
 
+  Point2D intersection_point(double x1, double x2, double y1, double y2,
+			     double x3, double x4, double y3, double y4) {
+    Point2D pt;
+
+    auto denom = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
+    pt.x = ( (x1*y2 - y1*x2)*(x3-x4) - (x1-x2)*(x3*y4-y3*x4) ) / denom;
+    pt.y = ( (x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-y3*x4) ) / denom;
+    
+    return pt;
+    
+  }
+  
   Point2D intersection_point(const std::vector<double>& l1, const std::vector<int> l2) {
     
     Point2D pt;

@@ -77,7 +77,7 @@ namespace larlite {
     }
 
     _alg_mgr.Process();
-    std::cout<<"Matched pairs: "<<_alg_mgr.BookKeeper().GetResult().size()<<std::endl;
+    // std::cout<<"Matched pairs: "<<_alg_mgr.BookKeeper().GetResult().size()<<std::endl;
 
     watch_one.Start();
     this->store_clusters(storage);

@@ -183,22 +183,9 @@ namespace larcv{
 	  //connect the boxes with criteria specified in PCAUtilities connect function
 	  connect(box,boxes,used,neighbors,combined,i,i);
 	}
-
-	// std::cout << "Finished connecting..." << "\n";
-	// std::cout << "\n\n";
-	// for(const auto& k : combined) {
-	//   std::cout << "\t key: " << k.first << " : {";
-	//   for(const auto& kk : k.second) {
-	//     std::cout << kk << ",";
-	//   }
-	//   std::cout << "}\n";
-	// }
-	
       }     
 
-      
       //At this point we have some idea about "connectedness". 
-
       //lets set the charge per box first
       int sum_charge = 0;
       for( auto& box : boxes ) {
@@ -231,28 +218,28 @@ namespace larcv{
       for(int r=0;r<4;++r) v[r] = verticies[r];
 
       path.CheckMinAreaRect(bbox,v);
+
       std::swap(v,ocluster._minAreaRect);
       
       ocluster._eigenVecFirst = path.combined_e_vec_;
-      ocluster._startPt       = path.point_closest_to_edge_;
-      ocluster._endPt         = point_farthest_away(ocluster,ocluster._startPt);
+      // ocluster._startPt       = path.point_closest_to_edge_;
+      // ocluster._endPt         = point_farthest_away(ocluster,ocluster._startPt);
 
       ocluster._sumCharge = (double) sum_charge;
-
+      ocluster._centerPt  = Point2D(bbox.center.x,bbox.center.y);
       ocluster._length    = rect.height > rect.width ? rect.height : rect.width;
-      ocluster._width     = rect.height > rect.width ? rect.width : rect.height;
+      ocluster._width     = rect.height > rect.width ? rect.width  : rect.height;
       ocluster._area      = ::cv::contourArea(cluster);
       ocluster._perimeter = ::cv::arcLength(cluster,1);
-
+      
       _pcapaths.push_back(path);
       
       oclusters.emplace_back(ocluster);
-      
     }
 
     //just return the clusters you didn't do anything...
     // std::cout << "return of PCAS oclusters" << oclusters.size() << "\n";
-
+    
     return oclusters;
   }
   

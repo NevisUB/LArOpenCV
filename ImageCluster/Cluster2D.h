@@ -81,7 +81,11 @@ namespace larcv {
     double _perimeter;
 
     std::vector<::cv::Point2f> _minAreaRect;
-   
+    std::vector<::cv::Point2f> _chosen;
+
+    std::vector<Point2D> _m;
+    
+    
     Point2D _vertex_2D;
  
     

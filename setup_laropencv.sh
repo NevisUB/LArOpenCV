@@ -8,6 +8,6 @@ if [ -z ${LARLITE_BASEDIR+x} ]; then
 fi
 
 
-export OPENCV_INCDIR=/uboone/app/users/vgenty/opencv/include
-export OPENCV_LIBDIR=/uboone/app/users/vgenty/opencv/lib
+export OPENCV_INCDIR=/usr/local/include
+export OPENCV_LIBDIR=/usr/local/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OPENCV_LIBDIR
