@@ -47,14 +47,13 @@ namespace larcv{
 
     Contour_t all_locations;
     ::cv::findNonZero(img, all_locations); // get the non zero points
-
       
     for(unsigned u = 0; u < clusters.size(); ++u) {
       bad = false;
       
 
       Cluster2D ocluster = clusters[u];
-
+      
       for(const auto& loc: all_locations) {
 	if ( ::cv::pointPolygonTest(ocluster._contour,loc,false) < 0 )
 	  continue;
@@ -222,11 +221,13 @@ namespace larcv{
       std::swap(v,ocluster._minAreaRect);
       
       ocluster._eigenVecFirst = path.combined_e_vec_;
+
+      //don't trust start and end point finding
       // ocluster._startPt       = path.point_closest_to_edge_;
       // ocluster._endPt         = point_farthest_away(ocluster,ocluster._startPt);
-
+      
       ocluster._sumCharge = (double) sum_charge;
-      ocluster._centerPt  = Point2D(bbox.center.x,bbox.center.y);
+      //ocluster._centerPt  = Point2D(bbox.center.x,bbox.center.y);
       ocluster._length    = rect.height > rect.width ? rect.height : rect.width;
       ocluster._width     = rect.height > rect.width ? rect.width  : rect.height;
       ocluster._area      = ::cv::contourArea(cluster);

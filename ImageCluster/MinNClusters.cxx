@@ -6,14 +6,16 @@
 namespace larcv{
 
   void MinNClusters::_Configure_(const ::fcllite::PSet &pset)
-  {}
+  {
+    _NClusters = pset.get<int> ("MinNClusters");
+  }
 
   Cluster2DArray_t MinNClusters::_Process_(const larcv::Cluster2DArray_t& clusters,
-					const ::cv::Mat& img,
-					larcv::ImageMeta& meta)
+					   const ::cv::Mat& img,
+					   larcv::ImageMeta& meta)
   {
 
-    if ( clusters.size() < 2 )
+    if ( clusters.size() < _NClusters )
       return Cluster2DArray_t ();
 
     return clusters;

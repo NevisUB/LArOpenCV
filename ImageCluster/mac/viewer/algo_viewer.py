@@ -1,11 +1,10 @@
 from viewer_methods import get_xy, get_xy_w_offset
 
 class AlgoViewer :
-    def __init__ (self,algo,algo2,plt):
+    def __init__ (self,algo,plt):
         self.algo  = algo
-        self.algo2 = algo2
-        
         self.name = algo.Name()
+        
         self.plt  = plt
         
     def draw(self,ax,cluster,cindex):
@@ -33,17 +32,17 @@ class AlgoViewer :
                     cluster._endPt.y + ys,'o',color='green',markersize=5)
             
             
-        if self.name in ["pcas","pizerofilter"] :
+        if self.name in ["pcas"] :
 
             insidehits = cluster._insideHits
             px, py     = get_xy_w_offset(insidehits,xs,ys)
             ax.plot(px,py,'o',markersize=1,color='black')
 
-            
-            if cindex >= self.algo2._pcapaths.size():
-                cindex = self.algo2._pcapaths.size() - 1
+            #This sometimes happpens for some reason
+            if cindex >= self.algo._pcapaths.size():
+                cindex = self.algo._pcapaths.size() - 1
                 
-            path   = self.algo2._pcapaths[cindex];
+            path   = self.algo._pcapaths[cindex];
 
             nboxes = path.chosen_boxes_.size()
 
@@ -65,6 +64,8 @@ class AlgoViewer :
             ax.plot(cluster._endPt.x + xs,
                     cluster._endPt.y + ys,'o',color='green',markersize=5)
             
+        if self.name in ["pizerofilter"] :
+
             ax.plot (xs+cluster._vertex_2D.x,
                      ys+cluster._vertex_2D.y,'o',markersize=10,color='black')
             

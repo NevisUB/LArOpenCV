@@ -37,9 +37,9 @@ ImageClusterManager: {
   ReClusterAlgoType: ""
   ReClusterAlgoName: ""
 
-  brs : {}
-  csd : {}
-  mnc : {}
+  brs : { NHitsCut        : 20  }
+  csd : { MaxStartDistance: 14.0}
+  mnc : { MinNClusters    : 2   }
 
  ImageClusterViewer: {
 

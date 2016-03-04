@@ -11,9 +11,9 @@ import algo_viewer as av
 my_proc = fmwk.ana_processor()
 
 # Config file
-cfg="../../../App/mac/MergingTester.fcl"
+cfg="../../../App/mac/SBCluster.fcl"
 
-algid = int(sys.argv[2])
+algid  = int(sys.argv[2])
 
 my_proc.add_input_file(sys.argv[1])
 my_proc.set_io_mode(fmwk.storage_manager.kREAD)
@@ -42,8 +42,7 @@ while( my_proc.process_event() ) :
     print manager.GetClusterAlg(algid)
     
     algo_drawer = av.AlgoViewer( manager.GetClusterAlg(algid),
-                                 manager.GetClusterAlg(algid-1),
-                                 plt)
+                                 plt )
     
     for c in xrange(manager.NumClusters(algid)):
 

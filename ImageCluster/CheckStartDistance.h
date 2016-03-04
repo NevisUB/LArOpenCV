@@ -48,6 +48,11 @@ namespace larcv {
     
   private:
 
+    double _max_start_d;
+
+    double _w;
+    double _h;
+    
   };
   
   /**

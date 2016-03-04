@@ -47,7 +47,8 @@ namespace larcv {
 				      larcv::ImageMeta& meta);
     
   private:
-
+    int _NClusters;
+    
   };
   
   /**

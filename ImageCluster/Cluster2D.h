@@ -57,35 +57,53 @@ namespace larcv {
     //
     // Data attributes that can be modified by algorithms
     //
+    /// PDG code
     ParticleType_t _particle_type;
-
+    /// The contour
     Contour_t _contour;
 
+    //
+    // Filled by various cluster params calculators
+    //
+
+    /// Hits inside the contour
     std::vector<::cv::Point> _insideHits;
+    /// Number of hits in the contour
     int _numHits;
-    
+    /// Center point of the cluster
     Point2D _centerPt;
+    /// If using PCA, principle eigenvector
     Point2D _eigenVecFirst;
+    /// If using PCA, second eigenvector
     Point2D _eigenVecSecond;
-
+    /// Start point
     Point2D _startPt;
+    /// End point
     Point2D _endPt;
-
-    double _angle2D ;
-
+    /// Total charge
     double _sumCharge;
-    
+    /// Length -- could be of line passing through
     double _length;
+    /// Width
     double _width;
+    /// Total area
     double _area;
+    /// Perimeter
     double _perimeter;
-
+    /// Angle of cluster
+    double _angle2D;
+    
+    /// Verticies of the line minimum bounding rectangle
     std::vector<::cv::Point2f> _minAreaRect;
+
+    
+    /// Chosen points as the edge that contains the start point
     std::vector<::cv::Point2f> _chosen;
 
+    /// Used by ???
     std::vector<Point2D> _m;
     
-    
+    /// 2D vertex point
     Point2D _vertex_2D;
  
     
