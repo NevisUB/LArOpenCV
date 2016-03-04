@@ -108,7 +108,7 @@ ImageClusterManager: {
 
   mto : {
     RatioCut : 0.001
-    StartTimeCut : 5
+    StartTimeCut : 15
     RequireThreePlanes : 0
   }
 
