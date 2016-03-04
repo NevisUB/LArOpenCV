@@ -1,8 +1,10 @@
 from viewer_methods import get_xy, get_xy_w_offset
 
 class AlgoViewer :
-    def __init__ (self,algo,plt):
-        self.algo = algo
+    def __init__ (self,algo,algo2,plt):
+        self.algo  = algo
+        self.algo2 = algo2
+        
         self.name = algo.Name()
         self.plt  = plt
         
@@ -41,8 +43,11 @@ class AlgoViewer :
             px, py     = get_xy_w_offset(insidehits,xs,ys)
             ax.plot(px,py,'o',markersize=1,color='black')
 
-
-            path   = self.algo._pcapaths[cindex];
+            
+            if cindex >= self.algo2._pcapaths.size():
+                cindex = self.algo2._pcapaths.size() - 1
+                
+            path   = self.algo2._pcapaths[cindex];
 
             nboxes = path.chosen_boxes_.size()
 
