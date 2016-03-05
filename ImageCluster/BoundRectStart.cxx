@@ -56,8 +56,11 @@ namespace larcv{
 
       auto& verts        = ocluster._minAreaRect;
       auto& center       = ocluster._centerPt;
+      auto& angle        = bbox.angle;
 	
-      // partition the points, which side has the most [whatever you want]
+      static unsigned int N = 4;
+      ::cv::RotatedRect divisions[N];
+      
       float edge1_d = std::sqrt(pow(verts[0].x-verts[1].x,2) + pow(verts[0].y - verts[1].y,2));
       float edge2_d = std::sqrt(pow(verts[2].x-verts[1].x,2) + pow(verts[2].y - verts[1].y,2));
       
@@ -66,30 +69,65 @@ namespace larcv{
       int se[2][2]; //se == short edge
       int le[2][2]; // le == long edge
 
+      // this is stupid, order the points so that we get the left most edge first
       if( edge1_d > edge2_d ){
+	
+	if ( vert[1].x < vert[0].x ) { le[0][0] = 1; le[0][1] = 0; }
+	else                         { le[0][0] = 0; le[0][1] = 1; }
 
-	le[0][0] = 1; le[0][1] = 0;
-	le[1][0] = 3; le[1][1] = 2;
+	
+	if ( vert[3].x < vert[2].x ) { le[1][0] = 3; le[1][1] = 2; }
+	else                         { le[1][0] = 2; le[1][1] = 3; }
+	
 
-	se[0][0] = 2; se[0][1] = 1;
-	se[1][0] = 3; se[1][1] = 0;
+	if ( vert[2].x < vert[1].x ) { se[0][0] = 2; se[0][1] = 1; }
+	else                         { se[0][0] = 1; se[0][1] = 2; }
+	
+	
+	if ( vert[3].x < vert[0].x ) { se[1][0] = 3; se[1][1] = 0; }
+	else                         { se[1][0] = 0; se[1][1] = 3; }
 	
 	le_d = edge1_d;
 	se_d = edge2_d;
 	
       } else {
 
-	le[0][0] = 2; le[0][1] = 1;
-	le[1][0] = 3; le[1][1] = 0;
+	if ( vert[1].x < vert[0].x ) { se[0][0] = 1; se[0][1] = 0; }
+	else                         { se[0][0] = 0; se[0][1] = 1; }
 
-	se[0][0] = 1; se[0][1] = 0;
-	se[1][0] = 3; se[1][1] = 2;
+	
+	if ( vert[3].x < vert[2].x ) { se[1][0] = 3; se[1][1] = 2; }
+	else                         { se[1][0] = 2; se[1][1] = 3; }
+	
+
+	if ( vert[2].x < vert[1].x ) { le[0][0] = 2; le[0][1] = 1; }
+	else                         { le[0][0] = 1; le[0][1] = 2; }
+	
+	
+	if ( vert[3].x < vert[0].x ) { le[1][0] = 3; le[1][1] = 0; }
+	else                         { le[1][0] = 0; le[1][1] = 3; }
+
 	
 	le_d = edge2_d;
 	se_d = edge1_d;
 	
       }
 
+      le_d_seg = le_d / (double) ( N - 1 );
+      se_d_seg = se_d / (double) 2.0;
+
+      auto divisions = segment(le,N);
+
+      
+      
+      // for ( int i = 0 ; i < N; ++i ) {
+      // 	division[i] = Point2D(le_d_seg*(i + 1) + le[0][0].x,
+      // 			      le_d_seg*(i + 1) + le[0][0].y);
+      // }
+
+
+
+      
       std::vector<::cv::Point2f> f_half,s_half,ipoints;
       
       for ( unsigned i = 0 ; i < 2; ++i) {
@@ -157,6 +195,9 @@ namespace larcv{
       }
 
 
+      // f_half and s_half are fine, they are oriented correct no problem, can we cut them again?
+      // we really need recursion
+      
 
       
       int tot_charge[2] = {0,0};
@@ -205,6 +246,39 @@ namespace larcv{
     }
     
     return oclusters;
+  }
+
+
+
+  std::vector<::cv::Point2f> BoundRectStart::segment(const std::vector<::cv::Point2f>& verts,int* le,double le_d) {
+
+
+    double N = 4.0;
+    auto le_d_seg = le_d / N;
+    
+    std::vector<::cv::Point2f> pts; pts.reserve(N-1);
+
+    auto& pt1 = verts[ le[0][0] ];
+    auto& pt2 = verts[ le[0][1] ];
+
+    auto x = std::abs( pt1.y - pt2.y );
+    auto y = std::abs( pt1.x - pt2.x );
+    
+    auto cos = y / le_d;
+    auto sin = x / le_d;
+    
+    auto dx = le_d_seg * cos;
+    auto dy = le_d_seg * sin;
+
+    for( unsigned i = 0; i < N - 1; ++i ) {
+      auto& pt = pts[i];
+
+      pt = ::cv::Point2f(pt1.x + (i+1)*dx,
+			 pt1.x + (i+1)*dy);
+      
+    }
+    
+    
   }
 
 }
