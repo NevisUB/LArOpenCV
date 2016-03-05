@@ -9,12 +9,15 @@ namespace larcv{
 
   void BoundRectStart::_Configure_(const ::fcllite::PSet &pset)
   {
-    _nHitsCut = pset.get<int> ("NHitsCut");
+    _nHitsCut  = pset.get<int> ( "NHitsCut"  );
+    _nDivWidth = pset.get<int> ( "NDivWidth" );
+
+    if ( _nDivWidth%2 != 0 ) { std::cout << "\n\tNDivWidth must be even!\n"; throw std::exception(); }
   }
 
   Cluster2DArray_t BoundRectStart::_Process_(const larcv::Cluster2DArray_t& clusters,
-					const ::cv::Mat& img,
-					larcv::ImageMeta& meta)
+					     const ::cv::Mat& img,
+					     larcv::ImageMeta& meta)
   {
     Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );
 
@@ -25,7 +28,6 @@ namespace larcv{
       
       Cluster2D ocluster = clusters[k];       
       auto& contour      = ocluster._contour;
-
 
       for(const auto& loc: all_locations) {
 	if ( ::cv::pointPolygonTest(ocluster._contour,loc,false) < 0 ) continue;
@@ -51,62 +53,61 @@ namespace larcv{
       //set the center points as the center of this box
       ocluster._centerPt  = Point2D(bbox.center.x,bbox.center.y);
 
+      // handles to few variables
+      auto& verts   = ocluster._minAreaRect;
+      auto& center  = ocluster._centerPt;
+      auto& angle   = bbox.angle;
 
-      ////////////////////////////////
+      std::vector<::cv::RotatedRect> divisions; divisions.resize(_nDivWidth);
 
-      auto& verts        = ocluster._minAreaRect;
-      auto& center       = ocluster._centerPt;
-      auto& angle        = bbox.angle;
-	
-      const static unsigned int N = 8;
-      ::cv::RotatedRect divisions[N];
-
-      float blob_angle_deg = bbox.angle;
+      double angle_deg = bbox.angle;
       double height ( bbox.size.height ), width( bbox.size.width );
+
       bool swapped = false;
 
       if (bbox.size.width < bbox.size.height) {
-	blob_angle_deg += 90.;
+	angle_deg += 90.;
 	width  = bbox.size.height;
 	height = bbox.size.width;
 	swapped = true;
       }
 
+      double N = _nDivWidth;
       
+      // divide the box up
       double w_div = width  / (double) N;
       double h_div = height / (double) N;
 
-      double deg2rad = 3.14159 / 180.0;
-      
-      auto dx = w_div * std::cos(blob_angle_deg * deg2rad);
-      auto dy = w_div * std::sin(blob_angle_deg * deg2rad);
 
+      // what is the step
+      auto dx = w_div * std::cos(angle_deg * _deg2rad);
+      auto dy = w_div * std::sin(angle_deg * _deg2rad);
+
+      // where do i start
       auto cx = center.x - (N/2-0.5) * dx;
       auto cy = center.y - (N/2-0.5) * dy;
 
 
       auto& vvv = ocluster._verts;
-      vvv.resize(N);
+      vvv.clear(); vvv.resize(N);
 	
       for(unsigned i = 0; i < N; ++i) {
 	auto& vv = vvv[i];
 
 	::cv::Size2f s = swapped ? ::cv::Size2f(height,w_div) : ::cv::Size2f(w_div,height);
-	
-	divisions[i] = ::cv::RotatedRect(::cv::Point2f(cx + i*dx,cy + i*dy),
-					 s,
-					 angle);
+
+	// step and make rotated rect
+	divisions[i] = ::cv::RotatedRect(::cv::Point2f(cx + i*dx,cy + i*dy),s,angle);
 	
 	::cv::Point2f ver[4];
 	divisions[i].points(ver);
       	v.clear(); v.resize(4);
 	for(int r=0;r<4;++r) v[r] = ver[r];
 	std::swap(vv,v);
-	
       }
-      
-      
-      
+
+
+      // do something with the boxes....
       
       // int tot_charge[2] = {0,0};
       // Contour_t insides[2];

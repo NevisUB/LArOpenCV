@@ -12,7 +12,9 @@ namespace larcv {
   public:
     
     /// Default constructor
-    BoundRectStart(const std::string name="BoundRectStart") : ClusterAlgoBase(name)
+    BoundRectStart(const std::string name="BoundRectStart") :
+      ClusterAlgoBase(name),
+      _deg2rad ( 3.14159 / 180.0 )
     {}
     
     /// Default destructor
@@ -33,7 +35,9 @@ namespace larcv {
     
   private:
     int _nHitsCut;
-    
+    int _nDivWidth;
+
+    double _deg2rad;
   };
   
   /**
