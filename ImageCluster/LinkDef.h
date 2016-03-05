@@ -40,8 +40,12 @@
 #pragma link C++ class larcv::BoundRectStart+;
 #pragma link C++ class larcv::CheckStartDistance+;
 #pragma link C++ class larcv::MinNClusters+;
+
+
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
+
 
 
 

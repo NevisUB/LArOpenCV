@@ -105,7 +105,8 @@ namespace larcv {
     
     /// 2D vertex point
     Point2D _vertex_2D;
- 
+
+    std::vector<std::vector<::cv::Point2f> > _verts;
     
   private:
     ClusterID_t _cluster_id;

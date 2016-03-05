@@ -11,7 +11,7 @@
 ```
 
 - Look at Test.fcl to get confused (i.e. to get started)
-- Join Skype thread (ping kazu/Ariana/Vic/WHOEVER_ON_THREAD_ADD_YOUR_NAME)
+- Join Skype thread (ping kazu/ariana/vic/jose/colton)
 - Document repository: https://github.com/NevisUB/laropencv_doc
 - Class reference: https://rawgit.com/NevisUB/laropencv_doc/master/html/annotated.html
 - OpenCV reference: http://docs.opencv.org/3.0.0 

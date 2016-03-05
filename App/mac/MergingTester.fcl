@@ -28,6 +28,7 @@ ImageClusterManager: {
   ClusterAlgoType: [SBCluster,BoundRectStart,CheckStartDistance,MinNClusters]
   ClusterAlgoName: [sbc,brs,csd,mnc]
 
+
   #MatchAlgoType: ""
   #MatchAlgoName: ""
 
@@ -38,7 +39,7 @@ ImageClusterManager: {
   ReClusterAlgoName: ""
 
   brs : { NHitsCut        : 20  }
-  csd : { MaxStartDistance: 14.0}
+  csd : { MaxStartDistance: 28.0}
   mnc : { MinNClusters    : 2   }
 
  ImageClusterViewer: {
@@ -50,8 +51,6 @@ ImageClusterManager: {
    
  }
 
-  mymatcher: {}
-    
  sbc:{
 
    Verbosity: 1
@@ -82,34 +81,40 @@ ImageClusterManager: {
     }
 
   Trackshower:{
+
     AreaCut : 900
     RatioCut : 3
     TrackShowerSat : 0 # 0 returns showers, 1 returns tracks, 2 returns satellites+showers, 3 returns everything
     Step1 : 80
     Step2 : 80
     SwitchRatio : 0.349
+    
   }
 
   satellitemerge: {
+
     AreaCut: 1850
     MinSatDistance: 50
     MinShowerDistance: 25
     ContourDensity:50 # unused
+    
   }
 
-  pcao: {
-    NMinInsideHits: 2
-  }
+  pcao: { NMinInsideHits: 2 }
 
   pizerofilter: {
+
     NHitsCut: 10
     BackStartPoint: 100
+    
   }
 
   mto : {
+
     RatioCut : 0.001
     StartTimeCut : 15
     RequireThreePlanes : 0
+    
   }
 
 
