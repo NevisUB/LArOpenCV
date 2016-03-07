@@ -18,6 +18,8 @@ namespace larcv{
     for( auto & c : pid_clusters ){
       if( _pdg == 11 )
         c._particle_type = kPi0 ;
+      else
+        c._particle_type = kUnknown ;
       }
 
     return pid_clusters; 
