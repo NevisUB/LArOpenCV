@@ -52,7 +52,12 @@ ImageClusterManager: {
    ThreshMaxVal : 255
 
   }
-	  
+
+ pid: {
+
+   PDG : 11
+
+  }
 
  pcas : {
 
