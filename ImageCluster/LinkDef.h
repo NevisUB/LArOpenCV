@@ -43,8 +43,10 @@
 #pragma link C++ class larcv::PID+;
 
 
+#pragma link C++ class larcv::StartEndMerge+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
 
 
 

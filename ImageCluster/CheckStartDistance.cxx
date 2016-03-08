@@ -8,7 +8,7 @@ namespace larcv{
 
   void CheckStartDistance::_Configure_(const ::fcllite::PSet &pset)
   {
-    _max_start_d = pset.get<double>("MaxStartDistance");
+    _max_start_d = pset.get<double>("MaxStartEndDistance");
 
     _w = 0.0557;
     _h = 0.3;

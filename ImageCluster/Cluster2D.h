@@ -76,6 +76,10 @@ namespace larcv {
     Point2D _eigenVecFirst;
     /// If using PCA, second eigenvector
     Point2D _eigenVecSecond;
+    /// If using PCA, principle eigenvalue
+    double  _eigenValFirst;
+    /// If using PCA, second eigenvalue
+    double  _eigenValSecond;
     /// Start point
     Point2D _startPt;
     /// End point

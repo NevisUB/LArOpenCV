@@ -34,13 +34,20 @@ namespace larcv{
       if (ocluster._numHits <= _nMinInsideHits) continue;
       
       Point2D e_vec_first,e_vec_second,e_center;
+      double  e_val_first,e_val_second;
+      
       pca_line(ocluster._insideHits,
-	       e_vec_first,e_vec_second,e_center);
+	       e_vec_first,e_vec_second,
+	       e_val_first,e_val_second,
+	       e_center);
 
-      ocluster._centerPt      = e_center;
+      ocluster._centerPt       = e_center;
       ocluster._eigenVecFirst  = e_vec_first;
       ocluster._eigenVecSecond = e_vec_second;
-
+      ocluster._eigenValFirst  = e_val_first;
+      ocluster._eigenValSecond = e_val_second;
+      ocluster._area           = ::cv::contourArea(ocluster._contour);
+      ocluster._perimeter      = ::cv::arcLength(ocluster._contour,1);
     }
     return out_clusters;
   }
