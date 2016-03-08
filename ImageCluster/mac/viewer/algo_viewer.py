@@ -97,23 +97,23 @@ class AlgoViewer :
             #         [ch[0].y+ys,ch[1].y+ys,ch[2].y+ys,ch[3].y+ys,ch[0].y+ys],color='magenta',lw=5)
             # 
 
-            # ax.plot(cluster._startPt.x + xs,
-            #         cluster._startPt.y + ys,'o',color='pink',markersize=10)
+            ax.plot(cluster._startPt.x + xs,
+                   cluster._startPt.y + ys,'o',color='pink',markersize=10)
             
             
             nboxes = cluster._verts.size();
             print "nboxes",nboxes
             r = 0
             for v in xrange(nboxes):
-                box = cluster._verts[v]
-                xx = [box[0].x+xs,box[1].x+xs,box[2].x+xs,box[3].x+xs,box[0].x+xs]
-                yy = [box[0].y+ys,box[1].y+ys,box[2].y+ys,box[3].y+ys,box[0].y+ys]
-                #ax.plot(xx,yy,lw=2)
-                a = np.array(zip(xx,yy))
-                polygon = mpatches.Polygon(a,True,fc=str(np.abs(cluster._something[r])))
-                # #poly = ax.Polygon(zip(xx,yy))
-                ax.add_patch(polygon)
-                r+=1
+               box = cluster._verts[v]
+               xx = [box[0].x+xs,box[1].x+xs,box[2].x+xs,box[3].x+xs,box[0].x+xs]
+               yy = [box[0].y+ys,box[1].y+ys,box[2].y+ys,box[3].y+ys,box[0].y+ys]
+               #ax.plot(xx,yy,lw=2)
+               a = np.array(zip(xx,yy))
+               polygon = mpatches.Polygon(a,True,fc=str(cluster._something[r]))
+               # #poly = ax.Polygon(zip(xx,yy))
+               ax.add_patch(polygon)
+               r+=1
 
 
                         

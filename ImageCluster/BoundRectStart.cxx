@@ -1,3 +1,4 @@
+//by vic
 #ifndef __BOUNDRECTSTART_CXX__
 #define __BOUNDRECTSTART_CXX__
 
@@ -19,6 +20,15 @@ namespace larcv{
 					     const ::cv::Mat& img,
 					     larcv::ImageMeta& meta)
   {
+
+    /*
+
+      Extend on Ariana's track shower module to include segmentation. Segment the box long ways
+      calculate the linearity, and total charge in each box. Maximize the product of the two
+      then the point farthest from the center is the start point
+
+    */
+
     Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );
 
     Contour_t all_locations;
@@ -106,8 +116,8 @@ namespace larcv{
 
 
       // do something with the segments...
-      std::vector<Contour_t> insides(N); insides.clear();
-      std::vector<double>    tot_charge(N); tot_charge.clear();
+      std::vector<Contour_t> insides; insides.resize(N);
+      std::vector<double>    tot_charge; tot_charge.resize(N);
 
       // hits in the cluster...
       for (auto& h : ocluster._insideHits) {      
@@ -125,32 +135,31 @@ namespace larcv{
 	}
       }
 
-      std::vector<double> roi_covs(N); roi_covs.clear();
-      for(int i=0;i<N;++i)
-	{ roi_covs[i] = roi_cov(insides[i]); ocluster._something.push_back(roi_covs[i]); }
+      double f_half(0), s_half(0);
+      std::vector<double> roi_covs; roi_covs.resize(N);
+      for(int i=0;i<N;++i) {
+	  auto roicov = std::abs(roi_cov(insides[i]));
+	  if ( i < N/2 ) f_half += roicov;// * tot_charge[i];
+	  else           s_half += roicov;// * tot_charge[i];
+	  
+	  roi_covs[i] = roicov;
+	  ocluster._something.push_back(roicov);
+	}
 	
 
-      // int cidx = 0;
+      int cstart = f_half > s_half ? 0 : N-1;
 
-      // // charge * linearity
-      // //if ( tot_charge[0]*roi_covs[0] > tot_charge[1]*roi_covs[1] )
+      //get the farthest point from the center
+      ::cv::Point* farthest;
+      double far = 0;
+      for( auto& h : insides[cstart] ){
+	auto d = dist(h.x,center.x,h.y,center.y);
+	if ( d > far ) { far = d;  farthest = &h; }
+      }
 
-      // // which side is more linear? Ok choose this side
-      // if ( roi_covs[0] > roi_covs[1] )
-      // 	{ ocluster._chosen = f_half; cidx = 0;}
-      // else
-      // 	{ ocluster._chosen = s_half; cidx = 1;}
-
-
-      // ::cv::Point* farthest;
-      // double far = 0;
-      // for( auto& h : insides[cidx] ){
-      // 	auto d = dist(h.x,center.x,h.y,center.y);
-      // 	if ( d > far ) { far = d;  farthest = &h; }
-      // }
+      if ( far == 0 ) continue;
       
-      // ocluster._startPt = Point2D(farthest->x,farthest->y);
-	
+      ocluster._startPt = Point2D(farthest->x,farthest->y);
       oclusters.emplace_back(ocluster);
       
     }
