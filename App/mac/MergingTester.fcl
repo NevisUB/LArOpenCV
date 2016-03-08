@@ -41,7 +41,7 @@ ImageClusterManager: {
   brs : {
 
   NHitsCut  : 20
-  NDivWidth : 4
+  NDivWidth : 8
   
   }
   csd : { MaxStartDistance: 28.0}

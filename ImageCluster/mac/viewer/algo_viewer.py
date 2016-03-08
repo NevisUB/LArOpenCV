@@ -1,4 +1,9 @@
 from viewer_methods import get_xy, get_xy_w_offset
+import matplotlib.patches as mpatches
+from matplotlib.collections import PatchCollection
+import matplotlib
+
+import numpy as np
 
 class AlgoViewer :
     def __init__ (self,algo,plt):
@@ -98,13 +103,19 @@ class AlgoViewer :
             
             nboxes = cluster._verts.size();
             print "nboxes",nboxes
+            r = 0
             for v in xrange(nboxes):
                 box = cluster._verts[v]
-
-                ax.plot([box[0].x+xs,box[1].x+xs,box[2].x+xs,box[3].x+xs,box[0].x+xs],
-                        [box[0].y+ys,box[1].y+ys,box[2].y+ys,box[3].y+ys,box[0].y+ys],lw=2)
-
+                xx = [box[0].x+xs,box[1].x+xs,box[2].x+xs,box[3].x+xs,box[0].x+xs]
+                yy = [box[0].y+ys,box[1].y+ys,box[2].y+ys,box[3].y+ys,box[0].y+ys]
+                #ax.plot(xx,yy,lw=2)
+                a = np.array(zip(xx,yy))
+                polygon = mpatches.Polygon(a,True,fc=str(np.abs(cluster._something[r])))
+                # #poly = ax.Polygon(zip(xx,yy))
+                ax.add_patch(polygon)
+                r+=1
 
 
                         
                 
+            

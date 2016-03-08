@@ -96,7 +96,6 @@ namespace larcv {
     /// Verticies of the line minimum bounding rectangle
     std::vector<::cv::Point2f> _minAreaRect;
 
-    
     /// Chosen points as the edge that contains the start point
     std::vector<::cv::Point2f> _chosen;
 
@@ -105,8 +104,9 @@ namespace larcv {
     
     /// 2D vertex point
     Point2D _vertex_2D;
-
+    
     std::vector<std::vector<::cv::Point2f> > _verts;
+    std::vector<double> _something;
     
   private:
     ClusterID_t _cluster_id;

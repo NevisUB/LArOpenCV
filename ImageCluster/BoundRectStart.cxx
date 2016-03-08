@@ -78,7 +78,6 @@ namespace larcv{
       double w_div = width  / (double) N;
       double h_div = height / (double) N;
 
-
       // what is the step
       auto dx = w_div * std::cos(angle_deg * _deg2rad);
       auto dy = w_div * std::sin(angle_deg * _deg2rad);
@@ -86,7 +85,6 @@ namespace larcv{
       // where do i start
       auto cx = center.x - (N/2-0.5) * dx;
       auto cy = center.y - (N/2-0.5) * dy;
-
 
       auto& vvv = ocluster._verts;
       vvv.clear(); vvv.resize(N);
@@ -107,28 +105,30 @@ namespace larcv{
       }
 
 
-      // do something with the boxes....
-      
-      // int tot_charge[2] = {0,0};
-      // Contour_t insides[2];
-      
-      // for (auto& h : ocluster._insideHits) {
-      // 	if ( ::cv::pointPolygonTest(f_half,h,false) >= 0 ) {
-      // 	  tot_charge[0] += (int) img.at<uchar>(h.y,h.x);
-      // 	  insides[0].push_back(h);
-      // 	}
+      // do something with the segments...
+      std::vector<Contour_t> insides(N); insides.clear();
+      std::vector<double>    tot_charge(N); tot_charge.clear();
 
-      // 	if ( ::cv::pointPolygonTest(s_half,h,false) >= 0 ) {
-      // 	  tot_charge[1] += (int) img.at<uchar>(h.y,h.x);
-      // 	  insides[1].push_back(h);
-      // 	}
-      // }
-      
+      // hits in the cluster...
+      for (auto& h : ocluster._insideHits) {      
 
-      // double roi_covs[2] = {0,0};
+	//which ones are in this segment
+	for( unsigned i = 0; i < divisions.size(); ++i ) {
+	  //auto& div = divisions[i];
+	  auto& div = ocluster._verts[i];
+	  
+	  if ( ::cv::pointPolygonTest(div,h,false) >= 0 ) {
+	    tot_charge[i] += (int) img.at<uchar>(h.y,h.x);
+	    insides   [i].push_back(h);
+	  }
+	  
+	}
+      }
 
-      // roi_covs[0] = roi_cov(insides[0]);
-      // roi_covs[1] = roi_cov(insides[1]);
+      std::vector<double> roi_covs(N); roi_covs.clear();
+      for(int i=0;i<N;++i)
+	{ roi_covs[i] = roi_cov(insides[i]); ocluster._something.push_back(roi_covs[i]); }
+	
 
       // int cidx = 0;
 
@@ -150,6 +150,7 @@ namespace larcv{
       // }
       
       // ocluster._startPt = Point2D(farthest->x,farthest->y);
+	
       oclusters.emplace_back(ocluster);
       
     }
