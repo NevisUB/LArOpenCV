@@ -9,8 +9,12 @@ namespace larcv{
 
   void StartEndMerge::_Configure_(const ::fcllite::PSet &pset)
   {
-    _max_start_end_d = pset.get<double>("MaxStartEndDistance");
- 
+    _max_start_end_d   = pset.get<double>("MaxStartEndDistance");
+    _require_pca_check = pset.get<bool>  ("RequirePCACheck");
+    _angle_cut         = pset.get<double>("PCAAngleCut");
+    
+    _angle_cut *= 3.14159/180.0;
+    
     _w = 0.0557;
     _h = 0.3;
   }
@@ -63,18 +67,18 @@ namespace larcv{
 
     }
 
-    std::cout << "\t==> con_start_end\n";
-    for( const auto& c : con_start_end ) {
-      std::cout << "[" << c.first << "] : {";
-      for( const auto& cc : c.second ) std::cout << cc << ",";
-      std::cout << "}\n";
-    }
-    std::cout << "\t==> com_start_end\n";
-    for( const auto& c : com_start_end ) {
-      std::cout << "[" << c.first << "] : {";
-      for( const auto& cc : c.second ) std::cout << cc << ",";
-      std::cout << "}\n";
-    }
+    // std::cout << "\t==> con_start_end\n";
+    // for( const auto& c : con_start_end ) {
+    //   std::cout << "[" << c.first << "] : {";
+    //   for( const auto& cc : c.second ) std::cout << cc << ",";
+    //   std::cout << "}\n";
+    // }
+    // std::cout << "\t==> com_start_end\n";
+    // for( const auto& c : com_start_end ) {
+    //   std::cout << "[" << c.first << "] : {";
+    //   for( const auto& cc : c.second ) std::cout << cc << ",";
+    //   std::cout << "}\n";
+    // }
     
     
     for ( const auto& u : used ) {
@@ -116,6 +120,13 @@ namespace larcv{
       const auto& c2 = ca.at(n);
 
       //here we could check the PCA dot product which might help us do merging
+
+      if ( _require_pca_check )
+
+	if ( ! check_slope(c1,c2) )
+
+	  continue;
+
       // if ( !compatible(box,box2) )
       // 	continue;
       
@@ -155,7 +166,27 @@ namespace larcv{
     
     return out;
   }
-  
+
+  bool StartEndMerge::check_slope( const Cluster2D& c1,
+				   const Cluster2D& c2 ) {
+				   
+    
+    auto& ax = c1._eigenVecFirst.x;
+    auto& ay = c1._eigenVecFirst.y;
+      
+    auto& bx = c2._eigenVecFirst.x;
+    auto& by = c2._eigenVecFirst.y;
+    
+    auto cos_angle = ax*bx + ay*by;
+    
+    if ( std::acos(cos_angle) <= _angle_cut ) //angle between PCA lines //use acos since it returns smallest angle
+      return true;
+
+    return false;
+    
+    
+    
+  }
   
 }
 #endif

@@ -147,7 +147,7 @@ namespace larcv {
 
     auto& bx = e_vec_second.x;
     auto& by = e_vec_second.y;
-    auto bsq = std::sqrt(bx*bx + bx*bx);
+    auto bsq = std::sqrt(bx*bx + by*by);
 
     ax /= asq; ay /= asq;
     bx /= bsq; ay /= bsq;
@@ -433,7 +433,8 @@ namespace larcv {
     
     std::sort( paths.begin(), paths.end(), []( const PCAPath& l, const PCAPath& r )
 	       {
-		 return l.cw_cov_ < r.cw_cov_ ;
+		 //return l.cw_cov_ < r.cw_cov_ ;
+		 return l.total_cov_ < r.total_cov_ ;
 	       });
 
     auto& chosen_path = paths.back();

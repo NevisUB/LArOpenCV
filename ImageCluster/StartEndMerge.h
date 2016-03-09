@@ -49,7 +49,9 @@ namespace larcv {
   private:
     
     double _max_start_end_d;
-
+    bool   _require_pca_check;
+    double _angle_cut;
+    
     double _w;
     double _h;
 
@@ -64,6 +66,8 @@ namespace larcv {
     Cluster2D join_clusters(const std::map<size_t,std::vector<size_t> >& cmse,
 			    const Cluster2DArray_t& clusters,
 			    int i);
+    bool check_slope( const Cluster2D& c1,
+		      const Cluster2D& c2 );
 
   };
   

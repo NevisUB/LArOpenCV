@@ -24,8 +24,8 @@ namespace larcv {
     
     PCABox(::cv::Rect box) :
       box_       ( box   ),
-      empty_     ( true  ),
-      subdivided_( false )
+      subdivided_( false ),
+      empty_     ( true  )
     {}
     
     PCABox(Point2D e_vec,

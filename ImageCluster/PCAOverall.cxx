@@ -46,8 +46,8 @@ namespace larcv{
       ocluster._eigenVecSecond = e_vec_second;
       ocluster._eigenValFirst  = e_val_first;
       ocluster._eigenValSecond = e_val_second;
-      ocluster._area           = ::cv::contourArea(ocluster._contour);
-      ocluster._perimeter      = ::cv::arcLength(ocluster._contour,1);
+      //ocluster._area           = ::cv::contourArea(ocluster._contour);
+      //ocluster._perimeter      = ::cv::arcLength(ocluster._contour,1);
     }
     return out_clusters;
   }

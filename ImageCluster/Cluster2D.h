@@ -99,7 +99,8 @@ namespace larcv {
     
     /// Verticies of the line minimum bounding rectangle
     std::vector<::cv::Point2f> _minAreaRect;
-
+    ::cv::Rect _boundingBox;
+    
     /// Chosen points as the edge that contains the start point
     std::vector<::cv::Point2f> _chosen;
 

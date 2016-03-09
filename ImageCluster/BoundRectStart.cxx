@@ -50,6 +50,8 @@ namespace larcv{
       
       // use bounding box considerations to define start point, fill the vertices vector
       auto bbox = ::cv::minAreaRect(contour);
+      ocluster._boundingBox = bbox.boundingRect();
+      
       ::cv::Point2f verticies[4];
       bbox.points(verticies);
 
@@ -64,7 +66,6 @@ namespace larcv{
       ocluster._centerPt  = Point2D(bbox.center.x,bbox.center.y);
 
       // handles to few variables
-      auto& verts   = ocluster._minAreaRect;
       auto& center  = ocluster._centerPt;
       auto& angle   = bbox.angle;
 
@@ -86,7 +87,7 @@ namespace larcv{
       
       // divide the box up
       double w_div = width  / (double) N;
-      double h_div = height / (double) N;
+      //double h_div = height / (double) N;
 
       // what is the step
       auto dx = w_div * std::cos(angle_deg * _deg2rad);

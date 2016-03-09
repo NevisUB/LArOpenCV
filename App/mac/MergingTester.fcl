@@ -25,12 +25,8 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  ClusterAlgoType: [SBCluster,BoundRectStart,StartEndMerge,MinNClusters]
-  ClusterAlgoName: [sbc,brs,sem,mnc]
-
-
-  #MatchAlgoType: ""
-  #MatchAlgoName: ""
+  ClusterAlgoType: [SBCluster,BoundRectStart,PCASegmentation,StartEndMerge,MinNClusters]
+  ClusterAlgoName: [sbc,brs,pcas,sem,mnc]
 
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
@@ -53,14 +49,16 @@ ImageClusterManager: {
 
   mnc : {
 
-  MinNClusters: 2
+  MinNClusters: 2 #Minimum number of clusters in the plane
 
   }
 
   sem : {
 
   MaxStartEndDistance: 10
-
+  RequirePCACheck : 1
+  PCAAngleCut     : 10
+  
   }
 
  ImageClusterViewer: {
