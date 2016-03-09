@@ -25,8 +25,8 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  ClusterAlgoType: [SBCluster,BoundRectStart,CheckStartDistance,MinNClusters]
-  ClusterAlgoName: [sbc,brs,csd,mnc]
+  ClusterAlgoType: [SBCluster,BoundRectStart,StartEndMerge,MinNClusters]
+  ClusterAlgoName: [sbc,brs,sem,mnc]
 
 
   #MatchAlgoType: ""
@@ -44,8 +44,24 @@ ImageClusterManager: {
   NDivWidth : 8
   
   }
-  csd : { MaxStartDistance: 28.0}
-  mnc : { MinNClusters    : 2   }
+
+  csd : {
+
+  MaxStartDistance: 28.0
+
+  }
+
+  mnc : {
+
+  MinNClusters: 2
+
+  }
+
+  sem : {
+
+  MaxStartEndDistance: 10
+
+  }
 
  ImageClusterViewer: {
 

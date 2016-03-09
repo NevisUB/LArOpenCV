@@ -133,7 +133,6 @@ namespace larcv{
       }
 
       //connect the boxes that are touching each other
-      
       for(unsigned b1 = 0; b1 < boxes.size(); ++b1) {
 	
 	auto& box1 = boxes[b1];

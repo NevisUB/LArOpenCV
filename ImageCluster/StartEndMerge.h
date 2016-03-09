@@ -54,6 +54,14 @@ namespace larcv {
     double _h;
 
 
+    void traverse(const Cluster2D& c1,         // the input cluster
+		  const Cluster2DArray_t& ca,  // all the clusters
+		  std::map<int,bool >& used,   //which one is used
+		  const std::map<size_t,std::vector<size_t> >& cnse, //neighbors
+		  std::map<size_t,std::vector<size_t> >&       cmse, //traversed and unique graph
+		  int i,int k);
+      
+      
   };
   
   /**
