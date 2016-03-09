@@ -32,13 +32,13 @@ namespace larcv{
 
     for(unsigned i = 0; i < clusters.size(); ++i){
 
-      auto& s1 = clusters[i]._startPt;
+      auto& s1 = clusters[i]._endPt;
       
       for(unsigned j = 0; j < clusters.size(); ++j){
 
 	if ( i == j ) continue;
 
-	auto& e2 = clusters[j]._endPt;
+	auto& e2 = clusters[j]._startPt;
 
 	auto d = dist(s1.x * _w, e2.x * _w,
 		      s1.y * _h, e2.y * _h);
@@ -59,18 +59,17 @@ namespace larcv{
 
       const auto& c1 = clusters[i];
 
-      // used[i] = true;
-      
       traverse(c1,clusters,used,con_start_end,com_start_end,i,i);
+
     }
 
-    std::cout << "\t==>con_start_end\n";
+    std::cout << "\t==> con_start_end\n";
     for( const auto& c : con_start_end ) {
       std::cout << "[" << c.first << "] : {";
       for( const auto& cc : c.second ) std::cout << cc << ",";
       std::cout << "}\n";
     }
-    std::cout << "\t==>com_start_end\n";
+    std::cout << "\t==> com_start_end\n";
     for( const auto& c : com_start_end ) {
       std::cout << "[" << c.first << "] : {";
       for( const auto& cc : c.second ) std::cout << cc << ",";
@@ -78,8 +77,20 @@ namespace larcv{
     }
     
     
-    //just let it pass through for now
-    return clusters;
+    for ( const auto& u : used ) {
+
+      if ( ! u.second )
+
+	oclusters.emplace_back( clusters[u.first] );
+			      
+    }
+
+    for( const auto& c : com_start_end )
+
+      oclusters.emplace_back( join_clusters( com_start_end, clusters, c.first ) );
+    
+
+    return oclusters;
   }
 
   //straight rip of PCAsegmentation function
@@ -91,16 +102,16 @@ namespace larcv{
 			       std::map<size_t,std::vector<size_t> >&       cmse, //traversed and unique graph
 			       int i,int k)
   {
-    std::cout << "i: " << i << " k: " << k << "\n";
+    //std::cout << "i: " << i << " k: " << k << "\n";
 
-    if ( cnse.count(k) <= 0 ) 
-      return;
-    std::cout << "pass cnse.count(k)\n";
+    if ( cnse.count(k) <= 0 ) return; // key doesn't exist
+      
+    //std::cout << "pass cnse.count(k)\n";
     
     for(const auto& n : cnse.at(k)) { // std::vector of neighbors
-      std::cout << "n: " << n << "\n";
+      //std::cout << "n: " << n << "\n";
       if ( used[n] ) continue;
-      std::cout << "passed used[n]\n";
+      //std::cout << "passed used[n]\n";
       
       const auto& c2 = ca.at(n);
 
@@ -109,12 +120,41 @@ namespace larcv{
       // 	continue;
       
       cmse[i].push_back(n);
-      used[n] = true;
+      used[i] = true; used[n] = true;
       
       traverse(c2,ca,used,cnse,cmse,i,n);
     }
   }
 
+
+  Cluster2D StartEndMerge::join_clusters(const std::map<size_t,std::vector<size_t> >& cmse,
+					 const Cluster2DArray_t& clusters,
+					 int i) {
+
+    Cluster2D out;
+    
+    out = clusters[ i ];
+
+    // join the connected clusters : i == end point of first cluster
+    for (const auto& c : cmse.at(i) ) {
+
+      auto& con = clusters[ c ];
+
+      //copy the hits over
+      out._insideHits.insert(std::end(out._insideHits), std::begin(con._insideHits), std::end(con._insideHits));
+	
+      //add the charge
+      out._sumCharge += con._sumCharge;
+	
+      //add the contours (good idea?)
+      out._contour.insert( std::end(out._contour),std::begin(con._contour),std::end(con._contour) );
+	
+    }
+
+    out._numHits = out._insideHits.size();
+    
+    return out;
+  }
   
   
 }

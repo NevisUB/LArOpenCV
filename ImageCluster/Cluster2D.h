@@ -103,9 +103,6 @@ namespace larcv {
     /// Chosen points as the edge that contains the start point
     std::vector<::cv::Point2f> _chosen;
 
-    /// Used by ???
-    std::vector<Point2D> _m;
-    
     /// 2D vertex point
     Point2D _vertex_2D;
     

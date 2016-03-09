@@ -96,7 +96,7 @@ class AlgoViewer :
             
             
             nboxes = cluster._verts.size();
-            print "nboxes",nboxes
+            #print "nboxes",nboxes
             r = 0
             for v in xrange(nboxes):
                box = cluster._verts[v]

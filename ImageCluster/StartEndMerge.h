@@ -61,7 +61,10 @@ namespace larcv {
 		  std::map<size_t,std::vector<size_t> >&       cmse, //traversed and unique graph
 		  int i,int k);
       
-      
+    Cluster2D join_clusters(const std::map<size_t,std::vector<size_t> >& cmse,
+			    const Cluster2DArray_t& clusters,
+			    int i);
+
   };
   
   /**
