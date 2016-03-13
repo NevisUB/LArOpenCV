@@ -27,6 +27,9 @@ ImageClusterManager: {
   ClusterAlgoType: [SBCluster,PCASegmentation,TrackShower,PiZeroFilter]
   ClusterAlgoName: [sbc,pcas,Trackshower,pizerofilter]
 
+  #ClusterAlgoType: [SBCluster,TrackShower,GetStartPoint]
+  #ClusterAlgoName: [sbc,Trackshower,gs]
+
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
 
@@ -52,6 +55,12 @@ ImageClusterManager: {
    ThreshMaxVal : 255
 
   }
+
+ gs: { 
+ 
+ NHits : 25
+
+ }
 
  pid: {
 

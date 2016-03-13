@@ -30,6 +30,40 @@ class AlgoViewer :
 
             ax.plot(cluster._endPt.x + xs,
                     cluster._endPt.y + ys,'o',color='green',markersize=5)
+
+        if self.name in ["gs"] :
+            
+            insidehits = cluster._insideHits
+
+            px, py     = get_xy_w_offset(insidehits,xs,ys)
+            ax.plot(px,py,'o',markersize=1,color='black')
+
+            #Ignore this cluster if less than 25 hits, or its polygon has no found vertices
+	    if cluster._insideHits < 25 or cluster._endPt.x < 0: 
+	      return
+
+	    if not cluster.PolyObject.Size(): 
+	     return
+
+            #Plot polygons
+	    pts_x = []
+	    pts_y = []
+	    for pt in xrange(cluster.PolyObject.Size()):
+	      pts_x.append( cluster.PolyObject.Point(pt).first + xs)
+	      pts_y.append( cluster.PolyObject.Point(pt).second + ys) 
+	     # ax.plot(cluster.PolyObject.Point(pt).first + xs, cluster.PolyObject.Point(pt).second + ys,'o',color='red',markersize=10)
+
+	    pts_x.append( cluster.PolyObject.Point(0).first + xs)
+	    pts_y.append( cluster.PolyObject.Point(0).second + ys) 
+
+	    ax.plot(pts_x,pts_y,color='red',lw=2)
+            
+	    #Plot start + end
+            ax.plot(cluster._startPt.x + xs,
+                    cluster._startPt.y + ys,'o',color='green',markersize=10)
+
+            ax.plot(cluster._endPt.x + xs,
+                    cluster._endPt.y + ys,'o',color='pink',markersize=5)
             
             
         if self.name in ["pcas"] :

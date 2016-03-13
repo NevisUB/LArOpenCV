@@ -15,6 +15,7 @@
 #define __IMAGECLUSTER_CLUSTER2D_H__
 
 #include "ImageClusterTypes.h"
+#include "ClusterRecoUtil/Base/Polygon2D.h"
 
 namespace larcv {
 
@@ -96,7 +97,9 @@ namespace larcv {
     /// Verticies of the line minimum bounding rectangle
     std::vector<::cv::Point2f> _minAreaRect;
 
-    
+    Polygon2D PolyObject;
+    //std::vector<cluster::Point2D > _start_point_cand; 
+
     /// Chosen points as the edge that contains the start point
     std::vector<::cv::Point2f> _chosen;
 
