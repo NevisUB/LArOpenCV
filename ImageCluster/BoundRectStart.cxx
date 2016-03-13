@@ -1,3 +1,4 @@
+//by vic
 #ifndef __BOUNDRECTSTART_CXX__
 #define __BOUNDRECTSTART_CXX__
 
@@ -19,6 +20,15 @@ namespace larcv{
 					     const ::cv::Mat& img,
 					     larcv::ImageMeta& meta)
   {
+
+    /*
+
+      Extend on Ariana's track shower module to include segmentation. Segment the box long ways
+      calculate the linearity, and total charge in each box. Maximize the product of the two
+      then the point farthest from the center is the start point
+
+    */
+
     Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );
 
     Contour_t all_locations;
@@ -78,7 +88,6 @@ namespace larcv{
       double w_div = width  / (double) N;
       double h_div = height / (double) N;
 
-
       // what is the step
       auto dx = w_div * std::cos(angle_deg * _deg2rad);
       auto dy = w_div * std::sin(angle_deg * _deg2rad);
@@ -86,7 +95,6 @@ namespace larcv{
       // where do i start
       auto cx = center.x - (N/2-0.5) * dx;
       auto cy = center.y - (N/2-0.5) * dy;
-
 
       auto& vvv = ocluster._verts;
       vvv.clear(); vvv.resize(N);
@@ -107,49 +115,51 @@ namespace larcv{
       }
 
 
-      // do something with the boxes....
+      // do something with the segments...
+      std::vector<Contour_t> insides; insides.resize(N);
+      std::vector<double>    tot_charge; tot_charge.resize(N);
+
+      // hits in the cluster...
+      for (auto& h : ocluster._insideHits) {      
+
+	//which ones are in this segment
+	for( unsigned i = 0; i < divisions.size(); ++i ) {
+	  //auto& div = divisions[i];
+	  auto& div = ocluster._verts[i];
+	  
+	  if ( ::cv::pointPolygonTest(div,h,false) >= 0 ) {
+	    tot_charge[i] += (int) img.at<uchar>(h.y,h.x);
+	    insides   [i].push_back(h);
+	  }
+	  
+	}
+      }
+
+      double f_half(0), s_half(0);
+      std::vector<double> roi_covs; roi_covs.resize(N);
+      for(int i=0;i<N;++i) {
+	  auto roicov = std::abs(roi_cov(insides[i]));
+	  if ( i < N/2 ) f_half += roicov;// * tot_charge[i];
+	  else           s_half += roicov;// * tot_charge[i];
+	  
+	  roi_covs[i] = roicov;
+	  ocluster._something.push_back(roicov);
+	}
+	
+
+      int cstart = f_half > s_half ? 0 : N-1;
+
+      //get the farthest point from the center
+      ::cv::Point* farthest;
+      double far = 0;
+      for( auto& h : insides[cstart] ){
+	auto d = dist(h.x,center.x,h.y,center.y);
+	if ( d > far ) { far = d;  farthest = &h; }
+      }
+
+      if ( far == 0 ) continue;
       
-      // int tot_charge[2] = {0,0};
-      // Contour_t insides[2];
-      
-      // for (auto& h : ocluster._insideHits) {
-      // 	if ( ::cv::pointPolygonTest(f_half,h,false) >= 0 ) {
-      // 	  tot_charge[0] += (int) img.at<uchar>(h.y,h.x);
-      // 	  insides[0].push_back(h);
-      // 	}
-
-      // 	if ( ::cv::pointPolygonTest(s_half,h,false) >= 0 ) {
-      // 	  tot_charge[1] += (int) img.at<uchar>(h.y,h.x);
-      // 	  insides[1].push_back(h);
-      // 	}
-      // }
-      
-
-      // double roi_covs[2] = {0,0};
-
-      // roi_covs[0] = roi_cov(insides[0]);
-      // roi_covs[1] = roi_cov(insides[1]);
-
-      // int cidx = 0;
-
-      // // charge * linearity
-      // //if ( tot_charge[0]*roi_covs[0] > tot_charge[1]*roi_covs[1] )
-
-      // // which side is more linear? Ok choose this side
-      // if ( roi_covs[0] > roi_covs[1] )
-      // 	{ ocluster._chosen = f_half; cidx = 0;}
-      // else
-      // 	{ ocluster._chosen = s_half; cidx = 1;}
-
-
-      // ::cv::Point* farthest;
-      // double far = 0;
-      // for( auto& h : insides[cidx] ){
-      // 	auto d = dist(h.x,center.x,h.y,center.y);
-      // 	if ( d > far ) { far = d;  farthest = &h; }
-      // }
-      
-      // ocluster._startPt = Point2D(farthest->x,farthest->y);
+      ocluster._startPt = Point2D(farthest->x,farthest->y);
       oclusters.emplace_back(ocluster);
       
     }
