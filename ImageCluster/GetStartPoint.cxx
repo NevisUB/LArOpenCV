@@ -49,23 +49,23 @@ larcv::Cluster2DArray_t GetStartPoint::_Process_(const larcv::Cluster2DArray_t& 
      ::cluster::cluster_params params;
      params.SetHits(px_hits);
 
-     cluster::GetAverages         averages         ;     
-     averages.do_params_fill(params)      ;
+     cluster::GetAverages averages;     
+     averages.do_params_fill(params);
 
-     cluster::FillPolygon         polygon          ;     
-     polygon.do_params_fill(params)      ;
+     cluster::FillPolygon polygon;     
+     polygon.do_params_fill(params);
 
-     cluster::GetRoughStartPoint  roughStartPoint  ;     
-     roughStartPoint.do_params_fill(params)      ;
+     cluster::GetRoughStartPoint roughStartPoint;     
+     roughStartPoint.do_params_fill(params);
 
-     cluster::FindShoweringPoint  showeringpoint   ;     
-     showeringpoint.do_params_fill(params)      ;
+     cluster::FindShoweringPoint showeringpoint;     
+     showeringpoint.do_params_fill(params);
 
-     cluster::SelectStartPoint    selectStartPoint ;     
-     selectStartPoint.do_params_fill(params)      ;
+     cluster::SelectStartPoint selectStartPoint ;     
+     selectStartPoint.do_params_fill(params);
 
-     cluster::RefineStartPoints   refineStartPoint ;     
-     refineStartPoint.do_params_fill(params)      ;
+     cluster::RefineStartPoints refineStartPoint ;     
+     refineStartPoint.do_params_fill(params);
 
      auto start = params.start_point ;
      auto end = params.end_point ;
