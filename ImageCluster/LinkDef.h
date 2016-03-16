@@ -42,8 +42,8 @@
 #pragma link C++ class larcv::MinNClusters+;
 #pragma link C++ class larcv::PID+;
 
+#pragma link C++ class larcv::StartEndMerge+;
 
-//#pragma link C++ class larcv::GetStartPoint+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
 

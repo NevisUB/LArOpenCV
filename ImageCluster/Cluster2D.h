@@ -77,6 +77,10 @@ namespace larcv {
     Point2D _eigenVecFirst;
     /// If using PCA, second eigenvector
     Point2D _eigenVecSecond;
+    /// If using PCA, principle eigenvalue
+    double  _eigenValFirst;
+    /// If using PCA, second eigenvalue
+    double  _eigenValSecond;
     /// Start point
     Point2D _startPt;
     /// End point
@@ -99,12 +103,11 @@ namespace larcv {
 
     Polygon2D PolyObject;
 
+    ::cv::Rect _boundingBox;
+
     /// Chosen points as the edge that contains the start point
     std::vector<::cv::Point2f> _chosen;
 
-    /// Used by ???
-    std::vector<Point2D> _m;
-    
     /// 2D vertex point
     Point2D _vertex_2D;
     

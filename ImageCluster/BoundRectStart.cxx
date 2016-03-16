@@ -50,6 +50,8 @@ namespace larcv{
       
       // use bounding box considerations to define start point, fill the vertices vector
       auto bbox = ::cv::minAreaRect(contour);
+      ocluster._boundingBox = bbox.boundingRect();
+      
       ::cv::Point2f verticies[4];
       bbox.points(verticies);
 
@@ -64,7 +66,6 @@ namespace larcv{
       ocluster._centerPt  = Point2D(bbox.center.x,bbox.center.y);
 
       // handles to few variables
-      auto& verts   = ocluster._minAreaRect;
       auto& center  = ocluster._centerPt;
       auto& angle   = bbox.angle;
 
@@ -86,7 +87,7 @@ namespace larcv{
       
       // divide the box up
       double w_div = width  / (double) N;
-      double h_div = height / (double) N;
+      //double h_div = height / (double) N;
 
       // what is the step
       auto dx = w_div * std::cos(angle_deg * _deg2rad);
@@ -147,19 +148,33 @@ namespace larcv{
 	}
 	
 
-      int cstart = f_half > s_half ? 0 : N-1;
+      int cstart = f_half > s_half ? 0   : N-1;
+      int cend   = f_half > s_half ? N-1 : 0;
 
-      //get the farthest point from the center
-      ::cv::Point* farthest;
+      //get the farthest point from the center as start point
+      ::cv::Point* f_start;
       double far = 0;
       for( auto& h : insides[cstart] ){
 	auto d = dist(h.x,center.x,h.y,center.y);
-	if ( d > far ) { far = d;  farthest = &h; }
+	if ( d > far ) { far = d;  f_start = &h; }
       }
 
+      //no start point found...
+      if ( far == 0 ) continue;
+
+      //end point is on the other side
+      ::cv::Point* f_end; //farthest end point
+      far = 0;
+      for( auto& h : insides[cend] ){
+	auto d = dist(h.x,center.x,h.y,center.y);
+	if ( d > far ) { far = d;  f_end = &h; }
+      }
+
+      //no end point found...
       if ( far == 0 ) continue;
       
-      ocluster._startPt = Point2D(farthest->x,farthest->y);
+      ocluster._startPt = Point2D(f_start->x,f_start->y);
+      ocluster._endPt   = Point2D(f_end->x  ,f_end->y  );
       oclusters.emplace_back(ocluster);
       
     }

@@ -116,6 +116,8 @@ namespace larcv {
   void pca_line(const Contour_t& cluster_s,
 		Point2D& e_vec_first,
 		Point2D& e_vec_second,
+		double&  e_val_first,
+		double&  e_val_second,
 		Point2D& e_center) {
     
     ::cv::Mat ctor_pts(cluster_s.size(), 2, CV_64FC1);
@@ -135,13 +137,20 @@ namespace larcv {
     
     e_vec_second    = Point2D( pca_ana.eigenvectors.at<double>(1,0),
 			       pca_ana.eigenvectors.at<double>(1,1) );
-    
-    // auto& ax = e_vec.x;
-    // auto& ay = e_vec.y;
-    // auto  sq = std::sqrt(ax*ax + ay*ay);
-    
-    // ax /= sq;
-    // ay /= sq;
+
+    e_val_first = pca_ana.eigenvalues.at<double>(0, 0);
+    e_val_second= pca_ana.eigenvalues.at<double>(0, 1);
+      
+    auto& ax = e_vec_first.x;
+    auto& ay = e_vec_first.y;
+    auto asq = std::sqrt(ax*ax + ay*ay);
+
+    auto& bx = e_vec_second.x;
+    auto& by = e_vec_second.y;
+    auto bsq = std::sqrt(bx*bx + by*by);
+
+    ax /= asq; ay /= asq;
+    bx /= bsq; ay /= bsq;
 
   }
 
@@ -424,7 +433,8 @@ namespace larcv {
     
     std::sort( paths.begin(), paths.end(), []( const PCAPath& l, const PCAPath& r )
 	       {
-		 return l.cw_cov_ < r.cw_cov_ ;
+		 //return l.cw_cov_ < r.cw_cov_ ;
+		 return l.total_cov_ < r.total_cov_ ;
 	       });
 
     auto& chosen_path = paths.back();

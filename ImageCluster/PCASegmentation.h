@@ -6,8 +6,9 @@
 #include "ClusterAlgoFactory.h"
 
 #include "TTree.h"
-#include "ClusterParams.h"
+//#include "ClusterParams.h"
 #include "PCABox.h"
+#include "PCAPath.h"
 
 namespace larcv {
   /**
@@ -54,12 +55,7 @@ namespace larcv {
     int _nhits_cut;
     int _sub_nhits_cut;
     
-    double _pearsons_r;
-
     int _n_divisions;
-    
-    double _area;
-    double _perimeter;
     
     double _angle_cut;
     

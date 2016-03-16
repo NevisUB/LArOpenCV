@@ -42,25 +42,23 @@ namespace larcv{
     double angle_cut = _angle_cut; //degrees
     angle_cut *= 3.14159/180.0;    //to radians
 
-    bool bad = false;
-
 
     Contour_t all_locations;
     ::cv::findNonZero(img, all_locations); // get the non zero points
       
     for(unsigned u = 0; u < clusters.size(); ++u) {
-      bad = false;
-      
 
       Cluster2D ocluster = clusters[u];
-      
-      for(const auto& loc: all_locations) {
-	if ( ::cv::pointPolygonTest(ocluster._contour,loc,false) < 0 )
-	  continue;
-	ocluster._insideHits.emplace_back(loc.x, loc.y);
-      }
 
-      ocluster._numHits = ocluster._insideHits.size();
+      if ( ! ocluster._numHits ) {
+	for(const auto& loc: all_locations) {
+	  if ( ::cv::pointPolygonTest(ocluster._contour,loc,false) < 0 )
+	    continue;
+	  ocluster._insideHits.emplace_back(loc.x, loc.y);
+	}
+
+	ocluster._numHits = ocluster._insideHits.size();
+      }
       
       if ( ocluster._numHits < _n_clustersize ) continue;
 
@@ -133,7 +131,6 @@ namespace larcv{
       }
 
       //connect the boxes that are touching each other
-      
       for(unsigned b1 = 0; b1 < boxes.size(); ++b1) {
 	
 	auto& box1 = boxes[b1];
@@ -208,39 +205,14 @@ namespace larcv{
       //decide the shower axis via some combination of everything you see in PCAPath.h
       auto path = decide_axis(boxes,combined);
 
-      // bounding box considerations to define start point
-      auto bbox = ::cv::minAreaRect(cluster);
-      ::cv::Point2f verticies[4];
-      bbox.points(verticies);
-
-      std::vector<::cv::Point2f> v; v.resize(4);
-      for(int r=0;r<4;++r) v[r] = verticies[r];
-
-      path.CheckMinAreaRect(bbox,v);
-
-      std::swap(v,ocluster._minAreaRect);
-      
-      ocluster._eigenVecFirst = path.combined_e_vec_;
-
-      //don't trust start and end point finding
-      // ocluster._startPt       = path.point_closest_to_edge_;
-      // ocluster._endPt         = point_farthest_away(ocluster,ocluster._startPt);
-      
-      ocluster._sumCharge = (double) sum_charge;
-      //ocluster._centerPt  = Point2D(bbox.center.x,bbox.center.y);
-      ocluster._length    = rect.height > rect.width ? rect.height : rect.width;
-      ocluster._width     = rect.height > rect.width ? rect.width  : rect.height;
-      ocluster._area      = ::cv::contourArea(cluster);
-      ocluster._perimeter = ::cv::arcLength(cluster,1);
+      ocluster._centerPt       = path.combined_e_center_;
+      ocluster._eigenVecFirst  = path.combined_e_vec_;
       
       _pcapaths.push_back(path);
       
       oclusters.emplace_back(ocluster);
     }
 
-    //just return the clusters you didn't do anything...
-    // std::cout << "return of PCAS oclusters" << oclusters.size() << "\n";
-    
     return oclusters;
   }
   

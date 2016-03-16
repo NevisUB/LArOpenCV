@@ -22,11 +22,16 @@ namespace larcv {
   double avg_d_pca(const PCABox& box);
   double cw_d_pca (const PCABox& box);
 
-  
   void pca_line(const Contour_t& cluster_s,
 		Point2D& e_vec,
 		Point2D& e_center);
-    
+
+  void pca_line(const Contour_t& cluster_s,
+		Point2D& e_vec_first,
+		Point2D& e_vec_second,
+		double&  e_val_first,
+		double&  e_val_second,
+		Point2D& e_center);
   
   void pca_line(const Contour_t& cluster_s,
 		const ::cv::Rect& rect,

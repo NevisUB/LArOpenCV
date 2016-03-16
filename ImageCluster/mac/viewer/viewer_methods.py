@@ -1,3 +1,5 @@
+import numpy as np
+
 def get_xy(data) :
     xx = []
     yy = []
@@ -39,3 +41,18 @@ def draw_cluster(ax,cluster) :
         
     ax.plot(cx,cy,'-',lw=3)
 
+def get_bounded_line(eline,ecenter,re):
+
+
+    def rx(t):
+        return ecenter.x + eline.x * t
+
+    def ry(t):
+        return ecenter.y + eline.y * t
+
+    t1 = ( re.x + re.width - ecenter.x ) / eline.x
+    t2 = ( re.x            - ecenter.x ) / eline.x
+
+    a = np.array([[rx(t1),rx(t2)],
+                  [ry(t1),ry(t2)]])
+    return a

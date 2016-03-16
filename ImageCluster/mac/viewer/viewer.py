@@ -11,7 +11,7 @@ import algo_viewer as av
 my_proc = fmwk.ana_processor()
 
 # Config file
-cfg="../../../App/mac/MergingTester.fcl"
+cfg="../../../App/mac/SBCluster.fcl"
 
 algid  = int(sys.argv[2])
 
@@ -27,7 +27,10 @@ while( my_proc.process_event() ) :
     k += 1
     manager  = myunit.algo_manager()
     print "NUMBER OF CLUSTERS", manager.NumClusters()
-
+    print "You have chosen algorithm:"
+    print manager.GetClusterAlg(algid)
+    print ""
+    
     if manager.NumClusters() == 0:
         print "No clusters found at all...\n";
         continue
@@ -39,13 +42,12 @@ while( my_proc.process_event() ) :
     ax2 = plt.subplot(3,1,3)
 
     axx = {0 : ax0, 1 : ax1, 2: ax2}
-    print manager.GetClusterAlg(algid)
+
     
     algo_drawer = av.AlgoViewer( manager.GetClusterAlg(algid),
                                  plt )
-    
     for c in xrange(manager.NumClusters(algid)):
-
+        
         cluster = manager.Cluster(c,algid)
         
         try:
@@ -56,13 +58,11 @@ while( my_proc.process_event() ) :
             "__reference_error__"
             continue
 
-        ax = axx[cluster.PlaneID()]
+        ax = axx[ cluster.PlaneID() ]
         
         draw_cluster(ax,cluster)
         algo_drawer.draw(ax,cluster,c)
-
-    plt.savefig("aho_%d_%d.pdf" % (k,k), format="pdf",dpi=100)
-
+        
     plt.show()
 
     #All possible ways to close viewer

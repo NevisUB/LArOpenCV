@@ -16,7 +16,7 @@
 
 #include "ClusterAlgoBase.h"
 #include "TTree.h"
-#include "ClusterParams.h"
+//#include "ClusterParams.h"
 #include "ClusterAlgoFactory.h"
 namespace larcv {
   /**
@@ -32,8 +32,6 @@ namespace larcv {
     
     /// Default destructor
     ~TrackShower(){}
-
-    std::vector<ClusterParams> _cparms_v;
 
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
     void Finalize(TFile*) {} 
