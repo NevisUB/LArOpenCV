@@ -34,6 +34,7 @@
 
 #pragma link C++ class larcv::PCAOverall+;
 #pragma link C++ class larcv::PiZeroFilter+;
+#pragma link C++ class larcv::PiZeroFilterVic+;
 
 #pragma link C++ class larcv::MatchTimeOverlap+;
 #pragma link C++ class larcv::EmptyMatcher+;
