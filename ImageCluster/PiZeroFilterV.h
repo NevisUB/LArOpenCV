@@ -1,41 +1,32 @@
-/**
- * \file PiZeroFilterVic.h
- *
- * \ingroup ImageCluster
- * 
- * \brief Class def header for a class PiZeroFilterVic
- *
- * @author kazuhiro
- */
-
-/** \addtogroup ImageCluster
-
-    @{*/
-#ifndef __PIZEROFILTERVIC_H__
-#define __PIZEROFILTERVIC_H__
+#ifndef __PIZEROFILTERV_H__
+#define __PIZEROFILTERV_H__
 
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
+#include "Vertex2D.h"
+
 namespace larcv {
   /**
-     \class PiZeroFilterVic
+     \class PiZeroFilterV
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class PiZeroFilterVic : public larcv::ClusterAlgoBase {
+  class PiZeroFilterV : public larcv::ClusterAlgoBase {
     
   public:
     
     /// Default constructor
-    PiZeroFilterVic(const std::string name="PiZeroFilterVic") : ClusterAlgoBase(name)
+    PiZeroFilterV(const std::string name="PiZeroFilterV") : ClusterAlgoBase(name)
     {}
     
     /// Default destructor
-    ~PiZeroFilterVic(){}
+    ~PiZeroFilterV(){}
 
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
     void Finalize(TFile*) {}
 
+    std::vector<std::vector<Vertex2D> > _verts_v;
+    
   protected:
 
     /// Configuration method
@@ -53,8 +44,9 @@ namespace larcv {
     double _max_rad_length; 
     double _width;
     double _height;
+    
 
-
+    
     bool  _attempt_merging;
     double _small_dot_prod;
 
@@ -67,20 +59,20 @@ namespace larcv {
   };
   
   /**
-     \class larcv::PiZeroFilterVicFactory
-     \brief A concrete factory class for larcv::PiZeroFilterVic
+     \class larcv::PiZeroFilterVFactory
+     \brief A concrete factory class for larcv::PiZeroFilterV
    */
-  class PiZeroFilterVicFactory : public ClusterAlgoFactoryBase {
+  class PiZeroFilterVFactory : public ClusterAlgoFactoryBase {
   public:
     /// ctor
-    PiZeroFilterVicFactory() { ClusterAlgoFactory::get().add_factory("PiZeroFilterVic",this); }
+    PiZeroFilterVFactory() { ClusterAlgoFactory::get().add_factory("PiZeroFilterV",this); }
     /// dtor
-    ~PiZeroFilterVicFactory() {}
+    ~PiZeroFilterVFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new PiZeroFilterVic(instance_name); }
+    ClusterAlgoBase* create(const std::string instance_name) { return new PiZeroFilterV(instance_name); }
   };
-  /// Global larcv::PiZeroFilterVicFactory to register ClusterAlgoFactory
-  static PiZeroFilterVicFactory __global_PiZeroFilterVicFactory__;
+  /// Global larcv::PiZeroFilterVFactory to register ClusterAlgoFactory
+  static PiZeroFilterVFactory __global_PiZeroFilterVFactory__;
 }
 #endif
 /** @} */ // end of doxygen group 

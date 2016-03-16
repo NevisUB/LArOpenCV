@@ -34,7 +34,7 @@
 
 #pragma link C++ class larcv::PCAOverall+;
 #pragma link C++ class larcv::PiZeroFilter+;
-#pragma link C++ class larcv::PiZeroFilterVic+;
+#pragma link C++ class larcv::PiZeroFilterV+;
 
 #pragma link C++ class larcv::MatchTimeOverlap+;
 #pragma link C++ class larcv::EmptyMatcher+;
@@ -45,8 +45,10 @@
 
 #pragma link C++ class larcv::StartEndMerge+;
 
+#pragma link C++ class larcv::Vertex2D+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
 
 
 

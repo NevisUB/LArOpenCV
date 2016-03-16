@@ -128,6 +128,21 @@ ImageClusterManager: {
     
   }
 
+
+  pizerofilterv: {
+    NHitsCut: 10
+    BackStartPoint: 1000
+    MaxRadLength: 40
+    MinArea: 1
+    Width : 0.0557 #cm/time tick
+    Height : 0.3 #cm/wire
+    AttemptMerging  : 0
+    SmallDotProduct : 0.3
+    
+  }
+
+
+
   mto : {
 
     RatioCut : 0.001

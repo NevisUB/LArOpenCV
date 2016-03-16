@@ -1,11 +1,12 @@
-#ifndef __PIZEROFILTERVIC_CXX__
-#define __PIZEROFILTERVIC_CXX__
+#ifndef __PIZEROFILTERV_CXX__
+#define __PIZEROFILTERV_CXX__
 
-#include "PiZeroFilterVic.h"
+#include "PiZeroFilterV.h"
+
 
 namespace larcv{
 
-  void PiZeroFilterVic::_Configure_(const ::fcllite::PSet &pset)
+  void PiZeroFilterV::_Configure_(const ::fcllite::PSet &pset)
   {
 
     _nhits_cut      = pset.get<int>    ("NHitsCut");
@@ -20,7 +21,7 @@ namespace larcv{
     
   }
 
-  Cluster2DArray_t PiZeroFilterVic::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t PiZeroFilterV::_Process_(const larcv::Cluster2DArray_t& clusters,
 					      const ::cv::Mat& img,
 					      larcv::ImageMeta& meta)
   { 
@@ -29,8 +30,12 @@ namespace larcv{
     Cluster2DArray_t Vertex_Clusters;
     std::vector<int> OutputClustersID;
 
-    std::map<int,std::vector<int> > _vclusters;
-
+    std::map<int,std::vector<int> > vclusters;
+    if ( meta.plane() == 0 ) { _verts_v.clear(); _verts_v.resize(3); }
+    
+    auto& _verts =  _verts_v[ meta.plane() ];
+    _verts.reserve(clusters.size() / 2);
+    
     if(clusters.empty())
     {
       return clusters;
@@ -73,39 +78,32 @@ namespace larcv{
 	      if(std::abs(distance1) <=  _max_rad_length && std::abs(distance2) <= _max_rad_length)
 	      {
 
-
-		
-		
-		std::cout << "Distances: " << distance1 << ", " << distance2 << std::endl;
-		
-		OutputClustersID.push_back(i);
-	        OutputClustersID.push_back(j);
-
-	        Cluster2D OClusteri = clusters.at(i);
-	        OClusteri._vertex_2D = sharedPoint;
-	        Cluster2D OClusterj = clusters.at(j);
-		OClusterj._vertex_2D = sharedPoint;
-		
-		Vertex_Clusters.push_back(OClusteri);
-		Vertex_Clusters.push_back(OClusterj);
-
 		//key exists
-		if ( _vclusters.find(j) != _vclusters.end() )
+		if ( vclusters.find(j) != vclusters.end() )
 		  // is i inside j
-		  if( std::find(_vclusters[j].begin(), _vclusters[j].end(), i) != _vclusters[j].end())
+		  if( std::find(vclusters[j].begin(), vclusters[j].end(), i) != vclusters[j].end())
 		    //ok it was, don't push me
 		    continue;
+		
+		Vertex2D v(distance1,distance2,sharedPoint,i,j);
+		v.first  = &clusters[ i ];
+		v.second = &clusters[ j ];
+		
+		_verts.emplace_back(v);
 		  
-		_vclusters[i].push_back(j);
+		vclusters[i].push_back(j);
 	      } // end distance
 	      
 	    }
           }	
 	}
     }
-
-    if ( _vclusters.size() > 0){ 
-      for( auto& c : _vclusters ) {
+    // vertex objects created at this point
+    
+    
+    //list of connections
+    if ( vclusters.size() > 0){ 
+      for( auto& c : vclusters ) {
 	std::cout << "" <<  c.first << " : {";
 	for(const auto& s : c.second) std::cout << s << ",";
 	std::cout << "}\n";
@@ -116,9 +114,8 @@ namespace larcv{
   }
 
 
-  Point2D PiZeroFilterVic::backprojectionpoint( Point2D point1, Point2D point2, Point2D point3, Point2D point4)
+  Point2D PiZeroFilterV::backprojectionpoint( Point2D point1, Point2D point2, Point2D point3, Point2D point4)
   {
-
 
     //Points 1 and 2 associated to line 1
     //Points 3 and 4 associated to line 2
@@ -141,7 +138,7 @@ namespace larcv{
     return intersection;
   } 
 
-  double PiZeroFilterVic::distance2D( Point2D point1, Point2D point2, double width, double height)
+  double PiZeroFilterV::distance2D( Point2D point1, Point2D point2, double width, double height)
   {
     double length = 0;
     double length2 = (point2.x - point1.x)*(point2.x - point1.x)*(width*width) 
@@ -152,7 +149,7 @@ namespace larcv{
     return length;
   }
 
-  Cluster2DArray_t PiZeroFilterVic::merging(Cluster2DArray_t filtered)
+  Cluster2DArray_t PiZeroFilterV::merging(Cluster2DArray_t filtered)
   {
 
     //Check Dot Product

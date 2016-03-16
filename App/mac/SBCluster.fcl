@@ -24,11 +24,9 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  ClusterAlgoType: [SBCluster,PCASegmentation,TrackShower,PiZeroFilterVic]
-  ClusterAlgoName: [sbc,pcas,Trackshower,pizerofilterv]
 
-  #ClusterAlgoType: [SBCluster,TrackShower,GetStartPoint]
-  #ClusterAlgoName: [sbc,Trackshower,gs]
+  ClusterAlgoType: [SBCluster,PCASegmentation,TrackShower,GetStartPoint,PiZeroFilterV]
+  ClusterAlgoName: [sbc,pcas,Trackshower,gs,pizerofilterv]
 
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto

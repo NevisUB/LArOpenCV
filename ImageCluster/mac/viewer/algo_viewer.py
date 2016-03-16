@@ -29,10 +29,10 @@ class AlgoViewer :
             if bbox.size() != 0 :
                 ax.plot([bbox[0].x+xs,bbox[1].x+xs,bbox[2].x+xs,bbox[3].x+xs,bbox[0].x+xs],
                         [bbox[0].y+ys,bbox[1].y+ys,bbox[2].y+ys,bbox[3].y+ys,bbox[0].y+ys],color='orange',lw=2)
-
-            ax.plot(cluster._startPt.x + xs,
+                
+                ax.plot(cluster._startPt.x + xs,
                     cluster._startPt.y + ys,'o',color='pink',markersize=5)
-
+            
             ax.plot(cluster._endPt.x + xs,
                     cluster._endPt.y + ys,'o',color='green',markersize=5)
 
@@ -45,7 +45,7 @@ class AlgoViewer :
 
             #Ignore this cluster if less than 25 hits, or its polygon has no found vertices
 	    if cluster._insideHits < 25 or cluster._endPt.x < 0: 
-	      return
+	        return
 
 	    if not cluster.PolyObject.Size(): 
 	     return
@@ -114,7 +114,54 @@ class AlgoViewer :
             
             ax.plot([cluster._startPt.x + xs,xs+cluster._vertex_2D.x],
                     [cluster._startPt.y + ys,ys+cluster._vertex_2D.y],'-o',color='pink',lw=3)
+
+        if self.name in ["pizerofilterv"] :
             
+            ##################TEMP COPY################
+            insidehits = cluster._insideHits
+
+            px, py     = get_xy_w_offset(insidehits,xs,ys)
+            ax.plot(px,py,'o',markersize=1,color='black')
+
+            #Ignore this cluster if less than 25 hits, or its polygon has no found vertices
+	    if cluster._insideHits < 25 or cluster._endPt.x < 0: 
+	        return
+            
+	    if not cluster.PolyObject.Size(): 
+	        return
+
+            #Plot polygons
+	    pts_x = []
+	    pts_y = []
+	    for pt in xrange(cluster.PolyObject.Size()):
+	      pts_x.append( cluster.PolyObject.Point(pt).first + xs)
+	      pts_y.append( cluster.PolyObject.Point(pt).second + ys) 
+	     # ax.plot(cluster.PolyObject.Point(pt).first + xs, cluster.PolyObject.Point(pt).second + ys,'o',color='red',markersize=10)
+
+	    pts_x.append( cluster.PolyObject.Point(0).first + xs)
+	    pts_y.append( cluster.PolyObject.Point(0).second + ys) 
+
+	    ax.plot(pts_x,pts_y,color='red',lw=2)
+            
+	    #Plot start + end
+            ax.plot(cluster._startPt.x + xs,
+                    cluster._startPt.y + ys,'o',color='green',markersize=10)
+
+            ax.plot(cluster._endPt.x + xs,
+                    cluster._endPt.y + ys,'o',color='pink',markersize=5)
+            ###################TEMP COPY###################
+            
+            _verts = self.algo._verts_v[ cluster.PlaneID() ]
+            
+            for v in xrange(_verts.size()):
+                vert = _verts[ v ];
+                ax.plot(vert._vtx.x + xs,vert._vtx.y + ys,'*',markersize=10)
+                ax.plot([vert._vtx.x + xs,vert.first._startPt.x + xs],
+                        [vert._vtx.y + ys,vert.first._startPt.y + ys],'-',lw=2,color='gray')
+
+                ax.plot([vert._vtx.x + xs,vert.second._startPt.x + xs],
+                        [vert._vtx.y + ys,vert.second._startPt.y + ys],'-',lw=2,color='gray')
+
         if self.name in ["brs","csd","mnc"]:
             bbox = cluster._minAreaRect
             
@@ -131,7 +178,6 @@ class AlgoViewer :
             
             ax.plot(cluster._endPt.x + xs,
                     cluster._endPt.y + ys,'o',color='green',markersize=10)
-            
             
             nboxes = cluster._verts.size();
 
