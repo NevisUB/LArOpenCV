@@ -18,6 +18,8 @@
 #include "Analysis/ana_base.h"
 #include "Core/ImageManager.h"
 #include "App/LArImageClusterBase.h"
+#include "Core/LArCVTypes.h"
+#include "TH1.h"
 
 namespace larlite {
 
@@ -35,6 +37,7 @@ namespace larlite {
       , _num_stored(0)
       , _charge_to_gray_scale(10)
       , _charge_threshold(5)
+      , _run_analyze_image_cluster(false)
     {}
 
     /// Default destructor
@@ -64,7 +67,14 @@ namespace larlite {
     size_t _num_unclustered_hits;
     size_t _num_clustered_hits;
 
-
+    /// Flag to run the AnalyzeImageCluster function
+    bool _run_analyze_image_cluster;
+    /// Output file with the plots made by the AnalyzeImageCluster function
+    TFile* _plotFile;
+    /// Vector of histograms showing the MC-reconstructed start distance on the planes
+    std::vector<TH1D*> _vhMCRecoStartDist;
+    /// Distance between two 2D points
+    inline double dist2D(const larcv::Point2D& a, const larcv::Point2D& b){ return std::sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y)); }  
 
   };
 }
