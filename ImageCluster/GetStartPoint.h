@@ -7,7 +7,7 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 #include "ClusterRecoUtil/Base/Polygon2D.h"
-#include "LArUtil/GeometryUtilities.h"
+#include "LArUtil/GeometryHelper.h"
 
 namespace larcv {
 

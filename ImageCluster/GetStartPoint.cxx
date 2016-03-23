@@ -22,27 +22,27 @@ larcv::Cluster2DArray_t GetStartPoint::_Process_(const larcv::Cluster2DArray_t& 
                                                  larcv::ImageMeta& meta)
  {
   // Geometry Utilities
-  auto geomUtil = ::larutil::GeometryUtilities::GetME();
+  auto geomHelper = ::larutil::GeometryHelper::GetME();
 
   Cluster2DArray_t ts_clusters(clusters);
 
   for( int i = 0; i < ts_clusters.size(); i++){
 
     auto & cluster = ts_clusters[i];
-    int plane = cluster.PlaneID();
+    //auto plane = meta.plane(); //cluster.PlaneID();
     auto const& hits = cluster._insideHits;
 
     if( hits.size() < _nhits ) continue;
 
     // get hit list
-    std::vector<Hit2D> px_hits;  
+    std::vector<larutil::Hit2D> px_hits;  
 
     for( auto & h : hits ){
-      Hit2D px;
-      px.w = h.y * geomUtil->WireToCm() ;
-      px.t = h.x * geomUtil->TimeToCm() ;
+      larutil::Hit2D px;
+      px.w = h.y * geomHelper->WireToCm() ;
+      px.t = h.x * geomHelper->TimeToCm() ;
       px.charge = (int)img.at<uchar>(h.y,h.x);
-      px.plane = plane ;
+      px.plane = meta.plane() ;
       px_hits.push_back(px);
       }
 
@@ -71,16 +71,16 @@ larcv::Cluster2DArray_t GetStartPoint::_Process_(const larcv::Cluster2DArray_t& 
      auto end = params.end_point ;
      auto poly = params.PolyObject ;
      //std::cout<<"start: "<<start.w<<", "<<start.t<<std::endl;
-     cluster._startPt = larcv::Point2D(start.t / geomUtil->TimeToCm() , start.w / geomUtil->WireToCm());
-     cluster._endPt = larcv::Point2D(end.t / geomUtil->TimeToCm() , end.w / geomUtil->WireToCm());
+     cluster._startPt = larcv::Point2D(start.t / geomHelper->TimeToCm() , start.w / geomHelper->WireToCm());
+     cluster._endPt = larcv::Point2D(end.t / geomHelper->TimeToCm() , end.w / geomHelper->WireToCm());
 
      std::vector<std::pair<float, float> > vertices;
     
      //std::cout<<"Poly size: "<<poly.Size()<<std::endl ;
      for (unsigned int i = 0; i < poly.Size(); i++){
        
-       vertices.push_back( std::make_pair( poly.Point(i).second / geomUtil->TimeToCm(), 
-	                                   poly.Point(i).first / geomUtil->WireToCm() ) ); 
+       vertices.push_back( std::make_pair( poly.Point(i).second / geomHelper->TimeToCm(), 
+	                                   poly.Point(i).first / geomHelper->WireToCm() ) ); 
         } 
 
      cluster.PolyObject = Polygon2D( vertices ) ;
