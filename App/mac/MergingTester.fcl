@@ -7,6 +7,7 @@ LArImageHit: {
   # LArImageHit config
   Q2Gray: 5 # convert Hit::Integral to a unit gray scale
   QMin: 3   # min. threshold for Hit::Integral to make it into an image
+  # RunAnalyze: true # Uncomment to run the MC shower-cluster comparison
 }
 
 LArDownImage: {
