@@ -74,7 +74,7 @@ namespace larlite {
     /// Vector of histograms showing the MC-reconstructed start distance on the planes
     std::vector<TH1D*> _vhMCRecoStartDist;
     /// Distance between two 2D points
-    inline double dist2D(const larcv::Point2D& a, const larcv::Point2D& b){ return std::sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y)); }  
+    // inline double dist2D(const larcv::Point2D& a, const larcv::Point2D& b){ return std::sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y)); }
 
   };
 }

@@ -36,8 +36,8 @@ namespace larlite {
 
       for(int plane = 0; plane < 3; plane++){
 	_vhMCRecoStartDist.push_back( new TH1D(Form("hMCRecoStartDist_plane%i", plane),
-					       Form("MC-reco cluster start distance on plane %i; Distance (pixels); Entries", plane),
-					       50, 0, 500) );
+					       Form("MC-reco cluster start distance on plane %i; Distance (cm); Entries / 5 cm", plane),
+					       40, 0, 200) );
       }
     }
     catch(const std::exception& e){ _run_analyze_image_cluster = false; }
@@ -384,7 +384,11 @@ namespace larlite {
 
 	// Compute all shower-cluster 2D-distances
 	for(size_t c = 0; c < clusters.size(); c++){
-	  matShowerClusterDist[s][c] = dist2D(clusters[c]._startPt, showerEndImg);
+	  // matShowerClusterDist[s][c] = dist2D(clusters[c]._startPt, showerEndImg); // Distance in pixels
+	  auto const& clusterStart = clusters[c]._startPt;
+	  // Distance in cm
+	  matShowerClusterDist[s][c] = std::sqrt( std::pow( (clusterStart.x - showerEndImg.x) * meta.pixel_height() * (geom->TimeToCm()), 2) 
+						  + std::pow( (clusterStart.y - showerEndImg.y) * meta.pixel_width() * (geom->WireToCm()), 2) );
 	}
 
       }
