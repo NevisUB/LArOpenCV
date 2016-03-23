@@ -37,80 +37,98 @@ namespace larcv{
     _verts.reserve(clusters.size() / 2);
     
     if(clusters.empty())
-    {
+
       return clusters;
-    }
 
     for(int i = 0; i < clusters.size(); i++)
-    {
+      {
 	int numHits = clusters.at(i)._numHits;
-
+	
 	//If cluster has hits >= defined minimum number of hits fill new cluster array
-	if(numHits >= _nhits_cut)
-	{
-	  for(int j = 0; j < clusters.size(); j++)
-          {
-
-	    if ( i == j ) continue;
-	    int next_numHits = clusters[j]._numHits;
+	if(numHits <= _nhits_cut)
+	  continue;
+	
+	for(int j = 0; j < clusters.size(); j++) {
 	    
-	    if(next_numHits >= _nhits_cut)
-	    {
+	  if ( i == j ) continue;
+	  int next_numHits = clusters[j]._numHits;
 	    
-	      double ipointX = clusters[i]._eigenVecFirst.x+clusters[i]._startPt.x;
-	      double ipointY = clusters[i]._eigenVecFirst.y+clusters[i]._startPt.y;
+	  if(next_numHits <= _nhits_cut)
+	    continue;
 
-	      double jpointX = clusters[j]._eigenVecFirst.x+clusters[j]._startPt.x;
-	      double jpointY = clusters[j]._eigenVecFirst.y+clusters[j]._startPt.y;
-
-	      Point2D iPoint  (ipointX,ipointY);
-	      Point2D jPoint  (jpointX,jpointY);
-
-	      Point2D sharedPoint = backprojectionpoint(iPoint, clusters[i]._startPt,
-				    			jPoint, clusters[j]._startPt);
-
-	      double distance1 = distance2D(sharedPoint, clusters[i]._startPt, _width, _height);
-              double distance2 = distance2D(sharedPoint, clusters[j]._startPt, _width, _height);
-
-
-	      //Make sure distance from back projected vertex from PCA
-	      //is equal to or shorter than maximum radiation length
-	      if(std::abs(distance1) <=  _max_rad_length && std::abs(distance2) <= _max_rad_length)
-	      {
-
-		//key exists
-		if ( vclusters.find(j) != vclusters.end() )
-		  // is i inside j
-		  if( std::find(vclusters[j].begin(), vclusters[j].end(), i) != vclusters[j].end())
-		    //ok it was, don't push me
-		    continue;
-		
-		Vertex2D v(distance1,distance2,sharedPoint,i,j);
-		v.first  = &clusters[ i ];
-		v.second = &clusters[ j ];
-		
-		_verts.emplace_back(v);
-		  
-		vclusters[i].push_back(j);
-	      } // end distance
-	      
-	    }
-          }	
+	  double ipointX = clusters[i]._eigenVecFirst.x+clusters[i]._startPt.x;
+	  double ipointY = clusters[i]._eigenVecFirst.y+clusters[i]._startPt.y;
+	  
+	  double jpointX = clusters[j]._eigenVecFirst.x+clusters[j]._startPt.x;
+	  double jpointY = clusters[j]._eigenVecFirst.y+clusters[j]._startPt.y;
+	  
+	  Point2D iPoint  (ipointX,ipointY);
+	  Point2D jPoint  (jpointX,jpointY);
+	  
+	  Point2D sharedPoint = backprojectionpoint(iPoint, clusters[i]._startPt,
+						    jPoint, clusters[j]._startPt);
+	  
+	  double distance1 = distance2D(sharedPoint, clusters[i]._startPt, _width, _height);
+	  double distance2 = distance2D(sharedPoint, clusters[j]._startPt, _width, _height);
+	  
+	    
+	  //Make sure distance from back projected vertex from PCA
+	  //is equal to or shorter than maximum radiation length
+	  if(std::abs(distance1) <=  _max_rad_length && std::abs(distance2) <= _max_rad_length) {
+	    
+	    //key exists
+	    if ( vclusters.find(j) != vclusters.end() )
+	      // is i inside j
+	      if( std::find(vclusters[j].begin(), vclusters[j].end(), i) != vclusters[j].end())
+		//ok it was, don't push me
+		continue;
+	    
+	    Vertex2D v(distance1,distance2,sharedPoint,i,j);
+	    v.first  = &clusters[ i ];
+	    v.second = &clusters[ j ];
+	    
+	    _verts.emplace_back(v);
+	    
+	    vclusters[i].push_back(j);
+	    
+	  } // end distance
 	}
-    }
+      }
+    
+    
+    
+    
     // vertex objects created at this point
     
+    // saw nothing, move on
+    if ( ! vclusters.size() )
+      return Cluster2DArray_t();
+
+    //this sucks, nothing is unique now
+    //quick and dirty unfolding of the tree
+    std::vector<int> o; o.reserve(clusters.size());
+
+    for( const auto& c : vclusters )
+      { o.push_back(c.first); for(const auto& s : c.second) o.push_back(s); }
+      
+    //from cppreference
+    std::sort(o.begin(), o.end());
+    auto last = std::unique(o.begin(), o.end());
+    std::vector<int> p(std::begin(o),last);
+
+    // std::cout << "pp: ";
+    // for(const auto& pp : p ) std::cout << pp << " ";
+
+    for(const auto& pp : p ) OutputClusters.emplace_back( clusters[pp] );
+
+    // std::cout <<"\n";
+    // for( auto& c : vclusters ) {
+    //   std::cout << "" <<  c.first << " : {";
+    //   for(const auto& s : c.second) std::cout << s << ",";
+    //   std::cout << "}\n";
+    // }
     
-    //list of connections
-    if ( vclusters.size() > 0){ 
-      for( auto& c : vclusters ) {
-	std::cout << "" <<  c.first << " : {";
-	for(const auto& s : c.second) std::cout << s << ",";
-	std::cout << "}\n";
-      }
-      std::cout << "\n";
-    }
-    return clusters;
+    return OutputClusters;
   }
 
 
