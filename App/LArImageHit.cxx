@@ -64,6 +64,7 @@ namespace larlite {
     std::cout << Form("%g%% ",clustered/(clustered+unclustered));
     std::cout << std::endl;
 
+    if(_plotFile){
     _plotFile->cd();
     for(const auto& h: _vhMCRecoStartDist){
       h->Write();
@@ -72,6 +73,7 @@ namespace larlite {
 
     _plotFile->Close();
     delete _plotFile;
+    }
   }
   
   void LArImageHit::store_clusters(storage_manager* storage)
