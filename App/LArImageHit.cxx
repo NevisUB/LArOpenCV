@@ -2,15 +2,19 @@
 #define __LARLITE_LARIMAGEHIT_CXX__
 
 #include "LArImageHit.h"
+#include "Core/larbys.h"
+
 #include "LArUtil/Geometry.h"
 #include "LArUtil/GeometryUtilities.h"
+
 #include "DataFormat/rawdigit.h"
-//#include "Utils/NDArrayConverter.h"
 #include "DataFormat/hit.h"
 #include "DataFormat/cluster.h"
 #include "DataFormat/event_ass.h"
-#include "Core/larbys.h"
+#include "DataFormat/PiZeroROI.h"
 #include "DataFormat/pfpart.h"
+
+// For MCTruth viewer
 #include "DataFormat/mcshower.h"
 #include "TMultiGraph.h"
 #include "TGraph.h"
@@ -172,26 +176,34 @@ namespace larlite {
     
     auto ev_hit = storage->get_data<event_hit>(producer());
 
+    //can toggle this in the future, on this branch it's required.
+    auto ev_roi = storage->get_data<event_PiZeroROI>( "mcroi" );
+
     if(ev_hit==nullptr) throw DataFormatException("Could not locate hit data product!");
-    
-    std::vector< std::pair<size_t,size_t> > wire_range_v(nplanes,std::pair<size_t,size_t>(1e12,0));
-    std::vector< std::pair<size_t,size_t> > tick_range_v(nplanes,std::pair<size_t,size_t>(1e12,0));
-    
-    for(auto const& h : *ev_hit) {
+    if(ev_roi==nullptr) throw DataFormatException("Could not locate ROI data product!");
 
-      if(h.Integral() < _charge_threshold) continue;
-      
-      auto const& wid = h.WireID();
+    // std::vector< std::pair<size_t,size_t> > wire_range_v(nplanes,std::pair<size_t,size_t>(1e12,0));
+    // std::vector< std::pair<size_t,size_t> > tick_range_v(nplanes,std::pair<size_t,size_t>(1e12,0));
 
-      auto& wire_range = wire_range_v[wid.Plane];
-      if(wire_range.first  > wid.Wire) wire_range.first  = wid.Wire;
-      if(wire_range.second < wid.Wire) wire_range.second = wid.Wire;
+    // I think we have to make a copy...
+    auto wire_range_v = (*ev_roi)[0].GetWireROI();
+    auto tick_range_v = (*ev_roi)[0].GetTimeROI();
+    
+    // for(auto const& h : *ev_hit) {
+
+    //   if(h.Integral() < _charge_threshold) continue;
       
-      auto& tick_range = tick_range_v[wid.Plane];
-      size_t peak_time = (size_t)(h.PeakTime());
-      if(tick_range.first  > peak_time    ) tick_range.first  = ( bool(peak_time) ? peak_time - 1 : 0 );
-      if(tick_range.second < (peak_time+1)) tick_range.second = peak_time+1;
-    }
+    //   auto const& wid = h.WireID();
+
+    //   auto& wire_range = wire_range_v[wid.Plane];
+    //   if(wire_range.first  > wid.Wire) wire_range.first  = wid.Wire;
+    //   if(wire_range.second < wid.Wire) wire_range.second = wid.Wire;
+      
+    //   auto& tick_range = tick_range_v[wid.Plane];
+    //   size_t peak_time = (size_t)(h.PeakTime());
+    //   if(tick_range.first  > peak_time    ) tick_range.first  = ( bool(peak_time) ? peak_time - 1 : 0 );
+    //   if(tick_range.second < (peak_time+1)) tick_range.second = peak_time+1;
+    // }
     
     for(size_t plane=0; plane<nplanes; ++plane) {
       auto const& wire_range = wire_range_v[plane];
@@ -199,6 +211,10 @@ namespace larlite {
       size_t nticks = tick_range.second - tick_range.first + 2;
       size_t nwires = wire_range.second - wire_range.first + 2;
       ::larcv::ImageMeta meta((double)nwires,(double)nticks,nwires,nticks,wire_range.first,tick_range.first,plane);
+
+      // set ROI vertex, there is only 1 for now...
+      const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
+      meta.setvtx(vtx.first,vtx.second);
       
       if ( nwires >= 1e10 || nticks >= 1e10 )
 	_img_mgr.push_back(::cv::Mat(),::larcv::ImageMeta());

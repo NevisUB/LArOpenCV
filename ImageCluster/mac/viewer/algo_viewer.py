@@ -12,13 +12,15 @@ class AlgoViewer :
         
         self.plt  = plt
         
-    def draw(self,ax,cluster,cindex):
+    def draw(self,ax,cluster,cindex,meta):
         xs = cluster.Origin().y
         ys = cluster.Origin().x
-            
-        if self.name in ["sbc"] :
-            return
 
+        if self.name in ["sbc"] :
+            ax.plot(meta.roivtx().y,
+                    meta.roivtx().x,'*',markersize=10,color='orange')
+            return
+        
         if self.name in ["Trackshower"] :
             
             insidehits = cluster._insideHits

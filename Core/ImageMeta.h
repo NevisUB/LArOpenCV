@@ -85,6 +85,13 @@ namespace larcaffe {
     /// Change # of vertical/horizontal pixels in meta data with cv::Mat as an input
     void update(const ::cv::Mat& mat)
     { update(mat.rows,mat.cols); }
+
+    /// Set vertex from ROI, may or may not exists, user should check this
+    void setvtx(size_t w, size_t t)
+    { _roi_vtx = larcaffe::Point2D(w,t); }
+
+    /// Get vertex ROI
+    larcaffe::Point2D roivtx() const { return _roi_vtx; } 
     
   protected:
 
@@ -94,6 +101,10 @@ namespace larcaffe {
     size_t _width_npixel;      ///< # of pixels in horizontal axis
     size_t _height_npixel;     ///< # of pixels in vertical axis
     size_t _plane;             ///< unique plane ID number
+
+    /// ROI vertex, may or may not exist, user should check this
+    larcaffe::Point2D _roi_vtx;
+    
   };
 
 }

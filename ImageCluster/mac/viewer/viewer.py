@@ -11,11 +11,12 @@ import algo_viewer as av
 my_proc = fmwk.ana_processor()
 
 # Config file
-cfg="../../../App/mac/SBCluster.fcl"
+cfg="../../../App/mac/MergingTester.fcl"
 
-algid  = int(sys.argv[2])
+algid  = int(sys.argv[3])
 
 my_proc.add_input_file(sys.argv[1])
+my_proc.add_input_file(sys.argv[2])
 my_proc.set_io_mode(fmwk.storage_manager.kREAD)
 
 myunit = fmwk.LArImageHit()
@@ -44,8 +45,9 @@ while( my_proc.process_event() ) :
     axx = {0 : ax0, 1 : ax1, 2: ax2}
 
     
-    algo_drawer = av.AlgoViewer( manager.GetClusterAlg(algid),
+    algo_drawer = av.AlgoViewer( manager.GetClusterAlg(algid) ,
                                  plt )
+
     for c in xrange(manager.NumClusters(algid)):
         
         cluster = manager.Cluster(c,algid)
@@ -61,7 +63,8 @@ while( my_proc.process_event() ) :
         ax = axx[ cluster.PlaneID() ]
         
         draw_cluster(ax,cluster)
-        algo_drawer.draw(ax,cluster,c)
+        algo_drawer.draw(ax,cluster,c,
+                         manager.MetaData(cluster.PlaneID(),algid)) #added metadata which has roi vertex
         
     plt.show()
 
