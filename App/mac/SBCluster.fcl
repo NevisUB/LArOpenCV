@@ -25,9 +25,11 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-
   ClusterAlgoType: [SBCluster,PCAOverall,TrackShower,GetStartPoint,PiZeroFilterV]
   ClusterAlgoName: [sbc,pcao,Trackshower,gs,pizerofilterv]
+
+#  ClusterAlgoType: [SBCluster,PCAOverall,TrackShower,ROIStart]
+#  ClusterAlgoName: [sbc,pcao,Trackshower,roist]
 
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
@@ -43,7 +45,15 @@ ImageClusterManager: {
    MinContourArea: 125
  }
 
-    
+  roist : {}
+
+  brs : {
+
+  NHitsCut  : 20
+  NDivWidth : 8
+
+  } 
+
  sbc:{
 
    Verbosity: 1
