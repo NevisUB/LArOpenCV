@@ -192,7 +192,7 @@ namespace larlite {
       if(tick_range.first  > peak_time    ) tick_range.first  = ( bool(peak_time) ? peak_time - 1 : 0 );
       if(tick_range.second < (peak_time+1)) tick_range.second = peak_time+1;
     }
-    
+
     for(size_t plane=0; plane<nplanes; ++plane) {
       auto const& wire_range = wire_range_v[plane];
       auto const& tick_range = tick_range_v[plane];
@@ -204,6 +204,7 @@ namespace larlite {
 	_img_mgr.push_back(::cv::Mat(),::larcv::ImageMeta());
       else
 	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
+      
       
       //if(!nticks || !nwires)
       //_img_mgr.push_back(cv::Mat(),meta);
@@ -251,6 +252,39 @@ namespace larlite {
       mat.at<unsigned char>(x,y) = (unsigned char)((int)charge);
     }
     
+    //normalize the tick range
+
+    int npool = 6;
+    
+    for(size_t plane=0; plane<nplanes; ++plane) {
+      auto& img  = _img_mgr.img_at(plane);
+      auto& meta = _img_mgr.meta_at(plane);
+
+
+      ::cv::Mat pooled(img.rows, img.cols/npool, CV_8UC1, cvScalar(0.));
+      
+      //columns == ticks
+      
+      for(int row = 0; row < img.rows; ++row) {
+    	uchar* p = img.ptr(row);
+    	for(int col = 0; col < img.cols; ++col) {
+    	  int pp = *p++;
+    	  int ch = (int) pooled.at<unsigned char>(row,col/npool);
+    	  pooled.at<unsigned char>(row,col/npool) = (unsigned char)(pp+ch);
+    	}
+      }
+
+      //old parameters
+      auto const& wire_range = wire_range_v[plane];
+      auto const& tick_range = tick_range_v[plane];
+      
+
+      img  = pooled;
+      meta = ::larcv::ImageMeta((double)pooled.rows,(double)pooled.cols,
+    				pooled.rows,pooled.cols,wire_range.first,tick_range.first,plane);
+      
+    }
+
   }
 
 
