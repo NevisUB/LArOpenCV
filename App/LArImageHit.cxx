@@ -260,25 +260,29 @@ namespace larlite {
       auto& img  = _img_mgr.img_at(plane);
       auto& meta = _img_mgr.meta_at(plane);
 
-
-      ::cv::Mat pooled(img.rows, img.cols/npool, CV_8UC1, cvScalar(0.));
+      ::cv::Mat pooled(img.rows, img.cols/npool+1, CV_8UC1, cvScalar(0.));
       
       //columns == ticks
-      
+      std::cout << "plane: " << plane << " img rows: " << img.rows << " columns: " << img.cols << "\n";
       for(int row = 0; row < img.rows; ++row) {
     	uchar* p = img.ptr(row);
     	for(int col = 0; col < img.cols; ++col) {
     	  int pp = *p++;
-    	  int ch = (int) pooled.at<unsigned char>(row,col/npool);
-    	  pooled.at<unsigned char>(row,col/npool) = (unsigned char)(pp+ch);
+
+	  //type conversion uchar to int 8bit to 32 bit shouldn't be issue...
+	  
+    	  auto& ch = pooled.at<uchar>(row,col/npool);
+	  int res  = pp + (int) ch;
+	  if (res > 255) res = 255;
+	  ch = (uchar) res;
+	  
     	}
       }
 
       //old parameters
       auto const& wire_range = wire_range_v[plane];
       auto const& tick_range = tick_range_v[plane];
-      
-
+  
       img  = pooled;
       meta = ::larcv::ImageMeta((double)pooled.rows,(double)pooled.cols,
     				pooled.rows,pooled.cols,wire_range.first,tick_range.first,plane);
