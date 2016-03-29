@@ -11,18 +11,18 @@ def get_xy(data) :
 
     return (xx,yy)
 
-def get_xy_w_offset(data,x,y) :
+def get_xy_w_offset(data,meta) :
     xx = []
     yy = []
 
     for p in xrange(data.size()):
         h = data[p]
-        xx.append(h.x + x)
-        yy.append(h.y + y)
+        xx.append(meta.pixel_y(h.x))
+        yy.append(meta.pixel_x(h.y))
 
     return (xx,yy)
 
-def draw_cluster(ax,cluster) :
+def draw_cluster(ax,cluster,meta) :
 
     contour = cluster._contour
     
@@ -34,7 +34,7 @@ def draw_cluster(ax,cluster) :
         print "CLUSTER CONTOUR WAY TOO BIG"
         return
         
-    cx,cy = get_xy_w_offset(contour,cluster.Origin().y,cluster.Origin().x)
+    cx,cy = get_xy_w_offset(contour,meta)
 
     cx.append(cx[0])
     cy.append(cy[0])

@@ -21,6 +21,7 @@
 #include "laropencv_base.h"
 #include "larbys.h"
 #include "ImageMeta.h"
+
 namespace larcv  {
   /**
      \class ImageManager

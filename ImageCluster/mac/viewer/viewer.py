@@ -62,9 +62,8 @@ while( my_proc.process_event() ) :
 
         ax = axx[ cluster.PlaneID() ]
         
-        draw_cluster(ax,cluster)
-        algo_drawer.draw(ax,cluster,c,
-                         manager.MetaData(cluster.PlaneID(),algid)) #added metadata which has roi vertex
+        draw_cluster(ax,cluster,manager.MetaData(cluster.PlaneID(),algid))
+        algo_drawer.draw(ax,cluster,c,manager.MetaData(cluster.PlaneID(),algid))
         
     plt.show()
 

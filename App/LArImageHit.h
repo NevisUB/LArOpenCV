@@ -37,6 +37,7 @@ namespace larlite {
       , _num_stored(0)
       , _charge_to_gray_scale(10)
       , _charge_threshold(5)
+      , _pool_time_tick(0)
       , _run_analyze_image_cluster(false)
     {}
 
@@ -59,6 +60,8 @@ namespace larlite {
     size_t _num_stored;
     double _charge_to_gray_scale;
     double _charge_threshold;
+    int    _pool_time_tick;
+    
     // std::vector<size_t> _num_clusters_v;
     // std::vector<size_t> _num_unclustered_hits_v;
     // std::vector<size_t> _num_clustered_hits_v;

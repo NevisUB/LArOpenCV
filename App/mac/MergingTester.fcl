@@ -7,7 +7,10 @@ LArImageHit: {
   # LArImageHit config
   Q2Gray: 5 # convert Hit::Integral to a unit gray scale
   QMin: 3   # min. threshold for Hit::Integral to make it into an image
-  #RunAnalyze: true # Uncomment to run the MC shower-cluster comparison
+
+  PoolTimeTick: 6
+  # RunAnalyze: true # Uncomment to run the MC shower-cluster comparison
+
 }
 
 LArDownImage: {
@@ -26,8 +29,9 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  ClusterAlgoType: [SBCluster,PCAOverall,TrackShower,BoundRectStart,PiZeroFilterV]
-  ClusterAlgoName: [sbc,pcao,ts,brs,pizerofilterv]
+  ClusterAlgoType: [SBCluster,PCAOverall,BoundRectStart,StartEndMerge]
+  ClusterAlgoName: [sbc,pcao,brs,sem]
+
 
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
@@ -131,6 +135,7 @@ ImageClusterManager: {
 
 
   pizerofilterv: {
+
     NHitsCut: 10
     BackStartPoint: 1000
     MaxRadLength: 40
