@@ -6,6 +6,9 @@ LArImageHit: {
   # LArImageHit config
   Q2Gray: 5 # convert Hit::Integral to a unit gray scale
   QMin: 3   # min. threshold for Hit::Integral to make it into an image
+
+  PoolTimeTick: 0
+  
   # RunAnalyze: true # Uncomment to run the MC shower-cluster comparison
 }
 
@@ -24,7 +27,6 @@ ImageClusterManager: {
   Verbosity: 1
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
-
 
   ClusterAlgoType: [SBCluster,PCAOverall,TrackShower,GetStartPoint,PiZeroFilterV]
   ClusterAlgoName: [sbc,pcao,Trackshower,gs,pizerofilterv]

@@ -23,7 +23,10 @@ namespace larlite {
   void LArImageHit::_Configure_(const ::fcllite::PSet &pset)
   {
     _charge_to_gray_scale = pset.get<double>("Q2Gray");
-    //    _charge_threshold = pset.get<double>("QMin");
+    _charge_threshold     = pset.get<double>("QMin");
+    _pool_time_tick       = pset.get<int>   ("PoolTimeTick");
+	
+    
     // Using a try-catch block to avoid forcing a modification of the .fcl files
     try{
       _run_analyze_image_cluster = pset.get<bool>("RunAnalyze");
@@ -94,7 +97,7 @@ namespace larlite {
     auto const& alg_mgr = algo_manager();
 
     _num_clusters = alg_mgr.NumClusters();
-
+    
     //std::cout<<"# clusters: "<<_num_clusters<<std::endl;
 
     AssSet_t cluster_ass;
@@ -254,41 +257,52 @@ namespace larlite {
     
     //normalize the tick range
 
-    int npool = 6;
-    
-    for(size_t plane=0; plane<nplanes; ++plane) {
-      auto& img  = _img_mgr.img_at(plane);
-      auto& meta = _img_mgr.meta_at(plane);
+    if ( _pool_time_tick > 1 ) {
 
-      ::cv::Mat pooled(img.rows, img.cols/npool+1, CV_8UC1, cvScalar(0.));
+      for(size_t plane=0; plane<nplanes; ++plane) {
+
+	auto& img  = _img_mgr.img_at(plane);
+	auto& meta = _img_mgr.meta_at(plane);
+
+	::cv::Mat pooled(img.rows, img.cols/_pool_time_tick+1, CV_8UC1, cvScalar(0.));
       
-      //columns == ticks
-      std::cout << "plane: " << plane << " img rows: " << img.rows << " columns: " << img.cols << "\n";
-      for(int row = 0; row < img.rows; ++row) {
-    	uchar* p = img.ptr(row);
-    	for(int col = 0; col < img.cols; ++col) {
-    	  int pp = *p++;
+	//columns == ticks
+	//std::cout << "plane: " << plane << " img rows: " << img.rows << " columns: " << img.cols << "\n";
+      
+	for(int row = 0; row < img.rows; ++row) {
 
-	  //type conversion uchar to int 8bit to 32 bit shouldn't be issue...
+	  uchar* p = img.ptr(row);
 	  
-    	  auto& ch = pooled.at<uchar>(row,col/npool);
-	  int res  = pp + (int) ch;
-	  if (res > 255) res = 255;
-	  ch = (uchar) res;
+	  for(int col = 0; col < img.cols; ++col) {
+
+	    int pp = *p++;
 	  
-    	}
+	    auto& ch = pooled.at<uchar>(row,col/_pool_time_tick);
+
+	    int res  = pp + (int) ch;
+	    if (res > 255) res = 255;
+	    ch = (uchar) res;
+	  
+	  }
+	}
+
+	//old parameters
+	auto const& wire_range = wire_range_v[plane];
+	auto const& tick_range = tick_range_v[plane];
+
+	std::cout << "plane: " << plane << "wire_range.first: " << wire_range.first << " && tick_range.first: " << tick_range.first << "\n";
+	
+	img  = pooled;
+	meta = ::larcv::ImageMeta((double)pooled.rows,
+				  (double)pooled.cols*_pool_time_tick,
+				  pooled.rows,
+				  pooled.cols,
+				  wire_range.first,
+				  tick_range.first,
+				  plane);
+      
       }
-
-      //old parameters
-      auto const& wire_range = wire_range_v[plane];
-      auto const& tick_range = tick_range_v[plane];
-  
-      img  = pooled;
-      meta = ::larcv::ImageMeta((double)pooled.rows,(double)pooled.cols,
-    				pooled.rows,pooled.cols,wire_range.first,tick_range.first,plane);
-      
     }
-
   }
 
 
