@@ -38,7 +38,6 @@ namespace larlite {
 
     if(_producer.empty()) throw ::larcv::larbys("No producer specified...");
 
-    //for(auto& mgr : _alg_mgr_v) mgr.Configure(cfg_mgr.Config().get_pset(mgr.Name()));
     _alg_mgr.Configure(cfg_mgr.Config().get_pset(_alg_mgr.Name()));
     
     return true;
@@ -64,12 +63,7 @@ namespace larlite {
       }
     }
 
-    //if(_img_mgr.size() != _alg_mgr_v.size()) throw ::larcv::larbys("# of imaged created != # of planes!");
-    
-    // for(size_t plane = 0; plane < _alg_mgr_v.size(); ++plane) {
-
     for(size_t plane=0; plane<_img_mgr.size(); ++plane) {
-      // auto& alg_mgr    = _alg_mgr_v[plane];
       auto const& img  = _img_mgr.img_at(plane);
       auto const& meta = _img_mgr.meta_at(plane);
       if(!meta.num_pixel_row() || !meta.num_pixel_column()) continue;
@@ -77,8 +71,7 @@ namespace larlite {
     }
 
     _alg_mgr.Process();
-    // std::cout<<"Matched pairs: "<<_alg_mgr.BookKeeper().GetResult().size()<<std::endl;
-
+    
     watch_one.Start();
     this->store_clusters(storage);
     _process_time_cluster_storage += watch_one.WallTime();

@@ -1,26 +1,35 @@
-
-LArImageHit: {
+LArImageWire: {
   # LArImageClusterBase config
   Profile: true
   StoreOriginalImage: false
-  Producer: gaushit
-  # LArImageHit config
+  Producer: caldata
   Q2Gray: 5 # convert Hit::Integral to a unit gray scale
-  QMin: 3   # min. threshold for Hit::Integral to make it into an image
-
-  PoolTimeTick: 6
-  # RunAnalyze: true # Uncomment to run the MC shower-cluster comparison
 
 }
 
-LArDownImage: {
-  # LArImageClusterBase config
-  Profile: true
-  StoreOriginalImage: false
-  Producer: gaushit
-  # LArDownImage config
-  Q2Gray: 0.1 
-}
+# LArImageHit: {
+#   # LArImageClusterBase config
+#   Profile: true
+#   StoreOriginalImage: false
+#   Producer: gaushit
+#   # LArImageHit config
+#   Q2Gray: 5 # convert Hit::Integral to a unit gray scale
+#   QMin: 3   # min. threshold for Hit::Integral to make it into an image
+
+#   PoolTimeTick: 6
+#   RunAnalyze: false # Uncomment to run the MC shower-cluster comparison
+
+# }
+
+
+# LArDownImage: {
+#   # LArImageClusterBase config
+#   Profile: true
+#   StoreOriginalImage: false
+#   Producer: gaushit
+#   # LArDownImage config
+#   Q2Gray: 0.1 
+# }
 
 # ImageClusterManager config
 ImageClusterManager: {
@@ -29,12 +38,17 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  ClusterAlgoType: [SBCluster,PCAOverall,BoundRectStart,StartEndMerge]
-  ClusterAlgoName: [sbc,pcao,brs,sem]
+  #ClusterAlgoType: [SBCluster,PCAOverall,BoundRectStart,StartEndMerge]
+  #ClusterAlgoName: [sbc,pcao,brs,sem]
+  
+  ClusterAlgoType: [SBCluster]
+  ClusterAlgoName: [sbc]
+  
+  # MatchAlgoType: MatchTimeOverlap
+  # MatchAlgoName: mto
 
-
-  MatchAlgoType: MatchTimeOverlap
-  MatchAlgoName: mto
+  MatchAlgoType: ""
+  MatchAlgoName: ""
 
   ReClusterAlgoType: ""
   ReClusterAlgoName: ""

@@ -30,7 +30,10 @@ namespace larlite {
   public:
 
     /// Default constructor
-    LArImageWire(const std::string name="LArImageWire") : LArImageClusterBase(name) {}
+    LArImageWire(const std::string name="LArImageWire")
+      : LArImageClusterBase(name)
+      ,_num_stored(0)
+    {}
 
     /// Default destructor
     virtual ~LArImageWire(){}
@@ -48,6 +51,17 @@ namespace larlite {
     void AnalyzeImageCluster(storage_manager* storage) {}
 
     double _charge_to_gray_scale;
+
+  private:
+
+    size_t _num_stored;
+    
+    size_t _num_clusters;
+    size_t _num_unclustered_hits;
+    size_t _num_clustered_hits;
+
+
+    
   };
 }
 #endif
