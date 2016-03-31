@@ -3,8 +3,8 @@ LArImageWire: {
   Profile: true
   StoreOriginalImage: false
   Producer: caldata
-  Q2Gray: 5 # convert Hit::Integral to a unit gray scale
-
+  Q2Gray: 5 # convert ADC to a unit gray scale
+  PoolTimeTick: 1
 }
 
 # LArImageHit: {
