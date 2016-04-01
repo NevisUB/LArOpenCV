@@ -40,15 +40,18 @@
 #pragma link C++ class larcv::EmptyMatcher+;
 #pragma link C++ class larcv::BoundRectStart+;
 #pragma link C++ class larcv::CheckStartDistance+;
-#pragma link C++ class larcv::MinNClusters+;
+#pragma link C++ class larcv::SimpleCuts+;
+
 #pragma link C++ class larcv::PID+;
 
 #pragma link C++ class larcv::StartEndMerge+;
 
 #pragma link C++ class larcv::Vertex2D+;
 #pragma link C++ class larcv::ROIStart+;
+#pragma link C++ class larcv::StupidStart+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
 
 
 

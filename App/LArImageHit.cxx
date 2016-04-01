@@ -43,7 +43,8 @@ namespace larlite {
 
       for(int plane = 0; plane < 3; plane++){
 	_vhMCRecoStartDist.push_back( new TH1D(Form("hMCRecoStartDist_plane%i", plane),
-					       Form("MC-reco cluster start distance on plane %i; Distance (cm); Entries / 5 cm", plane),
+					       Form("MC-reco cluster start distance on plane %i; Distance (cm); Entries / 5 cm", plane)
+					       ,
 					       40, 0, 200) );
       }
     }
@@ -87,12 +88,15 @@ namespace larlite {
   {
     ++_num_stored;
 
-    auto geom = ::larutil::Geometry::GetME();
+    // std::cout<<"# clusters: "<<_num_clusters<<std::endl;
+
     if(_num_clusters == 0){
       _num_clusters = 0;
       _num_clustered_hits = 0;
       _num_unclustered_hits = 0;
     }
+
+    auto geom = ::larutil::Geometry::GetME();
 
     auto ev_hit = storage->get_data<event_hit>(producer());
     
@@ -101,8 +105,8 @@ namespace larlite {
     auto const& alg_mgr = algo_manager();
 
     _num_clusters = alg_mgr.NumClusters();
-    
-    //std::cout<<"# clusters: "<<_num_clusters<<std::endl;
+
+    // std::cout << "num clustered hits: " << _num_clustered_hits << "\n";
 
     AssSet_t cluster_ass;
     cluster_ass.resize(_num_clusters);
@@ -122,13 +126,15 @@ namespace larlite {
 	continue;
       }
 
+      // std::cout << "_num_clustered_hits : " << _num_clustered_hits << "\n";
       _num_clustered_hits += 1;
-      
+
       cluster_ass[cid].push_back(hindex);
     }
 
     auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
     auto ev_ass     = storage->get_data<event_ass>    ("ImageClusterHit");
+    
     if(ev_cluster) {
       ev_cluster->reserve(_num_clusters);
 

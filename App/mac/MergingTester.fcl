@@ -1,26 +1,24 @@
-LArImageWire: {
-  # LArImageClusterBase config
-  Profile: true
-  StoreOriginalImage: false
-  Producer: caldata
-  Q2Gray: 5 # convert ADC to a unit gray scale
-  UseROI: true
-  PoolTimeTick: 1
-}
-
-# LArImageHit: {
+# LArImageWire: {
 #   # LArImageClusterBase config
 #   Profile: true
 #   StoreOriginalImage: false
-#   Producer: gaushit
-#   # LArImageHit config
-#   Q2Gray: 5 # convert Hit::Integral to a unit gray scale
-#   QMin: 3   # min. threshold for Hit::Integral to make it into an image
-
+#   Producer: caldata
+#   Q2Gray: 5 # convert ADC to a unit gray scale
+#   UseROI: false
 #   PoolTimeTick: 6
-#   RunAnalyze: false # Uncomment to run the MC shower-cluster comparison
-
 # }
+
+LArImageHit: {
+  # LArImageClusterBase config
+  Profile: true
+  StoreOriginalImage: false
+  Producer: gaushit
+  Q2Gray: 5 # convert Hit::Integral to a unit gray scale
+  QMin: 3   # min. threshold for Hit::Integral to make it into an image
+  UseROI : false
+  PoolTimeTick: 1
+  RunAnalyze: false # Uncomment to run the MC shower-cluster comparison
+}
 
 
 # LArDownImage: {
@@ -42,14 +40,14 @@ ImageClusterManager: {
   #ClusterAlgoType: [SBCluster,PCAOverall,BoundRectStart,StartEndMerge]
   #ClusterAlgoName: [sbc,pcao,brs,sem]
   
-  ClusterAlgoType: [SBCluster]
-  ClusterAlgoName: [sbc]
+  ClusterAlgoType: [SBCluster,SimpleCuts,StupidStart]
+  ClusterAlgoName: [sbc,sc,ss]
   
-  # MatchAlgoType: MatchTimeOverlap
-  # MatchAlgoName: mto
+  MatchAlgoType: MatchTimeOverlap
+  MatchAlgoName: mto
 
-  MatchAlgoType: ""
-  MatchAlgoName: ""
+  # MatchAlgoType: ""
+  # MatchAlgoName: ""
 
   ReClusterAlgoType: ""
   ReClusterAlgoName: ""
@@ -67,13 +65,16 @@ ImageClusterManager: {
 
   }
 
-  mnc : {
+ ss : {}
 
-  MinNClusters: 2 #Minimum number of clusters in the plane
+ sc : {
 
-  }
+ MinNHits : 25
+ MinNClusters: 2
 
-  sem : {
+ }
+
+ sem : {
 
   MaxStartEndDistance: 10
   RequirePCACheck : 1

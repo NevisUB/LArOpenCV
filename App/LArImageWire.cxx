@@ -71,7 +71,7 @@ namespace larlite {
     
     if(ev_cluster) {
       ev_cluster->reserve(_num_clusters);
-      //std::cout << "num_clusters: " << _num_clusters << "\n";
+      std::cout << "num_clusters: " << _num_clusters << "\n";
       
       for(size_t cid=0; cid<_num_clusters; ++cid) {
 
