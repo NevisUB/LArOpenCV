@@ -57,6 +57,13 @@ ImageClusterManager: {
 
   } 
 
+ sc : {
+
+ MinNHits : 10
+ MinNCluster: 2
+
+}
+  
  sbc:{
 
    Verbosity: 1

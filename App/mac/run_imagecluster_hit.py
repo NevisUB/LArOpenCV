@@ -27,6 +27,7 @@ my_proc.set_io_mode(fmwk.storage_manager.kBOTH)
 my_proc.set_output_file("%s_output.root" % name); 
 
 myunit = fmwk.LArImageHit()
+# myunit = fmwk.LArImageWire()
 myunit.set_config(cfg)
 my_proc.add_process(myunit)
 my_proc.run()
