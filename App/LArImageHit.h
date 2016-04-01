@@ -38,6 +38,7 @@ namespace larlite {
       , _charge_to_gray_scale(10)
       , _charge_threshold(5)
       , _pool_time_tick(0)
+      , _use_roi(false)
       , _run_analyze_image_cluster(false)
     {}
 
@@ -61,10 +62,7 @@ namespace larlite {
     double _charge_to_gray_scale;
     double _charge_threshold;
     int    _pool_time_tick;
-    
-    // std::vector<size_t> _num_clusters_v;
-    // std::vector<size_t> _num_unclustered_hits_v;
-    // std::vector<size_t> _num_clustered_hits_v;
+    bool   _use_roi;
 
     size_t _num_clusters;
     size_t _num_unclustered_hits;
@@ -76,8 +74,6 @@ namespace larlite {
     TFile* _plotFile;
     /// Vector of histograms showing the MC-reconstructed start distance on the planes
     std::vector<TH1D*> _vhMCRecoStartDist;
-    /// Distance between two 2D points
-    // inline double dist2D(const larcv::Point2D& a, const larcv::Point2D& b){ return std::sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y)); }
 
   };
 }

@@ -29,7 +29,7 @@ namespace larlite {
     _charge_to_gray_scale = pset.get<double>("Q2Gray");
     _charge_threshold     = pset.get<double>("QMin");
     _pool_time_tick       = pset.get<int>   ("PoolTimeTick");
-	
+    _use_roi              = pset.get<bool>  ("UseROI");
     
     // Using a try-catch block to avoid forcing a modification of the .fcl files
     try{
@@ -178,35 +178,41 @@ namespace larlite {
     const size_t nplanes = geom->Nplanes();
     
     auto ev_hit = storage->get_data<event_hit>(producer());
-
-    //can toggle this in the future, on this branch it's required.
-    auto ev_roi = storage->get_data<event_PiZeroROI>( "mcroi" );
-
     if(ev_hit==nullptr) throw DataFormatException("Could not locate hit data product!");
-    if(ev_roi==nullptr) throw DataFormatException("Could not locate ROI data product!");
-
-    // std::vector< std::pair<size_t,size_t> > wire_range_v(nplanes,std::pair<size_t,size_t>(1e12,0));
-    // std::vector< std::pair<size_t,size_t> > tick_range_v(nplanes,std::pair<size_t,size_t>(1e12,0));
-
-    // I think we have to make a copy...
-    auto wire_range_v = (*ev_roi)[0].GetWireROI();
-    auto tick_range_v = (*ev_roi)[0].GetTimeROI();
+        
+    std::vector< std::pair<size_t,size_t> > wire_range_v(nplanes,std::pair<size_t,size_t>(1e12,0));
+    std::vector< std::pair<size_t,size_t> > tick_range_v(nplanes,std::pair<size_t,size_t>(1e12,0));
     
-    // for(auto const& h : *ev_hit) {
+    ::larlite::event_PiZeroROI* ev_roi = nullptr;
+    if ( _use_roi ) {
 
-    //   if(h.Integral() < _charge_threshold) continue;
-      
-    //   auto const& wid = h.WireID();
+      ev_roi = storage->get_data<event_PiZeroROI>( "mcroi" );
+      if(ev_roi->size() == 0) throw DataFormatException("Could not locate ROI data product And you have UseROI: True!");
 
-    //   auto& wire_range = wire_range_v[wid.Plane];
-    //   if(wire_range.first  > wid.Wire) wire_range.first  = wid.Wire;
-    //   if(wire_range.second < wid.Wire) wire_range.second = wid.Wire;
+      auto wr_v = (*ev_roi)[0].GetWireROI();
+      auto tr_v = (*ev_roi)[0].GetTimeROI();
       
-    //   auto& tick_range = tick_range_v[wid.Plane];
-    //   size_t peak_time = (size_t)(h.PeakTime());
-    //   if(tick_range.first  > peak_time    ) tick_range.first  = ( bool(peak_time) ? peak_time - 1 : 0 );
-    //   if(tick_range.second < (peak_time+1)) tick_range.second = peak_time+1;
-    // }
+      for(uint k=0; k < nplanes; ++k)
+	{ wire_range_v[k] = wr_v[k]; tick_range_v[k] = tr_v[k]; }
+      
+    }
+    else { 
+	for(auto const& h : *ev_hit) {
+
+	  if(h.Integral() < _charge_threshold) continue;
+      
+	  auto const& wid = h.WireID();
+
+	  auto& wire_range = wire_range_v[wid.Plane];
+	  if(wire_range.first  > wid.Wire) wire_range.first  = wid.Wire;
+	  if(wire_range.second < wid.Wire) wire_range.second = wid.Wire;
+      
+	  auto& tick_range = tick_range_v[wid.Plane];
+	  size_t peak_time = (size_t)(h.PeakTime());
+	  if(tick_range.first  > peak_time    ) tick_range.first  = ( bool(peak_time) ? peak_time - 1 : 0 );
+	  if(tick_range.second < (peak_time+1)) tick_range.second = peak_time+1;
+	}
+      }
     
     for(size_t plane=0; plane<nplanes; ++plane) {
       auto const& wire_range = wire_range_v[plane];
@@ -215,29 +221,18 @@ namespace larlite {
       size_t nwires = wire_range.second - wire_range.first + 2;
       ::larcv::ImageMeta meta((double)nwires,(double)nticks,nwires,nticks,wire_range.first,tick_range.first,plane);
 
-      // set ROI vertex, there is only 1 for now...
-      const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
-      meta.setvtx(vtx.first,vtx.second);
+
+      if ( _use_roi ) {
+	// set ROI vertex, there is only 1 for now...
+	const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
+	meta.setvtx(vtx.first,vtx.second);
+      }
       
       if ( nwires >= 1e10 || nticks >= 1e10 )
 	_img_mgr.push_back(::cv::Mat(),::larcv::ImageMeta());
       else
 	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
       
-      
-      //if(!nticks || !nwires)
-      //_img_mgr.push_back(cv::Mat(),meta);
-      //else
-      //_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_32FC1, cvScalar(0.)),meta);
-      //_img_mgr->emplace_back(std::move(mat));
-      /*
-      std::cout << "Creating ... " << wire_range.first << " => " << wire_range.second << " ... " << nwires
-		<< " : " << tick_range.first << " => " << tick_range.second << " ... " << nticks
-		<< " @ " << plane << std::endl;
-      for(size_t x=0; x<nwires; ++x)
-	for(size_t y=0; y<nticks; ++y) mat.at<unsigned char>(x,y) = (unsigned char)5;
-      */
-      //mat.at<unsigned char>(0,0) = (unsigned char)5;
     }
     
     for(auto const& h : *ev_hit) {
@@ -306,8 +301,6 @@ namespace larlite {
 	auto const& wire_range = wire_range_v[plane];
 	auto const& tick_range = tick_range_v[plane];
 
-	std::cout << "plane: " << plane << "wire_range.first: " << wire_range.first << " && tick_range.first: " << tick_range.first << "\n";
-	
 	img  = pooled;
 	meta = ::larcv::ImageMeta((double)pooled.rows,
 				  (double)pooled.cols*_pool_time_tick,
@@ -385,13 +378,13 @@ namespace larlite {
       cimg->cd(img_id + 1);
 
       // Image & meta object
-      auto const& img  = img_v[img_id];
+      //auto const& img  = img_v[img_id];
       auto const& meta = meta_v[img_id];
       
       // Retrieve final clusters on this image
       auto const& clusters = alg_mgr.Clusters(img_id);
 
-      //      std::cout << "Image " << img_id << " @ Plane " << meta.plane() << " has " << clusters.size() << " clusters!" << std::endl;
+      //std::cout << "Image " << img_id << " @ Plane " << meta.plane() << " has " << clusters.size() << " clusters!" << std::endl;
 
       if( !clusters.size() ) continue;
 

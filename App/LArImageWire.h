@@ -32,12 +32,14 @@ namespace larlite {
     /// Default constructor
     LArImageWire(const std::string name="LArImageWire")
       : LArImageClusterBase(name)
-      ,_num_stored(0)
       ,_charge_to_gray_scale(0)
       ,_pool_time_tick(0)
+      ,_num_stored(0)
       ,_num_clusters(0)
       ,_num_unclustered_hits(0)
       ,_num_clustered_hits(0)
+      ,_use_roi(false)
+	
     {}
 
     /// Default destructor
@@ -67,7 +69,7 @@ namespace larlite {
     size_t _num_unclustered_hits;
     size_t _num_clustered_hits;
 
-
+    bool _use_roi;
     
   };
 }

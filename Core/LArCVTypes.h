@@ -33,6 +33,9 @@ namespace larcv {
   static const size_t kINVALID_SIZE = std::numeric_limits<size_t>::max();
   /// Used as an invalid value identifier for int
   static const int    kINVALID_INT  = std::numeric_limits<int>::max();
+  /// Used as an invalid value identifier for double
+  static const double kINVALID_DOUBLE  = std::numeric_limits<double>::max();
+
   /// Stolen from larcaffe
   typedef ::larcaffe::Point2D Point2D;
 

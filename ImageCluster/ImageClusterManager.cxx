@@ -272,18 +272,18 @@ namespace larcv {
 
       for(size_t img_id=0; img_id<clusters_v.size(); ++img_id) {
 
-	auto const& meta = _meta_v_v.back()[img_id];
-	auto const plane = meta.plane();
+    	auto const& meta = _meta_v_v.back()[img_id];
+    	auto const plane = meta.plane();
 
-	if(c_per_plane.size() <= plane) {
-	  c_per_plane.resize(plane+1);
-	  meta_per_plane.resize(plane+1);
-	}
+    	if(c_per_plane.size() <= plane) {
+    	  c_per_plane.resize(plane+1);
+    	  meta_per_plane.resize(plane+1);
+    	}
 
-	for(size_t cindex=0; cindex<clusters_v[img_id].size(); ++cindex) {
-	  c_per_plane[plane].push_back((const larcv::Cluster2D*)(&(clusters_v[img_id][cindex])));
-	  meta_per_plane[plane].push_back((const larcv::ImageMeta*)(&meta));
-	}
+    	for(size_t cindex=0; cindex<clusters_v[img_id].size(); ++cindex) {
+    	  c_per_plane[plane].push_back((const larcv::Cluster2D*)(&(clusters_v[img_id][cindex])));
+    	  meta_per_plane[plane].push_back((const larcv::ImageMeta*)(&meta));
+    	}
 	
       }
 
@@ -296,33 +296,33 @@ namespace larcv {
 
       if(nvalid_planes>1) {
 
-	auto comb_v = PlaneClusterCombinations(seed);
+    	auto comb_v = PlaneClusterCombinations(seed);
 	
-	for(auto const& comb : comb_v) {
+    	for(auto const& comb : comb_v) {
 	  
-	  //Assemble a vector of clusters
-	  std::vector<const larcv::Cluster2D*> input_clusters;
-	  std::vector<unsigned int> tmp_index_v;
-	  input_clusters.reserve(comb.size());
-	  tmp_index_v.reserve(comb.size());
+    	  //Assemble a vector of clusters
+    	  std::vector<const larcv::Cluster2D*> input_clusters;
+    	  std::vector<unsigned int> tmp_index_v;
+    	  input_clusters.reserve(comb.size());
+    	  tmp_index_v.reserve(comb.size());
 	  
-	  for(auto const& cinfo : comb) {
-	    auto const& plane = cinfo.first;
-	    auto const& index = cinfo.second;
+    	  for(auto const& cinfo : comb) {
+    	    auto const& plane = cinfo.first;
+    	    auto const& index = cinfo.second;
 
-	    if( !c_per_plane[plane].size() ) continue;
+    	    if( !c_per_plane[plane].size() ) continue;
 
-	    input_clusters.push_back(c_per_plane[plane][index]);
-	    tmp_index_v.push_back(c_per_plane[plane][index]->ClusterID());
-	  }
+    	    input_clusters.push_back(c_per_plane[plane][index]);
+    	    tmp_index_v.push_back(c_per_plane[plane][index]->ClusterID());
+    	  }
 	  
-	  auto score = _match_alg->Process(input_clusters);
+    	  auto score = _match_alg->Process(input_clusters);
 	  
-	  if(score>0)
+    	  if(score>0)
 	    
-	    _book_keeper.Match(tmp_index_v,score);
+    	    _book_keeper.Match(tmp_index_v,score);
 	  
-	}
+    	}
       }
     }
     
@@ -427,6 +427,7 @@ namespace larcv {
       auto const& meta = meta_v[img_index];    
       auto const& origin = meta.origin();
 
+      //std::cout << "meta.plane(): " << meta.plane() << "\n";
       if(meta.plane() != plane) continue;
       if(clusters.empty()) continue;
       
@@ -444,11 +445,11 @@ namespace larcv {
 	continue;
       }
 
-      // std::cout<<"Inspecting a point ("<<x<<","<<y<<") ... ";
+      //std::cout<<"Inspecting a point ("<<x<<","<<y<<") ... ";
     
       auto pt = ::cv::Point2d((y-origin.y)/meta.pixel_height(), (x-origin.x)/meta.pixel_width()); 
 
-      // std::cout<<"pt...("<<pt.x<<","<<pt.y<<")"<<std::endl;
+      //std::cout<<"pt...("<<pt.x<<","<<pt.y<<")"<<std::endl;
       
       for(size_t id=0; id<clusters.size(); ++id) {
 	
@@ -457,7 +458,8 @@ namespace larcv {
 	double inside = ::cv::pointPolygonTest(c._contour,pt,false);
       
 	if(inside < 0) continue;
-	// std::cout << "its inside " << std::endl;
+
+	//std::cout << "its inside " << std::endl;
 
 	result = c.ClusterID();
 

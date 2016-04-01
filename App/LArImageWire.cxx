@@ -9,12 +9,15 @@
 #include "DataFormat/hit.h"
 #include "DataFormat/pfpart.h"
 #include "DataFormat/cluster.h"
+#include "DataFormat/PiZeroROI.h"
 
 namespace larlite {
 
   void LArImageWire::_Configure_(const ::fcllite::PSet &pset)
   {
     _charge_to_gray_scale = pset.get<double>("Q2Gray");
+    _pool_time_tick       = pset.get<int>   ("PoolTimeTick");
+    _use_roi              = pset.get<bool>  ("UseROI");
   }
 
   void LArImageWire::store_clusters(storage_manager* storage) 
@@ -122,33 +125,54 @@ namespace larlite {
     std::vector< std::pair<size_t,size_t> > wire_range_v(nplanes,std::pair<size_t,size_t>(1e12,0));
     std::vector< std::pair<size_t,size_t> > tick_range_v(nplanes,std::pair<size_t,size_t>(1e12,0));
 
-    for(auto const& wire_data : *ev_wire) {
+    ::larlite::event_PiZeroROI* ev_roi = nullptr;
+    if ( _use_roi ) {
+
+      ev_roi = storage->get_data<event_PiZeroROI>( "mcroi" );
+      if(ev_roi->size() == 0) throw DataFormatException("Could not locate ROI data product And you have UseROI: True!");
+
+      auto wr_v = (*ev_roi)[0].GetWireROI();
+      auto tr_v = (*ev_roi)[0].GetTimeROI();
       
-      auto const& wid = geom->ChannelToWireID(wire_data.Channel());
+      for(uint k=0; k < nplanes; ++k)
+	{ wire_range_v[k] = wr_v[k]; tick_range_v[k] = tr_v[k]; }
+
+    } else {
+    
+      for(auto const& wire_data : *ev_wire) {
       
-      auto& wire_range = wire_range_v[wid.Plane];
-      if(wire_range.first  > wid.Wire) wire_range.first  = wid.Wire;
-      if(wire_range.second < wid.Wire) wire_range.second = wid.Wire;
+	auto const& wid = geom->ChannelToWireID(wire_data.Channel());
       
-      auto& tick_range = tick_range_v[wid.Plane];
+	auto& wire_range = wire_range_v[wid.Plane];
+	if(wire_range.first  > wid.Wire) wire_range.first  = wid.Wire;
+	if(wire_range.second < wid.Wire) wire_range.second = wid.Wire;
       
-      auto const& roi_v = wire_data.SignalROI();
+	auto& tick_range = tick_range_v[wid.Plane];
       
-      for(auto const& roi : roi_v.get_ranges()) {	
-	size_t start_tick = roi.begin_index();
-	size_t last_tick = start_tick + roi.size() - 1;
-	if(tick_range.first  > start_tick) tick_range.first  = start_tick;
-	if(tick_range.second < last_tick)  tick_range.second = last_tick;
+	auto const& roi_v = wire_data.SignalROI();
+      
+	for(auto const& roi : roi_v.get_ranges()) {	
+	  size_t start_tick = roi.begin_index();
+	  size_t last_tick = start_tick + roi.size() - 1;
+	  if(tick_range.first  > start_tick) tick_range.first  = start_tick;
+	  if(tick_range.second < last_tick)  tick_range.second = last_tick;
+	}
       }
     }
-
+    
     for(size_t plane=0; plane<nplanes; ++plane) {
       auto const& wire_range = wire_range_v[plane];
       auto const& tick_range = tick_range_v[plane];
       size_t nticks = tick_range.second - tick_range.first + 2;
       size_t nwires = wire_range.second - wire_range.first + 2;
-      ::larcv::ImageMeta meta((double)nwires,(double)nticks,nwires,nticks,wire_range.first,tick_range.first,plane);
 
+
+      ::larcv::ImageMeta meta((double)nwires,(double)nticks,nwires,nticks,wire_range.first,tick_range.first,plane);
+      if ( _use_roi ) {
+	const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
+	meta.setvtx(vtx.first,vtx.second);
+      }
+      
       if ( nwires >= 1e10 || nticks >= 1e10 )
 	_img_mgr.push_back(cv::Mat(),::larcv::ImageMeta());
       else
@@ -179,6 +203,49 @@ namespace larlite {
 	}
       }
     }
+
+    if ( _pool_time_tick > 1 ) {
+
+      for(size_t plane=0; plane<nplanes; ++plane) {
+
+	auto& img  = _img_mgr.img_at(plane);
+	auto& meta = _img_mgr.meta_at(plane);
+
+	::cv::Mat pooled(img.rows, img.cols/_pool_time_tick+1, CV_8UC1, cvScalar(0.));
+      
+	for(int row = 0; row < img.rows; ++row) {
+
+	  uchar* p = img.ptr(row);
+	  
+	  for(int col = 0; col < img.cols; ++col) {
+
+	    int pp = *p++;
+	  
+	    auto& ch = pooled.at<uchar>(row,col/_pool_time_tick);
+
+	    int res  = pp + (int) ch;
+	    if (res > 255) res = 255;
+	    ch = (uchar) res;
+	  
+	  }
+	}
+
+	//old parameters
+	auto const& wire_range = wire_range_v[plane];
+	auto const& tick_range = tick_range_v[plane];
+
+	img  = pooled;
+	meta = ::larcv::ImageMeta((double)pooled.rows,
+				  (double)pooled.cols*_pool_time_tick,
+				  pooled.rows,
+				  pooled.cols,
+				  wire_range.first,
+				  tick_range.first,
+				  plane);
+      
+      }
+    }
+    
   }
 
 }

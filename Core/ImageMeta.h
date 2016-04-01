@@ -49,6 +49,7 @@ namespace larcaffe {
       , _width(width)
       , _height(height)
       , _plane(plane)
+      , _roi_vtx(::larcv::kINVALID_DOUBLE,::larcv::kINVALID_DOUBLE)
     {
       if( width  < 0. ) throw larbys("Width must be a positive floating point!");
       if( height < 0. ) throw larbys("Height must be a positive floating point!");
@@ -102,7 +103,7 @@ namespace larcaffe {
     size_t _height_npixel;     ///< # of pixels in vertical axis
     size_t _plane;             ///< unique plane ID number
 
-    /// ROI vertex, may or may not exist, user should check this
+    /// ROI vertex, may or may not exist, user should check this again
     larcaffe::Point2D _roi_vtx;
     
   };

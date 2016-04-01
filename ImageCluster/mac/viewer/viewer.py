@@ -13,13 +13,15 @@ my_proc = fmwk.ana_processor()
 # Config file
 cfg="../../../App/mac/MergingTester.fcl"
 
-algid  = int(sys.argv[3])
-
+algid  = int(sys.argv[-1])
+print algid
 my_proc.add_input_file(sys.argv[1])
 my_proc.add_input_file(sys.argv[2])
+my_proc.add_input_file(sys.argv[3])
 my_proc.set_io_mode(fmwk.storage_manager.kREAD)
 
-myunit = fmwk.LArImageHit()
+#myunit = fmwk.LArImageHit()
+myunit = fmwk.LArImageWire()
 myunit.set_config(cfg)
 my_proc.add_process(myunit)
 
