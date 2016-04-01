@@ -4,6 +4,7 @@ LArImageWire: {
   StoreOriginalImage: false
   Producer: caldata
   Q2Gray: 5 # convert ADC to a unit gray scale
+  UseROI: true
   PoolTimeTick: 1
 }
 
