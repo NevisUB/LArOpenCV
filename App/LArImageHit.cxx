@@ -229,7 +229,6 @@ namespace larlite {
 
 
       if ( _use_roi ) {
-	// set ROI vertex, there is only 1 for now...
 	const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
 	meta.setvtx(vtx.first,vtx.second);
       }
@@ -315,7 +314,11 @@ namespace larlite {
 				  wire_range.first,
 				  tick_range.first,
 				  plane);
-      
+	if ( _use_roi ) {
+	  const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
+	  meta.setvtx(vtx.first,vtx.second);
+	}
+	
       }
     }
   }
