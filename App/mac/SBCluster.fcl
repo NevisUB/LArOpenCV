@@ -6,8 +6,8 @@ LArImageHit: {
   # LArImageHit config
   Q2Gray: 5 # convert Hit::Integral to a unit gray scale
   QMin: 3   # min. threshold for Hit::Integral to make it into an image
-  UseROI: false
-  PoolTimeTick: 0
+  UseROI: true
+  PoolTimeTick: 6
   
   RunAnalyze: false # Uncomment to run the MC shower-cluster comparison
 }
@@ -28,11 +28,11 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  ClusterAlgoType: [SBCluster,PCAOverall,TrackShower,GetStartPoint,PiZeroFilterV]
-  ClusterAlgoName: [sbc,pcao,Trackshower,gs,pizerofilterv]
+  # ClusterAlgoType: [SBCluster,PCAOverall,TrackShower,GetStartPoint,PiZeroFilterV]
+  # ClusterAlgoName: [sbc,pcao,Trackshower,gs,pizerofilterv]
 
-#  ClusterAlgoType: [SBCluster,PCAOverall,TrackShower,ROIStart]
-#  ClusterAlgoName: [sbc,pcao,Trackshower,roist]
+  ClusterAlgoType: [SBCluster,PCAOverall,TrackShower,ROIStart]
+  ClusterAlgoName: [sbc,pcao,Trackshower,roist]
 
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
@@ -154,7 +154,7 @@ ImageClusterManager: {
 
    mto : {
      RatioCut : 0.001
-     StartTimeCut : 15
+     StartTimeCut : 100
      RequireThreePlanes : 0 
     }
 
