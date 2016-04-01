@@ -161,8 +161,8 @@ namespace larlite {
 	c.set_start_tick( start_pt.x*px_w + origin.x ,_pool_time_tick*0.05);//error is 1 wire
 
 	//end
-	c.set_start_wire( end_pt.y*px_h + origin.y ,0.3);//error is 1 wire
-	c.set_start_tick( end_pt.x*px_w + origin.x ,_pool_time_tick*0.05);//error is 1 wire
+	c.set_end_wire( end_pt.y*px_h + origin.y ,0.3);//error is 1 wire
+	c.set_end_tick( end_pt.x*px_w + origin.x ,_pool_time_tick*0.05);//error is 1 wire
 
 	//store it
 	ev_cluster->push_back(c);

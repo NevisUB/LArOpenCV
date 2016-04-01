@@ -28,15 +28,15 @@ namespace larcv{
       int  max_hit_index = -1 ;
       if ( pi0_st.x == ::larcv::kINVALID_DOUBLE ) { std::cout << "BAD VTX\n"; throw std::exception(); }
       
-      // std::cout<<"pi0 start : "<<pi0_st.x<<", "<<pi0_st.y<<std::endl ;
-    
+      auto pi0st = Point2D( (pi0_st.y - meta.origin().y)/meta.pixel_height(), (pi0_st.x - meta.origin().x)/meta.pixel_width() );
+      
       auto const & hits = cluster._insideHits ;
 
       for(int i = 0; i < hits.size(); i++){
 
 	auto & hit = hits[i] ;
-
-	auto dist = sqrt( pow(pi0_st.x - hit.x,2) + pow(pi0_st.y - hit.y,2) );
+	
+	auto dist = sqrt( pow(pi0st.x - hit.x,2) + pow(pi0st.y - hit.y,2) );
       
 	/// Find smallest distance between all hits and ROI vertex point
 	/// Make closest hit the start point
