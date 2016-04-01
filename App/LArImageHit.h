@@ -36,6 +36,7 @@ namespace larlite {
       : LArImageClusterBase(name)
       , _num_stored(0)
       , _charge_to_gray_scale(10)
+      , _num_clusters(0)
       , _charge_threshold(5)
       , _pool_time_tick(0)
       , _use_roi(false)
