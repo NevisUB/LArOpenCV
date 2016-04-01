@@ -31,8 +31,11 @@ ImageClusterManager: {
   # ClusterAlgoType: [SBCluster,PCAOverall,TrackShower,GetStartPoint,PiZeroFilterV]
   # ClusterAlgoName: [sbc,pcao,Trackshower,gs,pizerofilterv]
 
-  ClusterAlgoType: [SBCluster,PCAOverall,TrackShower,ROIStart]
-  ClusterAlgoName: [sbc,pcao,Trackshower,roist]
+  #ClusterAlgoType: [SBCluster,PCAOverall,TrackShower,ROIStart]
+  #ClusterAlgoName: [sbc,pcao,Trackshower,roist]
+
+  ClusterAlgoType: [SBCluster,PCAOverall,SimpleCuts,ROIStart]
+  ClusterAlgoName: [sbc,pcao,sc,roist]
 
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
@@ -59,8 +62,8 @@ ImageClusterManager: {
 
  sc : {
 
- MinNHits : 10
- MinNCluster: 2
+ MinNHits : 20
+ MinNClusters: 2
 
 }
   

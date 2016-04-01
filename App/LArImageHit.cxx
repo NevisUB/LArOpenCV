@@ -151,7 +151,7 @@ namespace larlite {
 	c.set_id(image_cluster.ClusterID());
 
 	auto const& start_pt = image_cluster._startPt;
-	auto const& end_pt   = image_cluster._startPt;
+	auto const& end_pt   = image_cluster._endPt;
 	auto const& px_w     = image_cluster.PixelWidth();
 	auto const& px_h     = image_cluster.PixelHeight();
 	auto const& origin   = image_cluster.Origin();
@@ -245,7 +245,6 @@ namespace larlite {
 
 
       if ( _use_roi ) {
-	// set ROI vertex, there is only 1 for now...
 	const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
 	meta.setvtx(vtx.first,vtx.second);
       }
@@ -331,7 +330,11 @@ namespace larlite {
 				  wire_range.first,
 				  tick_range.first,
 				  plane);
-      
+	if ( _use_roi ) {
+	  const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
+	  meta.setvtx(vtx.first,vtx.second);
+	}
+
       }
     }
   }
