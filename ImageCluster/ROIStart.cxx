@@ -15,21 +15,23 @@ namespace larcv{
 
     Cluster2DArray_t roi_clusters; roi_clusters.reserve(clusters.size());
 
+
+    auto pi0_st = meta.roivtx();
+    if ( pi0_st.x == ::larcv::kINVALID_DOUBLE ) { std::cout << "BAD VTX\n"; throw std::exception(); }
+    // std::cout << "Got VTX: (" << pi0_st.x << "," << pi0_st.y << ")\n";
+    auto pi0st = Point2D( (pi0_st.y - meta.origin().y)/meta.pixel_height(), (pi0_st.x - meta.origin().x)/meta.pixel_width() );
+    // std::cout << "In image coords: (" << pi0st.x << "," << pi0st.y << ")\n";
+    
     for(size_t k = 0; k < clusters.size(); k++){
     
       Cluster2D cluster = clusters[k];
 
       if( !cluster._insideHits.size() ) continue;
 
-      auto pi0_st = meta.roivtx();
       float min_dist = 1e9;
       float max_dist = 0;
       int  min_hit_index = -1 ;
       int  max_hit_index = -1 ;
-      if ( pi0_st.x == ::larcv::kINVALID_DOUBLE ) { std::cout << "BAD VTX\n"; throw std::exception(); }
-      
-      auto pi0st = Point2D( (pi0_st.y - meta.origin().y)/meta.pixel_height(), (pi0_st.x - meta.origin().x)/meta.pixel_width() );
-      
       auto const & hits = cluster._insideHits ;
 
       for(int i = 0; i < hits.size(); i++){
@@ -51,14 +53,17 @@ namespace larcv{
 	}
 
       }
-     
-      cluster._startPt.x = hits[min_hit_index].x ; 
-      cluster._startPt.y = hits[min_hit_index].y ; 
-      cluster._endPt.x = hits[max_hit_index].x; 
-      cluster._endPt.y = hits[max_hit_index].y; 
 
+      
+      cluster._startPt.x = hits[min_hit_index].x;
+      cluster._startPt.y = hits[min_hit_index].y; 
+      cluster._endPt.x = hits[max_hit_index].x;
+      cluster._endPt.y = hits[max_hit_index].y;
+      // auto dist = sqrt( pow(cluster._startPt.x - pi0st.x,2) + pow(cluster._startPt.y - pi0st.y,2) );
+      // std::cout << "Closest point:(" << cluster._startPt.x<< "," << cluster._startPt.y << ") D: " << dist << "\n";
+      
       roi_clusters.emplace_back(cluster);
-     
+      
     }
   
     return roi_clusters; 

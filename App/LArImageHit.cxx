@@ -157,13 +157,15 @@ namespace larlite {
 	auto const& origin   = image_cluster.Origin();
 
 	//start
-	c.set_start_wire( start_pt.y*px_h + origin.y ,0.3);//error is 1 wire
-	c.set_start_tick( start_pt.x*px_w + origin.x ,_pool_time_tick*0.05);//error is 1 wire
+	c.set_start_tick( (start_pt.x+0.5)*px_h + origin.y ,0.3);//error is 1 wire
+	c.set_start_wire( (start_pt.y+0.5)*px_w + origin.x ,_pool_time_tick*0.05);//error is 1 wire
 
 	//end
-	c.set_end_wire( end_pt.y*px_h + origin.y ,0.3);//error is 1 wire
-	c.set_end_tick( end_pt.x*px_w + origin.x ,_pool_time_tick*0.05);//error is 1 wire
+	c.set_end_tick( (end_pt.x+0.5)*px_h + origin.y ,0.3);//error is 1 wire
+	c.set_end_wire( (end_pt.y+0.5)*px_w + origin.x ,_pool_time_tick*0.05);//error is 1 wire
 
+	// std::cout << "Set cluster start point: (" << c.StartWire() << "," << c.StartTick() << ")\n";
+	
 	//store it
 	ev_cluster->push_back(c);
       }
