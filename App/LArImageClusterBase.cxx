@@ -197,10 +197,10 @@ namespace larlite {
 	::larlite::cluster c;
 
 	// set cluster properties
-	auto const& sw = imgclus._startPt.x / geomH->WireToCm();
-	auto const& st = imgclus._startPt.y / geomH->TimeToCm();
-	auto const& ew = imgclus._endPt.x   / geomH->WireToCm();
-	auto const& et = imgclus._endPt.y   / geomH->TimeToCm();
+	auto const& sw = imgclus._startPt.x / imgclus.PixelWidth()  + imgclus.Origin().x;
+	auto const& st = imgclus._startPt.y / imgclus.PixelHeight() + imgclus.Origin().y;
+	auto const& ew = imgclus._endPt.x   / imgclus.PixelWidth()  + imgclus.Origin().x;
+	auto const& et = imgclus._endPt.y   / imgclus.PixelHeight() + imgclus.Origin().y;
 	c.set_start_wire(sw,1);
 	c.set_end_wire(ew,1);
 	c.set_start_tick(st,1);
