@@ -197,10 +197,12 @@ namespace larlite {
 	::larlite::cluster c;
 
 	// set cluster properties
-	auto const& sw = imgclus._startPt.x / imgclus.PixelWidth()  + imgclus.Origin().x;
-	auto const& st = imgclus._startPt.y / imgclus.PixelHeight() + imgclus.Origin().y;
-	auto const& ew = imgclus._endPt.x   / imgclus.PixelWidth()  + imgclus.Origin().x;
-	auto const& et = imgclus._endPt.y   / imgclus.PixelHeight() + imgclus.Origin().y;
+	// x is the time coordinate
+	// and Height is also for time
+	auto const& st = (imgclus._startPt.x + 0.5) / imgclus.PixelHeight() + imgclus.Origin().x;
+	auto const& sw = (imgclus._startPt.y + 0.5) / imgclus.PixelWidth()  + imgclus.Origin().y;
+	auto const& et = (imgclus._endPt.x + 0.5)   / imgclus.PixelHeight() + imgclus.Origin().x;
+	auto const& ew = (imgclus._endPt.y + 0.5)   / imgclus.PixelWidth()  + imgclus.Origin().y;
 	c.set_start_wire(sw,1);
 	c.set_end_wire(ew,1);
 	c.set_start_tick(st,1);
