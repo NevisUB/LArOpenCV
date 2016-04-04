@@ -55,9 +55,9 @@ namespace larcv {
     /// Pixel height size (i.e. X unit length in cm)
     double PixelHeight() const { return _pixel_height; }
     /// convert from X variable to Time-Tick
-    double XtoTimeTick(double x) const { return  ( x / _pixel_height ) + _origin.y ; }
+    double XtoTimeTick(double x) const { return  ( (x + 0.5) * _pixel_height ) + _origin.y ; }
     /// convert from y variable to Wire
-    double YtoWire(double y) const { return ( y / _pixel_width ) + _origin.x ; }
+    double YtoWire(double y) const { return ( (y + 0.5 )* _pixel_width ) + _origin.x ; }
 
     //
     // Data attributes that can be modified by algorithms
