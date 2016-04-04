@@ -50,6 +50,8 @@ namespace larcv {
     float _start_time_cut ;
     bool _require_3planes;
 
+    double _pixel_y(const Cluster2D* cluster,size_t pix);
+    
   };
   
   /**
