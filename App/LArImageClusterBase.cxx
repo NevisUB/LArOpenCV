@@ -199,14 +199,28 @@ namespace larlite {
 	// set cluster properties
 	// x is the time coordinate
 	// and Height is also for time
-	auto const& st = (imgclus._startPt.x + 0.5) / imgclus.PixelHeight() + imgclus.Origin().x;
-	auto const& sw = (imgclus._startPt.y + 0.5) / imgclus.PixelWidth()  + imgclus.Origin().y;
-	auto const& et = (imgclus._endPt.x + 0.5)   / imgclus.PixelHeight() + imgclus.Origin().x;
-	auto const& ew = (imgclus._endPt.y + 0.5)   / imgclus.PixelWidth()  + imgclus.Origin().y;
+	double st = imgclus.XtoTimeTick( imgclus._startPt.x );
+	double sw = imgclus.YtoWire    ( imgclus._startPt.y );
+	double et = imgclus.XtoTimeTick( imgclus._endPt.x   );
+	double ew = imgclus.YtoWire    ( imgclus._endPt.y   );
+
+	if ( sw > geom->Nwires(imgclus.PlaneID()) ){
+	  std::cout << "start wire out of range:" << std::endl;
+	  std::cout << "Plane : " << imgclus.PlaneID() << " w/ [start,end] wire -> [" << int(sw) << ", " << int(ew) << "]" << std::endl;
+	  std::cout << std::endl;
+	}
+	else if (ew > geom->Nwires(imgclus.PlaneID()) ){
+	  std::cout << "end wire out of range:" << std::endl;
+	  std::cout << "Plane : " << imgclus.PlaneID() << " w/ [start,end] wire -> [" << int(sw) << ", " << int(ew) << "]" << std::endl;
+	  std::cout << std::endl;
+	}
+	
 	c.set_start_wire(sw,1);
 	c.set_end_wire(ew,1);
 	c.set_start_tick(st,1);
 	c.set_end_tick(et,1);
+
+
 
 	// set plane / id information
 	c.set_view(geom->PlaneToView(imgclus.PlaneID()));
