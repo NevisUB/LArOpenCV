@@ -3,7 +3,15 @@
 
 #include "LArImageClusterBase.h"
 #include "LArUtil/Geometry.h"
+#include "LArUtil/GeometryHelper.h"
 #include "FhiclLite/ConfigManager.h"
+
+#include "DataFormat/rawdigit.h"
+#include "DataFormat/hit.h"
+#include "DataFormat/cluster.h"
+#include "DataFormat/event_ass.h"
+#include "DataFormat/PiZeroROI.h"
+#include "DataFormat/pfpart.h"
 
 namespace larlite {
 
@@ -11,6 +19,8 @@ namespace larlite {
   {
     _name=name;
     _fout=0;
+    _num_stored = 0;
+    _num_clusters = 0;
     _producer="";
     _store_original_img=false;
   }
@@ -119,6 +129,116 @@ namespace larlite {
     }   
 
     return true;
+  }
+
+
+    void LArImageClusterBase::store_clusters(storage_manager* storage)
+  {
+    ++_num_stored;
+
+    // std::cout<<"# clusters: "<<_num_clusters<<std::endl;
+
+    if(_num_clusters == 0){
+      _num_clusters = 0;
+      _num_clustered_hits = 0;
+      _num_unclustered_hits = 0;
+    }
+
+    auto geom  = ::larutil::Geometry::GetME();
+    auto geomH = ::larutil::GeometryHelper::GetME();
+
+    auto ev_hit = storage->get_data<event_hit>(producer());
+    
+    if(!ev_hit) throw DataFormatException("Could not locate hit data product!");
+
+    auto const& alg_mgr = algo_manager();
+
+    _num_clusters = alg_mgr.NumClusters();
+
+    // std::cout << "num clustered hits: " << _num_clustered_hits << "\n";
+
+    AssSet_t cluster_ass;
+    cluster_ass.resize(_num_clusters);
+
+    for(auto& ass_unit : cluster_ass) ass_unit.reserve(100);
+
+    for(size_t hindex=0; hindex<ev_hit->size(); ++hindex) {
+
+      auto const& h = (*ev_hit)[hindex];
+
+      auto const& wid = h.WireID();
+
+      auto const cid = alg_mgr.ClusterID(wid.Wire,h.PeakTime(),wid.Plane);
+
+      if(cid == ::larcv::kINVALID_CLUSTER_ID) {
+	_num_unclustered_hits += 1;
+	continue;
+      }
+
+      // std::cout << "_num_clustered_hits : " << _num_clustered_hits << "\n";
+      _num_clustered_hits += 1;
+
+      cluster_ass[cid].push_back(hindex);
+    }
+
+    auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
+    auto ev_ass     = storage->get_data<event_ass>    ("ImageClusterHit");
+    
+    if(ev_cluster) {
+      ev_cluster->reserve(_num_clusters);
+
+      for(size_t cid=0; cid<_num_clusters; ++cid) {
+
+	auto const& imgclus = alg_mgr.Cluster(cid);
+	
+	if(cid != imgclus.ClusterID())
+	  throw DataFormatException("ClusterID ordering seems inconsistent!");
+
+	::larlite::cluster c;
+
+	// set cluster properties
+	auto const& sw = imgclus._startPt.x / geomH->WireToCm();
+	auto const& st = imgclus._startPt.y / geomH->TimeToCm();
+	auto const& ew = imgclus._endPt.x   / geomH->WireToCm();
+	auto const& et = imgclus._endPt.y   / geomH->TimeToCm();
+	c.set_start_wire(sw,1);
+	c.set_end_wire(ew,1);
+	c.set_start_tick(st,1);
+	c.set_end_tick(et,1);
+
+	// set plane / id information
+	c.set_view(geom->PlaneToView(imgclus.PlaneID()));
+	c.set_planeID(geo::PlaneID(0,0,imgclus.PlaneID()));
+	c.set_id(imgclus.ClusterID());
+
+	// add to event_cluster
+	ev_cluster->push_back(c);
+      }
+
+      if(ev_ass)
+	ev_ass->set_association(ev_cluster->id(),ev_hit->id(),cluster_ass);
+    }
+
+    auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
+    if(ev_pfpart) {
+      auto const match_info = alg_mgr.BookKeeper().GetResult();
+      AssSet_t pfpart_ass;
+      pfpart_ass.reserve(match_info.size());
+
+      for(size_t pfp_index=0; pfp_index<match_info.size(); ++pfp_index) {
+
+	pfpart p;
+	ev_pfpart->push_back(p);
+	AssUnit_t ass;
+	for(auto const& cid : match_info[pfp_index]) ass.push_back(cid);
+
+	pfpart_ass.push_back(ass);
+      }
+
+      if(ev_ass && ev_cluster) ev_ass->set_association(ev_pfpart->id(),ev_cluster->id(),pfpart_ass);
+    }
+
+    return;
   }
 
 }

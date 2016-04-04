@@ -34,9 +34,7 @@ namespace larlite {
     /// Default constructor
     LArImageHit(const std::string name="LArImageHit")
       : LArImageClusterBase(name)
-      , _num_stored(0)
       , _charge_to_gray_scale(10)
-      , _num_clusters(0)
       , _charge_threshold(5)
       , _pool_time_tick(0)
       , _use_roi(false)
@@ -48,8 +46,6 @@ namespace larlite {
 
   protected:
 
-    void store_clusters(storage_manager* storage);
-    
     void extract_image(storage_manager* storage);
 
     void _Report_() const;
@@ -59,15 +55,10 @@ namespace larlite {
     void AnalyzeImageCluster(storage_manager* storage);
 
   private:
-    size_t _num_stored;
     double _charge_to_gray_scale;
     double _charge_threshold;
     int    _pool_time_tick;
     bool   _use_roi;
-
-    size_t _num_clusters;
-    size_t _num_unclustered_hits;
-    size_t _num_clustered_hits;
 
     /// Flag to run the AnalyzeImageCluster function
     bool _run_analyze_image_cluster;
