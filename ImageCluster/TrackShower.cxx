@@ -26,7 +26,7 @@ namespace larcv{
 
     Cluster2DArray_t ts_clusters; ts_clusters.reserve(clusters.size());
 
-    Cluster2DArray_t shower_v, track_v, satellite_v;
+    Cluster2DArray_t shower_v, track_v, satellite_v, shower_and_track_v;
 
     std::vector<::cv::Point> locations;
     ::cv::findNonZero(img, locations);  
@@ -86,6 +86,8 @@ namespace larcv{
 	minDist = dist1;
 	i0 = 2; i2 = 0;
       }
+
+      //std::cout<<"Rect height: "<<rect.height<<", "<<rect.width<<" widths: "<<maxDist<<", "<<minDist<<std::endl; 
 
       dir1 = std::make_pair((vertices[i0].x - vertices[i1].x)/step1, (vertices[i0].y - vertices[i1].y)/step1);
       dir2 = std::make_pair((vertices[i2].x - vertices[i1].x)/step2, (vertices[i2].y - vertices[i1].y)/step2);
@@ -195,6 +197,7 @@ namespace larcv{
       ts_clusters.push_back(ts_cluster);
 
       if( area > _area_cut){
+        shower_and_track_v.push_back(ts_cluster);
 	if ( max_width/min_width >= _ratio_separation)
 	  shower_v.push_back(ts_cluster);
 	else 
@@ -217,8 +220,10 @@ namespace larcv{
       return track_v;
     else if( _track_shower_sat == 2) 
       return satellite_v;
-    else 
+    else if( _track_shower_sat == 3)
       return ts_clusters;
+    else
+      return shower_and_track_v;
    
   }
 

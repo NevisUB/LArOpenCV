@@ -231,3 +231,10 @@ class AlgoViewer :
 
                ax.add_patch(polygon)
                r+=1
+        if self.name in ["roist"]:
+            ax.plot(meta.roivtx().y,
+                    meta.roivtx().x,'*',markersize=10,color='orange')
+
+            ax.plot(pixel_y(cluster._startPt.x),
+                    pixel_x(cluster._startPt.y),'o',color='pink'  ,markersize=10)
+                        

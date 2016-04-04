@@ -85,7 +85,6 @@ namespace larlite {
   }
   
 
-
   void LArImageHit::extract_image(storage_manager* storage)
   {
     
@@ -227,7 +226,6 @@ namespace larlite {
 	  const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
 	  meta.setvtx(vtx.first,vtx.second);
 	}
-	
       }
     }
   }

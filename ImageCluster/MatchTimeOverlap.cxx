@@ -27,7 +27,16 @@ namespace larcv{
     
     for(auto const& c : clusters){
 
-      time_difference  = std::abs(c->_startPt.x - c->_endPt.x); 
+      // no image meta information........
+      // auto cstart = meta.pixel_y(c->_startPt.x);
+      // auto cend   = meta.pixel_y(c->_endPt.x);
+      //start
+      
+      auto cstart = _pixel_y(c,c->_startPt.x);
+      auto cend   = _pixel_y(c,c->_endPt.x);
+
+      
+      time_difference  = std::abs(cstart - cend); 
       
       if(max_time_difference < time_difference)
         max_time_difference = time_difference;
@@ -59,13 +68,17 @@ namespace larcv{
       // Make sure start point always smaller in t
       // Can remove this condition later when start pt/
       // direction information is stronger
-      if(c->_startPt.x > c->_endPt.x) {
-        start_t = c->_endPt.x   + c->Origin().y ;
-        end_t   = c->_startPt.x + c->Origin().y ;
+
+      auto cstart = _pixel_y(c,c->_startPt.x);
+      auto cend   = _pixel_y(c,c->_endPt.x);
+      
+      if(cstart > cend) {
+        start_t = cend;
+	end_t   = cstart;
       }
       else{
-        start_t = c->_startPt.x + c->Origin().y;
-        end_t   = c->_endPt.x   + c->Origin().y;
+        start_t = cstart;
+        end_t   = cend;
       }         
       
       if(prev_start_t == 0) prev_start_t = start_t;
@@ -110,5 +123,13 @@ namespace larcv{
 
   }
 
+
+  double MatchTimeOverlap::_pixel_y(const Cluster2D* cluster,size_t pix) {
+    auto const& px_h   = cluster->PixelHeight();
+    auto const& origin = cluster->Origin();
+      
+    return (pix+0.5)*px_h + origin.y;
+    
+  }
 }
 #endif
