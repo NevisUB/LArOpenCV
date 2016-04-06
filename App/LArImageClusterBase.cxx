@@ -70,6 +70,12 @@ namespace larlite {
     }
     catch(const DataFormatException &e){
       std::cout << e.what() << std::endl;
+      // save data-products that would be created in store_clusters
+      // this will prevent event mis-alignment
+      auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
+      auto ev_hit_ass = storage->get_data<event_ass>    ("ImageClusterHit");
+      auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
+      storage->set_id(storage->run_id(),storage->subrun_id(),storage->event_id());
       return false;
     }
       
@@ -171,7 +177,7 @@ namespace larlite {
     cluster_hit_ass.resize(_num_clusters);
     // prepare cluster -> vertex association
     AssSet_t cluster_vtx_ass;
-    cluster_vtx_ass.resize(_num_clusters);
+    //cluster_vtx_ass.resize(_num_clusters);
 
     for(auto& ass_unit : cluster_hit_ass) ass_unit.reserve(100);
 
@@ -206,8 +212,11 @@ namespace larlite {
     if (ev_roi and (ev_roi->size() != 0) ){
       ass_vtx_v = storage->find_one_ass(ev_roi->id(), ev_vtx, ev_roi->name());
       // get associations for 1st ROI
-      if (ass_vtx_v.size() != 0)
-	cluster_vtx_ass.push_back( ass_vtx_v[0] );
+      if (ass_vtx_v.size() != 0){
+	for (size_t i=0; i < _num_clusters; i++){
+	  cluster_vtx_ass.push_back( ass_vtx_v[0] );
+	}
+      }// if associated vertices exist
     }// if PiZeroROI is found
     
     if(ev_cluster) {
