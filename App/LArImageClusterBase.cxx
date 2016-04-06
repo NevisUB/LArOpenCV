@@ -11,6 +11,7 @@
 #include "DataFormat/cluster.h"
 #include "DataFormat/event_ass.h"
 #include "DataFormat/PiZeroROI.h"
+#include "DataFormat/vertex.h"
 #include "DataFormat/pfpart.h"
 
 namespace larlite {
@@ -62,7 +63,23 @@ namespace larlite {
     ::larcv::Watch watch_all, watch_one;
     watch_all.Start();
     watch_one.Start();
-    this->extract_image(storage);
+    
+    // try getting an image for this event, if possible
+    try{
+      this->extract_image(storage);
+    }
+    catch(const DataFormatException &e){
+      std::cout << e.what() << std::endl;
+      // save data-products that would be created in store_clusters
+      // this will prevent event mis-alignment
+      auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
+      auto ev_hit_ass = storage->get_data<event_ass>    ("ImageClusterHit");
+      auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
+      storage->set_id(storage->run_id(),storage->subrun_id(),storage->event_id());
+      return false;
+    }
+      
+    
     _process_time_image_extraction += watch_one.WallTime();
       
     if(_store_original_img) {
@@ -155,12 +172,14 @@ namespace larlite {
 
     _num_clusters = alg_mgr.NumClusters();
 
-    // std::cout << "num clustered hits: " << _num_clustered_hits << "\n";
+    // prepare cluster -> hit association
+    AssSet_t cluster_hit_ass;
+    cluster_hit_ass.resize(_num_clusters);
+    // prepare cluster -> vertex association
+    AssSet_t cluster_vtx_ass;
+    //cluster_vtx_ass.resize(_num_clusters);
 
-    AssSet_t cluster_ass;
-    cluster_ass.resize(_num_clusters);
-
-    for(auto& ass_unit : cluster_ass) ass_unit.reserve(100);
+    for(auto& ass_unit : cluster_hit_ass) ass_unit.reserve(100);
 
     for(size_t hindex=0; hindex<ev_hit->size(); ++hindex) {
 
@@ -178,15 +197,31 @@ namespace larlite {
       // std::cout << "_num_clustered_hits : " << _num_clustered_hits << "\n";
       _num_clustered_hits += 1;
 
-      cluster_ass[cid].push_back(hindex);
-    }
+      cluster_hit_ass[cid].push_back(hindex);
+    }// for all hits
 
     auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
-    auto ev_ass     = storage->get_data<event_ass>    ("ImageClusterHit");
+    auto ev_hit_ass = storage->get_data<event_ass>    ("ImageClusterHit");
+    auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
+    // save ROI & vertices if available
+    // and grab the associated vertex
+    ::larlite::event_PiZeroROI* ev_roi = nullptr;
+    ::larlite::event_vertex* ev_vtx = nullptr;
+    ev_roi = storage->get_data<event_PiZeroROI>("mcroi");
+    AssSet_t ass_vtx_v;
+    if (ev_roi and (ev_roi->size() != 0) ){
+      ass_vtx_v = storage->find_one_ass(ev_roi->id(), ev_vtx, ev_roi->name());
+      // get associations for 1st ROI
+      if (ass_vtx_v.size() != 0){
+	for (size_t i=0; i < _num_clusters; i++){
+	  cluster_vtx_ass.push_back( ass_vtx_v[0] );
+	}
+      }// if associated vertices exist
+    }// if PiZeroROI is found
     
     if(ev_cluster) {
       ev_cluster->reserve(_num_clusters);
-
+      
       for(size_t cid=0; cid<_num_clusters; ++cid) {
 
 	auto const& imgclus = alg_mgr.Cluster(cid);
@@ -231,8 +266,13 @@ namespace larlite {
 	ev_cluster->push_back(c);
       }
 
-      if(ev_ass)
-	ev_ass->set_association(ev_cluster->id(),ev_hit->id(),cluster_ass);
+      // if we have crated a cluster -> hit association
+      if(ev_hit_ass)
+	ev_hit_ass->set_association(ev_cluster->id(), ev_hit->id(), cluster_hit_ass);
+      // if we have created a cluster -> vertex association
+      if (ev_vtx_ass)
+	ev_vtx_ass->set_association(ev_cluster->id(), ev_vtx->id(), cluster_vtx_ass);
+      
     }
 
     auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
@@ -251,7 +291,7 @@ namespace larlite {
 	pfpart_ass.push_back(ass);
       }
 
-      if(ev_ass && ev_cluster) ev_ass->set_association(ev_pfpart->id(),ev_cluster->id(),pfpart_ass);
+      if(ev_hit_ass && ev_cluster) ev_hit_ass->set_association(ev_pfpart->id(),ev_cluster->id(),pfpart_ass);
     }
 
     return;
