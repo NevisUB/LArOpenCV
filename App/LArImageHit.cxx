@@ -96,7 +96,7 @@ namespace larlite {
         
     std::vector< std::pair<size_t,size_t> > wire_range_v(nplanes,std::pair<size_t,size_t>(1e12,0));
     std::vector< std::pair<size_t,size_t> > tick_range_v(nplanes,std::pair<size_t,size_t>(1e12,0));
-    
+
     ::larlite::event_PiZeroROI* ev_roi = nullptr;
     if ( _use_roi ) {
 
