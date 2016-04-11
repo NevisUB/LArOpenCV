@@ -1,15 +1,6 @@
-# LArImageWire: {
-#   # LArImageClusterBase config
-#   Profile: true
-#   StoreOriginalImage: false
-#   Producer: caldata
-#   Q2Gray: 5 # convert ADC to a unit gray scale
-#   UseROI: false
-#   PoolTimeTick: 6
-# }
-
 LArImageHit: {
-  # LArImageClusterBase config
+# LArImageClusterBase config
+
   Profile: true
   StoreOriginalImage: false
   Producer: gaushit
@@ -18,19 +9,9 @@ LArImageHit: {
   UseROI : false
   PoolTimeTick: 6
   RunAnalyze: false # Uncomment to run the MC shower-cluster comparison
+  
 }
 
-
-# LArDownImage: {
-#   # LArImageClusterBase config
-#   Profile: true
-#   StoreOriginalImage: false
-#   Producer: gaushit
-#   # LArDownImage config
-#   Q2Gray: 0.1 
-# }
-
-# ImageClusterManager config
 ImageClusterManager: {
 
   Verbosity: 1
@@ -40,8 +21,11 @@ ImageClusterManager: {
   #ClusterAlgoType: [SBCluster,PCAOverall,BoundRectStart,StartEndMerge]
   #ClusterAlgoName: [sbc,pcao,brs,sem]
   
-  ClusterAlgoType: [SBCluster,SimpleCuts,StupidStart,PID]
-  ClusterAlgoName: [sbc,sc,ss,pid]
+  #ClusterAlgoType: [SBCluster,SimpleCuts,StupidStart,PID]
+  #ClusterAlgoName: [sbc,sc,ss,pid]
+
+  ClusterAlgoType: [SBCluster,SimpleCuts]
+  ClusterAlgoName: [sbc,sc]
   
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
