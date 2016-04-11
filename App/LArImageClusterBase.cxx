@@ -255,8 +255,6 @@ namespace larlite {
 	c.set_start_tick(st,1);
 	c.set_end_tick(et,1);
 
-
-
 	// set plane / id information
 	c.set_view(geom->PlaneToView(imgclus.PlaneID()));
 	c.set_planeID(geo::PlaneID(0,0,imgclus.PlaneID()));
