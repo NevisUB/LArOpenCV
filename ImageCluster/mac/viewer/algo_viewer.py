@@ -28,8 +28,8 @@ class AlgoViewer :
         
     
         if self.name in ["sbc"] :
-            ax.plot(meta.roivtx().y,
-                    meta.roivtx().x,'*',markersize=10,color='orange')
+            # ax.plot(meta.roivtx().y,
+            #         meta.roivtx().x,'*',markersize=10,color='orange')
             return
         
         if self.name in ["Trackshower"] :

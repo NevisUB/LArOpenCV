@@ -49,8 +49,10 @@
 #pragma link C++ class larcv::Vertex2D+;
 #pragma link C++ class larcv::ROIStart+;
 
+#pragma link C++ class larcv::AttachedClusters+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
 
 
 

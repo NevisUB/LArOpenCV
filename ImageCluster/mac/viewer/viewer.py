@@ -11,7 +11,7 @@ import algo_viewer as av
 my_proc = fmwk.ana_processor()
 
 # Config fileg
-cfg="../../../App/mac/SBCluster.fcl"
+cfg="../../../App/mac/BNBTester.fcl"
 
 algid  = int(sys.argv[-1])
 print algid
@@ -46,7 +46,6 @@ while( my_proc.process_event() ) :
 
     axx = {0 : ax0, 1 : ax1, 2: ax2}
 
-    
     algo_drawer = av.AlgoViewer( manager.GetClusterAlg(algid) ,
                                  plt )
 

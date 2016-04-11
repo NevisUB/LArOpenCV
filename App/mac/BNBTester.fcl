@@ -24,8 +24,8 @@ ImageClusterManager: {
   #ClusterAlgoType: [SBCluster,SimpleCuts,StupidStart,PID]
   #ClusterAlgoName: [sbc,sc,ss,pid]
 
-  ClusterAlgoType: [SBCluster,SimpleCuts]
-  ClusterAlgoName: [sbc,sc]
+  ClusterAlgoType: [SBCluster,SimpleCuts,AttachedClusters]
+  ClusterAlgoName: [sbc,sc,ac]
   
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
@@ -35,6 +35,11 @@ ImageClusterManager: {
 
   ReClusterAlgoType: ""
   ReClusterAlgoName: ""
+
+
+  ac : {
+    MaxDefectSize: 50 # why?
+      }
 
   pid : { PDG : 11 }
   
