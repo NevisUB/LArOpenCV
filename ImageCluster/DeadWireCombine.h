@@ -57,12 +57,6 @@ namespace larcv {
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
     void Finalize(TFile*) {}
 
-    /// Set dead wire list per plane //trick will be getting this into python right...
-    void SetDeadWires(std::vector<std::pair<int,int> > wires_v,int plane) { _wires_v[plane] = wires_v; }
-
-
-    std::vector<std::pair<int,int> > LoadWires(ImageMeta& meta);
-    
   protected:
     
     /// Configuration method
@@ -91,6 +85,8 @@ namespace larcv {
     
     inline float dist(float x1, float x2, float y1, float y2 )
     { return std::sqrt( (x1-x2)*(x1-x2) + (y2-y1)*(y2-y1) ); }
+
+    std::vector<std::pair<int,int> > LoadWires(ImageMeta& meta);
     
   };
   

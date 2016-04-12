@@ -56,7 +56,7 @@ namespace larlite {
 
     const std::string& producer() const { return _producer; }
 
-    void set_config(const std::string cfg_file) {_config_file=cfg_file;}
+    void set_config(const std::string cfg_file);
 
   private:
 

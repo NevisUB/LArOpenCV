@@ -37,6 +37,7 @@ ImageClusterManager: {
   MinWireWidth: 1
   CloseToDeath: 5
   CrossTolerance: 2
+  DeadWirePath : "dead_wires.fcl"
   }
  
 
