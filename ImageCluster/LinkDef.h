@@ -50,8 +50,10 @@
 #pragma link C++ class larcv::ROIStart+;
 
 #pragma link C++ class larcv::AttachedClusters+;
+#pragma link C++ class larcv::DeadWireCombine+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
 
 
 

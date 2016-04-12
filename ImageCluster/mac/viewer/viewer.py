@@ -1,13 +1,13 @@
 import matplotlib
 import matplotlib.pyplot as plt
 
+import wireloader
 import sys
 
 from larlite import larlite as fmwk
 
 from viewer_methods import draw_cluster
 import algo_viewer as av
-
 my_proc = fmwk.ana_processor()
 
 # Config fileg
@@ -16,13 +16,20 @@ cfg="../../../App/mac/BNBTester.fcl"
 algid  = int(sys.argv[-1])
 print algid
 my_proc.add_input_file(sys.argv[1])
-my_proc.add_input_file(sys.argv[2])
+#my_proc.add_input_file(sys.argv[2])
 #my_proc.add_input_file(sys.argv[3])
+
 my_proc.set_io_mode(fmwk.storage_manager.kREAD)
 
 myunit = fmwk.LArImageHit()
-# myunit = fmwk.LArImageWire()
 myunit.set_config(cfg)
+manager = myunit.algo_manager()
+dwc = manager.GetClusterAlg("dwc")
+deadwires = wireloader.load( "idiot.dat" )
+
+for ix, w in enumerate(deadwires):
+    dwc.SetDeadWires(w,ix)
+
 my_proc.add_process(myunit)
 
 k = 0 

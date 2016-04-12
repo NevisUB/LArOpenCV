@@ -21,25 +21,28 @@ ImageClusterManager: {
   #ClusterAlgoType: [SBCluster,PCAOverall,BoundRectStart,StartEndMerge]
   #ClusterAlgoName: [sbc,pcao,brs,sem]
   
-  #ClusterAlgoType: [SBCluster,SimpleCuts,StupidStart,PID]
-  #ClusterAlgoName: [sbc,sc,ss,pid]
+  #ClusterAlgoType: [SBCluster,SimpleCuts,AttachedClusters,BoundRectStart]
+  #ClusterAlgoName: [sbc,sc,ac,brs]
 
-  ClusterAlgoType: [SBCluster,SimpleCuts,AttachedClusters]
-  ClusterAlgoName: [sbc,sc,ac]
+  ClusterAlgoType: [SBCluster,SimpleCuts,DeadWireCombine]
+  ClusterAlgoName: [sbc,sc,dwc]
   
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
 
-  # MatchAlgoType: ""
-  # MatchAlgoName: ""
-
   ReClusterAlgoType: ""
   ReClusterAlgoName: ""
 
+  dwc : {
+  MinWireWidth: 1
+  CloseToDeath: 5
+  CrossTolerance: 2
+  }
+ 
 
   ac : {
     MaxDefectSize: 50 # why?
-      }
+  }
 
   pid : { PDG : 11 }
   

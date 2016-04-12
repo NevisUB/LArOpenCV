@@ -31,7 +31,15 @@ class AlgoViewer :
             # ax.plot(meta.roivtx().y,
             #         meta.roivtx().x,'*',markersize=10,color='orange')
             return
-        
+
+        if self.name in ["dwc"] :
+            for edges in self.algo._on_edge:
+                for c in edges.second:
+                    if cindex == c:
+                        insidehits = cluster._insideHits
+                        px, py     = get_xy_w_offset(insidehits,meta)
+                        ax.plot(px,py,'o',markersize=1,color='black')
+            
         if self.name in ["Trackshower"] :
             
             insidehits = cluster._insideHits
