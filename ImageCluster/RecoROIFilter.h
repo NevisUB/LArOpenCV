@@ -1,9 +1,9 @@
 /**
- * \file RadLengthFilter.h
+ * \file RecoROIFilter.h
  *
  * \ingroup ImageCluster
  * 
- * \brief Class def header for a class RadLengthFilter
+ * \brief Class def header for a class RecoROIFilter
  *
  * @author kazuhiro
  */
@@ -11,27 +11,27 @@
 /** \addtogroup ImageCluster
 
     @{*/
-#ifndef __RADLENGTHFILTER_H__
-#define __RADLENGTHFILTER_H__
+#ifndef __RECOROIFILTER_H__
+#define __RECOROIFILTER_H__
 
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
 namespace larcv {
   /**
-     \class RadLengthFilter
+     \class RecoROIFilter
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class RadLengthFilter : public larcv::ClusterAlgoBase {
+  class RecoROIFilter : public larcv::ClusterAlgoBase {
     
   public:
     
     /// Default constructor
-    RadLengthFilter(const std::string name="RadLengthFilter") : ClusterAlgoBase(name)
+    RecoROIFilter(const std::string name="RecoROIFilter") : ClusterAlgoBase(name)
     {}
     
     /// Default destructor
-    ~RadLengthFilter(){}
+    ~RecoROIFilter(){}
 
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
     void Finalize(TFile*) {}
@@ -47,24 +47,25 @@ namespace larcv {
 				      larcv::ImageMeta& meta);
     
   private:
-
+    double _max_rad_length;
+    int _numoutput;
   };
   
   /**
-     \class larcv::RadLengthFilterFactory
-     \brief A concrete factory class for larcv::RadLengthFilter
+     \class larcv::RecoROIFilterFactory
+     \brief A concrete factory class for larcv::RecoROIFilter
    */
-  class RadLengthFilterFactory : public ClusterAlgoFactoryBase {
+  class RecoROIFilterFactory : public ClusterAlgoFactoryBase {
   public:
     /// ctor
-    RadLengthFilterFactory() { ClusterAlgoFactory::get().add_factory("RadLengthFilter",this); }
+    RecoROIFilterFactory() { ClusterAlgoFactory::get().add_factory("RecoROIFilter",this); }
     /// dtor
-    ~RadLengthFilterFactory() {}
+    ~RecoROIFilterFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new RadLengthFilter(instance_name); }
+    ClusterAlgoBase* create(const std::string instance_name) { return new RecoROIFilter(instance_name); }
   };
-  /// Global larcv::RadLengthFilterFactory to register ClusterAlgoFactory
-  static RadLengthFilterFactory __global_RadLengthFilterFactory__;
+  /// Global larcv::RecoROIFilterFactory to register ClusterAlgoFactory
+  static RecoROIFilterFactory __global_RecoROIFilterFactory__;
 }
 #endif
 /** @} */ // end of doxygen group 

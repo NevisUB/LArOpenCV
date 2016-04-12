@@ -40,15 +40,15 @@ namespace larcv{
     
 
       auto max_defect_itr = std::max_element( std::begin(defects_d), std::end(defects_d) );
-      auto max_defect = * ( max_defect_itr );
-      auto ndefects =  defects_d.size();
+      auto max_defect =  *( max_defect_itr );
+      auto ndefects   =  defects_d.size();
 
       std::cout << "\t>> saw_max_defect " << max_defect << " for total of ndefects: " << ndefects << "\n";
 
       if ( max_defect > _maxDefectSize )
 	continue;
-
-	  oclusters.emplace_back( cluster );
+      
+      oclusters.emplace_back( cluster );
     }
     
     return oclusters;

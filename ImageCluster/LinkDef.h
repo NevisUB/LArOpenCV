@@ -51,9 +51,11 @@
 
 #pragma link C++ class larcv::AttachedClusters+;
 #pragma link C++ class larcv::DeadWireCombine+;
-#pragma link C++ class larcv::RadLengthFilter+;
+
+#pragma link C++ class larcv::RecoROIFilter+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
 
 
 

@@ -32,6 +32,7 @@ namespace larcv {
     Point2D endpt;
     Point2D dir;
     double  dist;
+    Point2D vtx;    
   };
     
   class Cluster2D{

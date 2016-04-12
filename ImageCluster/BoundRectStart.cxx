@@ -10,9 +10,9 @@ namespace larcv{
 
   void BoundRectStart::_Configure_(const ::fcllite::PSet &pset)
   {
-    _nHitsCut  = pset.get<int> ( "NHitsCut"  );
     _nDivWidth = pset.get<int> ( "NDivWidth" );
-
+    _cutbadreco= pset.get<bool>( "CutBadReco");
+      
     if ( _nDivWidth%2 != 0 ) { std::cout << "\n\tNDivWidth must be even!\n"; throw std::exception(); }
   }
 
@@ -39,14 +39,7 @@ namespace larcv{
       Cluster2D ocluster = clusters[k];       
       auto& contour      = ocluster._contour;
 
-      for(const auto& loc: all_locations) {
-	if ( ::cv::pointPolygonTest(ocluster._contour,loc,false) < 0 ) continue;
-	ocluster._insideHits.emplace_back(loc.x, loc.y);
-      }
-
-      ocluster._numHits = ocluster._insideHits.size();
-      
-      if ( ocluster._numHits < _nHitsCut ) continue;
+      if ( ocluster._numHits == 0 ) throw larbys();
       
       // use bounding box considerations to define start point, fill the vertices vector
       auto bbox = ::cv::minAreaRect(contour);
@@ -160,7 +153,7 @@ namespace larcv{
       }
 
       //no start point found...
-      if ( far == 0 ) continue;
+      if ( far == 0 && _cutbadreco) continue;
 
       //end point is on the other side
       ::cv::Point* f_end; //farthest end point
@@ -171,10 +164,12 @@ namespace larcv{
       }
 
       //no end point found...
-      if ( far == 0 ) continue;
-      
-      ocluster._startPt = Point2D(f_start->x,f_start->y);
-      ocluster._endPt   = Point2D(f_end->x  ,f_end->y  );
+      if ( far == 0 && _cutbadreco) continue;
+
+      auto& reco   = ocluster.reco;
+      reco.startpt = Point2D(f_start->x,f_start->y);
+      reco.endpt   = Point2D(f_end->x  ,f_end->y  );
+
       oclusters.emplace_back(ocluster);
       
     }

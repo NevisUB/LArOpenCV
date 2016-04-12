@@ -29,7 +29,9 @@ namespace larlite {
     _charge_to_gray_scale = pset.get<double>("Q2Gray");
     _charge_threshold     = pset.get<double>("QMin");
     _pool_time_tick       = pset.get<int>   ("PoolTimeTick");
-    _use_roi              = pset.get<bool>  ("UseROI");
+
+    _use_roi              = pset.get<bool>        ("UseROI");
+    _roi_producer         = pset.get<std::string> ("ROIProducer");
     
     // Using a try-catch block to avoid forcing a modification of the .fcl files
     try{
@@ -100,9 +102,9 @@ namespace larlite {
     ::larlite::event_PiZeroROI* ev_roi = nullptr;
     if ( _use_roi ) {
 
-      ev_roi = storage->get_data<event_PiZeroROI>( "mcroi" );
-      if(ev_roi->size() == 0) throw DataFormatException("Could not locate ROI data product And you have UseROI: True!");
-
+      ev_roi = storage->get_data<event_PiZeroROI>( _roi_producer );
+      if(ev_roi->size() == 0) throw DataFormatException("Could not locate ROI data product and you have UseROI: True!");
+      
       auto wr_v = (*ev_roi)[0].GetWireROI();
       auto tr_v = (*ev_roi)[0].GetTimeROI();
       
@@ -129,6 +131,7 @@ namespace larlite {
       }
     
     for(size_t plane=0; plane<nplanes; ++plane) {
+
       auto const& wire_range = wire_range_v[plane];
       auto const& tick_range = tick_range_v[plane];
       size_t nticks = tick_range.second - tick_range.first + 2;

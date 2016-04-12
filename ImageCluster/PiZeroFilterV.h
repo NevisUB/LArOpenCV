@@ -38,16 +38,11 @@ namespace larcv {
 				      larcv::ImageMeta& meta);
 
 
-    int _nhits_cut;
-    double _back_startPt;  
-    double _min_area;
+
     double _max_rad_length; 
     double _width;
     double _height;
     
-
-    
-    bool  _attempt_merging;
     double _small_dot_prod;
 
   private:

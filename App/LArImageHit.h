@@ -59,7 +59,7 @@ namespace larlite {
     double _charge_threshold;
     int    _pool_time_tick;
     bool   _use_roi;
-
+    std::string _roi_producer;
     /// Flag to run the AnalyzeImageCluster function
     bool _run_analyze_image_cluster;
     /// Output file with the plots made by the AnalyzeImageCluster function

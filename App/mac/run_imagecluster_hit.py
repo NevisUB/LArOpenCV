@@ -1,7 +1,5 @@
 import sys
 
-#import wireloader
-
 if len(sys.argv) < 2:
     msg  = '\n'
     msg += "Usage 1: %s $INPUT_ROOT_FILE(s)\n" % sys.argv[0]
@@ -27,7 +25,6 @@ my_proc.set_io_mode(fmwk.storage_manager.kBOTH)
 my_proc.set_output_file("%s_output.root" % name); 
 
 myunit  = fmwk.LArImageHit()
-# myunit = fmwk.LArImageWire()
 myunit.set_config(cfg)
 my_proc.add_process(myunit)
 

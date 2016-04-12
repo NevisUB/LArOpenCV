@@ -25,14 +25,15 @@ namespace larcv{
     
     for(size_t k = 0; k < clusters.size(); k++){
     
-      Cluster2D cluster = clusters[k];
+      Cluster2D cluster = clusters[k]; // make copy
 
-      if( !cluster._insideHits.size() ) continue;
+      if( ! cluster._insideHits.size() ) throw larbys();
 
       float min_dist = 1e9;
       float max_dist = 0;
       int  min_hit_index = -1 ;
       int  max_hit_index = -1 ;
+
       auto const & hits = cluster._insideHits ;
 
       for(int i = 0; i < hits.size(); i++){
@@ -59,15 +60,18 @@ namespace larcv{
       
       roi.startpt.x = hits[min_hit_index].x;
       roi.startpt.y = hits[min_hit_index].y; 
+
       roi.endpt.x   = hits[max_hit_index].x;
       roi.endpt.y   = hits[max_hit_index].y;
 
-      roi.dist = sqrt( pow(roi.startpt.x - pi0st.x,2) + pow(roi.startpt.y - pi0st.y,2) );
+      roi.dist = std::sqrt( std::pow(roi.startpt.x - pi0st.x,2) + std::pow(roi.startpt.y - pi0st.y,2) );
 
       roi.dir.x = ( roi.startpt.x - pi0st.x ) / roi.dist;
       roi.dir.y = ( roi.startpt.y - pi0st.y ) / roi.dist;
-            
-      roi_clusters.emplace_back(cluster);
+
+      roi.vtx = Point2D(pi0st.x,pi0st.y);
+      
+      roi_clusters.emplace_back( cluster );
       
     }
   
