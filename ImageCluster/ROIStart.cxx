@@ -19,6 +19,7 @@ namespace larcv{
     auto pi0_st = meta.roivtx();
     if ( pi0_st.x == ::larcv::kINVALID_DOUBLE ) { std::cout << "BAD VTX\n"; throw std::exception(); }
     // std::cout << "Got VTX: (" << pi0_st.x << "," << pi0_st.y << ")\n";
+
     auto pi0st = Point2D( (pi0_st.y - meta.origin().y)/meta.pixel_height(), (pi0_st.x - meta.origin().x)/meta.pixel_width() );
     // std::cout << "In image coords: (" << pi0st.x << "," << pi0st.y << ")\n";
     
@@ -54,14 +55,18 @@ namespace larcv{
 
       }
 
+      auto& roi = cluster.roi;
       
-      cluster._startPt.x = hits[min_hit_index].x;
-      cluster._startPt.y = hits[min_hit_index].y; 
-      cluster._endPt.x = hits[max_hit_index].x;
-      cluster._endPt.y = hits[max_hit_index].y;
-      // auto dist = sqrt( pow(cluster._startPt.x - pi0st.x,2) + pow(cluster._startPt.y - pi0st.y,2) );
-      // std::cout << "Closest point:(" << cluster._startPt.x<< "," << cluster._startPt.y << ") D: " << dist << "\n";
-      
+      roi.startpt.x = hits[min_hit_index].x;
+      roi.startpt.y = hits[min_hit_index].y; 
+      roi.endpt.x   = hits[max_hit_index].x;
+      roi.endpt.y   = hits[max_hit_index].y;
+
+      roi.dist = sqrt( pow(roi.startpt.x - pi0st.x,2) + pow(roi.startpt.y - pi0st.y,2) );
+
+      roi.dir.x = ( roi.startpt.x - pi0st.x ) / roi.dist;
+      roi.dir.y = ( roi.startpt.y - pi0st.y ) / roi.dist;
+            
       roi_clusters.emplace_back(cluster);
       
     }

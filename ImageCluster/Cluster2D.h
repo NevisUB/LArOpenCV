@@ -25,6 +25,15 @@ namespace larcv {
      User defined class Cluster2D ... these comments are used to generate
      doxygen documentation!
   */
+
+
+  struct params {
+    Point2D startpt;
+    Point2D endpt;
+    Point2D dir;
+    double  dist;
+  };
+    
   class Cluster2D{
 
     friend ImageClusterManager;
@@ -101,6 +110,11 @@ namespace larcv {
     double _perimeter;
     /// Angle of cluster
     double _angle2D;
+
+    //ROI parameters
+    params roi;
+    //Reconstructed
+    params reco;
     
     /// Verticies of the line minimum bounding rectangle
     std::vector<::cv::Point2f> _minAreaRect;
