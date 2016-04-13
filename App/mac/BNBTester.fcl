@@ -19,8 +19,8 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  ClusterAlgoType: [SBCluster,SimpleCuts,DeadWireCombine,AttachedClusters,ROIStart,RecoROIFilter]
-  ClusterAlgoName: [sbc,sc,dwc,ac,rois,rrf]
+  ClusterAlgoType: [SBCluster,SimpleCuts,DeadWireCombine,ROIStart,RecoROIFilter]
+  ClusterAlgoName: [sbc,sc,dwc,rois,rrf]
   
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
@@ -36,7 +36,10 @@ ImageClusterManager: {
   DeadWirePath : "dead_wires.fcl"
   
   }
- 
+
+  roip : {}
+  recop: {}
+  
  rrf : {
    MaxRadLength: 100
    TooManyClusters: 10 #ignore event going into matching if too many

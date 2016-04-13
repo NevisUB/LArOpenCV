@@ -132,7 +132,7 @@ namespace larcv{
 
     for(auto& shower : shower_v)    shower_sats_v.push_back( shower );
     for(auto& sats   : satellite_v) shower_sats_v.push_back( sats  );
-    std::cout << "\t>> shower_v.size(): " << shower_v.size() << "\n";
+    // std::cout << "\t>> shower_v.size(): " << shower_v.size() << "\n";
     switch ( _track_shower_sat ) {
 
     case 0: return shower_v;

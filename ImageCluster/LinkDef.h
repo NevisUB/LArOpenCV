@@ -53,8 +53,12 @@
 #pragma link C++ class larcv::DeadWireCombine+;
 
 #pragma link C++ class larcv::RecoROIFilter+;
+#pragma link C++ class larcv::ROIParameters+;
+#pragma link C++ class larcv::RecoParameters+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
+
 
 
 
