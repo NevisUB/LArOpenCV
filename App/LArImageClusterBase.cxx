@@ -273,8 +273,8 @@ namespace larlite {
 	ev_hit_ass->set_association(ev_cluster->id(), ev_hit->id(), cluster_hit_ass);
 
       // if we have created a cluster -> vertex association
-      // if (ev_vtx_ass)
-      // 	ev_vtx_ass->set_association(ev_cluster->id(), ev_vtx->id(), cluster_vtx_ass);
+      if (ev_vtx_ass)
+      	ev_vtx_ass->set_association(ev_cluster->id(), ev_vtx->id(), cluster_vtx_ass);
       
     }
 

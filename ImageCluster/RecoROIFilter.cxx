@@ -26,6 +26,8 @@ namespace larcv{
 
       ocluster._startPt = ocluster.roi.startpt;
       ocluster._endPt   = ocluster.roi.endpt;
+
+      ocluster._eigenVecFirst   = ocluster.roi.dir;
       
       oclusters.emplace_back( ocluster );
     }
