@@ -32,6 +32,9 @@ ImageClusterManager: {
   ClusterAlgoType: [SBCluster,PCAOverall,SimpleCuts,ROIStart,RecoROIFilter]
   ClusterAlgoName: [sbc,pcao,sc,roist,rrf]
 
+  #ClusterAlgoType: [SBCluster,ROIStart,InConeCluster]
+  #ClusterAlgoName: [sbc,roist,icc]
+
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
 
@@ -46,6 +49,11 @@ ImageClusterManager: {
    MinContourArea: 125
  }
 
+icc : {
+  AreaCut    : 700.
+  ConeAngle  : 15.
+  LengthMult : 3. 
+  }
 
 
  rrf : {
@@ -110,7 +118,7 @@ ImageClusterManager: {
 
     }
 
-  Trackshower:{
+  ts :{
     AreaCut : 900 
     RatioCut : 3
     TrackShowerSat : 0 # 0 returns showers, 1 returns tracks, 2 returns satellites+showers, 3 returns everything

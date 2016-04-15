@@ -146,6 +146,40 @@ class AlgoViewer :
             ax.plot([pixel_y(cluster._startPt.x),pixel_y(cluster._vertex_2D.x)],
                     [pixel_x(cluster._startPt.y),pixel_x(cluster._vertex_2D.y)],'-o',color='pink',lw=3)
 
+        if self.name in ["icc"] :
+            
+            ##################TEMP COPY################
+            insidehits = cluster._insideHits
+
+            px, py     = get_xy_w_offset(insidehits,meta)
+            ax.plot(px,py,'o',markersize=1,color='black')
+
+            #Ignore this cluster if less than 25 hits, or its polygon has no found vertices
+	    if cluster._area < 400 : #or cluster._endPt.x < 0: 
+	        return
+            
+            #Plot polygons
+	    pts_x = []
+	    pts_y = []
+	    for pt in xrange(cluster._cone_contour.size()):
+	      pts_x.append(pixel_y(cluster._cone_contour[pt].x))
+	      pts_y.append(pixel_x(cluster._cone_contour[pt].y))
+
+            if cluster._cone_contour.size():
+	      #print "\n\n\nCone contour size: ",cluster._cone_contour.size() 
+	      pts_x.append(pixel_y(cluster._cone_contour[0].x))
+	      pts_y.append(pixel_x(cluster._cone_contour[0].y))
+
+	      ax.plot(pts_x,pts_y,color='red',lw=2)
+            
+	    #Plot start + end
+            ax.plot(pixel_y(cluster.roi.startpt.x),
+                    pixel_x(cluster.roi.startpt.y),'o',color='green',markersize=10)
+
+            ax.plot(pixel_y(cluster.roi.endpt.x),
+                    pixel_x(cluster.roi.endpt.y),'o',color='pink',markersize=5)
+            ###################TEMP COPY###################
+
         if self.name in ["pizerofilterv"] :
             
             ##################TEMP COPY################

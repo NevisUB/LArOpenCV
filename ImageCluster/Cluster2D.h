@@ -112,6 +112,8 @@ namespace larcv {
     /// Angle of cluster
     double _angle2D;
 
+    std::vector<::cv::Point> _cone_contour ;
+
     /// For track shower separtion
     double _min_width;
     double _max_width;
