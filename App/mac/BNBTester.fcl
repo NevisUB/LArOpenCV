@@ -19,8 +19,8 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  ClusterAlgoType: [SBCluster,SimpleCuts,DeadWireCombine,ROIStart,RecoROIFilter]
-  ClusterAlgoName: [sbc,sc,dwc,rois,rrf]
+  ClusterAlgoType: [SBCluster,SimpleCuts,AttachedClusters,DeadWireCombine,ROIStart,RecoROIFilter]
+  ClusterAlgoName: [sbc,sc,ac,dwc,rois,rrf]
   
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
@@ -41,7 +41,7 @@ ImageClusterManager: {
   recop: {}
   
  rrf : {
-   MaxRadLength: 100
+   MaxRadLength: 200
    TooManyClusters: 10 #ignore event going into matching if too many
  }
  
