@@ -33,16 +33,10 @@ namespace larcv{
 
       Cluster2D ts_cluster = clusters[k];
 
-      auto area = ::cv::contourArea(cv_contour);
-
       cv::RotatedRect rect0 = ::cv::minAreaRect(cv::Mat(cv_contour));
       cv::Point2f vertices[4];
       rect0.points(vertices);
-      auto rect = rect0.size;
       
-      std::vector<cv::Point2f> rectangle = { vertices[0], vertices[1],vertices[2],vertices[3] };
-      std::swap(ts_cluster._minAreaRect,rectangle);
-
       ::cv::Point2d new_point1, new_point2;
 
       float max_width = 0;
@@ -102,17 +96,13 @@ namespace larcv{
 	}
       }
       
-      ts_cluster._length    = rect.height > rect.width ? rect.height : rect.width;
-      ts_cluster._width     = rect.height > rect.width ? rect.width  : rect.height;
-      ts_cluster._area      = area;
-      ts_cluster._perimeter = ::cv::arcLength(cv_contour,1);
       ts_cluster._max_width = max_width ;
       ts_cluster._min_width = min_width ;
 
       ts_clusters.push_back(ts_cluster);
 
-      std::cout << "\t>> area: " << area << " _area_cut: " << _area_cut << "\n";
-      if( area > _area_cut ){
+      //std::cout << "\t>> area: " << ts_cluster._area << " _area_cut: " << _area_cut << "\n";
+      if( ts_cluster._area > _area_cut ){
 
 	shower_and_track_v.push_back(ts_cluster);
 
