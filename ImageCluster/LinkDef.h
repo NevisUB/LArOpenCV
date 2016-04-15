@@ -50,6 +50,12 @@
 #pragma link C++ class larcv::ROIStart+;
 //#pragma link C++ class larcv::BigClusFilter+;
 #pragma link C++ class larcv::InConeCluster+;
+
+#pragma link C++ class larcv::AttachedClusters+;		
+#pragma link C++ class larcv::DeadWireCombine+;		
+#pragma link C++ class larcv::RecoROIFilter+;		
+#pragma link C++ class larcv::ROIParameters+;		
+#pragma link C++ class larcv::RecoParameters+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
 
