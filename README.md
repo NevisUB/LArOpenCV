@@ -1,4 +1,4 @@
-# LArOpenCV
+# LArOpenCV - Liquid Argon Open Source Computer Vision
 
 - To get started...
 

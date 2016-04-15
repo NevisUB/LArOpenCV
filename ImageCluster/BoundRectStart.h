@@ -35,9 +35,11 @@ namespace larcv {
 				      larcv::ImageMeta& meta);
     
   private:
-    int _nHitsCut;
+
     int _nDivWidth;
 
+    bool _cutbadreco;
+    
     double _deg2rad;
   };
   

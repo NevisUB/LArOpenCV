@@ -24,8 +24,12 @@ namespace larlite {
     _num_clusters = 0;
     _producer="";
     _store_original_img=false;
+    
   }
 
+  void LArImageClusterBase::set_config(const std::string cfg_file)
+    { _config_file=cfg_file; }
+  
   larcv::ImageClusterManager& LArImageClusterBase::algo_manager()
   { return _alg_mgr; }
 
@@ -255,8 +259,6 @@ namespace larlite {
 	c.set_start_tick(st,1);
 	c.set_end_tick(et,1);
 
-
-
 	// set plane / id information
 	c.set_view(geom->PlaneToView(imgclus.PlaneID()));
 	c.set_planeID(geo::PlaneID(0,0,imgclus.PlaneID()));
@@ -269,9 +271,10 @@ namespace larlite {
       // if we have crated a cluster -> hit association
       if(ev_hit_ass)
 	ev_hit_ass->set_association(ev_cluster->id(), ev_hit->id(), cluster_hit_ass);
+
       // if we have created a cluster -> vertex association
       if (ev_vtx_ass)
-	ev_vtx_ass->set_association(ev_cluster->id(), ev_vtx->id(), cluster_vtx_ass);
+      	ev_vtx_ass->set_association(ev_cluster->id(), ev_vtx->id(), cluster_vtx_ass);
       
     }
 

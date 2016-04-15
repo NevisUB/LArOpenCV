@@ -1,75 +1,99 @@
 LArImageHit: {
-  # LArImageClusterBase config
+# LArImageClusterBase config
+
   Profile: true
   StoreOriginalImage: false
   Producer: gaushit
-  # LArImageHit config
   Q2Gray: 5 # convert Hit::Integral to a unit gray scale
   QMin: 3   # min. threshold for Hit::Integral to make it into an image
-  UseROI: true
+  UseROI : true
   ROIProducer: mcroi
   PoolTimeTick: 6
-  
   RunAnalyze: false # Uncomment to run the MC shower-cluster comparison
+  
 }
 
-LArDownImage: {
-  # LArImageClusterBase config
-  Profile: true
-  StoreOriginalImage: false
-  Producer: gaushit
-  # LArDownImage config
-  Q2Gray: 0.1 
-}
-
-# ImageClusterManager config
 ImageClusterManager: {
 
   Verbosity: 1
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  ClusterAlgoType: [SBCluster,PCAOverall,SimpleCuts,ROIStart,RecoROIFilter]
-  ClusterAlgoName: [sbc,pcao,sc,roist,rrf]
-
+  ClusterAlgoType: [SBCluster,SimpleCuts,AttachedClusters,DeadWireCombine,ROIStart,RecoROIFilter]
+  ClusterAlgoName: [sbc,sc,ac,dwc,rois,rrf]
+  
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
 
   ReClusterAlgoType: ""
   ReClusterAlgoName: ""
 
+  dwc : {
 
- ImageClusterViewer: {
-   Verbosity: 0
-   Width:  800
-   Height: 800
-   MinContourArea: 125
- }
+  MinWireWidth: 2
+  CloseToDeath: 5
+  CrossTolerance: 10
+  DeadWirePath : "dead_wires.fcl"
+  
+  }
 
-
-
+  roip : {}
+  recop: {}
+  
  rrf : {
    MaxRadLength: 200
    TooManyClusters: 10 #ignore event going into matching if too many
  }
+ 
+  ac : {
+    MaxDefectSize: 20 # why?
+  }
 
+  pid : {
 
-  roist : {}
+  PDG : 11
 
+ }
+  
   brs : {
 
-  NHitsCut  : 20
-  NDivWidth : 8
+  NDivWidth : 4
+  CutBadReco: false
+  
+  }
 
-  } 
+  csd : {
+
+  MaxStartDistance: 28.0
+
+  }
+
+ ss : {}
 
  sc : {
 
- MinNHits : 20
+ MinNHits : 25
  MinNClusters: 2
 
-}
+ }
+
+ sem : {
+
+  MaxStartEndDistance: 10
+  RequirePCACheck : 1
+  PCAAngleCut     : 10
   
+  }
+
+ ImageClusterViewer: {
+
+   Verbosity: 0
+   Width:  800
+   Height: 800
+   MinContourArea: 125
+   
+ }
+
  sbc:{
 
    Verbosity: 1
@@ -80,18 +104,7 @@ ImageClusterManager: {
    ThreshMaxVal : 255
 
   }
-
- gs: { 
- 
- NHits : 25
-
- }
-
- pid: {
-
-   PDG : 11
-
-  }
+	  
 
  pcas : {
 
@@ -110,59 +123,58 @@ ImageClusterManager: {
 
     }
 
-  Trackshower:{
-    AreaCut : 900 
-    RatioCut : 3
-    TrackShowerSat : 0 # 0 returns showers, 1 returns tracks, 2 returns satellites+showers, 3 returns everything
+  ts:{
 
+    AreaCut : 1200
+    RatioCut : 0
+    TrackShowerSat : 0 # 0 returns showers, 1 returns tracks, 2 returns satellites+showers, 3 returns everything
     Step1 : 80
     Step2 : 80
-
-    SwitchRatio : 0.349
   }
 
   satellitemerge: {
+
     AreaCut: 1850
     MinSatDistance: 50
     MinShowerDistance: 25
     ContourDensity:50 # unused
+    
   }
 
   pcao: {
-    NMinInsideHits: 2
+
+  NMinInsideHits: 2
+
   }
 
   pizerofilter: {
+
+    NHitsCut: 10
+    BackStartPoint: 100
+    
+  }
+
+
+  pzfv: {
+
     NHitsCut: 10
     BackStartPoint: 1000
-    MaxRadLength: 40
+    MaxRadLength: 30
     MinArea: 1
-    Width : 0.0557 #cm/time tick
+    Width : 0.3 #cm/time tick #with pooling...
     Height : 0.3 #cm/wire
     AttemptMerging  : 0
     SmallDotProduct : 0.3
     
   }
 
-  pizerofilterv: {
-    NHitsCut: 10
-    BackStartPoint: 1000
-    MaxRadLength: 40
-    MinArea: 1
-    Width : 0.0557 #cm/time tick
-    Height : 0.3 #cm/wire
-    AttemptMerging  : 0
-    SmallDotProduct : 0.3
-    
+
+
+  mto : {
+    RatioCut : 0.001
+    StartTimeCut : 100
+    RequireThreePlanes : 0
   }
 
-
-
-   mto : {
-     RatioCut : 0.001
-     StartTimeCut : 100
-     RequireThreePlanes : 0 
-    }
-
-
+  rois : {}
 }

@@ -25,6 +25,16 @@ namespace larcv {
      User defined class Cluster2D ... these comments are used to generate
      doxygen documentation!
   */
+
+
+  struct params {
+    Point2D startpt;
+    Point2D endpt;
+    Point2D dir;
+    double  dist;
+    Point2D vtx;    
+  };
+    
   class Cluster2D{
 
     friend ImageClusterManager;
@@ -105,6 +115,10 @@ namespace larcv {
     /// For track shower separtion
     double _min_width;
     double _max_width;
+    //ROI parameters
+    params roi;
+    //Reconstructed
+    params reco;
     
     /// Verticies of the line minimum bounding rectangle
     std::vector<::cv::Point2f> _minAreaRect;

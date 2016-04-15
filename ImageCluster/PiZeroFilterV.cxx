@@ -9,14 +9,10 @@ namespace larcv{
   void PiZeroFilterV::_Configure_(const ::fcllite::PSet &pset)
   {
 
-    _nhits_cut      = pset.get<int>    ("NHitsCut");
-    _back_startPt   = pset.get<double> ("BackStartPoint");
-    _min_area       = pset.get<double> ("MinArea");
     _max_rad_length = pset.get<double> ("MaxRadLength");
     _width          = pset.get<double> ("Width");
     _height         = pset.get<double> ("Height");
 
-    _attempt_merging = pset.get<bool>   ("AttemptMerging");
     _small_dot_prod  = pset.get<double> ("SmallDotProduct");
     
   }
@@ -44,17 +40,11 @@ namespace larcv{
       {
 	int numHits = clusters.at(i)._numHits;
 	
-	//If cluster has hits >= defined minimum number of hits fill new cluster array
-	if(numHits <= _nhits_cut)
-	  continue;
-	
 	for(int j = 0; j < clusters.size(); j++) {
 	    
 	  if ( i == j ) continue;
 	  int next_numHits = clusters[j]._numHits;
 	    
-	  if(next_numHits <= _nhits_cut)
-	    continue;
 
 	  double ipointX = clusters[i]._eigenVecFirst.x+clusters[i]._startPt.x;
 	  double ipointY = clusters[i]._eigenVecFirst.y+clusters[i]._startPt.y;
@@ -96,8 +86,6 @@ namespace larcv{
       }
     
     
-    
-    
     // vertex objects created at this point
     
     // saw nothing, move on
@@ -107,7 +95,7 @@ namespace larcv{
     //this sucks, nothing is unique now
     //quick and dirty unfolding of the tree
     std::vector<int> o; o.reserve(clusters.size());
-
+    
     for( const auto& c : vclusters )
       { o.push_back(c.first); for(const auto& s : c.second) o.push_back(s); }
       
@@ -118,8 +106,11 @@ namespace larcv{
 
     // std::cout << "pp: ";
     // for(const auto& pp : p ) std::cout << pp << " ";
-
-    for(const auto& pp : p ) OutputClusters.emplace_back( clusters[pp] );
+ 
+    for(const auto& pp : p ) {
+      
+      OutputClusters.emplace_back( clusters[pp] );
+    }
 
     // std::cout <<"\n";
     // for( auto& c : vclusters ) {
@@ -217,7 +208,5 @@ namespace larcv{
     return merged;
   }
 }
-
-
 
 #endif
