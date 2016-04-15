@@ -101,6 +101,10 @@ namespace larcv {
     double _perimeter;
     /// Angle of cluster
     double _angle2D;
+
+    /// For track shower separtion
+    double _min_width;
+    double _max_width;
     
     /// Verticies of the line minimum bounding rectangle
     std::vector<::cv::Point2f> _minAreaRect;

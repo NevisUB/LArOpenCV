@@ -26,6 +26,9 @@ my_proc.set_io_mode(fmwk.storage_manager.kBOTH)
 
 my_proc.set_output_file("%s_output.root" % name); 
 
+my_proc.set_ana_output_file("%s_anatree.root" % name); 
+
+
 myunit = fmwk.LArImageHit()
 # myunit = fmwk.LArImageWire()
 myunit.set_config(cfg)

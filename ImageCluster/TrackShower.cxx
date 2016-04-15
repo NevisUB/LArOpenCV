@@ -194,6 +194,9 @@ namespace larcv{
       ts_cluster._area      = area;
       ts_cluster._perimeter = ::cv::arcLength(cv_contour,1);
 
+      ts_cluster._max_width = max_width ;
+      ts_cluster._min_width = min_width ;
+
       ts_clusters.push_back(ts_cluster);
 
       if( area > _area_cut){
