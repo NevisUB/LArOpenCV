@@ -27,7 +27,7 @@ namespace larcv{
     
       Cluster2D cluster = clusters[k]; // make copy
 
-      if( ! cluster._insideHits.size() ) throw larbys();
+      if( !cluster._insideHits.size() ) continue; //throw larbys();
 
       float min_dist = 1e9;
       float max_dist = 0;
@@ -66,8 +66,14 @@ namespace larcv{
 
       roi.dist = std::sqrt( std::pow(roi.startpt.x - pi0st.x,2) + std::pow(roi.startpt.y - pi0st.y,2) );
 
-      roi.dir.x = ( roi.startpt.x - pi0st.x ) / roi.dist;
-      roi.dir.y = ( roi.startpt.y - pi0st.y ) / roi.dist;
+      if ( roi.dist < 1. ){
+        roi.dir.x = ( roi.endpt.x - roi.startpt.x ) / roi.dist;
+        roi.dir.y = ( roi.endpt.y - roi.startpt.y ) / roi.dist;
+        }
+      else{
+        roi.dir.x = ( roi.startpt.x - pi0st.x ) / roi.dist;
+        roi.dir.y = ( roi.startpt.y - pi0st.y ) / roi.dist;
+      }
 
       roi.vtx = Point2D(pi0st.x,pi0st.y);
       
