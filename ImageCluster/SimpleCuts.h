@@ -29,7 +29,6 @@ namespace larcv {
     /// Default constructor
     SimpleCuts(const std::string name="SimpleCuts") :
       ClusterAlgoBase(name)
-      ,_NClusters(0)
       ,_NHits(0)
     {}    
     
@@ -50,7 +49,6 @@ namespace larcv {
 				      larcv::ImageMeta& meta);
     
   private:
-    int _NClusters;
     int _NHits;
     
   };

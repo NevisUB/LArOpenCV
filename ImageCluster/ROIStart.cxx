@@ -65,8 +65,9 @@ namespace larcv{
       roi.endpt.y   = hits[max_hit_index].y;
 
       roi.dist = std::sqrt( std::pow(roi.startpt.x - pi0st.x,2) + std::pow(roi.startpt.y - pi0st.y,2) );
+      //std::cout<<"Distance : " <<roi.dist<<std::endl; 
 
-      if ( roi.dist < 1. ){
+      if ( roi.dist < 2. ){
         roi.dir.x = ( roi.endpt.x - roi.startpt.x ) / roi.dist;
         roi.dir.y = ( roi.endpt.y - roi.startpt.y ) / roi.dist;
         }

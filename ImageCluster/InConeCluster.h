@@ -27,7 +27,7 @@ namespace larcv {
   public:
     
     /// Default constructor
-    InConeCluster(const std::string name="InConeCluster") : ClusterAlgoBase(name), _length_mult(1.5), _cone_angle(7.), _area_separation(700.)
+    InConeCluster(const std::string name="InConeCluster") : ClusterAlgoBase(name), _length_mult(1.5), _cone_angle(7.), _area_separation(700.), _hit_cut(40.)
     {}
     
     /// Default destructor
@@ -53,6 +53,7 @@ namespace larcv {
     float _length_mult ;
     float _cone_angle ;
     float _area_separation ;
+    float _hit_cut;
 
     void _combine_two_contours(const larcv::Contour_t& c1, const larcv::Contour_t& c2, larcv::Contour_t& c3);
     

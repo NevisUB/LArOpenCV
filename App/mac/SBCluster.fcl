@@ -32,8 +32,8 @@ ImageClusterManager: {
   ClusterAlgoType: [SBCluster,PCAOverall,SimpleCuts,ROIStart,RecoROIFilter]
   ClusterAlgoName: [sbc,pcao,sc,roist,rrf]
 
-  #ClusterAlgoType: [SBCluster,ROIStart,InConeCluster]
-  #ClusterAlgoName: [sbc,roist,icc]
+  #ClusterAlgoType: [SBCluster,SimpleCuts,ROIStart,InConeCluster,RecoROIFilter]
+  #ClusterAlgoName: [sbc,sc,roist,icc,rrf]
 
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
@@ -51,7 +51,8 @@ ImageClusterManager: {
 
 icc : {
   AreaCut    : 700.
-  ConeAngle  : 15.
+  HitCut     : 40.
+  ConeAngle  : 20.
   LengthMult : 3. 
   }
 
@@ -73,8 +74,7 @@ icc : {
 
  sc : {
 
- MinNHits : 20
- MinNClusters: 2
+ MinNHits : 20 
 
 }
   

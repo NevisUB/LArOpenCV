@@ -8,6 +8,7 @@ namespace larcv{
   void InConeCluster::_Configure_(const ::fcllite::PSet &pset)
   {
     _area_separation  = pset.get<double> ( "AreaCut"    );
+    _hit_cut          = pset.get<double> ( "HitCut"    );
     _length_mult      = pset.get<double> ( "LengthMult" );
     _cone_angle       = pset.get<double> ( "ConeAngle"  );
   }
@@ -17,13 +18,14 @@ namespace larcv{
 					     const ::cv::Mat& img,
 					     larcv::ImageMeta& meta)
   {
-    std::cout<<"New plane : "<<meta.plane() <<std::endl;
+    //std::cout<<"New plane : "<<meta.plane() <<std::endl;
 
     Cluster2DArray_t shower_v; shower_v.reserve(clusters.size());
     Cluster2DArray_t satellite_v; satellite_v.reserve(clusters.size());
 
     for(auto & cluster : clusters) {
-      if ( cluster._area > _area_separation )
+      //if ( cluster._area > _area_separation )
+      if ( cluster._numHits > _hit_cut )
 	shower_v.push_back(cluster);
       else
 	satellite_v.push_back(cluster);
@@ -54,6 +56,8 @@ namespace larcv{
         double new_length = length * _length_mult ;
         double cone_width = new_length * tan ( 3.14159 / 180. *_cone_angle ) / 2;
         //double cone_sides = new_length / cos ( _cone_angle ); 
+	//std::cout<<"x and y direction : "<<dir.first<<", "<<dir.second<<std::endl ;
+	//std::cout<<"cone width : "<<cone_width<<std::endl ;
 
         ::cv::Point second_pt, third_pt;
         std::vector<::cv::Point> cone_contour;
@@ -70,11 +74,12 @@ namespace larcv{
           second_pt.y = ( new_end_y + cone_width * cos(orig_angle));
           third_pt.y  = ( new_end_y - cone_width * cos(orig_angle)); 
           }
-        else if ( dir.first * dir.second > 0 ){
+        else if ( dir.first * dir.second >= 0 ){
           second_pt.y = ( new_end_y - cone_width * cos(orig_angle));
           third_pt.y  = ( new_end_y + cone_width * cos(orig_angle)); 
           }
-        
+       
+
         cone_contour.push_back(second_pt); cone_contour.push_back(third_pt);
 
 	c1._cone_contour = cone_contour ;
@@ -111,7 +116,6 @@ namespace larcv{
           c1._endPt.y = COM_w_s ;
           c1._sumCharge += c2._sumCharge ;
           c1._perimeter += c2._perimeter ;
-          //c1._cone_contour = cone_contour ;
 
 	  used_sats[j] = true;
         
