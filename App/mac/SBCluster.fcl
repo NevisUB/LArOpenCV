@@ -51,9 +51,8 @@ ImageClusterManager: {
 
 icc : {
   AreaCut    : 700.
-  HitCut     : 40.
-  ConeAngle  : 20.
-  LengthMult : 3. 
+  ConeAngle  : 25.
+  ConeLength : 36. #86% of shower's energy deposited in this distance
   }
 
 
@@ -74,7 +73,7 @@ icc : {
 
  sc : {
 
- MinNHits : 20 
+ MinNHits : 5 
 
 }
   
