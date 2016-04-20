@@ -5,7 +5,7 @@
 #include "Core/larbys.h"
 
 #include "LArUtil/Geometry.h"
-#include "LArUtil/GeometryUtilities.h"
+#include "LArUtil/GeometryHelper.h"
 
 #include "DataFormat/rawdigit.h"
 #include "DataFormat/hit.h"
@@ -283,7 +283,7 @@ namespace larlite {
     // Original image meta
     auto const& meta_v  = alg_mgr.InputImageMetas();
 
-    auto geom = larutil::GeometryUtilities::GetME();
+    auto geomH = larutil::GeometryHelper::GetME();
 
     TCanvas* cimg = new TCanvas( Form("c_eve_%i", auxevent), Form("Event %i", auxevent), 500, 1500 );
     cimg->Divide(1,3);
@@ -359,7 +359,7 @@ namespace larlite {
       // Get MC info here and project it to the plane being studied
       for(size_t s = 0; s < showerEnds.size(); s++){
 	double* showerEndxyz = &showerEnds.at(s)[0];
-	auto const& showerEnd2Dpp = geom->Get2DPointProjection( showerEndxyz, meta.plane() );
+	auto const& showerEnd2Dpp = geomH->Point_3Dto2D( showerEndxyz, meta.plane() );
 	// Images coordinates: horizontal is time, vertical is wire
 	larcv::Point2D showerEndImg( (showerEnd2Dpp.t - meta.origin().y)/meta.pixel_height(), (showerEnd2Dpp.w - meta.origin().x)/meta.pixel_width() );
 	graphShowerEnds->SetPoint((int)s, showerEndImg.x, showerEndImg.y);
@@ -369,8 +369,8 @@ namespace larlite {
 	  // matShowerClusterDist[s][c] = dist2D(clusters[c]._startPt, showerEndImg); // Distance in pixels
 	  auto const& clusterStart = clusters[c]._startPt;
 	  // Distance in cm
-	  matShowerClusterDist[s][c] = std::sqrt( std::pow( (clusterStart.x - showerEndImg.x) * meta.pixel_height() * (geom->TimeToCm()), 2) 
-						  + std::pow( (clusterStart.y - showerEndImg.y) * meta.pixel_width() * (geom->WireToCm()), 2) );
+	  matShowerClusterDist[s][c] = std::sqrt( std::pow( (clusterStart.x - showerEndImg.x) * meta.pixel_height() * (geomH->TimeToCm()), 2) 
+						  + std::pow( (clusterStart.y - showerEndImg.y) * meta.pixel_width() * (geomH->WireToCm()), 2) );
 	}
 
       }
@@ -418,7 +418,7 @@ namespace larlite {
       // Get MC info here and project it to the plane being studied
       for(size_t s = 0; s < showerStarts.size(); s++){
 	double* showerStartxyz = &showerStarts.at(s)[0];
-	auto const& showerStart2Dpp = geom->Get2DPointProjection( showerStartxyz, meta.plane() );
+	auto const& showerStart2Dpp = geomH->Point_3Dto2D( showerStartxyz, meta.plane() );
 	// Images coordinates: horizontal is time, vertical is wire
 	larcv::Point2D showerStartImg( (showerStart2Dpp.t - meta.origin().y)/meta.pixel_height(), (showerStart2Dpp.w - meta.origin().x)/meta.pixel_width() );
 	graphShowerStarts->SetPoint((int)s, showerStartImg.x, showerStartImg.y);
