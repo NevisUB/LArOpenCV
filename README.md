@@ -1,7 +1,7 @@
-# LArOpenCV
+# LArOpenCV 
 ## Liquid Argon Open Source Computer Vision
 
-- To get started...
+- To get started... see the [wiki](https://github.com/NevisUB/LArOpenCV/wiki)!
 
 1. Look at setup_laropencv.sh (or source it if you trust it).
 2. Need to compile UserDev/BasicTool before compiling LArOpenCV
