@@ -29,8 +29,8 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  ClusterAlgoType: [SBCluster,PCAOverall,SimpleCuts,ROIStart,RecoROIFilter]
-  ClusterAlgoName: [sbc,pcao,sc,roist,rrf]
+  ClusterAlgoType: [SBCluster,SimpleCuts,ROIStart,TrackShower,RecoROIFilter]
+  ClusterAlgoName: [sbc,sc,roist,ts,rrf]
 
   #ClusterAlgoType: [SBCluster,SimpleCuts,ROIStart,InConeCluster,RecoROIFilter]
   #ClusterAlgoName: [sbc,sc,roist,icc,rrf]
@@ -52,12 +52,13 @@ ImageClusterManager: {
 icc : {
   AreaCut    : 700.
   ConeAngle  : 25.
-  ConeLength : 36. #86% of shower's energy deposited in this distance
+  ConeLength : 40. # ~90% of shower's energy deposited in this distance
+  MinHitsShower : 25.
   }
 
 
  rrf : {
-   MaxRadLength: 200
+   MaxRadLength: 300
    TooManyClusters: 10 #ignore event going into matching if too many
  }
 

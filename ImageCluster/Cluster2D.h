@@ -112,9 +112,6 @@ namespace larcv {
     /// Angle of cluster
     double _angle2D;
 
-    /// Is this cluster one of the 2 closest to the roi vtx? Used in InConeCluster
-    bool _primary = false;
-
     std::vector<::cv::Point> _cone_contour ;
 
     /// For track shower separtion
