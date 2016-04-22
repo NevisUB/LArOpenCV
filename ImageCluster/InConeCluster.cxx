@@ -60,6 +60,11 @@ namespace larcv{
     Cluster2DArray_t result; result.reserve(clusters.size());
     
     /// DECIDE WHAT TO MERGE
+
+    /// Some variables for checks on our final clusters
+    Contour_t all_locations;
+    ::cv::findNonZero(img, all_locations); 
+    std::vector<bool> hit_used(all_locations.size(),false); 
       
     /// 0) Loop over showers (should only be 2 after step 1) above)
     for(unsigned i = 0; i < shower_v.size(); ++i) {
@@ -129,6 +134,7 @@ namespace larcv{
           c1._area += c2._area ;
           c1._insideHits.reserve( c2._insideHits.size() + c1._insideHits.size() );
           c1._insideHits.insert( c1._insideHits.end(), c2._insideHits.begin(), c2._insideHits.end() );
+          c1._numHits = c1._insideHits.size(); 
           c1.roi.endpt.x = c2.roi.endpt.x;
           c1.roi.endpt.y = c2.roi.endpt.y ;
           c1._sumCharge += c2._sumCharge ;
@@ -142,25 +148,27 @@ namespace larcv{
 
        /// 3) Merge stuff !
        for( auto & m : merge_us){
+
           std::vector<::cv::Point> c3;
 	  _combine_two_contours(c1._contour,m.second,c3,1./m.first);
-        
-          //Contour_t all_locations;
-          //::cv::findNonZero(img, all_locations); // get the non zero points
-          //bool hit_inside = false ;
-          //for( const auto& loc: all_locations ) { 
-          //  if ( ::cv::pointPolygonTest(c3,loc,false) > 0 ) {
-          //    hit_inside = true; 
-          //    break ;
-          //        }
-	  //    }
-          //if( hit_inside )              
-
           c1._contour = c3 ;
-          //std::cout<<"Size of contour to merge: "<<m.second.size()<<", offset: "<<1./m.first <<std::endl ;
+
           }
 
-       result.push_back(c1) ;
+       /// 4) Make sure we're not passing any showers that'll be found to have no hits (more twist issues)
+       bool hit_inside = false ;
+       int loc_i = 0;
+       for( const auto& loc: all_locations ) { 
+
+         if ( !hit_used[loc_i] && ::cv::pointPolygonTest(c1._contour,loc,false) >= 0 ) {
+           hit_inside = true; 
+	   hit_used[loc_i] = true; 
+               }
+	    loc_i ++ ;
+           }
+
+       if( hit_inside ) 
+          result.push_back(c1) ;
       }
 
       for(size_t i = 0; i < used_sats.size(); i++){
@@ -186,7 +194,7 @@ namespace larcv{
        while(true){
          min_index--; 
          if( merge_us.find(1./min_index) == merge_us.end() ){ 
-           std::cout<<"Making connection index smaller "<<std::endl;
+           //std::cout<<"Making connection index smaller "<<std::endl;
            merge_us[1./min_index] = c2._contour;
            break ;
           }

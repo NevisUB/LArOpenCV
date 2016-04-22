@@ -29,11 +29,11 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  ClusterAlgoType: [SBCluster,SimpleCuts,ROIStart,TrackShower,RecoROIFilter]
-  ClusterAlgoName: [sbc,sc,roist,ts,rrf]
+  #ClusterAlgoType: [SBCluster,SimpleCuts,ROIStart,TrackShower,RecoROIFilter]
+  #ClusterAlgoName: [sbc,sc,roist,ts,rrf]
 
-  #ClusterAlgoType: [SBCluster,SimpleCuts,ROIStart,InConeCluster,RecoROIFilter]
-  #ClusterAlgoName: [sbc,sc,roist,icc,rrf]
+  ClusterAlgoType: [SBCluster,SimpleCuts,ROIStart,InConeCluster,RecoROIFilter]
+  ClusterAlgoName: [sbc,sc,roist,icc,rrf]
 
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
@@ -60,6 +60,7 @@ icc : {
  rrf : {
    MaxRadLength: 300
    TooManyClusters: 10 #ignore event going into matching if too many
+   StrictHitCut: 20
  }
 
 

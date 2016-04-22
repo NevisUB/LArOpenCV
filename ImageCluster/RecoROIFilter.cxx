@@ -9,6 +9,7 @@ namespace larcv{
   {
     _max_rad_length = pset.get<double> ("MaxRadLength");    // minimum distance for ROI vertex to start point
     _numoutput      = pset.get<int>    ("TooManyClusters"); // how many is too many
+    _strict_hit_cut = pset.get<int>    ("StrictHitCut"); // how many is too many
   }
 
   Cluster2DArray_t RecoROIFilter::_Process_(const larcv::Cluster2DArray_t& clusters,
@@ -19,7 +20,7 @@ namespace larcv{
 
     for( const auto& cluster : clusters ) {
 
-      if ( cluster.roi.dist > _max_rad_length ) // start point distance to roi vertex
+      if ( cluster.roi.dist > _max_rad_length || cluster._numHits < _strict_hit_cut ) // start point distance to roi vertex
 	continue;
  
       auto ocluster = cluster; // make a copy

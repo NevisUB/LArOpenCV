@@ -49,6 +49,7 @@ namespace larcv {
   private:
     double _max_rad_length;
     int _numoutput;
+    int _strict_hit_cut ;
   };
   
   /**
