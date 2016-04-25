@@ -77,8 +77,10 @@ namespace larlite {
       // save data-products that would be created in store_clusters
       // this will prevent event mis-alignment
       auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
+      auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
       auto ev_hit_ass = storage->get_data<event_ass>    ("ImageClusterHit");
       auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
+
       storage->set_id(storage->run_id(),storage->subrun_id(),storage->event_id());
       return false;
     }
