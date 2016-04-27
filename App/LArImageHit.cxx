@@ -103,8 +103,9 @@ namespace larlite {
     if ( _use_roi ) {
 
       ev_roi = storage->get_data<event_PiZeroROI>( _roi_producer );
-      if(ev_roi->size() == 0) throw DataFormatException("Could not locate ROI data product and you have UseROI: True!");
-      
+      if(ev_roi->size() == 0)
+	{ throw DataFormatException("Could not locate ROI data product and you have UseROI: True!"); std::cout << "a\n";}
+
       auto wr_v = (*ev_roi)[0].GetWireROI();
       auto tr_v = (*ev_roi)[0].GetTimeROI();
       
@@ -141,7 +142,8 @@ namespace larlite {
 
       if ( _use_roi ) {
 	const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
-	meta.setvtx(vtx.first,vtx.second);
+	//meta.setvtx(vtx.first,vtx.second);
+	meta.setvtx(vtx.second,vtx.first);
       }
       
       if ( nwires >= 1e10 || nticks >= 1e10 )
@@ -170,7 +172,8 @@ namespace larlite {
       size_t x = wid.Wire - wire_range.first;
       
       //if(y>=nticks || x>=nwires) { throw std::exception(); }
-      if(y>=nticks || x>=nwires) { std::cout << "\t==> Skipping hit\n"; continue; } // skip this hit
+      // if(y>=nticks || x>=nwires) { std::cout << "\t==> Skipping hit\n"; continue; } // skip this hit
+      if(y>=nticks || x>=nwires) { continue; } // skip this hit
       
       //std::cout<<"Inserting " << x << " " << y << " @ " << wid.Plane << std::endl;
       double charge = h.Integral() / _charge_to_gray_scale;
@@ -227,7 +230,8 @@ namespace larlite {
 				  plane);
 	if ( _use_roi ) {
 	  const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
-	  meta.setvtx(vtx.first,vtx.second);
+	  meta.setvtx(vtx.second,vtx.first);
+	  //meta.setvtx(vtx.first,vtx.second);
 	}
       }
     }
