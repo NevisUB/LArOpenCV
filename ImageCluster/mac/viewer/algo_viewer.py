@@ -1,7 +1,9 @@
 from viewer_methods import *
 import matplotlib.patches as mpatches
+
+import matplotlib 
+from matplotlib.patches import Polygon 
 from matplotlib.collections import PatchCollection
-import matplotlib
 
 import numpy as np
 
@@ -156,15 +158,25 @@ class AlgoViewer :
             #Plot polygons
 	    pts_x = []
 	    pts_y = []
+	    pts_all = []
 	    for pt in xrange(cluster._cone_contour.size()):
 	      pts_x.append(pixel_y(cluster._cone_contour[pt].x))
 	      pts_y.append(pixel_x(cluster._cone_contour[pt].y))
+	      
+
+            patches = []
 
             if cluster._cone_contour.size():
 	      pts_x.append(pixel_y(cluster._cone_contour[0].x))
 	      pts_y.append(pixel_x(cluster._cone_contour[0].y))
 
-	    ax.plot(pts_x,pts_y,color='red',lw=2)
+	      pts_all = [ (pts_x[i],pts_y[i]) for i in xrange(len(pts_x))]
+	      polygon = Polygon(pts_all,True) 
+	      patches.append(polygon)
+	      p = PatchCollection(patches, cmap=matplotlib.cm.Blues, alpha=0.5)
+	      ax.add_collection(p)
+
+	    ax.plot(pts_x,pts_y,color='blue',lw=1)
 	    #ax.plot(pts_x,pts_y,'o',markersize=10,color='red') 
 
 	    #Plot start + end
