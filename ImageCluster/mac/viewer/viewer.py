@@ -1,7 +1,7 @@
 import matplotlib
 import matplotlib.pyplot as plt
 
-import wireloader
+#import wireloader
 import sys
 
 from larlite import larlite as fmwk
@@ -11,24 +11,24 @@ import algo_viewer as av
 my_proc = fmwk.ana_processor()
 
 # Config fileg
-cfg="../../../App/mac/BNBTester.fcl"
+cfg="../../../App/mac/SBCluster.fcl"
 
 algid  = int(sys.argv[-1])
 print algid
 my_proc.add_input_file(sys.argv[1])
-#my_proc.add_input_file(sys.argv[2])
-#my_proc.add_input_file(sys.argv[3])
+my_proc.add_input_file(sys.argv[2])
+my_proc.add_input_file(sys.argv[3])
 
 my_proc.set_io_mode(fmwk.storage_manager.kREAD)
 
 myunit = fmwk.LArImageHit()
 myunit.set_config(cfg)
 manager = myunit.algo_manager()
-dwc = manager.GetClusterAlg("dwc")
-deadwires = wireloader.load( "idiot.dat" )
+#dwc = manager.GetClusterAlg("icc")
+#deadwires = wireloader.load( "idiot.dat" )
 
-for ix, w in enumerate(deadwires):
-    dwc.SetDeadWires(w,ix)
+#for ix, w in enumerate(deadwires):
+#    dwc.SetDeadWires(w,ix)
 
 my_proc.add_process(myunit)
 
@@ -53,8 +53,7 @@ while( my_proc.process_event() ) :
 
     axx = {0 : ax0, 1 : ax1, 2: ax2}
 
-    algo_drawer = av.AlgoViewer( manager.GetClusterAlg(algid) ,
-                                 plt )
+    algo_drawer = av.AlgoViewer( manager.GetClusterAlg(algid), plt )
 
     for c in xrange(manager.NumClusters(algid)):
         
@@ -70,6 +69,7 @@ while( my_proc.process_event() ) :
 
         ax = axx[ cluster.PlaneID() ]
         
+	#print "Plane: ", cluster.PlaneID(), ", cluster area ", cluster._area, ", hits : ", cluster._numHits  
         draw_cluster(ax,cluster,manager.MetaData(cluster.PlaneID(),algid))
         algo_drawer.draw(ax,cluster,c,manager.MetaData(cluster.PlaneID(),algid))
         
