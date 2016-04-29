@@ -1,0 +1,178 @@
+LArImageHit: {
+  # LArImageClusterBase config
+  Profile: true
+  StoreOriginalImage: false
+  Producer: gaushit 
+  # LArImageHit config
+  Q2Gray: 5 # convert Hit::Integral to a unit gray scale
+  QMin: 3   # min. threshold for Hit::Integral to make it into an image
+  UseROI: false 
+  ROIProducer: pizerofilter 
+  PoolTimeTick: 6
+  
+  RunAnalyze: false # Uncomment to run the MC shower-cluster comparison
+}
+
+LArDownImage: {
+  # LArImageClusterBase config
+  Profile: true
+  StoreOriginalImage: false
+  Producer: gaushit
+  # LArDownImage config
+  Q2Gray: 0.1 
+}
+
+# ImageClusterManager config
+ImageClusterManager: {
+
+  Verbosity: 1
+  Profile:   true  # Time profiles algorithms
+  ShowImage: false  # Display image per process
+
+  #ClusterAlgoType: [SBCluster,SimpleCuts,ROIStart,InConeCluster,RecoROIFilter]
+  #ClusterAlgoName: [sbc,sc,roist,icc,rrf]
+
+  ClusterAlgoType: [SBCluster,SimpleCuts,PCAOverall,GetStartPoint]
+  ClusterAlgoName: [sbc,sc,pcao,gs]
+
+  MatchAlgoType: MatchTimeOverlap
+  MatchAlgoName: mto
+
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
+
+
+ ImageClusterViewer: {
+   Verbosity: 0
+   Width:  800
+   Height: 800
+   MinContourArea: 125
+ }
+
+ncc : {}
+icc : {
+  AreaCut    : 700.
+  ConeAngle  : 25.
+  ConeLength : 40. # ~90% of shower's energy deposited in this distance
+  MinHitsShower : 25.
+  }
+
+
+ rrf : {
+   MaxRadLength: 300
+   TooManyClusters: 10 #ignore event going into matching if too many
+   StrictHitCut: 20
+ }
+
+
+  roist : {}
+
+  brs : {
+
+  NHitsCut  : 20
+  NDivWidth : 8
+
+  } 
+
+ sc : {
+
+ MinNHits : 5 
+
+}
+  
+ sbc:{
+
+   Verbosity: 1
+   DilationSize : 5
+   DilationIterations : 2
+   BlurSize : 5
+   Thresh : 1
+   ThreshMaxVal : 255
+
+  }
+
+ gs: { 
+ 
+ NHits : 25
+
+ }
+
+ pid: {
+
+   PDG : 11
+
+  }
+
+ pcas : {
+
+    NSegmentsX : 6
+    NSegmentsY : 6
+
+    NHitsCut        : 3  # min number of hits in segment
+    NSubHitsCut     : 2  # min number of hits in sub segment
+    AngleCut        : 20 # degrees
+    NDivisions      : 2  # number of times to subdivide the segments
+    AllowEmptyCross : 1 # if an empty box is between two "good" boxes, should we be able to cross?
+    MinClusterSize  : 10 # min number of hits in cluster to actually care
+    MinPathSize     : 3  # min number of connected boxes...
+
+    CovSubDivide : 0.75
+
+    }
+
+  ts :{
+    AreaCut : 900 
+    RatioCut : 3
+    TrackShowerSat : 0 # 0 returns showers, 1 returns tracks, 2 returns satellites+showers, 3 returns everything
+
+    Step1 : 80
+    Step2 : 80
+
+    SwitchRatio : 0.349
+  }
+
+  satellitemerge: {
+    AreaCut: 1850
+    MinSatDistance: 50
+    MinShowerDistance: 25
+    ContourDensity:50 # unused
+  }
+
+  pcao: {
+    NMinInsideHits: 2
+  }
+
+  pizerofilter: {
+    NHitsCut: 10
+    BackStartPoint: 1000
+    MaxRadLength: 40
+    MinArea: 1
+    Width : 0.0557 #cm/time tick
+    Height : 0.3 #cm/wire
+    AttemptMerging  : 0
+    SmallDotProduct : 0.3
+    
+  }
+
+  pizerofilterv: {
+    NHitsCut: 10
+    BackStartPoint: 1000
+    MaxRadLength: 40
+    MinArea: 1
+    Width : 0.0557 #cm/time tick
+    Height : 0.3 #cm/wire
+    AttemptMerging  : 0
+    SmallDotProduct : 0.3
+    
+  }
+
+
+
+   mto : {
+     RatioCut : 0.001
+     StartTimeCut : 100
+     RequireThreePlanes : 0 
+    }
+
+
+}
