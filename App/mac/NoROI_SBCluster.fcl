@@ -13,14 +13,16 @@ LArImageHit: {
   RunAnalyze: false # Uncomment to run the MC shower-cluster comparison
 }
 
-LArDownImage: {
+LArImageWire: {
   # LArImageClusterBase config
   Profile: true
   StoreOriginalImage: false
-  Producer: gaushit
-  # LArDownImage config
-  Q2Gray: 0.1 
+  Producer: caldata
+  Q2Gray: 5 # convert ADC to a unit gray scale
+  UseROI: false
+  PoolTimeTick: 6
 }
+
 
 # ImageClusterManager config
 ImageClusterManager: {
