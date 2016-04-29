@@ -6,8 +6,8 @@ LArImageHit: {
   # LArImageHit config
   Q2Gray: 5 # convert Hit::Integral to a unit gray scale
   QMin: 3   # min. threshold for Hit::Integral to make it into an image
-  UseROI: false 
-  ROIProducer: pizerofilter 
+  UseROI: true  
+  ROIProducer: mcroi 
   PoolTimeTick: 6
   
   RunAnalyze: false # Uncomment to run the MC shower-cluster comparison
@@ -33,8 +33,8 @@ ImageClusterManager: {
   #ClusterAlgoType: [SBCluster,SimpleCuts,ROIStart,TrackShower,RecoROIFilter]
   #ClusterAlgoName: [sbc,sc,roist,ts,rrf]
 
-  ClusterAlgoType: [SBCluster,SimpleCuts]#,ROIStart,InConeCluster,RecoROIFilter]
-  ClusterAlgoName: [sbc,sc]#,roist,icc,rrf]
+  ClusterAlgoType: [SBCluster,SimpleCuts,ROIStart,InConeCluster,RecoROIFilter]
+  ClusterAlgoName: [sbc,sc,roist,icc,rrf]
 
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
