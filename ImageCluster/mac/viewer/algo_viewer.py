@@ -198,10 +198,6 @@ class AlgoViewer :
             px, py     = get_xy_w_offset(insidehits,meta)
             ax.plot(px,py,'o',markersize=1,color='black')
 
-            #Ignore this cluster if less than 25 hits, or its polygon has no found vertices
-	    if cluster._insideHits < 25 or cluster._endPt.x < 0: 
-	        return
-            
 	    if not cluster.PolyObject.Size(): 
 	        return
 
@@ -210,7 +206,7 @@ class AlgoViewer :
 	    pts_y = []
 	    for pt in xrange(cluster.PolyObject.Size()):
 	      pts_x.append(pixel_y(cluster.PolyObject.Point(pt).first))
-	      pts_y.append(pixel_x(cluster.PolyObject.Point(pt).second))	     # ax.plot(cluster.PolyObject.Point(pt).first + xs, cluster.PolyObject.Point(pt).second + ys,'o',color='red',markersize=10)
+	      pts_y.append(pixel_x(cluster.PolyObject.Point(pt).second))
 
 	    pts_x.append( pixel_y(cluster.PolyObject.Point(0).first))
 	    pts_y.append( pixel_x(cluster.PolyObject.Point(0).second))

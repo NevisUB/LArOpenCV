@@ -112,12 +112,12 @@ namespace larcv{
       OutputClusters.emplace_back( clusters[pp] );
     }
 
-    // std::cout <<"\n";
-    // for( auto& c : vclusters ) {
-    //   std::cout << "" <<  c.first << " : {";
-    //   for(const auto& s : c.second) std::cout << s << ",";
-    //   std::cout << "}\n";
-    // }
+    std::cout <<"\n";
+    for( auto& c : vclusters ) {
+      std::cout << "" <<  c.first << " : {";
+      for(const auto& s : c.second) std::cout << s << ",";
+      std::cout << "}\n";
+    }
     
     return OutputClusters;
   }

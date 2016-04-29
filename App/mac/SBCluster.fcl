@@ -2,25 +2,17 @@ LArImageHit: {
   # LArImageClusterBase config
   Profile: true
   StoreOriginalImage: false
-  Producer: gaushit
+  Producer: shrlike
   # LArImageHit config
   Q2Gray: 5 # convert Hit::Integral to a unit gray scale
   QMin: 3   # min. threshold for Hit::Integral to make it into an image
   UseROI: true
-  ROIProducer: mcroi
+  ROIProducer: pizerofilter
   PoolTimeTick: 6
-  
+
   RunAnalyze: false # Uncomment to run the MC shower-cluster comparison
 }
 
-LArDownImage: {
-  # LArImageClusterBase config
-  Profile: true
-  StoreOriginalImage: false
-  Producer: gaushit
-  # LArDownImage config
-  Q2Gray: 0.1 
-}
 
 # ImageClusterManager config
 ImageClusterManager: {
@@ -29,11 +21,14 @@ ImageClusterManager: {
   Profile:   true  # Time profiles algorithms
   ShowImage: false  # Display image per process
 
-  #ClusterAlgoType: [SBCluster,SimpleCuts,ROIStart,TrackShower,RecoROIFilter]
-  #ClusterAlgoName: [sbc,sc,roist,ts,rrf]
+  ClusterAlgoType: [SBCluster,SimpleCuts,AttachedClusters,PCAOverall,ROIStart,TrackShower,InConeCluster,RecoROIFilter]
+  ClusterAlgoName: [sbc,sc,ac,pcao,roist,ts,icc,rrf]
 
-  ClusterAlgoType: [SBCluster,SimpleCuts,ROIStart,InConeCluster,RecoROIFilter]
-  ClusterAlgoName: [sbc,sc,roist,icc,rrf]
+  #ClusterAlgoType: [SBCluster,SimpleCuts,PCAOverall,ROIStart,InConeCluster,RecoROIFilter]
+  #ClusterAlgoName: [sbc,sc,pcao,roist,icc,rrf]
+
+  #ClusterAlgoType: [SBCluster]
+  #ClusterAlgoName: [sbc]
 
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
@@ -41,12 +36,15 @@ ImageClusterManager: {
   ReClusterAlgoType: ""
   ReClusterAlgoName: ""
 
-
  ImageClusterViewer: {
    Verbosity: 0
    Width:  800
    Height: 800
    MinContourArea: 125
+ }
+
+ ac : {
+    MaxDefectSize: 20 # why?
  }
 
 icc : {
@@ -58,8 +56,9 @@ icc : {
 
 
  rrf : {
-   MaxRadLength: 300
-   TooManyClusters: 10 #ignore event going into matching if too many
+   MaxRadLength: 100
+   MaxClusters : 10
+   MinClusters : 2
    StrictHitCut: 20
  }
 
@@ -101,6 +100,7 @@ icc : {
    PDG : 11
 
   }
+
 
  pcas : {
 
@@ -158,7 +158,7 @@ icc : {
     BackStartPoint: 1000
     MaxRadLength: 40
     MinArea: 1
-    Width : 0.0557 #cm/time tick
+    Width :  0.3 #cm/time tick
     Height : 0.3 #cm/wire
     AttemptMerging  : 0
     SmallDotProduct : 0.3

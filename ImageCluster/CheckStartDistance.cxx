@@ -19,14 +19,19 @@ namespace larcv{
 						 larcv::ImageMeta& meta)
   {
     
-       
     Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );
+    
+    std::map<int,bool> keep;
 
-    std::map<int,bool> keep; for(int i=0;i<clusters.size();++i) keep[i] = false;
+    for(int i=0;i<clusters.size();++i)
+
+      keep[i] = false;
+
+    
     
     for( unsigned i = 0 ; i < clusters.size(); ++i ) {
       for( unsigned j = 0 ; j < clusters.size(); ++j ) {
-
+	
 	if ( i == j ) continue;
 	
 	auto& s1 = clusters[i]._startPt;
@@ -34,6 +39,7 @@ namespace larcv{
 
 	auto d = dist(s1.x * _w, s2.x * _w,
 		      s1.y * _h, s2.y * _h);
+	
 	if ( d <= _max_start_d ) { keep[i] = true; keep[j] = true; }
 	  
       }

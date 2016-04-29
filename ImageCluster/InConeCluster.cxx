@@ -18,8 +18,8 @@ namespace larcv{
   
   
   Cluster2DArray_t InConeCluster::_Process_(const larcv::Cluster2DArray_t& clusters,
-					     const ::cv::Mat& img,
-					     larcv::ImageMeta& meta)
+					    const ::cv::Mat& img,
+					    larcv::ImageMeta& meta)
   {
     //std::cout<<"\nNew plane : "<<meta.plane() <<std::endl;
 
@@ -74,7 +74,25 @@ namespace larcv{
         /// Find the shower cluster's cone extent  
         std::pair<float,float> start( c1.roi.startpt.x, c1.roi.startpt.y);
         std::pair<float,float> end  ( c1.roi.endpt.x  , c1.roi.endpt.y  );
-        std::pair<float,float> dir  ( c1.roi.dir.y    , c1.roi.dir.x    ); 
+	//is this a hack -- ?
+	std::cout << "c1.reco.dir.y" << c1.reco.dir.y << "\n";
+	std::cout << "c1.reco.dir.x" << c1.reco.dir.x << "\n";
+	if  ( c1.roi.endpt.x > c1.roi.startpt.x )  {
+	  if ( c1.reco.dir.x < 0 ) {
+	    c1.reco.dir.y *= -1.0;
+	    c1.reco.dir.x *= -1.0;
+	  }
+	}
+	else {
+	  if ( c1.reco.dir.x > 0 ) {
+	    c1.reco.dir.y *= -1.0;
+	    c1.reco.dir.x *= -1.0;
+	  }
+
+	}
+	
+
+	std::pair<float,float> dir  ( c1.reco.dir.y    , c1.reco.dir.x    ); 
 
         auto orig_angle = atan2(dir.first, dir.second) ;
         double length  = pow( pow(start.first - end.first,2) + pow(start.second - end.second,2),0.5 ) ;
