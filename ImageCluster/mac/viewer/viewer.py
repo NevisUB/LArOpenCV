@@ -11,7 +11,7 @@ import algo_viewer as av
 my_proc = fmwk.ana_processor()
 
 # Config fileg
-cfg="../../../App/mac/SBCluster.fcl"
+cfg="../../../App/mac/SBCluster2.fcl"
 
 algid  = int(sys.argv[-1])
 print algid
@@ -24,12 +24,6 @@ my_proc.set_io_mode(fmwk.storage_manager.kREAD)
 myunit = fmwk.LArImageHit()
 myunit.set_config(cfg)
 manager = myunit.algo_manager()
-
-#dwc = manager.GetClusterAlg("icc")
-#deadwires = wireloader.load( "idiot.dat" )
-
-#for ix, w in enumerate(deadwires):
-#    dwc.SetDeadWires(w,ix)
 
 my_proc.add_process(myunit)
 
@@ -60,7 +54,7 @@ while( my_proc.process_event() ) :
     # ax1 = None
     # ax2 = None
     
-    axx = {0 : ax0, 1 : ax1, 2: ax2}
+    axx = { 0 : ax0, 1 : ax1, 2: ax2 }
 
     algo_drawer = av.AlgoViewer( manager.GetClusterAlg(algid), plt )
 
@@ -85,7 +79,7 @@ while( my_proc.process_event() ) :
         draw_cluster(ax,cluster,manager.MetaData(cluster.PlaneID(),algid))
         algo_drawer.draw(ax,cluster,c,manager.MetaData(cluster.PlaneID(),algid))
         
-    plt.savefig('destination_path.pdf', format='pdf', dpi=1000)
+    # plt.savefig('destination_path.pdf', format='pdf', dpi=1000)
     plt.show()
 
     #All possible ways to close viewer

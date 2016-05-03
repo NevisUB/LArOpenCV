@@ -3,19 +3,19 @@
 
 #include "RecoParameters.h"
 
-namespace larcv{
+namespace larcv {
 
   void RecoParameters::_Configure_(const ::fcllite::PSet &pset)
   {}
 
   Cluster2DArray_t RecoParameters::_Process_(const larcv::Cluster2DArray_t& clusters,
-					const ::cv::Mat& img,
-					larcv::ImageMeta& meta)
+      const ::cv::Mat& img,
+      larcv::ImageMeta& meta)
   {
 
     Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );
 
-    for(const auto& cluster : clusters) {
+    for (const auto& cluster : clusters) {
 
       auto ocluster = cluster;
 
