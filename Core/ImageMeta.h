@@ -42,9 +42,9 @@ namespace larcaffe {
     
     /// Default constructor: width, height, and origin coordinate won't be modifiable 
     ImageMeta(const double width=0., const double height=0.,
-	      const size_t width_npixel=0., const size_t height_npixel=0,
-	      const double origin_x=0., const double origin_y=0.,
-	      const size_t plane=::larcv::kINVALID_SIZE)
+        const size_t width_npixel=0., const size_t height_npixel=0,
+        const double origin_x=0., const double origin_y=0.,
+        const size_t plane=::larcv::kINVALID_SIZE)
       : _origin(origin_x,origin_y)
       , _width(width)
       , _height(height)
@@ -91,10 +91,14 @@ namespace larcaffe {
     void setvtx(size_t w, size_t t)
     { _roi_vtx = larcaffe::Point2D(w,t); }
 
+    void settrkend(size_t w, size_t t)
+    { _roi_trkend = larcaffe::Point2D(w,t); }
+
     /// Get vertex ROI
-    larcaffe::Point2D roivtx() const { return _roi_vtx; } 
-    
-  protected:
+    larcaffe::Point2D roivtx() const { return _roi_vtx; }
+    larcaffe::Point2D roitrkend() const { return _roi_trkend; }
+
+   protected:
 
     larcaffe::Point2D _origin; ///< Absolute coordinate of the left bottom corner of an image
     double _width;             ///< Horizontal size of an image in double floating precision (in original coordinate unit size)
@@ -105,6 +109,8 @@ namespace larcaffe {
 
     /// ROI vertex, may or may not exist, user should check this again
     larcaffe::Point2D _roi_vtx;
+    larcaffe::Point2D _roi_trkend;
+
     
   };
 
