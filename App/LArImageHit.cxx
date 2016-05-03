@@ -22,6 +22,7 @@
 #include "TGraph.h"
 #include "TMultiGraph.h"
 
+
 namespace larlite {
 
 void LArImageHit::_Configure_(const ::fcllite::PSet& pset) {
@@ -110,6 +111,8 @@ void LArImageHit::extract_image(storage_manager* storage) {
       std::cout << "a\n";
     }
 
+    if ( ev_roi->size() > 1 ) { throw larcaffe::larbys("More than one ROI, not implemented!\n"); }
+
     auto wr_v = (*ev_roi)[0].GetWireROI();
     auto tr_v = (*ev_roi)[0].GetTimeROI();
 
@@ -147,8 +150,9 @@ void LArImageHit::extract_image(storage_manager* storage) {
 
     if (_use_roi) {
       const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
-      // meta.set(vtx.first,vtx.second);
+      const auto& trkend = (*ev_roi)[0].GetTrackEnd()[plane];
       meta.setvtx(vtx.second, vtx.first);
+      meta.settrkend(trkend.second, trkend.first);
     }
 
     if (nwires >= 1e10 || nticks >= 1e10)
@@ -229,11 +233,14 @@ void LArImageHit::extract_image(storage_manager* storage) {
       meta = ::larcv::ImageMeta(
           (double)pooled.rows, (double)pooled.cols * _pool_time_tick,
           pooled.rows, pooled.cols, wire_range.first, tick_range.first, plane);
+
       if (_use_roi) {
         const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
+        const auto& trkend = (*ev_roi)[0].GetTrackEnd()[plane];
         meta.setvtx(vtx.second, vtx.first);
-        // meta.setvtx(vtx.first,vtx.second);
+        meta.settrkend(trkend.second, trkend.first);
       }
+      
     }
   }
 }
