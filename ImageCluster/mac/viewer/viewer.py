@@ -14,7 +14,6 @@ my_proc = fmwk.ana_processor()
 cfg="../../../App/mac/SBCluster2.fcl"
 
 algid  = int(sys.argv[-1])
-print algid
 my_proc.add_input_file(sys.argv[1])
 #my_proc.add_input_file(sys.argv[2])
 #my_proc.add_input_file(sys.argv[3])
@@ -32,7 +31,7 @@ while( my_proc.process_event() ) :
     k += 1
     manager  = myunit.algo_manager()
     print "NUMBER OF CLUSTERS", manager.NumClusters()
-    print "You have chosen algorithm:"
+    print "You have chosen algorithm:", algid
     print manager.GetClusterAlg(algid)
     print ""
     
@@ -76,6 +75,9 @@ while( my_proc.process_event() ) :
         ax = axx[ cluster.PlaneID() ]
 
 	#print "Plane: ", cluster.PlaneID(), ", cluster area ", cluster._area, ", hits : ", cluster._numHits  
+        if cluster._area < 200 :
+	  continue
+
         draw_cluster(ax,cluster,manager.MetaData(cluster.PlaneID(),algid))
         algo_drawer.draw(ax,cluster,c,manager.MetaData(cluster.PlaneID(),algid))
         

@@ -60,6 +60,9 @@ bool LArImageClusterBase::initialize() {
 
 bool LArImageClusterBase::analyze(storage_manager* storage) {
 
+   std::cout<<"Event : "<<_event<<std::endl;
+   _event++;
+
   _img_mgr.clear();
   _orig_img_mgr.clear();
   _alg_mgr.ClearData();
@@ -254,6 +257,7 @@ void LArImageClusterBase::store_clusters(storage_manager* storage)
         std::cout << "end wire out of range:" << std::endl;
         std::cout << "Plane : " << imgclus.PlaneID() << " w/ [start,end] wire -> [" << int(sw) << ", " << int(ew) << "]" << std::endl;
         std::cout << std::endl;
+      
       }
 
       c.set_start_wire(sw, 1);
