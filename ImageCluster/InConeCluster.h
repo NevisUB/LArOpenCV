@@ -27,7 +27,12 @@ namespace larcv {
   public:
     
     /// Default constructor
-    InConeCluster(const std::string name="InConeCluster") : ClusterAlgoBase(name), _cone_length(36.), _cone_angle(7.), _area_separation(700.), _n_hits(25.) 
+    InConeCluster(const std::string name="InConeCluster") :
+      ClusterAlgoBase(name)
+      , _cone_length(36.)
+      , _cone_angle(7.)
+      , _area_separation(700.)
+      , _n_hits(25.)
     {}
     
     /// Default destructor

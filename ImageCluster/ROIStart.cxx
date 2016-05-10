@@ -29,7 +29,7 @@ namespace larcv {
 
       if ( !cluster._insideHits.size() ) continue; //throw larbys();
 
-      float min_dist = 1e9;
+      float min_dist = std::pow(10,9);
       float max_dist = 0;
       int  min_hit_index = -1 ;
       int  max_hit_index = -1 ;
@@ -61,11 +61,17 @@ namespace larcv {
       roi.startpt.x = hits[min_hit_index].x;
       roi.startpt.y = hits[min_hit_index].y;
 
+      // std::cout << " ROI start :("<<roi.startpt.x<<","<<roi.startpt.y<<")\n";
+
       roi.endpt.x   = hits[max_hit_index].x;
       roi.endpt.y   = hits[max_hit_index].y;
 
+      // std::cout << " ROI end :("<<roi.endpt.x<<","<<roi.endpt.y<<")\n";
+
       roi.dist = std::sqrt( std::pow(roi.startpt.x - pi0st.x, 2) + std::pow(roi.startpt.y - pi0st.y, 2) );
-      //std::cout<<"Distance : " <<roi.dist<<std::endl;
+
+      // std::cout<<" roi distance : " <<roi.dist<<std::endl;
+      // std::cout<<" and the far distance is " << std::sqrt( std::pow(roi.endpt.x - pi0st.x, 2) + std::pow(roi.endpt.y - pi0st.y, 2) ) << "\n";
 
       if ( roi.dist < 2. ) {
         roi.dir.x = ( roi.endpt.x - roi.startpt.x ) / roi.dist;

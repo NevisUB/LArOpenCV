@@ -78,8 +78,8 @@ namespace larcv {
       // is this a hack to get the direction right, sometime the cone
       // projects out in the wrong direction and collects the wrong
       // amount of charge
-      std::cout << "c1.reco.dir.y" << c1.reco.dir.y << "\n";
-      std::cout << "c1.reco.dir.x" << c1.reco.dir.x << "\n";
+      // std::cout << "c1.reco.dir.y" << c1.reco.dir.y << "\n";
+      // std::cout << "c1.reco.dir.x" << c1.reco.dir.x << "\n";
       if  ( c1.roi.endpt.x > c1.roi.startpt.x )  {
         if ( c1.reco.dir.x < 0 ) {
           c1.reco.dir.y *= -1.0;

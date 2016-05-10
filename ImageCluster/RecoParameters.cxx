@@ -9,8 +9,8 @@ namespace larcv {
   {}
 
   Cluster2DArray_t RecoParameters::_Process_(const larcv::Cluster2DArray_t& clusters,
-      const ::cv::Mat& img,
-      larcv::ImageMeta& meta)
+					     const ::cv::Mat& img,
+					     larcv::ImageMeta& meta)
   {
 
     Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );

@@ -14,8 +14,8 @@ namespace larcv {
     
     /// Default constructor
     BoundRectStart(const std::string name="BoundRectStart") :
-      ClusterAlgoBase(name),
-      _deg2rad ( 3.14159 / 180.0 )
+      ClusterAlgoBase(name)
+      , _deg2rad ( 3.14159 / 180.0 )
     {}
     
     /// Default destructor

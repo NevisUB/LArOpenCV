@@ -1,46 +1,44 @@
-//by vic
-#ifndef __BOUNDRECTSTART_CXX__
-#define __BOUNDRECTSTART_CXX__
+#ifndef __ROIASSISTEDSTART_CXX__
+#define __ROIASSISTEDSTART_CXX__
 
-#include "BoundRectStart.h"
+#include "ROIAssistedStart.h"
 #include "PCAUtilities.h"
 #include "StatUtilities.h"
 
-namespace larcv {
+namespace larcv{
 
-  void BoundRectStart::_Configure_(const ::fcllite::PSet &pset)
-  {
-    _nDivWidth = pset.get<int> ( "NDivWidth" );
-    _cutbadreco = pset.get<bool>( "CutBadReco");
+  void ROIAssistedStart::_Configure_(const ::fcllite::PSet &pset)
+  {}
 
-    if ( _nDivWidth % 2 != 0 ) { std::cout << "\n\tNDivWidth must be even!\n"; throw std::exception(); }
-  }
-
-  Cluster2DArray_t BoundRectStart::_Process_(const larcv::Cluster2DArray_t& clusters,
-					     const ::cv::Mat& img,
-					     larcv::ImageMeta& meta)
+  Cluster2DArray_t ROIAssistedStart::_Process_(const larcv::Cluster2DArray_t& clusters,
+					       const ::cv::Mat& img,
+					       larcv::ImageMeta& meta)
   {
 
-    /*
 
-      Extend on Ariana's track shower module to include segmentation. Segment the box long ways
-      calculate the linearity, and total charge in each box. Maximize the product of the two
-      then the point farthest from the center is the start point
+    // Just like Ariana's ROIStart but this time we let the ROI choose the side of the
+    // cluster the start point is probably on rather than the aboslute coordinate of the start point.
+    // The start point and end point will be chosen as the points that are farthest away from the center
+    // point. We could do PCA I bet and and walk inward and find the point that is closest to the PCA
+    // axis in an future larbys extension to this module
 
-    */
+    //copy and paste from ROIStart
 
-    Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );
+    //the ROI vertex
+    auto pi0_st = meta.roivtx();
+    if ( pi0_st.x == ::larcv::kINVALID_DOUBLE ) { std::cout << "BAD VTX\n"; throw std::exception(); }
 
-    Contour_t all_locations;
-    ::cv::findNonZero(img, all_locations); // get the non zero points
+    auto pi0st = Point2D( (pi0_st.y - meta.origin().y) / meta.pixel_height(), (pi0_st.x - meta.origin().x) / meta.pixel_width() );
 
+    Cluster2DArray_t oclusters;
+    oclusters.reserve( clusters.size() );
+    
     for (size_t k = 0; k < clusters.size(); k++) {
 
-      Cluster2D ocluster = clusters[k];
+      Cluster2D ocluster = clusters[k]; // make copy 
       auto& contour      = ocluster._contour;
 
-      if ( ocluster._numHits == 0 ) throw larbys();
-
+      //copy from BoundRecStart.cxx
       // use bounding box considerations to define start point, fill the vertices vector
       auto bbox = ::cv::minAreaRect(contour);
       ocluster._boundingBox = bbox.boundingRect();
@@ -62,8 +60,10 @@ namespace larcv {
       auto& center  = ocluster._centerPt;
       auto& angle   = bbox.angle;
 
+      double N = 2;
+      
       std::vector<::cv::RotatedRect> divisions;
-      divisions.resize(_nDivWidth);
+      divisions.resize(N);
 
       double angle_deg = bbox.angle;
       double height ( bbox.size.height ), width( bbox.size.width );
@@ -77,17 +77,16 @@ namespace larcv {
         swapped = true;
       }
 
-      double N = _nDivWidth;
 
       // divide the box up
       double w_div = width  / (double) N;
       //double h_div = height / (double) N;
 
-      // what is the step
+      // what is the step?
       auto dx = w_div * std::cos(angle_deg * _deg2rad);
       auto dy = w_div * std::sin(angle_deg * _deg2rad);
 
-      // where do i start
+      // where do i start?
       auto cx = center.x - (N / 2 - 0.5) * dx;
       auto cy = center.y - (N / 2 - 0.5) * dy;
 
@@ -107,59 +106,67 @@ namespace larcv {
         v.clear(); v.resize(4);
         for (int r = 0; r < 4; ++r) v[r] = ver[r];
         std::swap(vv, v);
-      }
-
-
-      // do something with the segments...
-      std::vector<Contour_t> insides;
-      insides.resize(N);
-
-      std::vector<double> tot_charge;
-      tot_charge.resize(N);
-
-      // hits in the cluster...
-      for (auto& h : ocluster._insideHits) {
-
-        //which ones are in this segment
-        for ( unsigned i = 0; i < divisions.size(); ++i ) {
-          auto& div = ocluster._verts[i];
-
-          if ( ::cv::pointPolygonTest(div, h, false) >= 0 ) {
-            tot_charge[i] += (int) img.at<uchar>(h.y, h.x);
-            insides[i].push_back(h);
-          }
-
-        }
-      }
-
-      double f_half(0), s_half(0);
-
-      // total charge half
-      auto tc_half = tot_charge.size() / 2;
-      
-      //first half total charge
-      auto f_total_charge = std::accumulate(std::begin(tot_charge),std::begin(tot_charge) + tc_half ,0);
-
-      //second hald total charge
-      auto s_total_charge = std::accumulate(std::begin(tot_charge) + tc_half,std::end(tot_charge),0);
-
-      for (int i = 0; i < N; ++i) {
-
-        auto roicov = std::abs(roi_cov(insides[i]));
-
-	if ( i < N / 2 ) f_half += roicov * tot_charge[i];
-        else             s_half += roicov * tot_charge[i];
-
-        ocluster._something.push_back(roicov);
 	
       }
-      
-      // this is charge weighting for the pearsons r
-      f_half /= f_total_charge;
-      s_half /= s_total_charge;
 
-      int cstart = f_half > s_half ? 0     : N - 1;
-      int cend   = f_half > s_half ? N - 1 : 0;
+      // length N vector that will hold the hits on either side
+      std::vector<Contour_t> insides;
+      insides.resize(N);
+      
+      // from ROIStart
+      float min_dist = std::pow(10,8);
+      int min_hit_index = -1 ;
+     
+      // hits in the cluster...
+      auto const & hits = ocluster._insideHits ;
+      
+      for (int i = 0; i < hits.size(); i++) {
+
+	auto & hit = hits[i];
+	
+	auto dist = sqrt( pow(pi0st.x - hit.x, 2) + pow(pi0st.y - hit.y, 2) );
+
+        if ( dist < min_dist ) {
+          min_dist = dist;
+	  min_hit_index = i;
+        }
+	
+        //which ones are in this segment
+	int count = 0;
+        for ( unsigned j = 0; j < divisions.size(); ++j ) {
+
+          auto& div = ocluster._verts[j];
+
+          if ( ::cv::pointPolygonTest(div, hit, false) >= 0 ) 
+	    
+            { insides[j].emplace_back(hit); ++count; }
+	  
+	}
+
+      }
+            
+      
+      //which side of the bounding rectangle is it on? f_half
+      unsigned j = 0;
+      bool found = false;
+      for ( ; j < insides.size(); ++j )  {
+
+	for( const auto& hd : insides[j] ) {
+
+	  if ( hd == hits[ min_hit_index ] )
+
+	    { found = true; break; }
+	}
+
+	if ( found ) break;
+      }
+      
+      
+      if ( N != 2 ) throw std::exception();
+      if ( j == N ) throw std::exception();
+      
+      int cstart = j;
+      int cend   = cstart > 0 ? 0 : 1;
       
       //get the farthest point from the center as start point
       ::cv::Point* f_start;
@@ -169,8 +176,6 @@ namespace larcv {
         if ( d > far ) { far = d;  f_start = &h; }
       }
       
-      //no start point found...
-      if ( far == 0 && _cutbadreco) continue;
       
       //end point is on the other side
       ::cv::Point* f_end; //farthest end point
@@ -180,20 +185,19 @@ namespace larcv {
         if ( d > far ) { far = d;  f_end = &h; }
       }
 
-      //no end point found...
-      if ( far == 0 && _cutbadreco) continue;
-
-      auto& reco   = ocluster.reco;
-      reco.startpt = Point2D(f_start->x, f_start->y);
-      reco.endpt   = Point2D(f_end->x  , f_end->y  );
+      auto& roi   = ocluster.roi;
+      roi.startpt = Point2D(f_start->x, f_start->y);
+      roi.endpt   = Point2D(f_end->x  , f_end->y  );
 
       oclusters.emplace_back(ocluster);
 
-    }
+
+      
+    } //end loop over clusters
 
     return oclusters;
-  }
 
+  } // end function
 
 }
 #endif
