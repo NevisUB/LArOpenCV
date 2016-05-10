@@ -17,8 +17,8 @@ namespace larcv {
   }
 
   Cluster2DArray_t BoundRectStart::_Process_(const larcv::Cluster2DArray_t& clusters,
-      const ::cv::Mat& img,
-      larcv::ImageMeta& meta)
+					     const ::cv::Mat& img,
+					     larcv::ImageMeta& meta)
   {
 
     /*
@@ -110,8 +110,11 @@ namespace larcv {
 
 
       // do something with the segments...
-      std::vector<Contour_t> insides; insides.resize(N);
-      std::vector<double>    tot_charge; tot_charge.resize(N);
+      std::vector<Contour_t> insides;
+      insides.resize(N);
+
+      std::vector<double> tot_charge;
+      tot_charge.resize(N);
 
       // hits in the cluster...
       for (auto& h : ocluster._insideHits) {
@@ -123,7 +126,7 @@ namespace larcv {
 
           if ( ::cv::pointPolygonTest(div, h, false) >= 0 ) {
             tot_charge[i] += (int) img.at<uchar>(h.y, h.x);
-            insides   [i].push_back(h);
+            insides[i].push_back(h);
           }
 
         }
@@ -133,8 +136,8 @@ namespace larcv {
       std::vector<double> roi_covs; roi_covs.resize(N);
       for (int i = 0; i < N; ++i) {
         auto roicov = std::abs(roi_cov(insides[i]));
-        if ( i < N / 2 ) f_half += roicov * tot_charge[i];
-        else             s_half += roicov * tot_charge[i];
+	if ( i < N / 2 ) f_half += roicov * tot_charge[i] / ( (double) insides[i].size() );
+        else             s_half += roicov * tot_charge[i] / ( (double) insides[i].size() );
 
         roi_covs[i] = roicov;
         ocluster._something.push_back(roicov);
@@ -151,10 +154,10 @@ namespace larcv {
         auto d = dist(h.x, center.x, h.y, center.y);
         if ( d > far ) { far = d;  f_start = &h; }
       }
-
+      
       //no start point found...
       if ( far == 0 && _cutbadreco) continue;
-
+      
       //end point is on the other side
       ::cv::Point* f_end; //farthest end point
       far = 0;
