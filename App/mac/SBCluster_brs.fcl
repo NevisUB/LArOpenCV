@@ -1,10 +1,10 @@
 LArImageHit: {
   Profile: true
   StoreOriginalImage: false
-  Producer: shrlike
-  Q2Gray: 5 
-  QMin: 3  
-  UseROI: true
+  Producer: gaushit
+  Q2Gray: 5
+  QMin: 3
+  UseROI: false
   ROIProducer: pizerofilterpad
   PoolTimeTick: 6
 
@@ -17,16 +17,15 @@ ImageClusterManager: {
   Profile:   true  
   ShowImage: false  
 
-  ClusterAlgoType: [SBCluster,SimpleCuts,PCAOverall,ROIAssistedStart,InConeCluster,RecoROIFilter]
-  ClusterAlgoName: [sbc,sc,pcao,rass,icc,rrf]
+  ClusterAlgoType: [SBCluster,SimpleCuts,PCAOverall,BoundRectStart,RecoParameters]
+  ClusterAlgoName: [sbc,sc,pcao,brs,rp]
   
-  MatchAlgoType: MatchTimeOverlap 
+  MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
 
   ReClusterAlgoType: ""
   ReClusterAlgoName: ""
 
- rass : {} # ROIAssistedStart
  rp   : {} # RecoParameters
  roip : {} # ROIParameters
 
@@ -58,7 +57,7 @@ ncc : {}
 
   CutBadReco : 1
   NHitsCut  : 20
-  NDivWidth : 4
+  NDivWidth : 2
 
   } 
 
