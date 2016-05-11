@@ -58,34 +58,15 @@ namespace larcv {
     ::cv::blur(sb_img,sb_img,
 	       ::cv::Size(_blur_size,_blur_size));
 
-    // Images that go off screen are not handled properly yet. Need to think some more
-    // This means the resize block is not working right now, but should only affeect resized blocks
-    ////////////////////////////////////////////////////////////////////////////////////////
-    ::cv::Mat resized(sb_img);
-    int row_resize = 4; 
-    int col_resize = 10; 
-    bool row_set = false; 
-    bool col_set = false; 
-     
     std::cout<<"Size of img : "<<sb_img.size() <<std::endl ;
-    if ( sb_img.rows > 1000){
-      ::cv::resize(sb_img,resized, cv::Size(sb_img.cols, sb_img.rows / row_resize));
-      row_set = true;
-      row_resize = float(sb_img.rows) / row_resize ; 
-     }
-    if ( sb_img.cols > 1000){
-      ::cv::resize(sb_img,resized, cv::Size(sb_img.cols / col_resize, sb_img.rows));
-      col_set = true;
-      }
-    std::cout<<"Size of img : "<<resized.size() <<std::endl ;
-    ////////////////////////////////////////////////////////////////////////////////////////
+    //::cv::resize(sb_img,resized, cv::Size(sb_img.cols / col_resize, sb_img.rows));
 
     //Contour finding
     ContourArray_t ctor_v;    
     std::vector<::cv::Vec4i> cv_hierarchy_v;
     ctor_v.clear(); cv_hierarchy_v.clear();
     
-    ::cv::findContours(resized,ctor_v,cv_hierarchy_v,
+    ::cv::findContours(sb_img,ctor_v,cv_hierarchy_v,
 		       CV_RETR_EXTERNAL,
 		       CV_CHAIN_APPROX_SIMPLE);
 
@@ -113,35 +94,100 @@ namespace larcv {
      poly_temp.clear() ;
      start_temp.x = 0; start_temp.y = 0; end_temp.x   = 0; end_temp.y   = 0;
 
-     std::cout<<"Entering loop "<<std::endl ;
+     int y_offset(0), x_offset(0) ;
+     int y_down(100), x_over(100) ;
+     int y_range(900), x_range(900) ;
+     ::cv::Mat down_img = drawing ;
 
+     std::cout<<"Entering loop "<<std::endl ;
+      
      while(1){
 
        // Enter 'e' to exit the image view; enter 's' to save 
        // your start + end points + polygons
        char c = cv::waitKey();
+
        if(c=='e') break;
        
        if(c == 's'){
-         for(int i = 0; i < poly_temp.size(); i++) {
-           if(row_set){ poly_temp[i].y *= row_resize ; }
-           if(col_set){ poly_temp[i].x *= col_resize ; }
-             }
-           if(row_set){ start_temp.y *= row_resize ; end_temp.y *= row_resize ; }
-           if(col_set){ start_temp.x *= col_resize ; end_temp.x *= col_resize ; }
+           poly_temp.push_back(poly_temp[0]) ;
 
            start_end_save.push_back(start_temp); start_end_save.push_back(end_temp);
            polygons_save.push_back(poly_temp);
 
-           std::cout<<"Saving polygon and start point! "<<std::endl ;
+           poly_temp.clear() ;
+           start_temp.x = 0; start_temp.y = 0; end_temp.x   = 0; end_temp.y   = 0;
+
+           std::cout<<"Saving polygon and start point! "<<polygons_save.size()<<", "<<start_end_save.size()<<std::endl ;
          }
+       
+       if( drawing.rows > y_range){
+         if(c=='u'){
+           y_offset -= y_down ;
+           if( y_offset < 0 ){
+             down_img = ::cv::Mat(drawing,cv::Range(0,y_range));  
+             y_offset = 0;
+              }
+           else
+             down_img = ::cv::Mat(drawing,cv::Range(y_offset, y_offset+ y_range));  
+              
+             ::cv::imshow( "Contours", down_img);
+            } 
+         if(c=='d'){
+           y_offset+= y_down ;
+           if( (y_offset + y_range) > drawing.rows ){
+             down_img = ::cv::Mat(drawing,cv::Range(y_offset, drawing.rows)); //,cv::Range(0,drawing.rows));
+             y_offset -= y_down ;
+             }
+           else
+             down_img = ::cv::Mat(drawing,cv::Range(y_offset, y_offset + y_range));  
+              
+             ::cv::imshow( "Contours", down_img);
+
+            std::cout<<"Dealing with range : "<<y_offset<<", "<<y_offset+y_range<<std::endl;
+            } 
+          }
+
+       if( drawing.cols > x_range){
+         if(c == 'l'){
+           x_offset -= x_over ;
+           if( x_offset < 0 ){
+             down_img = ::cv::Mat(drawing,cv::Range(0,x_range));  
+             x_offset = 0;
+              }
+           else
+             down_img = ::cv::Mat(drawing,cv::Range(x_offset, x_offset+ x_range));  
+              
+             ::cv::imshow( "Contours", down_img);
+            } 
+         if(c == 'r'){
+           x_offset += x_over ;
+           if( (x_offset + x_range) > drawing.rows ){
+             down_img = ::cv::Mat(drawing,cv::Range(x_offset, drawing.rows)); //,cv::Range(0,drawing.rows));
+             x_offset -= x_over ;
+             }
+           else
+             down_img = ::cv::Mat(drawing,cv::Range(x_offset, x_offset + x_range));  
+              
+             ::cv::imshow( "Contours", down_img);
+
+             std::cout<<"Dealing with range : "<<x_offset<<", "<<x_offset+x_range<<std::endl;
+            } 
+          }
+
        }
-    ////////////////////////////////////////////////////////
 
      ::larcv::Cluster2D new_clus ;
      
      for(size_t j = 0; j < start_end_save.size() / 2; ++j){
 
+       for(size_t i = 0; i < polygons_save[j].size(); ++i){
+         if( y_offset != 0)
+           polygons_save[j][i].y += y_offset ;
+         if( x_offset != 0)
+           polygons_save[j][i].x += x_offset ;
+          }
+         
        cv::RotatedRect rect0 = ::cv::minAreaRect(cv::Mat(polygons_save[j]));
        cv::Point2f vertices[4];
        rect0.points(vertices);
@@ -157,11 +203,23 @@ namespace larcv {
        new_clus._sumCharge = 0 ;
        std::swap(new_clus._contour,polygons_save[j]);
 
-       new_clus._startPt.x = start_end_save[2 * j].x ;
-       new_clus._startPt.y = start_end_save[2 * j].y;
-
-       new_clus._endPt.x = start_end_save[2 * j + 1].x ;
-       new_clus._endPt.y = start_end_save[2 * j + 1].y;
+      if( y_offset != 0){
+        new_clus._startPt.y = start_end_save[2 * j].y + y_offset ;
+        new_clus._endPt.y   = start_end_save[2 * j + 1].y + y_offset ; 
+         }
+       else{ 
+         new_clus._startPt.y = start_end_save[2 * j].y ; 
+         new_clus._endPt.y   = start_end_save[2 * j + 1].y ;
+         }
+       
+       if( x_offset != 0){
+         new_clus._startPt.x = start_end_save[2 * j].x + x_offset ;
+         new_clus._endPt.x   = start_end_save[2 * j + 1].x + x_offset ;
+         }
+       else{
+         new_clus._startPt.x = start_end_save[2 * j].x;
+         new_clus._endPt.x   = start_end_save[2 * j + 1].x ;
+         }
        
        result_v.push_back(new_clus);
        }
@@ -190,13 +248,11 @@ namespace larcv {
   void onMouse( int event, int x, int y, int f,void * ptr ){
 
     //Here we can drag and draw start_temp is stored on click, move mouse, release stores end_temp.
-    //std::cout<<"In onMouse ! "<<std::endl ;
-    
 
     switch(event){
 
         case  CV_EVENT_LBUTTONDOWN  :
-          std::cout<<"Setting start point!";
+          std::cout<<"Setting start point!: "<<x<<", "<<y<<std::endl;
           start_temp.x=x;
           start_temp.y=y;
           break;
@@ -208,7 +264,7 @@ namespace larcv {
           break;
          
         case  CV_EVENT_RBUTTONDOWN  :
-          std::cout<<"Adding point to polygon contour!";
+          std::cout<<"Adding point to polygon contour!"<<x<<", "<<y<<std::endl;
           poly_temp.push_back(cv::Point(x,y));
           break;
 
