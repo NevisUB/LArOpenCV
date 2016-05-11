@@ -110,7 +110,27 @@ namespace larcv{
       // super sad += is not function
       p1 = p1 + etop;
       p2 = p2 + ebot;
-	  
+
+      if ( p1.x < 0 ) p1.x = 0;
+      if ( p1.y < 0 ) p1.y = 0;
+      if ( p2.x < 0 ) p2.x = 0;
+      if ( p2.y < 0 ) p2.y = 0;
+      if ( stop.x<0 ) stop.x=0;
+      if ( stop.y<0 ) stop.y=0;
+      if ( etop.x<0 ) etop.x=0;
+      if ( etop.y<0 ) etop.y=0;
+      if ( sbot.x<0 ) sbot.x=0;
+      if ( sbot.y<0 ) sbot.y=0;
+      if ( ebot.x<0 ) ebot.x=0;
+      if ( ebot.y<0 ) ebot.y=0;
+
+      std::cout << "p1: " << p1 << "\n";
+      std::cout << "stop: " << stop << "\n";
+      std::cout << "etop: " << etop << "\n";
+      std::cout << "ebot: " << ebot << "\n";
+      std::cout << "sbot: " << sbot << "\n";
+      std::cout << "p2: " << p2 << "\n";
+      
       //lets do something idiotic first and just check that we can make this polygon reasonably;
       Contour_t aho_contour;
       aho_contour.reserve(4);
