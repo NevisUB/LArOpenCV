@@ -51,6 +51,9 @@ namespace larcv {
   private:
 
     float _deg2rad;
+
+    float _padx;
+    float _pady;
     
   };
   

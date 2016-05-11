@@ -8,7 +8,10 @@
 namespace larcv{
 
   void ROIAssistedStart::_Configure_(const ::fcllite::PSet &pset)
-  {}
+  {
+    _padx = pset.get<float>("Padx");
+    _pady = pset.get<float>("Pady");
+  }
 
   Cluster2DArray_t ROIAssistedStart::_Process_(const larcv::Cluster2DArray_t& clusters,
 					       const ::cv::Mat& img,
@@ -93,12 +96,12 @@ namespace larcv{
       auto& vvv = ocluster._verts;
       vvv.clear(); vvv.resize(N);
 
-      float padx(1.0), pady(1.0);
+
       
       for (unsigned i = 0; i < N; ++i) {
         auto& vv = vvv[i];
 
-        ::cv::Size2f s = swapped ? ::cv::Size2f(height+padx, w_div+pady) : ::cv::Size2f(w_div+padx, height+pady);
+        ::cv::Size2f s = swapped ? ::cv::Size2f(height+_padx, w_div+_pady) : ::cv::Size2f(w_div+_padx, height+_pady);
 
         // step and make rotated rect
         divisions[i] = ::cv::RotatedRect(::cv::Point2f(cx + i * dx, cy + i * dy), s, angle);
@@ -202,8 +205,6 @@ namespace larcv{
       roi.endpt   = Point2D(f_end->x  , f_end->y  );
 
       oclusters.emplace_back(std::move(ocluster));
-
-
       
     } //end loop over clusters
 

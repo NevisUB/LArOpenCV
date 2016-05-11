@@ -26,9 +26,18 @@ ImageClusterManager: {
   ReClusterAlgoType: ""
   ReClusterAlgoName: ""
 
- rass : {} # ROIAssistedStart
+
  rp   : {} # RecoParameters
  roip : {} # ROIParameters
+
+ rass : {# ROIAssistedStart
+
+   Padx : 1.0 # X padding on segments
+   Pady : 1.0 # Y passiing on segments (pixels?)
+ 
+ } 
+
+
 
  ac : {
     MaxDefectSize: 50 # why?
