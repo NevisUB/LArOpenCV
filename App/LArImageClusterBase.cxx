@@ -60,12 +60,9 @@ namespace larlite {
 
   bool LArImageClusterBase::analyze(storage_manager* storage) {
 
-   std::cout<<"Event : "<<_event<<std::endl;
-   _event++;
-
-  _img_mgr.clear();
-  _orig_img_mgr.clear();
-  _alg_mgr.ClearData();
+    _img_mgr.clear();
+    _orig_img_mgr.clear();
+    _alg_mgr.ClearData();
 
     ::larcv::Watch watch_all, watch_one;
     watch_all.Start();
@@ -274,7 +271,6 @@ namespace larlite {
 
 	// add to event_cluster
 	ev_cluster->push_back(c);
-
       }
 
       // if we have crated a cluster -> hit association
