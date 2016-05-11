@@ -29,7 +29,7 @@ class AlgoViewer :
             return meta.pixel_x(x)
         
     
-        if self.name in ["sbc"] :
+        if self.name in ["sbc", "tce"] :
             # ax.plot(meta.roivtx().y,
             #         meta.roivtx().x,'*',markersize=10,color='orange')
             insidehits = cluster._insideHits

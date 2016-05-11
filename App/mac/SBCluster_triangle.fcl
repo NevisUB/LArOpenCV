@@ -1,9 +1,10 @@
+
 LArImageHit: {
   Profile: true
   StoreOriginalImage: false
   Producer: shrlike
-  Q2Gray: 5 
-  QMin: 3  
+  Q2Gray: 5
+  QMin: 3
   UseROI: true
   ROIProducer: pizerofilterpad
   PoolTimeTick: 6
@@ -17,27 +18,24 @@ ImageClusterManager: {
   Profile:   true  
   ShowImage: false  
 
-  ClusterAlgoType: [SBCluster,SimpleCuts,PCAOverall,ROIAssistedStart,InConeCluster,RecoROIFilter]
-  ClusterAlgoName: [sbc,sc,pcao,rass,icc,rrf]
+  ClusterAlgoType: [SBCluster,SimpleCuts,PCAOverall,BoundRectStart,RecoParameters,TriangleClusterExt]
+  ClusterAlgoName: [sbc,sc,pcao,brs,rp,tce]
   
-  MatchAlgoType: MatchTimeOverlap 
-  MatchAlgoName: mto
+  #MatchAlgoType: MatchTimeOverlap
+  #MatchAlgoName: mto
+
+  MatchAlgoType: ""
+  MatchAlgoName: ""
 
   ReClusterAlgoType: ""
   ReClusterAlgoName: ""
 
-
+  tce : {
+     Keep: 2 # how many clusters to keep and do the triangle
+ }
+ 
  rp   : {} # RecoParameters
  roip : {} # ROIParameters
-
- rass : {# ROIAssistedStart
-
-   Padx : 1.0 # X padding on segments
-   Pady : 1.0 # Y passiing on segments (pixels?)
- 
- } 
-
-
 
  ac : {
     MaxDefectSize: 50 # why?
@@ -67,7 +65,7 @@ ncc : {}
 
   CutBadReco : 1
   NHitsCut  : 20
-  NDivWidth : 4
+  NDivWidth : 2
 
   } 
 
