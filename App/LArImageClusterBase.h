@@ -86,6 +86,8 @@ namespace larlite {
     size_t _num_clusters;
     size_t _num_unclustered_hits;
     size_t _num_clustered_hits;
+
+    int _event ;
     
     
   };

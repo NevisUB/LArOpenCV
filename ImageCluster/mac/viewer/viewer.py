@@ -16,7 +16,6 @@ cfg="../../../App/mac/SBCluster_vic_data.fcl"
 algid  = int(sys.argv[-1])
 print "You have chosen algid: {}".format(algid)
 my_proc.add_input_file(sys.argv[1])
-
 my_proc.set_io_mode(fmwk.storage_manager.kREAD)
 
 myunit = fmwk.LArImageHit()
@@ -30,7 +29,7 @@ while( my_proc.process_event() ) :
     k += 1
     manager  = myunit.algo_manager()
     print "NUMBER OF CLUSTERS", manager.NumClusters()
-    print "You have chosen algorithm:"
+    print "You have chosen algorithm:", algid
     print manager.GetClusterAlg(algid)
     print ""
     
@@ -74,6 +73,9 @@ while( my_proc.process_event() ) :
         ax = axx[ cluster.PlaneID() ]
 
 	#print "Plane: ", cluster.PlaneID(), ", cluster area ", cluster._area, ", hits : ", cluster._numHits  
+        if cluster._area < 200 :
+	  continue
+
         draw_cluster(ax,cluster,manager.MetaData(cluster.PlaneID(),algid))
         algo_drawer.draw(ax,cluster,c,manager.MetaData(cluster.PlaneID(),algid))
         

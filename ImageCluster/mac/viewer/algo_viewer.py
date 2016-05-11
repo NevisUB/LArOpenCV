@@ -32,6 +32,9 @@ class AlgoViewer :
         if self.name in ["sbc"] :
             # ax.plot(meta.roivtx().y,
             #         meta.roivtx().x,'*',markersize=10,color='orange')
+            insidehits = cluster._insideHits
+            px, py     = get_xy_w_offset(insidehits,meta)
+            ax.plot(px,py,'o',markersize=1,color='black')
             return
 
         if self.name in ["dwc"] :
@@ -158,12 +161,11 @@ class AlgoViewer :
             #Plot polygons
 	    pts_x = []
 	    pts_y = []
-	    pts_all = []
 	    for pt in xrange(cluster._cone_contour.size()):
 	      pts_x.append(pixel_y(cluster._cone_contour[pt].x))
 	      pts_y.append(pixel_x(cluster._cone_contour[pt].y))
 	      
-
+	    pts_all = []
             patches = []
 
             if cluster._cone_contour.size():
@@ -285,8 +287,8 @@ class AlgoViewer :
             px, py     = get_xy_w_offset(insidehits,meta)
             ax.plot(px,py,'o',markersize=1,color='black')
 
-            ax.plot(meta.roivtx().y,
-                    meta.roivtx().x,'*',markersize=10,color='orange')
+            ax.plot(meta.roivtx().x,
+                    meta.roivtx().y,'*',markersize=10,color='orange')
 
             ax.plot(pixel_y(cluster.roi.startpt.x),
                     pixel_x(cluster.roi.startpt.y),'o',color='green'  ,markersize=10)

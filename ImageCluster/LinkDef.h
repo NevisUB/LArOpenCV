@@ -57,20 +57,8 @@
 #pragma link C++ class larcv::ROIParameters+;		
 #pragma link C++ class larcv::RecoParameters+;
 #pragma link C++ class larcv::NearestConeCluster+;
+#pragma link C++ class larcv::SBManCluster+;
 #pragma link C++ class larcv::ROIAssistedStart+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -27,7 +27,8 @@ namespace larcv {
   public:
     
     /// Default constructor
-    ROIStart(const std::string name="ROIStart") : ClusterAlgoBase(name)
+    ROIStart(const std::string name="ROIStart") : ClusterAlgoBase(name), _min_vertex_dist(0.)
+    
     {}
     
     /// Default destructor
@@ -47,6 +48,8 @@ namespace larcv {
 				      larcv::ImageMeta& meta);
     
   private:
+
+  float _min_vertex_dist ;
 
   };
   
