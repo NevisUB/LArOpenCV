@@ -97,18 +97,15 @@ namespace larlite {
     if (ev_hit == nullptr)
       throw DataFormatException("Could not locate hit data product!");
 
-    std::vector<std::pair<size_t, size_t>> wire_range_v(
-							nplanes, std::pair<size_t, size_t>(1e12, 0));
-    std::vector<std::pair<size_t, size_t>> tick_range_v(
-							nplanes, std::pair<size_t, size_t>(1e12, 0));
+    std::vector<std::pair<size_t, size_t>> wire_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
+    std::vector<std::pair<size_t, size_t>> tick_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
 
     ::larlite::event_PiZeroROI* ev_roi = nullptr;
     if (_use_roi) {
       ev_roi = storage->get_data<event_PiZeroROI>(_roi_producer);
+      
       if (ev_roi->size() == 0) {
-	throw DataFormatException(
-				  "Could not locate ROI data product and you have UseROI: True!");
-	std::cout << "a\n";
+	throw DataFormatException("Could not locate ROI data product and you have UseROI: True!");
       }
 
       if ( ev_roi->size() > 1 ) { throw larcaffe::larbys("More than one ROI, not implemented!\n"); }
@@ -147,12 +144,13 @@ namespace larlite {
       size_t nwires = wire_range.second - wire_range.first + 2;
       ::larcv::ImageMeta meta((double)nwires, (double)nticks, nwires, nticks,
 			      wire_range.first, tick_range.first, plane);
-
+      
       if (_use_roi) {
-	const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
-	const auto& trkend = (*ev_roi)[0].GetTrackEnd()[plane];
+	auto vtx = (*ev_roi)[0].GetVertex()[plane];
+	auto trkend = (*ev_roi)[0].GetTrackEnd()[plane];
 	meta.setvtx(vtx.second, vtx.first);
 	meta.settrkend(trkend.second, trkend.first);
+	
       }
 
       if (nwires >= 1e10 || nticks >= 1e10)
@@ -179,15 +177,12 @@ namespace larlite {
       size_t y = (size_t)(h.PeakTime() + 0.5) - tick_range.first;
       size_t x = wid.Wire - wire_range.first;
 
-      // if(y>=nticks || x>=nwires) { throw std::exception(); }
-      // if(y>=nticks || x>=nwires) { std::cout << "\t==> Skipping hit\n";
-      // continue; } // skip this hit
-      if (y >= nticks || x >= nwires) {
-	continue;
-      }  // skip this hit
 
-      // std::cout<<"Inserting " << x << " " << y << " @ " << wid.Plane <<
-      // std::endl;
+      // skip this hit
+      if (y >= nticks || x >= nwires) 
+	continue;
+
+
       double charge = h.Integral() / _charge_to_gray_scale;
       charge += (double)(mat.at<unsigned char>(x, y));
 
@@ -230,13 +225,16 @@ namespace larlite {
 	auto const& tick_range = tick_range_v[plane];
 
 	img = pooled;
-	meta = ::larcv::ImageMeta(
-				  (double)pooled.rows, (double)pooled.cols * _pool_time_tick,
+	meta = ::larcv::ImageMeta((double)pooled.rows, (double)pooled.cols * _pool_time_tick,
 				  pooled.rows, pooled.cols, wire_range.first, tick_range.first, plane);
 
 	if (_use_roi) {
-	  const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
-	  const auto& trkend = (*ev_roi)[0].GetTrackEnd()[plane];
+	  //const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
+	  // you wont believe this but I have to make a strict copy of the vertex out
+	  // of the data product or somehoe GetTrackEnd() will overwrite the reference
+	  // i dare you to change below to const reference it's scary
+	  auto vtx = (*ev_roi)[0].GetVertex()[plane];
+	  auto trkend = (*ev_roi)[0].GetTrackEnd()[plane];
 	  meta.setvtx(vtx.second, vtx.first);
 	  meta.settrkend(trkend.second, trkend.first);
 	}
@@ -249,8 +247,7 @@ namespace larlite {
     if (!_run_analyze_image_cluster) return;
 
     if (!_plotFile) {
-      std::string _plotFilePrefix = storage->output_filename().substr(
-								      0, storage->output_filename().find(".root"));
+      std::string _plotFilePrefix = storage->output_filename().substr(0, storage->output_filename().find(".root"));
 
       _plotFile = new TFile(
 			    Form("%s_%s_PlotBook.root", _plotFilePrefix.c_str(), _name.c_str()),

@@ -93,10 +93,12 @@ namespace larcv{
       auto& vvv = ocluster._verts;
       vvv.clear(); vvv.resize(N);
 
+      float padx(1.0), pady(1.0);
+      
       for (unsigned i = 0; i < N; ++i) {
         auto& vv = vvv[i];
 
-        ::cv::Size2f s = swapped ? ::cv::Size2f(height, w_div) : ::cv::Size2f(w_div, height);
+        ::cv::Size2f s = swapped ? ::cv::Size2f(height+padx, w_div+pady) : ::cv::Size2f(w_div+padx, height+pady);
 
         // step and make rotated rect
         divisions[i] = ::cv::RotatedRect(::cv::Point2f(cx + i * dx, cy + i * dy), s, angle);
@@ -124,7 +126,7 @@ namespace larcv{
 
 	auto & hit = hits[i];
 	
-	auto dist = sqrt( pow(pi0st.x - hit.x, 2) + pow(pi0st.y - hit.y, 2) );
+	auto dist = std::sqrt( std::pow(pi0st.x - hit.x, 2) + std::pow(pi0st.y - hit.y, 2) );
 
         if ( dist < min_dist ) {
           min_dist = dist;
@@ -161,9 +163,19 @@ namespace larcv{
 	if ( found ) break;
       }
       
-      
       if ( N != 2 ) throw std::exception();
-      if ( j == N ) throw std::exception();
+      if ( j == N )
+	{
+	  std::cout << " If you are seeing this message then there are hits that lay on the outside of divisions\n";
+	  std::cout << " which could mean that there is a hit that failed to get associated with a segment. Take a look";
+	  std::cout << " min_hit_index: " << min_hit_index << " \n";
+	  std::cout << " hits[min_hit_index]" << hits[min_hit_index] << "\n";
+	  std::cout << " min dist : " << min_dist << "\n";
+	  std::cout << " vertex : " << pi0st.x << "," << pi0st.y << "\n";
+	  std::cout << " insides size " << insides[0].size() << " and " << insides[1].size() << "\n";
+	  std::cout << " hits.size() : " << hits.size() << "\n";
+	  throw std::exception();
+	}
       
       int cstart = j;
       int cend   = cstart > 0 ? 0 : 1;
@@ -189,7 +201,7 @@ namespace larcv{
       roi.startpt = Point2D(f_start->x, f_start->y);
       roi.endpt   = Point2D(f_end->x  , f_end->y  );
 
-      oclusters.emplace_back(ocluster);
+      oclusters.emplace_back(std::move(ocluster));
 
 
       

@@ -47,10 +47,12 @@ namespace larcv {
 				      larcv::ImageMeta& meta);
     
   private:
+
     double _max_rad_length;
     int _maxclusters;
     int _minclusters;
-    int _strict_hit_cut ;
+    int _strict_hit_cut;
+    
   };
   
   /**

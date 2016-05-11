@@ -14,20 +14,17 @@ namespace larcv {
     _strict_hit_cut = pset.get<int>("StrictHitCut");  // how many is too many
   }
 
-  Cluster2DArray_t RecoROIFilter::_Process_(const larcv::Cluster2DArray_t& clusters, const ::cv::Mat& img,
+  Cluster2DArray_t RecoROIFilter::_Process_(const larcv::Cluster2DArray_t& clusters,
+					    const ::cv::Mat& img,
 					    larcv::ImageMeta& meta) {
     Cluster2DArray_t oclusters;
     oclusters.reserve(clusters.size());
 
     for (const auto& cluster : clusters) {
-      if (cluster.roi.dist > _max_rad_length ||
-	  cluster._numHits <
-	  _strict_hit_cut)  // start point distance to roi vertex
-	{
-	  // std::cout << "start distance is: " << cluster.roi.dist << "\n";
-	  // std::cout << "number of hits is: " << cluster._numHits << "\n";
+
+      if (cluster.roi.dist > _max_rad_length || cluster._numHits < _strict_hit_cut)  // start point distance to roi vertex
 	  continue;
-	}
+
 
       auto ocluster = cluster;  // make a copy
 
@@ -39,17 +36,15 @@ namespace larcv {
       oclusters.emplace_back(ocluster);
     }
     
-    if (oclusters.size() > _maxclusters)  // to many clusters moving on to matching
-      {
+    if (oclusters.size() > _maxclusters) { // to many clusters moving on to matching
 	std::cout << "too many clusters @ " << oclusters.size() << "\n";
 	return Cluster2DArray_t();
       }
 
-    if (oclusters.size() < _minclusters)  // to little clusters moving on to matching
-      {
-	std::cout << "to little clusters @ " << oclusters.size() << "\n";
-	return Cluster2DArray_t();
-      }
+    if (oclusters.size() < _minclusters) {  // to little clusters moving on to matching
+      std::cout << "to little clusters @ " << oclusters.size() << "\n";
+      return Cluster2DArray_t();
+    }
 
     return oclusters;
   }
