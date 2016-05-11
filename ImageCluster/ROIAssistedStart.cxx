@@ -95,8 +95,6 @@ namespace larcv{
 
       auto& vvv = ocluster._verts;
       vvv.clear(); vvv.resize(N);
-
-
       
       for (unsigned i = 0; i < N; ++i) {
         auto& vv = vvv[i];

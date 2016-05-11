@@ -26,7 +26,6 @@ namespace larcv {
      doxygen documentation!
   */
 
-
   struct params {
     Point2D startpt;
     Point2D endpt;
@@ -117,6 +116,7 @@ namespace larcv {
     /// For track shower separtion
     double _min_width;
     double _max_width;
+
     //ROI parameters
     params roi;
     //Reconstructed
@@ -139,6 +139,7 @@ namespace larcv {
     std::vector<double> _something;
     
   private:
+
     ClusterID_t _cluster_id;
     ImageID_t   _image_id;
     size_t _plane_id;

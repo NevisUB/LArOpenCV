@@ -31,9 +31,6 @@ namespace larcv {
 
     Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );
 
-    Contour_t all_locations;
-    ::cv::findNonZero(img, all_locations); // get the non zero points
-
     for (size_t k = 0; k < clusters.size(); k++) {
 
       Cluster2D ocluster = clusters[k];
