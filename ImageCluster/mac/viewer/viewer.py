@@ -11,13 +11,11 @@ import algo_viewer as av
 my_proc = fmwk.ana_processor()
 
 # Config fileg
-cfg="../../../App/mac/SBCluster2.fcl"
+cfg="../../../App/mac/SBCluster_vic_data.fcl"
 
 algid  = int(sys.argv[-1])
-print algid
+print "You have chosen algid: {}".format(algid)
 my_proc.add_input_file(sys.argv[1])
-#my_proc.add_input_file(sys.argv[2])
-#my_proc.add_input_file(sys.argv[3])
 
 my_proc.set_io_mode(fmwk.storage_manager.kREAD)
 
