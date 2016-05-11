@@ -6,7 +6,9 @@
 namespace larcv {
 
   void ROIStart::_Configure_(const ::fcllite::PSet &pset)
-  {}
+  {
+     _min_vertex_dist = pset.get<float>("MinVtxDist") ;
+  }
 
   Cluster2DArray_t ROIStart::_Process_(const larcv::Cluster2DArray_t& clusters,
                                        const ::cv::Mat& img,
@@ -73,7 +75,7 @@ namespace larcv {
       // std::cout<<" roi distance : " <<roi.dist<<std::endl;
       // std::cout<<" and the far distance is " << std::sqrt( std::pow(roi.endpt.x - pi0st.x, 2) + std::pow(roi.endpt.y - pi0st.y, 2) ) << "\n";
 
-      if ( roi.dist < 2. ) {
+      if ( roi.dist < _min_vertex_dist ){
         roi.dir.x = ( roi.endpt.x - roi.startpt.x ) / roi.dist;
         roi.dir.y = ( roi.endpt.y - roi.startpt.y ) / roi.dist;
       }
