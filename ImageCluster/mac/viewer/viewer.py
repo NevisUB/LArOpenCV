@@ -18,7 +18,6 @@ algid  = int(sys.argv[-1])
 print "You have chosen algid: {}".format(algid)
 
 my_proc.add_input_file(sys.argv[1])
-
 my_proc.set_io_mode(fmwk.storage_manager.kREAD)
 
 myunit = fmwk.LArImageHit()
