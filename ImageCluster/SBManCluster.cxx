@@ -23,6 +23,8 @@ namespace larcv {
   //Polygon
   std::vector<cv::Point> poly_temp ;
 
+  float pix_h(0), pix_w(0), o_x(0), o_y(0) ;
+
   bool clicked = false;
 
 
@@ -43,6 +45,10 @@ namespace larcv {
 					       const ::cv::Mat& img,
 					       larcv::ImageMeta& meta)
   {
+    pix_h = meta.pixel_height() ;
+    pix_w = meta.pixel_width() ;
+    o_x = meta.origin().x ;
+    o_y = meta.origin().y ;
 
     if ( clusters.size() )
       throw larbys("This algo can only be executed first in algo chain!");
@@ -69,6 +75,7 @@ namespace larcv {
     ::cv::findContours(sb_img,ctor_v,cv_hierarchy_v,
 		       CV_RETR_EXTERNAL,
 		       CV_CHAIN_APPROX_SIMPLE);
+    
 
 
      //Fill some cluster parameters 
@@ -77,11 +84,12 @@ namespace larcv {
      // Draw contours, set mouse call function, store start/end points + polygon points
      ////////////////////////////////////////////////////////
      ::cv::RNG rng(12345);
-     ::cv::Mat drawing = ::cv::Mat::zeros( sb_img.size(), CV_8UC3 );
+     ::cv::Mat drawing(img) ; //::cv::Mat::zeros( sb_img.size(), CV_8UC3 );
+     ::cv::threshold(drawing,img, _thresh,_thresh_maxval,CV_THRESH_BINARY); //return type is "threshold value?" 
 
      for( int i = 0; i< ctor_v.size(); i++ ){
         ::cv::Scalar color = ::cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-        if( ::cv::contourArea(ctor_v[i]) < 200 ) continue;
+        //if( ::cv::contourArea(ctor_v[i]) < 200 ) continue;
         ::cv::drawContours( drawing , ctor_v, i, color, 2, 8, ::cv::noArray(), 0, ::cv::Point() );
       }
 
@@ -98,8 +106,6 @@ namespace larcv {
      int y_down(100), x_over(100) ;
      int y_range(900), x_range(900) ;
      ::cv::Mat down_img = drawing ;
-
-     std::cout<<"Entering loop "<<std::endl ;
       
      while(1){
 
@@ -110,8 +116,8 @@ namespace larcv {
        if(c=='e') break;
        
        if(c == 's'){
-           poly_temp.push_back(poly_temp[0]) ;
 
+           poly_temp.push_back(poly_temp[0]) ;
            start_end_save.push_back(start_temp); start_end_save.push_back(end_temp);
            polygons_save.push_back(poly_temp);
 
@@ -120,7 +126,8 @@ namespace larcv {
 
            std::cout<<"Saving polygon and start point! "<<polygons_save.size()<<", "<<start_end_save.size()<<std::endl ;
          }
-       
+
+       // Allows scrolling up and down 
        if( drawing.rows > y_range){
          if(c=='u'){
            y_offset -= y_down ;
@@ -148,6 +155,7 @@ namespace larcv {
             } 
           }
 
+       // Allows scroll left to right
        if( drawing.cols > x_range){
          if(c == 'l'){
            x_offset -= x_over ;
@@ -175,19 +183,21 @@ namespace larcv {
             } 
           }
 
+
        }
 
      ::larcv::Cluster2D new_clus ;
      
-     for(size_t j = 0; j < start_end_save.size() / 2; ++j){
+     for(int j = 0; j < start_end_save.size() / 2; ++j){
 
-       for(size_t i = 0; i < polygons_save[j].size(); ++i){
+       for(int i = 0; i < polygons_save[j].size(); ++i){
          if( y_offset != 0)
            polygons_save[j][i].y += y_offset ;
          if( x_offset != 0)
            polygons_save[j][i].x += x_offset ;
           }
-         
+
+
        cv::RotatedRect rect0 = ::cv::minAreaRect(cv::Mat(polygons_save[j]));
        cv::Point2f vertices[4];
        rect0.points(vertices);
@@ -220,12 +230,14 @@ namespace larcv {
          new_clus._startPt.x = start_end_save[2 * j].x;
          new_clus._endPt.x   = start_end_save[2 * j + 1].x ;
          }
-       
+
+       //std::cout<<"0) Start point is: "<<new_clus._startPt.x<<", "<<new_clus._startPt.y <<std::endl ;
        result_v.push_back(new_clus);
+       std::cout<<"new clus inside hits: "<<new_clus._insideHits.size() <<std::endl ;
        }
-    
+
      Contour_t all_locations;
-     ::cv::findNonZero(img, all_locations); // get the non zero points
+     ::cv::findNonZero(drawing, all_locations); // get the non zero points
 
      for( const auto& loc: all_locations ) {
        for( size_t i = 0; i < result_v.size(); i++ ) {
@@ -238,6 +250,43 @@ namespace larcv {
          result_v[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);  
           }   
         }   
+
+      // float min_st_dist = 1000000. ;
+      // int min_st_i = 0;
+      // float min_end_dist = 1000000. ;
+      // int min_end_i = 0;
+      // for( size_t i = 0; i < result_v.size(); i++){
+      //  for( size_t j = 0; j < result_v[i]._insideHits.size(); j++){ 
+
+      //    
+      //    auto & loc = result_v[i]._insideHits[j] ;
+
+      //    auto st = ( 0.5 + loc.x ) * meta.pixel_height() + meta.origin().y;
+      //    auto sw = ( 0.5 + loc.y ) * meta.pixel_width() + meta.origin().x;
+      //    std::cout<<"Hits at : "<<st<<", "<<sw<<std::endl;
+
+      //    float dist_st  = sqrt(pow(loc.x - result_v[i]._startPt.x,2) + pow(loc.y - result_v[i]._startPt.y,2)); 
+      //    float dist_end = sqrt(pow(loc.x - result_v[i]._endPt.x,2) + pow(loc.y - result_v[i]._endPt.y,2)); 
+
+      //    if( dist_st < min_st_dist){
+      //      min_st_dist = dist_st ;
+      //      min_st_i = j; 
+      //     }
+      //    if( dist_end < min_end_dist){
+      //      min_end_dist = dist_end ;
+      //      min_end_i = j; 
+      //     }
+      //   }
+      //   result_v[i]._startPt.x = result_v[i]._insideHits[min_st_i].x ;
+      //   result_v[i]._startPt.y = result_v[i]._insideHits[min_st_i].y ;
+      //   result_v[i]._endPt.x = result_v[i]._insideHits[min_end_i].x ;
+      //   result_v[i]._endPt.y = result_v[i]._insideHits[min_end_i].y ;
+      //   auto st = ( 0.5 + result_v[i]._startPt.x ) * meta.pixel_height() + meta.origin().y;
+      //   auto sw = ( 0.5 + result_v[i]._startPt.y ) * meta.pixel_width() + meta.origin().x;
+
+      //   std::cout<<"1)start is: "<<result_v[i]._startPt.x<<", "<<result_v[i]._startPt.y <<std::endl ;
+      //   std::cout<<"start time and wire  "<<st<<", "<<sw <<std::endl;
+      // }
 
      std::cout<<"Result : "<<result_v.size()<<std::endl ;
 
@@ -252,13 +301,15 @@ namespace larcv {
     switch(event){
 
         case  CV_EVENT_LBUTTONDOWN  :
-          std::cout<<"Setting start point!: "<<x<<", "<<y<<std::endl;
+          //std::cout<<"Setting start point!: "<<x<<", "<<y<<std::endl;
           start_temp.x=x;
           start_temp.y=y;
+	  std::cout<<"Setting time/wire!: "<< ( 0.5 + start_temp.x ) * pix_h + o_y<<", "<<( 0.5 + start_temp.y ) * pix_w + o_x<<std::endl;
+
           break;
 
         case  CV_EVENT_LBUTTONUP    :
-          std::cout<<"Setting end point!";
+          std::cout<<"Setting end point!: "<<x<<", "<<y<<std::endl ;
           end_temp.x=x;
           end_temp.y=y;
           break;
