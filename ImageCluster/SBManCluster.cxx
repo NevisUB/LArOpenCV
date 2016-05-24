@@ -23,7 +23,7 @@ namespace larcv {
   //Polygon
   std::vector<cv::Point> poly_temp ;
 
-  float pix_h(0), pix_w(0), o_x(0), o_y(0) ;
+  double pix_h(0), pix_w(0), o_x(0), o_y(0) ;
 
   bool clicked = false;
 
@@ -64,7 +64,7 @@ namespace larcv {
     ::cv::blur(sb_img,sb_img,
 	       ::cv::Size(_blur_size,_blur_size));
 
-    std::cout<<"Size of img : "<<sb_img.size() <<std::endl ;
+    //std::cout<<"Size of img : "<<sb_img.size() <<std::endl ;
     //::cv::resize(sb_img,resized, cv::Size(sb_img.cols / col_resize, sb_img.rows));
 
     //Contour finding
@@ -143,15 +143,16 @@ namespace larcv {
          if(c=='d'){
            y_offset+= y_down ;
            if( (y_offset + y_range) > drawing.rows ){
-             down_img = ::cv::Mat(drawing,cv::Range(y_offset, drawing.rows)); //,cv::Range(0,drawing.rows));
              y_offset -= y_down ;
+             down_img = ::cv::Mat(drawing,cv::Range(y_offset, drawing.rows)); //,cv::Range(0,drawing.rows));
              }
-           else
+           else{
              down_img = ::cv::Mat(drawing,cv::Range(y_offset, y_offset + y_range));  
+	     }
               
              ::cv::imshow( "Contours", down_img);
 
-            std::cout<<"Dealing with range : "<<y_offset<<", "<<y_offset+y_range<<std::endl;
+            //std::cout<<"Dealing with range : "<<y_offset<<", "<<y_offset+y_range<<std::endl;
             } 
           }
 
@@ -160,8 +161,8 @@ namespace larcv {
          if(c == 'l'){
            x_offset -= x_over ;
            if( x_offset < 0 ){
-             down_img = ::cv::Mat(drawing,cv::Range(0,x_range));  
              x_offset = 0;
+             down_img = ::cv::Mat(drawing,cv::Range(x_offset,x_range));  
               }
            else
              down_img = ::cv::Mat(drawing,cv::Range(x_offset, x_offset+ x_range));  
@@ -196,7 +197,6 @@ namespace larcv {
          if( x_offset != 0)
            polygons_save[j][i].x += x_offset ;
           }
-
 
        cv::RotatedRect rect0 = ::cv::minAreaRect(cv::Mat(polygons_save[j]));
        cv::Point2f vertices[4];
@@ -233,7 +233,6 @@ namespace larcv {
 
        //std::cout<<"0) Start point is: "<<new_clus._startPt.x<<", "<<new_clus._startPt.y <<std::endl ;
        result_v.push_back(new_clus);
-       std::cout<<"new clus inside hits: "<<new_clus._insideHits.size() <<std::endl ;
        }
 
      Contour_t all_locations;
@@ -251,42 +250,46 @@ namespace larcv {
           }   
         }   
 
-      // float min_st_dist = 1000000. ;
-      // int min_st_i = 0;
-      // float min_end_dist = 1000000. ;
-      // int min_end_i = 0;
-      // for( size_t i = 0; i < result_v.size(); i++){
-      //  for( size_t j = 0; j < result_v[i]._insideHits.size(); j++){ 
+       for( size_t i = 0; i < result_v.size(); i++){
 
-      //    
-      //    auto & loc = result_v[i]._insideHits[j] ;
+         float min_st_dist = 1000000. ;
+         int min_st_i = -1;
+         float min_end_dist = 1000000. ;
+         int min_end_i = -1;
 
-      //    auto st = ( 0.5 + loc.x ) * meta.pixel_height() + meta.origin().y;
-      //    auto sw = ( 0.5 + loc.y ) * meta.pixel_width() + meta.origin().x;
-      //    std::cout<<"Hits at : "<<st<<", "<<sw<<std::endl;
+         for( size_t j = 0; j < result_v[i]._insideHits.size(); j++){ 
 
-      //    float dist_st  = sqrt(pow(loc.x - result_v[i]._startPt.x,2) + pow(loc.y - result_v[i]._startPt.y,2)); 
-      //    float dist_end = sqrt(pow(loc.x - result_v[i]._endPt.x,2) + pow(loc.y - result_v[i]._endPt.y,2)); 
+          auto & loc = result_v[i]._insideHits[j] ;
 
-      //    if( dist_st < min_st_dist){
-      //      min_st_dist = dist_st ;
-      //      min_st_i = j; 
-      //     }
-      //    if( dist_end < min_end_dist){
-      //      min_end_dist = dist_end ;
-      //      min_end_i = j; 
-      //     }
-      //   }
-      //   result_v[i]._startPt.x = result_v[i]._insideHits[min_st_i].x ;
-      //   result_v[i]._startPt.y = result_v[i]._insideHits[min_st_i].y ;
-      //   result_v[i]._endPt.x = result_v[i]._insideHits[min_end_i].x ;
-      //   result_v[i]._endPt.y = result_v[i]._insideHits[min_end_i].y ;
-      //   auto st = ( 0.5 + result_v[i]._startPt.x ) * meta.pixel_height() + meta.origin().y;
-      //   auto sw = ( 0.5 + result_v[i]._startPt.y ) * meta.pixel_width() + meta.origin().x;
+          //auto st = ( 0.5 + loc.x ) * meta.pixel_height() + meta.origin().y;
+          //auto sw = ( 0.5 + loc.y ) * meta.pixel_width() + meta.origin().x;
+          //std::cout<<"Hits at : "<<st<<", "<<sw<<std::endl;
 
-      //   std::cout<<"1)start is: "<<result_v[i]._startPt.x<<", "<<result_v[i]._startPt.y <<std::endl ;
-      //   std::cout<<"start time and wire  "<<st<<", "<<sw <<std::endl;
-      // }
+          float dist_st  = sqrt(pow(loc.x - result_v[i]._startPt.x,2) + pow(loc.y - result_v[i]._startPt.y,2)); 
+          float dist_end = sqrt(pow(loc.x - result_v[i]._endPt.x,2) + pow(loc.y - result_v[i]._endPt.y,2)); 
+
+          if( dist_st < min_st_dist){
+            min_st_dist = dist_st ;
+            min_st_i = j; 
+           }
+          if( dist_end < min_end_dist){
+            min_end_dist = dist_end ;
+            min_end_i = j; 
+           }
+         }
+         if( min_st_i != -1 && min_end_i != -1){
+         result_v[i]._startPt.x = result_v[i]._insideHits[min_st_i].x ;
+         result_v[i]._startPt.y = result_v[i]._insideHits[min_st_i].y ;
+         result_v[i]._endPt.x = result_v[i]._insideHits[min_end_i].x ;
+         result_v[i]._endPt.y = result_v[i]._insideHits[min_end_i].y ;
+
+         }
+         auto st = ( 0.5 + result_v[i]._startPt.x ) * meta.pixel_height() + meta.origin().y;
+         auto sw = ( 0.5 + result_v[i]._startPt.y ) * meta.pixel_width() + meta.origin().x;
+
+         //std::cout<<"1) Hit adjusted start is: "<<result_v[i]._startPt.x<<", "<<result_v[i]._startPt.y <<std::endl ;
+         //std::cout<<"start time and wire  "<<st<<", "<<sw <<std::endl;
+       }
 
      std::cout<<"Result : "<<result_v.size()<<std::endl ;
 
@@ -305,7 +308,6 @@ namespace larcv {
           start_temp.x=x;
           start_temp.y=y;
 	  std::cout<<"Setting time/wire!: "<< ( 0.5 + start_temp.x ) * pix_h + o_y<<", "<<( 0.5 + start_temp.y ) * pix_w + o_x<<std::endl;
-
           break;
 
         case  CV_EVENT_LBUTTONUP    :
