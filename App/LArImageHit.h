@@ -59,6 +59,15 @@ namespace larlite {
     double _charge_threshold;
     int    _pool_time_tick;
     bool   _use_roi;
+
+    int _padw;
+    int _padt;
+
+    bool _use_shower_roi;
+
+    std::vector<int> _max_w;
+    int _max_t;
+    
     std::string _roi_producer;
     /// Flag to run the AnalyzeImageCluster function
     bool _run_analyze_image_cluster;

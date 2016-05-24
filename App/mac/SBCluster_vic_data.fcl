@@ -5,8 +5,12 @@ LArImageHit: {
   Q2Gray: 5 
   QMin: 3  
   UseROI: true
-  ROIProducer: pizerofilterpad
+  ROIProducer: pizerofilter
   PoolTimeTick: 6
+
+  UserShowerROI : true
+  PadW: 100
+  PadT: 100
 
   RunAnalyze: false 
 }
@@ -61,7 +65,9 @@ ncc : {}
  }
 
 
-  roist : {}
+  roist : {
+MinVtxDist : 4.
+}
 
   brs : {
 

@@ -32,7 +32,22 @@ namespace larlite {
 
     _use_roi = pset.get<bool>("UseROI");
     _roi_producer = pset.get<std::string>("ROIProducer");
+    _use_shower_roi = pset.get<bool>("UserShowerROI");
 
+    _padw = pset.get<int>("PadW");
+    _padt = pset.get<int>("PadT");
+    
+    _max_w.resize(3);
+
+    _max_w[0] = 2399;
+    _max_w[1] = 2399;
+    _max_w[2] = 3455;
+
+    _max_t = 6399;
+    
+    
+    
+    
     // Using a try-catch block to avoid forcing a modification of the .fcl files
     try {
       _run_analyze_image_cluster = pset.get<bool>("RunAnalyze");
@@ -110,15 +125,40 @@ namespace larlite {
 
       if ( ev_roi->size() > 1 ) { throw larcaffe::larbys("More than one ROI, not implemented!\n"); }
 
-      auto wr_v = (*ev_roi)[0].GetWireROI();
-      auto tr_v = (*ev_roi)[0].GetTimeROI();
+      std::vector < std::pair< int, int > >  wr_v;
+      std::vector < std::pair< int, int > >  tr_v;
 
-      for (uint k = 0; k < nplanes; ++k) {
-	wire_range_v[k] = wr_v[k];
-	tick_range_v[k] = tr_v[k];
+      if ( _use_shower_roi ) { 
+	wr_v = (*ev_roi)[0].GetPiZeroWireROI();
+	tr_v = (*ev_roi)[0].GetPiZeroTimeROI();
+      } else {
+	wr_v = (*ev_roi)[0].GetWireROI();
+	tr_v = (*ev_roi)[0].GetTimeROI();
       }
 
-    } else {
+      for (uint k = 0; k < nplanes; ++k) {
+
+	// wire_range_v[k] = wr_v[k];
+	// tick_range_v[k] = tr_v[k];
+
+	//we may want to do some padding
+	std::cout << tr_v[k].first << " "<<tr_v[k].second << "\n";
+	std::cout << wr_v[k].first << " "<< wr_v[k].second << "\n==\n";
+	//wire
+	wire_range_v[k].first   = ((wr_v[k].first  - _padw) < 0)         ? 0          : wr_v[k].first - _padw;
+	wire_range_v[k].second  = ((wr_v[k].second + _padw) > _max_w[k]) ? _max_w[k]  : wr_v[k].second + _padw;
+
+	//time
+	tick_range_v[k].first   = ((tr_v[k].first  - _padt) <  0)      ? 0      : tr_v[k].first - _padt;
+	tick_range_v[k].second  = ((tr_v[k].second + _padt) > _max_t) ? _max_t : tr_v[k].second + _padt;
+
+	std::cout << tick_range_v[k].first << " " << tick_range_v[k].second << "\n";
+	std::cout << wire_range_v[k].first << " " << wire_range_v[k].second << "\n~~\n";
+      }
+
+	
+
+    } else { //dont use the ROI at all
       for (auto const& h : *ev_hit) {
 	if (h.Integral() < _charge_threshold) continue;
 

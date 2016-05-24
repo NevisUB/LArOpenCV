@@ -213,7 +213,7 @@ namespace larlite {
     // and grab the associated vertex
     ::larlite::event_PiZeroROI* ev_roi = nullptr;
     ::larlite::event_vertex* ev_vtx = nullptr;
-    ev_roi = storage->get_data<event_PiZeroROI>("pizerofilterpad");
+    ev_roi = storage->get_data<event_PiZeroROI>("pizerofilter");
     AssSet_t ass_vtx_v;
     if (ev_roi and (ev_roi->size() != 0) ) {
       ass_vtx_v = storage->find_one_ass(ev_roi->id(), ev_vtx, ev_roi->name());
