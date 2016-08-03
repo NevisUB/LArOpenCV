@@ -21,7 +21,7 @@ laropencv_doc/
 *.pdf
 *.png
 *.eps
-*.ipynb
 *.pyc
 \#*\#
 LArOpenCV_ImageCluster*cxx
+*.ipynb_checkpoints

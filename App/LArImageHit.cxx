@@ -45,9 +45,6 @@ namespace larlite {
 
     _max_t = 6399;
     
-    
-    
-    
     // Using a try-catch block to avoid forcing a modification of the .fcl files
     try {
       _run_analyze_image_cluster = pset.get<bool>("RunAnalyze");
