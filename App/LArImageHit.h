@@ -19,7 +19,6 @@
 #include "Core/ImageManager.h"
 #include "App/LArImageClusterBase.h"
 #include "Core/LArCVTypes.h"
-#include "TH1.h"
 
 namespace larlite {
 
@@ -38,7 +37,6 @@ namespace larlite {
       , _charge_threshold(5)
       , _pool_time_tick(0)
       , _use_roi(false)
-      , _run_analyze_image_cluster(false)
     {}
 
     /// Default destructor
@@ -52,8 +50,8 @@ namespace larlite {
 
     void _Configure_(const ::fcllite::PSet &pset);
 
-    void AnalyzeImageCluster(storage_manager* storage);
-
+    void AnalyzeImageCluster(storage_manager* storage) {}
+    
   private:
     double _charge_to_gray_scale;
     double _charge_threshold;
@@ -69,12 +67,6 @@ namespace larlite {
     int _max_t;
     
     std::string _roi_producer;
-    /// Flag to run the AnalyzeImageCluster function
-    bool _run_analyze_image_cluster;
-    /// Output file with the plots made by the AnalyzeImageCluster function
-    TFile* _plotFile;
-    /// Vector of histograms showing the MC-reconstructed start distance on the planes
-    std::vector<TH1D*> _vhMCRecoStartDist;
 
   };
 }

@@ -14,7 +14,7 @@
 #pragma link C++ class larlite::LArImageHit+;
 #pragma link C++ class larlite::LArImageClusterBase+;
 //#pragma link C++ class larlite::LArDownImage+;
-#pragma link C++ class larlite::MCGetter+;
+//#pragma link C++ class larlite::MCGetter+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

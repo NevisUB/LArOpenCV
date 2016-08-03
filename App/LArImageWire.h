@@ -56,7 +56,6 @@ namespace larlite {
     void extract_image(storage_manager* storage);
 
     void AnalyzeImageCluster(storage_manager* storage) {}
-
     
   private:
 
