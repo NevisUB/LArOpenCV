@@ -3,7 +3,7 @@
 
 #include "SatelliteMerge.h"
 
-namespace larcv{
+namespace larocv{
 
   void SatelliteMerge::_Configure_(const ::fcllite::PSet &pset)
   {
@@ -13,14 +13,14 @@ namespace larcv{
     _density          = pset.get<double> ( "ContourDensity"    );
   }
   
-  Cluster2DArray_t SatelliteMerge::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t SatelliteMerge::_Process_(const larocv::Cluster2DArray_t& clusters,
 					     const ::cv::Mat& img,
-					     larcv::ImageMeta& meta)
+					     larocv::ImageMeta& meta)
   {
 
     _secret_initial_sats.clear();
-    std::vector<larcv::Contour_t> satellite_v; satellite_v.reserve(clusters.size());
-    std::vector<larcv::Contour_t> shower_v;    shower_v.reserve(clusters.size());
+    std::vector<larocv::Contour_t> satellite_v; satellite_v.reserve(clusters.size());
+    std::vector<larocv::Contour_t> shower_v;    shower_v.reserve(clusters.size());
     
     for(auto & cluster : clusters) {
       auto area   = ::cv::contourArea(cluster._contour);
@@ -35,8 +35,8 @@ namespace larcv{
     _secret_initial_sats = satellite_v;
     //Can we group the sattelites? Lets associate them based on closest distance.
     
-    std::vector<larcv::Contour_t> sats_v;
-    std::vector<larcv::Contour_t> sats_comb_v;
+    std::vector<larocv::Contour_t> sats_v;
+    std::vector<larocv::Contour_t> sats_comb_v;
 
     sats_v = satellite_v;
 
@@ -154,7 +154,7 @@ namespace larcv{
     return result;
   }
 
-  void SatelliteMerge::_combine_two_contours(const larcv::Contour_t& c1, const larcv::Contour_t& c2, larcv::Contour_t& c3) {
+  void SatelliteMerge::_combine_two_contours(const larocv::Contour_t& c1, const larocv::Contour_t& c2, larocv::Contour_t& c3) {
     c3.clear();
     c3.reserve( c1.size() + c2.size() );
     c3.insert( c3.end(), c1.begin(), c1.end() );
@@ -162,7 +162,7 @@ namespace larcv{
   }
 
   
-  double SatelliteMerge::_pt_distance(const larcv::Contour_t& c1, const larcv::Contour_t& c2) {
+  double SatelliteMerge::_pt_distance(const larocv::Contour_t& c1, const larocv::Contour_t& c2) {
     double min_d = 9e10;
     //returns closes distance between pts on contours
     //I think I overcount right? c1.x - c2.x and c2.x - c1.x whatever...

@@ -6,7 +6,7 @@
 #include "PCAUtilities.h"
 #include "StatUtilities.h"
 
-namespace larcv {
+namespace larocv {
 
   void BoundRectStart::_Configure_(const ::fcllite::PSet &pset)
   {
@@ -16,9 +16,9 @@ namespace larcv {
     if ( _nDivWidth % 2 != 0 ) { std::cout << "\n\tNDivWidth must be even!\n"; throw std::exception(); }
   }
 
-  Cluster2DArray_t BoundRectStart::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t BoundRectStart::_Process_(const larocv::Cluster2DArray_t& clusters,
 					     const ::cv::Mat& img,
-					     larcv::ImageMeta& meta)
+					     larocv::ImageMeta& meta)
   {
 
     /*

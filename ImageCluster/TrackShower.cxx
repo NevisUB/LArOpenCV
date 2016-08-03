@@ -3,7 +3,7 @@
 
 #include "TrackShower.h"
 
-namespace larcv{
+namespace larocv{
 
   void TrackShower::_Configure_(const ::fcllite::PSet &pset)
   {
@@ -18,9 +18,9 @@ namespace larcv{
 
   }
 
-  Cluster2DArray_t TrackShower::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t TrackShower::_Process_(const larocv::Cluster2DArray_t& clusters,
 					  const ::cv::Mat& img,
-					  larcv::ImageMeta& meta)
+					  larocv::ImageMeta& meta)
   { 
 
     Cluster2DArray_t ts_clusters; ts_clusters.reserve(clusters.size());

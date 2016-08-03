@@ -17,12 +17,12 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class PCAOverall
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class PCAOverall : public larcv::ClusterAlgoBase {
+  class PCAOverall : public larocv::ClusterAlgoBase {
     
   public:
     
@@ -44,9 +44,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
     
   private:
 
@@ -55,8 +55,8 @@ namespace larcv {
   };
   
   /**
-     \class larcv::PCAOverallFactory
-     \brief A concrete factory class for larcv::PCAOverall
+     \class larocv::PCAOverallFactory
+     \brief A concrete factory class for larocv::PCAOverall
    */
   class PCAOverallFactory : public ClusterAlgoFactoryBase {
   public:
@@ -67,7 +67,7 @@ namespace larcv {
     /// creation method
     ClusterAlgoBase* create(const std::string instance_name) { return new PCAOverall(instance_name); }
   };
-  /// Global larcv::PCAOverallFactory to register ClusterAlgoFactory
+  /// Global larocv::PCAOverallFactory to register ClusterAlgoFactory
   static PCAOverallFactory __global_PCAOverallFactory__;
 }
 #endif

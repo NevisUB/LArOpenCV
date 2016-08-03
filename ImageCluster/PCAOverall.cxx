@@ -4,16 +4,16 @@
 #include "PCAOverall.h"
 #include "PCAUtilities.h"
 
-namespace larcv{
+namespace larocv{
 
   void PCAOverall::_Configure_(const ::fcllite::PSet &pset)
   {
     _nMinInsideHits = pset.get<int>("NMinInsideHits");
   }
 
-  Cluster2DArray_t PCAOverall::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t PCAOverall::_Process_(const larocv::Cluster2DArray_t& clusters,
 					 const ::cv::Mat& img,
-					 larcv::ImageMeta& meta)
+					 larocv::ImageMeta& meta)
   {
     Cluster2DArray_t out_clusters = clusters;
     Contour_t all_locations;

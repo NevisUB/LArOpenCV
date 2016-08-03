@@ -55,7 +55,7 @@ namespace larlite {
       auto const& wid = h.WireID();
       auto const cid = alg_mgr.ClusterID(wid.Wire,h.PeakTime(),wid.Plane);
 
-      if(cid == ::larcv::kINVALID_CLUSTER_ID) {
+      if(cid == ::larocv::kINVALID_CLUSTER_ID) {
 	_num_unclustered_hits += 1;
 	continue;
       }
@@ -167,14 +167,14 @@ namespace larlite {
       size_t nwires = wire_range.second - wire_range.first + 2;
 
 
-      ::larcv::ImageMeta meta((double)nwires,(double)nticks,nwires,nticks,wire_range.first,tick_range.first,plane);
+      ::larocv::ImageMeta meta((double)nwires,(double)nticks,nwires,nticks,wire_range.first,tick_range.first,plane);
       if ( _use_roi ) {
 	const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
 	meta.setvtx(vtx.first,vtx.second);
       }
       
       if ( nwires >= 1e10 || nticks >= 1e10 )
-	_img_mgr.push_back(cv::Mat(),::larcv::ImageMeta());
+	_img_mgr.push_back(cv::Mat(),::larocv::ImageMeta());
       else
 	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
     }
@@ -235,7 +235,7 @@ namespace larlite {
 	auto const& tick_range = tick_range_v[plane];
 
 	img  = pooled;
-	meta = ::larcv::ImageMeta((double)pooled.rows,
+	meta = ::larocv::ImageMeta((double)pooled.rows,
 				  (double)pooled.cols*_pool_time_tick,
 				  pooled.rows,
 				  pooled.cols,

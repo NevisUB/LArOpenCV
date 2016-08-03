@@ -3,14 +3,14 @@
 
 #include "NearestConeCluster.h"
 
-namespace larcv{
+namespace larocv{
 
   void NearestConeCluster::_Configure_(const ::fcllite::PSet &pset)
   {}
 
-  Cluster2DArray_t NearestConeCluster::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t NearestConeCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
 					const ::cv::Mat& img,
-					larcv::ImageMeta& meta)
+					larocv::ImageMeta& meta)
   { 
     
     //std::cout<<"\n Plane is: "<<meta.plane()<<std::endl ;
@@ -81,7 +81,7 @@ namespace larcv{
         for(unsigned j = 0; j < shower_v.size(); ++j) {
 
           auto& c1 = shower_v[j];
-          std::map<float,larcv::Contour_t> merge_us ;
+          std::map<float,larocv::Contour_t> merge_us ;
           for(unsigned i = 0; i < shower_to_sat_merge[j].size(); ++i) {
             auto c2 = satellite_v[i];
 
@@ -113,7 +113,7 @@ namespace larcv{
   return result; 
   }
 
-   void NearestConeCluster::_order_sats(larcv::Cluster2D& c1, larcv::Cluster2D & c2, std::map<float,larcv::Contour_t> & merge_us, const ::cv::Point & COM ){
+   void NearestConeCluster::_order_sats(larocv::Cluster2D& c1, larocv::Cluster2D & c2, std::map<float,larocv::Contour_t> & merge_us, const ::cv::Point & COM ){
      int min_index = 0;
      float min_dist = 10000;
      for ( int p = 1; p < c1._contour.size(); ++p ){
@@ -140,7 +140,7 @@ namespace larcv{
 
      }
 
- void NearestConeCluster::_combine_two_contours(const larcv::Contour_t& c1, const larcv::Contour_t& c2, larcv::Contour_t& c3, const int & offset) {
+ void NearestConeCluster::_combine_two_contours(const larocv::Contour_t& c1, const larocv::Contour_t& c2, larocv::Contour_t& c3, const int & offset) {
     c3.clear();
     c3.reserve( c1.size() + c2.size() );
     c3.insert( c3.end(), c1.begin(), c1.begin() + offset);

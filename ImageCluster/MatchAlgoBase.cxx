@@ -3,15 +3,15 @@
 
 #include "MatchAlgoBase.h"
 
-namespace larcv {
+namespace larocv {
 
   MatchAlgoBase::MatchAlgoBase(const std::string name)
     : ImageClusterBase(name)
-  {LARCV_DEBUG((*this)) << "Constructed" << std::endl;}
+  {LAROCV_DEBUG((*this)) << "Constructed" << std::endl;}
 
   void MatchAlgoBase::Configure(const ::fcllite::PSet& cfg) {
 
-    LARCV_DEBUG((*this)) << "start" << std::endl;
+    LAROCV_DEBUG((*this)) << "start" << std::endl;
 
     ImageClusterBase::Configure(cfg);
 	
@@ -19,10 +19,10 @@ namespace larcv {
 
     this->_Configure_(cfg);
 
-    LARCV_DEBUG((*this)) << "end" << std::endl;
+    LAROCV_DEBUG((*this)) << "end" << std::endl;
   }
 
-  double MatchAlgoBase::Process(const larcv::Cluster2DPtrArray_t& clusters)
+  double MatchAlgoBase::Process(const larocv::Cluster2DPtrArray_t& clusters)
   {
     if(!Profile()) return this->_Process_(clusters);
     _watch.Start();

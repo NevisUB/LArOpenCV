@@ -11,7 +11,7 @@
 //maybe redundant
 #include <opencv2/opencv.hpp>
 
-namespace larcv {
+namespace larocv {
   
   double roi_d_to_line(const std::vector<double>& line,int lx,int ly);  
   double roi_d_to_line(const Point2D& dir, const Point2D& pt,int lx,int ly);

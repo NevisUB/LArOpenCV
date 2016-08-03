@@ -3,7 +3,7 @@
  *
  * \ingroup Core
  * 
- * \brief Compiler macro def header for a larcv logger
+ * \brief Compiler macro def header for a larocv logger
  *
  * @author kazuhiro
  */
@@ -16,7 +16,7 @@
 
 #include "larcaffe_logger.h"
 #include "LArCVTypes.h"
-namespace larcv {
+namespace larocv {
   /**
      \class larcaffe::logger
      Stealing from larcaffe::larcaffe_logger
@@ -26,12 +26,12 @@ namespace larcv {
 //
 // Compiler macro for saving us from text typing
 //
-#define LARCV_DEBUG(obj)    if(obj.logger().debug())    obj.logger().send(::larcaffe::msg::kDEBUG,    __FUNCTION__,__LINE__,__FILE__)
-#define LARCV_INFO(obj)     if(obj.logger().info())     obj.logger().send(::larcaffe::msg::kINFO,     __FUNCTION__,__LINE__         )
-#define LARCV_NORMAL(obj)   if(obj.logger().normal())   obj.logger().send(::larcaffe::msg::kNORMAL,   __FUNCTION__                  )
-#define LARCV_WARNING(obj)  if(obj.logger().warning())  obj.logger().send(::larcaffe::msg::kWARNING,  __FUNCTION__                  )
-#define LARCV_ERROR(obj)    if(obj.logger().error())    obj.logger().send(::larcaffe::msg::kERROR,    __FUNCTION__,__LINE__         )
-#define LARCV_CRITICAL(obj) obj.logger().send(::larcaffe::msg::kCRITICAL, __FUNCTION__,__LINE__,__FILE__)
+#define LAROCV_DEBUG(obj)    if(obj.logger().debug())    obj.logger().send(::larcaffe::msg::kDEBUG,    __FUNCTION__,__LINE__,__FILE__)
+#define LAROCV_INFO(obj)     if(obj.logger().info())     obj.logger().send(::larcaffe::msg::kINFO,     __FUNCTION__,__LINE__         )
+#define LAROCV_NORMAL(obj)   if(obj.logger().normal())   obj.logger().send(::larcaffe::msg::kNORMAL,   __FUNCTION__                  )
+#define LAROCV_WARNING(obj)  if(obj.logger().warning())  obj.logger().send(::larcaffe::msg::kWARNING,  __FUNCTION__                  )
+#define LAROCV_ERROR(obj)    if(obj.logger().error())    obj.logger().send(::larcaffe::msg::kERROR,    __FUNCTION__,__LINE__         )
+#define LAROCV_CRITICAL(obj) obj.logger().send(::larcaffe::msg::kCRITICAL, __FUNCTION__,__LINE__,__FILE__)
 #endif
 /** @} */ // end of doxygen group 
 

@@ -52,7 +52,7 @@ namespace larlite {
     */
     bool finalize();
 
-    larcv::ImageClusterManager& algo_manager();
+    larocv::ImageClusterManager& algo_manager();
 
     const std::string& producer() const { return _producer; }
 
@@ -60,8 +60,8 @@ namespace larlite {
 
   private:
 
-    ::larcv::ImageClusterManager _alg_mgr;
-    ::larcv::ImageManager _orig_img_mgr;
+    ::larocv::ImageClusterManager _alg_mgr;
+    ::larocv::ImageManager _orig_img_mgr;
 
     bool _store_original_img;
     std::string _producer;
@@ -80,7 +80,7 @@ namespace larlite {
     void store_clusters(storage_manager* storage);
     virtual void extract_image(storage_manager* storage) = 0;
     virtual void AnalyzeImageCluster(storage_manager* storage) = 0;
-    ::larcv::ImageManager _img_mgr;
+    ::larocv::ImageManager _img_mgr;
 
     size_t _num_stored;
     size_t _num_clusters;

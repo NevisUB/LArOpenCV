@@ -7,7 +7,7 @@
 
 
 
-namespace larcv {
+namespace larocv {
 
   double roi_d_to_line(const std::vector<double>& line,int lx,int ly) {
 

@@ -3,9 +3,9 @@
 
 #include "ImageManager.h"
 
-namespace larcv {
+namespace larocv {
 
-  void ImageManager::push_back(const ::cv::Mat& img, const larcv::ImageMeta& meta)
+  void ImageManager::push_back(const ::cv::Mat& img, const larocv::ImageMeta& meta)
   {
     ::cv::Mat res;
     img.copyTo(res);

@@ -17,12 +17,12 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class PID
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class PID : public larcv::ClusterAlgoBase {
+  class PID : public larocv::ClusterAlgoBase {
     
   public:
     
@@ -42,9 +42,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
     
   private:
 
@@ -53,8 +53,8 @@ namespace larcv {
   };
   
   /**
-     \class larcv::PIDFactory
-     \brief A concrete factory class for larcv::PID
+     \class larocv::PIDFactory
+     \brief A concrete factory class for larocv::PID
    */
   class PIDFactory : public ClusterAlgoFactoryBase {
   public:
@@ -65,7 +65,7 @@ namespace larcv {
     /// creation method
     ClusterAlgoBase* create(const std::string instance_name) { return new PID(instance_name); }
   };
-  /// Global larcv::PIDFactory to register ClusterAlgoFactory
+  /// Global larocv::PIDFactory to register ClusterAlgoFactory
   static PIDFactory __global_PIDFactory__;
 }
 #endif

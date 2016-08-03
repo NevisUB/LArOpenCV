@@ -17,7 +17,7 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class DeadWireCombine
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
@@ -38,7 +38,7 @@ namespace larcv {
 
   };
   
-  class DeadWireCombine : public larcv::ClusterAlgoBase {
+  class DeadWireCombine : public larocv::ClusterAlgoBase {
     
   public:
     
@@ -63,9 +63,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
     
   private:
 
@@ -91,8 +91,8 @@ namespace larcv {
   };
   
   /**
-     \class larcv::DeadWireCombineFactory
-     \brief A concrete factory class for larcv::DeadWireCombine
+     \class larocv::DeadWireCombineFactory
+     \brief A concrete factory class for larocv::DeadWireCombine
    */
   class DeadWireCombineFactory : public ClusterAlgoFactoryBase {
   public:
@@ -103,7 +103,7 @@ namespace larcv {
     /// creation method
     ClusterAlgoBase* create(const std::string instance_name) { return new DeadWireCombine(instance_name); }
   };
-  /// Global larcv::DeadWireCombineFactory to register ClusterAlgoFactory
+  /// Global larocv::DeadWireCombineFactory to register ClusterAlgoFactory
   static DeadWireCombineFactory __global_DeadWireCombineFactory__;
 }
 #endif

@@ -3,7 +3,7 @@
 
 #include "MatchBookKeeper.h"
 
-namespace larcv {
+namespace larocv {
 
   MatchBookKeeper::MatchBookKeeper()
   { 

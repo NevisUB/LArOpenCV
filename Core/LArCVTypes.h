@@ -1,5 +1,5 @@
-#ifndef __LARCV_TYPES_H__
-#define __LARCV_TYPES_H__
+#ifndef __LAROCV_TYPES_H__
+#define __LAROCV_TYPES_H__
 
 #include <vector>
 #include <limits>
@@ -24,10 +24,10 @@ namespace larcaffe {
 }
 
 /**
-   \namespace larcv
+   \namespace larocv
    C++ namespace for developping LArTPC software interface to OpenCV based algorithm tools (LArOpenCV)
  */
-namespace larcv {
+namespace larocv {
 
   /// Used as an invalid value identifier for size_t
   static const size_t kINVALID_SIZE = std::numeric_limits<size_t>::max();
@@ -39,7 +39,7 @@ namespace larcv {
   /// Stolen from larcaffe
   typedef ::larcaffe::Point2D Point2D;
 
-  /// Namespace for larcv message related types
+  /// Namespace for larocv message related types
   namespace msg{
     typedef ::larcaffe::msg::Level_t Level_t;
   }

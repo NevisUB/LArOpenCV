@@ -17,7 +17,7 @@
 #include "ImageClusterBase.h"
 #include "Cluster2D.h"
 
-namespace larcv {
+namespace larocv {
 
   /**
      \class ReClusterAlgoBase
@@ -26,7 +26,7 @@ namespace larcv {
 
   public:
     
-    /// Default constructor: Name is used to identify a configuration parameter set via larcv::ImageClusterManager
+    /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
     ReClusterAlgoBase(const std::string name = "noname");
     
     /// Default destructor
@@ -38,9 +38,9 @@ namespace larcv {
     /**
        @brief wrapper execution method: internally executes _Process_ function (see there for details)
     */
-    larcv::Cluster2DArray_t Process(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t Process(const larocv::Cluster2DArray_t& clusters,
 				    const ::cv::Mat& img,
-				    larcv::ImageMeta& meta);
+				    larocv::ImageMeta& meta);
 
   protected:
 
@@ -50,9 +50,9 @@ namespace larcv {
     /**
        TBD
      */
-    virtual larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    virtual larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 					      const ::cv::Mat& img,
-					      larcv::ImageMeta& meta) = 0;
+					      larocv::ImageMeta& meta) = 0;
     
   };
 

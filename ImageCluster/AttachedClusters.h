@@ -17,12 +17,12 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class AttachedClusters
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class AttachedClusters : public larcv::ClusterAlgoBase {
+  class AttachedClusters : public larocv::ClusterAlgoBase {
     
   public:
     
@@ -44,9 +44,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
     
   private:
 
@@ -55,8 +55,8 @@ namespace larcv {
   };
   
   /**
-     \class larcv::AttachedClustersFactory
-     \brief A concrete factory class for larcv::AttachedClusters
+     \class larocv::AttachedClustersFactory
+     \brief A concrete factory class for larocv::AttachedClusters
    */
   class AttachedClustersFactory : public ClusterAlgoFactoryBase {
   public:
@@ -67,7 +67,7 @@ namespace larcv {
     /// creation method
     ClusterAlgoBase* create(const std::string instance_name) { return new AttachedClusters(instance_name); }
   };
-  /// Global larcv::AttachedClustersFactory to register ClusterAlgoFactory
+  /// Global larocv::AttachedClustersFactory to register ClusterAlgoFactory
   static AttachedClustersFactory __global_AttachedClustersFactory__;
 }
 #endif

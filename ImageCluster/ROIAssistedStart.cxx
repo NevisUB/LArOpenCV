@@ -5,7 +5,7 @@
 #include "PCAUtilities.h"
 #include "StatUtilities.h"
 
-namespace larcv{
+namespace larocv{
 
   void ROIAssistedStart::_Configure_(const ::fcllite::PSet &pset)
   {
@@ -13,9 +13,9 @@ namespace larcv{
     _pady = pset.get<float>("Pady");
   }
 
-  Cluster2DArray_t ROIAssistedStart::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t ROIAssistedStart::_Process_(const larocv::Cluster2DArray_t& clusters,
 					       const ::cv::Mat& img,
-					       larcv::ImageMeta& meta)
+					       larocv::ImageMeta& meta)
   {
 
 
@@ -29,7 +29,7 @@ namespace larcv{
 
     //the ROI vertex
     auto pi0_st = meta.roivtx();
-    if ( pi0_st.x == ::larcv::kINVALID_DOUBLE ) { std::cout << "BAD VTX\n"; throw std::exception(); }
+    if ( pi0_st.x == ::larocv::kINVALID_DOUBLE ) { std::cout << "BAD VTX\n"; throw std::exception(); }
 
     auto pi0st = Point2D( (pi0_st.y - meta.origin().y) / meta.pixel_height(), (pi0_st.x - meta.origin().x) / meta.pixel_width() );
 

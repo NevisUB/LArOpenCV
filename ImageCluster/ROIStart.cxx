@@ -3,23 +3,23 @@
 
 #include "ROIStart.h"
 
-namespace larcv {
+namespace larocv {
 
   void ROIStart::_Configure_(const ::fcllite::PSet &pset)
   {
      _min_vertex_dist = pset.get<float>("MinVtxDist") ;
   }
 
-  Cluster2DArray_t ROIStart::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t ROIStart::_Process_(const larocv::Cluster2DArray_t& clusters,
                                        const ::cv::Mat& img,
-                                       larcv::ImageMeta& meta)
+                                       larocv::ImageMeta& meta)
   {
 
     Cluster2DArray_t roi_clusters; roi_clusters.reserve(clusters.size());
 
 
     auto pi0_st = meta.roivtx();
-    if ( pi0_st.x == ::larcv::kINVALID_DOUBLE ) { std::cout << "BAD VTX\n"; throw std::exception(); }
+    if ( pi0_st.x == ::larocv::kINVALID_DOUBLE ) { std::cout << "BAD VTX\n"; throw std::exception(); }
     // std::cout << "Got VTX: (" << pi0_st.x << "," << pi0_st.y << ")\n";
 
     auto pi0st = Point2D( (pi0_st.y - meta.origin().y) / meta.pixel_height(), (pi0_st.x - meta.origin().x) / meta.pixel_width() );

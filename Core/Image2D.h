@@ -60,9 +60,9 @@ namespace larcaffe {
     void clear();
   };
 }
-namespace larcv {
+namespace larocv {
   /**
-     \class larcv::Image2D
+     \class larocv::Image2D
      @brief Borrowed from larcaffe (see larcaffe::Image2D)
   */
   typedef ::larcaffe::Image2D Image2D;

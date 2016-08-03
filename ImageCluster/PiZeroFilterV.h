@@ -6,12 +6,12 @@
 
 #include "Vertex2D.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class PiZeroFilterV
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class PiZeroFilterV : public larcv::ClusterAlgoBase {
+  class PiZeroFilterV : public larocv::ClusterAlgoBase {
     
   public:
     
@@ -33,9 +33,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
 
 
 
@@ -54,8 +54,8 @@ namespace larcv {
   };
   
   /**
-     \class larcv::PiZeroFilterVFactory
-     \brief A concrete factory class for larcv::PiZeroFilterV
+     \class larocv::PiZeroFilterVFactory
+     \brief A concrete factory class for larocv::PiZeroFilterV
    */
   class PiZeroFilterVFactory : public ClusterAlgoFactoryBase {
   public:
@@ -66,7 +66,7 @@ namespace larcv {
     /// creation method
     ClusterAlgoBase* create(const std::string instance_name) { return new PiZeroFilterV(instance_name); }
   };
-  /// Global larcv::PiZeroFilterVFactory to register ClusterAlgoFactory
+  /// Global larocv::PiZeroFilterVFactory to register ClusterAlgoFactory
   static PiZeroFilterVFactory __global_PiZeroFilterVFactory__;
 }
 #endif

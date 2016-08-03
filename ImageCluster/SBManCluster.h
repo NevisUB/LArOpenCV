@@ -6,13 +6,13 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
  
-  class SBManCluster : public larcv::ClusterAlgoBase {
+  class SBManCluster : public larocv::ClusterAlgoBase {
     
   public:
     
-    /// Default constructor: Name is used to identify a configuration parameter set via larcv::ImageClusterManager
+    /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
     SBManCluster(const std::string name = "SBManCluster") :
       ClusterAlgoBase(name),
       _dilation_size ( 5 ),
@@ -39,9 +39,9 @@ namespace larcv {
     /// Inherited class configuration method
     void _Configure_(const ::fcllite::PSet &pset);
     
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
   private:
 
     int _dilation_size;
@@ -57,8 +57,8 @@ void onMouse( int event, int x, int y, int f, void* ) ;
 
 
   /**
-     \class larcv::SBManClusterFactory
-     \brief A concrete factory class for larcv::SBManCluster
+     \class larocv::SBManClusterFactory
+     \brief A concrete factory class for larocv::SBManCluster
    */
   class SBManClusterFactory : public ClusterAlgoFactoryBase {
   public:
@@ -69,7 +69,7 @@ void onMouse( int event, int x, int y, int f, void* ) ;
     /// create method
     ClusterAlgoBase* create(const std::string instance_name) { return new SBManCluster(instance_name); }
   };
-  /// Global larcv::SBManClusterFactory to register ClusterAlgoFactory
+  /// Global larocv::SBManClusterFactory to register ClusterAlgoFactory
   static SBManClusterFactory __global_SBManClusterFactory__;
   
 }

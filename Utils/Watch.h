@@ -1,5 +1,5 @@
-#ifndef __LARCV_UTILS_WATCH_H__
-#define __LARCV_UTILS_WATCH_H__
+#ifndef __LAROCV_UTILS_WATCH_H__
+#define __LAROCV_UTILS_WATCH_H__
 
 /**
  * \file Watch.h
@@ -18,10 +18,10 @@
 #include <sys/time.h>
 #include <time.h>
 
-namespace larcv {
+namespace larocv {
 
   /**
-     \class larcv::Watch
+     \class larocv::Watch
      @brief a _very_ simple stopwatch class for simple time measurement
    */
   class Watch {

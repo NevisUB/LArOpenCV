@@ -21,17 +21,17 @@
 #include "ImageClusterViewer.h"
 #include "MatchBookKeeper.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class ImageClusterManager
      @brief Class to execute a chain of algorithms to a given image input.
-     larcv::ImageClusterManager executes a chain of algorithms (ImageClusterBase inherit class instances) \n
+     larocv::ImageClusterManager executes a chain of algorithms (ImageClusterBase inherit class instances) \n
      to a provided cv::Mat image object. Each algorithm receives an image, clusters from a previous algorithm \n
      (for the 1st algorithm this is empty), and a meta data that needs to be modified by each algorithm to interpret \n
      the returning clusters' coordinate. After execution of algorithms it stores resulting clusters (many per algorithm) \n
-     and a meta data (one per algorithm) that are accessible via unique id (larcv::AlgorithmID_t and larcv::ClusterID_t).\n
-     At the execution of algorithms, a user must provide both image (cv::Mat) and image meta data (larcv::ImageMeta).\n
-     Each cluster is represented as a 2D contour (larcv::Contour_t), and the class provides a utility method to identify \n
+     and a meta data (one per algorithm) that are accessible via unique id (larocv::AlgorithmID_t and larocv::ClusterID_t).\n
+     At the execution of algorithms, a user must provide both image (cv::Mat) and image meta data (larocv::ImageMeta).\n
+     Each cluster is represented as a 2D contour (larocv::Contour_t), and the class provides a utility method to identify \n
      a cluster that contains a specific 2D point (x,y) in original coordinate system. This is possible via provided \n
      meta data for an original image that contains image origin (left bottom corner) in the original coordinate, the width \n
      and height of an image, etc. + updated meta data from each algorithm execution.
@@ -67,7 +67,7 @@ namespace larcv {
     /// Read-in configuration object & enforce configurations to algorithms
     void Configure(const ::fcllite::PSet& main_cfg);
     /// Execute algorithms to construct clusters + corresponding meta data
-    void Add(const ::cv::Mat& img, const larcv::ImageMeta& meta);
+    void Add(const ::cv::Mat& img, const larocv::ImageMeta& meta);
     /// Execute algorithms to construct clusters + corresponding meta data
     void Process();
     /// Finalize after multiple Process call
@@ -89,28 +89,28 @@ namespace larcv {
     /// Original input image getter
     const std::vector<cv::Mat> InputImages() const { return _raw_img_v; }
     /// Original image metadata getter
-    const std::vector<larcv::ImageMeta> InputImageMetas() const { return _raw_meta_v; }
+    const std::vector<larocv::ImageMeta> InputImageMetas() const { return _raw_meta_v; }
   private:
     /// Name identifier: used to fetch a block of configuration parameters
     std::string _name;
     /// Boolean flag to enforce Configure method to be called before Process.
     bool _configured;
     /// Array of clustering algorithms to be executed
-    std::vector<larcv::ClusterAlgoBase*> _cluster_alg_v;
+    std::vector<larocv::ClusterAlgoBase*> _cluster_alg_v;
     /// Array of matching algorithms to be executed
-    larcv::MatchAlgoBase* _match_alg;
+    larocv::MatchAlgoBase* _match_alg;
     /// Array of re-clustering algorithms to be executed
-    larcv::ReClusterAlgoBase* _recluster_alg;
+    larocv::ReClusterAlgoBase* _recluster_alg;
     /// Map of clustering algorithm instance name to ID
-    std::map<std::string,larcv::AlgorithmID_t> _cluster_alg_m;
+    std::map<std::string,larocv::AlgorithmID_t> _cluster_alg_m;
     /// Array of images
     std::vector<cv::Mat> _raw_img_v;
     /// Array of metadata
-    std::vector<larcv::ImageMeta> _raw_meta_v;
+    std::vector<larocv::ImageMeta> _raw_meta_v;
     /// Array of resulting clusters per algorithm per image (outer index = algorithm, inner index = image)
-    std::vector<std::vector<larcv::Cluster2DArray_t> > _clusters_v_v;
+    std::vector<std::vector<larocv::Cluster2DArray_t> > _clusters_v_v;
     /// Array of meta data: one per algorithm per image (outer index = algorithm, inner index = image)
-    std::vector<std::vector<larcv::ImageMeta> > _meta_v_v;
+    std::vector<std::vector<larocv::ImageMeta> > _meta_v_v;
     /// Boolean flag to measure process time + report
     bool _profile;
     /// Stopwatch

@@ -17,12 +17,12 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class ROIStart
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class ROIStart : public larcv::ClusterAlgoBase {
+  class ROIStart : public larocv::ClusterAlgoBase {
     
   public:
     
@@ -43,9 +43,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
     
   private:
 
@@ -54,8 +54,8 @@ namespace larcv {
   };
   
   /**
-     \class larcv::ROIStartFactory
-     \brief A concrete factory class for larcv::ROIStart
+     \class larocv::ROIStartFactory
+     \brief A concrete factory class for larocv::ROIStart
    */
   class ROIStartFactory : public ClusterAlgoFactoryBase {
   public:
@@ -66,7 +66,7 @@ namespace larcv {
     /// creation method
     ClusterAlgoBase* create(const std::string instance_name) { return new ROIStart(instance_name); }
   };
-  /// Global larcv::ROIStartFactory to register ClusterAlgoFactory
+  /// Global larocv::ROIStartFactory to register ClusterAlgoFactory
   static ROIStartFactory __global_ROIStartFactory__;
 }
 #endif

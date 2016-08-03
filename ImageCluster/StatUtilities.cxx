@@ -3,7 +3,7 @@
 
 #include "StatUtilities.h"
 
-namespace larcv {
+namespace larocv {
 
   double stdev( ::std::vector<int>& data,
 		size_t start, size_t end )

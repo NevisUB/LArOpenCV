@@ -17,7 +17,7 @@
 #include "ImageClusterTypes.h"
 #include "ClusterRecoUtil/Base/Polygon2D.h"
 
-namespace larcv {
+namespace larocv {
 
   class ImageClusterManager;
   /**
@@ -56,7 +56,7 @@ namespace larcv {
     /// Image ID getter
     ImageID_t ImageID() const { return _image_id;}
     /// Matched Cluster ID info getter
-    const std::vector<larcv::ClusterID_t>& MatchID() const { return _match_v; }
+    const std::vector<larocv::ClusterID_t>& MatchID() const { return _match_v; }
     /// Origin 2D point getter
     const Point2D& Origin() const { return _origin; }
     /// Pixel width size (i.e. X unit length in cm)
@@ -143,15 +143,15 @@ namespace larcv {
     ClusterID_t _cluster_id;
     ImageID_t   _image_id;
     size_t _plane_id;
-    std::vector<larcv::ClusterID_t> _match_v;
+    std::vector<larocv::ClusterID_t> _match_v;
     Point2D _origin;
     double _pixel_width;
     double _pixel_height;
     
   };
 
-  typedef std::vector<larcv::Cluster2D> Cluster2DArray_t;
-  typedef std::vector<const larcv::Cluster2D*> Cluster2DPtrArray_t;
+  typedef std::vector<larocv::Cluster2D> Cluster2DArray_t;
+  typedef std::vector<const larocv::Cluster2D*> Cluster2DPtrArray_t;
 }
   
 #endif

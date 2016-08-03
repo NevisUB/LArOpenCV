@@ -17,12 +17,12 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class TCluster
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class TCluster : public larcv::ClusterAlgoBase {
+  class TCluster : public larocv::ClusterAlgoBase {
     
   public:
     
@@ -49,9 +49,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
     
   private:
 

@@ -3,16 +3,16 @@
 
 #include "PID.h"
 
-namespace larcv{
+namespace larocv{
 
   void PID::_Configure_(const ::fcllite::PSet &pset)
   {
     _pdg = pset.get<int> ("PDG");
   }
 
-  Cluster2DArray_t PID::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t PID::_Process_(const larocv::Cluster2DArray_t& clusters,
 					const ::cv::Mat& img,
-					larcv::ImageMeta& meta)
+					larocv::ImageMeta& meta)
   { 
     Cluster2DArray_t pid_clusters(clusters); 
     for( auto & c : pid_clusters ){

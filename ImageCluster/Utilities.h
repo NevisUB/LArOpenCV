@@ -3,15 +3,15 @@
 
 #include "ImageClusterTypes.h"
 
-namespace larcv {
+namespace larocv {
 
-  ::cv::Rect BoundingBox(const larcv::ContourArray_t& clusters, const double min_area=-1);
+  ::cv::Rect BoundingBox(const larocv::ContourArray_t& clusters, const double min_area=-1);
 
-  ::cv::Rect BoundingBox(const larcv::Contour_t& cluster);
+  ::cv::Rect BoundingBox(const larocv::Contour_t& cluster);
   
-  ::cv::Mat CreateSubMatRef(const larcv::Contour_t& cluster, cv::Mat& img);
+  ::cv::Mat CreateSubMatRef(const larocv::Contour_t& cluster, cv::Mat& img);
 
-  ::cv::Mat CreateSubMatCopy(const larcv::Contour_t& cluster, const cv::Mat& img);
+  ::cv::Mat CreateSubMatCopy(const larocv::Contour_t& cluster, const cv::Mat& img);
 
   unsigned int Factorial(unsigned int n);
   

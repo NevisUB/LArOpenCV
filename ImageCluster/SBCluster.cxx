@@ -3,7 +3,7 @@
 
 #include "SBCluster.h"
 
-namespace larcv {
+namespace larocv {
 
 
   void SBCluster::_Configure_(const ::fcllite::PSet &pset)
@@ -20,9 +20,9 @@ namespace larcv {
     // _polygon_e     = pset.get<double>("PolygonEpsilon");
   }
 
-  larcv::Cluster2DArray_t SBCluster::_Process_(const larcv::Cluster2DArray_t& clusters,
+  larocv::Cluster2DArray_t SBCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
 					       const ::cv::Mat& img,
-					       larcv::ImageMeta& meta)
+					       larocv::ImageMeta& meta)
   {
 
     if ( clusters.size() )
@@ -56,7 +56,7 @@ namespace larcv {
      //Fill some cluster parameters 
      Cluster2DArray_t result_v; result_v.reserve(ctor_v.size());
 
-     ::larcv::Cluster2D new_clus ;
+     ::larocv::Cluster2D new_clus ;
 
      for(size_t j = 0; j < ctor_v.size(); ++j){
 

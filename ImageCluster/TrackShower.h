@@ -18,12 +18,12 @@
 #include "TTree.h"
 //#include "ClusterParams.h"
 #include "ClusterAlgoFactory.h"
-namespace larcv {
+namespace larocv {
   /**
      \class TrackShower
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class TrackShower : public larcv::ClusterAlgoBase {
+  class TrackShower : public larocv::ClusterAlgoBase {
     
   public:
     
@@ -42,9 +42,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
 
   private:
 
@@ -59,8 +59,8 @@ namespace larcv {
   };
   
   /**
-     \class larcv::TrackShowerFactory
-     \brief A concrete factory class for larcv::TrackShower
+     \class larocv::TrackShowerFactory
+     \brief A concrete factory class for larocv::TrackShower
    */
   class TrackShowerFactory : public ClusterAlgoFactoryBase {
   public:
@@ -71,7 +71,7 @@ namespace larcv {
     /// creation method
     ClusterAlgoBase* create(const std::string instance_name) { return new TrackShower(instance_name); }
   };
-  /// Global larcv::TrackShowerFactory to register ClusterAlgoFactory
+  /// Global larocv::TrackShowerFactory to register ClusterAlgoFactory
   static TrackShowerFactory __global_TrackShowerFactory__;
 }
 #endif

@@ -19,7 +19,7 @@
 #include "Core/laropencv_base.h"
 #include "FhiclLite/PSet.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class ImageClusterViewer
   */
@@ -41,7 +41,7 @@ namespace larcv {
 
     /// Execute viewer
     void Display(const ::cv::Mat& img,
-		 const std::vector<larcv::ContourArray_t>& contours_v,
+		 const std::vector<larocv::ContourArray_t>& contours_v,
 		 const std::vector<std::string>& window_name_v);
 
   private:

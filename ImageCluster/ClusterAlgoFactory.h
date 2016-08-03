@@ -19,7 +19,7 @@
 #include "Core/laropencv_base.h"
 #include "Core/larbys.h"
 
-namespace larcv {
+namespace larocv {
 
   class ClusterAlgoBase;
   /**
@@ -38,10 +38,10 @@ namespace larcv {
 
   /**
      \class ClusterAlgoFactory
-     \brief Factory class for instantiating algorithm instance by larcv::ImageClusterManager
+     \brief Factory class for instantiating algorithm instance by larocv::ImageClusterManager
      This factory class can instantiate a specified algorithm instance w/ provided instance name. \n
      The actual factory core (to which each algorithm must register creation factory instance) is \n
-     a static std::map. Use static method to get a static instance (larcv::ClusterAlgoFactory::get) \n
+     a static std::map. Use static method to get a static instance (larocv::ClusterAlgoFactory::get) \n
      to access a factory.
   */
   class ClusterAlgoFactory : public laropencv_base  {
@@ -56,13 +56,13 @@ namespace larcv {
     static ClusterAlgoFactory& get()
     { if(!_me) _me = new ClusterAlgoFactory; return *_me; }
     /// Factory registration method (should be called by global factory instance in algorithm header)
-    void add_factory(const std::string name, larcv::ClusterAlgoFactoryBase* factory)
+    void add_factory(const std::string name, larocv::ClusterAlgoFactoryBase* factory)
     { _factory_map[name] = factory; }
     /// Factory creation method (should be called by clients, possibly you!)
     ClusterAlgoBase* create(const std::string name, const std::string instance_name) {
       auto iter = _factory_map.find(name);
       if(iter == _factory_map.end() || !((*iter).second)) {
-	LARCV_ERROR((*this)) << "Found no registered class " << name << std::endl;
+	LAROCV_ERROR((*this)) << "Found no registered class " << name << std::endl;
 	return nullptr;
       }
       return (*iter).second->create(instance_name);
@@ -70,7 +70,7 @@ namespace larcv {
 
   private:
     /// Static factory container
-    std::map<std::string,larcv::ClusterAlgoFactoryBase*> _factory_map;
+    std::map<std::string,larocv::ClusterAlgoFactoryBase*> _factory_map;
     /// Static self
     static ClusterAlgoFactory* _me;
   };

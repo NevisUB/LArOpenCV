@@ -3,7 +3,7 @@
 
 #include "MatchTimeOverlap.h"
 
-namespace larcv{
+namespace larocv{
 
   void MatchTimeOverlap::_Configure_(const ::fcllite::PSet &pset)
   {
@@ -13,7 +13,7 @@ namespace larcv{
 
   }
   
-  double MatchTimeOverlap::_Process_(const larcv::Cluster2DPtrArray_t& clusters)
+  double MatchTimeOverlap::_Process_(const larocv::Cluster2DPtrArray_t& clusters)
   {
 
     if(_require_3planes && clusters.size() == 2) return -1;

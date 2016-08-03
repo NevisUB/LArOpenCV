@@ -17,12 +17,12 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class TriangleClusterExt
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class TriangleClusterExt : public larcv::ClusterAlgoBase {
+  class TriangleClusterExt : public larocv::ClusterAlgoBase {
     
   public:
     
@@ -42,9 +42,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
     
   private:
     int _N;
@@ -54,8 +54,8 @@ namespace larcv {
   };
   
   /**
-     \class larcv::TriangleClusterExtFactory
-     \brief A concrete factory class for larcv::TriangleClusterExt
+     \class larocv::TriangleClusterExtFactory
+     \brief A concrete factory class for larocv::TriangleClusterExt
    */
   class TriangleClusterExtFactory : public ClusterAlgoFactoryBase {
   public:
@@ -66,7 +66,7 @@ namespace larcv {
     /// creation method
     ClusterAlgoBase* create(const std::string instance_name) { return new TriangleClusterExt(instance_name); }
   };
-  /// Global larcv::TriangleClusterExtFactory to register ClusterAlgoFactory
+  /// Global larocv::TriangleClusterExtFactory to register ClusterAlgoFactory
   static TriangleClusterExtFactory __global_TriangleClusterExtFactory__;
 }
 #endif

@@ -5,10 +5,10 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
 
   
-  class BoundRectStart : public larcv::ClusterAlgoBase {
+  class BoundRectStart : public larocv::ClusterAlgoBase {
     
   public:
     
@@ -30,9 +30,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
     
   private:
 
@@ -44,8 +44,8 @@ namespace larcv {
   };
   
   /**
-     \class larcv::BoundRectStartFactory
-     \brief A concrete factory class for larcv::BoundRectStart
+     \class larocv::BoundRectStartFactory
+     \brief A concrete factory class for larocv::BoundRectStart
    */
   class BoundRectStartFactory : public ClusterAlgoFactoryBase {
   public:
@@ -56,7 +56,7 @@ namespace larcv {
     /// creation method
     ClusterAlgoBase* create(const std::string instance_name) { return new BoundRectStart(instance_name); }
   };
-  /// Global larcv::BoundRectStartFactory to register ClusterAlgoFactory
+  /// Global larocv::BoundRectStartFactory to register ClusterAlgoFactory
   static BoundRectStartFactory __global_BoundRectStartFactory__;
 }
 #endif

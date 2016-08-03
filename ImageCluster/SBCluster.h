@@ -6,13 +6,13 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
  
-  class SBCluster : public larcv::ClusterAlgoBase {
+  class SBCluster : public larocv::ClusterAlgoBase {
     
   public:
     
-    /// Default constructor: Name is used to identify a configuration parameter set via larcv::ImageClusterManager
+    /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
     SBCluster(const std::string name = "SBCluster") :
       ClusterAlgoBase(name),
       _dilation_size ( 5 ),
@@ -33,9 +33,9 @@ namespace larcv {
     /// Inherited class configuration method
     void _Configure_(const ::fcllite::PSet &pset);
     
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
     
   private:
 
@@ -48,8 +48,8 @@ namespace larcv {
   };
 
   /**
-     \class larcv::SBClusterFactory
-     \brief A concrete factory class for larcv::SBCluster
+     \class larocv::SBClusterFactory
+     \brief A concrete factory class for larocv::SBCluster
    */
   class SBClusterFactory : public ClusterAlgoFactoryBase {
   public:
@@ -60,7 +60,7 @@ namespace larcv {
     /// create method
     ClusterAlgoBase* create(const std::string instance_name) { return new SBCluster(instance_name); }
   };
-  /// Global larcv::SBClusterFactory to register ClusterAlgoFactory
+  /// Global larocv::SBClusterFactory to register ClusterAlgoFactory
   static SBClusterFactory __global_SBClusterFactory__;
   
 }

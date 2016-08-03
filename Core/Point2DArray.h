@@ -1,5 +1,5 @@
-#ifndef __LARCV_CORE_POINT2DARRAY_H__
-#define __LARCV_CORE_POINT2DARRAY_H__
+#ifndef __LAROCV_CORE_POINT2DARRAY_H__
+#define __LAROCV_CORE_POINT2DARRAY_H__
 
 /**
  * \file Point2DArray.h
@@ -17,19 +17,19 @@
 
 #include <vector>
 #include "LArCVTypes.h"
-namespace larcv {
+namespace larocv {
 
   namespace convert {
     class NDArrayConverter;
   }
 
   /**
-     \class larcv::Point2DArray
+     \class larocv::Point2DArray
      @brief An array of 2D points implemented as 1D std::vector<double> for I/O performance
-     It is meant to be used to store larcv::Contour_t in a ROOT file but not yet implemented (ignore!)
+     It is meant to be used to store larocv::Contour_t in a ROOT file but not yet implemented (ignore!)
    */
   class Point2DArray {
-    friend class ::larcv::convert::NDArrayConverter;
+    friend class ::larocv::convert::NDArrayConverter;
     
   public:
     Point2DArray() : _data() {}

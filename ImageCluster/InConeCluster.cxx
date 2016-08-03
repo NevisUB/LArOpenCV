@@ -6,7 +6,7 @@
 #include "ClusterRecoUtil/Base/Polygon2D.h"
 #include "ClusterRecoUtil/Base/ClusterParams.h"
 
-namespace larcv {
+namespace larocv {
 
   void InConeCluster::_Configure_(const ::fcllite::PSet &pset)
   {
@@ -17,9 +17,9 @@ namespace larcv {
   }
 
 
-  Cluster2DArray_t InConeCluster::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t InConeCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
                                             const ::cv::Mat& img,
-                                            larcv::ImageMeta& meta)
+                                            larocv::ImageMeta& meta)
   {
     //std::cout<<"\nNew plane : "<<meta.plane() <<std::endl;
 
@@ -128,7 +128,7 @@ namespace larcv {
       cone_contour.push_back(third_pt);
       c1._cone_contour = cone_contour ;
 
-      std::map<float, larcv::Contour_t> merge_us ;
+      std::map<float, larocv::Contour_t> merge_us ;
 
       /// 1) Loop over satellites and decide whether or not to associate with shower
       for (unsigned j = 0; j < satellite_v.size(); ++j) {
@@ -197,7 +197,7 @@ namespace larcv {
     return result;
   }
 
-  void InConeCluster::_order_sats(larcv::Cluster2D& c1, larcv::Cluster2D & c2, std::map<float, larcv::Contour_t> & merge_us, const ::cv::Point & COM ) {
+  void InConeCluster::_order_sats(larocv::Cluster2D& c1, larocv::Cluster2D & c2, std::map<float, larocv::Contour_t> & merge_us, const ::cv::Point & COM ) {
     int min_index = 0;
     float min_dist = 10000;
     for ( int p = 1; p < c1._contour.size(); ++p ) {
@@ -225,16 +225,16 @@ namespace larcv {
 
   }
 
-  void InConeCluster::_combine_two_contours(const larcv::Contour_t& c1, const larcv::Contour_t& c2, larcv::Contour_t& c3) {
+  void InConeCluster::_combine_two_contours(const larocv::Contour_t& c1, const larocv::Contour_t& c2, larocv::Contour_t& c3) {
     c3.clear();
     c3.reserve( c1.size() + c2.size() );
     c3.insert( c3.end(), c1.begin(), c1.end() );
     c3.insert( c3.end(), c2.begin(), c2.end() );
   }
 
-  void InConeCluster::_combine_two_contours(const larcv::Contour_t& c1, 
-                                            const larcv::Contour_t& c2, 
-                                            larcv::Contour_t& c3, 
+  void InConeCluster::_combine_two_contours(const larocv::Contour_t& c1, 
+                                            const larocv::Contour_t& c2, 
+                                            larocv::Contour_t& c3, 
                                             const int & offset) {
     c3.clear();
     c3.reserve( c1.size() + c2.size() );

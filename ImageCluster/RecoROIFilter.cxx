@@ -3,7 +3,7 @@
 
 #include "RecoROIFilter.h"
 
-namespace larcv {
+namespace larocv {
 
   void RecoROIFilter::_Configure_(const ::fcllite::PSet& pset) {
     _max_rad_length = pset.get<double>("MaxRadLength");  // minimum distance for ROI vertex to start point
@@ -14,9 +14,9 @@ namespace larcv {
     _strict_hit_cut = pset.get<int>("StrictHitCut");  // how many is too many
   }
 
-  Cluster2DArray_t RecoROIFilter::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t RecoROIFilter::_Process_(const larocv::Cluster2DArray_t& clusters,
 					    const ::cv::Mat& img,
-					    larcv::ImageMeta& meta) {
+					    larocv::ImageMeta& meta) {
     Cluster2DArray_t oclusters;
     oclusters.reserve(clusters.size());
 

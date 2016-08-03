@@ -16,10 +16,10 @@
 #include "Core/Point2DArray.h"
 static PyObject* opencv_error = 0;
 
-namespace larcv {
+namespace larocv {
 
   /**
-     \namespace larcv::convert
+     \namespace larocv::convert
      C++ namespace for a collection of Python<=>LArOpenCV C++ object conversion functions/classes
    */
   namespace convert {
@@ -70,8 +70,8 @@ namespace larcv {
       NDArrayConverter();
       ::cv::Mat toMat(const PyObject* o);
       PyObject* toNDArray(const ::cv::Mat& mat);
-      PyObject* toNDArray(const ::larcv::Image2D& img);
-      PyObject* toNDArray(const ::larcv::Point2DArray& pt_v);
+      PyObject* toNDArray(const ::larocv::Image2D& img);
+      PyObject* toNDArray(const ::larocv::Point2DArray& pt_v);
     };
   }
 }

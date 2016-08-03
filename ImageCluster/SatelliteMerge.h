@@ -17,12 +17,12 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class SatelliteMerge
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class SatelliteMerge : public larcv::ClusterAlgoBase {
+  class SatelliteMerge : public larocv::ClusterAlgoBase {
     
   public:
     
@@ -44,9 +44,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
     
   private:
 
@@ -55,14 +55,14 @@ namespace larcv {
     double _min_shower_dist;
     double _density;         
 
-    void _combine_two_contours(const larcv::Contour_t& c1, const larcv::Contour_t& c2, larcv::Contour_t& c3);
-    double _pt_distance       (const larcv::Contour_t& c1, const larcv::Contour_t& c2);
+    void _combine_two_contours(const larocv::Contour_t& c1, const larocv::Contour_t& c2, larocv::Contour_t& c3);
+    double _pt_distance       (const larocv::Contour_t& c1, const larocv::Contour_t& c2);
     
   };
   
   /**
-     \class larcv::SatelliteMergeFactory
-     \brief A concrete factory class for larcv::SatelliteMerge
+     \class larocv::SatelliteMergeFactory
+     \brief A concrete factory class for larocv::SatelliteMerge
    */
   class SatelliteMergeFactory : public ClusterAlgoFactoryBase {
   public:
@@ -73,7 +73,7 @@ namespace larcv {
     /// creation method
     ClusterAlgoBase* create(const std::string instance_name) { return new SatelliteMerge(instance_name); }
   };
-  /// Global larcv::SatelliteMergeFactory to register ClusterAlgoFactory
+  /// Global larocv::SatelliteMergeFactory to register ClusterAlgoFactory
   static SatelliteMergeFactory __global_SatelliteMergeFactory__;
 }
 #endif

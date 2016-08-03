@@ -44,9 +44,9 @@ namespace larcaffe {
   };
 }
 
-namespace larcv {
+namespace larocv {
   /**
-     \class larcv::larbys 
+     \class larocv::larbys 
      @brief Borrowed from larcaffe (see larcaffe::larbys)
   */
   typedef ::larcaffe::larbys larbys;

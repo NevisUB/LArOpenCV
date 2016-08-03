@@ -17,12 +17,12 @@
 #include "MatchAlgoBase.h"
 #include "MatchAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class MatchTimeOverlap
      @brief A simple matching algorithm meant to serve for testing/example by Kazu
   */
-  class MatchTimeOverlap : public larcv::MatchAlgoBase {
+  class MatchTimeOverlap : public larocv::MatchAlgoBase {
     
   public:
     
@@ -42,7 +42,7 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    double _Process_(const larcv::Cluster2DPtrArray_t& clusters);
+    double _Process_(const larocv::Cluster2DPtrArray_t& clusters);
 		     
     
   private:
@@ -55,8 +55,8 @@ namespace larcv {
   };
   
   /**
-     \class larcv::MatchTimeOverlapFactory
-     \brief A concrete factory class for larcv::MatchTimeOverlap
+     \class larocv::MatchTimeOverlapFactory
+     \brief A concrete factory class for larocv::MatchTimeOverlap
    */
   class MatchTimeOverlapFactory : public MatchAlgoFactoryBase {
   public:
@@ -67,7 +67,7 @@ namespace larcv {
     /// creation method
     MatchAlgoBase* create(const std::string instance_name) { return new MatchTimeOverlap(instance_name); }
   };
-  /// Global larcv::MatchTimeOverlapFactory to register MatchAlgoFactory
+  /// Global larocv::MatchTimeOverlapFactory to register MatchAlgoFactory
   static MatchTimeOverlapFactory __global_MatchTimeOverlapFactory__;
 }
 #endif

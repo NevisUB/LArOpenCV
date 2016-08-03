@@ -8,9 +8,9 @@
 #include <vector>
 #include <algorithm>
 
-namespace larcv {
+namespace larocv {
 
-  ::cv::Rect BoundingBox(const larcv::ContourArray_t& clusters, const double min_area)
+  ::cv::Rect BoundingBox(const larocv::ContourArray_t& clusters, const double min_area)
   {
     int bb_xmin = INT_MAX;
     int bb_ymin = INT_MAX;
@@ -29,7 +29,7 @@ namespace larcv {
     return ::cv::Rect(bb_xmin,bb_ymin,bb_xmax-bb_xmin,bb_ymax-bb_ymin);
   }
   
-  ::cv::Rect BoundingBox(const larcv::Contour_t& cluster)
+  ::cv::Rect BoundingBox(const larocv::Contour_t& cluster)
   {
     if(cluster.size()<2)
       throw larbys("Cannot create SubMatrix for a contour of size < 2!");
@@ -57,7 +57,7 @@ namespace larcv {
 		       y_max - y_min);
   }
 
-  ::cv::Mat CreateSubMatRef(const larcv::Contour_t& cluster, cv::Mat& img)
+  ::cv::Mat CreateSubMatRef(const larocv::Contour_t& cluster, cv::Mat& img)
   {
     if(cluster.size()<2)
       throw larbys("Cannot create SubMatrix for a contour of size < 2!");
@@ -70,7 +70,7 @@ namespace larcv {
     return result;
   }
 
-  ::cv::Mat CreateSubMatCopy(const larcv::Contour_t& cluster, const cv::Mat& img)
+  ::cv::Mat CreateSubMatCopy(const larocv::Contour_t& cluster, const cv::Mat& img)
   {
     if(cluster.size()<2)
       throw larbys("Cannot create SubMatrix for a contour of size < 2!");

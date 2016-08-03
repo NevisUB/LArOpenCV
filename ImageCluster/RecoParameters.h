@@ -17,12 +17,12 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class RecoParameters
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class RecoParameters : public larcv::ClusterAlgoBase {
+  class RecoParameters : public larocv::ClusterAlgoBase {
     
   public:
     
@@ -42,17 +42,17 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
     
   private:
 
   };
   
   /**
-     \class larcv::RecoParametersFactory
-     \brief A concrete factory class for larcv::RecoParameters
+     \class larocv::RecoParametersFactory
+     \brief A concrete factory class for larocv::RecoParameters
    */
   class RecoParametersFactory : public ClusterAlgoFactoryBase {
   public:
@@ -63,7 +63,7 @@ namespace larcv {
     /// creation method
     ClusterAlgoBase* create(const std::string instance_name) { return new RecoParameters(instance_name); }
   };
-  /// Global larcv::RecoParametersFactory to register ClusterAlgoFactory
+  /// Global larocv::RecoParametersFactory to register ClusterAlgoFactory
   static RecoParametersFactory __global_RecoParametersFactory__;
 }
 #endif

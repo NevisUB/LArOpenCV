@@ -22,27 +22,27 @@
 #include "Utils/Watch.h"
 #include "ImageClusterTypes.h"
 
-namespace larcv {
+namespace larocv {
 
   class ImageClusterManager;
   
   /**
      \class ImageClusterBase
      An abstract base class for ImageCluster algorithms. Its role is to construct a set of "cluster" given an image. \n
-     An algorithm instance is expected to be "configured" and "executed" via larcv::ImageClusterManager, though a user \n
+     An algorithm instance is expected to be "configured" and "executed" via larocv::ImageClusterManager, though a user \n
      can perform those actions by hand (which may be useful for development work) as well if wished. \n \n
 
-     larcv::ImageClusterManager executes a chain of algorithms that inherit from ImageClusterBase. Each algorithm instance \n
+     larocv::ImageClusterManager executes a chain of algorithms that inherit from ImageClusterBase. Each algorithm instance \n
      receives an image, information about previous algorithm's clustering result, and meta data to be updated for resulting \n
-     clusters from it. See larcv::ImageClusterManager for more details.\n\n
+     clusters from it. See larocv::ImageClusterManager for more details.\n\n
 
-     Configuration parameters are passed via fhicllite::PSet (which is constructed via larcv::ImageClusterManager) \n
+     Configuration parameters are passed via fhicllite::PSet (which is constructed via larocv::ImageClusterManager) \n
      and a derived class must implement ImageClusterBase::_Configure_ abstruct method. An execution of an algorithm \n
      is done inside an abstract method ImageClusterBase::_Process_ method which must be implemented in a child class. \n
-     A cluster is represented as a 2D contour (larcv::Contour_t). The execution method recieves 3 inputs: 0) a set of \n
+     A cluster is represented as a 2D contour (larocv::Contour_t). The execution method recieves 3 inputs: 0) a set of \n
      pre-defined clusters (typically a set of clusters created by the previous algorithm in a chain executed by \n
-     larcv::ImageClusterManager), 1) cv::Mat representing 2D image, and 2) larcv::ImageMeta which contains meta data \n
-     of 1) and should be updated to interpret the algorithm's return larcv::Contour_t if needed. \n \n
+     larocv::ImageClusterManager), 1) cv::Mat representing 2D image, and 2) larocv::ImageMeta which contains meta data \n
+     of 1) and should be updated to interpret the algorithm's return larocv::Contour_t if needed. \n \n
   */
   class ImageClusterBase : public laropencv_base{
 
@@ -50,7 +50,7 @@ namespace larcv {
     
   public:
     
-    /// Default constructor: Name is used to identify a configuration parameter set via larcv::ImageClusterManager
+    /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
     ImageClusterBase(const std::string name = "noname");
     
     /// Default destructor
@@ -79,7 +79,7 @@ namespace larcv {
 
   protected:
 
-    larcv::Watch _watch; ///< algorithm profile stopwatch
+    larocv::Watch _watch; ///< algorithm profile stopwatch
 
     double _proc_time;   ///< algorithm execution time record (cumulative)
 
@@ -87,7 +87,7 @@ namespace larcv {
 
   private:
 
-    larcv::AlgorithmID_t _id; ///< unique algorithm identifier 
+    larocv::AlgorithmID_t _id; ///< unique algorithm identifier 
 
     std::string _name;   ///< name identifier, used to fetch configuration
 

@@ -4,7 +4,7 @@
 
 #include "PCABox.h"
 
-namespace larcv {
+namespace larocv {
 
   class PCAPath : public std::vector<PCABox*> {
 

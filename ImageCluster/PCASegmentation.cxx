@@ -8,7 +8,7 @@
 #include "PCAUtilities.h"
 #include "PCAPath.h"
 
-namespace larcv{
+namespace larocv{
 
   void PCASegmentation::_Configure_(const ::fcllite::PSet &pset)
   {
@@ -31,9 +31,9 @@ namespace larcv{
 
   }
   
-  larcv::Cluster2DArray_t PCASegmentation::_Process_(const larcv::Cluster2DArray_t& clusters,
+  larocv::Cluster2DArray_t PCASegmentation::_Process_(const larocv::Cluster2DArray_t& clusters,
 						     const ::cv::Mat& img,
-						     larcv::ImageMeta& meta)
+						     larocv::ImageMeta& meta)
   {
     //Make the big copy
     Cluster2DArray_t oclusters; oclusters.reserve(clusters.size());

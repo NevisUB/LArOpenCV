@@ -12,16 +12,16 @@
 #pragma link C++ namespace larcaffe+;
 #pragma link C++ namespace larcaffe::msg+;
 #pragma link C++ class larcaffe::larbys+;
-#pragma link C++ namespace larcv+;
-#pragma link C++ namespace larcv::msg;
-#pragma link C++ class larcv::larbys+;
-#pragma link C++ class larcv::logger+;
-#pragma link C++ class larcv::laropencv_base+;
-#pragma link C++ class larcv::Point2D+;
-#pragma link C++ class larcv::Point2DArray+;
-#pragma link C++ class larcv::ImageMeta+;
-#pragma link C++ class larcv::Image2D+;
-#pragma link C++ class larcv::ImageManager+;
+#pragma link C++ namespace larocv+;
+#pragma link C++ namespace larocv::msg;
+#pragma link C++ class larocv::larbys+;
+#pragma link C++ class larocv::logger+;
+#pragma link C++ class larocv::laropencv_base+;
+#pragma link C++ class larocv::Point2D+;
+#pragma link C++ class larocv::Point2DArray+;
+#pragma link C++ class larocv::ImageMeta+;
+#pragma link C++ class larocv::Image2D+;
+#pragma link C++ class larocv::ImageManager+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
 

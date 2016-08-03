@@ -9,7 +9,7 @@
 #include "ReClusterAlgoFactory.h"
 #include "Utilities.h"
 
-namespace larcv {
+namespace larocv {
 
   ImageClusterManager::ImageClusterManager(const std::string name)
     : laropencv_base(name)
@@ -19,14 +19,14 @@ namespace larcv {
     , _match_alg(nullptr)
     , _recluster_alg(nullptr)
   {
-    LARCV_DEBUG((*this)) << "start" << std::endl;
+    LAROCV_DEBUG((*this)) << "start" << std::endl;
     Reset();
-    LARCV_DEBUG((*this)) << "end" << std::endl;
+    LAROCV_DEBUG((*this)) << "end" << std::endl;
   }
   
   void ImageClusterManager::Reset()
   {
-    LARCV_DEBUG((*this)) << "start" << std::endl;
+    LAROCV_DEBUG((*this)) << "start" << std::endl;
     _configured = false;
     _cluster_alg_v.clear();
     _clusters_v_v.clear();
@@ -39,7 +39,7 @@ namespace larcv {
     _meta_v_v.clear();
     _book_keeper.Reset();
     
-    LARCV_DEBUG((*this)) << "end" << std::endl;
+    LAROCV_DEBUG((*this)) << "end" << std::endl;
   }
 
   void ImageClusterManager::Finalize(TFile* file)
@@ -95,7 +95,7 @@ namespace larcv {
   
   void ImageClusterManager::Configure(const ::fcllite::PSet& main_cfg)
   {
-    LARCV_DEBUG((*this)) << "start" << std::endl;
+    LAROCV_DEBUG((*this)) << "start" << std::endl;
     _profile = main_cfg.get<bool>("Profile");
 
     this->set_verbosity((msg::Level_t)(main_cfg.get<unsigned short>("Verbosity",(unsigned short)(this->logger().level()))));
@@ -109,7 +109,7 @@ namespace larcv {
     auto cluster_instance_name_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoName");
 
     if(cluster_instance_type_v.size() != cluster_instance_name_v.size()) {
-      LARCV_CRITICAL((*this)) << "Clustering: AlgoType and AlgoName config parameters have different length! "
+      LAROCV_CRITICAL((*this)) << "Clustering: AlgoType and AlgoName config parameters have different length! "
 			      << "(" << cluster_instance_type_v.size() << " vs. " << cluster_instance_name_v.size() << ")" << std::endl;
       throw larbys();
     }
@@ -120,7 +120,7 @@ namespace larcv {
       auto const& name = cluster_instance_name_v[i];
       auto const& type = cluster_instance_type_v[i];
       if(_cluster_alg_m.find(name) != _cluster_alg_m.end()) {
-	LARCV_CRITICAL((*this)) << "Duplicate algorithm name found!" << std::endl;
+	LAROCV_CRITICAL((*this)) << "Duplicate algorithm name found!" << std::endl;
 	throw larbys("Duplicate algorithm name found!");
       }
       
@@ -153,7 +153,7 @@ namespace larcv {
     }
 
     _configured=true;
-    LARCV_DEBUG((*this)) << "end" << std::endl;
+    LAROCV_DEBUG((*this)) << "end" << std::endl;
   }
 
   void ImageClusterManager::Report() const
@@ -177,7 +177,7 @@ namespace larcv {
   
   void ImageClusterManager::Process()
   {
-    LARCV_DEBUG((*this)) << "start" << std::endl;
+    LAROCV_DEBUG((*this)) << "start" << std::endl;
     
     if(!_configured) throw larbys("Must Configure() before Process()!");
     
@@ -266,9 +266,9 @@ namespace larcv {
 
       auto const& clusters_v = _clusters_v_v.back();
       
-      std::vector< std::vector< const larcv::Cluster2D* > > c_per_plane;
+      std::vector< std::vector< const larocv::Cluster2D* > > c_per_plane;
 
-      std::vector< std::vector< const larcv::ImageMeta* > > meta_per_plane;
+      std::vector< std::vector< const larocv::ImageMeta* > > meta_per_plane;
 
       for(size_t img_id=0; img_id<clusters_v.size(); ++img_id) {
 
@@ -281,8 +281,8 @@ namespace larcv {
     	}
 
     	for(size_t cindex=0; cindex<clusters_v[img_id].size(); ++cindex) {
-    	  c_per_plane[plane].push_back((const larcv::Cluster2D*)(&(clusters_v[img_id][cindex])));
-    	  meta_per_plane[plane].push_back((const larcv::ImageMeta*)(&meta));
+    	  c_per_plane[plane].push_back((const larocv::Cluster2D*)(&(clusters_v[img_id][cindex])));
+    	  meta_per_plane[plane].push_back((const larocv::ImageMeta*)(&meta));
     	}
 	
       }
@@ -301,7 +301,7 @@ namespace larcv {
     	for(auto const& comb : comb_v) {
 	  
     	  //Assemble a vector of clusters
-    	  std::vector<const larcv::Cluster2D*> input_clusters;
+    	  std::vector<const larocv::Cluster2D*> input_clusters;
     	  std::vector<unsigned int> tmp_index_v;
     	  input_clusters.reserve(comb.size());
     	  tmp_index_v.reserve(comb.size());
@@ -338,7 +338,7 @@ namespace larcv {
       //_viewer.Display(img,contours_v,window_name_v);
     }
 
-    LARCV_DEBUG((*this)) << "end" << std::endl;
+    LAROCV_DEBUG((*this)) << "end" << std::endl;
   }
 
   size_t ImageClusterManager::NumClusters(const AlgorithmID_t alg_id) const

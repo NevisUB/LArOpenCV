@@ -3,15 +3,15 @@
 
 #include "ReClusterAlgoBase.h"
 
-namespace larcv {
+namespace larocv {
 
   ReClusterAlgoBase::ReClusterAlgoBase(const std::string name)
     : ImageClusterBase(name)
-  {LARCV_DEBUG((*this)) << "Constructed" << std::endl;}
+  {LAROCV_DEBUG((*this)) << "Constructed" << std::endl;}
 
   void ReClusterAlgoBase::Configure(const ::fcllite::PSet& cfg) {
 
-    LARCV_DEBUG((*this)) << "start" << std::endl;
+    LAROCV_DEBUG((*this)) << "start" << std::endl;
 
     ImageClusterBase::Configure(cfg);
 	
@@ -19,12 +19,12 @@ namespace larcv {
 
     this->_Configure_(cfg);
 
-    LARCV_DEBUG((*this)) << "end" << std::endl;
+    LAROCV_DEBUG((*this)) << "end" << std::endl;
   }
 
-  Cluster2DArray_t ReClusterAlgoBase::Process(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t ReClusterAlgoBase::Process(const larocv::Cluster2DArray_t& clusters,
 					      const ::cv::Mat& img,
-					      larcv::ImageMeta& meta)
+					      larocv::ImageMeta& meta)
   {
     if(!Profile()) return this->_Process_(clusters,img,meta);
     _watch.Start();

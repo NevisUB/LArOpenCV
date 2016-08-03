@@ -6,7 +6,7 @@
 #include "PCAUtilities.h"
 #include "StatUtilities.h"
 
-namespace larcv {
+namespace larocv {
 
   // just calculate everything who knows what we will need
   void PCAPath::Fill() {

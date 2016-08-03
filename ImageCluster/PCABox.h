@@ -14,7 +14,7 @@
 
 #include "StatUtilities.h"
 
-namespace larcv {
+namespace larocv {
   
   class PCABox {
 

@@ -10,16 +10,16 @@
 #include <map>
 #include <iomanip>
 
-namespace larcv {
+namespace larocv {
 
   void GetStartPoint::_Configure_(const ::fcllite::PSet &pset)
   {
     _nhits = pset.get<int>("NHits");
   }
 
-larcv::Cluster2DArray_t GetStartPoint::_Process_(const larcv::Cluster2DArray_t& clusters,
+larocv::Cluster2DArray_t GetStartPoint::_Process_(const larocv::Cluster2DArray_t& clusters,
                                                  const ::cv::Mat& img,
-                                                 larcv::ImageMeta& meta)
+                                                 larocv::ImageMeta& meta)
  {
   // Geometry Utilities
   auto geomHelper = ::larutil::GeometryHelper::GetME();
@@ -71,8 +71,8 @@ larcv::Cluster2DArray_t GetStartPoint::_Process_(const larcv::Cluster2DArray_t& 
      auto end = params.end_point ;
      auto poly = params.PolyObject ;
      //std::cout<<"start: "<<start.w<<", "<<start.t<<std::endl;
-     cluster._startPt = larcv::Point2D(start.t / geomHelper->TimeToCm() , start.w / geomHelper->WireToCm());
-     cluster._endPt = larcv::Point2D(end.t / geomHelper->TimeToCm() , end.w / geomHelper->WireToCm());
+     cluster._startPt = larocv::Point2D(start.t / geomHelper->TimeToCm() , start.w / geomHelper->WireToCm());
+     cluster._endPt = larocv::Point2D(end.t / geomHelper->TimeToCm() , end.w / geomHelper->WireToCm());
 
      std::vector<std::pair<float, float> > vertices;
     

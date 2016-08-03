@@ -4,7 +4,7 @@
 #include "TriangleClusterExt.h"
 #include "PCAUtilities.h"
 
-namespace larcv{
+namespace larocv{
 
 
   
@@ -16,9 +16,9 @@ namespace larcv{
       
   }
 
-  Cluster2DArray_t TriangleClusterExt::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t TriangleClusterExt::_Process_(const larocv::Cluster2DArray_t& clusters,
 						 const ::cv::Mat& img,
-						 larcv::ImageMeta& meta)
+						 larocv::ImageMeta& meta)
   {
 
     /* Once again, copy Ariana. Lets take the TWO (fcl...) largest clusters no matter what the size

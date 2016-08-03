@@ -22,7 +22,7 @@
 #include "larbys.h"
 #include "ImageMeta.h"
 
-namespace larcv  {
+namespace larocv  {
   /**
      \class ImageManager
      A utility container class for multiple image objects with corresponding metadata per image.\n 
@@ -42,11 +42,11 @@ namespace larcv  {
     /// Returns # images currently registered
     size_t size() const { return _mat_v.size(); }
     /// Register image by copying header
-    void push_back(const ::cv::Mat& img, const larcv::ImageMeta& meta);
+    void push_back(const ::cv::Mat& img, const larocv::ImageMeta& meta);
     /// Image getter
     ::cv::Mat& img_at(size_t index=0);
     /// Metadata getter
-    larcv::ImageMeta& meta_at(size_t index=0);
+    larocv::ImageMeta& meta_at(size_t index=0);
     /// Clear data
     void clear();
 
@@ -54,7 +54,7 @@ namespace larcv  {
     /// Image container
     std::vector<cv::Mat> _mat_v;
     /// Metadata container
-    std::vector<larcv::ImageMeta> _meta_v;
+    std::vector<larocv::ImageMeta> _meta_v;
     
   };
 }

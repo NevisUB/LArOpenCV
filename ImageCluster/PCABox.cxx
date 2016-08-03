@@ -6,7 +6,7 @@
 #include "PCABox.h"
 
 
-namespace larcv {
+namespace larocv {
   
   bool PCABox::touching(const PCABox& other) const {
     

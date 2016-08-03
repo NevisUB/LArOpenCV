@@ -18,7 +18,7 @@
 #include <vector>
 #include "laropencv_logger.h"
 
-namespace larcv {
+namespace larocv {
     
   /**
      \class laropencv_base
@@ -31,7 +31,7 @@ namespace larcv {
     /// Default constructor
     laropencv_base(const std::string logger_name="laropencv_base")
       : _logger(nullptr)
-    { _logger = &(::larcv::logger::get(logger_name)); }
+    { _logger = &(::larocv::logger::get(logger_name)); }
     
     /// Default copy constructor
     laropencv_base(const laropencv_base &original) : _logger(original._logger) {}
@@ -40,16 +40,16 @@ namespace larcv {
     virtual ~laropencv_base(){};
     
     /// Logger getter
-    inline const larcv::logger& logger() const
+    inline const larocv::logger& logger() const
     { return *_logger; }
     
     /// Verbosity level
-    void set_verbosity(::larcv::msg::Level_t level)
+    void set_verbosity(::larocv::msg::Level_t level)
     { _logger->set(level); }
     
   private:
     
-    larcv::logger *_logger;   ///< logger
+    larocv::logger *_logger;   ///< logger
     
   };
 }

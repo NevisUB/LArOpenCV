@@ -3,6 +3,6 @@
 
 #include "MatchAlgoFactory.h"
 
-larcv::MatchAlgoFactory* larcv::MatchAlgoFactory::_me = nullptr;
+larocv::MatchAlgoFactory* larocv::MatchAlgoFactory::_me = nullptr;
 
 #endif

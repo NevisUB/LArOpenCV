@@ -9,9 +9,9 @@
 #include "ClusterRecoUtil/Base/Polygon2D.h"
 #include "LArUtil/GeometryHelper.h"
 
-namespace larcv {
+namespace larocv {
 
-  class GetStartPoint : public larcv::ClusterAlgoBase {
+  class GetStartPoint : public larocv::ClusterAlgoBase {
 
   public:
 
@@ -31,9 +31,9 @@ namespace larcv {
     /// Inherited class configuration method
     void _Configure_(const ::fcllite::PSet &pset);
     
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
                                       const ::cv::Mat& img,
-                                      larcv::ImageMeta& meta);
+                                      larocv::ImageMeta& meta);
 
 
   private:
@@ -51,7 +51,7 @@ class GetStartPointFactory : public ClusterAlgoFactoryBase {
     /// create method
     ClusterAlgoBase* create(const std::string instance_name) { return new GetStartPoint(instance_name); }
   };
-  /// Global larcv::GetStartPointFactory to register ClusterAlgoFactory
+  /// Global larocv::GetStartPointFactory to register ClusterAlgoFactory
   static GetStartPointFactory __global_GetStartPointFactory__;
 
 } 

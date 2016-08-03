@@ -4,7 +4,7 @@
 #include "DeadWireCombine.h"
 #include "FhiclLite/ConfigManager.h"
 
-namespace larcv{
+namespace larocv{
 
   
   void DeadWireCombine::_Configure_(const ::fcllite::PSet &pset)
@@ -40,9 +40,9 @@ namespace larcv{
 
   }
   
-  Cluster2DArray_t DeadWireCombine::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t DeadWireCombine::_Process_(const larocv::Cluster2DArray_t& clusters,
 					      const ::cv::Mat& img,
-					      larcv::ImageMeta& meta)
+					      larocv::ImageMeta& meta)
   {
 
     Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );

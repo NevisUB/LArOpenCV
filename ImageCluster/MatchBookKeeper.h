@@ -18,7 +18,7 @@
 #include <vector>
 #include <map>
 
-namespace larcv {
+namespace larocv {
   /**
      \class MatchBookKeeper
      User defined class MatchBookKeeper ... these comments are used to generate

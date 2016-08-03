@@ -10,12 +10,12 @@
 #include "PCABox.h"
 #include "PCAPath.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class PCASegmentation
      @brief A class with segmented PCA
   */
-  class PCASegmentation : public larcv::ClusterAlgoBase {
+  class PCASegmentation : public larocv::ClusterAlgoBase {
     
   public:
     
@@ -40,9 +40,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
     
     
   private:
@@ -85,8 +85,8 @@ namespace larcv {
   };
   
   /**
-     \class larcv::PCASegmentationFactory
-     \brief A concrete factory class for larcv::PCASegmentation
+     \class larocv::PCASegmentationFactory
+     \brief A concrete factory class for larocv::PCASegmentation
    */
   class PCASegmentationFactory : public ClusterAlgoFactoryBase {
   public:
@@ -97,7 +97,7 @@ namespace larcv {
     /// creation method
     ClusterAlgoBase* create(const std::string instance_name) { return new PCASegmentation(instance_name); }
   };
-  /// Global larcv::PCASegmentationFactory to register ImageClusterFactory
+  /// Global larocv::PCASegmentationFactory to register ImageClusterFactory
   static PCASegmentationFactory __global_PCASegmentationFactory__;
 }
 #endif

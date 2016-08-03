@@ -3,16 +3,16 @@
 
 #include "AttachedClusters.h"
 
-namespace larcv{
+namespace larocv{
 
   void AttachedClusters::_Configure_(const ::fcllite::PSet &pset)
   {
     _maxDefectSize  = pset.get<int> ( "MaxDefectSize" );
   }
 
-  Cluster2DArray_t AttachedClusters::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t AttachedClusters::_Process_(const larocv::Cluster2DArray_t& clusters,
 					       const ::cv::Mat& img,
-					       larcv::ImageMeta& meta)
+					       larocv::ImageMeta& meta)
   { 
     Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );
     

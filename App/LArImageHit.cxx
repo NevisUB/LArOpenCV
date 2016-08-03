@@ -182,7 +182,7 @@ namespace larlite {
       auto const& tick_range = tick_range_v[plane];
       size_t nticks = tick_range.second - tick_range.first + 2;
       size_t nwires = wire_range.second - wire_range.first + 2;
-      ::larcv::ImageMeta meta((double)nwires, (double)nticks, nwires, nticks,
+      ::larocv::ImageMeta meta((double)nwires, (double)nticks, nwires, nticks,
 			      wire_range.first, tick_range.first, plane);
       
       if (_use_roi) {
@@ -194,7 +194,7 @@ namespace larlite {
       }
 
       if (nwires >= 1e10 || nticks >= 1e10)
-	_img_mgr.push_back(::cv::Mat(), ::larcv::ImageMeta());
+	_img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta());
       else
 	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),
 			   meta);
@@ -265,7 +265,7 @@ namespace larlite {
 	auto const& tick_range = tick_range_v[plane];
 
 	img = pooled;
-	meta = ::larcv::ImageMeta((double)pooled.rows, (double)pooled.cols * _pool_time_tick,
+	meta = ::larocv::ImageMeta((double)pooled.rows, (double)pooled.cols * _pool_time_tick,
 				  pooled.rows, pooled.cols, wire_range.first, tick_range.first, plane);
 
 	if (_use_roi) {
@@ -417,7 +417,7 @@ namespace larlite {
 	auto const& showerEnd2Dpp =
           geomH->Point_3Dto2D(showerEndxyz, meta.plane());
 	// Images coordinates: horizontal is time, vertical is wire
-	larcv::Point2D showerEndImg(
+	larocv::Point2D showerEndImg(
 				    (showerEnd2Dpp.t - meta.origin().y) / meta.pixel_height(),
 				    (showerEnd2Dpp.w - meta.origin().x) / meta.pixel_width());
 	graphShowerEnds->SetPoint((int)s, showerEndImg.x, showerEndImg.y);
@@ -490,7 +490,7 @@ namespace larlite {
 	auto const& showerStart2Dpp =
           geomH->Point_3Dto2D(showerStartxyz, meta.plane());
 	// Images coordinates: horizontal is time, vertical is wire
-	larcv::Point2D showerStartImg(
+	larocv::Point2D showerStartImg(
 				      (showerStart2Dpp.t - meta.origin().y) / meta.pixel_height(),
 				      (showerStart2Dpp.w - meta.origin().x) / meta.pixel_width());
 	graphShowerStarts->SetPoint((int)s, showerStartImg.x, showerStartImg.y);

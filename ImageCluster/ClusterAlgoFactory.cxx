@@ -3,6 +3,6 @@
 
 #include "ClusterAlgoFactory.h"
 
-larcv::ClusterAlgoFactory* larcv::ClusterAlgoFactory::_me = nullptr;
+larocv::ClusterAlgoFactory* larocv::ClusterAlgoFactory::_me = nullptr;
 
 #endif

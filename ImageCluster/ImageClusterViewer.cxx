@@ -6,7 +6,7 @@
 #include "ImageClusterViewer.h"
 #include "Core/larbys.h"
 #include "Utilities.h"
-namespace larcv {
+namespace larocv {
 
   ImageClusterViewer::ImageClusterViewer(const std::string name)
     : laropencv_base(name)
@@ -23,11 +23,11 @@ namespace larcv {
     _min_contour_area = cfg.get<double>("MinContourArea");
     /*
     if(_display_ratio<0.5) {
-      LARCV_WARNING((*this)) << "Ratio cannot be smaller than 0.5 (setting to 0.5...)" << std::endl;
+      LAROCV_WARNING((*this)) << "Ratio cannot be smaller than 0.5 (setting to 0.5...)" << std::endl;
       _display_ratio = 0.5;
     }
     if(_display_ratio>2.0) {
-      LARCV_WARNING((*this)) << "Ratio cannot be larger than 2.0 (ssetting to 2.0...)" << std::endl;
+      LAROCV_WARNING((*this)) << "Ratio cannot be larger than 2.0 (ssetting to 2.0...)" << std::endl;
       _display_ratio = 2.0;
     }
     */
@@ -35,16 +35,16 @@ namespace larcv {
   }
 
   void ImageClusterViewer::Display(const ::cv::Mat& img,
-				   const std::vector<larcv::ContourArray_t>& contours_v,
+				   const std::vector<larocv::ContourArray_t>& contours_v,
 				   const std::vector<std::string>& display_name_v)
   {
     if(contours_v.size() != display_name_v.size()) {
-      LARCV_CRITICAL((*this)) << "Provided number of cluster sets and display names do not match!" << std::endl;
+      LAROCV_CRITICAL((*this)) << "Provided number of cluster sets and display names do not match!" << std::endl;
       throw larbys();
     }
 
     if(contours_v.empty()) {
-      LARCV_WARNING((*this)) << "Nothing to display..." << std::endl;
+      LAROCV_WARNING((*this)) << "Nothing to display..." << std::endl;
       return;
     }
     
@@ -81,7 +81,7 @@ namespace larcv {
     //size_t imshow_height = (orig_image.cols > _display_height ? _display_height : orig_image.cols);
     size_t imshow_width  = _display_width;
     size_t imshow_height = _display_height;
-    LARCV_INFO((*this)) << "Original size: " << orig_image.rows << " : " << orig_image.cols
+    LAROCV_INFO((*this)) << "Original size: " << orig_image.rows << " : " << orig_image.cols
 			<< " ... "
 			<< "Resizing: " << imshow_width << " : " << imshow_height << std::endl;
 
@@ -95,11 +95,11 @@ namespace larcv {
     // 1) Find BoundingBox per set of contours (i.e. per algorithm) to display & prepare specific cv::Mat
     for(auto const& contours : contours_v) {
 
-      LARCV_DEBUG((*this)) << "Creating images for " << contours.size() << " contours..." << std::endl;
+      LAROCV_DEBUG((*this)) << "Creating images for " << contours.size() << " contours..." << std::endl;
       
       // Find bounding box limits
       auto rect = BoundingBox(contours,_min_contour_area);
-      LARCV_DEBUG((*this)) << "Bounding box: "
+      LAROCV_DEBUG((*this)) << "Bounding box: "
 			   << rect.x << " => " << rect.x + rect.width
 			   << " : "
 			   << rect.y << " => " << rect.y + rect.height << std::endl;
@@ -119,7 +119,7 @@ namespace larcv {
       result_image = result_image(rect).clone();      
       //imshow_width  = (result_image.rows > _display_width  ? _display_width  : result_image.rows);
       //imshow_height = (result_image.cols > _display_height ? _display_height : result_image.cols);
-      LARCV_INFO((*this)) << "Original size: " << img.rows << " : " << img.cols
+      LAROCV_INFO((*this)) << "Original size: " << img.rows << " : " << img.cols
 			  << " ... "
 			  << "Bounded size : " << result_image.rows << " : " << result_image.cols
 			  << " ... "

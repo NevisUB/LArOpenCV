@@ -3,7 +3,7 @@
 
 #include "TCluster.h"
 
-namespace larcv{
+namespace larocv{
 
   void TCluster::_Configure_(const ::fcllite::PSet &pset)
   {
@@ -15,9 +15,9 @@ namespace larcv{
     _size_y        = pset.get<float> ("ResizeY");
   }
 
-  Cluster2DArray_t TCluster::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t TCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
 				       const ::cv::Mat& img,
-				       larcv::ImageMeta& meta)
+				       larocv::ImageMeta& meta)
   { 
 
     //std::cout<<"Mat width height : "<<img.size()<<std::endl ;

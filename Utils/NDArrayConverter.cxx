@@ -11,7 +11,7 @@
 // Change for OpenCV 2
 #define OPENCV_3 1
 
-namespace larcv {
+namespace larocv {
   namespace convert {
     
     /*
@@ -341,11 +341,11 @@ namespace larcv {
 #endif
     }
 
-    PyObject* NDArrayConverter::toNDArray(const ::larcv::Image2D& img)
+    PyObject* NDArrayConverter::toNDArray(const ::larocv::Image2D& img)
     {
       return nullptr;
     }
-    PyObject* NDArrayConverter::toNDArray(const ::larcv::Point2DArray& pt_v)
+    PyObject* NDArrayConverter::toNDArray(const ::larocv::Point2DArray& pt_v)
     {
       int* dim_data = new int[2];
       dim_data[0] = 2;

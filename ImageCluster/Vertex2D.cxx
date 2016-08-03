@@ -3,6 +3,6 @@
 
 #include "Vertex2D.h"
 
-namespace larcv{ }
+namespace larocv{ }
 
 #endif

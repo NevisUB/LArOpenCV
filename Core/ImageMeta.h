@@ -29,7 +29,7 @@ namespace larcaffe {
      0) origin (left-bottom corner of the picture) absolute coordinate \n
      1) horizontal and vertical size (width and height) in double precision \n
      2) number of horizontal and vertical pixels \n
-     It is meant to be associated with a specific cv::Mat or larcv::Image2D object \n
+     It is meant to be associated with a specific cv::Mat or larocv::Image2D object \n
      (where the latter class contains ImageMeta as an attribute). For cv::Mat, there \n
      is a function ImageMeta::update to constantly update vertical/horizontal # pixels \n
      as it may change in the course of matrix operation.
@@ -44,12 +44,12 @@ namespace larcaffe {
     ImageMeta(const double width=0., const double height=0.,
         const size_t width_npixel=0., const size_t height_npixel=0,
         const double origin_x=0., const double origin_y=0.,
-        const size_t plane=::larcv::kINVALID_SIZE)
+        const size_t plane=::larocv::kINVALID_SIZE)
       : _origin(origin_x,origin_y)
       , _width(width)
       , _height(height)
       , _plane(plane)
-      , _roi_vtx(::larcv::kINVALID_DOUBLE,::larcv::kINVALID_DOUBLE)
+      , _roi_vtx(::larocv::kINVALID_DOUBLE,::larocv::kINVALID_DOUBLE)
     {
       if( width  < 0. ) throw larbys("Width must be a positive floating point!");
       if( height < 0. ) throw larbys("Height must be a positive floating point!");
@@ -116,9 +116,9 @@ namespace larcaffe {
 
 }
 
-namespace larcv {
+namespace larocv {
   /**
-     \class larcv::ImageMeta 
+     \class larocv::ImageMeta 
      @brief Borrowed from larcaffe (see larcaffe::ImageMeta)
   */
   typedef ::larcaffe::ImageMeta ImageMeta;

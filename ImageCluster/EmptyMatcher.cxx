@@ -3,12 +3,12 @@
 
 #include "EmptyMatcher.h"
 
-namespace larcv{
+namespace larocv{
 
   void EmptyMatcher::_Configure_(const ::fcllite::PSet &pset)
   {}
 
-  double EmptyMatcher::_Process_(const larcv::Cluster2DPtrArray_t& clusters)
+  double EmptyMatcher::_Process_(const larocv::Cluster2DPtrArray_t& clusters)
   { return -1.; }
 
 }

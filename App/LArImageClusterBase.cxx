@@ -30,7 +30,7 @@ namespace larlite {
   void LArImageClusterBase::set_config(const std::string cfg_file)
   { _config_file = cfg_file; }
 
-  larcv::ImageClusterManager& LArImageClusterBase::algo_manager()
+  larocv::ImageClusterManager& LArImageClusterBase::algo_manager()
   { return _alg_mgr; }
 
   bool LArImageClusterBase::initialize() {
@@ -51,7 +51,7 @@ namespace larlite {
 
     this->_Configure_(main_cfg);
 
-    if (_producer.empty()) throw ::larcv::larbys("No producer specified...");
+    if (_producer.empty()) throw ::larocv::larbys("No producer specified...");
 
     _alg_mgr.Configure(cfg_mgr.Config().get_pset(_alg_mgr.Name()));
 
@@ -64,7 +64,7 @@ namespace larlite {
     _orig_img_mgr.clear();
     _alg_mgr.ClearData();
 
-    ::larcv::Watch watch_all, watch_one;
+    ::larocv::Watch watch_all, watch_one;
     watch_all.Start();
     watch_one.Start();
 
@@ -195,7 +195,7 @@ namespace larlite {
 
       auto const cid = alg_mgr.ClusterID(wid.Wire, h.PeakTime(), wid.Plane);
 
-      if (cid == ::larcv::kINVALID_CLUSTER_ID) {
+      if (cid == ::larocv::kINVALID_CLUSTER_ID) {
 	_num_unclustered_hits += 1;
 	continue;
       }

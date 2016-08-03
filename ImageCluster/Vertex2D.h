@@ -5,7 +5,7 @@
 
 #include "Cluster2D.h"
 
-namespace larcv{
+namespace larocv{
   
   class Vertex2D : public std::pair<const Cluster2D*,const Cluster2D*> {
   

@@ -4,7 +4,7 @@
 #include "CheckStartDistance.h"
 #include "PCAUtilities.h"
 
-namespace larcv {
+namespace larocv {
 
   void CheckStartDistance::_Configure_(const ::fcllite::PSet& pset) {
     _max_start_d = pset.get<double>("MaxStartEndDistance");
@@ -13,8 +13,8 @@ namespace larcv {
     _h = 0.3;
   }
 
-  Cluster2DArray_t CheckStartDistance::_Process_(const larcv::Cluster2DArray_t& clusters, const ::cv::Mat& img,
-						 larcv::ImageMeta& meta) {
+  Cluster2DArray_t CheckStartDistance::_Process_(const larocv::Cluster2DArray_t& clusters, const ::cv::Mat& img,
+						 larocv::ImageMeta& meta) {
     Cluster2DArray_t oclusters;
     oclusters.reserve(clusters.size());
 

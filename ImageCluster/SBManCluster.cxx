@@ -15,7 +15,7 @@
 //   When you've repeated this process for all the clustering you'd like to do, type 'e' to exit this plane
 //   and head to the next.
 
-namespace larcv {
+namespace larocv {
 
   //Start and end points
   cv::Point start_temp(0,0), end_temp(0,0);
@@ -41,9 +41,9 @@ namespace larcv {
   
   }
 
-  larcv::Cluster2DArray_t SBManCluster::_Process_(const larcv::Cluster2DArray_t& clusters,
+  larocv::Cluster2DArray_t SBManCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
 					       const ::cv::Mat& img,
-					       larcv::ImageMeta& meta)
+					       larocv::ImageMeta& meta)
   {
     pix_h = meta.pixel_height() ;
     pix_w = meta.pixel_width() ;
@@ -187,7 +187,7 @@ namespace larcv {
 
        }
 
-     ::larcv::Cluster2D new_clus ;
+     ::larocv::Cluster2D new_clus ;
      
      for(int j = 0; j < start_end_save.size() / 2; ++j){
 

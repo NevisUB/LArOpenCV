@@ -17,12 +17,12 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class ROIAssistedStart
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class ROIAssistedStart : public larcv::ClusterAlgoBase {
+  class ROIAssistedStart : public larocv::ClusterAlgoBase {
     
   public:
     
@@ -44,9 +44,9 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::Cluster2DArray_t _Process_(const larcv::Cluster2DArray_t& clusters,
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larcv::ImageMeta& meta);
+				      larocv::ImageMeta& meta);
     
   private:
 
@@ -58,8 +58,8 @@ namespace larcv {
   };
   
   /**
-     \class larcv::ROIAssistedStartFactory
-     \brief A concrete factory class for larcv::ROIAssistedStart
+     \class larocv::ROIAssistedStartFactory
+     \brief A concrete factory class for larocv::ROIAssistedStart
    */
   class ROIAssistedStartFactory : public ClusterAlgoFactoryBase {
   public:
@@ -70,7 +70,7 @@ namespace larcv {
     /// creation method
     ClusterAlgoBase* create(const std::string instance_name) { return new ROIAssistedStart(instance_name); }
   };
-  /// Global larcv::ROIAssistedStartFactory to register ClusterAlgoFactory
+  /// Global larocv::ROIAssistedStartFactory to register ClusterAlgoFactory
   static ROIAssistedStartFactory __global_ROIAssistedStartFactory__;
 }
 #endif

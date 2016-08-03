@@ -5,7 +5,7 @@
 #include "StartEndMerge.h"
 #include "PCAUtilities.h"
 
-namespace larcv{
+namespace larocv{
 
   void StartEndMerge::_Configure_(const ::fcllite::PSet &pset)
   {
@@ -19,9 +19,9 @@ namespace larcv{
     _h = 0.3;
   }
 
-  Cluster2DArray_t StartEndMerge::_Process_(const larcv::Cluster2DArray_t& clusters,
+  Cluster2DArray_t StartEndMerge::_Process_(const larocv::Cluster2DArray_t& clusters,
 					const ::cv::Mat& img,
-					larcv::ImageMeta& meta)
+					larocv::ImageMeta& meta)
   { 
     Cluster2DArray_t oclusters; oclusters.reserve(clusters.size());
 
