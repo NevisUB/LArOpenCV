@@ -1,8 +1,10 @@
 LArImageHit: {
+
   # LArImageClusterBase config
   Profile: true
   StoreOriginalImage: false
-  Producer: gaushit
+  Producer: fake_pi0
+
   # LArImageHit config
   PoolTimeTick: 6
   UseROI: false

@@ -39,6 +39,8 @@ namespace larocv {
 				   const std::vector<larocv::ContourArray_t>& contours_v,
 				   const std::vector<std::string>& display_name_v)
   {
+    LAROCV_DEBUG((*this)) << "Called\n";
+    
     if(contours_v.size() != display_name_v.size()) {
       LAROCV_CRITICAL((*this)) << "Provided number of cluster sets and display names do not match!" << std::endl;
       throw larbys();
@@ -76,10 +78,12 @@ namespace larocv {
 	orig_image.at<unsigned char>(j,i,2) = (unsigned char)b;
       }
     }
-    std::cout<<minVal<<" => "<<maxVal<<std::endl;
+    LAROCV_DEBUG((*this))<<minVal<<" => "<<maxVal<<std::endl;
+
     //::cv::cvtColor(orig_image,orig_image,CV_GRAY2RGB);
     //size_t imshow_width  = (orig_image.rows > _display_width  ? _display_width  : orig_image.rows);
     //size_t imshow_height = (orig_image.cols > _display_height ? _display_height : orig_image.cols);
+
     size_t imshow_width  = _display_width;
     size_t imshow_height = _display_height;
     LAROCV_INFO((*this)) << "Original size: " << orig_image.rows << " : " << orig_image.cols
@@ -151,6 +155,7 @@ namespace larocv {
       if(i) name = display_name_v[i-1];
       cvDestroyWindow(name.c_str());
     }
+    LAROCV_DEBUG((*this)) << "Return\n";
   }
 }
 

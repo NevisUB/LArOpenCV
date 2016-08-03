@@ -1,0 +1,53 @@
+LArImageHit: {
+
+  # LArImageClusterBase config
+  Profile: true
+  StoreOriginalImage: false
+  Producer: fake_pi0
+
+  # LArImageHit config
+  PoolTimeTick: 6
+  UseROI: false
+  ROIProducer: nunca
+  UserShowerROI: false
+  PadW : 0
+  PadT:  0
+  Q2Gray: 10
+  QMin: 5
+  
+}
+
+ImageClusterManager: {
+
+  Verbosity: 0
+  Profile:   true
+  ClusterAlgoType:  [SBCluster]
+  ClusterAlgoName:  [sbc]
+
+  ShowImage: true
+
+  MatchAlgoType: ""
+  MatchAlgoName: ""
+
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
+
+ ImageClusterViewer: {
+
+   Verbosity: 0
+   Width:  800
+   Height: 800
+   MinContourArea: 0
+   
+ }
+
+ sbc : {
+   Verbosity: 0
+   DilationSize : 5
+   DilationIterations : 2
+   BlurSize : 5
+   Thresh : 1
+   ThreshMaxVal : 255
+  }
+  
+}

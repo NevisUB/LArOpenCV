@@ -26,7 +26,7 @@ namespace larlite {
      \class LArImageClusterBase
      User custom analysis class made by SHELL_USER_NAME
    */
-  class LArImageClusterBase : public ana_base {
+  class LArImageClusterBase : public ana_base{
   
   public:
 

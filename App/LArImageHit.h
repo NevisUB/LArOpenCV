@@ -19,6 +19,7 @@
 #include "Core/ImageManager.h"
 #include "App/LArImageClusterBase.h"
 #include "Core/LArCVTypes.h"
+#include "Core/laropencv_base.h"
 
 namespace larlite {
 
@@ -26,7 +27,7 @@ namespace larlite {
      \class LArImageHit
      User custom analysis class made by SHELL_USER_NAME
    */
-  class LArImageHit : public LArImageClusterBase {
+  class LArImageHit : public LArImageClusterBase, public ::larocv::laropencv_base {
   
   public:
 

@@ -21,8 +21,8 @@ namespace larocv {
   }
 
   larocv::Cluster2DArray_t SBCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
-					       const ::cv::Mat& img,
-					       larocv::ImageMeta& meta)
+						const ::cv::Mat& img,
+						larocv::ImageMeta& meta)
   {
 
     if ( clusters.size() )
@@ -53,45 +53,47 @@ namespace larocv {
 		       CV_RETR_EXTERNAL,
 		       CV_CHAIN_APPROX_SIMPLE);
 
-     //Fill some cluster parameters 
-     Cluster2DArray_t result_v; result_v.reserve(ctor_v.size());
+    //Fill some cluster parameters 
+    Cluster2DArray_t result_v; result_v.reserve(ctor_v.size());
 
-     ::larocv::Cluster2D new_clus ;
+    ::larocv::Cluster2D new_clus ;
 
-     for(size_t j = 0; j < ctor_v.size(); ++j){
-
-       cv::RotatedRect rect0 = ::cv::minAreaRect(cv::Mat(ctor_v[j]));
-       cv::Point2f vertices[4];
-       rect0.points(vertices);
-       auto rect = rect0.size;
-       std::vector<cv::Point2f> rectangle = { vertices[0], vertices[1],vertices[2],vertices[3] };
-       std::swap(new_clus._minAreaRect,rectangle);
-
-       new_clus._area = ::cv::contourArea(ctor_v[j]) ;
-       new_clus._perimeter = ::cv::arcLength(ctor_v[j],1);
-       new_clus._length    = rect.height > rect.width ? rect.height : rect.width;
-       new_clus._width     = rect.height > rect.width ? rect.width  : rect.height;
-       new_clus._numHits   = 0 ;
-       new_clus._sumCharge = 0 ;
-       std::swap(new_clus._contour,ctor_v[j]);
-       
-       result_v.push_back(new_clus);
-       }
+    LAROCV_DEBUG((*this)) << "Found " << ctor_v.size() << " contours\n";
     
-     Contour_t all_locations;
-     ::cv::findNonZero(img, all_locations); // get the non zero points
+    for(size_t j = 0; j < ctor_v.size(); ++j){
 
-     for( const auto& loc: all_locations ) {
-       for( size_t i = 0; i < result_v.size(); i++ ) {
+      cv::RotatedRect rect0 = ::cv::minAreaRect(cv::Mat(ctor_v[j]));
+      cv::Point2f vertices[4];
+      rect0.points(vertices);
+      auto rect = rect0.size;
+      std::vector<cv::Point2f> rectangle = { vertices[0], vertices[1],vertices[2],vertices[3] };
+      std::swap(new_clus._minAreaRect,rectangle);
 
-         if ( ::cv::pointPolygonTest(result_v[i]._contour,loc,false) < 0 ) 
-           continue;
+      new_clus._area = ::cv::contourArea(ctor_v[j]) ;
+      new_clus._perimeter = ::cv::arcLength(ctor_v[j],1);
+      new_clus._length    = rect.height > rect.width ? rect.height : rect.width;
+      new_clus._width     = rect.height > rect.width ? rect.width  : rect.height;
+      new_clus._numHits   = 0 ;
+      new_clus._sumCharge = 0 ;
+      std::swap(new_clus._contour,ctor_v[j]);
+       
+      result_v.push_back(new_clus);
+    }
+    
+    Contour_t all_locations;
+    ::cv::findNonZero(img, all_locations); // get the non zero points
 
-         result_v[i]._insideHits.emplace_back(loc.x, loc.y);
-         result_v[i]._numHits ++ ;
-         result_v[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);  
-          }   
-        }   
+    for( const auto& loc: all_locations ) {
+      for( size_t i = 0; i < result_v.size(); i++ ) {
+
+	if ( ::cv::pointPolygonTest(result_v[i]._contour,loc,false) < 0 ) 
+	  continue;
+
+	result_v[i]._insideHits.emplace_back(loc.x, loc.y);
+	result_v[i]._numHits ++ ;
+	result_v[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);  
+      }   
+    }   
 
     return result_v;
   }

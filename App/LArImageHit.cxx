@@ -17,6 +17,7 @@
 namespace larlite {
 
   void LArImageHit::_Configure_(const ::fcllite::PSet& pset) {
+
     _charge_to_gray_scale = pset.get<double>("Q2Gray");
     _charge_threshold = pset.get<double>("QMin");
     _pool_time_tick = pset.get<int>("PoolTimeTick");
@@ -60,8 +61,13 @@ namespace larlite {
   }
 
   void LArImageHit::extract_image(storage_manager* storage) {
+
+    LAROCV_DEBUG((*this)) << "Extracting Image\n";
+    
     auto const& geom = ::larutil::Geometry::GetME();
     const size_t nplanes = geom->Nplanes();
+
+    LAROCV_DEBUG((*this)) << "Getting hit producer " << producer() << "\n";
 
     auto ev_hit = storage->get_data<event_hit>(producer());
     if (ev_hit == nullptr)
@@ -72,6 +78,7 @@ namespace larlite {
 
     ::larlite::event_PiZeroROI* ev_roi = nullptr;
     if (_use_roi) {
+      LAROCV_DEBUG((*this)) << "Requesting use of ROI from producer " << _roi_producer << "\n";
       ev_roi = storage->get_data<event_PiZeroROI>(_roi_producer);
       
       if (ev_roi->size() == 0) {
@@ -93,27 +100,20 @@ namespace larlite {
 
       for (uint k = 0; k < nplanes; ++k) {
 
-	// wire_range_v[k] = wr_v[k];
-	// tick_range_v[k] = tr_v[k];
-
-	//we may want to do some padding
-	std::cout << tr_v[k].first << " "<<tr_v[k].second << "\n";
-	std::cout << wr_v[k].first << " "<< wr_v[k].second << "\n==\n";
 	//wire
 	wire_range_v[k].first   = ((wr_v[k].first  - _padw) < 0)         ? 0          : wr_v[k].first - _padw;
 	wire_range_v[k].second  = ((wr_v[k].second + _padw) > _max_w[k]) ? _max_w[k]  : wr_v[k].second + _padw;
 
 	//time
-	tick_range_v[k].first   = ((tr_v[k].first  - _padt) <  0)      ? 0      : tr_v[k].first - _padt;
+	tick_range_v[k].first   = ((tr_v[k].first  - _padt) <  0)     ? 0      : tr_v[k].first - _padt;
 	tick_range_v[k].second  = ((tr_v[k].second + _padt) > _max_t) ? _max_t : tr_v[k].second + _padt;
-
-	std::cout << tick_range_v[k].first << " " << tick_range_v[k].second << "\n";
-	std::cout << wire_range_v[k].first << " " << wire_range_v[k].second << "\n~~\n";
       }
-
 	
 
     } else { //dont use the ROI at all
+
+      LAROCV_DEBUG((*this)) << "Not using ROI\n";
+
       for (auto const& h : *ev_hit) {
 	if (h.Integral() < _charge_threshold) continue;
 
