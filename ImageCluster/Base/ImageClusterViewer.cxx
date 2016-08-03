@@ -5,7 +5,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include "ImageClusterViewer.h"
 #include "Core/larbys.h"
-#include "Utilities.h"
+#include "BaseUtil.h"
+
 namespace larocv {
 
   ImageClusterViewer::ImageClusterViewer(const std::string name)

@@ -17,8 +17,8 @@
 
 #include "Analysis/ana_base.h"
 #include "Core/ImageManager.h"
-#include "ImageCluster/ImageClusterManager.h"
-#include "ImageCluster/ImageClusterViewer.h"
+#include "ImageCluster/Base/ImageClusterManager.h"
+#include "ImageCluster/Base/ImageClusterViewer.h"
 
 namespace larlite {
 
@@ -35,7 +35,6 @@ namespace larlite {
 
     /// Default destructor
     virtual ~LArImageClusterBase(){}
-
 
     /** IMPLEMENT in LArImageClusterBase.cc!
         Initialization method to be called before the analysis event loop.

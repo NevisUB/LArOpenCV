@@ -1,5 +1,5 @@
-#ifndef __IMAGECLUSTER_UTILITIES_H__
-#define __IMAGECLUSTER_UTILITIES_H__
+#ifndef __IMAGECLUSTER_BASEUTIL_H__
+#define __IMAGECLUSTER_BASEUTIL_H__
 
 #include "ImageClusterTypes.h"
 

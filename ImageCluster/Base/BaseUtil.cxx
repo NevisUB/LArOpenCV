@@ -1,10 +1,10 @@
-#ifndef __IMAGECLUSTER_UTILITIES_CXX__
-#define __IMAGECLUSTER_UTILITIES_CXX__
+#ifndef __IMAGECLUSTER_BASEUTIL_CXX__
+#define __IMAGECLUSTER_BASEUTIL_CXX__
 
 #include <limits.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include "Core/larbys.h"
-#include "Utilities.h"
+#include "BaseUtil.h"
 #include <vector>
 #include <algorithm>
 

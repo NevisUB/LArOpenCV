@@ -7,7 +7,7 @@
 #include "ClusterAlgoFactory.h"
 #include "MatchAlgoFactory.h"
 #include "ReClusterAlgoFactory.h"
-#include "Utilities.h"
+#include "BaseUtil.h"
 
 namespace larocv {
 

@@ -2,7 +2,7 @@
 #define __LARLITE_LARIMAGEWIRE_CXX__
 
 #include "LArImageWire.h"
-#include "ImageCluster/ImageClusterTypes.h"
+#include "ImageCluster/Base/ImageClusterTypes.h"
 
 #include "LArUtil/Geometry.h"
 #include "DataFormat/wire.h"
