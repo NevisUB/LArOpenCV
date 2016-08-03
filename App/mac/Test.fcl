@@ -1,36 +1,26 @@
-
 LArImageHit: {
   # LArImageClusterBase config
   Profile: true
   StoreOriginalImage: false
   Producer: gaushit
   # LArImageHit config
+  PoolTimeTick: 6
+  UseROI: false
+  ROIProducer: nunca
+  UserShowerROI: false
+  PadW : 0
+  PadT:  0
   Q2Gray: 10
   QMin: 5
 }
 
-# ImageClusterManager config
 ImageClusterManager: {
 
   Verbosity: 1
   Profile:   true
-  ShowImage: true
-  AlgoType:  [EmptyImageCluster,ToyImageCluster]
-  AlgoName:  [MyEmpty,MyToy]
+  ClusterAlgoType:  [EmptyImageCluster]
+  ClusterAlgoName:  [eic]
 
-  ImageClusterViewer: {
-    Verbosity: 0
-    Width:  800
-    Height: 800
-    MinContourArea: 125
-  }
-    
-  MyEmpty: {
-  }
-
-  MyToy: {
-    Verbosity: 1
-    CannyParams: [10,100,3]
-  }
+   eic: { }
 
 }

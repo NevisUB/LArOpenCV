@@ -32,6 +32,7 @@ LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_highgui -lopencv_imgcodecs 
 LDFLAGS += -L$(LARLITE_LIBDIR)
 
 LDFLAGS += -lLArOpenCV_ImageClusterBase
+LDFLAGS += -lLArOpenCV_ImageClusterCluster
 
 LDFLAGS += -lLArOpenCV_Utils -lLArOpenCV_Core -lRecoTool_ClusterRecoUtil
 

@@ -9,6 +9,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ class larocv::EmptyImageCluster+;
 #pragma link C++ class larocv::SBCluster+;
 #pragma link C++ class larocv::TCluster+;
 #pragma link C++ class larocv::SBManCluster+;

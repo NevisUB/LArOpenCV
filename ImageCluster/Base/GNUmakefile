@@ -1,7 +1,3 @@
-#
-# This is an example GNUmakefile for my packages
-#
-
 # specific names for this package
 DICT  = LArOpenCV_ImageClusterBase
 SHLIB = libLArOpenCV_ImageClusterBase.so

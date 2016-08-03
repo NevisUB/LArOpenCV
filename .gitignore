@@ -24,3 +24,4 @@ laropencv_doc/
 *.ipynb
 *.pyc
 \#*\#
+LArOpenCV_ImageCluster*cxx
