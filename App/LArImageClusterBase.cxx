@@ -245,9 +245,6 @@ namespace larlite {
 	double et = imgclus.XtoTimeTick( imgclus._endPt.x   );
 	double ew = imgclus.YtoWire    ( imgclus._endPt.y   );
 
-	// std::cout << "Plane : " << imgclus.PlaneID() << " w/ [start]  -> [" << int(sw) << ", " << int(st) << "]" << std::endl;
-	// std::cout << "Plane : " << imgclus.PlaneID() << " w/ [end]    -> [" << int(ew) << ", " << int(et) << "]" << std::endl;
-
 	if ( sw > geom->Nwires(imgclus.PlaneID()) ) {
 	  std::cout << "start wire out of range:" << std::endl;
 	  std::cout << "Plane : " << imgclus.PlaneID() << " w/ [start,end] wire -> [" << int(sw) << ", " << int(ew) << "]" << std::endl;

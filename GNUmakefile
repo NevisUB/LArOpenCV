@@ -12,8 +12,8 @@
 # IMPOSE CONDITION BETWEEN LARLITE_USERDEVDIR & PWD =>
 #   do not compile if PWD !=$LARLITE_USERDEVDIR is set elsewhere
 #
-ifndef LARLITE_USERDEVDIR
-ERROR_MESSAGE := $(error LARLITE_USERDEVDIR is not defined!)
+ifndef LAROPENCV_BASEDIR
+ERROR_MESSAGE := $(error LAROPENCV_BASEDIR is not defined!)
 endif
 #
 #####################################################################################
@@ -30,13 +30,13 @@ SUBDIRS := Core Utils ImageCluster App #ADD_NEW_SUBDIR ... do not remove this co
 .phony: all clean
 
 all:
-	@for i in $(SUBDIRS); do ( echo "" && echo "Compiling $$i..." && cd $(LARLITE_USERDEVDIR)/LArOpenCV/$$i && $(MAKE) ) || exit $$?; done
+	@for i in $(SUBDIRS); do ( echo "" && echo "Compiling $$i..." && cd $(LAROPENCV_BASEDIR)/$$i && $(MAKE) ) || exit $$?; done
 #####################################################################################
 #
 # CLEANs...
 #
 clean:
-	@for i in $(SUBDIRS); do ( echo "" && echo "Cleaning $$i..." && cd $(LARLITE_USERDEVDIR)/LArOpenCV/$$i && $(MAKE) clean && rm -f $(LARLITE_LIBDIR)/$$i.* ) || exit $$?; done
+	@for i in $(SUBDIRS); do ( echo "" && echo "Cleaning $$i..." && cd $(LAROPENCV_BASEDIR)/$$i && $(MAKE) clean && rm -f $(LARLITE_LIBDIR)/$$i.* ) || exit $$?; done
 
 #####################################################################################
 #EOF

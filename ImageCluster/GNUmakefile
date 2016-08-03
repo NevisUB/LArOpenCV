@@ -18,7 +18,7 @@ INCFLAGS += $(shell larlite-config --includes)
 INCFLAGS += $(shell python-config --includes)
 INCFLAGS += -I$(shell python -c "import numpy; print numpy.get_include()")
 INCFLAGS += -I$(OPENCV_INCDIR)
-INCFLAGS += -I$(LARLITE_USERDEVDIR)/LArOpenCV
+INCFLAGS += -I$(LAROPENCV_BASEDIR)
 
 # platform-specific options
 OSNAME          = $(shell uname -s)
