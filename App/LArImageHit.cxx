@@ -8,6 +8,7 @@
 #include "LArUtil/GeometryHelper.h"
 
 #include "DataFormat/PiZeroROI.h"
+
 #include "DataFormat/cluster.h"
 #include "DataFormat/event_ass.h"
 #include "DataFormat/hit.h"
@@ -25,18 +26,7 @@ namespace larlite {
     _use_roi = pset.get<bool>("UseROI");
     _roi_producer = pset.get<std::string>("ROIProducer");
     _use_shower_roi = pset.get<bool>("UserShowerROI");
-
-    _padw = pset.get<int>("PadW");
-    _padt = pset.get<int>("PadT");
     
-    _max_w.resize(3);
-
-    _max_w[0] = 2399;
-    _max_w[1] = 2399;
-    _max_w[2] = 3455;
-
-    _max_t = 6399;
-
   }
 
   void LArImageHit::_Report_() const {
@@ -99,18 +89,17 @@ namespace larlite {
       }
 
       for (uint k = 0; k < nplanes; ++k) {
-
 	//wire
-	wire_range_v[k].first   = ((wr_v[k].first  - _padw) < 0)         ? 0          : wr_v[k].first - _padw;
-	wire_range_v[k].second  = ((wr_v[k].second + _padw) > _max_w[k]) ? _max_w[k]  : wr_v[k].second + _padw;
+	wire_range_v[k].first   = wr_v[k].first;
+	wire_range_v[k].second  = wr_v[k].second;
 
 	//time
-	tick_range_v[k].first   = ((tr_v[k].first  - _padt) <  0)     ? 0      : tr_v[k].first - _padt;
-	tick_range_v[k].second  = ((tr_v[k].second + _padt) > _max_t) ? _max_t : tr_v[k].second + _padt;
+	tick_range_v[k].first   = tr_v[k].first;
+	tick_range_v[k].second  = tr_v[k].second;
       }
 	
 
-    } else { //dont use the ROI at all
+    } else { //do not use the ROI information
 
       LAROCV_DEBUG((*this)) << "Not using ROI\n";
 
@@ -120,6 +109,7 @@ namespace larlite {
 	auto const& wid = h.WireID();
 
 	auto& wire_range = wire_range_v[wid.Plane];
+
 	if (wire_range.first > wid.Wire) wire_range.first = wid.Wire;
 	if (wire_range.second < wid.Wire) wire_range.second = wid.Wire;
 
@@ -145,14 +135,12 @@ namespace larlite {
 	auto trkend = (*ev_roi)[0].GetTrackEnd()[plane];
 	meta.setvtx(vtx.second, vtx.first);
 	meta.settrkend(trkend.second, trkend.first);
-	
       }
 
       if (nwires >= 1e10 || nticks >= 1e10)
 	_img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta());
       else
-	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),
-			   meta);
+	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
     }
 
     for (auto const& h : *ev_hit) {
@@ -173,7 +161,7 @@ namespace larlite {
       size_t x = wid.Wire - wire_range.first;
 
 
-      // skip this hit
+      // skip the hit if it's out of range
       if (y >= nticks || x >= nwires) 
 	continue;
 
@@ -196,10 +184,6 @@ namespace larlite {
 
 	::cv::Mat pooled(img.rows, img.cols / _pool_time_tick + 1, CV_8UC1,
 			 cvScalar(0.));
-
-	// columns == ticks
-	// std::cout << "plane: " << plane << " img rows: " << img.rows << "
-	// columns: " << img.cols << "\n";
 
 	for (int row = 0; row < img.rows; ++row) {
 	  uchar* p = img.ptr(row);
