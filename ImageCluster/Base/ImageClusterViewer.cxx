@@ -19,6 +19,7 @@ namespace larocv {
   
   void ImageClusterViewer::Configure(const ::fcllite::PSet& cfg)
   {
+    LAROCV_DEBUG((*this)) << "Called\n";
     _display_width    = cfg.get<size_t>("Width");
     _display_height   = cfg.get<size_t>("Height");
     _min_contour_area = cfg.get<double>("MinContourArea");
@@ -33,23 +34,24 @@ namespace larocv {
     }
     */
     this->set_verbosity((msg::Level_t)(cfg.get<unsigned short>("Verbosity",3)));
+    LAROCV_DEBUG((*this)) << "Return\n";
   }
 
   void ImageClusterViewer::Display(const ::cv::Mat& img,
-				   const std::vector<larocv::ContourArray_t>& contours_v,
+				   const larocv::ContourArray_t& contours,
 				   const std::vector<std::string>& display_name_v)
   {
     LAROCV_DEBUG((*this)) << "Called\n";
     
-    if(contours_v.size() != display_name_v.size()) {
-      LAROCV_CRITICAL((*this)) << "Provided number of cluster sets and display names do not match!" << std::endl;
-      throw larbys();
-    }
+    // if(contours_v.size() != display_name_v.size()) {
+    //   LAROCV_CRITICAL((*this)) << "Provided number of cluster sets and display names do not match!" << std::endl;
+    //   throw larbys();
+    // }
 
-    if(contours_v.empty()) {
-      LAROCV_WARNING((*this)) << "Nothing to display..." << std::endl;
-      return;
-    }
+    // if(contours_v.empty()) {
+    //   LAROCV_WARNING((*this)) << "Nothing to display..." << std::endl;
+    //   return;
+    // }
     
     //
     // How it works: Make all images to display in a vector then call imshow at once later.
@@ -87,8 +89,8 @@ namespace larocv {
     size_t imshow_width  = _display_width;
     size_t imshow_height = _display_height;
     LAROCV_INFO((*this)) << "Original size: " << orig_image.rows << " : " << orig_image.cols
-			<< " ... "
-			<< "Resizing: " << imshow_width << " : " << imshow_height << std::endl;
+			 << " ... "
+			 << "Resizing: " << imshow_width << " : " << imshow_height << std::endl;
 
     if(!orig_image.rows || !orig_image.cols) return;
     if(!imshow_width || !imshow_height) return;
@@ -98,43 +100,43 @@ namespace larocv {
     result_image_v.emplace_back(orig_image);
 
     // 1) Find BoundingBox per set of contours (i.e. per algorithm) to display & prepare specific cv::Mat
-    for(auto const& contours : contours_v) {
+    //for(auto const& contours : contours_v) {
 
-      LAROCV_DEBUG((*this)) << "Creating images for " << contours.size() << " contours..." << std::endl;
+    LAROCV_DEBUG((*this)) << "Creating images for " << contours.size() << " contours..." << std::endl;
       
-      // Find bounding box limits
-      auto rect = BoundingBox(contours,_min_contour_area);
-      LAROCV_DEBUG((*this)) << "Bounding box: "
-			   << rect.x << " => " << rect.x + rect.width
-			   << " : "
-			   << rect.y << " => " << rect.y + rect.height << std::endl;
+    // Find bounding box limits
+    auto rect = BoundingBox(contours,_min_contour_area);
+    LAROCV_DEBUG((*this)) << "Bounding box: "
+			  << rect.x << " => " << rect.x + rect.width
+			  << " : "
+			  << rect.y << " => " << rect.y + rect.height << std::endl;
 
-      // Prepare Mat
-      ::cv::Mat result_image;
-      ::cv::cvtColor(img,result_image,CV_GRAY2RGB);
+    // Prepare Mat
+    ::cv::Mat result_image;
+    ::cv::cvtColor(img,result_image,CV_GRAY2RGB);
 
-      // Draw contours
-      ::cv::RNG rng;
-      for(size_t cindex=0; cindex < contours.size(); ++cindex) {
-	::cv::Scalar color = ::cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-	drawContours( result_image, contours, cindex, color, 2, 8, ::cv::noArray(), 0, ::cv::Point() );
-      }
-
-      // Only show relevant area
-      result_image = result_image(rect).clone();      
-      //imshow_width  = (result_image.rows > _display_width  ? _display_width  : result_image.rows);
-      //imshow_height = (result_image.cols > _display_height ? _display_height : result_image.cols);
-      LAROCV_INFO((*this)) << "Original size: " << img.rows << " : " << img.cols
-			  << " ... "
-			  << "Bounded size : " << result_image.rows << " : " << result_image.cols
-			  << " ... "
-			  << "Resizing: " << imshow_width << " : " << imshow_height << std::endl;
-      if(imshow_width && imshow_height && result_image.rows && result_image.cols) {
-	::cv::resize(result_image,result_image,::cv::Size(imshow_width,imshow_height),0,0,::cv::INTER_AREA);
-	::cv::bitwise_not(result_image,result_image);
-      }
-      result_image_v.emplace_back(result_image);
+    // Draw contours
+    ::cv::RNG rng;
+    for(size_t cindex=0; cindex < contours.size(); ++cindex) {
+      ::cv::Scalar color = ::cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+      drawContours( result_image, contours, cindex, color, 2, 8, ::cv::noArray(), 0, ::cv::Point() );
     }
+
+    // Only show relevant area
+    result_image = result_image(rect).clone();      
+    //imshow_width  = (result_image.rows > _display_width  ? _display_width  : result_image.rows);
+    //imshow_height = (result_image.cols > _display_height ? _display_height : result_image.cols);
+    LAROCV_INFO((*this)) << "Original size: " << img.rows << " : " << img.cols
+			 << " ... "
+			 << "Bounded size : " << result_image.rows << " : " << result_image.cols
+			 << " ... "
+			 << "Resizing: " << imshow_width << " : " << imshow_height << std::endl;
+    if(imshow_width && imshow_height && result_image.rows && result_image.cols) {
+      ::cv::resize(result_image,result_image,::cv::Size(imshow_width,imshow_height),0,0,::cv::INTER_AREA);
+      ::cv::bitwise_not(result_image,result_image);
+    }
+    result_image_v.emplace_back(result_image);
+    //}
 
     // 2) Display
     for(size_t i=0; i<result_image_v.size(); ++i) {

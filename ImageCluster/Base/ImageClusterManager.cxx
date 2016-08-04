@@ -95,15 +95,17 @@ namespace larocv {
   
   void ImageClusterManager::Configure(const ::fcllite::PSet& main_cfg)
   {
-    LAROCV_DEBUG((*this)) << "start" << std::endl;
+    LAROCV_DEBUG((*this)) << "Start" << std::endl;
     _profile = main_cfg.get<bool>("Profile");
 
     this->set_verbosity((msg::Level_t)(main_cfg.get<unsigned short>("Verbosity",(unsigned short)(this->logger().level()))));
 
     _show_image = main_cfg.get<bool>("ShowImage",false);
 
-    if(_show_image)
-      _viewer.Configure(main_cfg.get_pset(_viewer.Name()));
+    //if(_show_image) {
+    LAROCV_DEBUG((*this)) << "Configuring Viewer" << std::endl;
+    _viewer.Configure(main_cfg.get_pset(_viewer.Name()));
+    //}
     
     auto cluster_instance_type_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoType");
     auto cluster_instance_name_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoName");
@@ -116,6 +118,7 @@ namespace larocv {
 
     _cluster_alg_v.clear();
     _cluster_alg_m.clear();
+
     for(size_t i=0; i<cluster_instance_type_v.size(); ++i) {
       auto const& name = cluster_instance_name_v[i];
       auto const& type = cluster_instance_type_v[i];
@@ -126,6 +129,7 @@ namespace larocv {
       
       _cluster_alg_m[name] = _cluster_alg_v.size();
       _cluster_alg_v.push_back(ClusterAlgoFactory::get().create(type,name));
+      
     }
 
     for(auto& ptr : _cluster_alg_v) {
@@ -153,7 +157,7 @@ namespace larocv {
     }
 
     _configured=true;
-    LAROCV_DEBUG((*this)) << "end" << std::endl;
+    LAROCV_DEBUG((*this)) << "Return" << std::endl;
   }
 
   void ImageClusterManager::Report() const
@@ -177,7 +181,7 @@ namespace larocv {
   
   void ImageClusterManager::Process()
   {
-    LAROCV_DEBUG((*this)) << "start" << std::endl;
+    LAROCV_DEBUG((*this)) << "Start" << std::endl;
     
     if(!_configured) throw larbys("Must Configure() before Process()!");
     
@@ -329,15 +333,20 @@ namespace larocv {
     _process_time += _watch.WallTime();
     ++_process_count;
 
-    if(_show_image) {
+    //if(_show_image) {
       std::vector<std::string> window_name_v(_cluster_alg_v.size());
       for(size_t i=0; i<_cluster_alg_v.size(); ++i) window_name_v[i] = _cluster_alg_v[i]->Name();
-      //ContourArray_t contours_v;
-      //contours_v.reserve(_clusters_v.size());
-      //for(auto const& c : _clusters_v) contours_v.push_back(c._contour);
-      //_viewer.Display(img,contours_v,window_name_v);
-    }
+      ContourArray_t contours_v;
+      std::cout << "contours_v size() is " << contours_v.size() << "\n";
+      
+      std::cout << "_clusters_v_v[0][0].size() is " << _clusters_v_v[0][0].size() << "\n";
 
+      fflush(stdout);
+      contours_v.reserve(_clusters_v_v[0][0].size());
+      for(auto const& c :  _clusters_v_v[0][0]) contours_v.push_back(c._contour);
+      _viewer.Display(_raw_img_v[0],contours_v,window_name_v);
+      //}
+      
     LAROCV_DEBUG((*this)) << "end" << std::endl;
   }
 

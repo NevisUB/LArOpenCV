@@ -41,7 +41,7 @@ namespace larocv {
 
     /// Execute viewer
     void Display(const ::cv::Mat& img,
-		 const std::vector<larocv::ContourArray_t>& contours_v,
+		 const larocv::ContourArray_t& contours,
 		 const std::vector<std::string>& window_name_v);
 
   private:
