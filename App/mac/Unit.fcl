@@ -10,8 +10,7 @@ LArImageHit: {
   UseROI: false
   ROIProducer: nunca
   UserShowerROI: false
-  PadW : 0
-  PadT:  0
+
   Q2Gray: 10
   QMin: 5
   
@@ -24,7 +23,7 @@ ImageClusterManager: {
   ClusterAlgoType:  [SBCluster]
   ClusterAlgoName:  [sbc]
 
-  ShowImage: true
+  ShowImage: false
 
   MatchAlgoType: ""
   MatchAlgoName: ""

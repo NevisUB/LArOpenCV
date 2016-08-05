@@ -102,10 +102,10 @@ namespace larocv {
 
     _show_image = main_cfg.get<bool>("ShowImage",false);
 
-    //if(_show_image) {
-    LAROCV_DEBUG((*this)) << "Configuring Viewer" << std::endl;
-    _viewer.Configure(main_cfg.get_pset(_viewer.Name()));
-    //}
+    if(_show_image) {
+      LAROCV_DEBUG((*this)) << "Configuring Viewer" << std::endl;
+      _viewer.Configure(main_cfg.get_pset(_viewer.Name()));
+    }
     
     auto cluster_instance_type_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoType");
     auto cluster_instance_name_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoName");
@@ -332,20 +332,23 @@ namespace larocv {
     
     _process_time += _watch.WallTime();
     ++_process_count;
+    
+    LAROCV_DEBUG((*this)) << "clusters_v_v.size() : " << _clusters_v_v.size() << "\n";
+    for (const auto& clusters_v : _clusters_v_v) {
+      LAROCV_DEBUG((*this)) << "clusters_v_v.size() " << clusters_v.size() << "\n";
+      for (const auto& clusters : clusters_v) {
+	LAROCV_DEBUG((*this)) << "clusters.size() " << clusters.size() << "\n";
+      }
+    }
 
-    //if(_show_image) {
+    if(_show_image) {
       std::vector<std::string> window_name_v(_cluster_alg_v.size());
       for(size_t i=0; i<_cluster_alg_v.size(); ++i) window_name_v[i] = _cluster_alg_v[i]->Name();
       ContourArray_t contours_v;
-      std::cout << "contours_v size() is " << contours_v.size() << "\n";
-      
-      std::cout << "_clusters_v_v[0][0].size() is " << _clusters_v_v[0][0].size() << "\n";
-
-      fflush(stdout);
-      contours_v.reserve(_clusters_v_v[0][0].size());
-      for(auto const& c :  _clusters_v_v[0][0]) contours_v.push_back(c._contour);
-      _viewer.Display(_raw_img_v[0],contours_v,window_name_v);
-      //}
+      contours_v.reserve(_clusters_v_v.back().back().size());
+      for(auto const& c :  _clusters_v_v.back().back()) contours_v.push_back(c._contour);
+      _viewer.Display(_raw_img_v.back(),contours_v,window_name_v);
+      }
       
     LAROCV_DEBUG((*this)) << "end" << std::endl;
   }
