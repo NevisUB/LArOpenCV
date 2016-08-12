@@ -53,7 +53,7 @@ namespace larlite {
   void LArImageHit::extract_image(storage_manager* storage) {
 
     LAROCV_DEBUG((*this)) << "Extracting Image\n";
-    
+
     auto const& geom = ::larutil::Geometry::GetME();
     const size_t nplanes = geom->Nplanes();
 
@@ -122,7 +122,32 @@ namespace larlite {
       }
     }
 
+    //// In this block, we set ROI parameters from larcv
+    std::vector<larcaffe::ROI> temp_roi_v;
+
+    if ( _use_larcv_roi ){
+    
+      auto roi_v = _ev_roi->ROIArray() ;
+
+      for(int i = 0; i < roi_v.size(); i++){
+            
+        auto r = roi_v[i];
+            
+        // OK...yuck. But let's do it.
+        ::larcaffe::ROI l_roi( int(r.Index()), r.Type(),r.Shape(), r.MCSTIndex(), r.MCTIndex(), r.EnergyDeposit(),
+                                 r.EnergyInit(), r.PdgCode(), r.ParentPdgCode(), r.TrackID(), r.ParentTrackID(),
+                                 r.X(), r.Y(), r.Z(), r.T(), r.Px(), r.Py(), r.Pz(),
+                                 r.ParentX(), r.ParentY(), r.ParentZ(), r.ParentPx(), r.ParentPy(), r.ParentPz() );
+                                 //r.NuCurrentType(), r.NuInteractionType() );
+
+        temp_roi_v.emplace_back(l_roi);
+
+        }   
+      }   
+    //// larcv ROI params should now be set!
+
     for (size_t plane = 0; plane < nplanes; ++plane) {
+
       auto const& wire_range = wire_range_v[plane];
       auto const& tick_range = tick_range_v[plane];
       size_t nticks = tick_range.second - tick_range.first + 2;
@@ -137,10 +162,18 @@ namespace larlite {
 	meta.settrkend(trkend.second, trkend.first);
       }
 
+      // Only fill the roi info if directed to. 
+      // Same info for all 3 planes
+      if (_use_larcv_roi){
+        meta.ClearROIs();
+        meta.SetLArCVROIs(temp_roi_v);
+        }
+
       if (nwires >= 1e10 || nticks >= 1e10)
 	_img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta());
       else
 	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
+         
     }
 
     for (auto const& h : *ev_hit) {
@@ -206,6 +239,11 @@ namespace larlite {
 	img = pooled;
 	meta = ::larocv::ImageMeta((double)pooled.rows, (double)pooled.cols * _pool_time_tick,
 				   pooled.rows, pooled.cols, wire_range.first, tick_range.first, plane);
+
+        if (_use_larcv_roi){
+          meta.ClearROIs();
+          meta.SetLArCVROIs(temp_roi_v);
+          }
 
 	if (_use_roi) {
 	  //const auto& vtx = (*ev_roi)[0].GetVertex()[plane];

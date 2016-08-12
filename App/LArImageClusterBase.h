@@ -20,6 +20,10 @@
 #include "ImageCluster/Base/ImageClusterManager.h"
 #include "ImageCluster/Base/ImageClusterViewer.h"
 
+//#ifdef USE_LARCV
+#include "DataFormat/EventROI.h"
+//#endif
+
 namespace larlite {
 
   /**
@@ -86,6 +90,13 @@ namespace larlite {
     size_t _num_unclustered_hits;
     size_t _num_clustered_hits;
     
+    TFile * _larcv_file ;
+    TTree * _roi_tree ;
+    
+    ::larcv::EventROI* _ev_roi ;
+    int _event ;
+    bool _use_larcv_roi;
+    std::string _larcv_roi_file;
     
   };
 }

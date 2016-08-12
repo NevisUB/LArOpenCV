@@ -24,6 +24,11 @@ namespace larlite {
     _num_clusters = 0;
     _producer = "";
     _store_original_img = false;
+    _larcv_file = 0;
+    _roi_tree = 0;
+    _ev_roi = 0;
+
+    _event = 0;
 
   }
 
@@ -35,6 +40,7 @@ namespace larlite {
 
   bool LArImageClusterBase::initialize() {
 
+
     ::fcllite::ConfigManager cfg_mgr(_name);
 
     cfg_mgr.AddCfgFile(_config_file);
@@ -44,6 +50,8 @@ namespace larlite {
     _profile = main_cfg.get<bool>("Profile");
     _producer = main_cfg.get<std::string>("Producer");
     _store_original_img = main_cfg.get<bool>("StoreOriginalImage");
+    _use_larcv_roi = main_cfg.get<bool>("UseLArCVROI");
+    _larcv_roi_file = main_cfg.get<std::string>("LArCVROIFile");
     _process_count = 0;
     _process_time_image_extraction = 0;
     _process_time_analyze = 0;
@@ -54,6 +62,12 @@ namespace larlite {
     if (_producer.empty()) throw ::larocv::larbys("No producer specified...");
 
     _alg_mgr.Configure(cfg_mgr.Config().get_pset(_alg_mgr.Name()));
+
+    if(_use_larcv_roi ){
+      _larcv_file = TFile::Open(_larcv_roi_file.c_str(),"kREAD");
+      _roi_tree = (TTree*)(_larcv_file->Get("partroi_tpc_tree"));
+      _roi_tree->SetBranchAddress("partroi_tpc_branch",&_ev_roi);
+    }
 
     return true;
   }
@@ -68,6 +82,11 @@ namespace larlite {
     watch_all.Start();
     watch_one.Start();
 
+    if ( _use_larcv_roi )
+      _roi_tree->GetEntry(_event);
+
+    _event++;
+    
     // try getting an image for this event, if possible
     try {
       this->extract_image(storage);
@@ -84,7 +103,6 @@ namespace larlite {
       storage->set_id(storage->run_id(), storage->subrun_id(), storage->event_id());
       return false;
     }
-
 
     _process_time_image_extraction += watch_one.WallTime();
 
@@ -168,7 +186,7 @@ namespace larlite {
     }
 
     auto geom  = ::larutil::Geometry::GetME();
-    auto geomH = ::larutil::GeometryHelper::GetME();
+    //auto geomH = ::larutil::GeometryHelper::GetME();
 
     auto ev_hit = storage->get_data<event_hit>(producer());
 

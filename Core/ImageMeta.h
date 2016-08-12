@@ -22,6 +22,58 @@
 
 namespace larcaffe {
 
+   
+  struct ROI{
+ 
+     int index;
+     int type;
+     int shape;
+     int mcst_index;
+     int mct_index;
+     float energy_dep;
+     float energy_init;
+     int pdg;
+     int parent_pdg;
+     int trackid;
+     int parent_trackid;
+     float x ;
+     float y ;
+     float z ;
+     float t ;
+     float px ;
+     float py ;
+     float pz ;
+     float parent_x ;
+     float parent_y ;
+     float parent_z ;
+     float parent_t ;
+     float parent_px ;
+     float parent_py ;
+     float parent_pz ;
+     //std::vector<float> vtx3D;
+     //std::vector<float> dir3D;
+     //std::vector<float> parent_vtx3D;
+     //std::vector<float> parent_dir3D;
+     int current_type;
+     int interaction_type;
+
+     // 
+     // This ugly ass initialization could probably handle some house keeping at some point
+     // Initializing in the order that parameters appear above
+     ROI(int i=-1, int t=-1, int sh=-1, int ms_i=-1, int mt_i=-1, float e_dep = 0,
+         float e_init=0, int PDG=-1, int parent_PDG=-1, int tid=-1, int p_tid=-1,
+	 float X=0, float Y=0, float Z=0, float T=0, float PX=0, float PY=0, float PZ=0,
+	 float par_x=0, float par_y=0, float par_z=0, float par_t=0, float par_px=0,
+	 float par_py=0, float par_pz=0, int c_type=-1, int int_type=-1):
+	 index(i), type(t), shape(sh), mcst_index(ms_i), mct_index(mt_i), energy_dep(e_dep),
+	 energy_init(e_init), pdg(PDG), parent_pdg(parent_PDG), trackid(tid), parent_trackid(p_tid),
+	 x(X), y(Y), z(Z), t(T), px(PX), py(PY), pz(PZ), parent_x(par_x), parent_y(par_y), parent_z(par_z),
+	 parent_t(par_t), parent_px(par_px), parent_py(par_py), parent_pz(par_pz), current_type(c_type),
+	 interaction_type(int_type){}
+
+      };  
+
+
   class Image2D;
   /**
      \class ImageMeta
@@ -98,6 +150,13 @@ namespace larcaffe {
     larcaffe::Point2D roivtx() const { return _roi_vtx; }
     larcaffe::Point2D roitrkend() const { return _roi_trkend; }
 
+    /// Fill index of roi vector
+    void SetLArCVROIs( const std::vector<ROI> r ){ _larcv_roi_v = r; }
+
+    void ClearROIs(){ _larcv_roi_v.clear(); }
+
+    const std::vector<ROI> GetROIs() const { return _larcv_roi_v; }
+
    protected:
 
     larcaffe::Point2D _origin; ///< Absolute coordinate of the left bottom corner of an image
@@ -111,6 +170,7 @@ namespace larcaffe {
     larcaffe::Point2D _roi_vtx;
     larcaffe::Point2D _roi_trkend;
 
+    std::vector<ROI> _larcv_roi_v ; 
     
   };
 

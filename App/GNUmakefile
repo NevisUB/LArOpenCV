@@ -17,6 +17,12 @@ INCFLAGS += $(shell larlite-config --includes)
 INCFLAGS += $(shell recotool-config --includes)
 INCFLAGS += -I$(LAROPENCV_BASEDIR)
 INCFLAGS += -I$(OPENCV_INCDIR)
+
+#USE_LARCV = $(LARCV_OPENCV)
+ifeq ($(LARCV_OPENCV),1)
+  INCFLAGS += -I$(LARCV_INCDIR)
+endif
+
 #INCFLAGS += -I../
 
 # platform-specific options
@@ -42,6 +48,10 @@ LDFLAGS += -lLArOpenCV_ImageClusterReCluster
 LDFLAGS += -lLArOpenCV_ImageClusterStartPoint
 
 LDFLAGS += -lLArOpenCV_Utils -lLArOpenCV_Core -lRecoTool_ClusterRecoUtil
+
+ifeq ($(LARCV_OPENCV),1)
+  LDFLAGS += -L$(LARCV_LIBDIR) -lLArCVBase -lLArCVDataFormat -lLArCVCVUtil
+endif
 
 # call kernel specific compiler setup
 include $(LARLITE_BASEDIR)/Makefile/Makefile.${OSNAME}

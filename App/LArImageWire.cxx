@@ -160,19 +160,49 @@ namespace larlite {
       }
     }
     
+    //// In this block, we set ROI parameters from larcv
+    std::vector<larcaffe::ROI> temp_roi_v;
+
+    if ( _use_larcv_roi ){
+    
+      auto roi_v = _ev_roi->ROIArray() ;
+
+      for(int i = 0; i < roi_v.size(); i++){
+    
+        auto r = roi_v[i];
+    
+        // OK...yuck. But let's do it.
+        ::larcaffe::ROI l_roi( int(r.Index()), r.Type(),r.Shape(), r.MCSTIndex(), r.MCTIndex(), r.EnergyDeposit(),
+                                 r.EnergyInit(), r.PdgCode(), r.ParentPdgCode(), r.TrackID(), r.ParentTrackID(),
+                                 r.X(), r.Y(), r.Z(), r.T(), r.Px(), r.Py(), r.Pz(),
+                                 r.ParentX(), r.ParentY(), r.ParentZ(), r.ParentPx(), r.ParentPy(), r.ParentPz() );
+                                 //r.NuCurrentType(), r.NuInteractionType() );
+
+        temp_roi_v.emplace_back(l_roi);
+
+        }   
+      }   
+    //// larcv ROI params should now be set!
+
     for(size_t plane=0; plane<nplanes; ++plane) {
       auto const& wire_range = wire_range_v[plane];
       auto const& tick_range = tick_range_v[plane];
       size_t nticks = tick_range.second - tick_range.first + 2;
       size_t nwires = wire_range.second - wire_range.first + 2;
 
-
       ::larocv::ImageMeta meta((double)nwires,(double)nticks,nwires,nticks,wire_range.first,tick_range.first,plane);
       if ( _use_roi ) {
 	const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
 	meta.setvtx(vtx.first,vtx.second);
       }
-      
+
+      // Only fill the roi info if directed to. 
+      // Same info for all 3 planes
+      if (_use_larcv_roi){
+        meta.ClearROIs();
+        meta.SetLArCVROIs(temp_roi_v);
+        }
+
       if ( nwires >= 1e10 || nticks >= 1e10 )
 	_img_mgr.push_back(cv::Mat(),::larocv::ImageMeta());
       else
@@ -241,7 +271,13 @@ namespace larlite {
 				  pooled.cols,
 				  wire_range.first,
 				  tick_range.first,
-				  plane);
+			 	  plane);
+
+        if ( _use_larcv_roi ){
+          meta.ClearROIs();
+          meta.SetLArCVROIs(temp_roi_v);
+           }
+
 	if ( _use_roi ) {
 	  const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
 	  meta.setvtx(vtx.first,vtx.second);

@@ -3,12 +3,16 @@ LArImageHit: {
   Profile: true
   StoreOriginalImage: false
   Producer: gaushit
+  UseLArCVROI: false
+  LArCVROIFile: roi.root
+
   # LArImageHit config
   Q2Gray: 5 # convert Hit::Integral to a unit gray scale
   QMin: 3   # min. threshold for Hit::Integral to make it into an image
-  UseROI: true  
+  UseROI: false 
   ROIProducer: mcroi 
   PoolTimeTick: 6
+  UserShowerROI: false
   
   RunAnalyze: false # Uncomment to run the MC shower-cluster comparison
 }
@@ -16,12 +20,16 @@ LArImageHit: {
  LArImageWire: {
    # LArImageClusterBase config
    Profile: true
-   StoreOriginalImage: false
+   StoreOriginalImage: true 
    Producer: caldata
+   UseLArCVROI: false 
+   LArCVROIFile: roi.root
+
    Q2Gray: 5 # convert ADC to a unit gray scale
    UseROI: false
    PoolTimeTick: 6
  }
+
 
 # ImageClusterManager config
 ImageClusterManager: {
@@ -33,8 +41,8 @@ ImageClusterManager: {
   #ClusterAlgoType: [SBCluster,SimpleCuts,ROIStart,TrackShower,RecoROIFilter]
   #ClusterAlgoName: [sbc,sc,roist,ts,rrf]
 
-  ClusterAlgoType: [SBCluster,SimpleCuts,ROIStart,InConeCluster,RecoROIFilter]
-  ClusterAlgoName: [sbc,sc,roist,icc,rrf]
+  ClusterAlgoType: [SBCluster]#,ROIStart,InConeCluster,RecoROIFilter]
+  ClusterAlgoName: [sbc]#,roist,icc,rrf]
 
   MatchAlgoType: MatchTimeOverlap
   MatchAlgoName: mto
@@ -58,13 +66,12 @@ icc : {
   MinHitsShower : 25.
   }
 
-
- rrf : {
-   MaxRadLength: 300
-   TooManyClusters: 10 #ignore event going into matching if too many
+ rrf : { 
+   MaxRadLength: 100 
+   MaxClusters : 20
+   MinClusters : 0 
    StrictHitCut: 20
  }
-
 
   roist : {
   
