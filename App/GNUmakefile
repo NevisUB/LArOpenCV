@@ -33,6 +33,13 @@ LDFLAGS += -L$(LARLITE_LIBDIR)
 
 LDFLAGS += -lLArOpenCV_ImageClusterBase
 LDFLAGS += -lLArOpenCV_ImageClusterCluster
+LDFLAGS += -lLArOpenCV_ImageClusterDirection
+LDFLAGS += -lLArOpenCV_ImageClusterUtil
+LDFLAGS += -lLArOpenCV_ImageClusterMatch
+LDFLAGS += -lLArOpenCV_ImageClusterMerge
+LDFLAGS += -lLArOpenCV_ImageClusterFilter
+LDFLAGS += -lLArOpenCV_ImageClusterReCluster
+LDFLAGS += -lLArOpenCV_ImageClusterStartPoint
 
 LDFLAGS += -lLArOpenCV_Utils -lLArOpenCV_Core -lRecoTool_ClusterRecoUtil
 
