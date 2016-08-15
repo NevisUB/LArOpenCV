@@ -12,13 +12,14 @@
 
     @{*/
 
-#ifndef __LARCAFFE_Image2D_H__
-#define __LARCAFFE_Image2D_H__
+#ifndef __LAROCV_Image2D_H__
+#define __LAROCV_Image2D_H__
 
 #include <vector>
 #include <cstdlib>
 #include "ImageMeta.h"
-namespace larcaffe {
+
+namespace larocv {
 
   /**
      \class Image2D
@@ -59,14 +60,6 @@ namespace larcaffe {
     ImageMeta _meta;
     void clear();
   };
-}
-namespace larocv {
-  /**
-     \class larocv::Image2D
-     @brief Borrowed from larcaffe (see larcaffe::Image2D)
-  */
-  typedef ::larcaffe::Image2D Image2D;
-
 }
 
 #endif

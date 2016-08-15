@@ -75,7 +75,7 @@ namespace larlite {
 	throw DataFormatException("Could not locate ROI data product and you have UseROI: True!");
       }
 
-      if ( ev_roi->size() > 1 ) { throw larcaffe::larbys("More than one ROI, not implemented!\n"); }
+      if ( ev_roi->size() > 1 ) { throw larocv::larbys("More than one ROI, not implemented!\n"); }
 
       std::vector < std::pair< int, int > >  wr_v;
       std::vector < std::pair< int, int > >  tr_v;

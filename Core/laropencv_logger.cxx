@@ -1,8 +1,9 @@
-#ifndef __LARCAFFELOGGER_CXX__
-#define __LARCAFFELOGGER_CXX__
+#ifndef __LAROCVLOGGER_CXX__
+#define __LAROCVLOGGER_CXX__
 
-#include "larcaffe_logger.h"
-namespace larcaffe {
+#include "laropencv_logger.h"
+
+namespace larocv {
 
   std::map<std::string,logger> *logger::_logger_m = nullptr;
   
@@ -40,4 +41,5 @@ namespace larcaffe {
     return strm;
   }
 }
+
 #endif

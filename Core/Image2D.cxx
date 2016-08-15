@@ -3,7 +3,8 @@
 #include <iostream>
 #include <string.h>
 #include <stdio.h>
-namespace larcaffe {
+
+namespace larocv {
 
   Image2D::Image2D(size_t width_npixel, size_t height_npixel )
     : std::vector<float>(height_npixel*width_npixel,0.)

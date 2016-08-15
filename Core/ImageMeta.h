@@ -1,26 +1,26 @@
 /**
  * \file ImageMeta.h
  *
- * \ingroup LArCaffe
+ * \ingroup LArOcv
  * 
  * \brief Class def header for a class ImageMeta
  *
  * @author kazuhiro
  */
 
-/** \addtogroup LArCaffe
+/** \addtogroup LArOcv
 
     @{*/
-#ifndef __LARCAFFE_IMAGEMETA_H__
-#define __LARCAFFE_IMAGEMETA_H__
+#ifndef __LAROCV_IMAGEMETA_H__
+#define __LAROCV_IMAGEMETA_H__
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
 #include "larbys.h"
-#include "LArCVTypes.h"
+#include "LArOCVTypes.h"
 
-namespace larcaffe {
+namespace larocv {
 
   class Image2D;
   /**
@@ -89,18 +89,18 @@ namespace larcaffe {
 
     /// Set vertex from ROI, may or may not exists, user should check this
     void setvtx(size_t w, size_t t)
-    { _roi_vtx = larcaffe::Point2D(w,t); }
+    { _roi_vtx = larocv::Point2D(w,t); }
 
     void settrkend(size_t w, size_t t)
-    { _roi_trkend = larcaffe::Point2D(w,t); }
+    { _roi_trkend = larocv::Point2D(w,t); }
 
     /// Get vertex ROI
-    larcaffe::Point2D roivtx() const { return _roi_vtx; }
-    larcaffe::Point2D roitrkend() const { return _roi_trkend; }
+    larocv::Point2D roivtx() const { return _roi_vtx; }
+    larocv::Point2D roitrkend() const { return _roi_trkend; }
 
    protected:
 
-    larcaffe::Point2D _origin; ///< Absolute coordinate of the left bottom corner of an image
+    larocv::Point2D _origin; ///< Absolute coordinate of the left bottom corner of an image
     double _width;             ///< Horizontal size of an image in double floating precision (in original coordinate unit size)
     double _height;            ///< Vertical size of an image in double floating precision (in original coordinate unit size)
     size_t _width_npixel;      ///< # of pixels in horizontal axis
@@ -108,20 +108,11 @@ namespace larcaffe {
     size_t _plane;             ///< unique plane ID number
 
     /// ROI vertex, may or may not exist, user should check this again
-    larcaffe::Point2D _roi_vtx;
-    larcaffe::Point2D _roi_trkend;
+    larocv::Point2D _roi_vtx;
+    larocv::Point2D _roi_trkend;
 
     
   };
-
-}
-
-namespace larocv {
-  /**
-     \class larocv::ImageMeta 
-     @brief Borrowed from larcaffe (see larcaffe::ImageMeta)
-  */
-  typedef ::larcaffe::ImageMeta ImageMeta;
 
 }
 

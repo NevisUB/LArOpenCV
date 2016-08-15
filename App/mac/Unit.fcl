@@ -20,8 +20,8 @@ ImageClusterManager: {
 
   Verbosity: 0
   Profile:   true
-  ClusterAlgoType:  [SBCluster]
-  ClusterAlgoName:  [sbc]
+  ClusterAlgoType:  [SBCluster,AttachedClusters]
+  ClusterAlgoName:  [sbc,ac]
 
   ShowImage: false
 
@@ -49,4 +49,8 @@ ImageClusterManager: {
    ThreshMaxVal : 255
   }
   
+ ac : {
+    MaxDefectSize: 50 # why?
+ }
+ 
 }

@@ -18,7 +18,7 @@
 #include "Analysis/ana_base.h"
 #include "Core/ImageManager.h"
 #include "App/LArImageClusterBase.h"
-#include "Core/LArCVTypes.h"
+#include "Core/LArOCVTypes.h"
 #include "Core/laropencv_base.h"
 
 namespace larlite {

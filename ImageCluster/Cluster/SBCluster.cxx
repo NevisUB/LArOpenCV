@@ -91,7 +91,8 @@ namespace larocv {
 
 	result_v[i]._insideHits.emplace_back(loc.x, loc.y);
 	result_v[i]._numHits ++ ;
-	result_v[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);  
+	result_v[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);
+	
       }   
     }   
 

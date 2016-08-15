@@ -2,7 +2,7 @@
 #define __IMAGECLUSTERTYPES_H__
 
 #include "opencv2/core/mat.hpp"
-#include "Core/LArCVTypes.h"
+#include "Core/LArOCVTypes.h"
 
 namespace larocv {
 

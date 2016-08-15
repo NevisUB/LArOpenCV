@@ -11,13 +11,13 @@
 /** \addtogroup LArCaffe
 
     @{*/
-#ifndef __LARCAFFE_LARBYS_H__
-#define __LARCAFFE_LARBYS_H__
+#ifndef __LAROCV_LARBYS_H__
+#define __LAROCV_LARBYS_H__
 
 #include <iostream>
 #include <exception>
 
-namespace larcaffe {
+namespace larocv {
 
   /**
      \class larbys
@@ -44,13 +44,6 @@ namespace larcaffe {
   };
 }
 
-namespace larocv {
-  /**
-     \class larocv::larbys 
-     @brief Borrowed from larcaffe (see larcaffe::larbys)
-  */
-  typedef ::larcaffe::larbys larbys;
-}
 
 #endif
 /** @} */ // end of doxygen group 

@@ -1,5 +1,5 @@
-#ifndef __LARCAFFE_IMAGEMETA_CXX__
-#define __LARCAFFE_IMAGEMETA_CXX__
+#ifndef __LAROCV_IMAGEMETA_CXX__
+#define __LAROCV_IMAGEMETA_CXX__
 
 #include "ImageMeta.h"
 

@@ -13,6 +13,8 @@ namespace larocv {
 					     larocv::ImageMeta& meta)
   {
 
+    //Assign calculated reconstruction parameters to cluster
+    
     Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );
 
     for (const auto& cluster : clusters) {
