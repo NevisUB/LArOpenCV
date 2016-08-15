@@ -39,8 +39,8 @@ namespace larcaffe {
   public:
     
     /// Default constructor: width, height, and origin coordinate won't be modifiable 
-    ROI( const double origin_x=0., const double origin_y=0.,
-         const double width=0., const double height=0.,
+    ROI( const double width=0., const double height=0.,
+         const double origin_x=0., const double origin_y=0.,
          const size_t plane=::larocv::kINVALID_SIZE)
       : _origin(origin_x,origin_y)
       , _width(width)
@@ -59,6 +59,9 @@ namespace larcaffe {
     size_t plane            () const { return _plane;  }
     double width            () const { return _width;  }
     double height           () const { return _height; }
+
+    void setorigin(size_t w, size_t t)
+    { _origin = larcaffe::Point2D(w,t); }
 
     /// Set vertex in ROI, may or may not exists, user should check this
     void setvtx(size_t w, size_t t)

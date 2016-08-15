@@ -55,7 +55,8 @@ namespace larocv {
     */
     larocv::Cluster2DArray_t Process(const larocv::Cluster2DArray_t& clusters,
 				    const ::cv::Mat& img,
-				    larocv::ImageMeta& meta);
+				    larocv::ImageMeta& meta,
+				    larocv::ROI & roi);
 
   protected:
 
@@ -71,7 +72,9 @@ namespace larocv {
      */
     virtual larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 					      const ::cv::Mat& img,
-					      larocv::ImageMeta& meta) = 0;
+					      larocv::ImageMeta& meta,
+					      larocv::ROI& roi) = 0;
+
     
   };
 

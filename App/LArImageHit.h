@@ -38,6 +38,7 @@ namespace larlite {
       , _charge_threshold(5)
       , _pool_time_tick(0)
       , _use_roi(false)
+//      , _make_roi(false)
     {}
 
     /// Default destructor
