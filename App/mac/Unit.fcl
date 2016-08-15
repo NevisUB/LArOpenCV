@@ -24,8 +24,8 @@ ImageClusterManager: {
 
   Verbosity: 0
   Profile:   true
-  ClusterAlgoType:  [SBCluster,AttachedClusters]
-  ClusterAlgoName:  [sbc,ac]
+  ClusterAlgoType:  [SBCluster]
+  ClusterAlgoName:  [sbc]
 
   ShowImage: false
 

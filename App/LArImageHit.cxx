@@ -25,10 +25,10 @@ namespace larlite {
 
     _vtx_producer  = pset.get<std::string>("VertexProducer");
 
-    _make_roi = pset.get<bool>("MakeROI");
-    
     _roi_buffer_w = pset.get<float>("ROIBufferW");
     _roi_buffer_t = pset.get<float>("ROIBufferT");
+
+    _make_roi = pset.get<bool>("MakeROI");
     
   }
 
@@ -64,6 +64,7 @@ namespace larlite {
     LAROCV_DEBUG((*this)) << "Getting hit producer " << producer() << "\n";
 
     auto ev_hit = storage->get_data<event_hit>(producer());
+
     if (ev_hit == nullptr)
       throw DataFormatException("Could not locate hit data product!");
 
@@ -117,7 +118,7 @@ namespace larlite {
         auto vtx_w = vtxWT.w / geomH->WireToCm();
         auto vtx_t = vtxWT.t / geomH->TimeToCm() + 800;
 
-	//LARCV_DEBUG((*this)) << "Got vertex point (w,t): " << vtx_w << "," << vtx_t << ")\n";
+	LAROCV_DEBUG((*this)) << "Got vertex point (w,t): " << vtx_w << "," << vtx_t << ")\n";
 	std::cout << "Got vertex point (w,t): " << vtx_w << "," << vtx_t << ")\n";
 	
         roi_bounds.emplace_back(larocv::Point2D(vtx_w - buffer_w, vtx_t - buffer_t)); ///< origin
@@ -138,6 +139,8 @@ namespace larlite {
       
     }
 
+    std::cout << "size of ev_hits is " << ev_hit->size() << "\n";
+    
     for (auto const& h : *ev_hit) {
 
       auto const& wid = h.WireID();
