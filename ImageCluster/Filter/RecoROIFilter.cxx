@@ -25,11 +25,10 @@ namespace larocv {
       if (cluster.roi.dist > _max_rad_length || cluster._numHits < _strict_hit_cut)  // start point distance to roi vertex
 	  continue;
 
-
       auto ocluster = cluster;  // make a copy
 
       ocluster._startPt = ocluster.roi.startpt;
-      ocluster._endPt = ocluster.roi.endpt;
+      ocluster._endPt   = ocluster.roi.endpt;
 
       ocluster._eigenVecFirst = ocluster.reco.dir;
 
@@ -37,12 +36,12 @@ namespace larocv {
     }
     
     if (oclusters.size() > _maxclusters) { // to many clusters moving on to matching
-	std::cout << "too many clusters @ " << oclusters.size() << "\n";
+      //std::cout << "too many clusters @ " << oclusters.size() << "\n";
 	return Cluster2DArray_t();
       }
 
     if (oclusters.size() < _minclusters) {  // to little clusters moving on to matching
-      std::cout << "to little clusters @ " << oclusters.size() << "\n";
+      //std::cout << "to little clusters @ " << oclusters.size() << "\n";
       return Cluster2DArray_t();
     }
 

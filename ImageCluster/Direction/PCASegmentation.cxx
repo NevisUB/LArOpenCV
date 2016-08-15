@@ -17,7 +17,7 @@ namespace larocv{
     _segments_x = pset.get<int> ("NSegmentsX");
     _segments_y = pset.get<int> ("NSegmentsY");
       
-    //various arbys cold cuts
+    //Various cuts
     _nhits_cut     = pset.get<int>   ("NHitsCut"   );
     _sub_nhits_cut = pset.get<int>   ("NSubHitsCut");
     _angle_cut     = pset.get<double>("AngleCut"   );
@@ -50,15 +50,9 @@ namespace larocv{
 
       Cluster2D ocluster = clusters[u];
 
-      if ( ! ocluster._numHits ) {
-	for(const auto& loc: all_locations) {
-	  if ( ::cv::pointPolygonTest(ocluster._contour,loc,false) < 0 )
-	    continue;
-	  ocluster._insideHits.emplace_back(loc.x, loc.y);
-	}
 
-	ocluster._numHits = ocluster._insideHits.size();
-      }
+      if ( ! ocluster._numHits )
+	{ std::cout << "No hits associated to this cluster\n"; throw std::exception(); }
       
       if ( ocluster._numHits < _n_clustersize ) continue;
 
@@ -272,7 +266,6 @@ namespace larocv{
       } else {
 	//nothing happened when I tried to subdivide, it's a box with
 	//bad linearity, lets just call this box "empty?"
-	// box.empty_ = true;
 	boxes.emplace_back(box);
       }
     } else { 
@@ -337,16 +330,12 @@ namespace larocv{
     
     ::cv::Point* far_point;
     double d = 0.0;
-    // std::cout << "inside hits... " << ocluster._insideHits.size() << "\n";
+
     for( auto& pt : ocluster._insideHits ) {
       auto dd = dist(startpoint,pt);
-      // std::cout << "start x : " << startpoint.x << " start y: " << startpoint.y << "\n";
-      // std::cout << pt << "\n";
-      // std::cout << "dd : " << dd << "\n";
       if( dd > d ) { d = dd; far_point = &pt; }
     }
 
-    //std::cout << "far point x: " << far_point->x << " and far point y " << far_point->y << "\n";
     return Point2D(far_point->x,far_point->y);
     
   }

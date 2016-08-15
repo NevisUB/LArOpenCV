@@ -12,13 +12,14 @@ namespace larocv {
       const ::cv::Mat& img,
       larocv::ImageMeta& meta, larocv::ROI& roi)
   {
-    Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );
+    //Assigned ROI parameters to start point, end point, and direction
+
+    Cluster2DArray_t oclusters;
+    oclusters.reserve( clusters.size() );
 
     for (const auto& cluster : clusters) {
 
       auto ocluster = cluster;
-
-
       ocluster._startPt       = ocluster.roi.startpt;
       ocluster._endPt         = ocluster.roi.endpt;
       ocluster._eigenVecFirst = ocluster.roi.dir;

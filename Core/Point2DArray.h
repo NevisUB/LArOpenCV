@@ -16,7 +16,8 @@
     @{*/
 
 #include <vector>
-#include "LArCVTypes.h"
+#include "LArOCVTypes.h"
+
 namespace larocv {
 
   namespace convert {

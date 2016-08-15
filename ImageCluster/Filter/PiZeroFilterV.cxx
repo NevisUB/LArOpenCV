@@ -33,18 +33,16 @@ namespace larocv{
     _verts.reserve(clusters.size() / 2);
     
     if(clusters.empty())
-
+      
       return clusters;
+    
+    for(int i = 0; i < clusters.size(); i++) {
 
-    for(int i = 0; i < clusters.size(); i++)
-      {
 	int numHits = clusters.at(i)._numHits;
 	
-	for(int j = 0; j < clusters.size(); j++) {
-	    
-	  if ( i == j ) continue;
+	for(int j = i; j < clusters.size(); j++) {
+
 	  int next_numHits = clusters[j]._numHits;
-	    
 
 	  double ipointX = clusters[i]._eigenVecFirst.x+clusters[i]._startPt.x;
 	  double ipointY = clusters[i]._eigenVecFirst.y+clusters[i]._startPt.y;
@@ -94,23 +92,26 @@ namespace larocv{
 
     //this sucks, nothing is unique now
     //quick and dirty unfolding of the tree
-    std::vector<int> o; o.reserve(clusters.size());
+    std::vector<int> o;
+    o.reserve(clusters.size());
     
-    for( const auto& c : vclusters )
-      { o.push_back(c.first); for(const auto& s : c.second) o.push_back(s); }
+    for( const auto& c : vclusters ) {
+
+      o.push_back(c.first);
+
+      for(const auto& s : c.second)
+	o.push_back(s);
+      
+    }
       
     //from cppreference
     std::sort(o.begin(), o.end());
     auto last = std::unique(o.begin(), o.end());
     std::vector<int> p(std::begin(o),last);
 
-    // std::cout << "pp: ";
-    // for(const auto& pp : p ) std::cout << pp << " ";
- 
-    for(const auto& pp : p ) {
-      
+    for(const auto& pp : p )
       OutputClusters.emplace_back( clusters[pp] );
-    }
+    
 
     std::cout <<"\n";
     for( auto& c : vclusters ) {

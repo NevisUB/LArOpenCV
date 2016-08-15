@@ -79,7 +79,7 @@ namespace larlite {
       
       if ( ev_roi->size() == 0) { throw DataFormatException("Could not locate ROI data product and you have UseROI: True!"); }
 
-      if ( ev_roi->size() > 1 ) { throw larcaffe::larbys("More than one ROI, not implemented!\n"); }
+      if ( ev_roi->size() > 1 ) { throw larocv::larbys("More than one ROI, not implemented!\n"); }
 
       std::vector < std::pair< int, int > >  wr_v;
       std::vector < std::pair< int, int > >  tr_v;
@@ -138,7 +138,7 @@ namespace larlite {
 
       if ( _make_roi ){
         auto vtx = ev_vertex->at(0) ;
-        std::vector<larcaffe::Point2D> roi_bounds ;
+        std::vector<larocv::Point2D> roi_bounds ;
         auto buffer_w = int(70 / geomH->WireToCm() ) ; // 70cm
         auto buffer_t = int(70 / geomH->TimeToCm() ) ; // 70cm
       
@@ -147,10 +147,10 @@ namespace larlite {
         auto vtx_w = int(vtxWT.w / geomH->WireToCm() );
         auto vtx_t = int(vtxWT.t / geomH->TimeToCm() ) + 800;
 
-        roi_bounds.emplace_back(larcaffe::Point2D(vtx_w - buffer_w, vtx_t - buffer_t)); ///< origin
-        roi_bounds.emplace_back(larcaffe::Point2D(vtx_w - buffer_w, vtx_t + buffer_t));
-        roi_bounds.emplace_back(larcaffe::Point2D(vtx_w + buffer_w, vtx_t + buffer_t));
-        roi_bounds.emplace_back(larcaffe::Point2D(vtx_w + buffer_w, vtx_t - buffer_t));
+        roi_bounds.emplace_back(larocv::Point2D(vtx_w - buffer_w, vtx_t - buffer_t)); ///< origin
+        roi_bounds.emplace_back(larocv::Point2D(vtx_w - buffer_w, vtx_t + buffer_t));
+        roi_bounds.emplace_back(larocv::Point2D(vtx_w + buffer_w, vtx_t + buffer_t));
+        roi_bounds.emplace_back(larocv::Point2D(vtx_w + buffer_w, vtx_t - buffer_t));
 
 	roi.setorigin(vtx_w - buffer_w,vtx_t - buffer_t);
 	roi.setvtx(vtx_w,vtx_t);
