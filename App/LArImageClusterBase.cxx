@@ -102,12 +102,12 @@ namespace larlite {
       auto const& meta = _img_mgr.meta_at(plane);
       if (!meta.num_pixel_row() || !meta.num_pixel_column()) continue;
       
-      if( _make_roi ){
-        auto const& roi  = _img_mgr.roi_at(plane);
-        _alg_mgr.Add(img, meta, roi);
-	}
-      else
-        _alg_mgr.Add(img, meta);
+      //if( _make_roi ){
+      auto const& roi  = _img_mgr.roi_at(plane);
+      _alg_mgr.Add(img, meta, roi);
+      //}
+      //	else
+      //_alg_mgr.Add(img, meta);
     }
 
     _alg_mgr.Process();
@@ -218,8 +218,11 @@ namespace larlite {
     auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
     // save ROI & vertices if available
     // and grab the associated vertex
+
     ::larlite::event_PiZeroROI* ev_roi = nullptr;
+
     ::larlite::event_vertex* ev_vtx = nullptr;
+
     ev_roi = storage->get_data<event_PiZeroROI>("pizerofilter");
     AssSet_t ass_vtx_v;
     if (ev_roi and (ev_roi->size() != 0) ) {

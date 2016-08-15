@@ -5,23 +5,23 @@
 
 namespace larocv {
 
-ImageClusterBase::ImageClusterBase(const std::string name)
+  ImageClusterBase::ImageClusterBase(const std::string name)
     : laropencv_base(name),
       _name(name),
       _proc_time(0.),
       _proc_count(0),
       _profile(true) {
-  LAROCV_DEBUG((*this)) << "Constructed" << std::endl;
-}
+    LAROCV_DEBUG((*this)) << "Constructed" << std::endl;
+  }
 
-void ImageClusterBase::Configure(const ::fcllite::PSet& cfg) {
-  LAROCV_DEBUG((*this)) << "start" << std::endl;
-  this->set_verbosity((msg::Level_t)(cfg.get<unsigned short>(
-      "Verbosity", (unsigned short)(this->logger().level()))));
-  _profile = cfg.get<bool>("Profile", _profile);
+  void ImageClusterBase::Configure(const ::fcllite::PSet& cfg) {
+    LAROCV_DEBUG((*this)) << "start" << std::endl;
+    this->set_verbosity((msg::Level_t)(cfg.get<unsigned short>(
+							       "Verbosity", (unsigned short)(this->logger().level()))));
+    _profile = cfg.get<bool>("Profile", _profile);
 
-  LAROCV_DEBUG((*this)) << "end" << std::endl;
-}
+    LAROCV_DEBUG((*this)) << "end" << std::endl;
+  }
 }
 
 #endif

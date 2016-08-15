@@ -1,22 +1,23 @@
 LArImageHit: {
   Verbosity: 0
   # LArImageClusterBase config
+
   Profile: true
   StoreOriginalImage: false
   Producer: fake_pi0
 
   # LArImageHit config
-  PoolTimeTick: 6
-  UseROI: false
-  ROIProducer: nunca
-  VertexProducer: fake_vertex
+  PoolTimeTick: 0
   
+  VertexProducer: fake_vertex
+
   ROIBufferW : 100
   ROIBufferT : 100
+  
   Q2Gray: 10
   QMin: 5
-  MakeROI: true
-  
+
+  MakeROI: false
 }
 
 ImageClusterManager: {
