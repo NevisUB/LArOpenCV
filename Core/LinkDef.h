@@ -22,6 +22,7 @@
 #pragma link C++ class larocv::ImageMeta+;
 #pragma link C++ class larocv::Image2D+;
 #pragma link C++ class larocv::ImageManager+;
+#pragma link C++ class larocv::ROI+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
 
