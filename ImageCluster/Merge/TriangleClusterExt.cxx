@@ -18,7 +18,7 @@ namespace larocv{
 
   Cluster2DArray_t TriangleClusterExt::_Process_(const larocv::Cluster2DArray_t& clusters,
 						 const ::cv::Mat& img,
-						 larocv::ImageMeta& meta)
+						 larocv::ImageMeta& meta, larocv::ROI& roi)
   {
 
     /* Once again, copy Ariana. Lets take the TWO (fcl...) largest clusters no matter what the size

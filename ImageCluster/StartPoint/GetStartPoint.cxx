@@ -19,7 +19,7 @@ namespace larocv {
 
 larocv::Cluster2DArray_t GetStartPoint::_Process_(const larocv::Cluster2DArray_t& clusters,
                                                  const ::cv::Mat& img,
-                                                 larocv::ImageMeta& meta)
+                                                 larocv::ImageMeta& meta, larocv::ROI& roi)
  {
   // Geometry Utilities
   auto geomHelper = ::larutil::GeometryHelper::GetME();

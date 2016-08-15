@@ -15,7 +15,7 @@ namespace larocv{
   
   Cluster2DArray_t SatelliteMerge::_Process_(const larocv::Cluster2DArray_t& clusters,
 					     const ::cv::Mat& img,
-					     larocv::ImageMeta& meta)
+					     larocv::ImageMeta& meta, larocv::ROI& roi)
   {
 
     _secret_initial_sats.clear();

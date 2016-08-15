@@ -11,7 +11,7 @@ namespace larocv{
 
   Cluster2DArray_t EmptyImageCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
 				       const ::cv::Mat& img,
-				       larocv::ImageMeta& meta)
+				       larocv::ImageMeta& meta, larocv::ROI& roi)
   { 
 
     LAROCV_INFO((*this)) << "NAMERU JA NAI\n";

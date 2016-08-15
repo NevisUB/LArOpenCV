@@ -44,7 +44,7 @@ namespace larocv {
     /// Process method
     larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
 				      const ::cv::Mat& img,
-				      larocv::ImageMeta& meta);
+				      larocv::ImageMeta& meta, larocv::ROI& roi);
     
   private:
 
