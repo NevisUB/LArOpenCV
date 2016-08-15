@@ -9,6 +9,9 @@ LArImageHit: {
   UseROI: true  
   ROIProducer: mcroi 
   PoolTimeTick: 6
+  MakeROI : false
+  ROIBufferW : 70
+  ROIBufferT : 70
   
   RunAnalyze: false # Uncomment to run the MC shower-cluster comparison
 }

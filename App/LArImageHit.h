@@ -38,7 +38,8 @@ namespace larlite {
       , _charge_threshold(5)
       , _pool_time_tick(0)
       , _use_roi(false)
-//      , _make_roi(false)
+      , _roi_buffer_w(70.)
+      , _roi_buffer_t(70.)
     {}
 
     /// Default destructor
@@ -62,6 +63,9 @@ namespace larlite {
 
     bool _use_shower_roi;
     std::string _roi_producer;
+
+    float _roi_buffer_w;
+    float _roi_buffer_t;
 
   };
 }

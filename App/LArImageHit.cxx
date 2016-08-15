@@ -27,6 +27,9 @@ namespace larlite {
     _use_roi = pset.get<bool>("UseROI");
     _roi_producer = pset.get<std::string>("ROIProducer");
     _use_shower_roi = pset.get<bool>("UserShowerROI");
+
+    _roi_buffer_w = pset.get<float>("ROIBufferW");
+    _roi_buffer_t = pset.get<float>("ROIBufferT");
     
   }
 
@@ -139,8 +142,8 @@ namespace larlite {
       if ( _make_roi ){
         auto vtx = ev_vertex->at(0) ;
         std::vector<larocv::Point2D> roi_bounds ;
-        auto buffer_w = int(70 / geomH->WireToCm() ) ; // 70cm
-        auto buffer_t = int(70 / geomH->TimeToCm() ) ; // 70cm
+        auto buffer_w = int( _roi_buffer_w / geomH->WireToCm() ) ; // 70cm
+        auto buffer_t = int( _roi_buffer_t / geomH->TimeToCm() ) ; // 70cm
       
         TVector3 vtxXYZ( vtx.X(), vtx.Y(), vtx.Z() );
         auto vtxWT  = geomH->Point_3Dto2D(vtxXYZ,plane);
