@@ -61,40 +61,31 @@ namespace larocv {
     double height           () const { return _height; }
 
     void setorigin(size_t w, size_t t)
-    { _origin = larocv::Point2D(w,t); }
+    { _origin = Point2D(w,t); }
 
     /// Set vertex in ROI, may or may not exists, user should check this
     void setvtx(size_t w, size_t t)
-    { _roi_vtx = larocv::Point2D(w,t); }
+    { _roi_vtx = Point2D(w,t); }
 
-    void setbounds(std::vector<larocv::Point2D> bounds)
+    void setbounds(std::vector<Point2D> bounds)
     { _roi_bounds = bounds; }
 
     /// Get vertex ROI
-    larocv::Point2D roivtx() const { return _roi_vtx; }
+    Point2D roivtx() const { return _roi_vtx; }
 
-    std::vector<larocv::Point2D> roibounds() const { return _roi_bounds; }
+    std::vector<Point2D> roibounds() const { return _roi_bounds; }
 
    protected:
 
-    larocv::Point2D _origin; ///< Absolute coordinate of the left bottom corner of ROI  
+    Point2D _origin; ///< Absolute coordinate of the left bottom corner of ROI  
     double _width;             ///< Horizontal size of ROI 
     double _height;            ///< Vertical size of ROI 
     size_t _plane;             ///< unique plane ID number
-    std::vector<larocv::Point2D> _roi_bounds ; ///< Corners of ROI
+    std::vector<Point2D> _roi_bounds ; ///< Corners of ROI
 
-    larocv::Point2D _roi_vtx;
+    Point2D _roi_vtx;
     
   };
-
-}
-
-namespace larocv {
-  /**
-     \class larocv::ROI 
-     @brief Borrowed from larocv (see larocv::ROI)
-  */
-  typedef ::larocv::ROI ROI;
 
 }
 

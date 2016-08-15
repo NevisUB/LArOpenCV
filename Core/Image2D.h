@@ -18,9 +18,9 @@
 #include <vector>
 #include <cstdlib>
 #include "ImageMeta.h"
+#include "ROI.h"
 
 namespace larocv {
-#include "ROI.h"
 
   /**
      \class Image2D
