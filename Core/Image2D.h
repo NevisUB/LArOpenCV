@@ -20,6 +20,7 @@
 #include "ImageMeta.h"
 
 namespace larocv {
+#include "ROI.h"
 
   /**
      \class Image2D
@@ -48,7 +49,9 @@ namespace larocv {
     void copy(size_t w, size_t h, const std::vector<short>& src, size_t num_pixel=0);
     const std::vector<float>& as_vector() const 
     { return (*this); }
+
     const ImageMeta& meta_data() const { return _meta; }
+    const ROI& roi_data() const { return _roi; }
     
     void resize( size_t width_npixel, size_t height_npixel );
     void set_pixel( size_t w, size_t h, float value );
@@ -58,6 +61,8 @@ namespace larocv {
 
   private:
     ImageMeta _meta;
+    ROI       _roi ;
+
     void clear();
   };
 }

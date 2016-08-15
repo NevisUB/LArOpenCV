@@ -14,6 +14,7 @@
 #include "DataFormat/hit.h"
 #include "DataFormat/pfpart.h"
 #include "DataFormat/rawdigit.h"
+#include "DataFormat/vertex.h"
 
 namespace larlite {
 
@@ -55,6 +56,7 @@ namespace larlite {
     LAROCV_DEBUG((*this)) << "Extracting Image\n";
     
     auto const& geom = ::larutil::Geometry::GetME();
+    auto const& geomH = ::larutil::GeometryHelper::GetME();
     const size_t nplanes = geom->Nplanes();
 
     LAROCV_DEBUG((*this)) << "Getting hit producer " << producer() << "\n";
@@ -62,6 +64,10 @@ namespace larlite {
     auto ev_hit = storage->get_data<event_hit>(producer());
     if (ev_hit == nullptr)
       throw DataFormatException("Could not locate hit data product!");
+
+    auto ev_vertex = storage->get_data<event_vertex>("ImageClusterHit");
+    if (ev_vertex == nullptr)
+      throw DataFormatException("Could not locate vertex data product!");
 
     std::vector<std::pair<size_t, size_t>> wire_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
     std::vector<std::pair<size_t, size_t>> tick_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
@@ -71,9 +77,7 @@ namespace larlite {
       LAROCV_DEBUG((*this)) << "Requesting use of ROI from producer " << _roi_producer << "\n";
       ev_roi = storage->get_data<event_PiZeroROI>(_roi_producer);
       
-      if (ev_roi->size() == 0) {
-	throw DataFormatException("Could not locate ROI data product and you have UseROI: True!");
-      }
+      if ( ev_roi->size() == 0) { throw DataFormatException("Could not locate ROI data product and you have UseROI: True!"); }
 
       if ( ev_roi->size() > 1 ) { throw larocv::larbys("More than one ROI, not implemented!\n"); }
 
@@ -92,7 +96,6 @@ namespace larlite {
 	//wire
 	wire_range_v[k].first   = wr_v[k].first;
 	wire_range_v[k].second  = wr_v[k].second;
-
 	//time
 	tick_range_v[k].first   = tr_v[k].first;
 	tick_range_v[k].second  = tr_v[k].second;
@@ -122,6 +125,7 @@ namespace larlite {
       }
     }
 
+
     for (size_t plane = 0; plane < nplanes; ++plane) {
       auto const& wire_range = wire_range_v[plane];
       auto const& tick_range = tick_range_v[plane];
@@ -129,8 +133,31 @@ namespace larlite {
       size_t nwires = wire_range.second - wire_range.first + 2;
       ::larocv::ImageMeta meta((double)nwires, (double)nticks, nwires, nticks,
 			       wire_range.first, tick_range.first, plane);
+
+      ::larocv::ROI roi;
+
+      if ( _make_roi ){
+        auto vtx = ev_vertex->at(0) ;
+        std::vector<larcaffe::Point2D> roi_bounds ;
+        auto buffer_w = int(70 / geomH->WireToCm() ) ; // 70cm
+        auto buffer_t = int(70 / geomH->TimeToCm() ) ; // 70cm
       
-      if (_use_roi) {
+        TVector3 vtxXYZ( vtx.X(), vtx.Y(), vtx.Z() );
+        auto vtxWT  = geomH->Point_3Dto2D(vtxXYZ,plane);
+        auto vtx_w = int(vtxWT.w / geomH->WireToCm() );
+        auto vtx_t = int(vtxWT.t / geomH->TimeToCm() ) + 800;
+
+        roi_bounds.emplace_back(larcaffe::Point2D(vtx_w - buffer_w, vtx_t - buffer_t)); ///< origin
+        roi_bounds.emplace_back(larcaffe::Point2D(vtx_w - buffer_w, vtx_t + buffer_t));
+        roi_bounds.emplace_back(larcaffe::Point2D(vtx_w + buffer_w, vtx_t + buffer_t));
+        roi_bounds.emplace_back(larcaffe::Point2D(vtx_w + buffer_w, vtx_t - buffer_t));
+
+	roi.setorigin(vtx_w - buffer_w,vtx_t - buffer_t);
+	roi.setvtx(vtx_w,vtx_t);
+	roi.setbounds(roi_bounds);
+	}
+
+      if ( _use_roi ){
 	auto vtx = (*ev_roi)[0].GetVertex()[plane];
 	auto trkend = (*ev_roi)[0].GetTrackEnd()[plane];
 	meta.setvtx(vtx.second, vtx.first);
@@ -139,6 +166,8 @@ namespace larlite {
 
       if (nwires >= 1e10 || nticks >= 1e10)
 	_img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta());
+      else if( _make_roi)
+	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,roi);
       else
 	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta);
     }
@@ -181,9 +210,11 @@ namespace larlite {
       for (size_t plane = 0; plane < nplanes; ++plane) {
 	auto& img = _img_mgr.img_at(plane);
 	auto& meta = _img_mgr.meta_at(plane);
+	auto& roi = _img_mgr.roi_at(plane);
 
 	::cv::Mat pooled(img.rows, img.cols / _pool_time_tick + 1, CV_8UC1,
 			 cvScalar(0.));
+	
 
 	for (int row = 0; row < img.rows; ++row) {
 	  uchar* p = img.ptr(row);
@@ -206,6 +237,22 @@ namespace larlite {
 	img = pooled;
 	meta = ::larocv::ImageMeta((double)pooled.rows, (double)pooled.cols * _pool_time_tick,
 				   pooled.rows, pooled.cols, wire_range.first, tick_range.first, plane);
+
+        
+
+	if (_make_roi){
+	  auto old_vtx = roi.roivtx();
+
+	  auto delta_origin_t = (roi.origin().y - tick_range.first) / _pool_time_tick ;
+	  auto new_origin_t   = tick_range.first + delta_origin_t ; 
+
+	  roi = ::larocv::ROI( roi.width(), roi.height() / _pool_time_tick, roi.origin().x, new_origin_t, plane);
+
+	  auto delta_vtx_t = (old_vtx.y - tick_range.first) / _pool_time_tick ;
+	  auto new_vtx_t   = tick_range.first + delta_vtx_t ; 
+	
+	  roi.setvtx(old_vtx.x, new_vtx_t);
+	   }
 
 	if (_use_roi) {
 	  //const auto& vtx = (*ev_roi)[0].GetVertex()[plane];

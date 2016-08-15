@@ -10,7 +10,7 @@ namespace larocv{
 
   Cluster2DArray_t NearestConeCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
 					const ::cv::Mat& img,
-					larocv::ImageMeta& meta)
+					larocv::ImageMeta& meta, larocv::ROI& roi)
   { 
     
     //std::cout<<"\n Plane is: "<<meta.plane()<<std::endl ;

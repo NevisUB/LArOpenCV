@@ -11,7 +11,7 @@ namespace larocv{
 
   Cluster2DArray_t PCAOverall::_Process_(const larocv::Cluster2DArray_t& clusters,
 					 const ::cv::Mat& img,
-					 larocv::ImageMeta& meta)
+					 larocv::ImageMeta& meta, larocv::ROI& roi)
   {
 
     Cluster2DArray_t out_clusters = clusters;

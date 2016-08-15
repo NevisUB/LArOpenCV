@@ -86,6 +86,7 @@ namespace larlite {
     size_t _num_unclustered_hits;
     size_t _num_clustered_hits;
     
+    bool _make_roi;
     
   };
 }

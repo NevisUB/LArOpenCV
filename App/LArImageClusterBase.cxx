@@ -44,6 +44,7 @@ namespace larlite {
     _profile = main_cfg.get<bool>("Profile");
     _producer = main_cfg.get<std::string>("Producer");
     _store_original_img = main_cfg.get<bool>("StoreOriginalImage");
+    _make_roi = main_cfg.get<bool>("MakeROI");
     _process_count = 0;
     _process_time_image_extraction = 0;
     _process_time_analyze = 0;
@@ -100,7 +101,13 @@ namespace larlite {
       auto const& img  = _img_mgr.img_at(plane);
       auto const& meta = _img_mgr.meta_at(plane);
       if (!meta.num_pixel_row() || !meta.num_pixel_column()) continue;
-      _alg_mgr.Add(img, meta);
+      
+      if( _make_roi ){
+        auto const& roi  = _img_mgr.roi_at(plane);
+        _alg_mgr.Add(img, meta, roi);
+	}
+      else
+        _alg_mgr.Add(img, meta);
     }
 
     _alg_mgr.Process();

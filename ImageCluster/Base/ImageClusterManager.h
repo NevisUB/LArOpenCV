@@ -68,6 +68,8 @@ namespace larocv {
     void Configure(const ::fcllite::PSet& main_cfg);
     /// Execute algorithms to construct clusters + corresponding meta data
     void Add(const ::cv::Mat& img, const larocv::ImageMeta& meta);
+    /// Execute algorithms to construct clusters + corresponding meta data + roi data
+    void Add(const ::cv::Mat& img, const larocv::ImageMeta& meta, const larocv::ROI& roi);
     /// Execute algorithms to construct clusters + corresponding meta data
     void Process();
     /// Finalize after multiple Process call
@@ -76,6 +78,8 @@ namespace larocv {
     size_t NumClusters(const AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
     /// Accessor to a specific meta data constructed by an algorithm (via algorithm id)
     const ImageMeta& MetaData(const ImageID_t img_id, const AlgorithmID_t alg_id) const;
+    /// Accessor to a specific roi data constructed by an algorithm (via algorithm id)
+    const ROI& ROIData(const ImageID_t img_id, const AlgorithmID_t alg_id) const;
     /// Accessor to a specific cluster constructed by an algorithm (via algorithm + cluster id)
     const Cluster2D& Cluster(const ClusterID_t cluster_id, const AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
     /// Accessor to a set of clusters constructed by an algorithm (via algorithm id)
@@ -90,6 +94,8 @@ namespace larocv {
     const std::vector<cv::Mat> InputImages() const { return _raw_img_v; }
     /// Original image metadata getter
     const std::vector<larocv::ImageMeta> InputImageMetas() const { return _raw_meta_v; }
+    /// Original image roi getter
+    const std::vector<larocv::ROI> InputROIs() const { return _raw_roi_v; }
   private:
     /// Name identifier: used to fetch a block of configuration parameters
     std::string _name;
@@ -107,10 +113,14 @@ namespace larocv {
     std::vector<cv::Mat> _raw_img_v;
     /// Array of metadata
     std::vector<larocv::ImageMeta> _raw_meta_v;
+    /// Array of roidata 
+    std::vector<larocv::ROI> _raw_roi_v;
     /// Array of resulting clusters per algorithm per image (outer index = algorithm, inner index = image)
     std::vector<std::vector<larocv::Cluster2DArray_t> > _clusters_v_v;
     /// Array of meta data: one per algorithm per image (outer index = algorithm, inner index = image)
     std::vector<std::vector<larocv::ImageMeta> > _meta_v_v;
+    /// Array of roi data: one per algorithm per image (outer index = algorithm, inner index = image)
+    std::vector<std::vector<larocv::ROI> > _roi_v_v;
     /// Boolean flag to measure process time + report
     bool _profile;
     /// Stopwatch

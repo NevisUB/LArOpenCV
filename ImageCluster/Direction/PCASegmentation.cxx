@@ -33,7 +33,7 @@ namespace larocv{
   
   larocv::Cluster2DArray_t PCASegmentation::_Process_(const larocv::Cluster2DArray_t& clusters,
 						     const ::cv::Mat& img,
-						     larocv::ImageMeta& meta)
+						     larocv::ImageMeta& meta, larocv::ROI& roi)
   {
     //Make the big copy
     Cluster2DArray_t oclusters; oclusters.reserve(clusters.size());

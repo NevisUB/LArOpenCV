@@ -43,7 +43,8 @@ namespace larocv {
 
   larocv::Cluster2DArray_t SBManCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
 					       const ::cv::Mat& img,
-					       larocv::ImageMeta& meta)
+					       larocv::ImageMeta& meta,
+					       larocv::ROI& roi)
   {
     pix_h = meta.pixel_height() ;
     pix_w = meta.pixel_width() ;

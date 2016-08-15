@@ -21,6 +21,7 @@
 #include "laropencv_base.h"
 #include "larbys.h"
 #include "ImageMeta.h"
+#include "ROI.h"
 
 namespace larocv  {
   /**
@@ -43,10 +44,14 @@ namespace larocv  {
     size_t size() const { return _mat_v.size(); }
     /// Register image by copying header
     void push_back(const ::cv::Mat& img, const larocv::ImageMeta& meta);
+    /// Regist image + meta + roi 
+    void push_back(const ::cv::Mat& img, const larocv::ImageMeta& meta, const larocv::ROI& roi);
     /// Image getter
     ::cv::Mat& img_at(size_t index=0);
     /// Metadata getter
     larocv::ImageMeta& meta_at(size_t index=0);
+    /// ROIdata getter
+    larocv::ROI& roi_at(size_t index=0);
     /// Clear data
     void clear();
 
@@ -55,6 +60,8 @@ namespace larocv  {
     std::vector<cv::Mat> _mat_v;
     /// Metadata container
     std::vector<larocv::ImageMeta> _meta_v;
+    /// ROI container
+    std::vector<larocv::ROI> _roi_v;
     
   };
 }
