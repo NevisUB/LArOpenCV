@@ -67,7 +67,7 @@ namespace larocv {
     /// Read-in configuration object & enforce configurations to algorithms
     void Configure(const ::fcllite::PSet& main_cfg);
     /// Execute algorithms to construct clusters + corresponding meta data
-    void Add(const ::cv::Mat& img, const larocv::ImageMeta& meta);
+    // void Add(const ::cv::Mat& img, const larocv::ImageMeta& meta);
     /// Execute algorithms to construct clusters + corresponding meta data + roi data
     void Add(const ::cv::Mat& img, const larocv::ImageMeta& meta, const larocv::ROI& roi);
     /// Execute algorithms to construct clusters + corresponding meta data
