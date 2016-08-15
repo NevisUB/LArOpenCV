@@ -71,10 +71,6 @@ namespace larlite {
     if (ev_hit == nullptr)
       throw DataFormatException("Could not locate hit data product!");
 
-    auto ev_vertex = storage->get_data<event_vertex>(_vtx_producer);
-    if (ev_vertex == nullptr)
-      throw DataFormatException("Could not locate vertex data product!");
-
     std::vector<std::pair<size_t, size_t>> wire_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
     std::vector<std::pair<size_t, size_t>> tick_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
 
@@ -143,6 +139,9 @@ namespace larlite {
       ::larocv::ROI roi;
 
       if ( _make_roi ){
+        auto ev_vertex = storage->get_data<event_vertex>(_vtx_producer);
+        if (ev_vertex == nullptr || !ev_vertex->size() )
+          throw DataFormatException("Could not locate vertex data product!");
 
 	auto vtx = ev_vertex->at(0) ;
         std::vector<larocv::Point2D> roi_bounds ;
@@ -162,7 +161,6 @@ namespace larlite {
 	roi.setorigin(vtx_w - buffer_w,vtx_t - buffer_t);
 	roi.setvtx(vtx_w,vtx_t);
 	roi.setbounds(roi_bounds);
-	
       }
 
       // if ( _use_roi ){
