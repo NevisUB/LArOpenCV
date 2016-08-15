@@ -1,5 +1,5 @@
 LArImageHit: {
-
+  Verbosity: 0
   # LArImageClusterBase config
   Profile: true
   StoreOriginalImage: false
@@ -9,10 +9,13 @@ LArImageHit: {
   PoolTimeTick: 6
   UseROI: false
   ROIProducer: nunca
-  UserShowerROI: false
-
+  VertexProducer: fake_vertex
+  
+  ROIBufferW : 100
+  ROIBufferT : 100
   Q2Gray: 10
   QMin: 5
+  MakeROI: true
   
 }
 

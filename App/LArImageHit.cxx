@@ -8,7 +8,6 @@
 #include "LArUtil/GeometryHelper.h"
 
 #include "DataFormat/PiZeroROI.h"
-
 #include "DataFormat/cluster.h"
 #include "DataFormat/event_ass.h"
 #include "DataFormat/hit.h"
@@ -25,11 +24,15 @@ namespace larlite {
     _pool_time_tick = pset.get<int>("PoolTimeTick");
 
     _use_roi = pset.get<bool>("UseROI");
-    _roi_producer = pset.get<std::string>("ROIProducer");
-    _use_shower_roi = pset.get<bool>("UserShowerROI");
+    //_roi_producer = pset.get<std::string>("ROIProducer");
+    //_use_shower_roi = pset.get<bool>("UseShowerROI");
 
+    _vtx_producer  = pset.get<std::string>("VertexProducer");
+    
     _roi_buffer_w = pset.get<float>("ROIBufferW");
     _roi_buffer_t = pset.get<float>("ROIBufferT");
+
+    _make_roi = pset.get<bool>("MakeROI");
     
   }
 
@@ -68,68 +71,68 @@ namespace larlite {
     if (ev_hit == nullptr)
       throw DataFormatException("Could not locate hit data product!");
 
-    auto ev_vertex = storage->get_data<event_vertex>("ImageClusterHit");
+    auto ev_vertex = storage->get_data<event_vertex>(_vtx_producer);
     if (ev_vertex == nullptr)
       throw DataFormatException("Could not locate vertex data product!");
 
     std::vector<std::pair<size_t, size_t>> wire_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
     std::vector<std::pair<size_t, size_t>> tick_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
 
-    ::larlite::event_PiZeroROI* ev_roi = nullptr;
-    if (_use_roi) {
-      LAROCV_DEBUG((*this)) << "Requesting use of ROI from producer " << _roi_producer << "\n";
-      ev_roi = storage->get_data<event_PiZeroROI>(_roi_producer);
+    // ::larlite::event_PiZeroROI* ev_roi = nullptr;
+    // if (_use_roi) {
+    //   LAROCV_DEBUG((*this)) << "Requesting use of ROI from producer " << _roi_producer << "\n";
+    //   ev_roi = storage->get_data<event_PiZeroROI>(_roi_producer);
       
-      if ( ev_roi->size() == 0) { throw DataFormatException("Could not locate ROI data product and you have UseROI: True!"); }
+    //   if ( ev_roi->size() == 0) { throw DataFormatException("Could not locate ROI data product and you have UseROI: True!"); }
 
-      if ( ev_roi->size() > 1 ) { throw larocv::larbys("More than one ROI, not implemented!\n"); }
+    //   if ( ev_roi->size() > 1 ) { throw larocv::larbys("More than one ROI, not implemented!\n"); }
 
-      std::vector < std::pair< int, int > >  wr_v;
-      std::vector < std::pair< int, int > >  tr_v;
+    //   std::vector < std::pair< int, int > >  wr_v;
+    //   std::vector < std::pair< int, int > >  tr_v;
 
-      if ( _use_shower_roi ) { 
-	wr_v = (*ev_roi)[0].GetPiZeroWireROI();
-	tr_v = (*ev_roi)[0].GetPiZeroTimeROI();
-      } else {
-	wr_v = (*ev_roi)[0].GetWireROI();
-	tr_v = (*ev_roi)[0].GetTimeROI();
-      }
+    //   if ( _use_shower_roi ) { 
+    // 	wr_v = (*ev_roi)[0].GetPiZeroWireROI();
+    // 	tr_v = (*ev_roi)[0].GetPiZeroTimeROI();
+    //   } else {
+    // 	wr_v = (*ev_roi)[0].GetWireROI();
+    // 	tr_v = (*ev_roi)[0].GetTimeROI();
+    //   }
 
-      for (uint k = 0; k < nplanes; ++k) {
-	//wire
-	wire_range_v[k].first   = wr_v[k].first;
-	wire_range_v[k].second  = wr_v[k].second;
-	//time
-	tick_range_v[k].first   = tr_v[k].first;
-	tick_range_v[k].second  = tr_v[k].second;
-      }
+    //   for (uint k = 0; k < nplanes; ++k) {
+    // 	//wire
+    // 	wire_range_v[k].first   = wr_v[k].first;
+    // 	wire_range_v[k].second  = wr_v[k].second;
+    // 	//time
+    // 	tick_range_v[k].first   = tr_v[k].first;
+    // 	tick_range_v[k].second  = tr_v[k].second;
+    //   }
 	
 
-    } else { //do not use the ROI information
+    // } else { //do not use the PiZeroROI information
 
-      LAROCV_DEBUG((*this)) << "Not using ROI\n";
+    LAROCV_DEBUG((*this)) << "Not using ROI\n";
 
-      for (auto const& h : *ev_hit) {
-	if (h.Integral() < _charge_threshold) continue;
+    for (auto const& h : *ev_hit) {
+      if (h.Integral() < _charge_threshold) continue;
 
-	auto const& wid = h.WireID();
+      auto const& wid = h.WireID();
 
-	auto& wire_range = wire_range_v[wid.Plane];
+      auto& wire_range = wire_range_v[wid.Plane];
 
-	if (wire_range.first > wid.Wire) wire_range.first = wid.Wire;
-	if (wire_range.second < wid.Wire) wire_range.second = wid.Wire;
+      if (wire_range.first > wid.Wire) wire_range.first = wid.Wire;
+      if (wire_range.second < wid.Wire) wire_range.second = wid.Wire;
 
-	auto& tick_range = tick_range_v[wid.Plane];
-	size_t peak_time = (size_t)(h.PeakTime());
-	if (tick_range.first > peak_time)
-	  tick_range.first = (bool(peak_time) ? peak_time - 1 : 0);
-	if (tick_range.second < (peak_time + 1))
-	  tick_range.second = peak_time + 1;
-      }
+      auto& tick_range = tick_range_v[wid.Plane];
+      size_t peak_time = (size_t)(h.PeakTime());
+      if (tick_range.first > peak_time)
+	tick_range.first = (bool(peak_time) ? peak_time - 1 : 0);
+      if (tick_range.second < (peak_time + 1))
+	tick_range.second = peak_time + 1;
     }
-
+    //}
 
     for (size_t plane = 0; plane < nplanes; ++plane) {
+
       auto const& wire_range = wire_range_v[plane];
       auto const& tick_range = tick_range_v[plane];
       size_t nticks = tick_range.second - tick_range.first + 2;
@@ -140,7 +143,8 @@ namespace larlite {
       ::larocv::ROI roi;
 
       if ( _make_roi ){
-        auto vtx = ev_vertex->at(0) ;
+
+	auto vtx = ev_vertex->at(0) ;
         std::vector<larocv::Point2D> roi_bounds ;
         auto buffer_w = int( _roi_buffer_w / geomH->WireToCm() ) ; // 70cm
         auto buffer_t = int( _roi_buffer_t / geomH->TimeToCm() ) ; // 70cm
@@ -158,17 +162,19 @@ namespace larlite {
 	roi.setorigin(vtx_w - buffer_w,vtx_t - buffer_t);
 	roi.setvtx(vtx_w,vtx_t);
 	roi.setbounds(roi_bounds);
-	}
-
-      if ( _use_roi ){
-	auto vtx = (*ev_roi)[0].GetVertex()[plane];
-	auto trkend = (*ev_roi)[0].GetTrackEnd()[plane];
-	meta.setvtx(vtx.second, vtx.first);
-	meta.settrkend(trkend.second, trkend.first);
+	
       }
 
+      // if ( _use_roi ){
+      // 	auto vtx = (*ev_roi)[0].GetVertex()[plane];
+      // 	auto trkend = (*ev_roi)[0].GetTrackEnd()[plane];
+      // 	meta.setvtx(vtx.second, vtx.first);
+      // 	meta.settrkend(trkend.second, trkend.first);
+      // }
+      //      LAROCV_INFO((*this)) << "_make_roi: " << _make_roi << "\n";
+
       if (nwires >= 1e10 || nticks >= 1e10)
-	_img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta());
+	_img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta(),::larocv::ROI());
       else if( _make_roi)
 	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,roi);
       else
@@ -192,11 +198,9 @@ namespace larlite {
       size_t y = (size_t)(h.PeakTime() + 0.5) - tick_range.first;
       size_t x = wid.Wire - wire_range.first;
 
-
       // skip the hit if it's out of range
       if (y >= nticks || x >= nwires) 
 	continue;
-
 
       double charge = h.Integral() / _charge_to_gray_scale;
       charge += (double)(mat.at<unsigned char>(x, y));
@@ -208,12 +212,11 @@ namespace larlite {
     }
 
     // normalize the tick range
-
     if (_pool_time_tick > 1) {
       for (size_t plane = 0; plane < nplanes; ++plane) {
-	auto& img = _img_mgr.img_at(plane);
+	auto& img  = _img_mgr.img_at(plane);
 	auto& meta = _img_mgr.meta_at(plane);
-	auto& roi = _img_mgr.roi_at(plane);
+	auto& roi  = _img_mgr.roi_at(plane);
 
 	::cv::Mat pooled(img.rows, img.cols / _pool_time_tick + 1, CV_8UC1,
 			 cvScalar(0.));
@@ -241,9 +244,9 @@ namespace larlite {
 	meta = ::larocv::ImageMeta((double)pooled.rows, (double)pooled.cols * _pool_time_tick,
 				   pooled.rows, pooled.cols, wire_range.first, tick_range.first, plane);
 
-        
 
 	if (_make_roi){
+	  
 	  auto old_vtx = roi.roivtx();
 
 	  auto delta_origin_t = (roi.origin().y - tick_range.first) / _pool_time_tick ;
@@ -255,18 +258,18 @@ namespace larlite {
 	  auto new_vtx_t   = tick_range.first + delta_vtx_t ; 
 	
 	  roi.setvtx(old_vtx.x, new_vtx_t);
-	   }
-
-	if (_use_roi) {
-	  //const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
-	  // you wont believe this but I have to make a strict copy of the vertex out
-	  // of the data product or somehoe GetTrackEnd() will overwrite the reference
-	  // i dare you to change below to const reference it's scary
-	  auto vtx = (*ev_roi)[0].GetVertex()[plane];
-	  auto trkend = (*ev_roi)[0].GetTrackEnd()[plane];
-	  meta.setvtx(vtx.second, vtx.first);
-	  meta.settrkend(trkend.second, trkend.first);
 	}
+
+	// if (_use_roi) {
+	//   //const auto& vtx = (*ev_roi)[0].GetVertex()[plane];
+	//   // you wont believe this but I have to make a strict copy of the vertex out
+	//   // of the data product or somehoe GetTrackEnd() will overwrite the reference
+	//   // i dare you to change below to const reference it's scary
+	//   auto vtx = (*ev_roi)[0].GetVertex()[plane];
+	//   auto trkend = (*ev_roi)[0].GetTrackEnd()[plane];
+	//   meta.setvtx(vtx.second, vtx.first);
+	//   meta.settrkend(trkend.second, trkend.first);
+	// }
       
       }
     }

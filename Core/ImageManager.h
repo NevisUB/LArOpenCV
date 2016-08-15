@@ -56,6 +56,7 @@ namespace larocv  {
     void clear();
 
   protected:
+    //public:
     /// Image container
     std::vector<cv::Mat> _mat_v;
     /// Metadata container

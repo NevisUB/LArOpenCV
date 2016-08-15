@@ -17,6 +17,7 @@ namespace larocv {
   {
     ::cv::Mat res;
     img.copyTo(res);
+    
     _mat_v.push_back(res);
     _meta_v.push_back(meta);
     _roi_v.push_back(roi);
