@@ -16,6 +16,7 @@ namespace larocv {
   Cluster2DArray_t CheckStartDistance::_Process_(const larocv::Cluster2DArray_t& clusters, const ::cv::Mat& img,
 						 larocv::ImageMeta& meta, larocv::ROI& roi) {
 
+    // Only clusters which have clusters near other clusters' start points are kept
     Cluster2DArray_t oclusters;
     oclusters.reserve(clusters.size());
 
