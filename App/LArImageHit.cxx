@@ -119,13 +119,27 @@ namespace larlite {
         auto vtx_w = vtxWT.w / geomH->WireToCm();
         auto vtx_t = vtxWT.t / geomH->TimeToCm() + 800;
 
-	LAROCV_DEBUG((*this)) << "Got vertex point (w,t): " << vtx_w << "," << vtx_t << ")\n";
-	std::cout << "Got vertex point (w,t): " << vtx_w << "," << vtx_t << ")\n";
+
+        float upper_w(3456);
+        float upper_t = ( vtx_t + buffer_t > 6399 ? 6399 : vtx_t + buffer_t );
+        float lower_w = ( vtx_w - buffer_w < 0 ? 0 : vtx_w - buffer_w );
+        float lower_t = ( vtx_t - buffer_t < 0 ? 0 : vtx_t - buffer_t );
+
+        if( plane == 0 || plane == 1)
+          upper_w = ( vtx_w + buffer_w > 2400 ? 2400 : vtx_w + buffer_w );
+        else 
+          upper_w = ( vtx_w + buffer_w > 3456 ? 3456 : vtx_w + buffer_w );
+
+	LAROCV_DEBUG((*this)) << "Got vertex point (w,t): (" << vtx_w << "," << vtx_t << ")\n";
+	std::cout << "Got vertex point (w,t): (" << vtx_w << "," << vtx_t << ")\n";
 	
-        roi_bounds.emplace_back(larocv::Point2D(vtx_w - buffer_w, vtx_t - buffer_t)); ///< origin
-        roi_bounds.emplace_back(larocv::Point2D(vtx_w - buffer_w, vtx_t + buffer_t));
-        roi_bounds.emplace_back(larocv::Point2D(vtx_w + buffer_w, vtx_t + buffer_t));
-        roi_bounds.emplace_back(larocv::Point2D(vtx_w + buffer_w, vtx_t - buffer_t));
+        roi_bounds.emplace_back(larocv::Point2D(lower_w, upper_t)); ///< origin
+        roi_bounds.emplace_back(larocv::Point2D(lower_w, lower_t));
+        roi_bounds.emplace_back(larocv::Point2D(upper_w, lower_t));
+        roi_bounds.emplace_back(larocv::Point2D(upper_w, upper_t));
+
+        //for(int i=0; i < roi_bounds.size(); i++)
+        //  std::cout<<"Bounds: "<<roi_bounds[i].x<<", "<<roi_bounds[i].y<<std::endl ;
 
 	roi.setorigin(vtx_w - buffer_w,vtx_t - buffer_t);
 	roi.setvtx(vtx_w,vtx_t);
@@ -133,13 +147,21 @@ namespace larlite {
       }
 
       // no matter what we have to send ROI... it can go to the algorithm blank, that's fine
-      if ( nwires >= 1e10 || nticks >= 1e10 )
-	_img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta(), ::larocv::ROI());
-      else
-	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,roi);
-      
-    }
-    
+      // If we don't want to use ROI, need to pass blanks
+      if ( _make_roi ){
+        if (nwires >= 1e10 || nticks >= 1e10)
+          _img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta(),::larocv::ROI());
+        else 
+          _img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,roi);
+         }   
+       else{
+         if (nwires >= 1e10 || nticks >= 1e10)
+          _img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta(),::larocv::ROI());
+         else 
+          _img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,::larocv::ROI());
+        }   
+      }   
+
     for (auto const& h : *ev_hit) {
 
       auto const& wid = h.WireID();
