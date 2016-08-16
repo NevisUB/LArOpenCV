@@ -18,6 +18,8 @@ LArImageHit: {
   QMin: 5
 
   MakeROI: false
+
+  StoreContours: true
 }
 
 ImageClusterManager: {

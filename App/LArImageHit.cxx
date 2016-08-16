@@ -29,6 +29,8 @@ namespace larlite {
     _roi_buffer_t = pset.get<float>("ROIBufferT");
 
     _make_roi = pset.get<bool>("MakeROI");
+
+    _store_contours = pset.get<bool>("StoreContours");
     
   }
 
@@ -70,7 +72,6 @@ namespace larlite {
 
     std::vector<std::pair<size_t, size_t>> wire_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
     std::vector<std::pair<size_t, size_t>> tick_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
-
 
     LAROCV_DEBUG((*this)) << "Not using ROI\n";
 
@@ -138,8 +139,6 @@ namespace larlite {
 	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,roi);
       
     }
-
-    std::cout << "size of ev_hits is " << ev_hit->size() << "\n";
     
     for (auto const& h : *ev_hit) {
 
