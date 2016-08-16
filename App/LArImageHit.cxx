@@ -29,6 +29,10 @@ namespace larlite {
     _roi_buffer_t = pset.get<float>("ROIBufferT");
 
     _make_roi = pset.get<bool>("MakeROI");
+    
+    _time_offset = pset.get<float>("TimeOffset");
+    _t_window_max = pset.get<float>("WindowTMax");
+    _t_window_min = pset.get<float>("WindowTMin");
 
     _store_contours = pset.get<bool>("StoreContours");
     
@@ -117,13 +121,13 @@ namespace larlite {
         TVector3 vtxXYZ( vtx.X(), vtx.Y(), vtx.Z() );
         auto vtxWT  = geomH->Point_3Dto2D(vtxXYZ,plane);
         auto vtx_w = vtxWT.w / geomH->WireToCm();
-        auto vtx_t = vtxWT.t / geomH->TimeToCm() + 800;
+        auto vtx_t = vtxWT.t / geomH->TimeToCm() + _time_offset ;
 
 
         float upper_w(3456);
-        float upper_t = ( vtx_t + buffer_t > 6399 ? 6399 : vtx_t + buffer_t );
         float lower_w = ( vtx_w - buffer_w < 0 ? 0 : vtx_w - buffer_w );
-        float lower_t = ( vtx_t - buffer_t < 0 ? 0 : vtx_t - buffer_t );
+        float upper_t = ( vtx_t + buffer_t > _t_window_max ? _t_window_max : vtx_t + buffer_t );
+        float lower_t = ( vtx_t - buffer_t < _t_window_min ? _t_window_min : vtx_t - buffer_t );
 
         if( plane == 0 || plane == 1)
           upper_w = ( vtx_w + buffer_w > 2400 ? 2400 : vtx_w + buffer_w );

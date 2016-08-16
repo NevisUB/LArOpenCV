@@ -40,6 +40,9 @@ namespace larlite {
       , _use_roi(false)
       , _roi_buffer_w(70.)
       , _roi_buffer_t(70.)
+      , _time_offset(800)
+      , _t_window_max(6399.)
+      , _t_window_min(0.)
     {}
 
     /// Default destructor
@@ -70,6 +73,9 @@ namespace larlite {
     std::string _vtx_producer;
 
     bool _make_roi;
+    float _time_offset ;
+    float _t_window_max ;
+    float _t_window_min ;
     
   };
 }
