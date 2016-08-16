@@ -1,5 +1,6 @@
 LArImageHit: {
-  Verbosity: 0
+
+Verbosity: 0
   # LArImageClusterBase config
 
   Profile: true
@@ -18,16 +19,16 @@ LArImageHit: {
   QMin: 5
 
   MakeROI: false
+  Debug: true
 
-  StoreContours: true
 }
 
 ImageClusterManager: {
 
   Verbosity: 0
   Profile:   true
-  ClusterAlgoType:  [SBCluster]
-  ClusterAlgoName:  [sbc]
+  ClusterAlgoType:  [SBCluster,PCAOverall]
+  ClusterAlgoName:  [sbc,pcao]
 
   ShowImage: false
 
@@ -54,9 +55,7 @@ ImageClusterManager: {
    Thresh : 1
    ThreshMaxVal : 255
   }
-  
- ac : {
-    MaxDefectSize: 50 # why?
- }
+
+  pcao: { }
  
 }

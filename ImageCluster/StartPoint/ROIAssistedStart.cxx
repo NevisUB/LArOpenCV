@@ -28,7 +28,7 @@ namespace larocv{
     //copy and paste from ROIStart
 
     //the ROI vertex
-    auto pi0_st = meta.roivtx();
+    auto pi0_st = roi.roivtx();
     if ( pi0_st.x == ::larocv::kINVALID_DOUBLE ) { std::cout << "BAD VTX\n"; throw std::exception(); }
 
     auto pi0st = Point2D( (pi0_st.y - meta.origin().y) / meta.pixel_height(), (pi0_st.x - meta.origin().x) / meta.pixel_width() );

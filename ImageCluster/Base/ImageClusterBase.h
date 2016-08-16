@@ -15,13 +15,17 @@
 #define __IMAGECLUSTERBASE_H__
 
 #include <iostream>
+#include <sstream> 
+
 #include <TFile.h>
+
 #include "FhiclLite/PSet.h"
 #include "Core/ImageMeta.h"
 #include "Core/ROI.h"
 #include "Core/laropencv_base.h"
 #include "Utils/Watch.h"
 #include "ImageClusterTypes.h"
+#include "DataFormat/user_info.h"
 
 namespace larocv {
 

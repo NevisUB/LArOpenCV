@@ -29,8 +29,10 @@ namespace larlite {
     _roi_buffer_t = pset.get<float>("ROIBufferT");
 
     _make_roi = pset.get<bool>("MakeROI");
+    
+    //_store_contours = pset.get<bool>("StoreContours");
 
-    _store_contours = pset.get<bool>("StoreContours");
+    _debug = pset.get<bool>("Debug");
     
   }
 
@@ -102,6 +104,9 @@ namespace larlite {
       ::larocv::ImageMeta meta((double)nwires, (double)nticks, nwires, nticks,
 			       wire_range.first, tick_range.first, plane);
 
+
+      if (_debug) meta.set_debug(true);
+      
       ::larocv::ROI roi;
 
       if ( _make_roi ){
@@ -205,7 +210,8 @@ namespace larlite {
 	meta = ::larocv::ImageMeta((double)pooled.rows, (double)pooled.cols * _pool_time_tick,
 				   pooled.rows, pooled.cols, wire_range.first, tick_range.first, plane);
 	
-
+	if (_debug) meta.set_debug(true);
+	
 	if (_make_roi){
 
 	  auto old_vtx = roi.roivtx();

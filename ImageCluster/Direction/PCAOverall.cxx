@@ -29,6 +29,34 @@ namespace larocv{
       auto& reco = ocluster.reco;
       reco.dir   = e_vec_first;
     }
+
+    /// Debug mode is off, return the result
+    if (!meta.debug()) return out_clusters;
+
+    //***************************************************
+    //***Debug Mode
+    
+    std::stringstream ss1;
+
+    ::larlite::user_info uinfo{};
+
+    for(size_t i = 0; i < out_clusters.size(); ++i){
+
+      const auto& imgclus = out_clusters[i];
+
+      ss1  << Name() << "_" << meta.plane() << "_dir_" << i;
+
+      double dir_x = imgclus.reco.dir.x;
+      double dir_y = imgclus.reco.dir.y;
+
+      uinfo.append(ss1.str(),dir_x);
+      uinfo.append(ss1.str(),dir_y);
+
+      ss1.str(std::string());
+      ss1.clear();
+    }
+      
+    meta.ev_user()->emplace_back(uinfo);
     
     return out_clusters;
   }

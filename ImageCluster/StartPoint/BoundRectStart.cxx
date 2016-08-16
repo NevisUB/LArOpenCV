@@ -147,8 +147,6 @@ namespace larocv {
 	if ( i < N / 2 ) f_half += roicov * tot_charge[i];
         else             s_half += roicov * tot_charge[i];
 
-        ocluster._something.push_back(roicov);
-	
       }
       
       // this is charge weighting for the pearsons r

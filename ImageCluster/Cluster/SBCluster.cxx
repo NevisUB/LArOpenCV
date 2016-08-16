@@ -17,7 +17,6 @@ namespace larocv {
     _thresh        = pset.get<float> ("Thresh");
     _thresh_maxval = pset.get<float> ("ThreshMaxVal");
 
-    // _polygon_e     = pset.get<double>("PolygonEpsilon");
   }
 
   larocv::Cluster2DArray_t SBCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -35,7 +34,7 @@ namespace larocv {
     auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,::cv::Size(_dilation_size,_dilation_size));
     ::cv::dilate(img,sb_img,
 		 kernel,::cv::Point(-1,-1),_dilation_iter);
-
+    
     //Blur
     ::cv::blur(sb_img,sb_img,
 	       ::cv::Size(_blur_size,_blur_size));
@@ -76,6 +75,7 @@ namespace larocv {
       new_clus._width     = rect.height > rect.width ? rect.width  : rect.height;
       new_clus._numHits   = 0 ;
       new_clus._sumCharge = 0 ;
+      
       std::swap(new_clus._contour,ctor_v[j]);
        
       result_v.push_back(new_clus);
@@ -95,11 +95,45 @@ namespace larocv {
 	result_v[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);
 	
       }   
-    }   
+    }
+    
+    /// Debug mode is off, return the result
+    if (!meta.debug()) return result_v;
+
+
+    //***************************************************
+    //***Debug Mode
+    
+    std::stringstream ss_x,ss_y;
+
+    ::larlite::user_info uinfo{};
+
+    for(size_t i = 0; i < result_v.size(); ++i){
+      const auto& imgclus = result_v[i];
+
+      ss_x  << Name() << "_" << meta.plane() << "_" << i << "_x";
+      ss_y  << Name() << "_" << meta.plane() << "_" << i << "_y";
+
+      for(const auto& point : imgclus._contour) {
+	double x = meta.XtoTimeTick(point.x);
+	double y = meta.YtoWire(point.y);
+	
+	uinfo.append(ss_x.str(),x);
+	uinfo.append(ss_y.str(),y);
+      }
+
+      ss_x.str(std::string());
+      ss_x.clear();
+
+      ss_y.str(std::string());
+      ss_y.clear();
+	
+    }    
+    meta.ev_user()->emplace_back(uinfo);
 
     return result_v;
   }
-
+ 
 }
 
 #endif

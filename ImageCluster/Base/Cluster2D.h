@@ -136,7 +136,6 @@ namespace larocv {
     Point2D _vertex_2D;
     
     std::vector<std::vector<::cv::Point2f> > _verts;
-    std::vector<double> _something;
     
   private:
 

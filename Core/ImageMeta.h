@@ -19,6 +19,7 @@
 #include <opencv2/core/core.hpp>
 #include "larbys.h"
 #include "LArOCVTypes.h"
+#include "DataFormat/user_info.h"
 
 namespace larocv {
 
@@ -49,7 +50,7 @@ namespace larocv {
       , _width(width)
       , _height(height)
       , _plane(plane)
-      , _roi_vtx(::larocv::kINVALID_DOUBLE,::larocv::kINVALID_DOUBLE)
+      , _debug(false)
     {
       if( width  < 0. ) throw larbys("Width must be a positive floating point!");
       if( height < 0. ) throw larbys("Height must be a positive floating point!");
@@ -87,17 +88,18 @@ namespace larocv {
     void update(const ::cv::Mat& mat)
     { update(mat.rows,mat.cols); }
 
-    /// Set vertex from ROI, may or may not exists, user should check this
-    void setvtx(size_t w, size_t t)
-    { _roi_vtx = larocv::Point2D(w,t); }
+    /// convert from X variable to Time-Tick
+    double XtoTimeTick(double x) const { return  ( (x + 0.5 ) * pixel_height() ) + _origin.y ; }
+    /// convert from y variable to Wire
+    double YtoWire(double y) const { return ( (y + 0.5)* pixel_width() ) + _origin.x ; }
 
-    void settrkend(size_t w, size_t t)
-    { _roi_trkend = larocv::Point2D(w,t); }
+    void set_debug(bool d) { _debug = d; }
+    const bool debug() const { return _debug; }
 
-    /// Get vertex ROI
-    larocv::Point2D roivtx() const { return _roi_vtx; }
-    larocv::Point2D roitrkend() const { return _roi_trkend; }
+    void set_ev_user(::larlite::event_user* ui) { EVUSERINFO = ui; }
+    ::larlite::event_user* ev_user() { return EVUSERINFO; } //all caps to remind you this is a global instance
 
+    
    protected:
 
     larocv::Point2D _origin; ///< Absolute coordinate of the left bottom corner of an image
@@ -107,10 +109,8 @@ namespace larocv {
     size_t _height_npixel;     ///< # of pixels in vertical axis
     size_t _plane;             ///< unique plane ID number
 
-    /// ROI vertex, may or may not exist, user should check this again
-    larocv::Point2D _roi_vtx;
-    larocv::Point2D _roi_trkend;
-
+    bool _debug;
+    ::larlite::event_user* EVUSERINFO;
     
   };
 

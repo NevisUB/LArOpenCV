@@ -80,18 +80,17 @@ namespace larlite {
       std::cout << e.what() << std::endl;
       // save data-products that would be created in store_clusters
       // this will prevent event mis-alignment
+
       auto ev_cluster = storage->get_data<event_cluster>      ("ImageClusterHit");
       auto ev_pfpart  = storage->get_data<event_pfpart>       ("ImageClusterHit");
       auto ev_hit_ass = storage->get_data<event_ass>          ("ImageClusterHit");
       auto ev_vtx_ass = storage->get_data<event_ass>          ("ImageClusterHit");
 
-      ::larlite::event_user* ev_user;
-      if (_store_contours)
-	ev_user = storage->get_data<event_user>    ("ImageClusterHit");
 
       storage->set_id(storage->run_id(), storage->subrun_id(), storage->event_id());
       return false;
     }
+
 
     _process_time_image_extraction += watch_one.WallTime();
 
@@ -102,13 +101,20 @@ namespace larlite {
 	_orig_img_mgr.push_back(img, _img_mgr.meta_at(plane));
       }
     }
+    
+    ::larlite::event_user* ev_user;
+    if (_debug)
+      ev_user = storage->get_data<event_user>    ("ImageClusterHit");
 
     for (size_t plane = 0; plane < _img_mgr.size(); ++plane) {
       auto const& img  = _img_mgr.img_at(plane);
-      auto const& meta = _img_mgr.meta_at(plane);
+      auto      & meta = _img_mgr.meta_at(plane);
+      auto const& roi  = _img_mgr.roi_at(plane);
+
+      if (_debug) meta.set_ev_user(ev_user);
+      
       if (!meta.num_pixel_row() || !meta.num_pixel_column()) continue;
       
-      auto const& roi  = _img_mgr.roi_at(plane);
       _alg_mgr.Add(img, meta, roi);
 
     }
@@ -221,11 +227,6 @@ namespace larlite {
     auto ev_hit_ass = storage->get_data<event_ass>    ("ImageClusterHit");
     auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
 
-
-    ::larlite::event_user* ev_user;
-    if (_store_contours)
-      ev_user = storage->get_data<event_user> ("ImageClusterHit");
-	
     // save ROI & vertices if available
     // and grab the associated vertex
 
@@ -290,17 +291,6 @@ namespace larlite {
 	// add to event_cluster
 	ev_cluster->push_back(c);
 
-	if (!_store_contours) continue;
-	
-	::larlite::user_info uinfo{};
-	  
-	for(const auto& point : imgclus._contour) {
-	  double x = imgclus.XtoTimeTick(point.x);
-	  double y = imgclus.YtoWire(point.y);
-	  uinfo.append("x",x);
-	  uinfo.append("y",y);
-	}
-	ev_user->emplace_back(uinfo);
 	
       }
 

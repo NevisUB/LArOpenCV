@@ -87,6 +87,8 @@ namespace larlite {
     size_t _num_clustered_hits;
     
     bool _store_contours;
+
+    bool _debug;
     
   };
 }
