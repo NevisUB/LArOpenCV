@@ -235,6 +235,7 @@ namespace larlite {
 	if (_make_roi){
 
 	  auto old_vtx = roi.roivtx();
+          auto old_bb  = roi.roibounds();
 
 	  auto delta_origin_t = (roi.origin().y - tick_range.first) / _pool_time_tick ;
 	  auto new_origin_t   = tick_range.first + delta_origin_t ; 
@@ -245,6 +246,21 @@ namespace larlite {
 	  auto new_vtx_t   = tick_range.first + delta_vtx_t ; 
 	
 	  roi.setvtx(old_vtx.x, new_vtx_t);
+
+          std::vector<larocv::Point2D> pool_bounds ;
+
+          // First entry is always the lower left corner (origin)
+          for(size_t b = 0; b < old_bb.size(); b++ ){
+
+            auto delta_bb_t = (old_bb[b].y - tick_range.first) / _pool_time_tick ;
+            auto new_bb_t   = tick_range.first + delta_bb_t ; 
+            pool_bounds.emplace_back(old_bb[b].x,new_bb_t);
+            std::cout<<pool_bounds[b].x<<", "<<pool_bounds[b].y<<std::endl ;
+
+            }   
+
+           roi.setbounds(pool_bounds);
+
 	}
       
       }
