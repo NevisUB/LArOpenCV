@@ -68,6 +68,8 @@ namespace larlite {
     float _roi_buffer_t;
 
     std::string _vtx_producer;
+
+    bool _make_roi;
     
   };
 }
@@ -82,3 +84,10 @@ namespace larlite {
 //**************************************************************************
 
 /** @} */ // end of doxygen group 
+
+
+
+
+
+
+

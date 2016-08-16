@@ -177,11 +177,11 @@ namespace larocv {
     
   }
 
-  void ImageClusterManager::Add(const ::cv::Mat& img, const ImageMeta& meta)
-  {
-    _raw_img_v.push_back(img);
-    _raw_meta_v.push_back(meta);
-  }
+  // void ImageClusterManager::Add(const ::cv::Mat& img, const ImageMeta& meta)
+  // {
+  //   _raw_img_v.push_back(img);
+  //   _raw_meta_v.push_back(meta);
+  // }
 
   void ImageClusterManager::Add(const ::cv::Mat& img, const ImageMeta& meta, const ROI& roi)
   {
@@ -192,7 +192,7 @@ namespace larocv {
   
   void ImageClusterManager::Process()
   {
-    LAROCV_DEBUG((*this)) << "Start" << std::endl;
+    LAROCV_DEBUG((*this)) << "Start Processing" << std::endl;
     
     if(!_configured) throw larbys("Must Configure() before Process()!");
     
@@ -210,10 +210,14 @@ namespace larocv {
     
     for(size_t img_index=0; img_index<_raw_img_v.size(); ++img_index) {
 
+      LAROCV_DEBUG((*this)) << "On img_index: " << img_index << "\n";
+      LAROCV_DEBUG((*this)) << "_raw_meta_v.size() " << _raw_meta_v.size() << "\n";
+      LAROCV_DEBUG((*this)) << "_raw_img_v.size() " << _raw_img_v.size() << "\n";
+      LAROCV_DEBUG((*this)) << "_raw_roi_v.size() " << _raw_roi_v.size() << "\n";
+      
       auto const& meta = _raw_meta_v[img_index];
       auto const& img  = _raw_img_v[img_index];
-      if(_raw_roi_v.size() )
-        auto & roi  = _raw_roi_v[img_index];
+      auto      & roi  = _raw_roi_v[img_index];
 
       if(meta.num_pixel_row()!=img.rows)
 	throw larbys("Provided metadata has incorrect # horizontal pixels w.r.t. image!");
@@ -227,16 +231,20 @@ namespace larocv {
       
       for(size_t alg_index=0; alg_index<_cluster_alg_v.size(); ++alg_index) {
 
+	LAROCV_DEBUG((*this)) << "On alg_index: " << alg_index << "\n";
+	
 	auto& alg_ptr    = _cluster_alg_v[alg_index];
 	auto& meta_v     = _meta_v_v[alg_index];
 	auto& clusters_v = _clusters_v_v[alg_index];
-	if( _roi_v_v.size() )
-	  auto& roi_v     = _roi_v_v[alg_index];
+	auto& roi_v      = _roi_v_v[alg_index];
 	
 	if(!alg_ptr) throw larbys("Invalid algorithm pointer!");
 	
 	if(alg_ptr == _cluster_alg_v.front()) {
-	  
+
+	  LAROCV_DEBUG((*this)) << "alg_ptr is _cluster_alg_v.front()\n" << std::endl;
+	  LAROCV_DEBUG((*this)) << "meta_v.size(): "<< meta_v.size() << " roi_v.size(): " << roi_v.size() << "\n";
+
 	  Cluster2DArray_t clusters;
 	  meta_v.push_back(meta);
 	  clusters_v.emplace_back(alg_ptr->Process(clusters,img,meta_v.back(),roi));
@@ -250,9 +258,7 @@ namespace larocv {
 	  auto prev_roi  = _roi_v_v[alg_index-1][img_index];
 	  clusters_v.emplace_back(alg_ptr->Process(prev_clusters,img,prev_meta,roi));
 	  meta_v.push_back(prev_meta);
-
-	  if(_make_roi) roi_v.push_back(prev_roi);
-	  
+	  roi_v.push_back(prev_roi);
 	}
 	
 	// Assign cluster IDs

@@ -9,8 +9,11 @@
 #include "DataFormat/rawdigit.h"
 #include "DataFormat/hit.h"
 #include "DataFormat/cluster.h"
+
+//#include "DataFormat/PiZeroROI.h"
+
+#include "DataFormat/user_info.h"
 #include "DataFormat/event_ass.h"
-#include "DataFormat/PiZeroROI.h"
 #include "DataFormat/vertex.h"
 #include "DataFormat/pfpart.h"
 
@@ -44,7 +47,6 @@ namespace larlite {
     _profile = main_cfg.get<bool>("Profile");
     _producer = main_cfg.get<std::string>("Producer");
     _store_original_img = main_cfg.get<bool>("StoreOriginalImage");
-    _make_roi = main_cfg.get<bool>("MakeROI");
     _process_count = 0;
     _process_time_image_extraction = 0;
     _process_time_analyze = 0;
@@ -69,6 +71,7 @@ namespace larlite {
     watch_all.Start();
     watch_one.Start();
 
+    
     // try getting an image for this event, if possible
     try {
       this->extract_image(storage);
@@ -77,15 +80,18 @@ namespace larlite {
       std::cout << e.what() << std::endl;
       // save data-products that would be created in store_clusters
       // this will prevent event mis-alignment
-      auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
-      auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
-      auto ev_hit_ass = storage->get_data<event_ass>    ("ImageClusterHit");
-      auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
+      auto ev_cluster = storage->get_data<event_cluster>      ("ImageClusterHit");
+      auto ev_pfpart  = storage->get_data<event_pfpart>       ("ImageClusterHit");
+      auto ev_hit_ass = storage->get_data<event_ass>          ("ImageClusterHit");
+      auto ev_vtx_ass = storage->get_data<event_ass>          ("ImageClusterHit");
+
+      ::larlite::event_user* ev_user;
+      if (_store_contours)
+	ev_user = storage->get_data<event_user>    ("ImageClusterHit");
 
       storage->set_id(storage->run_id(), storage->subrun_id(), storage->event_id());
       return false;
     }
-
 
     _process_time_image_extraction += watch_one.WallTime();
 
@@ -102,18 +108,17 @@ namespace larlite {
       auto const& meta = _img_mgr.meta_at(plane);
       if (!meta.num_pixel_row() || !meta.num_pixel_column()) continue;
       
-      if( _make_roi ){
-        auto const& roi  = _img_mgr.roi_at(plane);
-        _alg_mgr.Add(img, meta, roi);
-	}
-      else
-        _alg_mgr.Add(img, meta);
+      auto const& roi  = _img_mgr.roi_at(plane);
+      _alg_mgr.Add(img, meta, roi);
+
     }
-
+    
     _alg_mgr.Process();
-
+    
     watch_one.Start();
+
     this->store_clusters(storage);
+    
     _process_time_cluster_storage += watch_one.WallTime();
 
     _process_time_analyze += watch_all.WallTime();
@@ -122,7 +127,7 @@ namespace larlite {
 
     storage->set_id(storage->run_id(), storage->subrun_id(), storage->event_id());
 
-    AnalyzeImageCluster(storage);
+    //AnalyzeImageCluster(storage);
 
     return true;
   }
@@ -207,7 +212,6 @@ namespace larlite {
 	continue;
       }
 
-      // std::cout << "_num_clustered_hits : " << _num_clustered_hits << "\n";
       _num_clustered_hits += 1;
 
       cluster_hit_ass[cid].push_back(hindex);
@@ -216,23 +220,33 @@ namespace larlite {
     auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
     auto ev_hit_ass = storage->get_data<event_ass>    ("ImageClusterHit");
     auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
+
+
+    ::larlite::event_user* ev_user;
+    if (_store_contours)
+      ev_user = storage->get_data<event_user> ("ImageClusterHit");
+	
     // save ROI & vertices if available
     // and grab the associated vertex
-    ::larlite::event_PiZeroROI* ev_roi = nullptr;
+
+    //::larlite::event_PiZeroROI* ev_roi = nullptr;
+
     ::larlite::event_vertex* ev_vtx = nullptr;
-    ev_roi = storage->get_data<event_PiZeroROI>("pizerofilter");
-    AssSet_t ass_vtx_v;
-    if (ev_roi and (ev_roi->size() != 0) ) {
-      ass_vtx_v = storage->find_one_ass(ev_roi->id(), ev_vtx, ev_roi->name());
-      // get associations for 1st ROI
-      if (ass_vtx_v.size() != 0) {
-	for (size_t i = 0; i < _num_clusters; i++) {
-	  cluster_vtx_ass.push_back( ass_vtx_v[0] );
-	}
-      }// if associated vertices exist
-    }// if PiZeroROI is found
+
+    // ev_roi = storage->get_data<event_PiZeroROI>("pizerofilter");
+    // AssSet_t ass_vtx_v;
+    // if (ev_roi and (ev_roi->size() != 0) ) {
+    //   ass_vtx_v = storage->find_one_ass(ev_roi->id(), ev_vtx, ev_roi->name());
+    //   // get associations for 1st ROI
+    //   if (ass_vtx_v.size() != 0) {
+    // 	for (size_t i = 0; i < _num_clusters; i++) {
+    // 	  cluster_vtx_ass.push_back( ass_vtx_v[0] );
+    // 	}
+    //   }// if associated vertices exist
+    // }// if PiZeroROI is found
 
     if (ev_cluster) {
+      
       ev_cluster->reserve(_num_clusters);
 
       for (size_t cid = 0; cid < _num_clusters; ++cid) {
@@ -275,15 +289,29 @@ namespace larlite {
 
 	// add to event_cluster
 	ev_cluster->push_back(c);
+
+	if (!_store_contours) continue;
+	
+	::larlite::user_info uinfo{};
+	  
+	for(const auto& point : imgclus._contour) {
+	  double x = imgclus.XtoTimeTick(point.x);
+	  double y = imgclus.YtoWire(point.y);
+	  uinfo.append("x",x);
+	  uinfo.append("y",y);
+	}
+	ev_user->emplace_back(uinfo);
+	
       }
 
+      
       // if we have crated a cluster -> hit association
       if (ev_hit_ass)
 	ev_hit_ass->set_association(ev_cluster->id(), ev_hit->id(), cluster_hit_ass);
 
       // if we have created a cluster -> vertex association
       // if (ev_vtx_ass)
-      //  ev_vtx_ass->set_association(ev_cluster->id(), ev_vtx->id(), cluster_vtx_ass);
+      // ev_vtx_ass->set_association(ev_cluster->id(), ev_vtx->id(), cluster_vtx_ass);
 
     }
 
