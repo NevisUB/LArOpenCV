@@ -249,7 +249,7 @@ namespace larocv {
 	  meta_v.push_back(meta);
 	  clusters_v.emplace_back(alg_ptr->Process(clusters,img,meta_v.back(),roi));
 
-	  if(_make_roi) roi_v.push_back(roi);
+	  roi_v.push_back(roi);
 	  
 	}else{
 
