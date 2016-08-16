@@ -30,7 +30,9 @@ namespace larlite {
 
     _make_roi = pset.get<bool>("MakeROI");
     
-    //_store_contours = pset.get<bool>("StoreContours");
+    _time_offset = pset.get<float>("TimeOffset");
+    _t_window_max = pset.get<float>("WindowTMax");
+    _t_window_min = pset.get<float>("WindowTMin");
 
     _debug = pset.get<bool>("Debug");
     
@@ -122,15 +124,29 @@ namespace larlite {
         TVector3 vtxXYZ( vtx.X(), vtx.Y(), vtx.Z() );
         auto vtxWT  = geomH->Point_3Dto2D(vtxXYZ,plane);
         auto vtx_w = vtxWT.w / geomH->WireToCm();
-        auto vtx_t = vtxWT.t / geomH->TimeToCm() + 800;
+        auto vtx_t = vtxWT.t / geomH->TimeToCm() + _time_offset ;
 
-	LAROCV_DEBUG((*this)) << "Got vertex point (w,t): " << vtx_w << "," << vtx_t << ")\n";
-	std::cout << "Got vertex point (w,t): " << vtx_w << "," << vtx_t << ")\n";
+
+        float upper_w(3456);
+        float lower_w = ( vtx_w - buffer_w < 0 ? 0 : vtx_w - buffer_w );
+        float upper_t = ( vtx_t + buffer_t > _t_window_max ? _t_window_max : vtx_t + buffer_t );
+        float lower_t = ( vtx_t - buffer_t < _t_window_min ? _t_window_min : vtx_t - buffer_t );
+
+        if( plane == 0 || plane == 1)
+          upper_w = ( vtx_w + buffer_w > 2400 ? 2400 : vtx_w + buffer_w );
+        else 
+          upper_w = ( vtx_w + buffer_w > 3456 ? 3456 : vtx_w + buffer_w );
+
+	LAROCV_DEBUG((*this)) << "Got vertex point (w,t): (" << vtx_w << "," << vtx_t << ")\n";
+	std::cout << "Got vertex point (w,t): (" << vtx_w << "," << vtx_t << ")\n";
 	
-        roi_bounds.emplace_back(larocv::Point2D(vtx_w - buffer_w, vtx_t - buffer_t)); ///< origin
-        roi_bounds.emplace_back(larocv::Point2D(vtx_w - buffer_w, vtx_t + buffer_t));
-        roi_bounds.emplace_back(larocv::Point2D(vtx_w + buffer_w, vtx_t + buffer_t));
-        roi_bounds.emplace_back(larocv::Point2D(vtx_w + buffer_w, vtx_t - buffer_t));
+        roi_bounds.emplace_back(larocv::Point2D(lower_w, upper_t)); ///< origin
+        roi_bounds.emplace_back(larocv::Point2D(lower_w, lower_t));
+        roi_bounds.emplace_back(larocv::Point2D(upper_w, lower_t));
+        roi_bounds.emplace_back(larocv::Point2D(upper_w, upper_t));
+
+        //for(int i=0; i < roi_bounds.size(); i++)
+        //  std::cout<<"Bounds: "<<roi_bounds[i].x<<", "<<roi_bounds[i].y<<std::endl ;
 
 	roi.setorigin(vtx_w - buffer_w,vtx_t - buffer_t);
 	roi.setvtx(vtx_w,vtx_t);
@@ -138,13 +154,21 @@ namespace larlite {
       }
 
       // no matter what we have to send ROI... it can go to the algorithm blank, that's fine
-      if ( nwires >= 1e10 || nticks >= 1e10 )
-	_img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta(), ::larocv::ROI());
-      else
-	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,roi);
-      
-    }
-    
+      // If we don't want to use ROI, need to pass blanks
+      if ( _make_roi ){
+        if (nwires >= 1e10 || nticks >= 1e10)
+          _img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta(),::larocv::ROI());
+        else 
+          _img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,roi);
+         }   
+       else{
+         if (nwires >= 1e10 || nticks >= 1e10)
+          _img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta(),::larocv::ROI());
+         else 
+          _img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,::larocv::ROI());
+        }   
+      }   
+
     for (auto const& h : *ev_hit) {
 
       auto const& wid = h.WireID();

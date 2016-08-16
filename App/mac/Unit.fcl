@@ -18,8 +18,11 @@ Verbosity: 0
   Q2Gray: 10
   QMin: 5
 
-  MakeROI: false
   Debug: true
+  MakeROI: false
+  TimeOffset : 800
+  WindowTMax : 6399
+  WindowTMin : 0
 
 }
 

@@ -247,8 +247,9 @@ namespace larocv {
 
 	  Cluster2DArray_t clusters;
 	  meta_v.push_back(meta);
-	  roi_v.push_back(roi);
 	  clusters_v.emplace_back(alg_ptr->Process(clusters,img,meta_v.back(),roi));
+
+	  roi_v.push_back(roi);
 	  
 	}else{
 
