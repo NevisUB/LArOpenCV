@@ -212,7 +212,8 @@ namespace larocv {
 
       auto const& meta = _raw_meta_v[img_index];
       auto const& img  = _raw_img_v[img_index];
-      auto & roi  = _raw_roi_v[img_index];
+      if(_raw_roi_v.size() )
+        auto & roi  = _raw_roi_v[img_index];
 
       if(meta.num_pixel_row()!=img.rows)
 	throw larbys("Provided metadata has incorrect # horizontal pixels w.r.t. image!");
@@ -229,7 +230,8 @@ namespace larocv {
 	auto& alg_ptr    = _cluster_alg_v[alg_index];
 	auto& meta_v     = _meta_v_v[alg_index];
 	auto& clusters_v = _clusters_v_v[alg_index];
-	auto& roi_v     = _roi_v_v[alg_index];
+	if( _roi_v_v.size() )
+	  auto& roi_v     = _roi_v_v[alg_index];
 	
 	if(!alg_ptr) throw larbys("Invalid algorithm pointer!");
 	
@@ -237,8 +239,9 @@ namespace larocv {
 	  
 	  Cluster2DArray_t clusters;
 	  meta_v.push_back(meta);
-	  roi_v.push_back(roi);
 	  clusters_v.emplace_back(alg_ptr->Process(clusters,img,meta_v.back(),roi));
+
+	  if(_make_roi) roi_v.push_back(roi);
 	  
 	}else{
 
@@ -247,7 +250,8 @@ namespace larocv {
 	  auto prev_roi  = _roi_v_v[alg_index-1][img_index];
 	  clusters_v.emplace_back(alg_ptr->Process(prev_clusters,img,prev_meta,roi));
 	  meta_v.push_back(prev_meta);
-	  roi_v.push_back(prev_roi);
+
+	  if(_make_roi) roi_v.push_back(prev_roi);
 	  
 	}
 	
