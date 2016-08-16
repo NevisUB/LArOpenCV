@@ -28,8 +28,7 @@ namespace larocv {
     
     /// Default constructor
     PCAOverall(const std::string name="PCAOverall") :
-      ClusterAlgoBase(name),
-      _nMinInsideHits(0)
+      ClusterAlgoBase(name)
     {}
     
     /// Default destructor
@@ -49,8 +48,6 @@ namespace larocv {
 				      larocv::ImageMeta& meta, larocv::ROI& roi);
     
   private:
-
-    int _nMinInsideHits;
     
   };
   

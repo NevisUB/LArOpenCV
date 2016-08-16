@@ -9,7 +9,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class larocv::PiZeroFilter+;
+//#pragma link C++ class larocv::PiZeroFilter+;
 #pragma link C++ class larocv::PiZeroFilterV+;
 #pragma link C++ class larocv::CheckStartDistance+;
 #pragma link C++ class larocv::SimpleCuts+;
