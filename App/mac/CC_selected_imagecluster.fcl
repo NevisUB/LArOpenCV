@@ -8,7 +8,7 @@ LArImageHit: {
   Producer: gaushit
 
   # LArImageHit config
-  PoolTimeTick: 0
+  PoolTimeTick: 7
   
   VertexProducer: numuCC_vertex
 

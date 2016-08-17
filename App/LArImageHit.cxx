@@ -141,8 +141,8 @@ namespace larlite {
         roi_bounds.emplace_back(upper_w, lower_t);
         roi_bounds.emplace_back(upper_w, upper_t);
 
-        for(int i=0; i < roi_bounds.size(); i++)
-          std::cout<<"Bounds: "<<roi_bounds[i].x<<", "<<roi_bounds[i].y<<std::endl ;
+        // for(int i=0; i < roi_bounds.size(); i++)
+        //   std::cout<<"Bounds: "<<roi_bounds[i].x<<", "<<roi_bounds[i].y<<std::endl ;
 
 	roi.setorigin(vtx_w - buffer_w,vtx_t - buffer_t);
 	roi.setvtx(vtx_w,vtx_t);
