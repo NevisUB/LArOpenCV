@@ -105,6 +105,7 @@ namespace larocv {
     //***Debug Mode
     
     std::stringstream ss_x,ss_y;
+    std::stringstream bb_x,bb_y;
 
     ::larlite::user_info uinfo{};
 
@@ -129,6 +130,21 @@ namespace larocv {
       ss_y.clear();
 	
     }    
+
+    bb_x  << "roi_bounds"<< "_" << meta.plane() << "_w";
+    bb_y  << "roi_bounds"<< "_" << meta.plane() << "_t";
+
+    for ( size_t b = 0; b < roi.roibounds().size(); b++){
+      
+      auto c = roi.roibounds()[b];
+      auto w = c.x ; //meta.XtoTimeTick(c.x);
+      auto t = c.y ; //meta.YtoWire(c.y);
+      
+      uinfo.append(bb_x.str(),w);
+      uinfo.append(bb_y.str(),t);
+
+      }
+
     meta.ev_user()->emplace_back(uinfo);
 
     return result_v;
