@@ -1,6 +1,6 @@
 LArImageHit: {
 
-Verbosity: 0
+  Verbosity: 2
   # LArImageClusterBase config
 
   Profile: true
@@ -8,10 +8,12 @@ Verbosity: 0
   Producer: gaushit
 
   # LArImageHit config
-  PoolTimeTick: 6
+  PoolTimeTick: 0
   
   VertexProducer: numuCC_vertex
 
+  CropROI: true
+  
   ROIBufferW : 100
   ROIBufferT : 100
   
@@ -29,7 +31,7 @@ Verbosity: 0
 
 ImageClusterManager: {
 
-  Verbosity: 0
+  Verbosity: 2
   Profile:   true
   ClusterAlgoType:  [SBCluster]
   ClusterAlgoName:  [sbc]
@@ -43,16 +45,13 @@ ImageClusterManager: {
   ReClusterAlgoName: ""
 
  ImageClusterViewer: {
-
    Verbosity: 0
    Width:  800
    Height: 800
    MinContourArea: 0
-   
  }
 
  sbc : {
-   Verbosity: 0
    DilationSize : 5
    DilationIterations : 2
    BlurSize : 5

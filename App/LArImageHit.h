@@ -76,6 +76,8 @@ namespace larlite {
     float _time_offset ;
     float _t_window_max ;
     float _t_window_min ;
+
+    bool _crop_w_roi;
     
   };
 }

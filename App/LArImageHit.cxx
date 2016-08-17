@@ -22,19 +22,20 @@ namespace larlite {
     _charge_threshold = pset.get<double>("QMin");
     _pool_time_tick = pset.get<int>("PoolTimeTick");
 
-
     _vtx_producer  = pset.get<std::string>("VertexProducer");
 
     _roi_buffer_w = pset.get<float>("ROIBufferW");
     _roi_buffer_t = pset.get<float>("ROIBufferT");
 
     _make_roi = pset.get<bool>("MakeROI");
+    _crop_w_roi = pset.get<bool>("CropROI");
     
     _time_offset = pset.get<float>("TimeOffset");
     _t_window_max = pset.get<float>("WindowTMax");
     _t_window_min = pset.get<float>("WindowTMin");
 
     _debug = pset.get<bool>("Debug");
+
     
   }
 
@@ -77,8 +78,6 @@ namespace larlite {
     std::vector<std::pair<size_t, size_t>> wire_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
     std::vector<std::pair<size_t, size_t>> tick_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
 
-    LAROCV_DEBUG((*this)) << "Not using ROI\n";
-
     for (auto const& h : *ev_hit) {
       if (h.Integral() < _charge_threshold) continue;
 
@@ -99,20 +98,17 @@ namespace larlite {
 
     for (size_t plane = 0; plane < nplanes; ++plane) {
 
-      auto const& wire_range = wire_range_v[plane];
-      auto const& tick_range = tick_range_v[plane];
+      auto & wire_range = wire_range_v[plane];
+      auto & tick_range = tick_range_v[plane];
+
       size_t nticks = tick_range.second - tick_range.first + 2;
       size_t nwires = wire_range.second - wire_range.first + 2;
-      ::larocv::ImageMeta meta((double)nwires, (double)nticks, nwires, nticks,
-			       wire_range.first, tick_range.first, plane);
-
-
-      if (_debug) meta.set_debug(true);
       
       ::larocv::ROI roi;
 
       if ( _make_roi ){
-        auto ev_vertex = storage->get_data<event_vertex>(_vtx_producer);
+
+	auto ev_vertex = storage->get_data<event_vertex>(_vtx_producer);
         if (ev_vertex == nullptr || !ev_vertex->size() )
           throw DataFormatException("Could not locate vertex data product!");
 
@@ -122,11 +118,12 @@ namespace larlite {
         auto buffer_t =  _roi_buffer_t / geomH->TimeToCm(); // 70cm
 
         TVector3 vtxXYZ( vtx.X(), vtx.Y(), vtx.Z() );
-        auto vtxWT  = geomH->Point_3Dto2D(vtxXYZ,plane);
+
+	auto vtxWT  = geomH->Point_3Dto2D(vtxXYZ,plane);
+	
         auto vtx_w = vtxWT.w / geomH->WireToCm();
         auto vtx_t = vtxWT.t / geomH->TimeToCm() + _time_offset ;
-
-
+	
         float upper_w(3456);
         float lower_w = ( vtx_w - buffer_w < 0 ? 0 : vtx_w - buffer_w );
         float upper_t = ( vtx_t + buffer_t > _t_window_max ? _t_window_max : vtx_t + buffer_t );
@@ -138,12 +135,11 @@ namespace larlite {
           upper_w = ( vtx_w + buffer_w > 3456 ? 3456 : vtx_w + buffer_w );
 
 	LAROCV_DEBUG((*this)) << "Got vertex point (w,t): (" << vtx_w << "," << vtx_t << ")\n";
-	std::cout << "Got vertex point (w,t): (" << vtx_w << "," << vtx_t << ")\n";
-	
-        roi_bounds.emplace_back(larocv::Point2D(lower_w, upper_t)); ///< origin
-        roi_bounds.emplace_back(larocv::Point2D(lower_w, lower_t));
-        roi_bounds.emplace_back(larocv::Point2D(upper_w, lower_t));
-        roi_bounds.emplace_back(larocv::Point2D(upper_w, upper_t));
+		
+        roi_bounds.emplace_back(lower_w, upper_t); ///< origin
+        roi_bounds.emplace_back(lower_w, lower_t);
+        roi_bounds.emplace_back(upper_w, lower_t);
+        roi_bounds.emplace_back(upper_w, upper_t);
 
         //for(int i=0; i < roi_bounds.size(); i++)
         //  std::cout<<"Bounds: "<<roi_bounds[i].x<<", "<<roi_bounds[i].y<<std::endl ;
@@ -151,23 +147,32 @@ namespace larlite {
 	roi.setorigin(vtx_w - buffer_w,vtx_t - buffer_t);
 	roi.setvtx(vtx_w,vtx_t);
 	roi.setbounds(roi_bounds);
-      }
 
+	//std::vector<std::pair<size_t, size_t>> wire_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
+	//std::vector<std::pair<size_t, size_t>> tick_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
+
+	if (_crop_w_roi) {
+	  wire_range = {lower_w,upper_w};
+	  tick_range = {lower_t,upper_t};
+	  nticks = tick_range.second - tick_range.first + 2;
+	  nwires = wire_range.second - wire_range.first + 2;
+	}
+	
+      }
+      
+      ::larocv::ImageMeta meta((double)nwires, (double)nticks, nwires, nticks,
+			       wire_range.first, tick_range.first, plane);
+      
+      if (_debug) meta.set_debug(true);
+      
       // no matter what we have to send ROI... it can go to the algorithm blank, that's fine
       // If we don't want to use ROI, need to pass blanks
-      if ( _make_roi ){
-        if (nwires >= 1e10 || nticks >= 1e10)
-          _img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta(),::larocv::ROI());
-        else 
-          _img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,roi);
-         }   
-       else{
-         if (nwires >= 1e10 || nticks >= 1e10)
-          _img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta(),::larocv::ROI());
-         else 
-          _img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,::larocv::ROI());
-        }   
-      }   
+      if (nwires >= 1e10 || nticks >= 1e10)
+	_img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta(),::larocv::ROI());
+      else 
+	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,roi);
+	
+    }   
 
     for (auto const& h : *ev_hit) {
 
@@ -230,10 +235,13 @@ namespace larlite {
 	auto const& wire_range = wire_range_v[plane];
 	auto const& tick_range = tick_range_v[plane];
 
+
+	//copy pooled image into image
 	img = pooled;
-	meta = ::larocv::ImageMeta((double)pooled.rows, (double)pooled.cols * _pool_time_tick,
-				   pooled.rows, pooled.cols, wire_range.first, tick_range.first, plane);
+	meta = ::larocv::ImageMeta ((double)pooled.rows, (double)pooled.cols * _pool_time_tick,
+				    pooled.rows, pooled.cols, wire_range.first, tick_range.first, plane);
 	
+
 	if (_debug) meta.set_debug(true);
 	
 	if (_make_roi){
@@ -244,7 +252,8 @@ namespace larlite {
 	  auto delta_origin_t = (roi.origin().y - tick_range.first) / _pool_time_tick ;
 	  auto new_origin_t   = tick_range.first + delta_origin_t ; 
 
-	  roi = ::larocv::ROI( roi.width(), roi.height() / _pool_time_tick, roi.origin().x, new_origin_t, plane);
+	  roi = ::larocv::ROI( roi.width(), roi.height() / _pool_time_tick,
+			       roi.origin().x, new_origin_t, plane);
 
 	  auto delta_vtx_t = (old_vtx.y - tick_range.first) / _pool_time_tick ;
 	  auto new_vtx_t   = tick_range.first + delta_vtx_t ; 
@@ -255,18 +264,13 @@ namespace larlite {
 
           // First entry is always the lower left corner (origin)
           for(size_t b = 0; b < old_bb.size(); b++ ){
-
             auto delta_bb_t = (old_bb[b].y - tick_range.first) / _pool_time_tick ;
             auto new_bb_t   = tick_range.first + delta_bb_t ; 
             pool_bounds.emplace_back(old_bb[b].x,new_bb_t);
-            std::cout<<pool_bounds[b].x<<", "<<pool_bounds[b].y<<std::endl ;
-
-            }   
-
-           roi.setbounds(pool_bounds);
-
+            LAROCV_DEBUG((*this))<<"("<<pool_bounds[b].x<<", "<<pool_bounds[b].y<<")\n";
+	  }   
+	  roi.setbounds(pool_bounds);
 	}
-      
       }
     }
   }
