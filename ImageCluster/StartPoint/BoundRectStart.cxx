@@ -10,8 +10,8 @@ namespace larocv {
 
   void BoundRectStart::_Configure_(const ::fcllite::PSet &pset)
   {
-    _nDivWidth = pset.get<int> ( "NDivWidth" );
-    _cutbadreco = pset.get<bool>( "CutBadReco");
+    _nDivWidth = pset.get<int>("NDivWidth");
+    _cutbadreco = pset.get<bool>("CutBadReco");
 
     if ( _nDivWidth % 2 != 0 ) { std::cout << "\n\tNDivWidth must be even!\n"; throw std::exception(); }
   }
@@ -22,11 +22,9 @@ namespace larocv {
   {
 
     /*
-
       Extend on Ariana's track shower module to include segmentation. Segment the box long ways
       calculate the linearity, and total charge in each box. Maximize the product of the two
       then the point farthest from the center is the start point
-
     */
 
     Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );

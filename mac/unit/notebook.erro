@@ -1,0 +1,49 @@
+[W 09:01:39.786 NotebookApp] Widgets are unavailable. Please install widgetsnbextension or ipywidgets 4.0
+[I 09:01:39.800 NotebookApp] Serving notebooks from local directory: /Users/vgenty/sw/laropencv/mac/unit
+[I 09:01:39.800 NotebookApp] 0 active kernels 
+[I 09:01:39.800 NotebookApp] The Jupyter Notebook is running at: http://localhost:8888/
+[I 09:01:39.800 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[I 09:02:00.500 NotebookApp] Kernel started: 7287c347-6263-4c4a-ba0f-933e0eaac6cc
+[W 09:02:00.528 NotebookApp] 404 GET /nbextensions/widgets/notebook/js/extension.js?v=20160817090139 (::1) 17.10ms referer=http://localhost:8888/notebooks/realistic_fake_pi0_maker.ipynb
+[I 09:04:00.482 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 09:08:00.474 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 09:10:00.471 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 09:12:00.468 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 09:12:00.513 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 09:12:00.759 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 09:12:00.921 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 11:05:36.498 NotebookApp] KernelRestarter: restarting kernel (1/5)
+[I 11:32:15.244 NotebookApp] 302 GET / (::1) 0.47ms
+[W 11:32:17.681 NotebookApp] 404 GET /nbextensions/widgets/notebook/js/extension.js?v=20160817090139 (::1) 1.79ms referer=http://localhost:8888/notebooks/realistic_fake_pi0_maker.ipynb
+[I 11:34:18.149 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 11:36:17.685 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 11:38:17.680 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 11:40:17.674 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 11:42:17.676 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 11:42:37.225 NotebookApp] Kernel interrupted: 7287c347-6263-4c4a-ba0f-933e0eaac6cc
+[I 11:43:47.512 NotebookApp] Kernel interrupted: 7287c347-6263-4c4a-ba0f-933e0eaac6cc
+[I 11:44:17.666 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 11:44:29.089 NotebookApp] Kernel interrupted: 7287c347-6263-4c4a-ba0f-933e0eaac6cc
+[I 11:46:17.662 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 11:48:17.665 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 11:50:17.913 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 11:52:17.659 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 11:54:17.657 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 11:56:17.650 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 11:58:17.647 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 12:00:17.646 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 12:02:17.637 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 12:04:17.640 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 12:04:31.489 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 12:04:31.608 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 12:04:39.508 NotebookApp] KernelRestarter: restarting kernel (1/5)
+[I 12:30:24.776 NotebookApp] 302 GET / (::1) 0.42ms
+[W 12:30:26.884 NotebookApp] 404 GET /nbextensions/widgets/notebook/js/extension.js?v=20160817090139 (::1) 1.52ms referer=http://localhost:8888/notebooks/realistic_fake_pi0_maker.ipynb
+[I 12:30:28.591 NotebookApp] Kernel restarted: 7287c347-6263-4c4a-ba0f-933e0eaac6cc
+[I 12:30:29.508 NotebookApp] Kernel restarted: 7287c347-6263-4c4a-ba0f-933e0eaac6cc
+[W 12:30:30.006 NotebookApp] Replacing stale connection: 7287c347-6263-4c4a-ba0f-933e0eaac6cc:0A5AE843E0174ABB970F1B165BFF0C0C
+[I 12:32:26.887 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 12:34:26.883 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb
+[I 13:51:05.481 NotebookApp] 302 GET / (::1) 0.39ms
+[W 13:51:08.030 NotebookApp] 404 GET /nbextensions/widgets/notebook/js/extension.js?v=20160817090139 (::1) 1.46ms referer=http://localhost:8888/notebooks/realistic_fake_pi0_maker.ipynb
+[I 13:51:51.900 NotebookApp] Saving file at /realistic_fake_pi0_maker.ipynb

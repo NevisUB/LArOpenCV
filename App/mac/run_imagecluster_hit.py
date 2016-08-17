@@ -29,7 +29,8 @@ myunit = fmwk.LArImageHit()
 myunit.set_config(cfg)
 my_proc.add_process(myunit)
 
-my_proc.run()
+#my_proc.run()
+my_proc.run(1,1)
              
 
 sys.exit(0)

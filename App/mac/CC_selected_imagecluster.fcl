@@ -1,0 +1,65 @@
+LArImageHit: {
+
+Verbosity: 0
+  # LArImageClusterBase config
+
+  Profile: true
+  StoreOriginalImage: false
+  Producer: gaushit
+
+  # LArImageHit config
+  PoolTimeTick: 6
+  
+  VertexProducer: numuCC_vertex
+
+  ROIBufferW : 100
+  ROIBufferT : 100
+  
+  Q2Gray: 10
+  QMin: 5
+
+  Debug: true
+  MakeROI: true
+
+  TimeOffset : 800
+  WindowTMax : 6399
+  WindowTMin : 0
+
+}
+
+ImageClusterManager: {
+
+  Verbosity: 0
+  Profile:   true
+  ClusterAlgoType:  [SBCluster]
+  ClusterAlgoName:  [sbc]
+
+  ShowImage: false
+
+  MatchAlgoType: ""
+  MatchAlgoName: ""
+
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
+
+ ImageClusterViewer: {
+
+   Verbosity: 0
+   Width:  800
+   Height: 800
+   MinContourArea: 0
+   
+ }
+
+ sbc : {
+   Verbosity: 0
+   DilationSize : 5
+   DilationIterations : 2
+   BlurSize : 5
+   Thresh : 1
+   ThreshMaxVal : 255
+  }
+
+  pcao: { }
+ 
+}
