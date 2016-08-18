@@ -88,7 +88,8 @@ namespace larocv {
       new_clus._numHits   = 0 ;
       new_clus._sumCharge = 0 ;
       new_clus._angle2D   = min_rect.angle;
-      
+      new_clus._centerPt  = Point2D(min_rect.center.x,min_rect.center.y);
+	
       std::swap(new_clus._contour,contour);
        
       result_v.emplace_back(new_clus);

@@ -32,31 +32,21 @@ namespace larocv {
     for (size_t k = 0; k < clusters.size(); k++) {
 
       Cluster2D ocluster = clusters[k];
-      auto& contour      = ocluster._contour;
 
-      if ( ocluster._numHits == 0 ) throw larbys();
+      if ( ocluster._numHits == 0 ) throw larbys("Somehow this cluster has no hits, why?");
 
       // use bounding box considerations to define start point, fill the vertices vector
-      auto bbox = ::cv::minAreaRect(contour);
-      ocluster._boundingBox = bbox.boundingRect();
-
-      ::cv::Point2f verticies[4];
-      bbox.points(verticies);
-
-      // turn verticies vector into std::vector
-      std::vector<::cv::Point2f> v; v.resize(4);
-      for (int r = 0; r < 4; ++r) v[r] = verticies[r];
-
-      //give ocluster the minimum area rectangle
-      std::swap(v, ocluster._minAreaRect);
+      auto& bbox = ocluster._minAreaBox;
 
       //set the center points as the center of this box
       ocluster._centerPt  = Point2D(bbox.center.x, bbox.center.y);
 
       // handles to few variables
       auto& center  = ocluster._centerPt;
-      auto& angle   = bbox.angle;
+      auto& angle   = ocluster._angle2D;
 
+      auto v = ocluster._minAreaRect;
+      
       std::vector<::cv::RotatedRect> divisions;
       divisions.resize(_nDivWidth);
 
@@ -86,8 +76,8 @@ namespace larocv {
       auto cx = center.x - (N / 2 - 0.5) * dx;
       auto cy = center.y - (N / 2 - 0.5) * dy;
 
-      auto& vvv = ocluster._verts;
-      vvv.clear(); vvv.resize(N);
+      std::vector<std::vector<::cv::Point2f> > vvv;
+      vvv.resize(N);
 
       for (unsigned i = 0; i < N; ++i) {
         auto& vv = vvv[i];
@@ -117,7 +107,7 @@ namespace larocv {
 
         //which ones are in this segment
         for ( unsigned i = 0; i < divisions.size(); ++i ) {
-          auto& div = ocluster._verts[i];
+          auto& div = vvv[i];
 
           if ( ::cv::pointPolygonTest(div, h, false) >= 0 ) {
             tot_charge[i] += (int) img.at<uchar>(h.y, h.x);

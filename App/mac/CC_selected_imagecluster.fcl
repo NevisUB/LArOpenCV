@@ -30,8 +30,8 @@ ImageClusterManager: {
 
   Verbosity: 2
   Profile:   true
-  ClusterAlgoType:  [SBCluster,SimpleCuts,PCAOverall,ClusterWriteOut]
-  ClusterAlgoName:  [sbc,sc,pcao,cwo]
+  ClusterAlgoType: [SBCluster,SimpleCuts,PCAOverall,BoundRectStart,RecoParameters,ClusterWriteOut]
+  ClusterAlgoName: [sbc,sc,pcao,brs,rp,cwo]
 
   ShowImage: false
 
@@ -63,7 +63,7 @@ ImageClusterManager: {
 
   sc : {
 
-   MinHits : 3
+   MinHits : 10
    MinArea : -1
    MinPerimieter : -1
    MinCharge :-1
@@ -74,6 +74,13 @@ ImageClusterManager: {
 
   cwo : {
   Verbosity : 0
-}
+  }
+
+   rp : {}
+
+   brs : {
+    CutBadReco : 1
+    NDivWidth : 2
+  } 
 
 }

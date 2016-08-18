@@ -26,8 +26,8 @@ namespace larocv{
 	       e_val_first,e_val_second,
 	       e_center);
 
-      ocluster._eigenVecFirst = e_vec_first;
-      ocluster._centerPt = e_center;
+      //ocluster._eigenVecFirst = e_vec_first;
+      //ocluster._centerPt = e_center;
 	
       auto& reco = ocluster.reco;
       reco.dir   = e_vec_first;
