@@ -17,11 +17,6 @@ namespace larocv {
 
     Cluster2DArray_t roi_clusters; roi_clusters.reserve(clusters.size());
 
-
-    auto pi0_st = roi.roivtx();
-    if ( pi0_st.x == ::larocv::kINVALID_DOUBLE ) { std::cout << "BAD VTX\n"; throw std::exception(); }
-    LAROCV_DEBUG((*this)) << "Got VTX: (" << pi0_st.x << "," << pi0_st.y << ")\n";
-
     auto pi0st = roi.roivtx_in_image(meta);
     
     LAROCV_DEBUG((*this)) << "In image coords: (" << pi0st.x << "," << pi0st.y << ")\n";

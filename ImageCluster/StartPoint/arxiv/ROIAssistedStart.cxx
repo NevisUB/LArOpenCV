@@ -139,15 +139,11 @@ namespace larocv{
         for ( unsigned j = 0; j < divisions.size(); ++j ) {
 
           auto& div = ocluster._verts[j];
-
-          if ( ::cv::pointPolygonTest(div, hit, false) >= 0 ) 
-	    
-            { insides[j].emplace_back(hit); ++count; }
 	  
+          if ( ::cv::pointPolygonTest(div, hit, false) >= 0 ) 
+            { insides[j].emplace_back(hit); ++count; }
 	}
-
       }
-            
       
       //which side of the bounding rectangle is it on? f_half
       unsigned j = 0;
