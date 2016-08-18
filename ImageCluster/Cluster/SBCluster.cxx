@@ -9,13 +9,13 @@ namespace larocv {
   void SBCluster::_Configure_(const ::fcllite::PSet &pset)
   {
 
-    _dilation_size = pset.get<int> ("DilationSize");
-    _dilation_iter = pset.get<int> ("DilationIterations");
+    _dilation_size = pset.get<int>("DilationSize");
+    _dilation_iter = pset.get<int>("DilationIterations");
     
-    _blur_size     = pset.get<int> ("BlurSize");
+    _blur_size     = pset.get<int>("BlurSize");
     
-    _thresh        = pset.get<float> ("Thresh");
-    _thresh_maxval = pset.get<float> ("ThreshMaxVal");
+    _thresh        = pset.get<float>("Thresh");
+    _thresh_maxval = pset.get<float>("ThreshMaxVal");
 
   }
 
@@ -42,7 +42,7 @@ namespace larocv {
     //Threshold
     auto t_value = ::cv::threshold(sb_img,sb_img,
 				   _thresh,_thresh_maxval,CV_THRESH_BINARY); //return type is "threshold value?"
-
+    (void) t_value;
 
     //Contour finding
     ContourArray_t ctor_v;    
@@ -54,7 +54,8 @@ namespace larocv {
 		       CV_CHAIN_APPROX_SIMPLE);
 
     //Fill some cluster parameters 
-    Cluster2DArray_t result_v; result_v.reserve(ctor_v.size());
+    Cluster2DArray_t result_v;
+    result_v.reserve(ctor_v.size());
 
     ::larocv::Cluster2D new_clus ;
 
@@ -62,23 +63,35 @@ namespace larocv {
     
     for(size_t j = 0; j < ctor_v.size(); ++j){
 
-      cv::RotatedRect rect0 = ::cv::minAreaRect(cv::Mat(ctor_v[j]));
-      cv::Point2f vertices[4];
-      rect0.points(vertices);
-      auto rect = rect0.size;
-      std::vector<cv::Point2f> rectangle = { vertices[0], vertices[1],vertices[2],vertices[3] };
-      std::swap(new_clus._minAreaRect,rectangle);
+      auto& contour = ctor_v[j];
+      
+      new_clus._minAreaBox  = ::cv::minAreaRect(contour);
+      new_clus._boundingBox = ::cv::boundingRect(contour);
+      
+      auto& min_rect      = new_clus._minAreaBox;
+      auto& bounding_rect = new_clus._boundingBox;
+      
+      ::cv::Point2f vertices[4];
 
-      new_clus._area = ::cv::contourArea(ctor_v[j]) ;
-      new_clus._perimeter = ::cv::arcLength(ctor_v[j],1);
+      //rotated rect coordinates
+      min_rect.points(vertices);
+      new_clus._minAreaRect     = {vertices[0],vertices[1],vertices[2],vertices[3]};
+
+      //axis aligned rect coordinates
+      new_clus._minBoundingRect = {bounding_rect.br(),bounding_rect.tl()};
+
+      auto rect = min_rect.size;
+      new_clus._area      = ::cv::contourArea(contour) ;
+      new_clus._perimeter = ::cv::arcLength(contour,1);
       new_clus._length    = rect.height > rect.width ? rect.height : rect.width;
       new_clus._width     = rect.height > rect.width ? rect.width  : rect.height;
       new_clus._numHits   = 0 ;
       new_clus._sumCharge = 0 ;
+      new_clus._angle2D   = min_rect.angle;
       
-      std::swap(new_clus._contour,ctor_v[j]);
+      std::swap(new_clus._contour,contour);
        
-      result_v.push_back(new_clus);
+      result_v.emplace_back(new_clus);
     }
     
     Contour_t all_locations;
@@ -91,63 +104,14 @@ namespace larocv {
 	  continue;
 
 	result_v[i]._insideHits.emplace_back(loc.x, loc.y);
-	result_v[i]._numHits ++ ;
+	result_v[i]._numHits++;
 	result_v[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);
 	
       }   
     }
     
-    /// Debug mode is off, return the result
-    if (!meta.debug()) return result_v;
-
-
-    //***************************************************
-    //***Debug Mode
-    
-    std::stringstream ss_x,ss_y;
-    std::stringstream bb_x,bb_y;
-
-    ::larlite::user_info uinfo{};
-
-    for(size_t i = 0; i < result_v.size(); ++i){
-      const auto& imgclus = result_v[i];
-
-      ss_x  << Name() << "_" << meta.plane() << "_" << i << "_x";
-      ss_y  << Name() << "_" << meta.plane() << "_" << i << "_y";
-
-      for(const auto& point : imgclus._contour) {
-	double x = meta.XtoTimeTick(point.x);
-	double y = meta.YtoWire(point.y);
-	
-	uinfo.append(ss_x.str(),x);
-	uinfo.append(ss_y.str(),y);
-      }
-
-      ss_x.str(std::string());
-      ss_x.clear();
-
-      ss_y.str(std::string());
-      ss_y.clear();
-	
-    }    
-
-    bb_x  << "roi_bounds"<< "_" << meta.plane() << "_w";
-    bb_y  << "roi_bounds"<< "_" << meta.plane() << "_t";
-
-    for ( size_t b = 0; b < roi.roibounds().size(); b++){
-      
-      auto c = roi.roibounds()[b];
-      auto w = c.x ; //meta.XtoTimeTick(c.x);
-      auto t = c.y ; //meta.YtoWire(c.y);
-      
-      uinfo.append(bb_x.str(),w);
-      uinfo.append(bb_y.str(),t);
-
-      }
-
-    meta.ev_user()->emplace_back(uinfo);
-
     return result_v;
+
   }
  
 }

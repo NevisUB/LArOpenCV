@@ -111,6 +111,7 @@ namespace larocv {
     /// Angle of cluster
     double _angle2D;
 
+    /// Cone contour
     std::vector<::cv::Point> _cone_contour ;
 
     /// For track shower separtion
@@ -122,13 +123,21 @@ namespace larocv {
     //Reconstructed
     params reco;
     
+    /// Axis aligned bounding box
+    ::cv::Rect _boundingBox;
+
+    /// Rotated min area bounding box
+    ::cv::RotatedRect _minAreaBox;
+
     /// Verticies of the line minimum bounding rectangle
     std::vector<::cv::Point2f> _minAreaRect;
 
+    /// Verticies of the BoundingRect
+    std::vector<::cv::Point2f> _minBoundingRect;
+    
+    /// Forgot
     Polygon2D PolyObject;
-
-    ::cv::Rect _boundingBox;
-
+    
     /// Chosen points as the edge that contains the start point
     std::vector<::cv::Point2f> _chosen;
 
@@ -140,7 +149,7 @@ namespace larocv {
   private:
 
     ClusterID_t _cluster_id;
-    ImageID_t   _image_id;
+    ImageID_t  _image_id;
     size_t _plane_id;
     std::vector<larocv::ClusterID_t> _match_v;
     Point2D _origin;

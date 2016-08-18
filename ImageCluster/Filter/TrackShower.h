@@ -15,9 +15,9 @@
 #define __TRACKSHOWER_H__
 
 #include "ClusterAlgoBase.h"
-#include "TTree.h"
-//#include "ClusterParams.h"
 #include "ClusterAlgoFactory.h"
+#include "TTree.h"
+
 namespace larocv {
   /**
      \class TrackShower
@@ -43,8 +43,8 @@ namespace larocv {
 
     /// Process method
     larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
-				      const ::cv::Mat& img,
-				      larocv::ImageMeta& meta, larocv::ROI& roi);
+				       const ::cv::Mat& img,
+				       larocv::ImageMeta& meta, larocv::ROI& roi);
 
   private:
 

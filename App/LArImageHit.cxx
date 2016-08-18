@@ -212,7 +212,7 @@ namespace larlite {
 
 	auto& img  = _img_mgr.img_at(plane);
 	auto& meta = _img_mgr.meta_at(plane);
-	auto& roi  = _img_mgr.roi_at(plane);
+	//auto& roi  = _img_mgr.roi_at(plane);
 
 	::cv::Mat pooled(img.rows, img.cols / _pool_time_tick + 1, CV_8UC1,
 			 cvScalar(0.));

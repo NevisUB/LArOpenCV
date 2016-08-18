@@ -6,11 +6,12 @@
 namespace larocv {
 
   ImageClusterBase::ImageClusterBase(const std::string name)
-    : laropencv_base(name),
-      _name(name),
-      _proc_time(0.),
-      _proc_count(0),
-      _profile(true) {
+    : laropencv_base(name)
+    ,_proc_time(0.)
+    ,_proc_count(0)
+    ,_name(name)
+    ,_profile(true)
+{
     LAROCV_DEBUG((*this)) << "Constructed" << std::endl;
   }
 

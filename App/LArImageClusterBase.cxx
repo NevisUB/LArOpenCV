@@ -3,7 +3,6 @@
 
 #include "LArImageClusterBase.h"
 #include "LArUtil/Geometry.h"
-#include "LArUtil/GeometryHelper.h"
 #include "FhiclLite/ConfigManager.h"
 
 #include "DataFormat/rawdigit.h"
@@ -81,12 +80,24 @@ namespace larlite {
       // save data-products that would be created in store_clusters
       // this will prevent event mis-alignment
 
-      auto ev_cluster = storage->get_data<event_cluster>      ("ImageClusterHit");
-      auto ev_pfpart  = storage->get_data<event_pfpart>       ("ImageClusterHit");
-      auto ev_hit_ass = storage->get_data<event_ass>          ("ImageClusterHit");
-      auto ev_vtx_ass = storage->get_data<event_ass>          ("ImageClusterHit");
+      auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
+      auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
+      auto ev_hit_ass = storage->get_data<event_ass>    ("ImageClusterHit");
+      //auto ev_vtx     = storage->get_data<event_vertex> ("ImageClusterHit");
+      //auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
 
+      ::larlite::event_user* ev_user;
+      if (_debug)
+	ev_user = storage->get_data<event_user>("ImageClusterHit");
 
+      //silence compiler
+      (void)ev_cluster;
+      (void)ev_pfpart;
+      (void)ev_hit_ass;
+      (void)ev_user;
+      //(void)ev_vtx_ass;
+      //(void)ev_vtx;
+      
       storage->set_id(storage->run_id(), storage->subrun_id(), storage->event_id());
       return false;
     }
@@ -103,10 +114,12 @@ namespace larlite {
     }
     
     ::larlite::event_user* ev_user;
+
     if (_debug)
-      ev_user = storage->get_data<event_user>    ("ImageClusterHit");
+      ev_user = storage->get_data<event_user>("ImageClusterHit");
 
     for (size_t plane = 0; plane < _img_mgr.size(); ++plane) {
+
       auto const& img  = _img_mgr.img_at(plane);
       auto      & meta = _img_mgr.meta_at(plane);
       auto const& roi  = _img_mgr.roi_at(plane);
@@ -186,7 +199,6 @@ namespace larlite {
     }
 
     auto geom  = ::larutil::Geometry::GetME();
-    auto geomH = ::larutil::GeometryHelper::GetME();
 
     auto ev_hit = storage->get_data<event_hit>(producer());
 
@@ -225,14 +237,14 @@ namespace larlite {
 
     auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
     auto ev_hit_ass = storage->get_data<event_ass>    ("ImageClusterHit");
-    auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
+    //auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
 
     // save ROI & vertices if available
     // and grab the associated vertex
 
     //::larlite::event_PiZeroROI* ev_roi = nullptr;
 
-    ::larlite::event_vertex* ev_vtx = nullptr;
+    //::larlite::event_vertex* ev_vtx = nullptr;
 
     // ev_roi = storage->get_data<event_PiZeroROI>("pizerofilter");
     // AssSet_t ass_vtx_v;

@@ -3,8 +3,8 @@
 #
 
 # specific names for this package
-DICT  = LArOpenCV_AppDict
-SHLIB = libLArOpenCV_App.so
+DICT  = LArOpenCV_ImageClusterDebug
+SHLIB = libLArOpenCV_ImageClusterDebug.so
 SOURCES = $(filter-out $(DICT).cxx, $(wildcard *.cxx))
 FMWK_HEADERS = LinkDef.h $(DICT).h
 HEADERS = $(filter-out $(FMWK_HEADERS), $(wildcard *.h))
@@ -13,11 +13,14 @@ OBJECTS = $(SOURCES:.cxx=.o)
 # include options for this package
 INCFLAGS  = -I.                       #Include itself
 INCFLAGS += $(shell basictool-config --includes)
-INCFLAGS += $(shell larlite-config --includes)
 INCFLAGS += $(shell recotool-config --includes)
-INCFLAGS += -I$(LAROPENCV_BASEDIR)
+INCFLAGS += $(shell larlite-config --includes)
+INCFLAGS += $(shell python-config --includes)
+INCFLAGS += -I$(shell python -c "import numpy; print numpy.get_include()")
 INCFLAGS += -I$(OPENCV_INCDIR)
-#INCFLAGS += -I../
+INCFLAGS += -I$(LAROPENCV_BASEDIR)
+INCFLAGS += -I$(LAROPENCV_IMAGECLUSTERDIR)/Base
+INCFLAGS += -I$(LAROPENCV_IMAGECLUSTERDIR)/Util
 
 # platform-specific options
 OSNAME          = $(shell uname -s)
@@ -25,24 +28,12 @@ HOST            = $(shell uname -n)
 OSNAMEMODE      = $(OSNAME)
 
 LDFLAGS += -L$(shell python-config --prefix)/lib/
-LDFLAGS += $(shell basictool-config --libs)
-LDFLAGS += $(shell larlite-config --libs)
 LDFLAGS += $(shell python-config --ldflags)
+LDFLAGS += $(shell basictool-config --libs)
+LDFLAGS += $(shell recotool-config --libs)
+LDFLAGS += $(shell larlite-config --libs)
 LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc
-LDFLAGS += -L$(LARLITE_LIBDIR)
-
-LDFLAGS += -lLArOpenCV_ImageClusterBase
-LDFLAGS += -lLArOpenCV_ImageClusterCluster
-LDFLAGS += -lLArOpenCV_ImageClusterDirection
-LDFLAGS += -lLArOpenCV_ImageClusterUtil
-LDFLAGS += -lLArOpenCV_ImageClusterMatch
-LDFLAGS += -lLArOpenCV_ImageClusterMerge
-LDFLAGS += -lLArOpenCV_ImageClusterFilter
-LDFLAGS += -lLArOpenCV_ImageClusterReCluster
-LDFLAGS += -lLArOpenCV_ImageClusterStartPoint
-LDFLAGS += -lLArOpenCV_ImageClusterDebug
-
-LDFLAGS += -lLArOpenCV_Utils -lLArOpenCV_Core -lRecoTool_ClusterRecoUtil
+LDFLAGS += -L$(LARLITE_LIBDIR) -lLArOpenCV_Core -lLArOpenCV_Utils -lLArOpenCV_ImageClusterBase -lLArOpenCV_ImageClusterUtil -lRecoTool_ClusterRecoUtil -lRecoTool_ClusterRecoUtilAlg
 
 # call kernel specific compiler setup
 include $(LARLITE_BASEDIR)/Makefile/Makefile.${OSNAME}

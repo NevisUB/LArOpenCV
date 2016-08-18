@@ -494,11 +494,11 @@ namespace larocv {
 	continue;
       }
 
-      //std::cout<<"Inspecting a point ("<<x<<","<<y<<") ... ";
+      LAROCV_DEBUG((*this))<<"Inspecting a point ("<<x<<","<<y<<") ... ";
     
       auto pt = ::cv::Point2d((y-origin.y)/meta.pixel_height(), (x-origin.x)/meta.pixel_width()); 
 
-      //std::cout<<"pt...("<<pt.x<<","<<pt.y<<")"<<std::endl;
+      LAROCV_DEBUG((*this)) <<"pt...("<<pt.x<<","<<pt.y<<")"<<std::endl;
       
       for(size_t id=0; id<clusters.size(); ++id) {
 	
@@ -507,8 +507,6 @@ namespace larocv {
 	double inside = ::cv::pointPolygonTest(c._contour,pt,false);
       
 	if(inside < 0) continue;
-
-	//std::cout << "its inside " << std::endl;
 
 	result = c.ClusterID();
 
