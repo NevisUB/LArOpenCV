@@ -19,6 +19,7 @@
 #include <opencv2/core/core.hpp>
 #include "larbys.h"
 #include "LArOCVTypes.h"
+#include "ImageMeta.h"
 
 namespace larocv {
 
@@ -70,11 +71,17 @@ namespace larocv {
     void setbounds(std::vector<Point2D> bounds)
     { _roi_bounds = bounds; }
 
-    /// Get vertex ROI
-    Point2D roivtx() const { return _roi_vtx; }
+    /// Get vertex in wire tick coordinates
+    Point2D roivtx() const { return _roi_vtx; }    
 
+    /// Get vertex ROI
     std::vector<Point2D> roibounds() const { return _roi_bounds; }
 
+    Point2D roivtx_in_image(const ImageMeta& meta) {
+      return Point2D( (_roi_vtx.y - meta.origin().y) / meta.pixel_height(),
+		      (_roi_vtx.x - meta.origin().x) / meta.pixel_width() );
+    }
+    
    protected:
 
     Point2D _origin; ///< Absolute coordinate of the left bottom corner of ROI  

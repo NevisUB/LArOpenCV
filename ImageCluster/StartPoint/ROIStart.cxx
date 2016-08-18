@@ -20,10 +20,11 @@ namespace larocv {
 
     auto pi0_st = roi.roivtx();
     if ( pi0_st.x == ::larocv::kINVALID_DOUBLE ) { std::cout << "BAD VTX\n"; throw std::exception(); }
-    // std::cout << "Got VTX: (" << pi0_st.x << "," << pi0_st.y << ")\n";
+    LAROCV_DEBUG((*this)) << "Got VTX: (" << pi0_st.x << "," << pi0_st.y << ")\n";
 
-    auto pi0st = Point2D( (pi0_st.y - meta.origin().y) / meta.pixel_height(), (pi0_st.x - meta.origin().x) / meta.pixel_width() );
-    // std::cout << "In image coords: (" << pi0st.x << "," << pi0st.y << ")\n";
+    auto pi0st = roi.roivtx_in_image(meta);
+    
+    LAROCV_DEBUG((*this)) << "In image coords: (" << pi0st.x << "," << pi0st.y << ")\n";
 
     for (size_t k = 0; k < clusters.size(); k++) {
 
