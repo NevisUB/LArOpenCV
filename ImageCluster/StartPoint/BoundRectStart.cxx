@@ -130,7 +130,7 @@ namespace larocv {
 	auto pi0st = roi.roivtx_in_image(meta);
 	
 	int min_hit_index = -1;
-	float min_dist;
+	float min_dist=1e8;
 	
 	for (int i = 0; i < hits.size(); i++) {
 
@@ -157,19 +157,20 @@ namespace larocv {
 	  }
 
 	  if ( found ) break;
+	  
 	}
       
-	if ( N != 2 ) throw larbys();
+	if ( N != 2 ) throw larbys("N != 2 in BoundRectStart\n");
 	if ( j == N ) {
 	  LAROCV_DEBUG((*this)) << " If you are seeing this message then there are hits that lay on the outside of divisions\n";
-	  LAROCV_DEBUG((*this)) << " which could mean that there is a hit that failed to get associated with a segment. Take a look";
+	  LAROCV_DEBUG((*this)) << " which could mean that there is a hit that failed to get associated with a segment. Take a look\n";
 	  LAROCV_DEBUG((*this)) << " min_hit_index: " << min_hit_index << " \n";
-	  LAROCV_DEBUG((*this)) << " hits[min_hit_index]" << hits[min_hit_index] << "\n";
+	  LAROCV_DEBUG((*this)) << " hits[min_hit_index]: " << hits[min_hit_index] << "\n";
 	  LAROCV_DEBUG((*this)) << " min dist : " << min_dist << "\n";
 	  LAROCV_DEBUG((*this)) << " vertex : " << pi0st.x << "," << pi0st.y << "\n";
-	  LAROCV_DEBUG((*this)) << " insides size " << insides[0].size() << " and " << insides[1].size() << "\n";
+	  LAROCV_DEBUG((*this)) << " insides size :" << insides[0].size() << " and " << insides[1].size() << "\n";
 	  LAROCV_DEBUG((*this)) << " hits.size() : " << hits.size() << "\n";
-	  throw larbys();
+	  throw larbys("Find me in BoundRectStart");
 	}
       
 	cstart = j;
@@ -227,15 +228,18 @@ namespace larocv {
       //no end point found...
       if ( far == 0 && _cutbadreco) continue;
 
-
       if(_use_roi_vertex){
+
 	auto& roi   = ocluster.roi;
 	roi.startpt = Point2D(f_start->x, f_start->y);
 	roi.endpt   = Point2D(f_end->x  , f_end->y  );
+
       } else {
+
 	auto& reco   = ocluster.reco;
 	reco.startpt = Point2D(f_start->x, f_start->y);
 	reco.endpt   = Point2D(f_end->x  , f_end->y  );
+	
       }
       
       oclusters.emplace_back(std::move(ocluster));

@@ -8,7 +8,7 @@ LArImageHit: {
   Producer: gaushit
 
   # LArImageHit config
-  PoolTimeTick: 7
+  PoolTimeTick: 6
   
   VertexProducer: numuCC_vertex
   Debug: true
@@ -30,7 +30,7 @@ ImageClusterManager: {
 
   Verbosity: 2
   Profile:   true
-  ClusterAlgoType: [SBCluster,SimpleCuts,PCAOverall,BoundRectStart,RecoParameters,ClusterWriteOut]
+  ClusterAlgoType: [SBCluster,SimpleCuts,PCAOverall,BoundRectStart,ROIParameters,ClusterWriteOut]
   ClusterAlgoName: [sbc,sc,pcao,brs,rp,cwo]
 
   ShowImage: false
@@ -76,11 +76,15 @@ ImageClusterManager: {
   Verbosity : 0
   }
 
-   rp : {}
+  rp : {}
+  roip : {}
 
    brs : {
+
+    UseROIVertex: true
     CutBadReco : 1
     NDivWidth : 2
+    
   } 
 
 }

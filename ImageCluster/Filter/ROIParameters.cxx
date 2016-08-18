@@ -20,6 +20,7 @@ namespace larocv {
     for (const auto& cluster : clusters) {
 
       auto ocluster = cluster;
+
       ocluster._startPt       = ocluster.roi.startpt;
       ocluster._endPt         = ocluster.roi.endpt;
       ocluster._eigenVecFirst = ocluster.roi.dir;
