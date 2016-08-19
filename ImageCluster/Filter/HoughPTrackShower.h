@@ -55,7 +55,11 @@ namespace larocv {
 
   private:
 
-   double _pi;
+    bool line_intersection(const ::cv::Vec4i& hline,
+			   const ::cv::Point& p1,
+			   const ::cv::Point& p2);
+    
+    double _pi;
     
     double _hough_rho;
     double _hough_theta;

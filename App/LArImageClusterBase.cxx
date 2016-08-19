@@ -105,6 +105,7 @@ namespace larlite {
 
     _process_time_image_extraction += watch_one.WallTime();
 
+    _store_original_img = false;
     if (_store_original_img) {
       for (size_t plane = 0; plane < _img_mgr.size(); ++plane) {
 	::cv::Mat img;
