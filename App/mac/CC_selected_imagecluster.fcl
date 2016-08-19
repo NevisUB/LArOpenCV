@@ -30,8 +30,8 @@ ImageClusterManager: {
 
   Verbosity: 2
   Profile:   true
-  ClusterAlgoType: [SBCluster,SimpleCuts,PCAOverall,BoundRectStart,ROIParameters,ClusterWriteOut]
-  ClusterAlgoName: [sbc,sc,pcao,brs,rp,cwo]
+  ClusterAlgoType: [SBCluster,SimpleCuts,PCAOverall,BoundRectStart,HoughPTrackShower,ROIParameters,ClusterWriteOut]
+  ClusterAlgoName: [sbc,sc,pcao,brs,hpts,rp,cwo]
 
   ShowImage: false
 
@@ -86,5 +86,13 @@ ImageClusterManager: {
     NDivWidth : 2
     
   } 
+
+  hpts: {
+    Rho: 1.0
+    Theta: -1
+    Threshold: 75
+    MinLineLength: 80
+    MaxLineGap: 10
+  }
 
 }
