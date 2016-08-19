@@ -51,6 +51,7 @@ namespace larocv {
       , _height(height)
       , _plane(plane)
       , _debug(false)
+      , _roi_cropped(false)
     {
       if( width  < 0. ) throw larbys("Width must be a positive floating point!");
       if( height < 0. ) throw larbys("Height must be a positive floating point!");
@@ -99,6 +100,8 @@ namespace larocv {
     void set_ev_user(::larlite::event_user* ui) { EVUSERINFO = ui; }
     ::larlite::event_user* ev_user() { return EVUSERINFO; } //all caps to remind you this is a global instance
 
+    void set_roi_cropped(bool d) { _roi_cropped = d; }
+    const bool roi_cropped() const { return _roi_cropped; }
     
    protected:
 
@@ -110,7 +113,10 @@ namespace larocv {
     size_t _plane;             ///< unique plane ID number
 
     bool _debug;
+
     ::larlite::event_user* EVUSERINFO;
+
+    bool _roi_cropped;
     
   };
 

@@ -14,7 +14,8 @@ LArImageHit: {
   Debug: true
 
   MakeROI: true
-  CropROI: true
+  CropROI: false
+  
   ROIBufferW : 100
   ROIBufferT : 100
   
@@ -30,8 +31,8 @@ ImageClusterManager: {
 
   Verbosity: 2
   Profile:   true
-  ClusterAlgoType: [SBCluster,SimpleCuts,PCAOverall,BoundRectStart,HoughPTrackShower,ROIParameters,ClusterWriteOut]
-  ClusterAlgoName: [sbc,sc,pcao,brs,hpts,rp,cwo]
+  ClusterAlgoType: [SBCluster,SimpleCuts,HoughPTrackShower,FilterROI,PCAOverall,BoundRectStart,ROIParameters,ClusterWriteOut]
+  ClusterAlgoName: [sbc,sc,hpts,fr,pcao,brs,rp,cwo]
 
   ShowImage: false
 
@@ -48,6 +49,10 @@ ImageClusterManager: {
    Height: 800
    MinContourArea: 0
    
+ }
+
+ fr : {
+   Verbosity : 0
  }
 
  sbc : {
