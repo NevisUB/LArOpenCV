@@ -141,15 +141,9 @@ namespace larlite {
         roi_bounds.emplace_back(upper_w, lower_t);
         roi_bounds.emplace_back(upper_w, upper_t);
 
-        // for(int i=0; i < roi_bounds.size(); i++)
-        //   std::cout<<"Bounds: "<<roi_bounds[i].x<<", "<<roi_bounds[i].y<<std::endl ;
-
 	roi.setorigin(vtx_w - buffer_w,vtx_t - buffer_t);
 	roi.setvtx(vtx_w,vtx_t);
 	roi.setbounds(roi_bounds);
-
-	//std::vector<std::pair<size_t, size_t>> wire_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
-	//std::vector<std::pair<size_t, size_t>> tick_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
 
 	if (_crop_w_roi) {
 	  wire_range = {lower_w,upper_w};
@@ -157,13 +151,13 @@ namespace larlite {
 	  nticks = tick_range.second - tick_range.first + 2;
 	  nwires = wire_range.second - wire_range.first + 2;
 	}
-	
       }
       
       ::larocv::ImageMeta meta((double)nwires, (double)nticks, nwires, nticks,
 			       wire_range.first, tick_range.first, plane);
       
       if (_debug) meta.set_debug(true);
+      if (_crop_w_roi) meta.set_roi_cropped(true);
       
       // no matter what we have to send ROI... it can go to the algorithm blank, that's fine
       // If we don't want to use ROI, need to pass blanks
@@ -243,7 +237,8 @@ namespace larlite {
 	
 
 	if (_debug) meta.set_debug(true);
-
+	if (_crop_w_roi) meta.set_roi_cropped(true);
+	
 	//	if (_make_roi){
 	//
 	//	  auto old_vtx = roi.roivtx();

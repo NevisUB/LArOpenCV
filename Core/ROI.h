@@ -68,21 +68,27 @@ namespace larocv {
     void setvtx(size_t w, size_t t)
     { _roi_vtx = Point2D(w,t); }
 
-    void setbounds(std::vector<Point2D> bounds)
-    { _roi_bounds = bounds; }
-
+    void setbounds(std::vector<Point2D>& bounds)
+    { std::swap(_roi_bounds,bounds); }
+    
+    
     /// Get vertex in wire tick coordinates
-    Point2D roivtx() const { return _roi_vtx; }    
+    const Point2D& roivtx() const { return _roi_vtx; }
 
-    /// Get vertex ROI
-    std::vector<Point2D> roibounds() const { return _roi_bounds; }
+    /// Get vertex ROI bounds
+    const std::vector<Point2D>& roibounds() const { return _roi_bounds; }
 
     Point2D roivtx_in_image(const ImageMeta& meta) {
       return Point2D( (_roi_vtx.y - meta.origin().y) / meta.pixel_height(),
 		      (_roi_vtx.x - meta.origin().x) / meta.pixel_width() );
     }
+
+    Point2D roibounds_in_image(const ImageMeta& meta,size_t i) {
+      return Point2D( (_roi_bounds[i].y - meta.origin().y) / meta.pixel_height(),
+		      (_roi_bounds[i].x - meta.origin().x) / meta.pixel_width() );
+    }
     
-   protected:
+  protected:
 
     Point2D _origin; ///< Absolute coordinate of the left bottom corner of ROI  
     double _width;             ///< Horizontal size of ROI 

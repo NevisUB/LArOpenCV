@@ -31,7 +31,7 @@ namespace larocv{
        
       auto& cv_contour = clusters[k]._contour;
 
-      Cluster2D ts_cluster = clusters[k];
+      auto ts_cluster = clusters[k];
 
       cv::RotatedRect rect0 = ::cv::minAreaRect(cv::Mat(cv_contour));
       cv::Point2f vertices[4];
