@@ -19,6 +19,7 @@
 #pragma link C++ class larocv::ROIParameters+;		
 #pragma link C++ class larocv::RecoParameters+;
 
+#pragma link C++ class larocv::HoughPTrackShower+;
 
 #endif
 

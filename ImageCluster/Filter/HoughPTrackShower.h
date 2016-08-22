@@ -14,45 +14,34 @@
 #ifndef __HOUGHPTRACKSHOWER_H__
 #define __HOUGHPTRACKSHOWER_H__
 
-#include "ImageClusterBase.h"
+#include "ClusterAlgoBase.h"
+#include "ClusterAlgoFactory.h"
 #include "TTree.h"
 
-#include <array>
-
-namespace larcv {
+namespace larocv {
   /**
      \class HoughPTrackShower
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class HoughPTrackShower : public larcv::ImageClusterBase {
+  class HoughPTrackShower : public larocv::ClusterAlgoBase {
     
   public:
     
     /// Default constructor
     HoughPTrackShower(const std::string name="HoughPTrackShower")
-      : ImageClusterBase(name),
-	_outtree(nullptr),
-	_pi(3.14159),
-	
-	_hough_rho       ( 20.0 ),
-	_hough_threshold (  100 ),
-	_hough_min_line_length ( 100 ),
-	_hough_max_line_gap    (  60 )
+      : ClusterAlgoBase(name)
+      , _pi(3.14159)
+      , _hough_rho(20.0)
+      , _hough_threshold(100)
+      , _hough_min_line_length(100)
+      , _hough_max_line_gap(60)
     {}
     
     /// Default destructor
     ~HoughPTrackShower(){}
-
-  private:
-    TTree* _outtree;
-    
-  public:
     
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
-    void Finalize(TFile* _fout) {  _outtree->Write(); }
-
-
-    std::vector<std::vector<std::array<int,4> > > _houghs_v;
+    void Finalize(TFile* _fout) { }
     
   protected:
 
@@ -60,16 +49,16 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    larcv::ContourArray_t _Process_(const larcv::ContourArray_t& clusters,
-				    const ::cv::Mat& img,
-				    larcv::ImageMeta& meta);
-    
-
-
-
+    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
+				       const ::cv::Mat& img,
+				       larocv::ImageMeta& meta, larocv::ROI& roi);
 
   private:
 
+    bool line_intersection(const ::cv::Vec4i& hline,
+			   const ::cv::Point& p1,
+			   const ::cv::Point& p2);
+    
     double _pi;
     
     double _hough_rho;
@@ -77,25 +66,25 @@ namespace larcv {
     int    _hough_threshold;
     double _hough_min_line_length;
     double _hough_max_line_gap;
-
     
   };
   
   /**
-     \class larcv::HoughPTrackShowerFactory
-     \brief A concrete factory class for larcv::HoughPTrackShower
+     \class larocv::HoughPTrackShowerFactory
+     \brief A concrete factory class for larocv::HoughPTrackShower
    */
-  class HoughPTrackShowerFactory : public ImageClusterFactoryBase {
+  class HoughPTrackShowerFactory : public ClusterAlgoFactoryBase {
   public:
     /// ctor
-    HoughPTrackShowerFactory() { ImageClusterFactory::get().add_factory("HoughPTrackShower",this); }
+    HoughPTrackShowerFactory() { ClusterAlgoFactory::get().add_factory("HoughPTrackShower",this); }
     /// dtor
     ~HoughPTrackShowerFactory() {}
     /// creation method
-    ImageClusterBase* create(const std::string instance_name) { return new HoughPTrackShower(instance_name); }
+    ClusterAlgoBase* create(const std::string instance_name) { return new HoughPTrackShower(instance_name); }
   };
-  /// Global larcv::HoughPTrackShowerFactory to register ImageClusterFactory
+  /// Global larocv::HoughPTrackShowerFactory to register ClusterAlgoFactory
   static HoughPTrackShowerFactory __global_HoughPTrackShowerFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

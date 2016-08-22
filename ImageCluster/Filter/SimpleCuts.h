@@ -29,7 +29,13 @@ namespace larocv {
     /// Default constructor
     SimpleCuts(const std::string name="SimpleCuts") :
       ClusterAlgoBase(name)
-      ,_NHits(0)
+      ,_min_hits(-1)
+      ,_min_area(-1)
+      ,_min_perimeter(-1)
+      ,_min_charge(-1)
+      ,_min_length(-1)
+      ,_min_width(-1)
+      
     {}    
     
     /// Default destructor
@@ -49,7 +55,13 @@ namespace larocv {
 				      larocv::ImageMeta& meta, larocv::ROI& roi);
     
   private:
-    int _NHits;
+
+    int _min_hits;
+    float _min_area;  
+    float _min_perimeter;
+    int _min_charge;
+    float _min_length;
+    float _min_width;
     
   };
   

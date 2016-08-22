@@ -16,6 +16,7 @@ namespace larocv {
     BoundRectStart(const std::string name="BoundRectStart") :
       ClusterAlgoBase(name)
       , _deg2rad ( 3.14159 / 180.0 )
+      , _use_roi_vertex(false)
     {}
     
     /// Default destructor
@@ -41,6 +42,8 @@ namespace larocv {
     bool _cutbadreco;
     
     double _deg2rad;
+
+    double _use_roi_vertex;
   };
   
   /**

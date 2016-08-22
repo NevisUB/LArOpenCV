@@ -9,8 +9,8 @@ namespace larocv {
   {}
 
   Cluster2DArray_t ROIParameters::_Process_(const larocv::Cluster2DArray_t& clusters,
-      const ::cv::Mat& img,
-      larocv::ImageMeta& meta, larocv::ROI& roi)
+					    const ::cv::Mat& img,
+					    larocv::ImageMeta& meta, larocv::ROI& roi)
   {
     //Assigned ROI parameters to start point, end point, and direction
 
@@ -20,6 +20,7 @@ namespace larocv {
     for (const auto& cluster : clusters) {
 
       auto ocluster = cluster;
+
       ocluster._startPt       = ocluster.roi.startpt;
       ocluster._endPt         = ocluster.roi.endpt;
       ocluster._eigenVecFirst = ocluster.roi.dir;

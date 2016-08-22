@@ -7,7 +7,7 @@ endif
 #
 # Define directories to be compile upon a global "make"...
 #
-SUBDIRS := Base Util Cluster Direction Filter StartPoint Merge Match ReCluster
+SUBDIRS := Base Util Cluster Direction Filter StartPoint Merge Match ReCluster Debug
 
 #####################################################################################
 #

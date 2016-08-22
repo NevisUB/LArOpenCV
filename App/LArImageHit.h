@@ -37,7 +37,6 @@ namespace larlite {
       , _charge_to_gray_scale(10)
       , _charge_threshold(5)
       , _pool_time_tick(0)
-      , _use_roi(false)
       , _roi_buffer_w(70.)
       , _roi_buffer_t(70.)
       , _time_offset(800)
@@ -62,9 +61,7 @@ namespace larlite {
     double _charge_to_gray_scale;
     double _charge_threshold;
     int    _pool_time_tick;
-    bool   _use_roi;
 
-    bool _use_shower_roi;
     std::string _roi_producer;
 
     float _roi_buffer_w;
@@ -76,6 +73,8 @@ namespace larlite {
     float _time_offset ;
     float _t_window_max ;
     float _t_window_min ;
+
+    bool _crop_w_roi;
     
   };
 }

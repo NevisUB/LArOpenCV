@@ -20,6 +20,7 @@ Verbosity: 0
 
   Debug: true
   MakeROI: false
+  
   TimeOffset : 800
   WindowTMax : 6399
   WindowTMin : 0
@@ -30,8 +31,8 @@ ImageClusterManager: {
 
   Verbosity: 0
   Profile:   true
-  ClusterAlgoType:  [SBCluster,PCAOverall]
-  ClusterAlgoName:  [sbc,pcao]
+  ClusterAlgoType:  [SBCluster,SimpleCuts,PCAOverall,ClusterWriteOut]
+  ClusterAlgoName:  [sbc,sc,pcao,cwo]
 
   ShowImage: false
 
@@ -60,5 +61,18 @@ ImageClusterManager: {
   }
 
   pcao: { }
- 
+
+  sc : {
+
+   MinHits : 3
+   MinArea : -1
+   MinPerimieter : -1
+   MinCharge :-1
+   MinLength : -1
+   MinWidth : -1
+   
+  }
+
+  cwo : { }
+
 }

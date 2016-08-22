@@ -1,6 +1,6 @@
 LArImageHit: {
 
-Verbosity: 0
+  Verbosity: 2
   # LArImageClusterBase config
 
   Profile: true
@@ -11,28 +11,27 @@ Verbosity: 0
   PoolTimeTick: 6
   
   VertexProducer: numuCC_vertex
+  Debug: true
 
+  MakeROI: true
+  CropROI: true
   ROIBufferW : 100
   ROIBufferT : 100
   
   Q2Gray: 10
   QMin: 5
 
-  Debug: true
-  MakeROI: true
-
   TimeOffset : 800
   WindowTMax : 6399
   WindowTMin : 0
 
 }
-
 ImageClusterManager: {
 
-  Verbosity: 0
+  Verbosity: 2
   Profile:   true
-  ClusterAlgoType:  [SBCluster]
-  ClusterAlgoName:  [sbc]
+  ClusterAlgoType: [SBCluster,SimpleCuts,PCAOverall,BoundRectStart,HoughPTrackShower,ROIParameters,ClusterWriteOut]
+  ClusterAlgoName: [sbc,sc,pcao,brs,hpts,rp,cwo]
 
   ShowImage: false
 
@@ -61,5 +60,39 @@ ImageClusterManager: {
   }
 
   pcao: { }
- 
+
+  sc : {
+
+   MinHits : 10
+   MinArea : -1
+   MinPerimieter : -1
+   MinCharge :-1
+   MinLength : -1
+   MinWidth : -1
+   
+  }
+
+  cwo : {
+  Verbosity : 0
+  }
+
+  rp : {}
+  roip : {}
+
+   brs : {
+
+    UseROIVertex: true
+    CutBadReco : 1
+    NDivWidth : 2
+    
+  } 
+
+  hpts: {
+    Rho: 1.0
+    Theta: -1
+    Threshold: 75
+    MinLineLength: 80
+    MaxLineGap: 10
+  }
+
 }
