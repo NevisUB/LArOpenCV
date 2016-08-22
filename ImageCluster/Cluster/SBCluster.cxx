@@ -131,8 +131,8 @@ namespace larocv {
 	
     }    
 
-    bb_x  << "roi_bounds"<< "_" << meta.plane() << "_w";
-    bb_y  << "roi_bounds"<< "_" << meta.plane() << "_t";
+    bb_x  << "roi_bounds_" << meta.plane() << "_w";
+    bb_y  << "roi_bounds_" << meta.plane() << "_t";
 
     for ( size_t b = 0; b < roi.roibounds().size(); b++){
       
@@ -144,6 +144,13 @@ namespace larocv {
       uinfo.append(bb_y.str(),t);
 
       }
+
+    std::stringstream v_x,v_y;
+    v_x  << "vertex_" << meta.plane() << "_w";
+    v_y  << "vertex_" << meta.plane() << "_t";
+
+    uinfo.append(v_x.str(),roi.roivtx().x);
+    uinfo.append(v_y.str(),roi.roivtx().y);
 
     meta.ev_user()->emplace_back(uinfo);
 
