@@ -7,7 +7,8 @@ namespace larocv{
 
   void AttachedClusters::_Configure_(const ::fcllite::PSet &pset)
   {
-    _maxDefectSize  = pset.get<int> ( "MaxDefectSize" );
+    _max_defect_size         = pset.get<int>  ( "MaxDefectSize" );
+    _hull_contour_area_ratio = pset.get<float>( "HullContourAreaRatio" );
   }
 
   Cluster2DArray_t AttachedClusters::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -60,10 +61,17 @@ namespace larocv{
       auto max_defect     =  *(max_defect_itr);
       auto ndefects       =  defects_d.size();
 
-      LAROCV_DEBUG((*this)) << "\t>> Saw max_defect " << max_defect << " for total of ndefects: " << ndefects << " for cluster " << i << "\n";
+      
+      std::vector<::cv::Point> hullcontour;
+      hullcontour.resize(hullpts.size()-1);
 
-      if ( max_defect > _maxDefectSize )
-	continue;
+      for(unsigned u=0;u<hullcontour.size();++u) 
+	hullcontour[u] = cluster._contour[ hullpts[u] ];
+
+      double contour_area = cluster._area;
+      double hull_area    = ::cv::contourArea(hullcontour);
+
+      LAROCV_DEBUG((*this)) << "\t>> Saw max_defect " << max_defect << " for total of ndefects: " << ndefects << " for cluster " << i << "\n";
 
       if ( meta.debug() ) {
 
@@ -76,8 +84,8 @@ namespace larocv{
 	  std::cout << "(" << cluster._contour[idx].x << "," << cluster._contour[idx].y << ") : ("
 		    << meta.XtoTimeTick(cluster._contour[idx].x) << "," << meta.YtoWire(cluster._contour[idx].y) << ")\n";
 
-	  double x = (double)meta.XtoTimeTick(cluster._contour[idx].x);
-	  double y = (double)meta.YtoWire    (cluster._contour[idx].y);
+	  double x = meta.XtoTimeTick(cluster._contour[idx].x);
+	  double y = meta.YtoWire    (cluster._contour[idx].y);
 
 	  uinfo.append(ss1.str(),x);
 	  uinfo.append(ss2.str(),y);
@@ -90,6 +98,16 @@ namespace larocv{
 	  
 	}
       }
+      
+      if ( max_defect > _max_defect_size )
+	continue;
+      
+      double area_ratio = hull_area > 0 ? contour_area / hull_area : 0.0;
+
+      if ( area_ratio > 1.0 ) throw larbys("How can the convex hull be larger in area than the contour?");
+
+      if ( area_ratio < _hull_contour_area_ratio)
+	continue;
       
       
       oclusters.emplace_back(cluster);

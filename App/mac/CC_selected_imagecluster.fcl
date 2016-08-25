@@ -55,6 +55,7 @@ ImageClusterManager: {
 
  ac : {
   MaxDefectSize : 9999
+  HullContourAreaRatio : 0.5
  }
 
  fr : {

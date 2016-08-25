@@ -29,7 +29,7 @@ namespace larocv {
     /// Default constructor
     AttachedClusters(const std::string name="AttachedClusters") :
       ClusterAlgoBase(name)
-      ,_maxDefectSize(99999)
+      ,_max_defect_size(99999)
     {}
     
     /// Default destructor
@@ -50,7 +50,8 @@ namespace larocv {
     
   private:
 
-    int _maxDefectSize;
+    int _max_defect_size;
+    float _hull_contour_area_ratio;
     
   };
   
