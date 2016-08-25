@@ -14,12 +14,27 @@ namespace larocv{
 					       const ::cv::Mat& img,
 					       larocv::ImageMeta& meta, larocv::ROI& roi)
   { 
-    Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );
-    
-    
-    std::vector<std::vector<int> > hullpts_v; hullpts_v.resize(clusters.size());
-    std::vector<std::vector<::cv::Vec4i> >    defects_v; defects_v.resize(clusters.size());
 
+    Cluster2DArray_t oclusters;
+    oclusters.reserve( clusters.size() );
+    
+    std::vector<std::vector<int> > hullpts_v;
+    hullpts_v.resize(clusters.size());
+
+    std::vector<std::vector<::cv::Vec4i> > defects_v;
+    defects_v.resize(clusters.size());
+
+
+    //start -- debug
+    std::stringstream ss1,ss2,ss3,ss4;
+    ::larlite::user_info uinfo{};
+
+    ss1 << "Algo_"<<Name()<<"_Plane_"<<meta.plane()<<"_clusters";
+    uinfo.store("ID",ss1.str());
+
+    ss1.str(std::string());
+    ss1.clear();
+    //end -- debug
     
     for (unsigned i = 0; i < clusters.size(); ++i ) {
 
@@ -32,27 +47,58 @@ namespace larocv{
 
       ::cv::convexityDefects(cluster._contour,hullpts,defects);
 
+      // no defects found
       if ( ! defects.size() ) continue;
       
-      std::vector<double> defects_d; defects_d.resize( defects.size() );
+      std::vector<double> defects_d;
+      defects_d.resize( defects.size() );
 
       for( int j = 0; j < defects.size(); ++j )
-
-	defects_d[j]  = ( ( (float) defects[j][3] ) / 256.0 );
+	defects_d[j]  = ( ( (float) defects[j][3] ) / 256.0 ); //why divide by 256?
     
-
       auto max_defect_itr = std::max_element( std::begin(defects_d), std::end(defects_d) );
-      auto max_defect     =  * ( max_defect_itr );
+      auto max_defect     =  *(max_defect_itr);
       auto ndefects       =  defects_d.size();
 
-      std::cout << "\t>> saw_max_defect " << max_defect << " for total of ndefects: " << ndefects << "\n";
+      LAROCV_DEBUG((*this)) << "\t>> Saw max_defect " << max_defect << " for total of ndefects: " << ndefects << " for cluster " << i << "\n";
 
       if ( max_defect > _maxDefectSize )
 	continue;
+
+      if ( meta.debug() ) {
+
+	for( unsigned k = 0; k < hullpts.size(); ++k ) {
+
+	  auto idx=hullpts[k];
+	  ss1 << "ClusterID_" << cluster.ClusterID() << "_hull_x";
+	  ss2 << "ClusterID_" << cluster.ClusterID() << "_hull_y";
+
+	  std::cout << "(" << cluster._contour[idx].x << "," << cluster._contour[idx].y << ") : ("
+		    << meta.XtoTimeTick(cluster._contour[idx].x) << "," << meta.YtoWire(cluster._contour[idx].y) << ")\n";
+
+	  double x = (double)meta.XtoTimeTick(cluster._contour[idx].x);
+	  double y = (double)meta.YtoWire    (cluster._contour[idx].y);
+
+	  uinfo.append(ss1.str(),x);
+	  uinfo.append(ss2.str(),y);
+
+	  ss1.str(std::string());
+	  ss1.clear();
+
+	  ss2.str(std::string());
+	  ss2.clear();
+	  
+	}
+      }
       
-      oclusters.emplace_back( cluster );
+      
+      oclusters.emplace_back(cluster);
     }
     
+    
+    if ( meta.debug() )
+      meta.ev_user()->emplace_back(uinfo);
+        
     return oclusters;
   }
 
