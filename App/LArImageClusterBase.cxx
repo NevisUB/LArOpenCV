@@ -83,8 +83,8 @@ namespace larlite {
       auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
       auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
       auto ev_hit_ass = storage->get_data<event_ass>    ("ImageClusterHit");
-      //auto ev_vtx     = storage->get_data<event_vertex> ("ImageClusterHit");
-      //auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
+      auto ev_vtx     = storage->get_data<event_vertex> (_vtx_producer);
+      auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
 
       ::larlite::event_user* ev_user;
       if (_debug)
@@ -95,8 +95,8 @@ namespace larlite {
       (void)ev_pfpart;
       (void)ev_hit_ass;
       (void)ev_user;
-      //(void)ev_vtx_ass;
-      //(void)ev_vtx;
+      (void)ev_vtx_ass;
+      (void)ev_vtx;
       
       storage->set_id(storage->run_id(), storage->subrun_id(), storage->event_id());
       return false;
@@ -213,7 +213,7 @@ namespace larlite {
     AssSet_t cluster_hit_ass;
     cluster_hit_ass.resize(_num_clusters);
     // prepare cluster -> vertex association
-    AssSet_t cluster_vtx_ass;
+    //AssSet_t cluster_vtx_ass;
     //cluster_vtx_ass.resize(_num_clusters);
 
     for (auto& ass_unit : cluster_hit_ass) ass_unit.reserve(100);
@@ -238,13 +238,11 @@ namespace larlite {
 
     auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
     auto ev_hit_ass = storage->get_data<event_ass>    ("ImageClusterHit");
-    //auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
+    auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
 
     // save ROI & vertices if available
     // and grab the associated vertex
-
     //::larlite::event_PiZeroROI* ev_roi = nullptr;
-
     //::larlite::event_vertex* ev_vtx = nullptr;
 
     // ev_roi = storage->get_data<event_PiZeroROI>("pizerofilter");
@@ -313,16 +311,20 @@ namespace larlite {
 	ev_hit_ass->set_association(ev_cluster->id(), ev_hit->id(), cluster_hit_ass);
 
       // if we have created a cluster -> vertex association
-      // if (ev_vtx_ass)
+      //if (ev_vtx_ass)
       // ev_vtx_ass->set_association(ev_cluster->id(), ev_vtx->id(), cluster_vtx_ass);
 
     }
 
     auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
+    auto ev_vtx     = storage->get_data<event_vertex> (_vtx_producer);
+
     if (ev_pfpart) {
+
       auto const match_info = alg_mgr.BookKeeper().GetResult();
       AssSet_t pfpart_ass;
       pfpart_ass.reserve(match_info.size());
+
 
       for (size_t pfp_index = 0; pfp_index < match_info.size(); ++pfp_index) {
 
@@ -330,11 +332,27 @@ namespace larlite {
 	ev_pfpart->push_back(p);
 	AssUnit_t ass;
 	for (auto const& cid : match_info[pfp_index]) ass.push_back(cid);
-
 	pfpart_ass.push_back(ass);
+
       }
 
       if (ev_hit_ass && ev_cluster) ev_hit_ass->set_association(ev_pfpart->id(), ev_cluster->id(), pfpart_ass);
+       
+      if (ev_vtx) {
+        AssSet_t vtx_ass;
+        vtx_ass.reserve(match_info.size());
+        for (size_t pfp_index = 0; pfp_index < match_info.size(); ++pfp_index){ 
+
+          AssUnit_t ass;
+	  ass.push_back(pfp_index);
+	  vtx_ass.push_back(ass);
+
+	  }
+
+        if (ev_vtx_ass && ev_vtx) ev_vtx_ass->set_association(ev_pfpart->id(), ev_vtx->id(), vtx_ass);
+
+         }
+
     }
 
     return;

@@ -67,7 +67,7 @@ namespace larlite {
     float _roi_buffer_w;
     float _roi_buffer_t;
 
-    std::string _vtx_producer;
+    //std::string _vtx_producer;
 
     bool _make_roi;
     float _time_offset ;

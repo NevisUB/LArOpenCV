@@ -89,6 +89,8 @@ namespace larlite {
     bool _store_contours;
 
     bool _debug;
+
+    std::string _vtx_producer;
     
   };
 }
