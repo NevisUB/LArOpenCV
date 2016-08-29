@@ -59,11 +59,16 @@ namespace larocv {
 
 	//check if this point intersects this contour
 	size_t j = 0;
-	for( ; j < cluster._contour.size(); ++j)
-	  if ( line_intersection(line,cluster._contour[j],cluster._contour[j+1]) ) break;
+	for( ; j < cluster._contour.size()-1; ++j)
+	  {
+	    // std::cout << "A: " << cluster._contour[j] << cluster._contour[j+1] << std::endl;
+	    // std::cout << "B: " << line[0] << "," << line[1] << "\n";
+	    if ( line_intersection(line,cluster._contour[j],cluster._contour[j+1]) )
+	      break;
+	  }
 
 	//we didn't make it all the way around the contour, we intersected somewhere
-	if ( j != cluster._contour.size() )  break;
+	if ( j != cluster._contour.size()-1 )  break;
 
 	//we did make it all the way around the contour, let check the last and first points
 	if ( line_intersection(line, cluster._contour.back(), cluster._contour.front()) ) break;
