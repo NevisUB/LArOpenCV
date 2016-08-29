@@ -340,13 +340,12 @@ namespace larlite {
        
       if (ev_vtx) {
         AssSet_t vtx_ass;
-        vtx_ass.reserve(match_info.size());
-        for (size_t pfp_index = 0; pfp_index < match_info.size(); ++pfp_index){ 
+        vtx_ass.reserve(ev_pfpart->size());
 
+        for (size_t pfp_index = 0; pfp_index < ev_pfpart->size(); ++pfp_index){
           AssUnit_t ass;
-	  ass.push_back(pfp_index);
-	  vtx_ass.push_back(ass);
-
+          ass.push_back(0); 
+          vtx_ass.push_back(ass);
 	  }
 
         if (ev_vtx_ass && ev_vtx) ev_vtx_ass->set_association(ev_pfpart->id(), ev_vtx->id(), vtx_ass);
