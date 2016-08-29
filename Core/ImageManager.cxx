@@ -42,7 +42,7 @@ namespace larocv {
   }
 
   void ImageManager::clear()
-  { _mat_v.clear(); _meta_v.clear(); }
+  { _mat_v.clear(); _meta_v.clear(); _roi_v.clear();}
 
 }
 #endif
