@@ -81,8 +81,8 @@ namespace larocv{
 	  ss1 << "ClusterID_" << cluster.ClusterID() << "_hull_x";
 	  ss2 << "ClusterID_" << cluster.ClusterID() << "_hull_y";
 
-	  std::cout << "(" << cluster._contour[idx].x << "," << cluster._contour[idx].y << ") : ("
-		    << meta.XtoTimeTick(cluster._contour[idx].x) << "," << meta.YtoWire(cluster._contour[idx].y) << ")\n";
+	  LAROCV_DEBUG((*this)) <<"(" << cluster._contour[idx].x << "," << cluster._contour[idx].y << ") : ("
+				<< meta.XtoTimeTick(cluster._contour[idx].x) << "," << meta.YtoWire(cluster._contour[idx].y) << ")\n";
 
 	  double x = meta.XtoTimeTick(cluster._contour[idx].x);
 	  double y = meta.YtoWire    (cluster._contour[idx].y);

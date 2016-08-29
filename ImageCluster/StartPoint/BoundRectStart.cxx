@@ -91,8 +91,12 @@ namespace larocv {
 
         ::cv::Point2f ver[4];
         divisions[i].points(ver);
-        v.clear(); v.resize(4);
-        for (int r = 0; r < 4; ++r) v[r] = ver[r];
+        v.clear();
+	v.resize(4);
+
+        for (int r = 0; r < 4; ++r)
+	  v[r] = ver[r];
+	
         std::swap(vv, v);
       }
 
@@ -106,20 +110,41 @@ namespace larocv {
 
 
       auto const & hits = ocluster._insideHits ;
-      // hits in the cluster...
 
+      bool placed=false;
+      // hits in the cluster...
       for (auto& h : hits) {
 
-        //which ones are in this segment
+	placed=false;
+
+        // which ones are in this segment
         for ( unsigned i = 0; i < divisions.size(); ++i ) {
           auto& div = vvv[i];
 
           if ( ::cv::pointPolygonTest(div, h, false) >= 0 ) {
             tot_charge[i] += (int) img.at<uchar>(h.y, h.x);
             insides[i].push_back(h);
+	    placed=true;
           }
 
         }
+
+	if ( placed ) continue;
+	// wasn't in either segment? why? assigned hit to segment which is closest to center
+	float min_dist = 1e8;
+	size_t min = 0;
+	
+	for ( unsigned i = 0; i < divisions.size(); ++i ) {
+	  auto center = divisions[i].center;
+	  
+	  auto dist = std::sqrt( std::pow(center.x - h.x, 2) + std::pow(center.y - h.y, 2) );
+
+	  if ( dist < min_dist ) {
+	    min=i;
+	    min_dist=dist;
+	  }
+	}	  
+	insides[min].push_back(h);
       }
 
       //which side of the bounding rectangle is it on? f_half
@@ -135,6 +160,7 @@ namespace larocv {
 	for (int i = 0; i < hits.size(); i++) {
 
 	  auto const& hit = hits[i];
+	  
 	  auto dist = std::sqrt( std::pow(pi0st.x - hit.x, 2) + std::pow(pi0st.y - hit.y, 2) );
 	  
 	  if ( dist < min_dist ) {
@@ -162,14 +188,14 @@ namespace larocv {
       
 	if ( N != 2 ) throw larbys("N != 2 in BoundRectStart\n");
 	if ( j == N ) {
-	  LAROCV_DEBUG((*this)) << " If you are seeing this message then there are hits that lay on the outside of divisions\n";
-	  LAROCV_DEBUG((*this)) << " which could mean that there is a hit that failed to get associated with a segment. Take a look\n";
-	  LAROCV_DEBUG((*this)) << " min_hit_index: " << min_hit_index << " \n";
-	  LAROCV_DEBUG((*this)) << " hits[min_hit_index]: " << hits[min_hit_index] << "\n";
-	  LAROCV_DEBUG((*this)) << " min dist : " << min_dist << "\n";
-	  LAROCV_DEBUG((*this)) << " vertex : " << pi0st.x << "," << pi0st.y << "\n";
-	  LAROCV_DEBUG((*this)) << " insides size :" << insides[0].size() << " and " << insides[1].size() << "\n";
-	  LAROCV_DEBUG((*this)) << " hits.size() : " << hits.size() << "\n";
+	  std::cout  << " If you are seeing this message then there are hits that lay on the outside of divisions\n";
+	  std::cout  << " which could mean that there is a hit that failed to get associated with a segment. Take a look\n";
+	  std::cout  << " min_hit_index: " << min_hit_index << " \n";
+	  std::cout  << " hits[min_hit_index]: " << hits[min_hit_index] << "\n";
+	  std::cout  << " min dist : " << min_dist << "\n";
+	  std::cout  << " vertex : " << pi0st.x << "," << pi0st.y << "\n";
+	  std::cout  << " insides size :" << insides[0].size() << " and " << insides[1].size() << "\n";
+	  std::cout  << " hits.size() : " << hits.size() << "\n";
 	  throw larbys("Find me in BoundRectStart");
 	}
       

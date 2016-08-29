@@ -110,9 +110,50 @@ namespace larocv {
 	
       }   
     }
+
+    if ( meta.debug() ) {
+
+      std::stringstream ss1, ss2;
+
+      ::larlite::user_info uinfo{};
+      ss1 << "Algo_"<<Name()<<"_Plane_"<<meta.plane()<<"_clusters";
+      uinfo.store("ID",ss1.str());
+
+      ss1.str(std::string());
+      ss1.clear();
+
+      uinfo.store("NClusters",(int)result_v.size());
+
+      LAROCV_DEBUG((*this)) << "Writing debug information for " << clusters.size() << "\n";
+    
+      for(size_t i = 0; i < result_v.size(); ++i){
+
+	const auto& cluster = result_v[i];
+
+	////////////////////////////////////////////
+	/////Contour points
+      
+	ss1  <<  "ClusterID_" << i << "_contour_x";
+	ss2  <<  "ClusterID_" << i << "_contour_y";
+
+	for(const auto& point : cluster._contour) {
+	  double x = meta.XtoTimeTick(point.x);
+	  double y = meta.YtoWire(point.y);
+	
+	  uinfo.append(ss1.str(),x);
+	  uinfo.append(ss2.str(),y);
+	}
+	
+	ss1.str(std::string());
+	ss1.clear();
+	ss2.str(std::string());
+	ss2.clear();
+      }
+
+      meta.ev_user()->emplace_back(uinfo);
+    }
     
     return result_v;
-
   }
  
 }
