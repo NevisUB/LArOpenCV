@@ -31,9 +31,10 @@ ImageClusterManager: {
 
   Verbosity: 2
   Profile:   true
-  ClusterAlgoType: [SBCluster,SimpleCuts,HoughPTrackShower,FilterROI,PCAOverall,BoundRectStart,ROIParameters,ClusterWriteOut]
-  ClusterAlgoName: [sbc,sc,hpts,fr,pcao,brs,rp,cwo]
 
+  ClusterAlgoType: [SBCluster,SimpleCuts,HoughPTrackShower,FilterROI,PCAOverall,BoundRectStart,ROIParameters,AttachedClusters,ClusterWriteOut]
+  ClusterAlgoName: [sbc,sc,hpts,fr,pcao,brs,rp,ac,cwo]
+  
   ShowImage: false
 
   MatchAlgoType: ""
@@ -49,6 +50,12 @@ ImageClusterManager: {
    Height: 800
    MinContourArea: 0
    
+ }
+
+
+ ac : {
+  MaxDefectSize : 9999
+  HullContourAreaRatio : 0.5
  }
 
  fr : {
