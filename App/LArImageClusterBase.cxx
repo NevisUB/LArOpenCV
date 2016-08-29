@@ -239,6 +239,8 @@ namespace larlite {
     auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
     auto ev_hit_ass = storage->get_data<event_ass>    ("ImageClusterHit");
     auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
+    auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
+    auto ev_vtx     = storage->get_data<event_vertex> (_vtx_producer);
 
     // save ROI & vertices if available
     // and grab the associated vertex
@@ -316,8 +318,6 @@ namespace larlite {
 
     }
 
-    auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
-    auto ev_vtx     = storage->get_data<event_vertex> (_vtx_producer);
 
     if (ev_pfpart) {
 
