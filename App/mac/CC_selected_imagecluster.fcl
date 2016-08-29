@@ -37,8 +37,8 @@ ImageClusterManager: {
   
   ShowImage: false
 
-  MatchAlgoType: ""
-  MatchAlgoName: ""
+  MatchAlgoType: MatchTimeOverlap 
+  MatchAlgoName: mto
 
   ReClusterAlgoType: ""
   ReClusterAlgoName: ""
@@ -106,5 +106,12 @@ ImageClusterManager: {
     MinLineLength: 80
     MaxLineGap: 10
   }
+
+
+   mto : { 
+         RatioCut : 0.001
+         StartTimeCut : 100 
+         RequireThreePlanes : 0 
+        }   
 
 }
