@@ -11,27 +11,27 @@
 /** \addtogroup ImageCluster
 
     @{*/
-#ifndef __TRIANGLECLUSTEREXT_H__
-#define __TRIANGLECLUSTEREXT_H__
+#ifndef __FLASHLIGHTMERGE_H__
+#define __FLASHLIGHTMERGE_H__
 
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
 namespace larocv {
   /**
-     \class TriangleClusterExt
+     \class FlashlightMerge
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
   */
-  class TriangleClusterExt : public larocv::ClusterAlgoBase {
+  class FlashlightMerge : public larocv::ClusterAlgoBase {
     
   public:
     
     /// Default constructor
-    TriangleClusterExt(const std::string name="TriangleClusterExt") : ClusterAlgoBase(name)
+    FlashlightMerge(const std::string name="FlashlightMerge") : ClusterAlgoBase(name)
     {}
     
     /// Default destructor
-    ~TriangleClusterExt(){}
+    ~FlashlightMerge(){}
 
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
     void Finalize(TFile*) {}
@@ -49,25 +49,25 @@ namespace larocv {
   private:
     int _N;
 
-    template <typename T> inline int sgn(T val) { return (T(0) < val) - (val < T(0)); }
+    template <typename T> inline float sgn(T val) { return (T(0) < val) - (val < T(0)); }
 
   };
   
   /**
-     \class larocv::TriangleClusterExtFactory
-     \brief A concrete factory class for larocv::TriangleClusterExt
+     \class larocv::FlashlightMergeFactory
+     \brief A concrete factory class for larocv::FlashlightMerge
    */
-  class TriangleClusterExtFactory : public ClusterAlgoFactoryBase {
+  class FlashlightMergeFactory : public ClusterAlgoFactoryBase {
   public:
     /// ctor
-    TriangleClusterExtFactory() { ClusterAlgoFactory::get().add_factory("TriangleClusterExt",this); }
+    FlashlightMergeFactory() { ClusterAlgoFactory::get().add_factory("FlashlightMerge",this); }
     /// dtor
-    ~TriangleClusterExtFactory() {}
+    ~FlashlightMergeFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new TriangleClusterExt(instance_name); }
+    ClusterAlgoBase* create(const std::string instance_name) { return new FlashlightMerge(instance_name); }
   };
-  /// Global larocv::TriangleClusterExtFactory to register ClusterAlgoFactory
-  static TriangleClusterExtFactory __global_TriangleClusterExtFactory__;
+  /// Global larocv::FlashlightMergeFactory to register ClusterAlgoFactory
+  static FlashlightMergeFactory __global_FlashlightMergeFactory__;
 }
 #endif
 /** @} */ // end of doxygen group 
