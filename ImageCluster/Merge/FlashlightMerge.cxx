@@ -25,46 +25,24 @@ namespace larocv{
        like a flashlight. A bounding rectangle at the start, then trapezoid at the end. In this scheme
        our contour should be convex and not require sophisticated untangling
     */
-
     
-    Cluster2DArray_t ccopy = clusters; //we need to make a copy to do the sorting
-    Cluster2DArray_t oclusters;
+    Cluster2DArray_t oclusters = clusters;
 
-    auto n = _N <= clusters.size() ? _N : clusters.size();
-    oclusters.resize(n);
-      
+    // auto n = _N <= clusters.size() ? _N : clusters.size();
+    // oclusters.resize(n);
     //sort the clusters by number of hits
-    std::sort(std::begin(ccopy),std::end(ccopy),
-	      [](const Cluster2D& c1, const Cluster2D& c2)
-	      { return c1._numHits > c2._numHits; } );
+    // std::sort(std::begin(ccopy),std::end(ccopy),
+    // 	      [](const Cluster2D& c1, const Cluster2D& c2)
+    // 	      { return c1._numHits > c2._numHits; } );
     
-
     //take it from the copy and put it in ocluster to be manipulated
-    for(unsigned i = 0; i < n; ++i) std::swap(oclusters[i],ccopy[i]);
+    // for(unsigned i = 0; i < n; ++i)
+    //   std::swap(oclusters[i],ccopy[i]);
 
     for(auto& ocluster : oclusters) {
-
       
       auto ostart  = roi.roivtx_in_image(meta);
       auto oend    = ocluster._startPt;
-      
-      auto& odir   = ocluster._eigenVecFirst;
-      
-      // We now have the top N clusters, lets set the direction of the PCA i.e from
-      // start to end point
-      if  ( ostart.x < oend.x )  {
-        if ( odir.x < 0 ) {
-          odir.x *= -1.0;
-          odir.y *= -1.0;
-        }
-      }
-      else {
-        if ( odir.x > 0 ) {
-          odir.x *= -1.0;
-          odir.y *= -1.0;
-        }
-      }
-    
     
       //Get the minimum rectangle (should already exist in Cluster2D)
       //make a copy because I want to sort it
@@ -80,7 +58,6 @@ namespace larocv{
       std::sort(std::begin(minrect),std::end(minrect),
 		[&oend](const ::cv::Point2f& p1, const ::cv::Point2f& p2)
 		{ return dist(p1,oend) > dist(p2,oend); } );
-
 
       //set the top and bottom end
       etop = minrect[0].y > minrect[1].y ? minrect[0] : minrect[1];
@@ -103,9 +80,6 @@ namespace larocv{
       if (bbox.size.width < bbox.size.height)
 	oangle += 90 * 3.14159/180.0;
 
-      ::cv::Point2f p1,p2;
-
-
       // im going to be very explicit since i've screwed up many times
       float p1_cos_a = oangle + bangle;
       float p1_sin_a = oangle + bangle;
@@ -119,8 +93,8 @@ namespace larocv{
       auto xx2 = odout*std::cos(p2_cos_a);
       auto yy2 = odout*std::sin(p2_sin_a);
 	    
-      p1 = ::cv::Point2f(xx1,yy1);
-      p2 = ::cv::Point2f(xx2,yy2);
+      ::cv::Point2f p1(xx1,yy1);
+      ::cv::Point2f p2(xx2,yy2);
 
       if ( (dx < 0 and dy < 0) or (dx < 0 and dy > 0)) { 
 	p1 = ebot - p1;     
@@ -145,14 +119,12 @@ namespace larocv{
       out_contour.emplace_back(std::move(p2));
       out_contour.emplace_back(std::move(ebot));
 
-
       std::swap(out_contour,ocluster._contour);
-
-      
     }
 
 
-
+    //do the combinations, recursive function to find intersections
+    // auto connected = connect(oclusters);    
 
     if ( meta.debug() ) {
 
@@ -197,6 +169,39 @@ namespace larocv{
     
     return oclusters;
   }
+
+  // std::map<int,int> FlashlightMerge::lin
   
+  //   bool FlashlightMerge::line_intersection(const ::cv::Vec4i& hline,
+  // 					    const ::cv::Point& p1,
+  // 					    const ::cv::Point& p2) {
+    
+  //     auto& p0_x = hline[0];
+  //     auto& p0_y = hline[1];
+
+  //     auto& p1_x = hline[2];
+  //     auto& p1_y = hline[3];
+
+  //     auto& p2_x = p1.x;
+  //     auto& p2_y = p1.y;
+
+  //     auto& p3_x = p2.x;
+  //     auto& p3_y = p2.y;
+		
+      
+  //     float s1_x, s1_y, s2_x, s2_y;
+  //     s1_x = p1_x - p0_x;     s1_y = p1_y - p0_y;
+  //     s2_x = p3_x - p2_x;     s2_y = p3_y - p2_y;
+
+  //     float s, t;
+  //     s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
+  //     t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
+
+  //     if (s >= 0 && s <= 1 && t >= 0 && t <= 1) return true;
+    
+  //     return false;
+    
+  //   }
+
 }
 #endif
