@@ -42,10 +42,6 @@ for evt in xrange(10):
 
     #get contour data
     event_user = sm.get_data(ll.data.kUserInfo,"ImageClusterHit")
-
-    #for e in xrange(event_user.size()):
-    #    eu = event_user[e]
-    #    print eu.get_string("ID")
         
 
     gausdata = rn.root2array(FILENAME,
@@ -71,10 +67,10 @@ for evt in xrange(10):
     for s in xrange(event_user.size()):
         uinfo=event_user[s]
         id_ = uinfo.get_string("ID")
-
-        if id_ == "Algo_sbc_Plane0_clusters" : sbcplane0 = uinfo
-        if id_ == "Algo_sbc_Plane1_clusters" : sbcplane1 = uinfo
-        if id_ == "Algo_sbc_Plane2_clusters" : sbcplane2 = uinfo
+        
+        if id_ == "Algo_sbc_Plane_2_clusters" : sbcplane0 = uinfo
+        if id_ == "Algo_sbc_Plane_1_clusters" : sbcplane1 = uinfo
+        if id_ == "Algo_sbc_Plane_2_clusters" : sbcplane2 = uinfo
 
         if id_ == "Algo_cwo_Plane_0_clusters" : plane0 = uinfo
         if id_ == "Algo_cwo_Plane_1_clusters" : plane1 = uinfo
@@ -109,8 +105,8 @@ for evt in xrange(10):
 
         ax.plot(phits.Wire,phits.PeakTime,'o',color='black',markersize=3,alpha=0.2)
 
-
         exec("sbc_data = sbcplane%s"%plane)
+
         if sbc_data :
             nsbc_clusters = sbc_data.get_int("NClusters")
         
