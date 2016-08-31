@@ -60,6 +60,16 @@ namespace larocv{
       clear_ss(ss2);
 
 
+      //_endPt
+      ss1  <<  "ClusterID_" << cluster.ClusterID() <<  "_endPt_x";
+      ss2  <<  "ClusterID_" << cluster.ClusterID() <<  "_endPt_y";
+      uinfo.store(ss1.str(),meta.XtoTimeTick(cluster._endPt.x));
+      uinfo.store(ss2.str(),meta.YtoWire    (cluster._endPt.y));
+
+      clear_ss(ss1);
+      clear_ss(ss2);
+
+
       //_centerPt
       ss1  <<  "ClusterID_" << cluster.ClusterID() <<  "_centerPt_x";
       ss2  <<  "ClusterID_" << cluster.ClusterID() <<  "_centerPt_y";

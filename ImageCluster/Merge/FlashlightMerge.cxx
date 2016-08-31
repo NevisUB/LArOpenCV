@@ -211,26 +211,26 @@ namespace larocv{
     }
     
     
-    //this is useful for debugging!
-    std::cout <<"\n\t" << "actual neighbors...\n\n";
-    for(auto n : neighbors){
-      std::cout << "i : " << n.first << " : ";
-      for(auto j : n.second)     
-      	std::cout << j << ",";
-      std::cout << "\n";
-    }
+    // //this is useful for debugging!
+    // std::cout <<"\n\t" << "actual neighbors...\n\n";
+    // for(auto n : neighbors){
+    //   std::cout << "i : " << n.first << " : ";
+    //   for(auto j : n.second)     
+    //   	std::cout << j << ",";
+    //   std::cout << "\n";
+    // }
 
     
 
-    std::cout <<"\n\t" << "unique neighbors...\n\n";
-    for(int i=0;i<unique_neighbors.size();++i) {
+    // std::cout <<"\n\t" << "unique neighbors...\n\n";
+    // for(int i=0;i<unique_neighbors.size();++i) {
 
-      std::cout << "i : " << i << " : ";
-      for(auto j : unique_neighbors[i])
-    	std::cout << j << ",";
+    //   std::cout << "i : " << i << " : ";
+    //   for(auto j : unique_neighbors[i])
+    // 	std::cout << j << ",";
 
-      std::cout << "\n";
-    }
+    //   std::cout << "\n";
+    // }
 
 
     //lets use used again
@@ -290,8 +290,10 @@ namespace larocv{
 	cluster._contour[u] = overall_ctor[ hullpts[u] ];
 
       //set the cluster parameters to the parent
-      std::cout << "on i : " << i << "\n";
       cluster.copy_params(oclusters[i]);
+
+      // the start point is (since we sorted oclusters) the closest point (in the BRS sense) to the
+      // projected vertex, but we need the end point for matching
       
       //put this cluster back into the array
       result_clusters.emplace_back(std::move(cluster));

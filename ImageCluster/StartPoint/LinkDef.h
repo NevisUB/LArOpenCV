@@ -11,12 +11,9 @@
 
 
 #pragma link C++ class larocv::BoundRectStart+;
-
-#pragma link C++ class larocv::StartEndMerge+;
-
 #pragma link C++ class larocv::ROIStart+;
-
 #pragma link C++ class larocv::ROIAssistedStart+;
+#pragma link C++ class larocv::SimpleEndPoint+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
