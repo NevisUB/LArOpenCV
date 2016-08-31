@@ -28,6 +28,17 @@ namespace larocv {
     Cluster2DArray_t shower_v; shower_v.reserve(clusters.size());
     Cluster2DArray_t satellite_v; satellite_v.reserve(clusters.size());
 
+    //start -- debug
+    std::stringstream ss1,ss2,ss3,ss4;
+    ::larlite::user_info uinfo{};
+
+    ss1 << "Algo_"<<Name()<<"_Plane_"<<meta.plane()<<"_clusters";
+    uinfo.store("ID",ss1.str());
+
+    ss1.str(std::string());
+    ss1.clear();
+    //end -- debug
+
     /// SEPARATE SHOWERS AND SATELLITES
 
     /// 0) Find distance from cluster starts to roi vtx
@@ -35,8 +46,8 @@ namespace larocv {
     std::multimap<float, int> clus_dists ;
 
     for (int i = 0; i < clusters.size(); ++i) {
-      auto pi0st = clusters[i].roi.vtx;
       auto cst  = clusters[i].roi.startpt ;
+      auto pi0st = r.roivtx_in_image(meta);
       auto dist = sqrt( pow(pi0st.x - cst.x, 2) + pow(pi0st.y - cst.y, 2) );
 
       clus_dists.emplace(dist, i);
@@ -52,6 +63,7 @@ namespace larocv {
       else
         satellite_v.push_back(orig_clus[c.second]);
     }
+
 
     /// 2) Don't want to reuse merged satellites-- store status here
     std::map<size_t, bool> used_sats;
@@ -75,25 +87,31 @@ namespace larocv {
       std::pair<float, float> start( c1.roi.startpt.x, c1.roi.startpt.y);
       std::pair<float, float> end  ( c1.roi.endpt.x  , c1.roi.endpt.y  );
       
+      auto dist = sqrt ( pow(end.first - start.first,2) + pow(end.second - start.second,2)); 
+
+      c1.roi.dir.x = ( c1.roi.endpt.x - c1.roi.startpt.x ) / dist;
+      c1.roi.dir.y = ( c1.roi.endpt.y - c1.roi.startpt.y ) / dist;
+
       // is this a hack to get the direction right, sometime the cone
       // projects out in the wrong direction and collects the wrong
       // amount of charge
       // std::cout << "c1.reco.dir.y" << c1.reco.dir.y << "\n";
       // std::cout << "c1.reco.dir.x" << c1.reco.dir.x << "\n";
-      if  ( c1.roi.endpt.x > c1.roi.startpt.x )  {
-        if ( c1.reco.dir.x < 0 ) {
-          c1.reco.dir.y *= -1.0;
-          c1.reco.dir.x *= -1.0;
-        }
-      }
-      else {
-        if ( c1.reco.dir.x > 0 ) {
-          c1.reco.dir.y *= -1.0;
-          c1.reco.dir.x *= -1.0;
-        }
-      }
+      //if  ( c1.roi.endpt.x > c1.roi.startpt.x )  {
+      //  if ( c1.reco.dir.x < 0 ) {
+      //    c1.reco.dir.y *= -1.0;
+      //    c1.reco.dir.x *= -1.0;
+      //  }
+      //}
+      //else {
+      //  if ( c1.reco.dir.x > 0 ) {
+      //    c1.reco.dir.y *= -1.0;
+      //    c1.reco.dir.x *= -1.0;
+      //  }
+      //}
 
-      std::pair<float, float> dir  ( c1.reco.dir.y    , c1.reco.dir.x    );
+      //std::pair<float, float> dir  ( c1.reco.dir.y    , c1.reco.dir.x    );
+      std::pair<float, float> dir  ( c1.roi.dir.y    , c1.roi.dir.x    );
 
       auto orig_angle = atan2(dir.first, dir.second) ;
       double length  = pow( pow(start.first - end.first, 2) + pow(start.second - end.second, 2), 0.5 ) ;
@@ -188,11 +206,49 @@ namespace larocv {
 
       if ( hit_inside )
         result.push_back(c1) ;
+
+
+    //***************************************************
+    //***Debug Mode
+    if ( !meta.debug() ) continue;    
+
+    std::stringstream ss_x,ss_y;
+    ss_x  << "Cone_" << c1.ClusterID()<<"_x";
+    ss_y  << "Cone_" << c1.ClusterID()<<"_y";
+
+    for (int i = 0; i < 3; i ++ ) {
+
+        double x1 = meta.XtoTimeTick(c1._cone_contour[i].x);
+        double y1 = meta.YtoWire(c1._cone_contour[i].y);
+      
+        uinfo.append(ss_x.str(),x1); 
+        uinfo.append(ss_y.str(),y1); 
+        
+	if ( i ==2 ){
+        double x1 = meta.XtoTimeTick(c1._cone_contour[0].x);
+        double y1 = meta.YtoWire(c1._cone_contour[0].y);
+      
+        uinfo.append(ss_x.str(),x1); 
+        uinfo.append(ss_y.str(),y1); 
+	}
+
+       }
+
+        ss_x.str(std::string());
+        ss_x.clear();
+
+        ss_y.str(std::string());
+        ss_y.clear();
+
     }
 
     for (size_t i = 0; i < used_sats.size(); i++) {
       if ( !used_sats[i] ) result.push_back(satellite_v[i]);
     }
+
+   if ( meta.debug() ) 
+   meta.ev_user()->emplace_back(uinfo);
+
 
     return result;
   }
