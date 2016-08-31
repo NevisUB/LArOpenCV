@@ -1,11 +1,17 @@
 import os,sys
 
+# Usage from ImageCluster :
+# python bin/gen_image_cluster_algo.py AlgName Directory
+# For example, directory can be Merge, Cluster, Filter, etc
+
 name=sys.argv[1]
 print
 print 'Generating a source code for new ClusterImage algorithm',name
 source_path = os.path.dirname(__file__)
 source_path = os.getcwd() + "/" + source_path + "/"
 target_path = source_path + '../'
+
+target_path += '%s' % sys.argv[2] + '/'
 
 print 'Target path:',target_path
 print 'Source path:',source_path
@@ -41,7 +47,7 @@ tmp_linkdef = open(res_link,'r').read().split('\n')
 linkdef = ''
 for line in tmp_linkdef:
     if line.find('ADD_NEW_CLASS') >= 0:
-        linkdef += '#pragma link C++ class larcv::%s+;\n' % name
+        linkdef += '#pragma link C++ class larocv::%s+;\n' % name
     linkdef += line + '\n'
 fout=open(res_link,'w')
 fout.write(linkdef)

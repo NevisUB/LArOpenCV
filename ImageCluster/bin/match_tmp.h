@@ -17,12 +17,12 @@
 #include "MatchAlgoBase.h"
 #include "MatchAlgoFactory.h"
 
-namespace larcv {
+namespace larocv {
   /**
      \class ClassName
      @brief A simple matching algorithm meant to serve for testing/example by Kazu
   */
-  class ClassName : public larcv::MatchAlgoBase {
+  class ClassName : public larocv::MatchAlgoBase {
     
   public:
     
@@ -42,7 +42,7 @@ namespace larcv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    double _Process_(const larcv::Cluster2DPtrArray_t& clusters);
+    double _Process_(const larocv::Cluster2DPtrArray_t& clusters);
 
     
   private:
@@ -50,8 +50,8 @@ namespace larcv {
   };
   
   /**
-     \class larcv::ClassNameFactory
-     \brief A concrete factory class for larcv::ClassName
+     \class larocv::ClassNameFactory
+     \brief A concrete factory class for larocv::ClassName
    */
   class ClassNameFactory : public MatchAlgoFactoryBase {
   public:
@@ -62,7 +62,7 @@ namespace larcv {
     /// creation method
     MatchAlgoBase* create(const std::string instance_name) { return new ClassName(instance_name); }
   };
-  /// Global larcv::ClassNameFactory to register MatchAlgoFactory
+  /// Global larocv::ClassNameFactory to register MatchAlgoFactory
   static ClassNameFactory __global_ClassNameFactory__;
 }
 #endif
