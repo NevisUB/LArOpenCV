@@ -22,11 +22,11 @@ namespace larocv {
     LAROCV_DEBUG((*this)) << "end" << std::endl;
   }
 
-  double MatchAlgoBase::Process(const larocv::Cluster2DPtrArray_t& clusters)
+  double MatchAlgoBase::Process(const larocv::Cluster2DPtrArray_t& clusters,const std::vector<double> & roi_vtx)
   {
-    if(!Profile()) return this->_Process_(clusters);
+    if(!Profile()) return this->_Process_(clusters,roi_vtx);
     _watch.Start();
-    auto result = this->_Process_(clusters);
+    auto result = this->_Process_(clusters,roi_vtx);
     _proc_time += _watch.WallTime();
     ++_proc_count;
     return result;

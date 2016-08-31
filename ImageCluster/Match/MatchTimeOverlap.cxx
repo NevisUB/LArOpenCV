@@ -13,7 +13,7 @@ namespace larocv{
 
   }
   
-  double MatchTimeOverlap::_Process_(const larocv::Cluster2DPtrArray_t& clusters)
+  double MatchTimeOverlap::_Process_(const larocv::Cluster2DPtrArray_t& clusters, const std::vector<double>& vtx)
   {
 
     if(_require_3planes && clusters.size() == 2) return -1;

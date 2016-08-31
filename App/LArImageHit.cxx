@@ -117,7 +117,10 @@ namespace larlite {
         auto buffer_w =  _roi_buffer_w / geomH->WireToCm(); // 70cm
         auto buffer_t =  _roi_buffer_t / geomH->TimeToCm(); // 70cm
 
-        TVector3 vtxXYZ( vtx.X(), vtx.Y(), vtx.Z() );
+        //TVector3 vtxXYZ( vtx.X(), vtx.Y(), vtx.Z() );
+        std::vector<double> vtxXYZ = { vtx.X(), vtx.Y(), vtx.Z() };
+
+	roi.set3Dvtx(vtxXYZ);
 
 	auto vtxWT  = geomH->Point_3Dto2D(vtxXYZ,plane);
 	

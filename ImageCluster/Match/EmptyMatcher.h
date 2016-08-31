@@ -42,7 +42,7 @@ namespace larocv {
     void _Configure_(const ::fcllite::PSet &pset);
 
     /// Process method
-    double _Process_(const larocv::Cluster2DPtrArray_t& clusters);
+    double _Process_(const larocv::Cluster2DPtrArray_t& clusters, const std::vector<double>& vtx); 
     
   private:
 

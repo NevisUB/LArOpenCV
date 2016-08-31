@@ -16,6 +16,7 @@
 
 #include "ImageClusterBase.h"
 #include "Cluster2D.h"
+#include "Core/ROI.h"
 
 namespace larocv {
 
@@ -53,7 +54,7 @@ namespace larocv {
     /**
        @brief wrapper execution method: internally executes _Process_ function (see there for details)
     */
-    double Process(const larocv::Cluster2DPtrArray_t& clusters);
+    double Process(const larocv::Cluster2DPtrArray_t& clusters, const std::vector<double>& roi_vtx);
 
   protected:
 
@@ -67,7 +68,7 @@ namespace larocv {
        third argument is meta data to interpret a returned clusters (i.e. update metadata if return clusters \n
        do not use the same coordinate reference as provided image, else leave unchanged).
      */
-    virtual double _Process_(const larocv::Cluster2DPtrArray_t& clusters)=0;
+    virtual double _Process_(const larocv::Cluster2DPtrArray_t& clusters, const std::vector<double>& roi_vtx)=0;
     
   };
 

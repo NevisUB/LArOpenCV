@@ -48,6 +48,7 @@ namespace larocv {
       , _height(height)
       , _plane(plane)
       , _roi_vtx(::larocv::kINVALID_DOUBLE,::larocv::kINVALID_DOUBLE)
+      , _roi_3D_vtx(3,0)
     {
       if( width  < 0. ) throw larbys("Width must be a positive floating point!");
       if( height < 0. ) throw larbys("Height must be a positive floating point!");
@@ -68,12 +69,17 @@ namespace larocv {
     void setvtx(size_t w, size_t t)
     { _roi_vtx = Point2D(w,t); }
 
+    void set3Dvtx(std::vector<double> vtx3D)
+    { _roi_3D_vtx = vtx3D; }
+
     void setbounds(std::vector<Point2D>& bounds)
     { std::swap(_roi_bounds,bounds); }
     
     
     /// Get vertex in wire tick coordinates
     const Point2D& roivtx() const { return _roi_vtx; }
+
+    const std::vector<double> roi3Dvtx() const { return _roi_3D_vtx; }
 
     /// Get vertex ROI bounds
     const std::vector<Point2D>& roibounds() const { return _roi_bounds; }
@@ -97,6 +103,7 @@ namespace larocv {
     std::vector<Point2D> _roi_bounds ; ///< Corners of ROI
 
     Point2D _roi_vtx;
+    std::vector<double> _roi_3D_vtx ;
     
   };
 
