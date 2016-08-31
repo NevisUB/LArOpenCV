@@ -352,7 +352,7 @@ namespace larocv {
     	    tmp_index_v.push_back(c_per_plane[plane][index]->ClusterID());
     	  }
 
-	  const std::vector<double> roi_vtx = _roi_v_v[comb[0].first][0].roi3Dvtx();
+	  const std::vector<double> roi_vtx = _roi_v_v[0][comb[0].first].roi3Dvtx();
 	  
     	  auto score = _match_alg->Process(input_clusters,roi_vtx);
 	  
