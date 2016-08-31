@@ -11,8 +11,10 @@
 
 #pragma link C++ class larocv::MatchTimeOverlap+;
 #pragma link C++ class larocv::EmptyMatcher+;
+#pragma link C++ class larocv::VtxAlign+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
 
 
 
