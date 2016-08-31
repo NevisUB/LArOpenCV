@@ -141,6 +141,58 @@ namespace larocv{
     }
 
 
+
+
+    //fix connections
+    //sometimes this happens
+    // actual neighbors...
+
+    //   i : 0 : 1,
+    //   i : 1 : 10,
+    //   i : 5 : 7,
+    //   i : 9 : 10,
+    //   i : 10 : 1,
+
+    //unique neighbors...
+
+    // i : 0 : 1,10,
+    // i : 1 :
+    // i : 2 :
+    // i : 3 :
+    // i : 4 :
+    // i : 5 : 7,
+    // i : 6 :
+    // i : 7 :
+    // i : 8 :
+    // i : 9 :
+    // i : 10 : 
+
+    for( auto& neighbor : neighbors ) {
+
+      //get the current index
+      auto& idx = neighbor.first;
+
+      //and my neighbors
+      auto& vec = neighbor.second;
+      
+      //for each of my neighbors
+      for(auto& v : vec) {
+
+	if ( neighbors.count(v) <= 0 ) continue;
+
+	//get their neighbors
+	auto& ovec = neighbors[v];
+
+	//if i'm in there, good, if not
+	if ( std::find(ovec.begin(), ovec.end(), idx) != ovec.end() ) continue;
+
+	//ad me to my neighbors!
+	ovec.push_back(idx);
+	
+      }
+    }
+
+    
     //unravel it, meaning start with the contours that are closest to the vertex, and create
     //a unique vector for them
 
@@ -157,8 +209,9 @@ namespace larocv{
       unravel(used,neighbors,unique_neighbors,i,i);
 
     }
-
-    // //this is useful for debugging!
+    
+    
+    //this is useful for debugging!
     // std::cout <<"\n\t" << "actual neighbors...\n\n";
     // for(auto n : neighbors){
     //   std::cout << "i : " << n.first << " : ";
@@ -302,11 +355,12 @@ namespace larocv{
     if ( cnse.count(k) <= 0 ) return; // key doesn't exist
     
     for(const auto& n : cnse.at(k)) { // std::vector of neighbors
-
+      
       if ( used[n] ) continue;
       
       cmse[i].push_back(n);
-      used[i] = true; used[n] = true;
+      used[i] = true;
+      used[n] = true;
       
       unravel(used,cnse,cmse,i,n);
     }

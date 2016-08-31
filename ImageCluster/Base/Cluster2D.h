@@ -68,6 +68,15 @@ namespace larocv {
     /// convert from y variable to Wire
     double YtoWire(double y) const { return ( (y + 0.5 )* _pixel_width ) + _origin.x ; }
 
+
+    //copy of the essentials...
+    void copy_params(const Cluster2D& incluster) {
+      this->_startPt      = incluster._startPt;
+      this->_eigenVecFirst= incluster._eigenVecFirst;
+      this->reco          = incluster.reco;
+      this->roi           = incluster.roi;
+    }
+    
     //
     // Data attributes that can be modified by algorithms
     //
