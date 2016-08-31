@@ -21,8 +21,11 @@
 
 #pragma link C++ class larocv::HoughPTrackShower+;
 #pragma link C++ class larocv::FilterROI+;
+#pragma link C++ class larocv::VertexInHull+;
 
 #endif
+
+
 
 
 
