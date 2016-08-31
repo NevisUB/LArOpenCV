@@ -120,7 +120,7 @@ namespace larocv{
     //sort the clusters based on their distance from the vertex
     std::sort(std::begin(oclusters),std::end(oclusters),
 	      [this,&pi0st](const Cluster2D& c1, const Cluster2D& c2) {
-		return this->d_to_vtx(c1._contour,pi0st) < this->d_to_vtx(c2._contour,pi0st);
+		return (this->d_to_vtx(c1._contour,pi0st) < this->d_to_vtx(c2._contour,pi0st));
 	      });
 
     //do the combinations, find which ones overlap, put them into a map
@@ -212,25 +212,25 @@ namespace larocv{
     
     
     //this is useful for debugging!
-    // std::cout <<"\n\t" << "actual neighbors...\n\n";
-    // for(auto n : neighbors){
-    //   std::cout << "i : " << n.first << " : ";
-    //   for(auto j : n.second)     
-    //   	std::cout << j << ",";
-    //   std::cout << "\n";
-    // }
+    std::cout <<"\n\t" << "actual neighbors...\n\n";
+    for(auto n : neighbors){
+      std::cout << "i : " << n.first << " : ";
+      for(auto j : n.second)     
+      	std::cout << j << ",";
+      std::cout << "\n";
+    }
 
     
 
-    // std::cout <<"\n\t" << "unique neighbors...\n\n";
-    // for(int i=0;i<unique_neighbors.size();++i) {
+    std::cout <<"\n\t" << "unique neighbors...\n\n";
+    for(int i=0;i<unique_neighbors.size();++i) {
 
-    //   std::cout << "i : " << i << " : ";
-    //   for(auto j : unique_neighbors[i])
-    // 	std::cout << j << ",";
+      std::cout << "i : " << i << " : ";
+      for(auto j : unique_neighbors[i])
+    	std::cout << j << ",";
 
-    //   std::cout << "\n";
-    // }
+      std::cout << "\n";
+    }
 
 
     //lets use used again
@@ -290,6 +290,7 @@ namespace larocv{
 	cluster._contour[u] = overall_ctor[ hullpts[u] ];
 
       //set the cluster parameters to the parent
+      std::cout << "on i : " << i << "\n";
       cluster.copy_params(oclusters[i]);
       
       //put this cluster back into the array
@@ -411,7 +412,7 @@ namespace larocv{
     for(const auto& pt : ctor) {
       auto dd = sqrt((pt.x - vtx.x)*(pt.x - vtx.x) +
 		     (pt.y - vtx.y)*(pt.y - vtx.y));
-      if (d < dd)
+      if (dd < d)
 	d = dd;
     }
     return d;
