@@ -5,7 +5,7 @@ LArImageHit: {
 
   Profile: true
   StoreOriginalImage: false
-  Producer: gaushit
+  Producer: shrhits2
 
   # LArImageHit config
   PoolTimeTick: 6 
@@ -32,13 +32,13 @@ ImageClusterManager: {
   Verbosity: 2
   Profile:   true
 
-  ClusterAlgoType: [SBCluster,SimpleCuts,HoughPTrackShower,FilterROI,PCAOverall,BoundRectStart,ROIParameters,AttachedClusters,VertexInHull,ClusterWriteOut]
-  ClusterAlgoName: [sbc,sc,hpts,fr,pcao,brs,rp,ac,vih,cwo]
+  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,HoughPTrackShower,FilterROI,PCAOverall,BoundRectStart,ROIParameters,AttachedClusters,VertexInHull,ClusterWriteOut]
+  ClusterAlgoName: [pc,fcp,sc,hpts,fr,pcao,brs,rp,ac,vih,cwo]
   
   ShowImage: false
 
-  MatchAlgoType: ""#MatchTimeOverlap 
-  MatchAlgoName: ""#mto
+  MatchAlgoType: "MatchTimeOverlap"
+  MatchAlgoName: "mto"
 
   ReClusterAlgoType: ""
   ReClusterAlgoName: ""
@@ -51,6 +51,12 @@ ImageClusterManager: {
    MinContourArea: 0
    
  }
+
+ fm : {
+   Keep : 100
+}
+
+  fcp: {}
 
  vih : {}
 
@@ -108,11 +114,22 @@ ImageClusterManager: {
     MaxLineGap: 10
   }
 
+ pc : {
+
+   Verbosity: 0
+   DilationSize : 10
+   DilationIterations : 2
+   BlurSizeR : 25
+   BlurSizeT : 5
+   Thresh : 1
+   ThreshMaxVal : 255
+   
+  }
 
    mto : { 
-         RatioCut : 0.001
-         StartTimeCut : 100 
-         RequireThreePlanes : 0 
-        }   
+      RatioCut : 0.001
+      StartTimeCut : 100 
+      RequireThreePlanes : 0 
+   }   
 
 }

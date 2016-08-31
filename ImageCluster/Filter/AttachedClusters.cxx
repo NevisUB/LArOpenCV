@@ -25,7 +25,6 @@ namespace larocv{
     std::vector<std::vector<::cv::Vec4i> > defects_v;
     defects_v.resize(clusters.size());
 
-
     //start -- debug
     std::stringstream ss1,ss2,ss3,ss4;
     ::larlite::user_info uinfo{};
@@ -61,7 +60,6 @@ namespace larocv{
       auto max_defect     =  *(max_defect_itr);
       auto ndefects       =  defects_d.size();
 
-      
       std::vector<::cv::Point> hullcontour;
       hullcontour.resize(hullpts.size()-1);
 
@@ -72,7 +70,7 @@ namespace larocv{
       double hull_area    = ::cv::contourArea(hullcontour);
 
       LAROCV_DEBUG((*this)) << "\t>> Saw max_defect " << max_defect << " for total of ndefects: " << ndefects << " for cluster " << i << "\n";
-
+      
       if ( meta.debug() ) {
 
 	for( unsigned k = 0; k < hullpts.size(); ++k ) {

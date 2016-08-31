@@ -12,7 +12,8 @@ namespace larocv {
     _dilation_size = pset.get<int>("DilationSize");
     _dilation_iter = pset.get<int>("DilationIterations");
     
-    _blur_size     = pset.get<int>("BlurSize");
+    _blur_size_r = pset.get<int>("BlurSizeR");
+    _blur_size_t = pset.get<int>("BlurSizeT");
     
     _thresh        = pset.get<float>("Thresh");
     _thresh_maxval = pset.get<float>("ThreshMaxVal");
@@ -28,17 +29,16 @@ namespace larocv {
     if ( clusters.size() )
       throw larbys("This algo can only be executed first in algo chain!");
 					
-    ::cv::Mat polarimg,sb_img;
+    ::cv::Mat polarimg, sb_img;
 
     //get the vertex in the image
     auto pi0st = roi.roivtx_in_image(meta);
+
     auto roib1 = roi.roibounds_in_image(meta,0);
     auto roib2 = roi.roibounds_in_image(meta,2);
 
     auto radx = std::abs(roib1.x - roib2.x);
-    auto rady = std::abs(roib1.x - roib2.x);
-
-    std::cout << "RADX: " << radx << " & RADY: " << rady << "\n";
+    auto rady = std::abs(roib1.y - roib2.y);
 
     double rad = radx;
     
@@ -50,17 +50,21 @@ namespace larocv {
 
     
     //Dilate
-    auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,::cv::Size(_dilation_size,_dilation_size));
+    auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,
+					      ::cv::Size(_dilation_size,_dilation_size));
     ::cv::dilate(polarimg,sb_img,
 		 kernel,::cv::Point(-1,-1),_dilation_iter);
     
     //Blur
     ::cv::blur(sb_img,sb_img,
-	       ::cv::Size(_blur_size,_blur_size));
+	       ::cv::Size(_blur_size_r,_blur_size_t));
 
     //Threshold
-    auto t_value = ::cv::threshold(sb_img,sb_img,
-				   _thresh,_thresh_maxval,CV_THRESH_BINARY); //return type is "threshold value?"
+    auto t_value = ::cv::threshold(sb_img,
+				   sb_img,
+				   _thresh,
+				   _thresh_maxval,
+				   CV_THRESH_BINARY); //return type is "threshold value?"
     (void) t_value;
     
     //Contour finding
@@ -93,58 +97,17 @@ namespace larocv {
 	float t = pt.y;
 	
 	r = (r / cols) * rad;
-	t = (t / rows) * 2.0 * 3.14159;
+	t = (t / rows) * 360.0 * 3.14159 / 180.0;
 	
 	pt.x = (int) r * std::cos(t) + pi0st.x;
 	pt.y = (int) r * std::sin(t) + pi0st.y;
       }
       
-      new_clus._minAreaBox  = ::cv::minAreaRect(contour);
-      new_clus._boundingBox = ::cv::boundingRect(contour);
-      
-      auto& min_rect      = new_clus._minAreaBox;
-      auto& bounding_rect = new_clus._boundingBox;
-      
-      ::cv::Point2f vertices[4];
-
-      //rotated rect coordinates
-      min_rect.points(vertices);
-      new_clus._minAreaRect     = {vertices[0],vertices[1],vertices[2],vertices[3]};
-
-      //axis aligned rect coordinates
-      new_clus._minBoundingRect = {bounding_rect.br(),bounding_rect.tl()};
-
-      auto rect = min_rect.size;
-      new_clus._area      = ::cv::contourArea(contour) ;
-      new_clus._perimeter = ::cv::arcLength(contour,1);
-      new_clus._length    = rect.height > rect.width ? rect.height : rect.width;
-      new_clus._width     = rect.height > rect.width ? rect.width  : rect.height;
-      new_clus._numHits   = 0 ;
-      new_clus._sumCharge = 0 ;
-      new_clus._angle2D   = min_rect.angle;
-      new_clus._centerPt  = Point2D(min_rect.center.x,min_rect.center.y);
-	
       std::swap(new_clus._contour,contour);
        
       result_v.emplace_back(new_clus);
     }
     
-    Contour_t all_locations;
-    ::cv::findNonZero(img, all_locations); // get the non zero points
-
-    for( const auto& loc: all_locations ) {
-      for( size_t i = 0; i < result_v.size(); i++ ) {
-
-	if ( ::cv::pointPolygonTest(result_v[i]._contour,loc,false) < 0 ) 
-	  continue;
-
-	result_v[i]._insideHits.emplace_back(loc.x, loc.y);
-	result_v[i]._numHits++;
-	result_v[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);
-	
-      }   
-    }
-
     if ( meta.debug() ) {
 
       std::stringstream ss1, ss2;

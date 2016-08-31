@@ -64,53 +64,11 @@ namespace larocv {
     for(size_t j = 0; j < ctor_v.size(); ++j){
 
       auto& contour = ctor_v[j];
-      
-      new_clus._minAreaBox  = ::cv::minAreaRect(contour);
-      new_clus._boundingBox = ::cv::boundingRect(contour);
-      
-      auto& min_rect      = new_clus._minAreaBox;
-      auto& bounding_rect = new_clus._boundingBox;
-      
-      ::cv::Point2f vertices[4];
-
-      //rotated rect coordinates
-      min_rect.points(vertices);
-      new_clus._minAreaRect     = {vertices[0],vertices[1],vertices[2],vertices[3]};
-
-      //axis aligned rect coordinates
-      new_clus._minBoundingRect = {bounding_rect.br(),bounding_rect.tl()};
-
-      auto rect = min_rect.size;
-      new_clus._area      = ::cv::contourArea(contour) ;
-      new_clus._perimeter = ::cv::arcLength(contour,1);
-      new_clus._length    = rect.height > rect.width ? rect.height : rect.width;
-      new_clus._width     = rect.height > rect.width ? rect.width  : rect.height;
-      new_clus._numHits   = 0 ;
-      new_clus._sumCharge = 0 ;
-      new_clus._angle2D   = min_rect.angle;
-      new_clus._centerPt  = Point2D(min_rect.center.x,min_rect.center.y);
-	
       std::swap(new_clus._contour,contour);
-       
-      result_v.emplace_back(new_clus);
+      result_v.emplace_back(new_clus); //this makes a copy
+      
     }
     
-    Contour_t all_locations;
-    ::cv::findNonZero(img, all_locations); // get the non zero points
-
-    for( const auto& loc: all_locations ) {
-      for( size_t i = 0; i < result_v.size(); i++ ) {
-
-	if ( ::cv::pointPolygonTest(result_v[i]._contour,loc,false) < 0 ) 
-	  continue;
-
-	result_v[i]._insideHits.emplace_back(loc.x, loc.y);
-	result_v[i]._numHits++;
-	result_v[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);
-	
-      }   
-    }
-
     if ( meta.debug() ) {
 
       std::stringstream ss1, ss2;
@@ -125,7 +83,7 @@ namespace larocv {
       uinfo.store("NClusters",(int)result_v.size());
 
       LAROCV_DEBUG((*this)) << "Writing debug information for " << clusters.size() << "\n";
-    
+      
       for(size_t i = 0; i < result_v.size(); ++i){
 
 	const auto& cluster = result_v[i];

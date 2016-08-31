@@ -11,8 +11,10 @@
 
 #pragma link C++ class larocv::EmptyImageCluster+;
 #pragma link C++ class larocv::SBCluster+;
+#pragma link C++ class larocv::PolarCluster+;
 #pragma link C++ class larocv::TCluster+;
 #pragma link C++ class larocv::SBManCluster+;
+#pragma link C++ class larocv::FillClusterParams+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
