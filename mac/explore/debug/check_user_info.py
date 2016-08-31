@@ -22,7 +22,7 @@ FILENAME="../../../App/mac/test_output.root"
 sm.add_in_filename(FILENAME)
 sm.open()
 
-for evt in xrange(10):
+for evt in xrange(30):
     print "~~~~~~~~~~~> event is %d <~~~~~~~~~~~"%evt
     sm.go_to(evt)
 
@@ -68,9 +68,9 @@ for evt in xrange(10):
         uinfo=event_user[s]
         id_ = uinfo.get_string("ID")
         
-        if id_ == "Algo_sbc_Plane_2_clusters" : sbcplane0 = uinfo
-        if id_ == "Algo_sbc_Plane_1_clusters" : sbcplane1 = uinfo
-        if id_ == "Algo_sbc_Plane_2_clusters" : sbcplane2 = uinfo
+        if id_ == "Algo_pc_Plane_2_clusters" : sbcplane0 = uinfo
+        if id_ == "Algo_pc_Plane_1_clusters" : sbcplane1 = uinfo
+        if id_ == "Algo_pc_Plane_2_clusters" : sbcplane2 = uinfo
 
         if id_ == "Algo_cwo_Plane_0_clusters" : plane0 = uinfo
         if id_ == "Algo_cwo_Plane_1_clusters" : plane1 = uinfo
@@ -155,16 +155,6 @@ for evt in xrange(10):
                     yy=np.append(yy,yy[0])
 
                     plt.plot(yy,xx,'-',lw=2,color='red')
-
-            # exec("flash_data = flashplane%s"%plane)
-
-            # if flash_data:
-            #     xx=np.array(flash_data.get_darray('ClusterID_{}_contour_x'.format(cid)))
-            #     yy=np.array(flash_data.get_darray('ClusterID_{}_contour_y'.format(cid)))
-            #     xx=np.append(xx,xx[0])
-            #     yy=np.append(yy,yy[0])
-                
-            #     plt.plot(yy,xx,'-',lw=2,color='blue',alpha=0.5)
             
             ##############################
             #put vertex information on screen as a big star 
@@ -213,6 +203,20 @@ for evt in xrange(10):
                 x2=houghdata.get_double("line_{}_x2".format(n))
                 y2=houghdata.get_double("line_{}_y2".format(n))
                 ax.plot([y1,y2],[x1,x2],'--',lw=3,color='yellow')
+
+
+        ##############################
+        #lets put on there my flashlights
+        exec("flash_data = flashplane%s"%plane)
+
+        if flash_data:
+            for i in xrange(flash_data.get_int("N_hulls")):
+                xx=np.array(flash_data.get_darray('ClusterID_{}_contour_x'.format(i)))
+                yy=np.array(flash_data.get_darray('ClusterID_{}_contour_y'.format(i)))
+                xx=np.append(xx,xx[0])
+                yy=np.append(yy,yy[0])
+                
+                plt.plot(yy,xx,'-',lw=2,color='blue',alpha=0.5)
 
         plt.grid()
         ax.set_title("Event {} Plane {}".format(evt,plane),fontweight='bold',fontsize=30)
