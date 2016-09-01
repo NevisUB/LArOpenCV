@@ -17,6 +17,8 @@
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
+#include "TTree.h"
+
 namespace larocv {
   /**
      \class InertiaTrackShower
@@ -28,14 +30,14 @@ namespace larocv {
     
     /// Default constructor
     InertiaTrackShower(const std::string name="InertiaTrackShower")
-      : ClusterAlgoBase(name)
+      : ClusterAlgoBase(name),_outtree(nullptr)
     {}
     
     /// Default destructor
     ~InertiaTrackShower(){}
     
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
-    void Finalize(TFile* _fout) { }
+    void Finalize(TFile* _fout) { _outtree->Write(); }
     
   protected:
 
@@ -48,7 +50,9 @@ namespace larocv {
 				       larocv::ImageMeta& meta, larocv::ROI& roi);
 
   private:
-    
+    TTree* _outtree;
+    double _ratio;
+    double _nhits;
   };
   
   /**

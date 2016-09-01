@@ -7,6 +7,9 @@ namespace larocv {
 
   void InertiaTrackShower::_Configure_(const ::fcllite::PSet &pset)
   {
+    _outtree = new TTree("outtree","outtree");
+    _outtree->Branch("ratio",&_ratio,"_ratio/D");
+    _outtree->Branch("nhits",&_nhits,"_nhits/D");
   }
   
   Cluster2DArray_t InertiaTrackShower::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -41,8 +44,11 @@ namespace larocv {
       else {
 	ratio = 1;
       }
-      
-      std::cout << "ratio is ... " << ratio << "\n";
+
+      _ratio = ratio;
+      _nhits = (double) cluster._numHits;
+      _outtree->Fill();
+
     }
     
     return clusters;
