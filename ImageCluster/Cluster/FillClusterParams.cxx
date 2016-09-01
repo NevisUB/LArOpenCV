@@ -49,7 +49,7 @@ namespace larocv {
     Contour_t all_locations;
     ::cv::findNonZero(img, all_locations); // get the non zero points
     
-    for( const auto& loc: all_locations ) {
+     for( const auto& loc: all_locations ) {
       for( size_t i = 0; i < oclusters.size(); i++ ) {
 	
 	if ( ::cv::pointPolygonTest(oclusters[i]._contour,loc,false) < 0 ) 

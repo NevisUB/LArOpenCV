@@ -191,8 +191,6 @@ namespace larlite {
   {
     ++_num_stored;
 
-    // std::cout<<"# clusters: "<<_num_clusters<<std::endl;
-
     if (_num_clusters == 0) {
       _num_clusters = 0;
       _num_clustered_hits = 0;
@@ -212,6 +210,7 @@ namespace larlite {
     // prepare cluster -> hit association
     AssSet_t cluster_hit_ass;
     cluster_hit_ass.resize(_num_clusters);
+
     // prepare cluster -> vertex association
     //AssSet_t cluster_vtx_ass;
     //cluster_vtx_ass.resize(_num_clusters);
@@ -275,11 +274,15 @@ namespace larlite {
 	// set cluster properties
 	// x is the time coordinate
 	// and Height is also for time
+
 	double st = imgclus.XtoTimeTick( imgclus._startPt.x );
 	double sw = imgclus.YtoWire    ( imgclus._startPt.y );
 	double et = imgclus.XtoTimeTick( imgclus._endPt.x   );
 	double ew = imgclus.YtoWire    ( imgclus._endPt.y   );
 
+	//angle, calculated from direction
+	double sa = imgclus.AngleofDir();
+	
 	if ( sw > geom->Nwires(imgclus.PlaneID()) ) {
 	  std::cout << "start wire out of range:" << std::endl;
 	  std::cout << "Plane : " << imgclus.PlaneID() << " w/ [start,end] wire -> [" << int(sw) << ", " << int(ew) << "]" << std::endl;
@@ -291,11 +294,15 @@ namespace larlite {
 	  std::cout << std::endl;
 	}
 
+	//set reco params
 	c.set_start_wire(sw, 1);
 	c.set_end_wire(ew, 1);
+
 	c.set_start_tick(st, 1);
 	c.set_end_tick(et, 1);
 
+	c.set_start_angle(sa);
+	
 	// set plane / id information
 	c.set_view(geom->PlaneToView(imgclus.PlaneID()));
 	c.set_planeID(geo::PlaneID(0, 0, imgclus.PlaneID()));

@@ -68,26 +68,35 @@ namespace larocv{
 
       clear_ss(ss1);
       clear_ss(ss2);
-
+      //std::cout << "meta.pixel_width() : " << meta.pixel_width() << " , & meta.pixel_height() : " << meta.pixel_height() << "\n";
 
       //_centerPt
       ss1  <<  "ClusterID_" << cluster.ClusterID() <<  "_centerPt_x";
       ss2  <<  "ClusterID_" << cluster.ClusterID() <<  "_centerPt_y";
       uinfo.store(ss1.str(),meta.XtoTimeTick(cluster._centerPt.x));
       uinfo.store(ss2.str(),meta.YtoWire    (cluster._centerPt.y));
-
+	
       clear_ss(ss1);
       clear_ss(ss2);
 
       //_eigenVecFirst
       ss1  <<  "ClusterID_" << cluster.ClusterID() <<  "_eigenVecFirst_x";
       ss2  <<  "ClusterID_" << cluster.ClusterID() <<  "_eigenVecFirst_y";
-      uinfo.store(ss1.str(),meta.XtoTimeTick(cluster._eigenVecFirst.x));
-      uinfo.store(ss2.str(),meta.YtoWire    (cluster._eigenVecFirst.y));
+      uinfo.store(ss1.str(),cluster._eigenVecFirst.x);
+      uinfo.store(ss2.str(),cluster._eigenVecFirst.y);
 
       clear_ss(ss1);
       clear_ss(ss2);
-	
+
+
+      //hell, lets put the angle in there too
+      double angle= std::atan2(cluster._eigenVecFirst.x*meta.pixel_height(),
+			       cluster._eigenVecFirst.y*meta.pixel_width());
+
+      ss1  <<  "ClusterID_" << cluster.ClusterID() <<  "_angle";
+      uinfo.store(ss1.str(),angle);
+      clear_ss(ss1);
+      
     }
 
     meta.ev_user()->emplace_back(uinfo);

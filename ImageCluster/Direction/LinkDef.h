@@ -11,6 +11,7 @@
 
 #pragma link C++ class larocv::PCASegmentation+;
 #pragma link C++ class larocv::PCAOverall+;
+#pragma link C++ class larocv::BoundingRectDir+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

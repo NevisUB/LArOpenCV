@@ -67,7 +67,8 @@ namespace larocv {
     double XtoTimeTick(double x) const { return  ( (x + 0.5) * _pixel_height ) + _origin.y ; }
     /// convert from y variable to Wire
     double YtoWire(double y) const { return ( (y + 0.5 )* _pixel_width ) + _origin.x ; }
-
+    ///convert the direction to a 2D angle, scaling back from image coordinates x/y to return to wire/tick
+    double AngleofDir() const { return std::atan2(_eigenVecFirst.x*_pixel_height,_eigenVecFirst.y*_pixel_width); }
 
     //copy of the essentials...
     void copy_params(const Cluster2D& incluster) {

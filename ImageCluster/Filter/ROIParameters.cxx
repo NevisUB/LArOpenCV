@@ -25,6 +25,9 @@ namespace larocv {
       ocluster._endPt         = ocluster.roi.endpt;
       ocluster._eigenVecFirst = ocluster.roi.dir;
 
+      if (!ocluster.roi.dir.x)
+	ocluster._eigenVecFirst = ocluster.reco.dir;
+
       oclusters.emplace_back(ocluster);
     }
 

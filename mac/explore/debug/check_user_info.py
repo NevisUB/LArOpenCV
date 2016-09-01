@@ -22,7 +22,7 @@ FILENAME="../../../App/mac/test_output.root"
 sm.add_in_filename(FILENAME)
 sm.open()
 
-for evt in xrange(30):
+for evt in xrange(10):
     print "~~~~~~~~~~~> event is %d <~~~~~~~~~~~"%evt
     sm.go_to(evt)
 
@@ -175,7 +175,39 @@ for evt in xrange(30):
             starty = cluster_data.get_double("ClusterID_{}_startPt_y".format(cid))
             ax.plot(starty,startx,'*',markersize=20,color='orange')
 
+            #can we overlay the end points
+            endx = cluster_data.get_double("ClusterID_{}_endPt_x".format(cid))
+            endy = cluster_data.get_double("ClusterID_{}_endPt_y".format(cid))
+            ax.plot(endy,endx,'*',markersize=20,color='green')
 
+            #can we put the eigenvect first on there?
+            eigenx = cluster_data.get_double("ClusterID_{}_eigenVecFirst_x".format(cid))
+            eigeny = cluster_data.get_double("ClusterID_{}_eigenVecFirst_y".format(cid))
+
+            #how long should it be?
+            len_ = np.sqrt(np.power((endy-starty),2) + np.power((endx-startx),2))
+            print "len_ {}".format(len_)
+            print  "eigenx {} eigeny {}".format(eigenx,eigeny)
+            #normalize it
+            size_ = np.sqrt(np.power(eigeny,2) + np.power(eigenx,2))
+            eigenx/=size_
+            eigeny/=size_
+
+            t=50
+            ex=t*eigenx*6 #6==meta.pixel_height()
+            ey=t*eigeny
+            print "ex {} ey {} size_ {}".format(ex,ey,size_)
+            ax.plot([starty-ey,starty,starty+ey],[startx-ex,startx,startx+ex],'-',lw=3,color='orange')
+
+            #get the angle, lets make the line accounding to this guy
+            angle=cluster_data.get_double("ClusterID_{}_angle".format(cid))
+
+            ey=50*np.cos(angle)
+            ex=50*np.sin(angle)
+            ax.plot([starty-ey,starty,starty+ey],[startx-ex,startx,startx+ex],'-',lw=4,alpha=0.5,color='cyan')
+            
+            
+            
         exec("roi_data = roiplane%s"%plane)  
         ##############################
         #put the bounding box in
