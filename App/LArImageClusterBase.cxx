@@ -57,6 +57,8 @@ namespace larlite {
 
     _alg_mgr.Configure(cfg_mgr.Config().get_pset(_alg_mgr.Name()));
 
+    _alg_mgr.MatchPlaneWeights() = _plane_weights;
+    
     return true;
   }
 
@@ -65,16 +67,16 @@ namespace larlite {
     _img_mgr.clear();
     _orig_img_mgr.clear();
     _alg_mgr.ClearData();
-
+    
     ::larocv::Watch watch_all, watch_one;
     watch_all.Start();
     watch_one.Start();
-
     
     // try getting an image for this event, if possible
     try {
       this->extract_image(storage);
     }
+    
     catch (const DataFormatException &e) {
       std::cout << e.what() << std::endl;
       // save data-products that would be created in store_clusters

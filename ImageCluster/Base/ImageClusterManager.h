@@ -96,6 +96,9 @@ namespace larocv {
     const std::vector<larocv::ImageMeta> InputImageMetas() const { return _raw_meta_v; }
     /// Original image roi getter
     const std::vector<larocv::ROI> InputROIs() const { return _raw_roi_v; }
+    /// Plane weights getter and setter
+    std::vector<float>& MatchPlaneWeights() { return _match_plane_weights; }
+    
   private:
     /// Name identifier: used to fetch a block of configuration parameters
     std::string _name;
@@ -135,6 +138,8 @@ namespace larocv {
     ImageClusterViewer _viewer;
     /// MatchBookKeeper
     MatchBookKeeper _book_keeper;
+    /// MatchPlaneWeights
+    std::vector<float> _match_plane_weights;
   };
 }
 #endif

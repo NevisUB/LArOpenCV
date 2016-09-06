@@ -339,24 +339,29 @@ namespace larocv {
     	  input_clusters.reserve(comb.size());
     	  tmp_index_v.reserve(comb.size());
 
+	  float plane_weights = 1.0;
 	  // ROI is storing same 3D vertex for all three images, all algs
 	  // First index is plane, to be sure we're taking from a filled ROI
 	  // Second in alg id; 0 is definitely filled, else we're not here
     	  for(auto const& cinfo : comb) {
     	    auto const& plane = cinfo.first;
     	    auto const& index = cinfo.second;
-
+	    
     	    if( !c_per_plane[plane].size() ) continue;
 
+	    plane_weights *= _match_plane_weights[plane];
+	    
     	    input_clusters.push_back(c_per_plane[plane][index]);
     	    tmp_index_v.push_back(c_per_plane[plane][index]->ClusterID());
     	  }
-
+	  
 	  const std::vector<double> roi_vtx = _roi_v_v[0][comb[0].first].roi3Dvtx();
 	  
     	  auto score = _match_alg->Process(input_clusters,roi_vtx);
+
+	  score *= plane_weights;
 	  
-    	  if(score>0)
+	  if(score>0)
 	    
     	    _book_keeper.Match(tmp_index_v,score);
 	  
