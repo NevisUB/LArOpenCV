@@ -25,8 +25,6 @@ namespace larocv{
     auto vtx2D = roi.roivtx_in_image(meta); 
    std::cout<<"\nPlane "<<meta.plane()<<std::endl ;
    
-    _ratio_cut = 0 ; 
-   
     for ( size_t i = 0; i < clusters.size(); i++){ 
 
        auto const & c = clusters[i]; 
@@ -54,7 +52,7 @@ namespace larocv{
           oclusters.emplace_back(c);       
              }
 
-          std::cout<<"Score : " <<dot <<std::endl ;
+         // std::cout<<"Score : " <<_ratio_cut<<", "<<dot <<std::endl ;
 
 
      }
