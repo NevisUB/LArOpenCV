@@ -36,9 +36,9 @@ namespace larlite {
 
     _debug = pset.get<bool>("Debug");
 
-    
+    _plane_weights = pset.get<std::vector<float>>("MatchPlaneWeights");
   }
-
+  
   void LArImageHit::_Report_() const {
     std::cout << "  # of clusters  ......... ";
     std::cout << Form("%-6zu ", _num_clusters);
