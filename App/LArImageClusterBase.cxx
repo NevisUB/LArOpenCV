@@ -210,17 +210,18 @@ namespace larlite {
     _num_clusters = alg_mgr.NumClusters();
 
     // prepare cluster -> hit association
+    // temporary vector
+    AssSet_t temp_cluster_hit_ass;
+    temp_cluster_hit_ass.resize(_num_clusters);
+    // vector to store
     AssSet_t cluster_hit_ass;
-    cluster_hit_ass.resize(_num_clusters);
-
-    // prepare cluster -> vertex association
-    //AssSet_t cluster_vtx_ass;
-    //cluster_vtx_ass.resize(_num_clusters);
-
-    for (auto& ass_unit : cluster_hit_ass) ass_unit.reserve(100);
+    cluster_hit_ass.reserve(_num_clusters);
+    
+    for (auto& ass_unit : temp_cluster_hit_ass)
+      ass_unit.reserve(100);
 
     for (size_t hindex = 0; hindex < ev_hit->size(); ++hindex) {
-
+      
       auto const& h = (*ev_hit)[hindex];
 
       auto const& wid = h.WireID();
@@ -234,31 +235,19 @@ namespace larlite {
 
       _num_clustered_hits += 1;
 
-      cluster_hit_ass[cid].push_back(hindex);
+      temp_cluster_hit_ass[cid].push_back(hindex);
     }// for all hits
 
+    for(auto & temp_cluster_hit_a : temp_cluster_hit_ass) {
+      if (!temp_cluster_hit_a.size()) continue;
+      cluster_hit_ass.emplace_back(temp_cluster_hit_a); // do not std::move it, we need to check nonzero later
+    }
+	  
     auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
     auto ev_hit_ass = storage->get_data<event_ass>    ("ImageClusterHit");
     auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
     auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
     auto ev_vtx     = storage->get_data<event_vertex> (_vtx_producer);
-
-    // save ROI & vertices if available
-    // and grab the associated vertex
-    //::larlite::event_PiZeroROI* ev_roi = nullptr;
-    //::larlite::event_vertex* ev_vtx = nullptr;
-
-    // ev_roi = storage->get_data<event_PiZeroROI>("pizerofilter");
-    // AssSet_t ass_vtx_v;
-    // if (ev_roi and (ev_roi->size() != 0) ) {
-    //   ass_vtx_v = storage->find_one_ass(ev_roi->id(), ev_vtx, ev_roi->name());
-    //   // get associations for 1st ROI
-    //   if (ass_vtx_v.size() != 0) {
-    // 	for (size_t i = 0; i < _num_clusters; i++) {
-    // 	  cluster_vtx_ass.push_back( ass_vtx_v[0] );
-    // 	}
-    //   }// if associated vertices exist
-    // }// if PiZeroROI is found
 
     if (ev_cluster) {
       
@@ -266,17 +255,19 @@ namespace larlite {
 
       for (size_t cid = 0; cid < _num_clusters; ++cid) {
 
+	if (!temp_cluster_hit_ass[cid].size()) continue;
+	
 	auto const& imgclus = alg_mgr.Cluster(cid);
-
+	
 	if (cid != imgclus.ClusterID())
 	  throw DataFormatException("ClusterID ordering seems inconsistent!");
-
+	
 	::larlite::cluster c;
-
+	
 	// set cluster properties
 	// x is the time coordinate
 	// and Height is also for time
-
+	
 	double st = imgclus.XtoTimeTick( imgclus._startPt.x );
 	double sw = imgclus.YtoWire    ( imgclus._startPt.y );
 	double et = imgclus.XtoTimeTick( imgclus._endPt.x   );
@@ -312,10 +303,12 @@ namespace larlite {
 
 	// add to event_cluster
 	ev_cluster->push_back(c);
-
-	
       }
 
+      if (ev_cluster->size() != cluster_hit_ass.size()) {
+	std::cout << "ev_cluster->size() : " << ev_cluster->size() << " and cluster_hit_ass.size() : " <<  cluster_hit_ass.size() << "\n";
+	  throw larocv::larbys("There are more cluster-associated hits than there are in ev_cluster. Get your ass over here and fix it\n");
+	}
       
       // if we have crated a cluster -> hit association
       if (ev_hit_ass)
@@ -355,11 +348,11 @@ namespace larlite {
           AssUnit_t ass;
           ass.push_back(0); 
           vtx_ass.push_back(ass);
-	  }
+	}
 
         if (ev_vtx_ass && ev_vtx) ev_vtx_ass->set_association(ev_pfpart->id(), ev_vtx->id(), vtx_ass);
 
-         }
+      }
 
     }
 
