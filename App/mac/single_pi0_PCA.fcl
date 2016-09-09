@@ -1,0 +1,141 @@
+LArImageHit: {
+  Verbosity: 2
+  # LArImageClusterBase config
+
+  Profile: true
+  StoreOriginalImage: false
+  Producer: gaushit
+
+  # LArImageHit config
+  PoolTimeTick: 6 
+  
+  VertexProducer: mcvertex
+  Debug: true
+
+  MakeROI: true
+  CropROI: false
+  
+  ROIBufferW : 1000
+  ROIBufferT : 1000
+  
+  Q2Gray: 10
+  QMin: 5
+
+  TimeOffset : 800
+  WindowTMax : 9599#6399
+  WindowTMin : 0
+
+  MatchPlaneWeights : [1,1,10] #plane 0,1,2
+
+}
+ImageClusterManager: {
+
+  Verbosity: 2
+  Profile:   true
+
+  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,PCAOverall,BoundRectStart,ROIParameters,AttachedClusters,FlashlightMerge,FillClusterParams,SimpleEndPoint,ClusterWriteOut]
+  ClusterAlgoName: [pc,fcp1,sc,fr,pcao,brs,rp,ac,fm,fcp2,sep,cwo]
+  
+  ShowImage: false
+
+  MatchAlgoType: "MatchTimeOverlap"
+  MatchAlgoName: "mto"
+
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
+
+ ImageClusterViewer: {
+
+   Verbosity: 2
+   Width:  800
+   Height: 800
+   MinContourArea: 0
+   
+ }
+
+ sep : {}
+
+ fm : {
+   Keep : 100
+   TriAngle : 20
+   TriLen : 50
+  }
+
+  fcp1: {}
+  fcp2: {}
+
+ vih : {}
+
+ ac : {
+  MaxDefectSize : 9999
+  HullContourAreaRatio : 0.5
+ }
+
+ fr : {
+   Verbosity : 2
+ }
+
+ sbc : {
+   Verbosity: 2
+   DilationSize : 5
+   DilationIterations : 2
+   BlurSize : 5
+   Thresh : 1
+   ThreshMaxVal : 255
+  }
+
+  pcao: { }
+
+  sc : {
+
+   MinHits : 10
+   MinArea : -1
+   MinPerimieter : -1
+   MinCharge :-1
+   MinLength : -1
+   MinWidth : -1
+   
+  }
+
+  cwo : {
+  Verbosity : 2
+  }
+
+  rp : {}
+  roip : {}
+
+   brs : {
+
+    UseROIVertex: true
+    CutBadReco : 1
+    NDivWidth : 2
+    
+  } 
+
+  hpts: {
+    Rho: 1.0
+    Theta: -1
+    Threshold: 75
+    MinLineLength: 80
+    MaxLineGap: 10
+  }
+
+ pc : {
+
+   Verbosity: 2
+   DilationSize : 5#10
+   DilationIterations : 2
+   BlurSizeR : 10 #25
+   BlurSizeT : 5
+   Thresh : 1
+   ThreshMaxVal : 255
+   
+  }
+
+   mto : { 
+      RatioCut : 0.001
+      StartTimeCut : 100 
+      RequireThreePlanes : 0 
+   }   
+
+}

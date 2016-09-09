@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 #create storage manager
 sm = ll.storage_manager()
 sm.set_io_mode(ll.storage_manager.kREAD)
-FILENAME="../../../App/mac/test_output.root"
+FILENAME="../../../App/mac/mctester_output.root"
 sm.add_in_filename(FILENAME)
 sm.open()
 
@@ -27,7 +27,7 @@ for evt in xrange(10):
     sm.go_to(evt)
 
     #get hits and clusters
-    hitprod='shrhits2'
+    hitprod='gaushit'
     event_hits     = sm.get_data(ll.data.kHit,"%s"%hitprod)
     event_clusters = sm.get_data(ll.data.kCluster,"ImageClusterHit")
 
@@ -38,7 +38,8 @@ for evt in xrange(10):
     cluster_to_hit_ass = event_ass.association(event_clusters.id(),event_hits.id())
 
     #get the vertex_data
-    event_vertex = sm.get_data(ll.data.kVertex,"numuCC_vertex")
+    VTXPRODUCER='mcvertex'
+    event_vertex = sm.get_data(ll.data.kVertex,VTXPRODUCER)
 
     #get contour data
     event_user = sm.get_data(ll.data.kUserInfo,"ImageClusterHit")
@@ -165,8 +166,8 @@ for evt in xrange(10):
             vtx[1]=event_vertex[0].Y()
             vtx[2]=event_vertex[0].Z()
             px = geoH.Point_3Dto2D(vtx.data(),plane)
-            pt=np.array([px.w/geoH.WireToCm(),px.t//geoH.TimeToCm()+800.0])
-
+            pt=np.array([px.w/geoH.WireToCm(),px.t/geoH.TimeToCm()+800])
+            print "EVENT VERTEX IS ",pt
             ax.plot(pt[0],pt[1],'*',markersize=20,color='yellow')
 
             ##############################
@@ -219,8 +220,8 @@ for evt in xrange(10):
         bby=np.append(bby,bby[0])
         plt.plot(bbx,bby,'-',lw=2,color='brown')
 
-        ax.set_xlim(bbx.min()-25,bbx.max()+25)
-        ax.set_ylim(bby.min()-25,bby.max()+25)
+        # ax.set_xlim(bbx.min()-25,bbx.max()+25)
+        # ax.set_ylim(bby.min()-25,bby.max()+25)
 
         ##############################
         #can we overlay the hough lines?
