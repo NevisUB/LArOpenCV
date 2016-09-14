@@ -236,26 +236,37 @@ namespace larlite {
       _num_clustered_hits += 1;
 
       temp_cluster_hit_ass[cid].push_back(hindex);
+      
     }// for all hits
-
+    
     for(auto & temp_cluster_hit_a : temp_cluster_hit_ass) {
       if (!temp_cluster_hit_a.size()) continue;
       cluster_hit_ass.emplace_back(temp_cluster_hit_a); // do not std::move it, we need to check nonzero later
     }
-	  
     auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
     auto ev_hit_ass = storage->get_data<event_ass>    ("ImageClusterHit");
     auto ev_vtx_ass = storage->get_data<event_ass>    ("ImageClusterHit");
     auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
     auto ev_vtx     = storage->get_data<event_vertex> (_vtx_producer);
 
+    // hot fix for the case that the ImageCluster contains a pixel
+    // but when transforming the hits into image coordinates, we find this
+    // contour contains no hits at all. This contour could have been matched with
+    // other clusters as well. We need a way to remove it, lets do it like this;
+    std::vector<int> cid_good_list(_num_clusters,0);
+    int offset=0;
+    
     if (ev_cluster) {
       
       ev_cluster->reserve(_num_clusters);
-
       for (size_t cid = 0; cid < _num_clusters; ++cid) {
-
-	if (!temp_cluster_hit_ass[cid].size()) continue;
+	cid_good_list[cid] = offset;
+	if (!temp_cluster_hit_ass[cid].size()) {
+	  cid_good_list[cid] = 1;
+	  offset-=1;
+	  std::cout << "[Funkiness Detection] storage_manager TTree entry " << storage->get_index() <<  "\n";
+	  continue;
+	}
 	
 	auto const& imgclus = alg_mgr.Cluster(cid);
 	
@@ -276,17 +287,18 @@ namespace larlite {
 	//angle, calculated from direction
 	double sa = imgclus.AngleofDir();
 	
-	if ( sw > geom->Nwires(imgclus.PlaneID()) ) {
+	if ( sw < 0 or sw > geom->Nwires(imgclus.PlaneID()) ) {
 	  std::cout << "start wire out of range:" << std::endl;
 	  std::cout << "Plane : " << imgclus.PlaneID() << " w/ [start,end] wire -> [" << int(sw) << ", " << int(ew) << "]" << std::endl;
 	  std::cout << std::endl;
 	}
-	else if (ew > geom->Nwires(imgclus.PlaneID()) ) {
+	else if (ew < 0 or ew > geom->Nwires(imgclus.PlaneID()) ) {
 	  std::cout << "end wire out of range:" << std::endl;
 	  std::cout << "Plane : " << imgclus.PlaneID() << " w/ [start,end] wire -> [" << int(sw) << ", " << int(ew) << "]" << std::endl;
 	  std::cout << std::endl;
 	}
-
+	
+	
 	//set reco params
 	c.set_start_wire(sw, 1);
 	c.set_end_wire(ew, 1);
@@ -299,7 +311,7 @@ namespace larlite {
 	// set plane / id information
 	c.set_view(geom->PlaneToView(imgclus.PlaneID()));
 	c.set_planeID(geo::PlaneID(0, 0, imgclus.PlaneID()));
-	c.set_id(imgclus.ClusterID());
+	c.set_id(imgclus.ClusterID()+offset);
 
 	// add to event_cluster
 	ev_cluster->push_back(c);
@@ -307,39 +319,39 @@ namespace larlite {
 
       if (ev_cluster->size() != cluster_hit_ass.size()) {
 	std::cout << "ev_cluster->size() : " << ev_cluster->size() << " and cluster_hit_ass.size() : " <<  cluster_hit_ass.size() << "\n";
-	  throw larocv::larbys("There are more cluster-associated hits than there are in ev_cluster. Get your ass over here and fix it\n");
-	}
+	throw larocv::larbys("There are more cluster-associated hits than there are in ev_cluster. Get your ass over here and fix it\n");
+      }
       
       // if we have crated a cluster -> hit association
       if (ev_hit_ass)
 	ev_hit_ass->set_association(ev_cluster->id(), ev_hit->id(), cluster_hit_ass);
-
+      
       // if we have created a cluster -> vertex association
       //if (ev_vtx_ass)
       // ev_vtx_ass->set_association(ev_cluster->id(), ev_vtx->id(), cluster_vtx_ass);
 
     }
-
-
+    
     if (ev_pfpart) {
-
+      
       auto const match_info = alg_mgr.BookKeeper().GetResult();
+      
       AssSet_t pfpart_ass;
       pfpart_ass.reserve(match_info.size());
-
-
+      
       for (size_t pfp_index = 0; pfp_index < match_info.size(); ++pfp_index) {
-
 	pfpart p;
 	ev_pfpart->push_back(p);
 	AssUnit_t ass;
-	for (auto const& cid : match_info[pfp_index]) ass.push_back(cid);
+	for (auto const& cid : match_info[pfp_index]) {
+	  if (cid_good_list.at(cid) == 1) { continue; }
+	  int ccid = cid+cid_good_list.at(cid);
+	  ass.push_back(ccid);
+      }
 	pfpart_ass.push_back(ass);
-
       }
 
       if (ev_hit_ass && ev_cluster) ev_hit_ass->set_association(ev_pfpart->id(), ev_cluster->id(), pfpart_ass);
-       
       if (ev_vtx) {
         AssSet_t vtx_ass;
         vtx_ass.reserve(ev_pfpart->size());
