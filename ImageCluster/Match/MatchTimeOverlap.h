@@ -51,6 +51,8 @@ namespace larocv {
     bool _require_3planes;
 
     double _pixel_y(const Cluster2D* cluster,size_t pix);
+
+    bool _use_only_2planes; 
     
   };
   

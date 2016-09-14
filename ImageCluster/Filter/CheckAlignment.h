@@ -5,7 +5,7 @@
  * 
  * \brief Class def header for a class CheckAlignment
  *
- * @author kazuhiro
+ * @author ariana hackenburg 
  */
 
 /** \addtogroup ImageCluster

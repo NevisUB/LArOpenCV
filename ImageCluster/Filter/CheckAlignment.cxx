@@ -23,7 +23,7 @@ namespace larocv{
     oclusters.reserve( clusters.size() );
 
     auto vtx2D = roi.roivtx_in_image(meta); 
-   std::cout<<"\nPlane "<<meta.plane()<<std::endl ;
+    //std::cout<<"\nPlane "<<meta.plane()<<std::endl ;
    
     for ( size_t i = 0; i < clusters.size(); i++){ 
 
