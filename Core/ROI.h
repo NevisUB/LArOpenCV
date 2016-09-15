@@ -73,7 +73,13 @@ namespace larocv {
     { _roi_3D_vtx = vtx3D; }
 
     void setbounds(std::vector<Point2D>& bounds)
-    { std::swap(_roi_bounds,bounds); }
+    { 
+      std::swap(_roi_bounds,bounds); 
+      _width = _roi_bounds[2].x - _roi_bounds[0].x;
+      _height = _roi_bounds[0].y - _roi_bounds[2].y ;
+    }
+
+    void setplane( int plane ){ _plane = plane; }
     
     
     /// Get vertex in wire tick coordinates
@@ -93,7 +99,7 @@ namespace larocv {
       return Point2D( (_roi_bounds[i].y - meta.origin().y) / meta.pixel_height(),
 		      (_roi_bounds[i].x - meta.origin().x) / meta.pixel_width() );
     }
-    
+
   protected:
 
     Point2D _origin; ///< Absolute coordinate of the left bottom corner of ROI  

@@ -232,7 +232,7 @@ namespace larocv {
          new_clus._endPt.x   = start_end_save[2 * j + 1].x ;
          }
 
-       //std::cout<<"0) Start point is: "<<new_clus._startPt.x<<", "<<new_clus._startPt.y <<std::endl ;
+       std::cout<<"0) Start point is: "<<new_clus._startPt.x<<", "<<new_clus._startPt.y <<std::endl ;
        result_v.push_back(new_clus);
        }
 
@@ -255,8 +255,6 @@ namespace larocv {
 
          float min_st_dist = 1000000. ;
          int min_st_i = -1;
-         float min_end_dist = 1000000. ;
-         int min_end_i = -1;
 
          for( size_t j = 0; j < result_v[i]._insideHits.size(); j++){ 
 
@@ -267,29 +265,24 @@ namespace larocv {
           //std::cout<<"Hits at : "<<st<<", "<<sw<<std::endl;
 
           float dist_st  = sqrt(pow(loc.x - result_v[i]._startPt.x,2) + pow(loc.y - result_v[i]._startPt.y,2)); 
-          float dist_end = sqrt(pow(loc.x - result_v[i]._endPt.x,2) + pow(loc.y - result_v[i]._endPt.y,2)); 
 
           if( dist_st < min_st_dist){
             min_st_dist = dist_st ;
             min_st_i = j; 
            }
-          if( dist_end < min_end_dist){
-            min_end_dist = dist_end ;
-            min_end_i = j; 
-           }
          }
-         if( min_st_i != -1 && min_end_i != -1){
+         if( min_st_i != -1){// && min_end_i != -1){
          result_v[i]._startPt.x = result_v[i]._insideHits[min_st_i].x ;
          result_v[i]._startPt.y = result_v[i]._insideHits[min_st_i].y ;
-         result_v[i]._endPt.x = result_v[i]._insideHits[min_end_i].x ;
-         result_v[i]._endPt.y = result_v[i]._insideHits[min_end_i].y ;
+         //result_v[i]._endPt.x = result_v[i]._insideHits[min_end_i].x ;
+         //result_v[i]._endPt.y = result_v[i]._insideHits[min_end_i].y ;
 
          }
          auto st = ( 0.5 + result_v[i]._startPt.x ) * meta.pixel_height() + meta.origin().y;
          auto sw = ( 0.5 + result_v[i]._startPt.y ) * meta.pixel_width() + meta.origin().x;
 
-         //std::cout<<"1) Hit adjusted start is: "<<result_v[i]._startPt.x<<", "<<result_v[i]._startPt.y <<std::endl ;
-         //std::cout<<"start time and wire  "<<st<<", "<<sw <<std::endl;
+         std::cout<<"1) Hit adjusted start is: "<<result_v[i]._startPt.x<<", "<<result_v[i]._startPt.y <<std::endl ;
+         std::cout<<"start time and wire  "<<st<<", "<<sw <<std::endl;
        }
 
      std::cout<<"Result : "<<result_v.size()<<std::endl ;

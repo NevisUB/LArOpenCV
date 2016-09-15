@@ -70,6 +70,7 @@ namespace larocv {
     ///convert the direction to a 2D angle, scaling back from image coordinates x/y to return to wire/tick
     double AngleofDir() const { return std::atan2(_eigenVecFirst.x*_pixel_height,_eigenVecFirst.y*_pixel_width); }
 
+
     //copy of the essentials...
     void copy_params(const Cluster2D& incluster) {
       this->_startPt      = incluster._startPt;
@@ -153,6 +154,9 @@ namespace larocv {
 
     /// 2D vertex point
     Point2D _vertex_2D;
+
+    /// Scores for matching (from CheckWires); stored per cluster, but same across x plane
+    float _score ; 
     
   private:
 

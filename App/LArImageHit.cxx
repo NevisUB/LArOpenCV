@@ -147,6 +147,7 @@ namespace larlite {
 	roi.setorigin(vtx_w - buffer_w,vtx_t - buffer_t);
 	roi.setvtx(vtx_w,vtx_t);
 	roi.setbounds(roi_bounds);
+	roi.setplane(plane);
 
 	if (_crop_w_roi) {
 	  wire_range = {lower_w,upper_w};
