@@ -92,6 +92,8 @@ namespace larlite {
 
     std::string _vtx_producer;
     std::vector<float> _plane_weights;
+
+    int _event ;
     
   };
 }

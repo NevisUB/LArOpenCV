@@ -155,9 +155,6 @@ namespace larocv {
     /// 2D vertex point
     Point2D _vertex_2D;
 
-    /// Scores for matching (from CheckWires); stored per cluster, but same across x plane
-    float _score ; 
-    
   private:
 
     ClusterID_t _cluster_id;

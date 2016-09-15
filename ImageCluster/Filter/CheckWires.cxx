@@ -44,11 +44,7 @@ namespace larocv{
 					larocv::ROI& roi)
   { 
   
-    Cluster2DArray_t oclusters; oclusters.reserve( clusters.size() );
-
     //Wire loading code from Vic's DeadWireCombine Merge algorithm
-    auto const & vtx = roi.roivtx_in_image(meta);
-  
     auto const & l_w = roi.roibounds_in_image(meta,0).y;
     auto const & r_w = roi.roibounds_in_image(meta,2).y;
 
@@ -89,13 +85,11 @@ namespace larocv{
 
     //std::cout<<"Range is :" <<range <<", "<<roi.width()<<", score: "<<score<<std::endl ;
 
-    for ( auto const & c : clusters ){
-      auto out = c ;
-      out._score = score ;
-      oclusters.emplace_back(out);
-       }
+  meta.set_score(score) ;
+  //std::cout<<"Meta score :" <<meta.score() <<std::endl ;
   
-  return oclusters; }
+  return clusters; 
+}
 
   std::vector<std::pair<int,int> > CheckWires::LoadWires(ImageMeta& meta)
   {

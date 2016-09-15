@@ -114,6 +114,9 @@ namespace larocv {
     auto cluster_instance_type_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoType");
     auto cluster_instance_name_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoName");
 
+    _enable_wire_check = main_cfg.get<bool>("EnableWireCheck");
+
+
     if(cluster_instance_type_v.size() != cluster_instance_name_v.size()) {
       LAROCV_CRITICAL((*this)) << "Clustering: AlgoType and AlgoName config parameters have different length! "
 			      << "(" << cluster_instance_type_v.size() << " vs. " << cluster_instance_name_v.size() << ")" << std::endl;
@@ -317,8 +320,23 @@ namespace larocv {
     	  c_per_plane[plane].push_back((const larocv::Cluster2D*)(&(clusters_v[img_id][cindex])));
     	  meta_per_plane[plane].push_back((const larocv::ImageMeta*)(&meta));
     	}
-	
+
       }
+
+      float lowest_plane_score = 10;
+      int lowest_plane = -1;
+
+      for( auto const & img : meta_per_plane ){
+        for(auto const & m : img ){
+
+         if (m->score() <= lowest_plane_score){
+           lowest_plane_score = m->score() ;
+           lowest_plane = m->plane() ;
+           }
+	 }
+        }
+
+      //std::cout<<" lower plane score and plane : "<<lowest_plane_score<<", "<<lowest_plane<<std::endl ;
 
       std::vector<size_t> seed; seed.reserve(c_per_plane.size());
      
@@ -346,7 +364,8 @@ namespace larocv {
     	  for(auto const& cinfo : comb) {
     	    auto const& plane = cinfo.first;
     	    auto const& index = cinfo.second;
-	    
+
+            if( _enable_wire_check && plane == lowest_plane ) continue ;
     	    if( !c_per_plane[plane].size() ) continue;
 
 	    plane_weights *= _match_plane_weights[plane];
@@ -354,7 +373,9 @@ namespace larocv {
     	    input_clusters.push_back(c_per_plane[plane][index]);
     	    tmp_index_v.push_back(c_per_plane[plane][index]->ClusterID());
     	  }
-	  
+
+ 	  if( _enable_wire_check && input_clusters.size() == 1 ) continue;
+	    
 	  const std::vector<double> roi_vtx = _roi_v_v[0][comb[0].first].roi3Dvtx();
 	  
     	  auto score = _match_alg->Process(input_clusters,roi_vtx);
@@ -486,7 +507,6 @@ namespace larocv {
       auto const& meta = meta_v[img_index];    
       auto const& origin = meta.origin();
 
-      //std::cout << "meta.plane(): " << meta.plane() << "\n";
       if(meta.plane() != plane) continue;
       if(clusters.empty()) continue;
       

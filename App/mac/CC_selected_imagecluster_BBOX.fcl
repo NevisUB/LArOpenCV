@@ -4,7 +4,8 @@ LArImageHit: {
 
   Profile: true
   StoreOriginalImage: false
-  Producer: shrhits2
+  Producer: clusterfilter 
+  MatchPlaneWeights : [5,1,10]
 
   # LArImageHit config
   PoolTimeTick: 6 
@@ -31,9 +32,9 @@ ImageClusterManager: {
   Verbosity: 2
   Profile:   true
 
-  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,HoughPTrackShower,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,AttachedClusters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleEndPoint,ClusterWriteOut]
-  ClusterAlgoName: [pc,fcp1,sc,hpts,fr,brd,brs,roip,ac,vih,fm,fcp2,sep,cwo]
-  
+  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,AttachedClusters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
+  ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,ac,vih,fm,fcp2,sep,ca,cwires,cwo]
+
   ShowImage: false
 
   MatchAlgoType: "MatchTimeOverlap"
@@ -51,8 +52,26 @@ ImageClusterManager: {
    
  }
 
+ EnableWireCheck : true 
+
+ cwires : { 
+   DeadWirePath : "dead_wires.fcl"
+  }
+
+ ca : {
+ RatioCut : 0.7 
+  }
+
  brd : {}
  sep : {}
+
+icc : { 
+  AreaCut    : 700.
+  ConeAngle  : 25. 
+  ConeLength : 30. # ~90% of shower's energy deposited in this distance
+  MinHitsShower : 25. 
+  }
+
 
  fm : {
    Keep : 100
@@ -135,6 +154,7 @@ ImageClusterManager: {
       RatioCut : 0.001
       StartTimeCut : 100 
       RequireThreePlanes : 0 
+      UseOnlyTwoPlanes : 1
    }   
 
 }

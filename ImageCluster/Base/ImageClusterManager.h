@@ -140,6 +140,8 @@ namespace larocv {
     MatchBookKeeper _book_keeper;
     /// MatchPlaneWeights
     std::vector<float> _match_plane_weights;
+    /// Switch for dead wire check
+    bool _enable_wire_check ;
   };
 }
 #endif

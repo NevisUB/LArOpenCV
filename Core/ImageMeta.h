@@ -52,6 +52,7 @@ namespace larocv {
       , _plane(plane)
       , _debug(false)
       , _roi_cropped(false)
+      , _score(100.)
     {
       if( width  < 0. ) throw larbys("Width must be a positive floating point!");
       if( height < 0. ) throw larbys("Height must be a positive floating point!");
@@ -94,6 +95,8 @@ namespace larocv {
     /// convert from y variable to Wire
     double YtoWire(double y) const { return ( (y + 0.5)* pixel_width() ) + _origin.x ; }
 
+    float score() const { return _score; }
+
     void set_debug(bool d) { _debug = d; }
     const bool debug() const { return _debug; }
 
@@ -102,6 +105,8 @@ namespace larocv {
 
     void set_roi_cropped(bool d) { _roi_cropped = d; }
     const bool roi_cropped() const { return _roi_cropped; }
+
+    void set_score(float the_score) { _score = the_score ; }
     
    protected:
 
@@ -117,6 +122,9 @@ namespace larocv {
     ::larlite::event_user* EVUSERINFO;
 
     bool _roi_cropped;
+
+    // Score per plane that represents ROI overlap with dead wires
+    float _score ;
     
   };
 

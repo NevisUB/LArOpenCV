@@ -26,6 +26,7 @@ namespace larlite {
     _num_clusters = 0;
     _producer = "";
     _store_original_img = false;
+    _event = 0;
 
   }
 
@@ -63,6 +64,9 @@ namespace larlite {
   }
 
   bool LArImageClusterBase::analyze(storage_manager* storage) {
+    
+    //std::cout<<"\n\nOn event: "<<_event <<std::endl ;
+    _event++ ;
 
     _img_mgr.clear();
     _orig_img_mgr.clear();

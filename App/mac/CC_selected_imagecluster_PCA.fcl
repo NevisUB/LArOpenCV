@@ -4,7 +4,8 @@ LArImageHit: {
 
   Profile: true
   StoreOriginalImage: false
-  Producer: shrhits2
+  Producer: clusterfilter 
+  MatchPlaneWeights : [5,1,10]
 
   # LArImageHit config
   PoolTimeTick: 6 
@@ -31,8 +32,8 @@ ImageClusterManager: {
   Verbosity: 2
   Profile:   true
 
-  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,HoughPTrackShower,FilterROI,PCAOverall,BoundRectStart,ROIParameters,AttachedClusters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleEndPoint,ClusterWriteOut]
-  ClusterAlgoName: [pc,fcp1,sc,hpts,fr,pcao,brs,rp,ac,vih,fm,fcp2,sep,cwo]
+  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,PCAOverall,BoundRectStart,ROIParameters,AttachedClusters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
+  ClusterAlgoName: [pc,fcp1,sc,fr,pcao,brs,rp,ac,vih,fm,fcp2,sep,ca,cwires,cwo]
   
   ShowImage: false
 
@@ -50,6 +51,15 @@ ImageClusterManager: {
    MinContourArea: 0
    
  }
+
+ EnableWireCheck : true 
+ cwires : { 
+    DeadWirePath : "dead_wires.fcl"
+   }
+
+ ca : { 
+   RatioCut : 0.7 
+     }
 
  sep : {}
 
@@ -134,6 +144,7 @@ ImageClusterManager: {
       RatioCut : 0.001
       StartTimeCut : 100 
       RequireThreePlanes : 0 
+      UseOnlyTwoPlanes: 1
    }   
 
 }
