@@ -49,10 +49,11 @@ namespace larocv{
     //Wire loading code from Vic's DeadWireCombine Merge algorithm
     auto const & vtx = roi.roivtx_in_image(meta);
   
-    //std::cout<<"ROI width : "<<roi.width()<<", "<<roi.plane()<<", "<<roi.height()<<std::endl ;
-
     auto const & l_w = roi.roibounds_in_image(meta,0).y;
     auto const & r_w = roi.roibounds_in_image(meta,2).y;
+
+    auto const & vtx_l_w = roi.roivtx_in_image(meta).y - (roi.width()/3); 
+    auto const & vtx_r_w = roi.roivtx_in_image(meta).y + (roi.width()/3);
 
     // Load wires per plane
     auto dead_wires = LoadWires(meta);
@@ -69,14 +70,20 @@ namespace larocv{
          //std::cout<<"Dead wire range: " << dw.first<<", "<<dw.second<<std::endl ;
         
         if ( dw.first >= l_w ){
-          if ( dw.second < r_w )
-            range += (dw.second - dw.first);
+          if ( dw.second < r_w ){
+            if( dw.first >= vtx_l_w && dw.first < vtx_r_w)
+              range += 2*(dw.second - dw.first);
+            else
+               range += (dw.second - dw.first);
+             }
           else
             range += (r_w - dw.first); 
              }
         }
     
     auto score = 1. - float(range) / roi.width () ;
+    // This can happen if the weighting of dead wires makes range > width
+    if ( score < 0. ) score = 0.;
 
     if ( meta.plane() == 2 ) score = 1. ;
 
