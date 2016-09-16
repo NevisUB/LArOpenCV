@@ -162,8 +162,6 @@ namespace larocv{
 	
     }
 
-    out._numHits = out._insideHits.size();
-    
     return out;
   }
 

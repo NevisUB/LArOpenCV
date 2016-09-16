@@ -50,11 +50,11 @@ namespace larocv{
       if(max_charge < charge)
         max_charge = charge ;
 
-      if(c->_numHits > max_hits_1) {
+      if(c->_numHits() > max_hits_1) {
         max_hits_2 = max_hits_1;
-        max_hits_1 = c->_numHits;
-      }else if(c->_numHits > max_hits_2) 
-        max_hits_2 = c->_numHits;
+        max_hits_1 = c->_numHits();
+      }else if(c->_numHits() > max_hits_2) 
+        max_hits_2 = c->_numHits();
     }
 
     // Preserve location in time space. Cut clusters that have similar time differences,

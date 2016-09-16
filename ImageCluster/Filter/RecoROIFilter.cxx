@@ -22,7 +22,7 @@ namespace larocv {
 
     for (const auto& cluster : clusters) {
 
-      if (cluster.roi.dist > _max_rad_length || cluster._numHits < _strict_hit_cut)  // start point distance to roi vertex
+      if (cluster.roi.dist > _max_rad_length || cluster._numHits() < _strict_hit_cut)  // start point distance to roi vertex
 	  continue;
 
       auto ocluster = cluster;  // make a copy

@@ -46,7 +46,7 @@ namespace larocv {
       }
 
       _ratio = ratio;
-      _nhits = (double) cluster._numHits;
+      _nhits = (double) cluster._numHits();
       _outtree->Fill();
 
     }

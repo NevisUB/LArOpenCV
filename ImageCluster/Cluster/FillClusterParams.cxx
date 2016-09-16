@@ -40,7 +40,6 @@ namespace larocv {
       ocluster._perimeter = ::cv::arcLength(contour,1);
       ocluster._length    = rect.height > rect.width ? rect.height : rect.width;
       ocluster._width     = rect.height > rect.width ? rect.width  : rect.height;
-      ocluster._numHits   = 0 ;
       ocluster._sumCharge = 0 ;
       ocluster._angle2D   = min_rect.angle;
       ocluster._centerPt  = Point2D(min_rect.center.x,min_rect.center.y);
@@ -56,7 +55,6 @@ namespace larocv {
 	  continue;
 
 	oclusters[i]._insideHits.emplace_back(loc.x, loc.y);
-	oclusters[i]._numHits++;
 	oclusters[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);
       }   
     }

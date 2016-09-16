@@ -35,7 +35,7 @@ namespace larocv {
 
       Cluster2D ocluster = clusters[k];
 
-      if ( ocluster._numHits == 0 ) throw larbys("Somehow this cluster has no hits, why?");
+      if ( ocluster._numHits() == 0 ) throw larbys("Somehow this cluster has no hits, why?");
 
       // use bounding box considerations to define start point, fill the vertices vector
       auto& bbox = ocluster._minAreaBox;

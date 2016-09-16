@@ -166,11 +166,11 @@ namespace larocv{
     
     paired_point pp;
     
-    for( unsigned i = 0; i < c1._numHits; ++i )  {
+    for( unsigned i = 0; i < c1._numHits(); ++i )  {
 
       auto& h1 = c1._insideHits[i];
       
-      for( unsigned j = i; j < c2._numHits-1; ++j )  {
+      for( unsigned j = i; j < c2._numHits()-1; ++j )  {
 	auto& h2 = c2._insideHits[j];
 
 	auto dd = dist(h1.x,h2.x,h1.y,h2.y);
@@ -200,9 +200,6 @@ namespace larocv{
 	
     //add the contours (good idea?)
     out._contour.insert( std::end(out._contour),std::begin(c2._contour),std::end(c2._contour) );
-
-    //set total number of hits
-    out._numHits = out._insideHits.size();
     
     return out;
   }

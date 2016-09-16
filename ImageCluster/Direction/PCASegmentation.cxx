@@ -51,10 +51,10 @@ namespace larocv{
       Cluster2D ocluster = clusters[u];
 
 
-      if ( ! ocluster._numHits )
+      if ( ! ocluster._numHits() )
 	{ std::cout << "No hits associated to this cluster\n"; throw std::exception(); }
       
-      if ( ocluster._numHits < _n_clustersize ) continue;
+      if ( ocluster._numHits() < _n_clustersize ) continue;
 
       auto& cluster = ocluster._contour;
 

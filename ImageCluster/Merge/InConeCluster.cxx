@@ -56,7 +56,7 @@ namespace larocv {
     /// 1) Set 2 closest clusters with >=25 hits to be showers -- everything else satellite
     int map_it = 0;
     for ( auto & c : clus_dists) {
-      if ( map_it <= 1 && orig_clus[c.second]._numHits >= _n_hits && c.first < 300 ) {
+      if ( map_it <= 1 && orig_clus[c.second]._numHits() >= _n_hits && c.first < 300 ) {
         shower_v.push_back(orig_clus[c.second]) ;
         map_it ++ ;
       }
@@ -171,7 +171,6 @@ namespace larocv {
         c1._area += c2._area ;
         c1._insideHits.reserve( c2._insideHits.size() + c1._insideHits.size() );
         c1._insideHits.insert( c1._insideHits.end(), c2._insideHits.begin(), c2._insideHits.end() );
-        c1._numHits = c1._insideHits.size();
         c1.roi.endpt.x = c2.roi.endpt.x;
         c1.roi.endpt.y = c2.roi.endpt.y ;
         c1._sumCharge += c2._sumCharge ;

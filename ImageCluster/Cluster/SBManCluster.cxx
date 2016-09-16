@@ -210,7 +210,6 @@ namespace larocv {
        new_clus._perimeter = ::cv::arcLength(polygons_save[j],1);
        new_clus._length    = rect.height > rect.width ? rect.height : rect.width;
        new_clus._width     = rect.height > rect.width ? rect.width  : rect.height;
-       new_clus._numHits   = 0 ;
        new_clus._sumCharge = 0 ;
        std::swap(new_clus._contour,polygons_save[j]);
 
@@ -246,7 +245,6 @@ namespace larocv {
            continue;
 
          result_v[i]._insideHits.emplace_back(loc.x, loc.y);
-         result_v[i]._numHits ++ ;
          result_v[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);  
           }   
         }   

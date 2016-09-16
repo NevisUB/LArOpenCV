@@ -38,11 +38,11 @@ namespace larocv{
     
     for(int i = 0; i < clusters.size(); i++) {
 
-	int numHits = clusters.at(i)._numHits;
+      int numHits = clusters.at(i)._numHits();
 	
 	for(int j = i; j < clusters.size(); j++) {
 
-	  int next_numHits = clusters[j]._numHits;
+	  int next_numHits = clusters[j]._numHits();
 
 	  double ipointX = clusters[i]._eigenVecFirst.x+clusters[i]._startPt.x;
 	  double ipointY = clusters[i]._eigenVecFirst.y+clusters[i]._startPt.y;

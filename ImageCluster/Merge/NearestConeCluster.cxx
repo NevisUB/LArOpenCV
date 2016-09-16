@@ -69,7 +69,6 @@ namespace larocv{
           c1._area += c2._area ;
           c1._insideHits.reserve( c2._insideHits.size() + c1._insideHits.size() );
           c1._insideHits.insert( c1._insideHits.end(), c2._insideHits.begin(), c2._insideHits.end() );
-          c1._numHits = c1._insideHits.size();
           c1._sumCharge += c2._sumCharge ;
           c1._perimeter += c2._perimeter ;
            

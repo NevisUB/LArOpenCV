@@ -23,7 +23,7 @@ namespace larocv{
   auto geomH  = larutil::GeometryHelper::GetME();
 
   for (auto c : clusters ){
-    if ( c->_numHits < 20) 
+    if ( c->_numHits() < 20) 
       return -1 ; 
     }
 
@@ -71,7 +71,7 @@ namespace larocv{
        if(ratio > _ratio_cut ){
         std::cout<<"Clust size : " <<clusters.size() <<std::endl ;
         for (auto c : clusters )
-	  std::cout<<c->_numHits<<", " ;
+	  std::cout<<c->_numHits()<<", " ;
 	  std::cout<<std::endl ;
 	  //std::cout<<clusters[i]->_numHits<<", "<<clusters[j]->_numHits<<std::endl ;
 

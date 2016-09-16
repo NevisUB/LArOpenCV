@@ -94,7 +94,7 @@ namespace larocv {
     /// Hits inside the contour
     std::vector<::cv::Point> _insideHits;
     /// Number of hits in the contour
-    int _numHits;
+    int _numHits() const { return _insideHits.size(); }
     /// Center point of the cluster
     Point2D _centerPt;
     /// If using PCA, principle eigenvector
