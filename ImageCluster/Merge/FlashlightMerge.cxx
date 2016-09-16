@@ -33,7 +33,6 @@ namespace larocv{
       auto& ocluster = oclusters[i];
       auto& contour =  ocluster._contour;
 
-      auto ostart  = roi.roivtx_in_image(meta);
       auto oend    = ocluster._startPt;
       
       //Get the minimum rectangle (should already exist in Cluster2D)
@@ -72,14 +71,14 @@ namespace larocv{
       // have to do this for some reason I read on forums
       if (bbox.size.width < bbox.size.height)
 	oangle += 90 * 3.14159/180.0;
-
+      
       // im going to be very explicit since i've screwed up many times
       float p1_cos_a = oangle + bangle;
       float p1_sin_a = oangle + bangle;
 
       float p2_cos_a = oangle - bangle;
       float p2_sin_a = oangle - bangle;
-
+      
       auto xx1 = odout*std::cos(p1_cos_a);
       auto yy1 = odout*std::sin(p1_sin_a);
 
@@ -89,7 +88,28 @@ namespace larocv{
       ::cv::Point2f p1(xx1,yy1);
       ::cv::Point2f p2(xx2,yy2);
 
+      // if (meta.plane()==1) {
+      // 	std::cout << "sbot: " << sbot << "\n";
+      // 	std::cout << "stop: " << stop << "\n";
+      // 	std::cout << "ebot: " << ebot << "\n";
+      // 	std::cout << "etop: " << etop << "\n";
+      // 	std::cout << "dx : " << dx << " dy : " << dy << "\n";
+      // 	std::cout << "oangle: " << oangle << "\n";
+      // }
+	
       if ( (dx < 0 and dy < 0) or (dx < 0 and dy > 0)) { 
+
+	p1 = ebot - p1;     
+	p2 = etop - p2;
+	std::swap(p1,p2);
+      }
+      //odd case
+      else if ( dx==0 and dy<0 ) {
+	p1 = ebot - p1;     
+	p2 = etop - p2;
+      }
+      //another odd case
+      else if ( dy == 0 and dx < 0) {
 	p1 = ebot - p1;     
 	p2 = etop - p2;
 	std::swap(p1,p2);
