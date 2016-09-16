@@ -257,9 +257,13 @@ namespace larocv{
       //reerve 10 times the space of the number of overlaps
       overall_ctor.reserve(10*(neighbors.size()+1 ));
 
-      //put the first set of contour points into overall_ctor;
-      for(auto& pt : ctor1) overall_ctor.emplace_back(pt);
+      //put the actual points themselves
+      for(auto& pt : oclusters[i]._insideHits) overall_ctor.emplace_back(pt);
 
+      //for good measure I want to include the end cap of the FIRST contour
+      for (int iy=2;iy<=5;++iy)
+	overall_ctor.emplace_back(ctor1[iy]);
+      
       //loop over the overlapping contours
       for ( auto& idx : neighbors ) {
 
