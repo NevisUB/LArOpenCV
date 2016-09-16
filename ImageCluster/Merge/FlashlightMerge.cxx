@@ -211,7 +211,7 @@ namespace larocv{
     }
     
     
-    // //this is useful for debugging!
+    //this is useful for debugging!
     // std::cout <<"\n\t" << "actual neighbors...\n\n";
     // for(auto n : neighbors){
     //   std::cout << "i : " << n.first << " : ";
@@ -373,37 +373,26 @@ namespace larocv{
   bool FlashlightMerge::overlap(const Contour_t& c1,
 				const Contour_t& c2) {
     
-    //hey, we are specifically checking for overlap in THE CONE!
-    //that's why the indicies are fuggled
-    int c1_start_idx = 2;
-    int c1_end_idx   = 5;
+    std::vector<int> c1_idx={2,3,4,5};  //will check 2->3, 3->4, 4->5
+    std::vector<int> c2_idx={0,1,2}; //will check 0->1, 1->2
 
-    int c2_start_idx = 0;
-    int c2_end_idx   = 5;
-    
-    for(unsigned i=c1_start_idx; i < c1_end_idx; ++i) {
+    for(unsigned i=0;i<c1_idx.size()-1;++i) {
       //check this segment on c1
+      auto c11=c1_idx[i];
+      auto c12=c1_idx[i+1];
       
-      for(unsigned j=c2_start_idx; j < c2_end_idx; ++j) {
-
+      for(unsigned j=0;j<c2_idx.size()-1;++j) {
+	auto c21=c2_idx[j];
+	auto c22=c2_idx[j+1];
+      
     	//against all segements on c2
-    	if ( line_intersection(c1[i],c1[i+1],c2[j],c2[j+1]) ) return true;
+    	if ( line_intersection(c1[c11],c1[c12],c2[c21],c2[c22]) ) return true;
       }
 
       //including the connection between the first and the last
-      if ( line_intersection(c1[i],c1[i+1],c2[c2_end_idx],c2[c2_start_idx]) ) return true;
+      if ( line_intersection(c1[c11],c1[c12],c2.back(),c2.front()) ) return true;
     }
 
-
-    for(unsigned j=c2_start_idx; j < c2_end_idx; ++j) {
-
-      //check c1 front and back against all of c2
-      if ( line_intersection(c1[c1_end_idx],c1[c1_start_idx],c2[j],c2[j+1]) ) return true;
-    }
-    
-    // finish with these segemnts on the front and back
-    if ( line_intersection(c1[c1_end_idx],c1[c1_start_idx],c2[c2_end_idx],c2[c2_start_idx] ) ) return true;
-	 
     return false;
   }
 				

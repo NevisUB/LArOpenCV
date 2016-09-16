@@ -1,7 +1,7 @@
 #get larlite
 from larlite import larlite as ll
 from larlite import larutil as lu
-
+import sys
 geo=lu.Geometry.GetME()
 geoH=lu.GeometryHelper.GetME()
 
@@ -18,16 +18,17 @@ import matplotlib.pyplot as plt
 #create storage manager
 sm = ll.storage_manager()
 sm.set_io_mode(ll.storage_manager.kREAD)
-FILENAME="../../../App/mac/mctester_output.root"
+FILENAME=sys.argv[1]
 sm.add_in_filename(FILENAME)
 sm.open()
 
-for evt in xrange(10):
+dx=1
+for evt in xrange(174):
     print "~~~~~~~~~~~> event is %d <~~~~~~~~~~~"%evt
     sm.go_to(evt)
 
     #get hits and clusters
-    hitprod='gaushit'
+    hitprod='clusterfilter'
     event_hits     = sm.get_data(ll.data.kHit,"%s"%hitprod)
     event_clusters = sm.get_data(ll.data.kCluster,"ImageClusterHit")
 
@@ -38,7 +39,7 @@ for evt in xrange(10):
     cluster_to_hit_ass = event_ass.association(event_clusters.id(),event_hits.id())
 
     #get the vertex_data
-    VTXPRODUCER='mcvertex'
+    VTXPRODUCER='numuCC_vertex'
     event_vertex = sm.get_data(ll.data.kVertex,VTXPRODUCER)
 
     #get contour data
@@ -139,10 +140,11 @@ for evt in xrange(10):
             cid = event_clusters[ix].ID()
             xx=np.array(cluster_data.get_darray('ClusterID_{}_contour_x'.format(cid)))
             yy=np.array(cluster_data.get_darray('ClusterID_{}_contour_y'.format(cid)))
-            xx=np.append(xx,xx[0])
-            yy=np.append(yy,yy[0])
-
-            plt.plot(yy,xx,'-',lw=2)
+            if xx.size>1:
+                xx=np.append(xx,xx[0])
+                yy=np.append(yy,yy[0])
+            
+                plt.plot(yy,xx,'-',lw=2)
 
             ##############################
             #put the hull info on
@@ -219,9 +221,9 @@ for evt in xrange(10):
         bbx=np.append(bbx,bbx[0])
         bby=np.append(bby,bby[0])
         plt.plot(bbx,bby,'-',lw=2,color='brown')
-
-        # ax.set_xlim(bbx.min()-25,bbx.max()+25)
-        # ax.set_ylim(bby.min()-25,bby.max()+25)
+        
+        ax.set_xlim(bbx.min()-25,bbx.max()+25)
+        ax.set_ylim(bby.min()-25,bby.max()+25)
 
         ##############################
         #can we overlay the hough lines?
