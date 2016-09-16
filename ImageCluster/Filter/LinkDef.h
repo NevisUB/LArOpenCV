@@ -23,7 +23,9 @@
 #pragma link C++ class larocv::FilterROI+;
 #pragma link C++ class larocv::VertexInHull+;
 #pragma link C++ class larocv::CheckWires+;
+#pragma link C++ class larocv::ClusDeadWireOverlap+;
 
 #pragma link C++ class larocv::InertiaTrackShower+;
 
 #endif
+
