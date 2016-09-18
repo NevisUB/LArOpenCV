@@ -13,6 +13,7 @@
 #pragma link C++ class larocv::ChargeDistribOverlap+;
 #pragma link C++ class larocv::EmptyMatcher+;
 #pragma link C++ class larocv::VtxAlign+;
+#pragma link C++ class larocv::IoUOverlap+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
 

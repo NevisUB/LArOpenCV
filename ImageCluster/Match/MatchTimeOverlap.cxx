@@ -7,21 +7,13 @@ namespace larocv{
 
   void MatchTimeOverlap::_Configure_(const ::fcllite::PSet &pset)
   {
-
     _time_ratio_cut  = pset.get<float> ("RatioCut");
     _start_time_cut  = pset.get<float> ("StartTimeCut");
-    _require_3planes = pset.get<bool>  ("RequireThreePlanes");
-    _use_only_2planes = pset.get<bool>("UseOnlyTwoPlanes");
-
   }
   
   double MatchTimeOverlap::_Process_(const larocv::Cluster2DPtrArray_t& clusters, const std::vector<double>& vtx)
   {
-
-    if(_require_3planes && clusters.size() == 2) return -1;
-
-    if ( _use_only_2planes && clusters.size() == 3 ) return -1 ; 
-
+    
     double time_difference     = 0;
     double max_time_difference = 0;
     double max_charge          = 0;

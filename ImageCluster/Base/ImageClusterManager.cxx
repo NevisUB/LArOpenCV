@@ -163,6 +163,9 @@ namespace larocv {
       _recluster_alg->Configure(main_cfg.get<fcllite::PSet>(_recluster_alg->Name()));
     }
 
+    _use_two_plane  = main_cfg.get<bool>("UseOnlyTwoPlanes");
+    _required_plane = main_cfg.get<int>("RequirePlane");
+    
     _configured=true;
     LAROCV_DEBUG((*this)) << "Return" << std::endl;
   }
@@ -329,7 +332,8 @@ namespace larocv {
       for( auto const & img : meta_per_plane ){
         for(auto const & m : img ){
 
-         if (m->score() <= lowest_plane_score && lowest_plane_score > 0.93){
+	  //if (m->score() <= lowest_plane_score && lowest_plane_score > 0.93){
+	  if (m->score() <= lowest_plane_score){
            lowest_plane_score = m->score() ;
            lowest_plane = m->plane() ;
            }
@@ -361,10 +365,12 @@ namespace larocv {
 	  // ROI is storing same 3D vertex for all three images, all algs
 	  // First index is plane, to be sure we're taking from a filled ROI
 	  // Second in alg id; 0 is definitely filled, else we're not here
-    	  for(auto const& cinfo : comb) {
+	  bool required_plane_found=false;
+	  for(auto const& cinfo : comb) {
+
     	    auto const& plane = cinfo.first;
     	    auto const& index = cinfo.second;
-
+	    if ( plane == _required_plane ) required_plane_found=true;
             if( _enable_wire_check && plane == lowest_plane ) continue ;
     	    if( !c_per_plane[plane].size() ) continue;
 
@@ -372,10 +378,14 @@ namespace larocv {
 	    
     	    input_clusters.push_back(c_per_plane[plane][index]);
     	    tmp_index_v.push_back(c_per_plane[plane][index]->ClusterID());
-    	  }
-
- 	  if( _enable_wire_check && input_clusters.size() == 1 ) continue;
 	    
+    	  }
+	  if ( !required_plane_found ) continue;
+	  
+ 	  if( input_clusters.size() == 1 ) continue;
+
+	  if( input_clusters.size() > 2 && _use_two_plane) continue;
+	  
 	  const std::vector<double> roi_vtx = _roi_v_v[0][comb[0].first].roi3Dvtx();
 	  
     	  auto score = _match_alg->Process(input_clusters,roi_vtx);

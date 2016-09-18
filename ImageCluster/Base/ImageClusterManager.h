@@ -142,6 +142,9 @@ namespace larocv {
     std::vector<float> _match_plane_weights;
     /// Switch for dead wire check
     bool _enable_wire_check ;
+
+    int _required_plane;
+    bool _use_two_plane;
   };
 }
 #endif
