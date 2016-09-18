@@ -8,13 +8,14 @@ namespace larocv{
 
   void CheckAlignment::_Configure_(const ::fcllite::PSet &pset)
   {
-     _ratio_cut = pset.get<float>  ("RatioCut");
+    _ratio_cut = pset.get<float>  ("RatioCut");
+    _use_start_end=pset.get<bool>("UseStartEnd");
   }
 
   Cluster2DArray_t CheckAlignment::_Process_(const larocv::Cluster2DArray_t& clusters,
-					const ::cv::Mat& img,
-					larocv::ImageMeta& meta,
-					larocv::ROI& roi)
+					     const ::cv::Mat& img,
+					     larocv::ImageMeta& meta,
+					     larocv::ROI& roi)
   { 
 
     auto geomH  = larutil::GeometryHelper::GetME();
@@ -27,37 +28,52 @@ namespace larocv{
    
     for ( size_t i = 0; i < clusters.size(); i++){ 
 
-       auto const & c = clusters[i]; 
-        
-       auto sW = ( c.roi.startpt.x ); // * geomH->WireToCm();
-       auto sT = ( c.roi.startpt.y ); // * geomH->TimeToCm();
+      auto const & c = clusters[i]; 
 
-       auto eW = ( c.roi.endpt.x   ); // * geomH->WireToCm();
-       auto eT = ( c.roi.endpt.y   ); // * geomH->TimeToCm();
+      std::vector<double> direction(2,0.0);
+
+      double sW,sT,eW,eT,dist_se;
+      sW = c.roi.startpt.x;
+      sT = c.roi.startpt.y;
+
+      if ( _use_start_end ) {
+	eW = c.roi.endpt.x;
+	eT = c.roi.endpt.y;
+
+	dist_se  = std::sqrt( std::pow(eW - sW,2) + std::pow(eT - sT,2));
+
+	direction[0]= (eW - sW) / dist_se;
+	direction[1]= (eT - sT) / dist_se;
+	
+      }
+      else {
+	
+	dist_se = std::sqrt( c.roi.dir.x*c.roi.dir.x + c.roi.dir.y*c.roi.dir.y );
+	//std::cout << dist_se << "\n";
+	direction[0] = c.roi.dir.x / dist_se;
+	direction[1] = c.roi.dir.y / dist_se;
+	
+      }
+     
+      //Now have 3 3d points; vertex, start, end; for each, check axis alignment
+
+      double dist_roi = std::sqrt( std::pow(vtx2D.x - sW,2) + std::pow( vtx2D.y - sT,2));
+
       
-       //Now have 3 3d points; vertex, start, end; for each, check axis alignment
-       double dist_se  = sqrt( pow(eW - sW,2) + pow(eT - sT,2));
-       double dist_roi = sqrt( pow(vtx2D.x - sW,2) + pow( vtx2D.y - sT,2));
+      std::vector<double> vtx_to_start = { (sW - vtx2D.x) / dist_roi,
+					   (sT - vtx2D.y) / dist_roi };
+      //std::cout << dist_roi << " " << sW << " " << sT << " " << vtx2D.x << " " << vtx2D.y << " " << eT << " " << eW << " " << "\n";
+      auto dot = direction[0] * vtx_to_start[0] + direction[1] * vtx_to_start[1] ;
 
-       std::vector<double> start_to_end = { (eW - sW) / dist_se, 
-                                            (eT - sT) / dist_se };
+      if((dot) > _ratio_cut )
 
-       std::vector<double> vtx_to_start = { (sW - vtx2D.x) / dist_roi,
-                                            (sT - vtx2D.y) / dist_roi };
-
-       auto dot = start_to_end[0] * vtx_to_start[0] + 
-                  start_to_end[1] * vtx_to_start[1] ;
-
-       if((dot) > _ratio_cut ){
-          oclusters.emplace_back(c);       
-             }
-
-         // std::cout<<"Score : " <<_ratio_cut<<", "<<dot <<std::endl ;
-
-
-     }
- 
-  return oclusters; }
+	oclusters.emplace_back(c);       
+      
+    }
+    //std::cout << oclusters.size() << "\n";
+    return oclusters;
+  }
+  
 
 }
 #endif

@@ -49,8 +49,8 @@ namespace larocv {
     
   private:
 
-  double _ratio_cut ;
-
+    double _ratio_cut;
+    bool _use_start_end;
   };
   
   /**

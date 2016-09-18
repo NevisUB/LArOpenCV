@@ -1,0 +1,164 @@
+LArImageHit: {
+  Verbosity: 2
+  # LArImageClusterBase config
+
+  Profile: true
+  StoreOriginalImage: false
+  Producer: clusterfilter 
+  MatchPlaneWeights : [1,1,1]
+
+  # LArImageHit config
+  PoolTimeTick: 6 
+  
+  VertexProducer: numuCC_vertex
+  Debug: true
+
+  MakeROI: true
+  CropROI: false
+  
+  ROIBufferW : 100
+  ROIBufferT : 100
+  
+  Q2Gray: 10
+  QMin: 5
+
+  TimeOffset : 800
+  WindowTMax : 6399
+  WindowTMin : 0
+
+}
+ImageClusterManager: {
+
+  Verbosity: 2
+  Profile:   true
+
+  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
+  ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,fm,fcp2,sep,ca,cwires,cwo]
+
+  ShowImage: false
+
+  MatchAlgoType: "IoUOverlap"
+  MatchAlgoName: "iouo"
+
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
+
+ ImageClusterViewer: {
+
+   Verbosity: 2
+   Width:  800
+   Height: 800
+   MinContourArea: 0
+   
+ }
+ 
+ EnableWireCheck : true
+ UseOnlyTwoPlanes : 1
+ RequirePlane : 2
+
+ cwires : { 
+   DeadWirePath : "dead_wires.fcl"
+  }
+
+ ca : {
+   RatioCut : 0.7
+   UseStartEnd: 1 #else use direction of first flashlight
+  }
+
+ brd : {}
+ sep : {}
+
+icc : { 
+  AreaCut    : 700.
+  ConeAngle  : 25. 
+  ConeLength : 30. # ~90% of shower's energy deposited in this distance
+  MinHitsShower : 25. 
+  }
+
+
+ fm : {
+   Keep : 100
+   TriAngle : 20
+   TriLen : 50
+  }
+
+  fcp1: {}
+  fcp2: {}
+
+ vih : {}
+
+ ac : {
+  MaxDefectSize : 9999
+  HullContourAreaRatio : 0.5
+ }
+
+ fr : {
+   Verbosity : 2
+ }
+
+ sbc : {
+   Verbosity: 2
+   DilationSize : 5
+   DilationIterations : 2
+   BlurSize : 5
+   Thresh : 1
+   ThreshMaxVal : 255
+  }
+
+  pcao: { }
+
+  sc : {
+
+   MinHits : 10
+   MinArea : -1
+   MinPerimieter : -1
+   MinCharge :-1
+   MinLength : -1
+   MinWidth : -1
+   
+  }
+
+  cwo : {
+  Verbosity : 2
+  }
+
+  rp : {}
+  roip : {}
+
+   brs : {
+
+    UseROIVertex: true
+    CutBadReco : 1
+    NDivWidth : 2
+    
+  } 
+
+  hpts: {
+    Rho: 1.0
+    Theta: -1
+    Threshold: 75
+    MinLineLength: 80
+    MaxLineGap: 10
+  }
+
+ pc : {
+
+   Verbosity: 2
+   DilationSize : 10
+   DilationIterations : 2
+   BlurSizeR : 25
+   BlurSizeT : 5
+   Thresh : 1
+   ThreshMaxVal : 255
+   
+  }
+
+   mto : { 
+      RatioCut : 0.001
+      StartTimeCut : 100 
+   }
+
+   iouo : {}
+
+}
+
