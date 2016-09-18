@@ -329,7 +329,7 @@ namespace larocv {
       for( auto const & img : meta_per_plane ){
         for(auto const & m : img ){
 
-         if (m->score() <= lowest_plane_score){
+         if (m->score() <= lowest_plane_score && lowest_plane_score > 0.93){
            lowest_plane_score = m->score() ;
            lowest_plane = m->plane() ;
            }
