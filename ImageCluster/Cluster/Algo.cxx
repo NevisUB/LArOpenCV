@@ -105,9 +105,24 @@ namespace larocv {
      ///////////////////////////////////////////////
      //unify the contours
      ContourArray_t all_ctor_v;
-     all_ctor_v.reserve(mip_ctor_v.size() + hip_ctor_v.size());
-     all_ctor_v.insert( all_ctor_v.end(), mip_ctor_v.begin(), mip_ctor_v.end());
-     all_ctor_v.insert( all_ctor_v.end(), hip_ctor_v.begin(), hip_ctor_v.end() );
+
+     for (const auto& mip_ctor : mip_ctor_v) {
+       if (mip_ctor.size() > 0) 
+     	 all_ctor_v.emplace_back(mip_ctor);
+       else
+	 std::cout << "zero mip cluster found\n";
+     }
+     for (const auto& hip_ctor : hip_ctor_v) {
+       if (hip_ctor.size() > 0)
+	 all_ctor_v.emplace_back(hip_ctor);
+       else
+	 std::cout << "zero hip cluster found\n";
+     }
+
+     std::cout << "meta.plane: " << meta.plane() << " " << all_ctor_v.size() << "\n";
+     // all_ctor_v.reserve(mip_ctor_v.size() + hip_ctor_v.size());
+     // all_ctor_v.insert( all_ctor_v.end(), mip_ctor_v.begin(), mip_ctor_v.end());
+     // all_ctor_v.insert( all_ctor_v.end(), hip_ctor_v.begin(), hip_ctor_v.end() );
 
      ///////////////////////////////////////////////
      //convex hull on each contour, lets save the output
@@ -160,6 +175,7 @@ namespace larocv {
      for(unsigned i=0;i<all_ctor_v.size();++i) 
        ocluster_v[i]._contour = all_ctor_v[i];
 
+     std::cout << "ocluster set to size : " << ocluster_v.size() << "\n";
      ////////////////////////////////////////////
      //Fill cluster parameters
      FillClusterParams(ocluster_v,img);
@@ -172,7 +188,8 @@ namespace larocv {
      // pair of location @ defect point, and intersection of minimum line to convex hull
      std::vector< std::vector<std::pair<::cv::Point2f,::cv::Point2f> > >split_defects_v;
      split_defects_v.resize(ocluster_v.size());
-     
+
+     std::cout << "setting split_defects_v.size(): " << split_defects_v.size() << "\n";
      float MIN_DEFECT_SIZE=5;
      
      for(unsigned i=0;i<ocluster_v.size();++i) {
@@ -243,6 +260,9 @@ namespace larocv {
 	 //get the minimum index....
 	 int mindex=-1;
 	 float mdist=9e9;
+
+	 if ( ss.size()==0 ) continue;
+	 
 	 for(unsigned ih=0;ih<ss.size();++ih) {
 	   auto _p4=ss[ih].first;
 	   auto _p3=ss[ih].second;
@@ -255,7 +275,7 @@ namespace larocv {
 	 if (mindex==-1) { std::cout << " mindex can not be -1!"; throw std::exception(); }
 
 	 split_defect.emplace_back(ss[mindex]);
-	 	 
+	 std::cout << "split_defect size is now: " << split_defect.size() << "\n";
        }//end loop over this defect
 
      }//end loop over this contour
@@ -270,13 +290,17 @@ namespace larocv {
      
      for(unsigned i=0;i<ocluster_v.size();++i) {
 
+       std::cout << " do the splitting starting @ i : " << i << "\n";
+       
        auto& contour   = ocluster_v[i]._contour;
        auto& defects   = defects_v[i];
        auto& defects_d = defects_dist_v[i];
        auto& split_defect = split_defects_v[i];
 
        if (split_defect.size()==0) {
+	 std::cout << "This contour not split has size: " << contour.size() << "\n";
 	 ocluster_v_tmp.emplace_back(contour);
+	 std::cout << " && putting in contour of size : " << ocluster_v_tmp.back().size() << " with ocluster_v_tmp size: " << ocluster_v_tmp.size() << "\n";
 	 continue;
        }
        
@@ -301,15 +325,15 @@ namespace larocv {
 
 	   auto pt=contour[iq];
 	   
-	   if (iq==0) {
+	   if (id==0) {
 	     if (! test_point_above(dp1,pt) ) {
 	       split_ctors[id].emplace_back(pt);
 	     }
 	   }
 	   
-	   if (iq==split_defect.size()-1) {
+	   if (id==split_defect.size()-1) {
 	     if ( test_point_above(dp1,pt) ) {
-	       split_ctors[id+1].emplace_back(pt);
+              split_ctors[id+1].emplace_back(pt);
 	       continue;
 	     }
 	   }
@@ -322,8 +346,10 @@ namespace larocv {
 
        }//end loop over the defects for this contour
 
-       for (const auto& split_ctor : split_ctors)
+       for (const auto& split_ctor : split_ctors) {
+	 std::cout << "\t==> this split_ctor has size: " << split_ctor.size() << "\n";
 	 ocluster_v_tmp.emplace_back(split_ctor);
+       }
 
      }//end loop over ocluster_v contours
 
@@ -331,12 +357,18 @@ namespace larocv {
      Cluster2DArray_t ocluster_v_new;
      ocluster_v_new.resize(ocluster_v_tmp.size());
 
-     for(unsigned ob=0;ob<ocluster_v_tmp.size();++ob)
-       ocluster_v_new[ob]._contour = ocluster_v_tmp[ob];
-
+     for(unsigned ob=0;ob<ocluster_v_tmp.size();++ob) {
+       if (ocluster_v_tmp[ob].size() != 0) {
+	 ocluster_v_new[ob]._contour = ocluster_v_tmp[ob];
+	 std::cout << "on ob : " << ob << " size going in is" << ocluster_v_new[ob]._contour.size() << "\n";
+       }
+     }
+     std::cout << "ocluster_v_tmp.size(): " << ocluster_v_tmp.size() << "\n";
+     std::cout << "Filling cluster params again with the split contours\n";
      FillClusterParams(ocluster_v_new,img);
      
      std::swap(ocluster_v,ocluster_v_new);
+     std::cout << "\n\n\tReturning\n\n";
      return ocluster_v;
   }
   
