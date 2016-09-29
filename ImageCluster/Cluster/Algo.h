@@ -35,7 +35,7 @@ namespace larocv {
 
     bool test_point_above(std::pair<::cv::Point2f,::cv::Point2f> segment,::cv::Point2f pt);
 
-    bool four_pt_intersect(::cv::Point2f p1,
+    int four_pt_intersect(::cv::Point2f p1,
 			   ::cv::Point2f p2,
 			   ::cv::Point2f p3,
 			   ::cv::Point2f p4);
