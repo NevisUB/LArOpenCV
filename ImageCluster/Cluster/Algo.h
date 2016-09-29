@@ -32,7 +32,23 @@ namespace larocv {
 				       larocv::ROI& roi);
     
   private:
+
+    bool test_point_above(std::pair<::cv::Point2f,::cv::Point2f> segment,::cv::Point2f pt);
+
+    bool four_pt_intersect(::cv::Point2f p1,
+			   ::cv::Point2f p2,
+			   ::cv::Point2f p3,
+			   ::cv::Point2f p4);
+    ::cv::Point2f intersect(float x1,float y1,
+			    float x2,float y2,
+			    float x3,float y3);
+    double intersect_distance(float x1,float y1,float x2,float y2,float x3,float y3);
+    ::cv::Point2f intersection_point(float x1,float x2,float y1,float y2,float x3,float x4,float y3,float y4);
     
+   
+    double distance(float x1,float x2,float y1,float y2);
+    void FillClusterParams(Cluster2DArray_t& cluster2d_v,const ::cv::Mat& img);
+      
   };
   
   /**
@@ -54,4 +70,5 @@ namespace larocv {
 }
 #endif
 /** @} */ // end of doxygen group 
+
 

@@ -141,7 +141,7 @@ namespace larocv {
 
        //compute the defects
        ::cv::convexityDefects(cluster,hullpts,defects);
-
+       
        //lets put the defects into bonafide vector of doubles
        defects_d.resize( defects.size() );
        
@@ -150,13 +150,318 @@ namespace larocv {
        
      }
 
+     ////////////////////////////////////////////
+     //Create the result vector for output 
      Cluster2DArray_t result_v;
      result_v.resize(all_ctor_v.size());
 
      for(unsigned i=0;i<all_ctor_v.size();++i) 
        result_v[i]._contour = all_ctor_v[i];
+
+     ////////////////////////////////////////////
+     //Fill cluster parameters
+     FillClusterParams(result_v,img);
+
+
+
+     ////////////////////////////////////////////
+     //Now lets go through and do the breaking
+
+     std::vector< std::vector<std::pair<::cv::Point2f,::cv::Point2f> > >split_defects_v;
+     split_defects_v.resize(result_v.size());
      
-    return result_v;
+     float MIN_DEFECT_SIZE=5;
+     
+     for(unsigned i=0;i<result_v.size();++i) {
+       auto& contour   = result_v[i]._contour;
+       auto& defects   = defects_v[i];
+       auto& defects_d = defects_double_v[i];
+
+       //for(auto& std::vector<double>& defect : defects_d) {
+       auto& split_defect = split_defects_v[i];
+       for(unsigned ig=0;ig<defects_d.size();++ig) {
+
+	 if (defects_d[ig] < MIN_DEFECT_SIZE) {
+	   //split_defect.emplace_back(::cv::Point2f(-1e6,-1e6),::cv::Point2f(-1e6,-1e6));
+	   continue;
+	 }
+	 
+	 //defects gives us indicies i'm pretty sure
+	 ::cv::Point start  = contour.at((size_t)defects[ig][0]);
+	 ::cv::Point end    = contour.at((size_t)defects[ig][1]);
+	 ::cv::Point far    = contour.at((size_t)defects[ig][2]);
+	 double dist = defects_d[ig];//contour.at(defect[3]);
+
+	 
+	 ::cv::Point2f kx(start.x,end.x);//np.array([start[0],end[0]]);
+	 ::cv::Point2f ky(start.y,end.y);//np.array([start[1],end[1]]);
+	 ::cv::Point2d kz(far.x  ,far.y);//np.array([far[0],far[1]]);
+	 
+	 float x1=kx.x;
+	 float x2=kx.y;
+	 float x3=kz.x;
+	 float y1=ky.x;
+	 float y2=ky.y;
+	 float y3=kz.y;
+
+	 int npts=50;
+	 std::vector<::cv::Point2f> l_;
+	 l_.resize(npts);
+	 for(int j=0;j<npts;++j){
+	   ::cv::Point2f dir_=::cv::Point2f(x2-x1,y2-y1);
+	   float k = ( (float) j ) / ( (float) npts );
+	   l_[j] = dir_*k+::cv::Point2f(x1,y1);
+	 }
+       
+	 ::cv::Point2f p3(x3,y3);
+	 std::vector<std::pair<::cv::Point2f,::cv::Point2f> > ss;
+	 ss.reserve(l_.size());
+	 
+	 for ( const auto& l : l_ ) {
+
+	   ::cv::Point2f p4=intersect(x1,y1,x2,y2,l.x,l.y);
+	   auto x4=l.x;
+	   auto y4=l.y;
+	   int pts_c = contour.size();
+	   int inters=0;
+
+	   for(unsigned ix=defects[ig][0];ix<defects[ig][1];++ix) {
+
+	     ::cv::Point2f pt1=contour.at(ix);
+	     ::cv::Point2f pt2=contour.at((ix+1)%pts_c);
+	     ::cv::Point2f pt3(x3,y3);
+	     ::cv::Point2f pt4(x4,y4);
+
+	     inters += four_pt_intersect(pt1,pt2,pt3,pt4);
+	      
+	     if (inters>=3) break;
+	   }
+	   
+	   if(inters>=3) continue;
+	   ss.emplace_back(p4,p3);
+	 }
+	 //get the minimum index....
+	 size_t mindex=0;
+	 float mdist=9e9;
+	 for(unsigned ih=0;ih<ss.size();++ih) {
+	   auto _p4=ss[ih].first;
+	   auto _p3=ss[ih].second;
+	   float _d=std::sqrt( std::pow(_p4.x-_p3.x,2) + std::pow(_p4.y-_p3.y,2));
+	   if (_d < mdist) {
+	     mdist  = _d;
+	     mindex = ih;
+	   }
+	 }
+	 //mindex is what we are going to slice on!
+	 //x3==defect far point
+	 //x4==intersection
+	 split_defect.emplace_back(ss[mindex]);
+	 	 
+       }//end loop over this defect
+
+     }//end loop over this contour!
+
+
+     //////////////////////////////////////////
+     // no that we have the locations on the hull which connect to the defects
+     // we can do the splitting
+
+     ContourArray_t result_v_tmp;
+     result_v_tmp.reserve(result_v.size());       
+     
+     std::vector<size_t> broken_idx_v;
+     broken_idx_v.reserve(result_v.size()/10);
+     
+     for(unsigned i=0;i<result_v.size();++i) {
+       auto& contour   = result_v[i]._contour;
+       auto& defects   = defects_v[i];
+       auto& defects_d = defects_double_v[i];
+       
+       //for(auto& std::vector<double>& defect : defects_d) {
+       auto& split_defect = split_defects_v[i];
+
+       if (split_defect.size()==1)
+	 result_v_tmp.emplace_back(contour);
+       
+       std::sort(std::begin(split_defect),std::end(split_defect),
+		 [](const std::pair<::cv::Point2f,::cv::Point2f>& p1,
+		    const std::pair<::cv::Point2f,::cv::Point2f>& p2)
+		 { return p1.second.y > p2.second.y; } );
+
+       std::vector< std::vector<::cv::Point> > split_ctors;
+       split_ctors.resize(split_defect.size()+1);
+       
+       for(unsigned id=0;id<split_defect.size();++id) {
+
+	 //this one is broken
+	 auto dp1 = split_defect.at(id);
+	 auto dp2 = split_defect.at((id+1)%split_defect.size());
+	 
+	 //loop over the contour and assign it to top bottom etc
+	 //for(const auto& pt : contour) {
+	 
+	 for(unsigned iq=0;iq<contour.size();++iq) {	 
+
+	   auto pt=contour[iq];
+	   
+	   if (iq==0) {
+	     if (! test_point_above(dp1,pt)==false ) {
+	       split_ctors[iq].emplace_back(pt);
+	     }
+	   }
+	   
+	   if (iq==split_defect.size()-1) {
+	     if ( test_point_above(dp1,pt) ) {
+	       split_ctors[iq+1].emplace_back(pt);
+	       continue;
+	     }
+	   }
+	   
+	   if( !test_point_above(dp2,pt) and test_point_above(dp1,pt)) {
+	     split_ctors[iq+1].emplace_back(pt);
+	   }
+	   
+	 }//end loop over this contour points
+
+       }//end loop over the defects for this contour
+
+       for (const auto& split_ctor : split_ctors)
+	 result_v_tmp.emplace_back(split_ctor);
+
+     }//end loop over result_v contours
+
+
+     Cluster2DArray_t result_v_new;
+     result_v_new.resize(result_v_tmp.size());
+
+     for(unsigned ob=0;ob<result_v_tmp.size();++ob)
+       result_v_new[ob]._contour = result_v_tmp[ob];
+
+     FillClusterParams(result_v_new,img);
+     
+     std::swap(result_v,result_v_new);
+     return result_v;
+  }
+  
+  
+  bool Algo::test_point_above(std::pair<::cv::Point2f,::cv::Point2f> segment,::cv::Point2f pt) { 
+    
+    ::cv::Point2f p1=segment.first;
+    ::cv::Point2f p2=segment.second;
+    
+    float slope=(p2.y-p1.y)/(p2.x-p1.x);
+    float yinter = -1.0*slope*p1.x+p1.y;
+    
+    if (pt.y > pt.x*slope+yinter)
+      return true;
+    
+    return false;
+    
+  }
+  
+  bool Algo::four_pt_intersect(::cv::Point2f p1,
+			       ::cv::Point2f p2,
+			       ::cv::Point2f p3,
+			       ::cv::Point2f p4) {
+    
+    float p0_x = p1.x;
+    float p0_y = p1.y;
+
+    float p1_x = p2.x;
+    float p1_y = p2.y;
+
+    float p2_x = p3.x;
+    float p2_y = p3.y;
+
+    float p3_x = p4.x;
+    float p3_y = p4.y;
+
+    float s1_x = p1_x - p0_x;
+    float s1_y = p1_y - p0_y; 
+    float s2_x = p3_x - p2_x;
+    float s2_y = p3_y - p2_y;
+    
+    float s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
+    float t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
+
+    if (s >= 0 and s <= 1 and t >= 0 and t <= 1)
+      return 1;
+
+    return 0;
+  }
+  
+  ::cv::Point2f Algo::intersect(float x1,float y1,
+				float x2,float y2,
+				float x3,float y3) {
+    float k = ((y2-y1) * (x3-x1) - (x2-x1) * (y3-y1)) / (std::pow(y2-y1,2) + std::pow(x2-x1,2));
+    float x4 = x3 - k * (y2-y1);
+    float y4 = y3 + k * (x2-x1);
+    return ::cv::Point2f(x4,y4);
+  }
+
+  double Algo::intersect_distance(float x1,float y1,float x2,float y2,float x3,float y3){
+    float k = ((y2-y1) * (x3-x1) - (x2-x1) * (y3-y1)) / ( std::pow(y2-y1,2) + std::pow(x2-x1,2));
+    float x4 = x3 - k * (y2-y1);
+    float y4 = y3 + k * (x2-x1);
+    return std::sqrt(std::pow(x4-x3,2)+std::pow(y4-y3,2));
+  }
+  
+  ::cv::Point2f Algo::intersection_point(float x1,float x2,float y1,float y2,float x3,float x4,float y3,float y4){
+    float denom = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
+    float xx = ( (x1*y2 - y1*x2)*(x3-x4) - (x1-x2)*(x3*y4-y3*x4) ) / denom;
+    float yy = ( (x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-y3*x4) ) / denom;
+    return ::cv::Point2f(xx,yy);
+  }
+
+  double Algo::distance(float x1,float x2,float y1,float y2){
+    return std::sqrt(std::pow(x2-x1,2)+std::pow(y2-y1,2));
+  }
+
+
+  void Algo::FillClusterParams(Cluster2DArray_t& cluster2d_v,const ::cv::Mat& img) {
+    
+    for (auto& ocluster : cluster2d_v) {
+
+      auto& contour = ocluster._contour;
+      
+      ocluster._minAreaBox  = ::cv::minAreaRect(contour);
+      ocluster._boundingBox = ::cv::boundingRect(contour);
+      
+      auto& min_rect      = ocluster._minAreaBox;
+      auto& bounding_rect = ocluster._boundingBox;
+      
+      ::cv::Point2f vertices[4];
+
+      //rotated rect coordinates
+      min_rect.points(vertices);
+      ocluster._minAreaRect  = {vertices[0],vertices[1],vertices[2],vertices[3]};
+
+      //axis aligned rect coordinates
+      ocluster._minBoundingRect = {bounding_rect.br(),bounding_rect.tl()};
+
+      auto rect = min_rect.size;
+      ocluster._area      = ::cv::contourArea(contour) ;
+      ocluster._perimeter = ::cv::arcLength(contour,1);
+      ocluster._length    = rect.height > rect.width ? rect.height : rect.width;
+      ocluster._width     = rect.height > rect.width ? rect.width  : rect.height;
+      ocluster._sumCharge = 0 ;
+      ocluster._angle2D   = min_rect.angle;
+      ocluster._centerPt  = Point2D(min_rect.center.x,min_rect.center.y);
+    }
+    
+    Contour_t all_locations;
+    ::cv::findNonZero(img, all_locations); // get the non zero points
+    
+    for( auto& loc: all_locations ) {
+      for( size_t i = 0; i < cluster2d_v.size(); i++ ) {
+	
+	if ( ::cv::pointPolygonTest(cluster2d_v[i]._contour,loc,false) < 0 ) 
+	  continue;
+	
+	cluster2d_v[i]._insideHits.emplace_back(loc.x, loc.y);
+	cluster2d_v[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);
+      }   
+    }
   }
   
 }
