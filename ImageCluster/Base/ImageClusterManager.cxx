@@ -304,7 +304,7 @@ namespace larocv {
     if(_match_alg) {
 
       auto const& clusters_v = _clusters_v_v.back();
-      
+
       std::vector< std::vector< const larocv::Cluster2D* > > c_per_plane;
 
       std::vector< std::vector< const larocv::ImageMeta* > > meta_per_plane;
@@ -543,7 +543,9 @@ namespace larocv {
       for(size_t id=0; id<clusters.size(); ++id) {
 	
 	auto const& c = clusters[id];
-      
+	// The contour points are stored as integers, while hits have 3 point precision in x.
+	// Need hit x to be integer for fair comparison.
+	pt.x = int(pt.x);
 	double inside = ::cv::pointPolygonTest(c._contour,pt,false);
       
 	if(inside < 0) continue;
