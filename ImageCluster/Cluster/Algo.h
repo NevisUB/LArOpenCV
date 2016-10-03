@@ -32,7 +32,7 @@ namespace larocv {
 				       larocv::ROI& roi);
     
   private:
-
+    
     bool test_point_above(std::pair<::cv::Point2f,::cv::Point2f> segment,::cv::Point2f pt);
 
     int four_pt_intersect(::cv::Point2f p1,
@@ -48,7 +48,12 @@ namespace larocv {
    
     double distance(float x1,float x2,float y1,float y2);
     void FillClusterParams(Cluster2DArray_t& cluster2d_v,const ::cv::Mat& img);
-      
+
+    int _min_hip_cluster_size;
+    int _min_mip_cluster_size;
+    int _min_defect_size;
+    int _hull_edge_pts_split;
+    
   };
   
   /**

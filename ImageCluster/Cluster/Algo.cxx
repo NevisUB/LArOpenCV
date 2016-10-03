@@ -8,6 +8,12 @@ namespace larocv {
 
   void Algo::_Configure_(const ::fcllite::PSet &pset)
   {
+
+    _min_hip_cluster_size = pset.get<int>("MinHipClusterSize");
+    _min_mip_cluster_size = pset.get<int>("MinMipClusterSize");
+    _min_defect_size      = pset.get<int>("MinDefectSize");
+    _hull_edge_pts_split  = pset.get<int>("HullEdgePtsSplit");
+
   }
 
   larocv::Cluster2DArray_t Algo::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -22,12 +28,10 @@ namespace larocv {
     int THRESH_LOWER=1;
     int HIP_LEVEL=255;
     
-
     ::cv::imwrite("shitty.png",img);
     
     ///////////////////////////////////////////////
-    //Threshold the input image to certain ADC value, this is the working image
-
+    //Threshold the input image to certain ADC value, this is our MIP
     ::cv::Mat img_thresh_m;
     threshold(img, img_thresh_m,THRESH_LOWER,255,0);
     
@@ -43,13 +47,17 @@ namespace larocv {
     hip_ctor_v.clear();
     hip_cv_hierarchy_v.clear();
     
-    ::cv::findContours(hip_thresh_m,hip_ctor_v,hip_cv_hierarchy_v,
+    ::cv::findContours(hip_thresh_m,hip_ctor_v,
+		       hip_cv_hierarchy_v,
 		       CV_RETR_EXTERNAL,
 		       CV_CHAIN_APPROX_SIMPLE);
-    std::cout << "+=> Found " << hip_ctor_v.size() << " hip contours " << "\n";
+    
+    LAROCV_DEBUG((*this)) << "+==> Found: " << hip_ctor_v.size() << " hip contours\n";
+
     ///////////////////////////////////////////////
     //Filter the HIP contours to a minimum size
-    int min_hip_size = 6;
+    int min_hip_size = _min_hip_cluster_size;
+    
     ContourArray_t hip_ctor_v_tmp;
     hip_ctor_v_tmp.reserve(hip_ctor_v.size());
     
@@ -57,33 +65,33 @@ namespace larocv {
       if ( hip_ctor.size() > min_hip_size)
 	hip_ctor_v_tmp.emplace_back(hip_ctor);
 
-    // swap them b.c. I don't like _tmp stuffs
+    //swap them out -- the thresholded hips and all hips
+    //hip_ctor_v == HIP contours
     std::swap(hip_ctor_v,hip_ctor_v_tmp);
     
     ///////////////////////////////////////////////
     //Masking away the hip in the original image
+    //find the non zero pixels in the hip contours. Mask them out of the MIP image.
 
-    //lets find the non zero pixels hiding in the hip contours. Lets mask them out of the original image
-    //OK this means lets identify the point inside the HIP contour, then go straight into the
-    //original image and zero that guy out to create a MIP image
+    //clone the current mip image
     ::cv::Mat mip_thresh_m = img_thresh_m.clone();
-
+    
+    // get the non zero points of the mip
     Contour_t all_locations;
-    ::cv::findNonZero(mip_thresh_m, all_locations); // get the non zero points
+    ::cv::findNonZero(mip_thresh_m, all_locations); 
     
      for( const auto& loc: all_locations ) {
        for( size_t i = 0; i < hip_ctor_v.size(); i++ ) {
-	 if ( ::cv::pointPolygonTest(hip_ctor_v[i],loc,false) < 0 )  // not inside
+	 if ( ::cv::pointPolygonTest(hip_ctor_v[i],loc,false) < 0 )  // check if point in HIP contour
 	   continue;
 	 
-	 //something here can we zero out in the MIP image
+	 //Something here. Zero out this pixel.
 	 mip_thresh_m.at<uchar>(loc.y, loc.x) = 0;
        }
      }
 
      ///////////////////////////////////////////////
-     //run the contour finder on the MIP
-
+     //run the contour finder on the MIPs
      ContourArray_t mip_ctor_v;
      std::vector<::cv::Vec4i> mip_cv_hierarchy_v;
      mip_ctor_v.clear();
@@ -91,11 +99,13 @@ namespace larocv {
      
      ::cv::findContours(mip_thresh_m,mip_ctor_v,mip_cv_hierarchy_v,
 			CV_RETR_EXTERNAL,
-			CV_CHAIN_APPROX_SIMPLE);     
-     std::cout << "+=> Found " << mip_ctor_v.size() << " mip contours " << "\n";
+			CV_CHAIN_APPROX_SIMPLE);
+     
+     LAROCV_DEBUG((*this)) << "+==> Found " << mip_ctor_v.size() << " mip contours " << "\n";
+
      ///////////////////////////////////////////////
      //Filter the MIP contours to a minimum size, the ones that are
-     int min_mip_size = 6;
+     int min_mip_size = _min_mip_cluster_size;
      ContourArray_t mip_ctor_v_tmp;
      mip_ctor_v_tmp.reserve(mip_ctor_v.size());
      
@@ -103,41 +113,50 @@ namespace larocv {
        if (mip_ctor.size() > min_mip_size)
 	 mip_ctor_v_tmp.emplace_back(mip_ctor);
      
-     // swap them b.c. I don't like _tmp stuffs either
+
+     //swap them out -- the thresholded mips and all mips
+     //hip_ctor_v == HIP contours
      std::swap(mip_ctor_v,mip_ctor_v_tmp);
      
      ///////////////////////////////////////////////
-     //unify the contours
+     //unify the contours into a single array
      ContourArray_t all_ctor_v;
+
+     // failed at combining
+     // all_ctor_v.reserve(mip_ctor_v.size() + hip_ctor_v.size());
+     // all_ctor_v.insert( all_ctor_v.end(), mip_ctor_v.begin(), mip_ctor_v.end());
+     // all_ctor_v.insert( all_ctor_v.end(), hip_ctor_v.begin(), hip_ctor_v.end() );
 
      for (const auto& mip_ctor : mip_ctor_v) {
        if (mip_ctor.size() > 0) 
      	 all_ctor_v.emplace_back(mip_ctor);
        else
-	 std::cout << "zero mip cluster found\n";
+	 LAROCV_DEBUG((*this)) << "Shouldn't happen, but zero mip cluster found!\n";
      }
      for (const auto& hip_ctor : hip_ctor_v) {
        if (hip_ctor.size() > 0)
 	 all_ctor_v.emplace_back(hip_ctor);
        else
-	 std::cout << "zero hip cluster found\n";
+	 LAROCV_DEBUG((*this)) << "Shouldn't happen, but zero hip cluster found!\n";
      }
 
-     std::cout << "meta.plane: " << meta.plane() << " " << all_ctor_v.size() << "\n";
-     // all_ctor_v.reserve(mip_ctor_v.size() + hip_ctor_v.size());
-     // all_ctor_v.insert( all_ctor_v.end(), mip_ctor_v.begin(), mip_ctor_v.end());
-     // all_ctor_v.insert( all_ctor_v.end(), hip_ctor_v.begin(), hip_ctor_v.end() );
+     LAROCV_DEBUG((*this)) << "On meta.plane: " << meta.plane() << " found total contours: " << all_ctor_v.size() << "\n";
 
      ///////////////////////////////////////////////
-     //convex hull on each contour, lets save the output
+     //Compute the convex hull on each contour, save the output.
      
-     //with the MIP and HIP clusters in hand, lets calculate convex hull per cluster and find defects
+     //With the MIP and HIP clusters find hull, then calculate defects
+     //in same way as python script.
+
+     //The hull points
      std::vector<std::vector<int> > hullpts_v;
      hullpts_v.resize(all_ctor_v.size());
 
+     //The defects
      std::vector<std::vector<::cv::Vec4i> > defects_v;
      defects_v.resize(all_ctor_v.size());
 
+     //The converted defect distances, separate array since it's "corrected" distance
      std::vector<std::vector<double> > defects_dist_v;
      defects_dist_v.resize(all_ctor_v.size());
      
@@ -147,23 +166,25 @@ namespace larocv {
        auto& hullpts   = hullpts_v[i];
        auto& defects   = defects_v[i];
        auto& defects_d = defects_dist_v[i];
-
-       //make the hull
+       
+       //Make this hull
        ::cv::convexHull(cluster, hullpts);
-       //close the hull up
+       
+       //Close this hull up
        hullpts.push_back(hullpts.at(0));
 
-       //make the contour that holds actual hull points, instead of indicies
+       //Make the contour that holds hull points, instead of indicies
        std::vector<::cv::Point> hullcontour;
        hullcontour.resize(hullpts.size()-1);
-       
+
+       //Make a contour array with hull points
        for(unsigned u=0;u<hullcontour.size();++u) 
 	 hullcontour[u] = cluster[ hullpts[u] ];
-
-       //compute the defects
+       
+       //Compute the defects
        ::cv::convexityDefects(cluster,hullpts,defects);
        
-       //lets put the defects into bonafide vector of doubles
+       //Lets put the defects distances specially into vector of doubles
        defects_d.resize( defects.size() );
        
        for( int j = 0; j < defects.size(); ++j )
@@ -171,62 +192,71 @@ namespace larocv {
        
      }
 
-     std::cout << "\tSee: all_ctor_v.size() : " << all_ctor_v.size() << "\n";
-     std::cout << "\tSee: hullpts_v.size() : " << hullpts_v.size() << "\n";
-     std::cout << "\tSee: defects_v.size() : " << defects_v.size() << "\n";
-     std::cout << "\tSee: defects_dist_v.size() : " << defects_dist_v.size() << "\n";
+     LAROCV_DEBUG((*this)) << "\tSee: all_ctor_v.size() : " << all_ctor_v.size() << "\n";
+     LAROCV_DEBUG((*this)) << "\tSee: hullpts_v.size() : " << hullpts_v.size() << "\n";
+     LAROCV_DEBUG((*this)) << "\tSee: defects_v.size() : " << defects_v.size() << "\n";
+     LAROCV_DEBUG((*this)) << "\tSee: defects_dist_v.size() : " << defects_dist_v.size() << "\n";
 
      ////////////////////////////////////////////
-     //Create the result contour array vector for output 
+     //Create the result cluster array vector for output
+     //set the contours for these clusters
      Cluster2DArray_t ocluster_v;
      ocluster_v.resize(all_ctor_v.size());
 
      for(unsigned i=0;i<all_ctor_v.size();++i) 
        ocluster_v[i]._contour = all_ctor_v[i];
 
-     std::cout << "\tSee: ocluster set to size : " << ocluster_v.size() << "\n";
+     LAROCV_DEBUG((*this)) << "\tSee: ocluster set to size : " << ocluster_v.size() << "\n";
 
      ////////////////////////////////////////////
-     //Fill cluster parameters
+     //Fill cluster parameters, this copied from external module, fills aabox, obox, etc
      FillClusterParams(ocluster_v,img);
 
      ////////////////////////////////////////////
-     //Now lets go through and do the breaking
+     //Now lets go through and do the breaking procedure
+     //which uses the defects
 
-     // array for each contour
-     // array for set of defects per contour
-     // pair of location @ defect point, and intersection of minimum line to convex hull
+     // split_defects_v[...] ==> array for each contour
+     // split_defects_v[...][...] ==> array for set of defects per contour
+     // split_defects_v[...][...].first/second ==> pair of location @ defect point, intersection of minimum line to convex hull
      std::vector< std::vector<std::pair<::cv::Point2f,::cv::Point2f> > >split_defects_v;
      split_defects_v.resize(ocluster_v.size());
      
-     std::cout << "\tSee: split_defects_v.size(): " << split_defects_v.size() << "\n";
-     float MIN_DEFECT_SIZE=5;
+     LAROCV_DEBUG((*this)) << "\tSee: split_defects_v.size(): " << split_defects_v.size() << "\n";
+     LAROCV_DEBUG((*this)) << "\t==================\n";
+     
+     float MIN_DEFECT_SIZE=_min_defect_size;
 
-     std::cout << "\t==================\n";
      for(unsigned i=0;i<ocluster_v.size();++i) {
        
        auto& contour   = ocluster_v[i]._contour;
        auto& defects   = defects_v[i];
        auto& defects_d = defects_dist_v[i];
        auto& split_defect = split_defects_v[i];
-       std::cout << "==>Next cluster  @ i:" << i << "\n";
-       std::cout << "\tSee: split_defect.size(): " << split_defect.size() << "\n";
-       std::cout << "\tSee: defects.size(): " << defects.size() << "\n";
-       std::cout << "\tSee: defects_d.size(): " << defects_d.size() << "\n";
 
+       LAROCV_DEBUG((*this)) << "==>Next cluster  @ i:" << i << "\n";
+       LAROCV_DEBUG((*this)) << "\tSee: split_defect.size(): " << split_defect.size() << "\n";
+       LAROCV_DEBUG((*this)) << "\tSee: defects.size(): " << defects.size() << "\n";
+       LAROCV_DEBUG((*this)) << "\tSee: defects_d.size(): " << defects_d.size() << "\n";
+
+       //for each defect in this cluster
        for(unsigned ig=0;ig<defects_d.size();++ig) {
-	 
+
+	 // no defects on this cluster, continue	 
 	 if (defects_d[ig] < MIN_DEFECT_SIZE) {
-	   std::cout << "==>No min defect @ ig: " << ig  << "\n";
+	   LAROCV_DEBUG((*this)) << "==>No min defect @ ig: " << ig  << "\n";
 	   continue;
 	 }
-	 std::cout << "!=>See min defect @ ig: " << ig  << " of size: " << defects_d[ig] << "\n";
+
+	 //there was a defect
+	 LAROCV_DEBUG((*this)) << "!=>See min defect @ ig: " << ig  << " of size: " << defects_d[ig] << "\n";
 	 
-	 //defects gives us indicies of location @ contour
+	 //defects gives us indicies of ::cv::Point on the contour, from start index, to end index.
 	 ::cv::Point start  = contour.at((size_t)defects[ig][0]);
 	 ::cv::Point end    = contour.at((size_t)defects[ig][1]);
 	 ::cv::Point far    = contour.at((size_t)defects[ig][2]);
 
+	 //fix this, copy out of ipython notebook
 	 ::cv::Point2f kx(start.x,end.x);
 	 ::cv::Point2f ky(start.y,end.y);
 	 ::cv::Point2d kz(far.x  ,far.y);
@@ -238,55 +268,74 @@ namespace larocv {
 	 float y2=ky.y;
 	 float y3=kz.y;
 
-	 int npts=50;
+	 int npts=_hull_edge_pts_split;
+
+	 // number of points on segmented edge
 	 std::vector<::cv::Point2f> l_;
 	 l_.resize(npts);
-	 for(int j=0;j<npts;++j){
-	   ::cv::Point2f dir_=::cv::Point2f(x2-x1,y2-y1);
+
+	 ::cv::Point2f dir_=::cv::Point2f(x2-x1,y2-y1);
+	 
+	 // make the points on the hull edge
+	 for(int j=0;j<npts;++j) {
 	   float k = ( (float) j ) / ( (float) npts );
 	   l_[j] = dir_*k+::cv::Point2f(x1,y1);
 	 }
 
 	 ::cv::Point2f p3(x3,y3);
 
-
 	 std::vector<std::pair<::cv::Point2f,::cv::Point2f> > _ss;
-	 std::cout << "\tSee: _ss.size(): " << _ss.size() << "\n";
+
+	 LAROCV_DEBUG((*this)) << "\tSee: _ss.size(): " << _ss.size() << "\n";
 	 _ss.reserve(l_.size()/10);
-	 std::cout << "\tScanning contour idx range: " << defects[ig][0] << " to " << defects[ig][1] << "\n";
-	 
+	 LAROCV_DEBUG((*this)) << "\tScanning contour idx range: " << defects[ig][0] << " to " << defects[ig][1] << "\n";
+
+	 // for each point on the hull edge
 	 for ( const auto& l : l_ ) {
 
-	   ::cv::Point2f p4=intersect(x1,y1,x2,y2,l.x,l.y);
+	   //is this needed
+	   //::cv::Point2f p4=intersect(x1,y1,x2,y2,l.x,l.y);
+	   
 	   auto x4=l.x;
 	   auto y4=l.y;
+	   ::cv::Point2f p4(x4,y4);
+	   
 	   int pts_c = contour.size();
 
 	   int inters=0;
 
 	   auto minidx=std::min(defects[ig][0],defects[ig][1]);
 	   auto maxidx=std::max(defects[ig][0],defects[ig][1]);
-	   
-	   for(unsigned ix=minidx;ix<maxidx;++ix) {
 
+	   //loop over the portion of the contour facing the hull
+	   for(unsigned ix=minidx;ix<maxidx;++ix) {
+	     
 	     ::cv::Point2f pt1=contour.at(ix);
 	     ::cv::Point2f pt2=contour.at((ix+1)%pts_c);
 	     ::cv::Point2f pt3(x3,y3);
 	     ::cv::Point2f pt4(x4,y4);
 
+	     //check if there is intersection
 	     inters += four_pt_intersect(pt1,pt2,pt3,pt4);
+
+	     //does the line go through, and exit the hull, the connect to the defect point?
+	     //if so that's 3 intersection points, continue
+	     if (inters>=3) break;
 	     
-	     if (inters>=0) break;
 	   }//end loop over this region of contour next to hull
-	   
-	   if(inters>=0) continue;
+
+	   //we intersected, move on
+	   if(inters>=3) continue;
+
+	   //we never intersected between the hull and the defect, store this pair
 	   _ss.emplace_back(p4,p3);
 
 	 }//end loop over segmented hull edge
-	 
-	 std::cout << "==>End loop over segmented hull saw: _ss.size(): " << _ss.size() << "\n";
 
-	 //get the minimum index....
+	 
+	 LAROCV_DEBUG((*this)) << "==>End loop over segmented hull saw: _ss.size(): " << _ss.size() << "\n";
+
+	 //get the minimum index. the hull defect line with minimum length
 	 int mindex=-1;
 	 float mdist=9e9;
 
@@ -301,18 +350,20 @@ namespace larocv {
 	     mindex = ih;
 	   }
 	 }
-	 if (mindex==-1) { std::cout << " mindex can not be -1!"; throw std::exception(); }
 
+	 if (mindex==-1) { LAROCV_DEBUG((*this)) << " mindex can not be -1!"; throw std::exception(); }
+
+	 //get got it, put into this split_defect
 	 split_defect.emplace_back(_ss[mindex]);
-	 std::cout << "==> Made it to loop over this defect... split_defect size is now: " << split_defect.size() << "\n";
+	 LAROCV_DEBUG((*this)) << "==> Made it to loop over this defect... split_defect size is now: " << split_defect.size() << "\n";
        }//end loop over this defect
-       std::cout << "==> End this contour\n";
+       LAROCV_DEBUG((*this)) << "==> End this contour\n";
      }//end loop over this contour
 
 
      //////////////////////////////////////////
-     // now that we have the locations on the hull which connect to the defects
-     // we can do the splitting
+     // Now that we have the locations on the hull which connect to the defects
+     // we can do the splitting, finally
 
      ContourArray_t ocluster_v_tmp;
      ocluster_v_tmp.reserve(ocluster_v.size());       
@@ -320,20 +371,18 @@ namespace larocv {
      for(unsigned i=0;i<ocluster_v.size();++i) {
 
        auto& contour   = ocluster_v[i]._contour;
-       std::cout << "\t==>Trying to splitting @ i : " << i << "\n";
+       LAROCV_DEBUG((*this)) << "\t==>Trying to splitting @ i : " << i << "\n";
        
-       auto& defects   = defects_v[i];
-       auto& defects_d = defects_dist_v[i];
        auto& split_defect = split_defects_v[i];
 
        if (split_defect.size()==0) {
-	 std::cout << "==>This contour !NOT! split has size: " << contour.size();
+	 LAROCV_DEBUG((*this)) << "==>This contour !NOT! split has size: " << contour.size();
 	 ocluster_v_tmp.emplace_back(contour);
 	 continue;
        }
 
-       std::cout << "!=>This contour !IS! split has size: " << contour.size() << "\n";
-       std::cout << "!=>Split defect size: " << split_defect.size() << "\n";
+       LAROCV_DEBUG((*this)) << "!=>This contour !IS! split has size: " << contour.size() << "\n";
+       LAROCV_DEBUG((*this)) << "!=>Split defect size: " << split_defect.size() << "\n";
        
        std::sort(std::begin(split_defect),std::end(split_defect),
 		 [](const std::pair<::cv::Point2f,::cv::Point2f>& p1,
@@ -378,12 +427,11 @@ namespace larocv {
        }//end loop over the defects for this contour
 
        for (const auto& split_ctor : split_ctors) {
-	 std::cout << "\t==> this split_ctor has size: " << split_ctor.size() << "\n";
+	 LAROCV_DEBUG((*this)) << "\t==> this split_ctor has size: " << split_ctor.size() << "\n";
 	 ocluster_v_tmp.emplace_back(split_ctor);
        }
 
      }//end loop over ocluster_v contours
-
 
      Cluster2DArray_t ocluster_v_new;
      ocluster_v_new.resize(ocluster_v_tmp.size());
@@ -391,15 +439,16 @@ namespace larocv {
      for(unsigned ob=0;ob<ocluster_v_tmp.size();++ob) {
        if (ocluster_v_tmp[ob].size() != 0) {
 	 ocluster_v_new[ob]._contour = ocluster_v_tmp[ob];
-	 std::cout << "on ob : " << ob << " size going in is" << ocluster_v_new[ob]._contour.size() << "\n";
+	 LAROCV_DEBUG((*this)) << "on ob : " << ob << " size going in is" << ocluster_v_new[ob]._contour.size() << "\n";
        }
      }
-     std::cout << "ocluster_v_tmp.size(): " << ocluster_v_tmp.size() << "\n";
-     std::cout << "Filling cluster params again with the split contours\n";
+
+     LAROCV_DEBUG((*this)) << "ocluster_v_tmp.size(): " << ocluster_v_tmp.size() << "\n";
+     LAROCV_DEBUG((*this)) << "Filling cluster params again with the split contours\n";
      FillClusterParams(ocluster_v_new,img);
      
      std::swap(ocluster_v,ocluster_v_new);
-     std::cout << "\n\n\tReturning\n\n";
+     LAROCV_DEBUG((*this)) << "\n\n\tReturning\n\n";
      return ocluster_v;
   }
   
@@ -453,6 +502,7 @@ namespace larocv {
   ::cv::Point2f Algo::intersect(float x1,float y1,
 				float x2,float y2,
 				float x3,float y3) {
+    
     float k = ((y2-y1) * (x3-x1) - (x2-x1) * (y3-y1)) / (std::pow(y2-y1,2) + std::pow(x2-x1,2));
     float x4 = x3 - k * (y2-y1);
     float y4 = y3 + k * (x2-x1);
@@ -498,7 +548,7 @@ namespace larocv {
 
       //axis aligned rect coordinates
       ocluster._minBoundingRect = {bounding_rect.br(),bounding_rect.tl()};
-
+      
       auto rect = min_rect.size;
       ocluster._area      = ::cv::contourArea(contour) ;
       ocluster._perimeter = ::cv::arcLength(contour,1);
