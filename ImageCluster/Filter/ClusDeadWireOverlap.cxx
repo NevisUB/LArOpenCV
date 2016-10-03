@@ -53,25 +53,36 @@ namespace larocv{
     auto dead_wires = LoadWires(meta);
 
     std::cout<<"PLANE IS: "<<meta.plane()<<std::endl;
+    std::vector<std::pair<float,float>> min_max_wire ;
+    std::vector<std::pair<float,float>> min_max_time;
 
     for ( auto const & c : clusters ){
 
-      int min_wire = 100000;
-      int max_wire = -1;
+      float min_wire = 100000;
+      float max_wire = -1;
+      float min_time = 100000;
+      float max_time = -1;
       int range = 0;
 
       for( auto & i : c._insideHits ){
-        if( i.y > max_wire )
+        if( i.y > max_wire ){
           max_wire = i.y;
-        if( i.y < min_wire )
+          max_time = i.x;
+          }
+        if( i.y < min_wire ){
           min_wire = i.y;
+          min_time = i.x;
+         }
         }
       
       float clus_range = max_wire - min_wire;
       
-      min_wire -= (clus_range / 3) ; //make fcl param
-      max_wire += (clus_range / 3) ;
+      min_wire -= (clus_range / 5) ; //make fcl param
+      max_wire += (clus_range / 5) ;
       std::cout<<"Clus range : "<<min_wire<<", "<<max_wire<<std::endl ;
+ 
+      min_max_wire.push_back(std::make_pair(min_wire,max_wire) ) ;
+      min_max_time.push_back(std::make_pair(min_time,max_time) ) ;
       
       for( unsigned i=0; i < dead_wires.size() && dead_wires[i].second < max_wire ; ++i ) { 
     
@@ -80,25 +91,77 @@ namespace larocv{
          //std::cout<<"Dead wire range: " << dw.first<<", "<<dw.second<<std::endl ;
     
         if ( dw.first >= min_wire){
-          if(  dw.second < max_wire )
+          //if(  dw.second < max_wire )
             range += (dw.second - dw.first);
-          else
-            range += (max_wire - dw.first); 
+          //else
+           // range += (max_wire - dw.first); 
           }   
         else{
           if( dw.second > min_wire )
-            range += (dw.second - min_wire );
+            range += (dw.second - dw.first);
+            //range += (dw.second - min_wire );
            } 
         } 
     
       auto score = 1. - float(range) / (max_wire - min_wire) ;
       if ( score < 0. ) score = 0.; 
-      if ( meta.plane() == 2 ) score = 1. ;
+      //if ( meta.plane() == 2 ) score = 1. ;
 
       std::cout<<"These Scores though: "<<score<<std::endl ;
       if(score > 0.7 ) oclusters.emplace_back(c);
 
+
       }
+
+      if ( meta.debug() ) {
+
+      std::stringstream ss1, ss2, ss3, ss4;
+
+      ::larlite::user_info uinfo{};
+      ss1 << "Algo_"<<Name()<<"_Plane_"<<meta.plane()<<"_clusters";
+      uinfo.store("ID",ss1.str());
+
+      ss1.str(std::string());
+      ss1.clear();
+
+      //uinfo.store("NClusters",(int)result_v.size());
+
+      LAROCV_DEBUG((*this)) << "Writing debug information for " << clusters.size() << "\n";
+
+      for(size_t i = 0; i < oclusters.size(); ++i){
+
+        const auto& cluster = oclusters[i];
+
+        ////////////////////////////////////////////
+        /////Contour points
+
+        ss1  <<  "MinWire_" << i ; 
+        ss2  <<  "MaxWire_" << i ;
+        ss3  <<  "MinTime_" << i ;
+        ss4  <<  "MaxTime_" << i ;
+
+        float min = min_max_wire[i].first + meta.origin().x;  
+        float max = min_max_wire[i].second + meta.origin().x;
+
+        uinfo.append(ss1.str(),min);
+        uinfo.append(ss2.str(),max);
+        uinfo.append(ss3.str(),(min_max_time[i].first + meta.origin().y + 2400));
+        uinfo.append(ss4.str(),(min_max_time[i].second + meta.origin().y + 2400));
+
+        ss1.str(std::string());
+        ss1.clear();
+        ss2.str(std::string());
+        ss2.clear();
+        ss3.str(std::string());
+        ss3.clear();
+        ss4.str(std::string());
+        ss4.clear();
+      }
+
+      meta.ev_user()->emplace_back(uinfo);
+
+      std::cout<<"Meta origin: "<<meta.origin().x <<", "<<meta.origin().y <<std::endl ;
+    }
   
   return oclusters; 
   }
