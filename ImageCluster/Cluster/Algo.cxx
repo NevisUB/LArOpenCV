@@ -17,11 +17,16 @@ namespace larocv {
   void Algo::_Configure_(const ::fcllite::PSet &pset)
   {
 
-    _min_hip_cluster_size = pset.get<int>("MinHipClusterSize");
-    _min_mip_cluster_size = pset.get<int>("MinMipClusterSize");
-    _min_defect_size      = pset.get<int>("MinDefectSize");
-    _hull_edge_pts_split  = pset.get<int>("HullEdgePtsSplit");
-
+    // _min_hip_cluster_size = pset.get<int>("MinHipClusterSize",6);
+    // _min_mip_cluster_size = pset.get<int>("MinMipClusterSize",6);
+    // _min_defect_size      = pset.get<int>("MinDefectSize",5);
+    // _hull_edge_pts_split  = pset.get<int>("HullEdgePtsSplit",50);
+    _min_hip_cluster_size = 6;
+    _min_mip_cluster_size = 6;
+    _min_defect_size      = 5;
+    _hull_edge_pts_split  = 50;
+    _mip_thresh = 1;
+    _hip_thresh = 255;
   }
 
   larocv::Cluster2DArray_t Algo::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -29,12 +34,13 @@ namespace larocv {
 					   larocv::ImageMeta& meta,
 					   larocv::ROI& roi)
   {
+
     clear();
     if ( clusters.size() )
       throw larbys("This algo can only be executed first in algo chain!");
     
-    int THRESH_LOWER=1;
-    int HIP_LEVEL=255;
+    int THRESH_LOWER = _mip_thresh;
+    int HIP_LEVEL    = _hip_thresh;
     
     ::cv::imwrite("shitty.png",img);
     
@@ -71,7 +77,7 @@ namespace larocv {
     for (const auto& hip_ctor : _hip_ctor_v)
       if ( hip_ctor.size() > min_hip_size)
 	hip_ctor_v_tmp.emplace_back(hip_ctor);
-
+    
     //swap them out -- the thresholded hips and all hips
     //_hip_ctor_v == HIP contours
     std::swap(_hip_ctor_v,hip_ctor_v_tmp);
@@ -453,6 +459,7 @@ namespace larocv {
      std::swap(ocluster_v,ocluster_v_new);
      LAROCV_DEBUG((*this)) << "\n\n\tReturning\n\n";
      return ocluster_v;
+     
   }
   
   
