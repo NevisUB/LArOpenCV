@@ -20,6 +20,21 @@ namespace larocv {
     
     /// Finalize after process
     void Finalize(TFile*) {}
+
+    /// functions to test out algo in ipython notebook
+
+    // ContourArray_t& f_mip_ctor_v(){return _mip_ctor_v;}
+    // ContourArray_t& f_hip_ctor_v(){return _hip_ctor_v;}
+    // ContourArray_t& f_all_ctor_v(){return _all_ctor_v;}
+    // std::vector<std::vector<int> >& f_hullpts_v() {return _hullpts_v;}
+    // std::vector<std::vector<::cv::Vec4i> >& f_defects_v() {return _defects_v;}
+
+    ContourArray_t _mip_ctor_v;
+    ContourArray_t _hip_ctor_v;
+    ContourArray_t _all_ctor_v;
+    std::vector<std::vector<int> > _hullpts_v;
+    std::vector<std::vector<::cv::Vec4i> > _defects_v;
+
     
   protected:
     
@@ -32,6 +47,10 @@ namespace larocv {
 				       larocv::ROI& roi);
     
   private:
+
+
+    
+    void clear();
     
     bool test_point_above(std::pair<::cv::Point2f,::cv::Point2f> segment,::cv::Point2f pt);
 
@@ -53,7 +72,8 @@ namespace larocv {
     int _min_mip_cluster_size;
     int _min_defect_size;
     int _hull_edge_pts_split;
-    
+    int _mip_thresh;
+    int _hip_thresh;
   };
   
   /**
