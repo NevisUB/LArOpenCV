@@ -61,7 +61,7 @@ ImageClusterManager: {
   }
 
  ca : {
-   RatioCut : 0.7
+   RatioCut : 0.5
    UseStartEnd: 1 #else use direction of first flashlight
   }
 
@@ -108,6 +108,17 @@ icc : {
   pcao: { }
 
   sc : {
+
+   MinHits : 10
+   MinArea : -1
+   MinPerimieter : -1
+   MinCharge :-1
+   MinLength : -1
+   MinWidth : -1
+   
+  }
+
+  sc2 : {
 
    MinHits : 10
    MinArea : -1
