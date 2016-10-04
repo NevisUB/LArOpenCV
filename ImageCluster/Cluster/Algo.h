@@ -20,6 +20,15 @@ namespace larocv {
     
     /// Finalize after process
     void Finalize(TFile*) {}
+
+
+    /// functions to test out algo in ipython notebook
+
+    ContourArray_t _mip_ctor_v;
+    ContourArray_t _hip_ctor_v;
+    ContourArray_t _all_ctor_v;
+    std::vector<std::vector<int> > _hullpts_v;
+    std::vector<std::vector<::cv::Vec4i> > _defects_v;
     
   protected:
     
@@ -32,6 +41,7 @@ namespace larocv {
 				       larocv::ROI& roi);
     
   private:
+    void clear();
     
     bool test_point_above(std::pair<::cv::Point2f,::cv::Point2f> segment,::cv::Point2f pt);
 
