@@ -5,7 +5,7 @@ LArImageHit: {
   Profile: true
   StoreOriginalImage: false
   Producer: clusterfilter 
-  MatchPlaneWeights : [5,1,10]
+  MatchPlaneWeights : [1,1,1]
 
   # LArImageHit config
   PoolTimeTick: 6 
@@ -96,7 +96,7 @@ ImageClusterManager: {
 
   sc : {
 
-   MinHits : 10
+   MinHits : 20
    MinArea : -1
    MinPerimieter : -1
    MinCharge :-1

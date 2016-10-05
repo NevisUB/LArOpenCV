@@ -32,8 +32,8 @@ ImageClusterManager: {
   Verbosity: 2
   Profile:   true
 
-  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
-  ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,fm,fcp2,sep,ca,cwires,cwo]
+  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleCuts,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
+  ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,fm,fcp2,sc2,sep,ca,cwires,cwo]
 
   ShowImage: false
 
