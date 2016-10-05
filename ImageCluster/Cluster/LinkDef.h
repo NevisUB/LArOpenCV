@@ -15,6 +15,7 @@
 #pragma link C++ class larocv::TCluster+;
 #pragma link C++ class larocv::SBManCluster+;
 #pragma link C++ class larocv::FillClusterParams+;
+#pragma link C++ class larocv::Algo+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

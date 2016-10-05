@@ -5,15 +5,28 @@
 
 namespace larocv {
 
+  void Algo::clear()
+  {
+    _mip_ctor_v.clear();
+    _hip_ctor_v.clear();
+    _all_ctor_v.clear();
+    _hullpts_v.clear();
+    _defects_v.clear();
+  }
 
   void Algo::_Configure_(const ::fcllite::PSet &pset)
   {
 
-    _min_hip_cluster_size = pset.get<int>("MinHipClusterSize");
-    _min_mip_cluster_size = pset.get<int>("MinMipClusterSize");
-    _min_defect_size      = pset.get<int>("MinDefectSize");
-    _hull_edge_pts_split  = pset.get<int>("HullEdgePtsSplit");
-
+    // _min_hip_cluster_size = pset.get<int>("MinHipClusterSize",6);
+    // _min_mip_cluster_size = pset.get<int>("MinMipClusterSize",6);
+    // _min_defect_size      = pset.get<int>("MinDefectSize",5);
+    // _hull_edge_pts_split  = pset.get<int>("HullEdgePtsSplit",50);
+    _min_hip_cluster_size = 6;
+    _min_mip_cluster_size = 6;
+    _min_defect_size      = 5;
+    _hull_edge_pts_split  = 50;
+    _mip_thresh = 1;
+    _hip_thresh = 255;
   }
 
   larocv::Cluster2DArray_t Algo::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -22,11 +35,12 @@ namespace larocv {
 					   larocv::ROI& roi)
   {
 
+    clear();
     if ( clusters.size() )
       throw larbys("This algo can only be executed first in algo chain!");
     
-    int THRESH_LOWER=1;
-    int HIP_LEVEL=255;
+    int THRESH_LOWER = _mip_thresh;
+    int HIP_LEVEL    = _hip_thresh;
     
     ::cv::imwrite("shitty.png",img);
     
@@ -42,32 +56,31 @@ namespace larocv {
 
     ///////////////////////////////////////////////
     //Contour finding on the HIP
-    ContourArray_t hip_ctor_v;
     std::vector<::cv::Vec4i> hip_cv_hierarchy_v;
-    hip_ctor_v.clear();
+    _hip_ctor_v.clear();
     hip_cv_hierarchy_v.clear();
     
-    ::cv::findContours(hip_thresh_m,hip_ctor_v,
+    ::cv::findContours(hip_thresh_m,_hip_ctor_v,
 		       hip_cv_hierarchy_v,
 		       CV_RETR_EXTERNAL,
 		       CV_CHAIN_APPROX_SIMPLE);
     
-    LAROCV_DEBUG((*this)) << "+==> Found: " << hip_ctor_v.size() << " hip contours\n";
+    LAROCV_DEBUG((*this)) << "+==> Found: " << _hip_ctor_v.size() << " hip contours\n";
 
     ///////////////////////////////////////////////
     //Filter the HIP contours to a minimum size
     int min_hip_size = _min_hip_cluster_size;
     
     ContourArray_t hip_ctor_v_tmp;
-    hip_ctor_v_tmp.reserve(hip_ctor_v.size());
+    hip_ctor_v_tmp.reserve(_hip_ctor_v.size());
     
-    for (const auto& hip_ctor : hip_ctor_v)
+    for (const auto& hip_ctor : _hip_ctor_v)
       if ( hip_ctor.size() > min_hip_size)
 	hip_ctor_v_tmp.emplace_back(hip_ctor);
-
+    
     //swap them out -- the thresholded hips and all hips
-    //hip_ctor_v == HIP contours
-    std::swap(hip_ctor_v,hip_ctor_v_tmp);
+    //_hip_ctor_v == HIP contours
+    std::swap(_hip_ctor_v,hip_ctor_v_tmp);
     
     ///////////////////////////////////////////////
     //Masking away the hip in the original image
@@ -81,8 +94,8 @@ namespace larocv {
     ::cv::findNonZero(mip_thresh_m, all_locations); 
     
      for( const auto& loc: all_locations ) {
-       for( size_t i = 0; i < hip_ctor_v.size(); i++ ) {
-	 if ( ::cv::pointPolygonTest(hip_ctor_v[i],loc,false) < 0 )  // check if point in HIP contour
+       for( size_t i = 0; i < _hip_ctor_v.size(); i++ ) {
+	 if ( ::cv::pointPolygonTest(_hip_ctor_v[i],loc,false) < 0 )  // check if point in HIP contour
 	   continue;
 	 
 	 //Something here. Zero out this pixel.
@@ -92,55 +105,53 @@ namespace larocv {
 
      ///////////////////////////////////////////////
      //run the contour finder on the MIPs
-     ContourArray_t mip_ctor_v;
      std::vector<::cv::Vec4i> mip_cv_hierarchy_v;
-     mip_ctor_v.clear();
+     _mip_ctor_v.clear();
      mip_cv_hierarchy_v.clear();
      
-     ::cv::findContours(mip_thresh_m,mip_ctor_v,mip_cv_hierarchy_v,
+     ::cv::findContours(mip_thresh_m,_mip_ctor_v,mip_cv_hierarchy_v,
 			CV_RETR_EXTERNAL,
 			CV_CHAIN_APPROX_SIMPLE);
-     
-     LAROCV_DEBUG((*this)) << "+==> Found " << mip_ctor_v.size() << " mip contours " << "\n";
+
+     LAROCV_DEBUG((*this)) << "+==> Found " << _mip_ctor_v.size() << " mip contours " << "\n";
 
      ///////////////////////////////////////////////
      //Filter the MIP contours to a minimum size, the ones that are
      int min_mip_size = _min_mip_cluster_size;
      ContourArray_t mip_ctor_v_tmp;
-     mip_ctor_v_tmp.reserve(mip_ctor_v.size());
+     mip_ctor_v_tmp.reserve(_mip_ctor_v.size());
      
-     for (const auto& mip_ctor : mip_ctor_v)
+     for (const auto& mip_ctor : _mip_ctor_v)
        if (mip_ctor.size() > min_mip_size)
 	 mip_ctor_v_tmp.emplace_back(mip_ctor);
      
 
      //swap them out -- the thresholded mips and all mips
      //hip_ctor_v == HIP contours
-     std::swap(mip_ctor_v,mip_ctor_v_tmp);
+     std::swap(_mip_ctor_v,mip_ctor_v_tmp);
      
      ///////////////////////////////////////////////
      //unify the contours into a single array
-     ContourArray_t all_ctor_v;
-
+     
      // failed at combining
      // all_ctor_v.reserve(mip_ctor_v.size() + hip_ctor_v.size());
      // all_ctor_v.insert( all_ctor_v.end(), mip_ctor_v.begin(), mip_ctor_v.end());
      // all_ctor_v.insert( all_ctor_v.end(), hip_ctor_v.begin(), hip_ctor_v.end() );
 
-     for (const auto& mip_ctor : mip_ctor_v) {
+     for (const auto& mip_ctor : _mip_ctor_v) {
        if (mip_ctor.size() > 0) 
-     	 all_ctor_v.emplace_back(mip_ctor);
+     	 _all_ctor_v.emplace_back(mip_ctor);
        else
 	 LAROCV_DEBUG((*this)) << "Shouldn't happen, but zero mip cluster found!\n";
      }
-     for (const auto& hip_ctor : hip_ctor_v) {
+     for (const auto& hip_ctor : _hip_ctor_v) {
        if (hip_ctor.size() > 0)
-	 all_ctor_v.emplace_back(hip_ctor);
+	 _all_ctor_v.emplace_back(hip_ctor);
        else
 	 LAROCV_DEBUG((*this)) << "Shouldn't happen, but zero hip cluster found!\n";
      }
 
-     LAROCV_DEBUG((*this)) << "On meta.plane: " << meta.plane() << " found total contours: " << all_ctor_v.size() << "\n";
+     LAROCV_DEBUG((*this)) << "On meta.plane: " << meta.plane() << " found total contours: " << _all_ctor_v.size() << "\n";
 
      ///////////////////////////////////////////////
      //Compute the convex hull on each contour, save the output.
@@ -149,22 +160,20 @@ namespace larocv {
      //in same way as python script.
 
      //The hull points
-     std::vector<std::vector<int> > hullpts_v;
-     hullpts_v.resize(all_ctor_v.size());
+     _hullpts_v.resize(_all_ctor_v.size());
 
      //The defects
-     std::vector<std::vector<::cv::Vec4i> > defects_v;
-     defects_v.resize(all_ctor_v.size());
+     _defects_v.resize(_all_ctor_v.size());
 
      //The converted defect distances, separate array since it's "corrected" distance
      std::vector<std::vector<double> > defects_dist_v;
-     defects_dist_v.resize(all_ctor_v.size());
+     defects_dist_v.resize(_all_ctor_v.size());
      
-     for (unsigned i = 0; i < all_ctor_v.size(); ++i ) {
+     for (unsigned i = 0; i < _all_ctor_v.size(); ++i ) {
 
-       auto& cluster   = all_ctor_v[i];
-       auto& hullpts   = hullpts_v[i];
-       auto& defects   = defects_v[i];
+       auto& cluster   = _all_ctor_v[i];
+       auto& hullpts   = _hullpts_v[i];
+       auto& defects   = _defects_v[i];
        auto& defects_d = defects_dist_v[i];
        
        //Make this hull
@@ -192,19 +201,19 @@ namespace larocv {
        
      }
 
-     LAROCV_DEBUG((*this)) << "\tSee: all_ctor_v.size() : " << all_ctor_v.size() << "\n";
-     LAROCV_DEBUG((*this)) << "\tSee: hullpts_v.size() : " << hullpts_v.size() << "\n";
-     LAROCV_DEBUG((*this)) << "\tSee: defects_v.size() : " << defects_v.size() << "\n";
+     LAROCV_DEBUG((*this)) << "\tSee: _all_ctor_v.size() : " << _all_ctor_v.size() << "\n";
+     LAROCV_DEBUG((*this)) << "\tSee: _hullpts_v.size() : " << _hullpts_v.size() << "\n";
+     LAROCV_DEBUG((*this)) << "\tSee: _defects_v.size() : " << _defects_v.size() << "\n";
      LAROCV_DEBUG((*this)) << "\tSee: defects_dist_v.size() : " << defects_dist_v.size() << "\n";
 
      ////////////////////////////////////////////
      //Create the result cluster array vector for output
      //set the contours for these clusters
      Cluster2DArray_t ocluster_v;
-     ocluster_v.resize(all_ctor_v.size());
+     ocluster_v.resize(_all_ctor_v.size());
 
-     for(unsigned i=0;i<all_ctor_v.size();++i) 
-       ocluster_v[i]._contour = all_ctor_v[i];
+     for(unsigned i=0;i<_all_ctor_v.size();++i) 
+       ocluster_v[i]._contour = _all_ctor_v[i];
 
      LAROCV_DEBUG((*this)) << "\tSee: ocluster set to size : " << ocluster_v.size() << "\n";
 
@@ -230,7 +239,7 @@ namespace larocv {
      for(unsigned i=0;i<ocluster_v.size();++i) {
        
        auto& contour   = ocluster_v[i]._contour;
-       auto& defects   = defects_v[i];
+       auto& defects   = _defects_v[i];
        auto& defects_d = defects_dist_v[i];
        auto& split_defect = split_defects_v[i];
 
@@ -450,6 +459,7 @@ namespace larocv {
      std::swap(ocluster_v,ocluster_v_new);
      LAROCV_DEBUG((*this)) << "\n\n\tReturning\n\n";
      return ocluster_v;
+     
   }
   
   
