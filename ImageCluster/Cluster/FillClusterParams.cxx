@@ -14,6 +14,7 @@ namespace larocv {
 							larocv::ImageMeta& meta,
 							larocv::ROI& roi)
   {
+
     auto oclusters = clusters;
 
     for (auto& ocluster : oclusters) {
@@ -47,8 +48,8 @@ namespace larocv {
     
     Contour_t all_locations;
     ::cv::findNonZero(img, all_locations); // get the non zero points
-    
-     for( const auto& loc: all_locations ) {
+
+    for( const auto& loc: all_locations ) {
       for( size_t i = 0; i < oclusters.size(); i++ ) {
 	
 	if ( ::cv::pointPolygonTest(oclusters[i]._contour,loc,false) < 0 ) 
@@ -56,6 +57,9 @@ namespace larocv {
 
 	oclusters[i]._insideHits.emplace_back(loc.x, loc.y);
 	oclusters[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);
+	// When point is found in contour, no others are checked; avoids double counting
+	// Requires SimpleCuts to the alg chain after this; may have clusters with 0 hits
+	break;
       }   
     }
     
