@@ -18,6 +18,7 @@
 #include "AlgoDataBase.h"
 #include <TTree.h>
 #include <vector>
+
 namespace larocv {
 
   /**
@@ -40,6 +41,9 @@ namespace larocv {
     /// Registration of algorithm data storage ttree (optional)
     void Register(TTree* tree);
 
+    /// Algorithm ID getter from name (slow search)
+    AlgorithmID_t ID(const std::string& name);
+
     /// Data access method
     const AlgoDataBase* Data(AlgorithmID_t id);
 
@@ -48,7 +52,7 @@ namespace larocv {
     bool   _tree_attached;
     TTree* _tree;
     std::vector<AlgoDataBase*> _data_v;
-    
+    std::vector<std::string> _name_v;
   };
 }
 

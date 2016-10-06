@@ -18,13 +18,32 @@ namespace larocv {
     LAROCV_NORMAL((*this)) << "Registering AlgoData " << data->Name() << " ID = " << data->ID() << std::endl;
     if(_tree_attached)
       throw larbys("Cannot register after TTree attachment happened!");    
-    if(data->ID() >= _data_v.size()) _data_v.resize(data->ID()+1,nullptr);
+    if(data->ID() >= _data_v.size()) {
+      _data_v.resize(data->ID()+1,nullptr);
+      _name_v.resize(data->ID()+1,"");
+    }
     if(_data_v[data->ID()]){
       std::stringstream ss;
       ss << "Duplicate registration of AlgoDataBase pointer (ID=" << data->ID() <<")!";
       throw larbys(ss.str());
     }
     _data_v[data->ID()] = data;
+    _name_v[data->ID()] = data->Name();
+  }
+
+  AlgorithmID_t AlgoDataManager::ID(const std::string& name)
+  {
+    AlgorithmID_t id=kINVALID_ALGO_ID;
+    for(size_t i=0; i<_name_v.size(); ++i) {
+      if(_name_v[i] != name) continue;
+      if(id == kINVALID_ALGO_ID) id = i;
+      else {
+	std::stringstream ss;
+	ss << "Algorithm name \"" << name << "\" is duplicated!" << std::endl;
+	throw larbys(ss.str());
+      }
+    }
+    return id;
   }
 
   void AlgoDataManager::Register(TTree* tree)
