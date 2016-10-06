@@ -3,6 +3,7 @@
 
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
+#include "VicData.h"
 
 namespace larocv {
   
@@ -111,6 +112,9 @@ namespace larocv {
     ~AlgoFactory() {}
     /// create method
     ClusterAlgoBase* create(const std::string instance_name) { return new Algo(instance_name); }
+    /// create algo data method
+    AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
+    { return new VicData(instance_name,id);}
   };
   /// Global larocv::AlgoFactory to register ClusterAlgoFactory
   static AlgoFactory __global_AlgoFactory__;

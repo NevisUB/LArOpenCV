@@ -27,8 +27,8 @@
 
 #pragma link C++ class larocv::BaseUtil+;
 
+#pragma link C++ class larocv::AlgoDataBase+;
+#pragma link C++ class larocv::AlgoDataEmpty+;
+#pragma link C++ class larocv::AlgoDataManager+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
-
-
-
