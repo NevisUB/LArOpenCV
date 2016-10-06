@@ -5,7 +5,18 @@
 #include "ClusterAlgoFactory.h"
 
 namespace larocv {
- 
+  
+  struct Line {
+
+    Line(float s, float o) { slope=s; offset=o; }
+    ~Line(){}
+    
+    float slope;
+    float offset;
+    
+  };
+  
+  
   class Algo : public larocv::ClusterAlgoBase {
     
   public:
@@ -23,12 +34,6 @@ namespace larocv {
 
     /// functions to test out algo in ipython notebook
 
-    // ContourArray_t& f_mip_ctor_v(){return _mip_ctor_v;}
-    // ContourArray_t& f_hip_ctor_v(){return _hip_ctor_v;}
-    // ContourArray_t& f_all_ctor_v(){return _all_ctor_v;}
-    // std::vector<std::vector<int> >& f_hullpts_v() {return _hullpts_v;}
-    // std::vector<std::vector<::cv::Vec4i> >& f_defects_v() {return _defects_v;}
-
     ContourArray_t _mip_ctor_v;
     ContourArray_t _hip_ctor_v;
     ContourArray_t _all_ctor_v;
@@ -36,6 +41,7 @@ namespace larocv {
     std::vector<std::vector<::cv::Vec4i> > _defects_v;
     std::vector< std::vector<std::pair<::cv::Point2f,::cv::Point2f> > > _split_defects_v;
     Cluster2DArray_t _ocluster_v;
+    
   protected:
     
     /// Inherited class configuration method
@@ -49,18 +55,23 @@ namespace larocv {
   private:
 
 
+    cv::Vec4i max_hull_edge(const Contour_t& ctor, std::vector<cv::Vec4i> defects);
     
     void clear();
     
     bool test_point_above(std::pair<::cv::Point2f,::cv::Point2f> segment,::cv::Point2f pt);
 
+    bool test_point_above(const Line& line,::cv::Point pt);
+    
     int four_pt_intersect(::cv::Point2f p1,
-			   ::cv::Point2f p2,
-			   ::cv::Point2f p3,
-			   ::cv::Point2f p4);
+			  ::cv::Point2f p2,
+			  ::cv::Point2f p3,
+			  ::cv::Point2f p4);
+    
     ::cv::Point2f intersect(float x1,float y1,
 			    float x2,float y2,
 			    float x3,float y3);
+    
     double intersect_distance(float x1,float y1,float x2,float y2,float x3,float y3);
     ::cv::Point2f intersection_point(float x1,float x2,float y1,float y2,float x3,float x4,float y3,float y4);
     
@@ -68,6 +79,18 @@ namespace larocv {
     double distance(float x1,float x2,float y1,float y2);
     void FillClusterParams(Cluster2DArray_t& cluster2d_v,const ::cv::Mat& img);
 
+    void split_contour(const Contour_t& ctor,Contour_t& ctor1,Contour_t& ctor2, const Line& line);
+    
+    void fill_hull_and_defects(const Contour_t& ctor,
+			       std::vector<int>& hullpts,
+			       std::vector<cv::Vec4i>& defects,
+			       std::vector<float>& defects_d);
+
+    void filter_defects(std::vector<cv::Vec4i>& defects,
+			std::vector<float>& defects_d,
+			float min_defect_size);
+    Line find_line_hull_defect(const Contour_t& ctor, cv::Vec4i defect);
+    
     int _min_hip_cluster_size;
     int _min_mip_cluster_size;
     int _min_defect_size;

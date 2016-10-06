@@ -18,11 +18,6 @@ namespace larocv {
 
   void Algo::_Configure_(const ::fcllite::PSet &pset)
   {
-
-    // _min_hip_cluster_size = pset.get<int>("MinHipClusterSize",6);
-    // _min_mip_cluster_size = pset.get<int>("MinMipClusterSize",6);
-    // _min_defect_size      = pset.get<int>("MinDefectSize",5);
-    // _hull_edge_pts_split  = pset.get<int>("HullEdgePtsSplit",50);
     _min_hip_cluster_size = 6;
     _min_mip_cluster_size = 6;
     _min_defect_size      = 5;
@@ -67,8 +62,6 @@ namespace larocv {
 		       CV_RETR_EXTERNAL,
 		       CV_CHAIN_APPROX_SIMPLE);
     
-    LAROCV_DEBUG((*this)) << "+==> Found: " << _hip_ctor_v.size() << " hip contours\n";
-
     ///////////////////////////////////////////////
     //Filter the HIP contours to a minimum size
     int min_hip_size = _min_hip_cluster_size;
@@ -115,8 +108,6 @@ namespace larocv {
 			CV_RETR_EXTERNAL,
 			CV_CHAIN_APPROX_SIMPLE);
 
-     LAROCV_DEBUG((*this)) << "+==> Found " << _mip_ctor_v.size() << " mip contours " << "\n";
-
      ///////////////////////////////////////////////
      //Filter the MIP contours to a minimum size, the ones that are
      int min_mip_size = _min_mip_cluster_size;
@@ -126,7 +117,6 @@ namespace larocv {
      for (const auto& mip_ctor : _mip_ctor_v)
        if (mip_ctor.size() > min_mip_size)
 	 mip_ctor_v_tmp.emplace_back(mip_ctor);
-     
 
      //swap them out -- the thresholded mips and all mips
      //hip_ctor_v == HIP contours
@@ -134,337 +124,102 @@ namespace larocv {
      
      ///////////////////////////////////////////////
      //unify the contours into a single array
-     
-     // failed at combining
-     // all_ctor_v.reserve(mip_ctor_v.size() + hip_ctor_v.size());
-     // all_ctor_v.insert( all_ctor_v.end(), mip_ctor_v.begin(), mip_ctor_v.end());
-     // all_ctor_v.insert( all_ctor_v.end(), hip_ctor_v.begin(), hip_ctor_v.end() );
-
      for (const auto& mip_ctor : _mip_ctor_v) {
+
        if (mip_ctor.size() > 0) 
      	 _all_ctor_v.emplace_back(mip_ctor);
-       else
-	 LAROCV_DEBUG((*this)) << "Shouldn't happen, but zero mip cluster found!\n";
+       
      }
+
      for (const auto& hip_ctor : _hip_ctor_v) {
+
        if (hip_ctor.size() > 0)
 	 _all_ctor_v.emplace_back(hip_ctor);
-       else
-	 LAROCV_DEBUG((*this)) << "Shouldn't happen, but zero hip cluster found!\n";
-     }
-
-     LAROCV_DEBUG((*this)) << "On meta.plane: " << meta.plane() << " found total contours: " << _all_ctor_v.size() << "\n";
-
-     ///////////////////////////////////////////////
-     //Compute the convex hull on each contour, save the output.
-     
-     //With the MIP and HIP clusters find hull, then calculate defects
-     //in same way as python script.
-     LAROCV_DEBUG((*this)) << "On plane: " << meta.plane() << " found : " << _all_ctor_v.size() << " combined contours\n";
-     
-     //The hull points
-     _hullpts_v.resize(_all_ctor_v.size());
-
-     //The defects
-     _defects_v.resize(_all_ctor_v.size());
-
-     //The converted defect distances, separate array since it's "corrected" distance
-     std::vector<std::vector<double> > defects_dist_v;
-     defects_dist_v.resize(_all_ctor_v.size());
-     
-     for (unsigned i = 0; i < _all_ctor_v.size(); ++i ) {
-
-       auto& cluster   = _all_ctor_v[i];
-       auto& hullpts   = _hullpts_v[i];
-       auto& defects   = _defects_v[i];
-       auto& defects_d = defects_dist_v[i];
-       LAROCV_DEBUG((*this)) << "This cluster at i: " << i << " has size of " << cluster.size() << " ";
-       //Make this hull
-       ::cv::convexHull(cluster, hullpts);
-       LAROCV_DEBUG((*this)) << " hullpts is now: " << hullpts.size() << "\n";
-       
-       //Close this hull up
-       hullpts.push_back(hullpts.at(0));
-
-       //Make the contour that holds hull points, instead of indicies
-       std::vector<::cv::Point> hullcontour;
-       hullcontour.resize(hullpts.size()-1);
-
-       //Make a contour array with hull points
-       for(unsigned u=0;u<hullcontour.size();++u) 
-	 hullcontour[u] = cluster[ hullpts[u] ];
-       
-       //Compute the defects
-       ::cv::convexityDefects(cluster,hullpts,defects);
-       
-       //Lets put the defects distances specially into vector of doubles
-       defects_d.resize( defects.size() );
-       
-       for( int j = 0; j < defects.size(); ++j )
-	 defects_d[j]  = ( ( (float) defects[j][3] ) / 256.0 ); 
        
      }
 
-     LAROCV_DEBUG((*this)) << "\tSee: _all_ctor_v.size() : " << _all_ctor_v.size() << "\n";
-     LAROCV_DEBUG((*this)) << "\tSee: _hullpts_v.size() : " << _hullpts_v.size() << "\n";
-     LAROCV_DEBUG((*this)) << "\tSee: _defects_v.size() : " << _defects_v.size() << "\n";
-     LAROCV_DEBUG((*this)) << "\tSee: defects_dist_v.size() : " << defects_dist_v.size() << "\n";
-
      ////////////////////////////////////////////
-     //Create the result cluster array vector for output
-     //set the contours for these clusters
-     _ocluster_v.resize(_all_ctor_v.size());
+     // Take a single contour, find the defect on the side with 
+     // longest hull edge. Break the contour into two. Re insert into master
+     // contour list to re-breakup.
 
-     for(unsigned i=0;i<_all_ctor_v.size();++i) 
-       _ocluster_v[i]._contour = _all_ctor_v[i];
+     //contours which can not be broken up further
+     ContourArray_t _atomic_ctor_v;
 
-     LAROCV_DEBUG((*this)) << "\tSee: ocluster set to size : " << _ocluster_v.size() << "\n";
+     //contours which may be broken up
+     ContourArray_t _break_ctor_v;
 
-     ////////////////////////////////////////////
-     //Fill cluster parameters, this copied from external module, fills aabox, obox, etc
-     FillClusterParams(_ocluster_v,img);
+     //loop through all the contours, and close them up
+     _break_ctor_v = _all_ctor_v;
 
-     ////////////////////////////////////////////
-     //Now lets go through and identify the locations between the contour
-     //and the hull which we will break on
+     for(auto& ctor : _break_ctor_v)
+       ctor.emplace_back(ctor.at(0));
 
-     // split_defects_v[...] ==> array for each contour
-     // split_defects_v[...][...] ==> array for set of defects per contour
-     // split_defects_v[...][...].first/second ==> pair of location @ defect point, intersection of minimum line to convex hull
-     _split_defects_v.resize(_ocluster_v.size());
-     
-     LAROCV_DEBUG((*this)) << "\tSee: _split_defects_v.size(): " << _split_defects_v.size() << "\n";
-     LAROCV_DEBUG((*this)) << "\t==================\n";
-     
-     float MIN_DEFECT_SIZE=_min_defect_size;
+     //for each contour lets do the breaking
+     std::cout << "ctors to break: " << _break_ctor_v.size() << "\n";
+     while( _break_ctor_v.size() != 0 ) {
 
-     for(unsigned i=0;i<_ocluster_v.size();++i) {
+       //get a contour out off the front
+       auto  ctor_itr = _break_ctor_v.begin();
+       auto& ctor     = *ctor_itr;
        
-       auto& contour   = _ocluster_v[i]._contour;
-       auto& defects   = _defects_v[i];
-       auto& defects_d = defects_dist_v[i];
-       auto& split_defect = _split_defects_v[i];
+       std::cout << "Found contour of size : " << ctor.size() << "\n";
+       std::cout << "size of breakctor is : " << _break_ctor_v.size() << "\n";
 
-       LAROCV_DEBUG((*this)) << "==>Next cluster  @ i:" << i << "\n";
-       LAROCV_DEBUG((*this)) << "\tSee: split_defect.size(): " << split_defect.size() << "\n";
-       LAROCV_DEBUG((*this)) << "\tSee: defects.size(): " << defects.size() << "\n";
-       LAROCV_DEBUG((*this)) << "\tSee: defects_d.size(): " << defects_d.size() << "\n";
-
-       //for each defect in this cluster
-       for(unsigned ig=0;ig<defects_d.size();++ig) {
-
-	 // no defects on this cluster, continue	 
-	 if (defects_d[ig] < MIN_DEFECT_SIZE) {
-	   LAROCV_DEBUG((*this)) << "==>No min defect @ ig: " << ig  << "\n";
-	   continue;
-	 }
-
-	 //there was a defect
-	 LAROCV_DEBUG((*this)) << "!=>See min defect @ ig: " << ig  << " of size: " << defects_d[ig] << "\n";
-	 
-	 //defects gives us indicies of ::cv::Point on the contour, from start index, to end index.
-	 ::cv::Point start  = contour.at((size_t)defects[ig][0]);
-	 ::cv::Point end    = contour.at((size_t)defects[ig][1]);
-	 ::cv::Point far    = contour.at((size_t)defects[ig][2]);
-
-	 //fix this, copy out of ipython notebook
-	 ::cv::Point2f kx(start.x,end.x);
-	 ::cv::Point2f ky(start.y,end.y);
-	 ::cv::Point2d kz(far.x  ,far.y);
-	 
-	 float x1=kx.x;
-	 float x2=kx.y;
-	 float x3=kz.x;
-	 float y1=ky.x;
-	 float y2=ky.y;
-	 float y3=kz.y;
-
-	 int npts=_hull_edge_pts_split;
-
-	 // number of points on segmented edge
-	 std::vector<::cv::Point2f> l_;
-	 l_.resize(npts);
-
-	 ::cv::Point2f dir_=::cv::Point2f(x2-x1,y2-y1);
-	 
-	 // make the points on the hull edge
-	 for(int j=0;j<npts;++j) {
-	   float k = ( (float) j ) / ( (float) npts );
-	   l_[j] = dir_*k+::cv::Point2f(x1,y1);
-	 }
-
-	 ::cv::Point2f p3(x3,y3);
-
-	 std::vector<std::pair<::cv::Point2f,::cv::Point2f> > _ss;
-
-	 LAROCV_DEBUG((*this)) << "\tSee: _ss.size(): " << _ss.size() << "\n";
-	 _ss.reserve(l_.size()/10);
-	 LAROCV_DEBUG((*this)) << "\tScanning contour idx range: " << defects[ig][0] << " to " << defects[ig][1] << "\n";
-
-	 // for each point on the hull edge
-	 for ( const auto& l : l_ ) {
-
-	   //is this needed
-	   //::cv::Point2f p4=intersect(x1,y1,x2,y2,l.x,l.y);
-	   
-	   auto x4=l.x;
-	   auto y4=l.y;
-	   ::cv::Point2f p4(x4,y4);
-	   
-	   int pts_c = contour.size();
-
-	   int inters=0;
-
-	   auto minidx=std::min(defects[ig][0],defects[ig][1]);
-	   auto maxidx=std::max(defects[ig][0],defects[ig][1]);
-
-	   //loop over the portion of the contour facing the hull
-	   for(unsigned ix=minidx;ix<maxidx;++ix) {
-	     
-	     ::cv::Point2f pt1=contour.at(ix);
-	     ::cv::Point2f pt2=contour.at((ix+1)%pts_c);
-	     ::cv::Point2f pt3(x3,y3);
-	     ::cv::Point2f pt4(x4,y4);
-
-	     //check if there is intersection
-	     inters += four_pt_intersect(pt1,pt2,pt3,pt4);
-
-	     //does the line go through, and exit the hull, the connect to the defect point?
-	     //if so that's 3 intersection points, continue
-	     if (inters>=3) break;
-	     
-	   }//end loop over this region of contour next to hull
-
-	   //we intersected, move on
-	   if(inters>=3) continue;
-
-	   //we never intersected between the hull and the defect, store this pair
-	   _ss.emplace_back(p4,p3);
-
-	 }//end loop over segmented hull edge
-
-	 
-	 LAROCV_DEBUG((*this)) << "==>End loop over segmented hull saw: _ss.size(): " << _ss.size() << "\n";
-
-	 //get the minimum index. the hull defect line with minimum length
-	 int mindex=-1;
-	 float mdist=9e9;
-
-	 if ( _ss.size()==0 ) continue;
-	 
-	 for(unsigned ih=0;ih<_ss.size();++ih) {
-	   auto _p4=_ss[ih].first;
-	   auto _p3=_ss[ih].second;
-	   float _d=std::sqrt( std::pow(_p4.x-_p3.x,2) + std::pow(_p4.y-_p3.y,2));
-	   if (_d < mdist) {
-	     mdist  = _d;
-	     mindex = ih;
-	   }
-	 }
-
-	 if (mindex==-1) { LAROCV_DEBUG((*this)) << " mindex can not be -1!"; throw std::exception(); }
-
-	 //get got it, put into this split_defect
-	 split_defect.emplace_back(_ss[mindex]);
-	 LAROCV_DEBUG((*this)) << "==> Made it to loop over this defect... split_defect size is now: " << split_defect.size() << "\n";
-       }//end loop over this defect
-       LAROCV_DEBUG((*this)) << "==> End this contour\n";
-     }//end loop over this contour
-
-
-     //////////////////////////////////////////
-     // Now that we have the locations on the hull which connect to the defects
-     // we can do the splitting, finally
-
-     ContourArray_t ocluster_v_tmp;
-     ocluster_v_tmp.reserve(_ocluster_v.size());       
-     
-     for(unsigned i=0;i<_ocluster_v.size();++i) {
-
-       auto& contour   = _ocluster_v[i]._contour;
-       LAROCV_DEBUG((*this)) << "\t==>Trying to splitting @ i : " << i << "\n";
+       if (ctor.size() == 0) {
+	 _break_ctor_v.erase(ctor_itr);
+	 continue;
+       }
        
-       auto& split_defect = _split_defects_v[i];
+       // get the hull and defects for this contour
+       std::vector<int> hullpts;
+       std::vector<::cv::Vec4i> defects;
+       std::vector<float> defects_d;
 
-       if (split_defect.size()==0) {
-	 LAROCV_DEBUG((*this)) << "==>This contour !NOT! split has size: " << contour.size();
-	 ocluster_v_tmp.emplace_back(contour);
+       fill_hull_and_defects(ctor,hullpts,defects,defects_d);
+       filter_defects(defects,defects_d,_min_defect_size);
+
+       if ( !defects_d.size() ) { // it's atomic 
+	 _atomic_ctor_v.emplace_back(ctor);
+	 std::cout << "not breaking it: atomic size is now: " << _atomic_ctor_v.size() << "\n";
+	 _break_ctor_v.erase(ctor_itr);
+	 std::cout << "called erase break_ctor_v.size() is : " << _break_ctor_v.size() << "\n";
 	 continue;
        }
 
-       LAROCV_DEBUG((*this)) << "!=>This contour !IS! split has size: " << contour.size() << "\n";
-       LAROCV_DEBUG((*this)) << "!=>Split defect size: " << split_defect.size() << "\n";
+       std::cout << "Breaking it\n";
        
-       std::sort(std::begin(split_defect),std::end(split_defect),
-		 [](const std::pair<::cv::Point2f,::cv::Point2f>& p1,
-		    const std::pair<::cv::Point2f,::cv::Point2f>& p2)
-		 { return p1.second.y < p2.second.y; } );
+       //get the chosen edge
+       auto chosen_edge = max_hull_edge(ctor,defects);
 
-       std::vector< std::vector<::cv::Point> > split_ctors;
-       split_ctors.resize(split_defect.size()+1);
+       // lets break this line up and find the line between the hull edge and
+       // the defect point, which does not intersect the contour itself
+       Line min_line = find_line_hull_defect(ctor,chosen_edge);
+
+       Contour_t ctor1;
+       Contour_t ctor2;
+
+       split_contour(ctor,ctor1,ctor2,min_line);
+
+       _break_ctor_v.erase(ctor_itr);
+
+       _break_ctor_v.emplace_back(ctor1);
+       _break_ctor_v.emplace_back(ctor2);
        
-       for(unsigned id=0;id<split_defect.size();++id) {
-	 
-	 //this one is broken
-	 auto dp1 = split_defect.at(id);
-	 auto dp2 = split_defect.at((id+1)%split_defect.size());
-	 
-	 //loop over the contour and assign it to top bottom etc
-	 //for(const auto& pt : contour) {
-	 
-	 for(unsigned iq=0;iq<contour.size();++iq) {	 
-
-	   auto pt=contour[iq];
-	   
-	   if (id==0) {
-	     if (! test_point_above(dp1,pt) ) {
-	       split_ctors[id].emplace_back(pt);
-	     }
-	   }
-	   
-	   if (id==split_defect.size()-1) {
-	     if ( test_point_above(dp1,pt) ) {
-              split_ctors[id+1].emplace_back(pt);
-	       continue;
-	     }
-	   }
-	   
-	   if( !test_point_above(dp2,pt) and test_point_above(dp1,pt)) {
-	     split_ctors[id+1].emplace_back(pt);
-	   }
-	   
-	 }//end loop over this contour points
-
-       }//end loop over the defects for this contour
-
-       for (const auto& split_ctor : split_ctors) {
-	 LAROCV_DEBUG((*this)) << "\t==> this split_ctor has size: " << split_ctor.size() << "\n";
-	 ocluster_v_tmp.emplace_back(split_ctor);
-       }
-
-     }//end loop over _ocluster_v contours
-
-     Cluster2DArray_t ocluster_v_new;
-     ocluster_v_new.reserve(ocluster_v_tmp.size());
-
-     for(unsigned ob=0;ob<ocluster_v_tmp.size();++ob) {
-       if (ocluster_v_tmp[ob].size() != 0) {
-	 //ocluster_v_new[ob]._contour = ocluster_v_tmp[ob];
-	 Cluster2D cc;
-	 cc._contour=ocluster_v_tmp[ob];
-	 ocluster_v_new.emplace_back(std::move(cc));
-	 LAROCV_DEBUG((*this)) << "on ob : " << ob << " size going in is" << ocluster_v_new[ob]._contour.size() << "\n";
-       }
      }
 
-     LAROCV_DEBUG((*this)) << "ocluster_v_tmp.size(): " << ocluster_v_tmp.size() << "\n";
-     LAROCV_DEBUG((*this)) << "Filling cluster params again with the split contours\n";
-     FillClusterParams(ocluster_v_new,img);
+     std::cout << "Done~\n";
+     for(auto& atomic_ctor : _atomic_ctor_v) {
+       
+       Cluster2D ocluster;
+       ocluster._contour = atomic_ctor;
+
+       _ocluster_v.emplace_back(ocluster);
+     }
      
-     std::swap(_ocluster_v,ocluster_v_new);
-     LAROCV_DEBUG((*this)) << "\n\n\tReturning\n\n";
+     FillClusterParams(_ocluster_v,img);
+     
      return _ocluster_v;
-     
   }
   
   
@@ -482,7 +237,17 @@ namespace larocv {
     return false;
     
   }
-  
+
+
+  bool Algo::test_point_above(const Line& line,::cv::Point pt) { 
+    
+    if (pt.y > pt.x*line.slope + line.offset)
+      return true;
+    
+    return false;
+    
+  }
+
   int Algo::four_pt_intersect(::cv::Point2f p1,
 			      ::cv::Point2f p2,
 			      ::cv::Point2f p3,
@@ -585,6 +350,171 @@ namespace larocv {
     }
   }
   
+  
+
+  void Algo::fill_hull_and_defects(const Contour_t& ctor,
+				   std::vector<int>& hullpts,
+				   std::vector<cv::Vec4i>& defects,
+				   std::vector<float>& defects_d) {
+    
+    //Make this hull
+    ::cv::convexHull(ctor, hullpts);
+       
+    //Close this hull up
+    hullpts.push_back(hullpts.at(0));
+
+    //Compute the defects
+    ::cv::convexityDefects(ctor,hullpts,defects);
+       
+    //Put the defects distances specially into vector of doubles
+    defects_d.resize( defects.size() );
+       
+    for( int j = 0; j < defects.size(); ++j )
+      defects_d[j]  = ( ( (float) defects[j][3] ) / 256.0 ); 
+    
+  }
+  void Algo::filter_defects(std::vector<cv::Vec4i>& defects,
+			    std::vector<float>& defects_d,
+			    float min_defect_size){
+
+    std::vector<cv::Vec4i> defects_tmp;
+    defects_tmp.reserve(defects.size());
+
+    std::vector<float> defects_d_tmp;
+    defects_d_tmp.reserve(defects.size());
+
+
+    for(unsigned i=0;i<defects.size();++i) {
+
+      if (defects_d[i] < min_defect_size) continue;
+      
+      defects_tmp.emplace_back(defects[i]);
+      defects_d_tmp.emplace_back(defects_d[i]);
+    }
+
+
+    std::swap(defects_tmp  ,defects);
+    std::swap(defects_d_tmp,defects_d);
+    
+  }
+
+  Line Algo::find_line_hull_defect(const Contour_t& ctor, cv::Vec4i defect) {
+
+    //number of points in contour
+    int pts_c = ctor.size();
+    
+    auto start = ctor[defect[0]];
+    auto end   = ctor[defect[1]];
+    auto far   = ctor[defect[2]];
+    
+    float x1 = start.x;
+    float x2 = end.x;
+    float x3 = far.x;
+    float y1 = start.y;
+    float y2 = end.y;
+    float y3 = far.y;
+    
+    int npts=_hull_edge_pts_split;
+
+    std::vector<::cv::Point2f> l_;
+    l_.resize(npts);
+
+    ::cv::Point2f dir_(x2-x1,y2-y1);
+    
+    // make the points on the hull edge
+    for(int j=0;j<npts;++j) {
+      float k = ( (float) j ) / ( (float) npts );
+      l_[j] = dir_*k+::cv::Point2f(x1,y1);
+    }
+    
+    ::cv::Point2f p3(x3,y3);
+    ::cv::Point2f p4(-1,-1);
+
+    float mdist = 9.e9;
+    for ( const auto& l : l_ ) {
+
+      // pont on hull
+      auto x4 = l.x;
+      auto y4 = l.y;
+
+      //intersection counter
+      int inters = 0;
+
+      //min and max idx from start end
+      auto minidx = std::min(defect[0],defect[1]);
+      auto maxidx = std::max(defect[0],defect[1]);
+
+      // point on hull as cv
+      ::cv::Point2f pt4(x4,y4);
+
+      // loop over portion of contour facing edge
+      for(unsigned ix=minidx;ix<maxidx;++ix) {
+	
+	::cv::Point2f pt1 = ctor.at(ix);
+	::cv::Point2f pt2 = ctor.at((ix+1)%pts_c);
+
+	inters += four_pt_intersect(pt1,pt2,p3,pt4);
+	
+	if (inters>=3) break;
+      }
+      
+      if(inters>=3) continue;
+      
+      float dd = std::sqrt( std::pow(pt4.x-p3.x,2) + std::pow(pt4.y-p3.y,2) );
+      
+      if ( dd > mdist ) continue;
+
+      mdist = dd;
+
+      p4 = pt4;
+      
+    }
+
+    if (p4.x == -1 || p4.y == -1) throw std::exception();
+    
+    float slope  = (p4.y-p3.y)/(p4.x-p3.x);
+    float yinter = -1.0*slope*p4.x+p4.y;
+    
+    return Line(slope,yinter);
+  }
+
+  void Algo::split_contour(const Contour_t& ctor,Contour_t& ctor1,Contour_t& ctor2, const Line& line) {
+
+    for(auto& pt : ctor) {
+
+      if ( test_point_above(line,pt) )
+	{ ctor1.emplace_back(pt); continue; }
+
+      ctor2.emplace_back(pt);
+    }
+
+    if ( ctor.size() != (ctor1.size() + ctor2.size()) ) throw std::exception();
+    
+  }
+
+  cv::Vec4i Algo::max_hull_edge(const Contour_t& ctor, std::vector<cv::Vec4i> defects) {
+
+    auto ctor_size = ctor.size();
+
+    float max_dist = -1;
+    int max_idx = -1;
+    
+    for(unsigned i=0;i<defects.size();++i) {
+
+      auto d1=defects[i];
+      
+      float ll=std::sqrt(std::pow(ctor[d1[0]].x-ctor[d1[1]].x,2)+std::pow(ctor[d1[0]].y-ctor[d1[1]].y,2));
+
+      if (ll > max_dist) {
+	max_dist=ll;
+	max_idx=i;
+      }
+      
+    }
+
+    return defects.at(max_idx);
+      
+  }
 }
 
 #endif
