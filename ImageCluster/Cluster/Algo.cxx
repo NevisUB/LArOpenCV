@@ -2,6 +2,7 @@
 #define __ALGO_CXX__
 
 #include "Algo.h"
+#include "VicData.h"
 
 namespace larocv {
 
@@ -463,6 +464,10 @@ namespace larocv {
      
      std::swap(_ocluster_v,ocluster_v_new);
      LAROCV_DEBUG((*this)) << "\n\n\tReturning\n\n";
+
+     auto& mydata = AlgoData<larocv::VicData>();
+     mydata.num_clusters = _ocluster_v.size();
+     
      return _ocluster_v;
      
   }

@@ -27,7 +27,6 @@ namespace larlite {
     _producer = "";
     _store_original_img = false;
     _event = 0;
-
   }
 
   void LArImageClusterBase::set_config(const std::string cfg_file)
@@ -181,8 +180,6 @@ namespace larlite {
     Report();
     std::cout << "  \033[95mImageClusterManager\033[00m\n";
     _alg_mgr.Report();
-
-
 
     if (_fout) {
       _fout->cd();

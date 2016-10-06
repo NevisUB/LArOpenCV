@@ -20,7 +20,8 @@
 #include "ReClusterAlgoBase.h"
 #include "ImageClusterViewer.h"
 #include "MatchBookKeeper.h"
-
+#include "AlgoDataManager.h"
+#include <TTree.h>
 namespace larocv {
   /**
      \class ImageClusterManager
@@ -98,7 +99,8 @@ namespace larocv {
     const std::vector<larocv::ROI> InputROIs() const { return _raw_roi_v; }
     /// Plane weights getter and setter
     std::vector<float>& MatchPlaneWeights() { return _match_plane_weights; }
-    
+    /// Algorithm data manager accessor
+    const AlgoDataManager& DataManager() const { return _algo_dataman; }
   private:
     /// Name identifier: used to fetch a block of configuration parameters
     std::string _name;
@@ -142,7 +144,10 @@ namespace larocv {
     std::vector<float> _match_plane_weights;
     /// Switch for dead wire check
     bool _enable_wire_check ;
-
+    /// Algorithm data container
+    AlgoDataManager _algo_dataman;
+    /// Algorithm data storage TTree
+    TTree* _tree;
     int _required_plane;
     bool _use_two_plane;
   };

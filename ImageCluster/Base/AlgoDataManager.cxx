@@ -1,0 +1,59 @@
+#ifndef ALGODATAMANAGER_CXX
+#define ALGODATAMANAGER_CXX
+
+#include "Core/larbys.h"
+#include "AlgoDataManager.h"
+#include <sstream>
+
+namespace larocv {
+
+  AlgoDataManager::AlgoDataManager()
+    : _tree_attached(false)
+    , _tree(nullptr)
+    , _data_v()
+  {}
+
+  void AlgoDataManager::Register(AlgoDataBase* data)
+  {
+    LAROCV_NORMAL((*this)) << "Registering AlgoData " << data->Name() << " ID = " << data->ID() << std::endl;
+    if(_tree_attached)
+      throw larbys("Cannot register after TTree attachment happened!");    
+    if(data->ID() >= _data_v.size()) _data_v.resize(data->ID()+1,nullptr);
+    if(_data_v[data->ID()]){
+      std::stringstream ss;
+      ss << "Duplicate registration of AlgoDataBase pointer (ID=" << data->ID() <<")!";
+      throw larbys(ss.str());
+    }
+    _data_v[data->ID()] = data;
+  }
+
+  void AlgoDataManager::Register(TTree* tree)
+  {
+    _tree = tree;
+    for(size_t i=0; i<_data_v.size(); ++i) {
+      auto& ptr = _data_v[i];
+      if(!ptr) continue;
+      std::stringstream ss;
+      ss << "algo" << ptr->ID() << "_" << ptr->Name().c_str() << "_branch";
+      std::string name(ss.str());
+      _tree->Branch(name.c_str(),&(_data_v[i]));
+    }
+    _tree_attached = true;
+  }
+
+  const AlgoDataBase* AlgoDataManager::Data(AlgorithmID_t id)
+  {
+    if( id >= _data_v.size() ) {
+      std::stringstream ss;
+      ss << "Invalid AlgorithmID_t (" << id << ") requested for AlgoData access!";
+      throw larbys(ss.str());
+    }
+    if(!_data_v[id]) {
+      std::stringstream ss;
+      ss << "AlgorithmID_t (" << id << ") does not have any registered data!";
+      throw larbys(ss.str());
+    }
+    return _data_v[id];
+  }
+}
+#endif

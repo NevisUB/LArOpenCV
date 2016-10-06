@@ -15,9 +15,10 @@ namespace larocv {
     : laropencv_base(name)
     , _name(name)
     , _configured(false)
-    , _profile(true)
     , _match_alg(nullptr)
     , _recluster_alg(nullptr)
+    , _profile(true)
+    , _tree(nullptr)
   {
     LAROCV_DEBUG((*this)) << "start" << std::endl;
     Reset();
@@ -46,9 +47,9 @@ namespace larocv {
 
   void ImageClusterManager::Finalize(TFile* file)
   {
+    if(file && _tree) {file->cd(); _tree->Write();}
     for(auto& alg : _cluster_alg_v   ) alg->Finalize(file);
-    _match_alg->Finalize(file);
-    //_recluster_alg->Finalize(file);
+    if(_match_alg) _match_alg->Finalize(file);
     _configured = false;
   }
 
@@ -135,8 +136,11 @@ namespace larocv {
       }
       
       _cluster_alg_m[name] = _cluster_alg_v.size();
-      _cluster_alg_v.push_back(ClusterAlgoFactory::get().create(type,name));
-      
+      auto ptr = ClusterAlgoFactory::get().create(type,name);
+      ptr->_id = _cluster_alg_v.size();
+      ptr->_dataman_ptr = &_algo_dataman;
+      _algo_dataman.Register(ClusterAlgoFactory::get().create_data(type,name,ptr->ID()));
+      _cluster_alg_v.push_back(ptr);
     }
 
     for(auto& ptr : _cluster_alg_v) {
@@ -149,6 +153,9 @@ namespace larocv {
     auto const match_alg_name = main_cfg.get<std::string>("MatchAlgoName","");
     if(!match_alg_type.empty()) {
       _match_alg = MatchAlgoFactory::get().create(match_alg_type,match_alg_name);
+      _match_alg->_id = _cluster_alg_v.size();
+      _match_alg->_dataman_ptr = &_algo_dataman;
+      _algo_dataman.Register(MatchAlgoFactory::get().create_data(match_alg_type,match_alg_name,_match_alg->ID()));
       _match_alg->Profile(_profile);
       _match_alg->set_verbosity(this->logger().level());
       _match_alg->Configure(main_cfg.get<fcllite::PSet>(_match_alg->Name()));
@@ -158,6 +165,9 @@ namespace larocv {
     auto const recluster_alg_name = main_cfg.get<std::string>("ReClusterAlgoName","");
     if(!recluster_alg_type.empty()) {
       _recluster_alg = ReClusterAlgoFactory::get().create(recluster_alg_type,recluster_alg_name);
+      _recluster_alg->_id = _match_alg->ID()+1;
+      _recluster_alg->_dataman_ptr = &_algo_dataman;
+      _algo_dataman.Register(ReClusterAlgoFactory::get().create_data(recluster_alg_type,recluster_alg_name,_recluster_alg->ID()));
       _recluster_alg->Profile(_profile);
       _recluster_alg->set_verbosity(this->logger().level());
       _recluster_alg->Configure(main_cfg.get<fcllite::PSet>(_recluster_alg->Name()));
@@ -165,6 +175,11 @@ namespace larocv {
 
     _use_two_plane  = main_cfg.get<bool>("UseOnlyTwoPlanes");
     _required_plane = main_cfg.get<int>("RequirePlane");
+
+    if(main_cfg.get<bool>("StoreAlgoData",false)) {
+      _tree = new TTree("larocv_tree","");
+      _algo_dataman.Register(_tree);
+    }
     
     _configured=true;
     LAROCV_DEBUG((*this)) << "Return" << std::endl;
@@ -419,7 +434,9 @@ namespace larocv {
       for(auto const& c :  _clusters_v_v.back().back()) contours_v.push_back(c._contour);
       _viewer.Display(_raw_img_v.back(),contours_v,window_name_v);
       }
-      
+
+    if(_tree) _tree->Fill();
+    
     LAROCV_DEBUG((*this)) << "end" << std::endl;
   }
 
