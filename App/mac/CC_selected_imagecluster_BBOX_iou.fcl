@@ -33,6 +33,7 @@ ImageClusterManager: {
   Profile:   true
 
   ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleCuts,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
+
   ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,fm,fcp2,sc2,sep,ca,cwires,cwo]
 
   ShowImage: false
@@ -62,6 +63,7 @@ ImageClusterManager: {
 
  ca : {
    RatioCut : 0.5
+   MinDist  : 12.
    UseStartEnd: 1 #else use direction of first flashlight
   }
 

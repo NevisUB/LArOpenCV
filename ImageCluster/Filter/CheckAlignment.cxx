@@ -8,8 +8,10 @@ namespace larocv{
 
   void CheckAlignment::_Configure_(const ::fcllite::PSet &pset)
   {
-    _ratio_cut = pset.get<float>  ("RatioCut");
-    _use_start_end=pset.get<bool>("UseStartEnd");
+    _ratio_cut     = pset.get<float>("RatioCut");
+    _min_dist      = pset.get<float>("MinDist");
+    _use_start_end = pset.get<bool> ("UseStartEnd");
+
   }
 
   Cluster2DArray_t CheckAlignment::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -36,6 +38,9 @@ namespace larocv{
       sW = c.roi.startpt.x;
       sT = c.roi.startpt.y;
 
+      //std::cout<<"Vtx   : "<<meta.XtoTimeTick(vtx2D.x)<<", y: "<<meta.YtoWire(vtx2D.y)<<std::endl ;
+      //std::cout<<"Start : "<<meta.XtoTimeTick(c._startPt.x)<<", y: "<<meta.YtoWire(c._startPt.y)<<std::endl ;
+      //std::cout<<"End   : "<<meta.XtoTimeTick(c._endPt.x)<<", y: "<<meta.YtoWire(c._endPt.y)<<std::endl ;
       if ( _use_start_end ) {
 	eW = c.roi.endpt.x;
 	eT = c.roi.endpt.y;
@@ -65,8 +70,9 @@ namespace larocv{
       //std::cout << dist_roi << " " << sW << " " << sT << " " << vtx2D.x << " " << vtx2D.y << " " << eT << " " << eW << " " << "\n";
       auto dot = direction[0] * vtx_to_start[0] + direction[1] * vtx_to_start[1] ;
 
-      if((dot) > _ratio_cut )
+      auto dist_to_vtx = sqrt( pow(sW - vtx2D.x,2) + pow(sT - vtx2D.y,2) );
 
+      if((dot) > _ratio_cut || dist_to_vtx < _min_dist)
 	oclusters.emplace_back(c);       
       
     }

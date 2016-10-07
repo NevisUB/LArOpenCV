@@ -27,7 +27,7 @@ namespace larocv {
   public:
     
     /// Default constructor
-    CheckAlignment(const std::string name="CheckAlignment") : ClusterAlgoBase(name), _ratio_cut(0.6)
+    CheckAlignment(const std::string name="CheckAlignment") : ClusterAlgoBase(name), _ratio_cut(0.6), _min_dist(12.)
     {}
     
     /// Default destructor
@@ -49,8 +49,10 @@ namespace larocv {
     
   private:
 
-    double _ratio_cut;
+    float _ratio_cut;
+    float _min_dist ;
     bool _use_start_end;
+    
   };
   
   /**

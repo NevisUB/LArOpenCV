@@ -16,6 +16,9 @@ namespace larocv{
 
     double t_min_abs = 9600; // smallest start point of the 3
     double t_max_abs = 0;    // largest start point of the three
+
+    float max_hits = 0;
+    float min_hits = 1e9;
         
     for(auto const& c : clusters){
       
@@ -27,9 +30,17 @@ namespace larocv{
 	t_min_abs = min;
       if ( max   > t_max_abs )
 	t_max_abs = max;
-      
+
+      // Also find max and min hits
+      if ( c->_insideHits.size() > max_hits )
+        max_hits = c->_insideHits.size();
+
+      if ( c->_insideHits.size() < min_hits )
+        min_hits = c->_insideHits.size();
+
     }
-    
+
+
     if (clusters.size() < 2) return -1;
 
     // do the clusters overlap at all?
@@ -60,7 +71,10 @@ namespace larocv{
 
     }// for all clusters
 
-    if (overlap == false) return -1;
+    // If one cluster has < 10% of the hits of the other cluster, ignore this pair
+    double hit_frac = min_hits / max_hits;
+
+    if (overlap == false || hit_frac < 0.1 ) return -1;
 
     // calculate overlap
 
