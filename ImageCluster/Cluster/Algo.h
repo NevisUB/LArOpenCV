@@ -5,6 +5,12 @@
 #include "ClusterAlgoFactory.h"
 #include "VicData.h"
 
+#include "Core/Vector2D.h"
+
+typedef std::vector<std::vector<geo2d::Vector2D<int> > > GEO2D_ContourArray_t;
+typedef std::vector<geo2d::Vector2D<int> >               GEO2D_Contour_t;
+
+
 namespace larocv {
   
   struct Line {
@@ -35,12 +41,11 @@ namespace larocv {
 
     /// functions to test out algo in ipython notebook
 
-    ContourArray_t _mip_ctor_v;
-    ContourArray_t _hip_ctor_v;
-    ContourArray_t _all_ctor_v;
+    GEO2D_ContourArray_t _mip_ctor_v;
+    GEO2D_ContourArray_t _hip_ctor_v;
+    GEO2D_ContourArray_t _all_ctor_v;
     std::vector<std::vector<int> > _hullpts_v;
     std::vector<std::vector<::cv::Vec4i> > _defects_v;
-    std::vector< std::vector<std::pair<::cv::Point2f,::cv::Point2f> > > _split_defects_v;
     Cluster2DArray_t _ocluster_v;
     
   protected:

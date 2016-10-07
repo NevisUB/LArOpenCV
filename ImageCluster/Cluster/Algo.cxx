@@ -13,7 +13,6 @@ namespace larocv {
     _all_ctor_v.clear();
     _hullpts_v.clear();
     _defects_v.clear();
-    _split_defects_v.clear();
     _ocluster_v.clear();
   }
 
@@ -40,8 +39,6 @@ namespace larocv {
     int THRESH_LOWER = _mip_thresh;
     int HIP_LEVEL    = _hip_thresh;
     
-    ::cv::imwrite("shitty.png",img);
-    
     ///////////////////////////////////////////////
     //Threshold the input image to certain ADC value, this is our MIP
     ::cv::Mat img_thresh_m;
@@ -67,7 +64,8 @@ namespace larocv {
     //Filter the HIP contours to a minimum size
     int min_hip_size = _min_hip_cluster_size;
     
-    ContourArray_t hip_ctor_v_tmp;
+    //ContourArray_t hip_ctor_v_tmp;
+    GEO2D_ContourArray_t hip_ctor_v_tmp;
     hip_ctor_v_tmp.reserve(_hip_ctor_v.size());
     
     for (const auto& hip_ctor : _hip_ctor_v)
@@ -86,7 +84,7 @@ namespace larocv {
     ::cv::Mat mip_thresh_m = img_thresh_m.clone();
     
     // get the non zero points of the mip
-    Contour_t all_locations;
+    std::vector<geo2d::Vector2D<float> > all_locations;
     ::cv::findNonZero(mip_thresh_m, all_locations); 
     
      for( const auto& loc: all_locations ) {
@@ -112,7 +110,7 @@ namespace larocv {
      ///////////////////////////////////////////////
      //Filter the MIP contours to a minimum size, the ones that are
      int min_mip_size = _min_mip_cluster_size;
-     ContourArray_t mip_ctor_v_tmp;
+     GEO2D_ContourArray_t mip_ctor_v_tmp;
      mip_ctor_v_tmp.reserve(_mip_ctor_v.size());
      
      for (const auto& mip_ctor : _mip_ctor_v)
@@ -128,6 +126,7 @@ namespace larocv {
      for (const auto& mip_ctor : _mip_ctor_v) {
 
        if (mip_ctor.size() > 0) 
+
      	 _all_ctor_v.emplace_back(mip_ctor);
        
      }
@@ -135,6 +134,7 @@ namespace larocv {
      for (const auto& hip_ctor : _hip_ctor_v) {
 
        if (hip_ctor.size() > 0)
+
 	 _all_ctor_v.emplace_back(hip_ctor);
        
      }
@@ -145,10 +145,10 @@ namespace larocv {
      // contour list to re-breakup.
 
      //contours which can not be broken up further
-     ContourArray_t _atomic_ctor_v;
+     GEO2D_ContourArray_t _atomic_ctor_v;
 
      //contours which may be broken up
-     ContourArray_t _break_ctor_v;
+     GEO2D_ContourArray_t _break_ctor_v;
 
      //loop through all the contours, and close them up
      _break_ctor_v = _all_ctor_v;
@@ -202,8 +202,8 @@ namespace larocv {
        // the defect point, which does not intersect the contour itself
        Line min_line = find_line_hull_defect(ctor,chosen_edge);
 
-       Contour_t ctor1;
-       Contour_t ctor2;
+       GEO2D_Contour_t ctor1;
+       GEO2D_Contour_t ctor2;
 
        split_contour(ctor,ctor1,ctor2,min_line);
        std::cout << "1 and 2: " << ctor1.size() << "," << ctor2.size() << "\n";
@@ -370,7 +370,7 @@ namespace larocv {
       ocluster._centerPt  = Point2D(min_rect.center.x,min_rect.center.y);
     }
     
-    Contour_t all_locations;
+    std::vector<geo2d::Vector2D<float> > all_locations;
     ::cv::findNonZero(img, all_locations); // get the non zero points
     
     for( auto& loc: all_locations ) {
@@ -387,7 +387,7 @@ namespace larocv {
   
   
 
-  void Algo::fill_hull_and_defects(const Contour_t& ctor,
+  void Algo::fill_hull_and_defects(const GEO2D_Contour_t& ctor,
 				   std::vector<int>& hullpts,
 				   std::vector<cv::Vec4i>& defects,
 				   std::vector<float>& defects_d) {
@@ -458,7 +458,7 @@ namespace larocv {
     
   }
 
-  Line Algo::find_line_hull_defect(const Contour_t& ctor, cv::Vec4i defect) {
+  Line Algo::find_line_hull_defect(const GEO2D_Contour_t& ctor, cv::Vec4i defect) {
 
     //number of points in contour
     int pts_c = ctor.size();
@@ -540,7 +540,7 @@ namespace larocv {
     return Line(slope,yinter);
   }
 
-  void Algo::split_contour(Contour_t& ctor,Contour_t& ctor1,Contour_t& ctor2, const Line& line) {
+  void Algo::split_contour(GEO2D_Contour_t& ctor,GEO2D_Contour_t& ctor1,GEO2D_Contour_t& ctor2, const Line& line) {
 
     //get the two intersection points of this contour and this line
     //one of these points is presumably on the contour
@@ -552,7 +552,7 @@ namespace larocv {
     std::cout << "\t==>called split_contour with size: " << cs << "\n";
     std::cout << "\t==>this line is slope " << line.slope << " with offset " << line.offset << "\n";
     
-    Contour_t ctor_copy;
+    GEO2D_Contour_t ctor_copy;
     ctor_copy.reserve(ctor.size());
     
     for(unsigned i=0; i<ctor.size(); ++i) {
@@ -617,7 +617,7 @@ namespace larocv {
     
   }
 
-  cv::Vec4i Algo::max_hull_edge(const Contour_t& ctor, std::vector<cv::Vec4i> defects) {
+  cv::Vec4i Algo::max_hull_edge(const GEO2D_Contour_t& ctor, std::vector<cv::Vec4i> defects) {
 
     auto ctor_size = ctor.size();
 
