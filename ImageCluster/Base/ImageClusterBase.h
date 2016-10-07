@@ -26,6 +26,7 @@
 #include "Utils/Watch.h"
 #include "ImageClusterTypes.h"
 #include "DataFormat/user_info.h"
+#include "AlgoDataManager.h"
 
 namespace larocv {
 
@@ -62,7 +63,10 @@ namespace larocv {
     virtual ~ImageClusterBase(){}
 
     /// Name accessor
-    const std::string& Name() const { return _name; };
+    const std::string& Name() const { return _name; }
+
+    /// Algorithm ID accessor
+    AlgorithmID_t ID() const { return _id; }
 
     /// Profile flag setter
     void Profile(bool doit) { _profile = doit; }
@@ -82,6 +86,21 @@ namespace larocv {
     /// Finalize after (possibly multiple) process call. Handed TFile may be used to store objects.
     virtual void Finalize(TFile*) = 0;
 
+    /// Access to ANY algorithm's data (const reference)
+    template <class T>
+    const T& AlgoData(AlgorithmID_t id) const
+    { if(!_dataman_ptr) throw larbys("AlgoDataManager not available");
+      return *( (const T*)(_dataman_ptr->Data(id)));
+    }
+
+    /// Access to OWN algorithm's data (non-const reference)
+    template <class T>
+    T& AlgoData()
+    {
+      if(!_dataman_ptr) throw larbys("AlgoDataManager not available");
+      return *( (T*)(_dataman_ptr->Data(_id)));
+    }
+    
   protected:
 
     larocv::Watch _watch; ///< algorithm profile stopwatch
@@ -97,6 +116,8 @@ namespace larocv {
     std::string _name;   ///< name identifier, used to fetch configuration
 
     bool _profile;       ///< measure process time if profile flag is on
+
+    AlgoDataManager* _dataman_ptr; ///< pointer to AlgoDataManager
 
   };
 

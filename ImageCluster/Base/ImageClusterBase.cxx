@@ -11,6 +11,7 @@ namespace larocv {
     ,_proc_count(0)
     ,_name(name)
     ,_profile(true)
+    ,_dataman_ptr(nullptr)
 {
     LAROCV_DEBUG((*this)) << "Constructed" << std::endl;
   }

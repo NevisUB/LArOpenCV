@@ -18,6 +18,7 @@
 #include <map>
 #include "Core/laropencv_base.h"
 #include "Core/larbys.h"
+#include "AlgoDataEmpty.h"
 
 namespace larocv {
 
@@ -34,6 +35,9 @@ namespace larocv {
     virtual ~ClusterAlgoFactoryBase(){}
     /// Abstract constructor method
     virtual ClusterAlgoBase* create(const std::string instance_name) = 0;
+    /// Algorithm data creation method (can be re-implemented)
+    virtual AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
+    { return (new AlgoDataEmpty(instance_name,id)); }
   };
 
   /**
@@ -67,7 +71,17 @@ namespace larocv {
       }
       return (*iter).second->create(instance_name);
     }
-
+    /// Factory creation method for algorithm data
+    AlgoDataBase* create_data(const std::string name, const std::string instance_name, const AlgorithmID_t id)
+    {
+      auto iter = _factory_map.find(name);
+      if(iter == _factory_map.end() || !((*iter).second)) {
+	LAROCV_ERROR((*this)) << "Found no registered class " << name << std::endl;
+	return nullptr;
+      }
+      return (*iter).second->create_data(instance_name,id);
+    }
+    
   private:
     /// Static factory container
     std::map<std::string,larocv::ClusterAlgoFactoryBase*> _factory_map;
