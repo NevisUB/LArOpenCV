@@ -59,6 +59,8 @@ namespace larocv {
     cv::Vec4i max_hull_edge(const Contour_t& ctor, std::vector<cv::Vec4i> defects);
     
     void clear();
+
+    bool on_line(const Line& line,::cv::Point pt);
     
     bool test_point_above(std::pair<::cv::Point2f,::cv::Point2f> segment,::cv::Point2f pt);
 
@@ -74,13 +76,14 @@ namespace larocv {
 			    float x3,float y3);
     
     double intersect_distance(float x1,float y1,float x2,float y2,float x3,float y3);
+
     ::cv::Point2f intersection_point(float x1,float x2,float y1,float y2,float x3,float x4,float y3,float y4);
     
-   
     double distance(float x1,float x2,float y1,float y2);
+
     void FillClusterParams(Cluster2DArray_t& cluster2d_v,const ::cv::Mat& img);
 
-    void split_contour(const Contour_t& ctor,Contour_t& ctor1,Contour_t& ctor2, const Line& line);
+    void split_contour(Contour_t& ctor,Contour_t& ctor1,Contour_t& ctor2, const Line& line);
     
     void fill_hull_and_defects(const Contour_t& ctor,
 			       std::vector<int>& hullpts,
@@ -90,8 +93,10 @@ namespace larocv {
     void filter_defects(std::vector<cv::Vec4i>& defects,
 			std::vector<float>& defects_d,
 			float min_defect_size);
-    Line find_line_hull_defect(const Contour_t& ctor, cv::Vec4i defect);
     
+    Line find_line_hull_defect(const Contour_t& ctor, cv::Vec4i defect);
+    float Signed2DTriArea(const ::cv::Point2f& a,const cv::Point2f& b, const cv::Point2f& c);
+    int SegmentSegmentTest(const ::cv::Point2f& a, const ::cv::Point2f& b, const ::cv::Point2f& c, const ::cv::Point2f& d);
     int _min_hip_cluster_size;
     int _min_mip_cluster_size;
     int _min_defect_size;

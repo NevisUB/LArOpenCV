@@ -158,16 +158,19 @@ namespace larocv {
 
      //for each contour lets do the breaking
      std::cout << "ctors to break: " << _break_ctor_v.size() << "\n";
-     while( _break_ctor_v.size() != 0 ) {
+     int nbreaks=0;
+     while( _break_ctor_v.size() != 0 and nbreaks<=20) {
 
        //get a contour out off the front
        auto  ctor_itr = _break_ctor_v.begin();
        auto& ctor     = *ctor_itr;
        
-       std::cout << "Found contour of size : " << ctor.size() << "\n";
-       std::cout << "size of breakctor is : " << _break_ctor_v.size() << "\n";
+       cv::approxPolyDP(cv::Mat(ctor), ctor, 3, true);
+  
+       std::cout << "\t====>breakctor : " << _break_ctor_v.size() << ", atomic_ctor : " << _atomic_ctor_v.size() << "\n";
+       std::cout << "\t===>Found contour of size : " << ctor.size() << "\n";
 
-       if (ctor.size() == 0) {
+       if (ctor.size() <= 2) {
 	 _break_ctor_v.erase(ctor_itr);
 	 continue;
        }
@@ -179,20 +182,22 @@ namespace larocv {
 
        fill_hull_and_defects(ctor,hullpts,defects,defects_d);
        filter_defects(defects,defects_d,_min_defect_size);
-
+       
        if ( !defects_d.size() ) { // it's atomic 
 	 _atomic_ctor_v.emplace_back(ctor);
-	 std::cout << "not breaking it: atomic size is now: " << _atomic_ctor_v.size() << "\n";
+	 std::cout << "\t==> not breaking it\n";
 	 _break_ctor_v.erase(ctor_itr);
-	 std::cout << "called erase break_ctor_v.size() is : " << _break_ctor_v.size() << "\n";
 	 continue;
        }
 
-       std::cout << "Breaking it\n";
+       std::cout << "\t=>Breaking it nbreaks: " << nbreaks << "\n";
+
+       nbreaks+=1;
        
        //get the chosen edge
        auto chosen_edge = max_hull_edge(ctor,defects);
-
+       std::cout << "Chosen edge pts: [" << ctor[chosen_edge[0]].x << "," << ctor[chosen_edge[1]].x << "],["
+		 << ctor[chosen_edge[0]].y << "," << ctor[chosen_edge[1]].y << "]\n"; 
        // lets break this line up and find the line between the hull edge and
        // the defect point, which does not intersect the contour itself
        Line min_line = find_line_hull_defect(ctor,chosen_edge);
@@ -201,15 +206,22 @@ namespace larocv {
        Contour_t ctor2;
 
        split_contour(ctor,ctor1,ctor2,min_line);
-
+       std::cout << "1 and 2: " << ctor1.size() << "," << ctor2.size() << "\n";
        _break_ctor_v.erase(ctor_itr);
 
        _break_ctor_v.emplace_back(ctor1);
        _break_ctor_v.emplace_back(ctor2);
-       
+
+       std::cout << "~~Next\n";
      }
 
      std::cout << "Done~\n";
+
+
+     //debug
+
+     for(auto& bc : _break_ctor_v) _atomic_ctor_v.emplace_back(bc);
+     
      for(auto& atomic_ctor : _atomic_ctor_v) {
        
        Cluster2D ocluster;
@@ -220,8 +232,8 @@ namespace larocv {
      
      FillClusterParams(_ocluster_v,img);
 
-     auto& mydata = AlgoData<larocv::VicData>();
-     mydata.num_clusters = _ocluster_v.size();
+     // auto& mydata = AlgoData<larocv::VicData>();
+     // mydata.num_clusters = _ocluster_v.size();
      
      return _ocluster_v;
   }
@@ -242,7 +254,26 @@ namespace larocv {
     
   }
 
+  bool Algo::on_line(const Line& line,::cv::Point pt) { 
 
+    float eps=0.99;
+
+    float xpos = pt.x;
+    float ypos = pt.y;
+    
+    if ((ypos < xpos*line.slope + line.offset + eps) and
+	(ypos > xpos*line.slope + line.offset - eps))
+      return true;
+
+    if ((ypos < (xpos+eps)*line.slope + line.offset) and
+	(ypos > (xpos-eps)*line.slope + line.offset))
+      return true;
+    
+    return false;
+    
+  }
+
+  
   bool Algo::test_point_above(const Line& line,::cv::Point pt) { 
     
     if (pt.y > pt.x*line.slope + line.offset)
@@ -373,8 +404,33 @@ namespace larocv {
     //Put the defects distances specially into vector of doubles
     defects_d.resize( defects.size() );
        
-    for( int j = 0; j < defects.size(); ++j )
-      defects_d[j]  = ( ( (float) defects[j][3] ) / 256.0 ); 
+    for( int j = 0; j < defects.size(); ++j ) {
+	defects_d[j]  = ( ( (float) defects[j][3] ) / 256.0 );
+	// std::cout << "j : " << defects[j] << "\n";
+      }
+
+    
+    std::cout << "\tHull is\n";
+    std::cout << "[";
+    for(auto hullpt : hullpts) {
+      std::cout << ctor[hullpt].x << ",";
+    }
+    std::cout << "],[";
+    for(auto hullpt : hullpts) {
+      std::cout << ctor[hullpt].y << ",";
+    }
+    std::cout << "]\n";
+
+    std::cout << "\tctor is\n";
+    std::cout << "[";
+    for(auto hullpt : ctor) {
+      std::cout << hullpt.x << ",";
+    }
+    std::cout << "],[";
+    for(auto hullpt : ctor) {
+      std::cout << hullpt.y << ",";
+    }
+    std::cout << "]\n";
     
   }
   void Algo::filter_defects(std::vector<cv::Vec4i>& defects,
@@ -391,7 +447,7 @@ namespace larocv {
     for(unsigned i=0;i<defects.size();++i) {
 
       if (defects_d[i] < min_defect_size) continue;
-      
+      std::cout << "*Defect of size : " << defects_d[i] << " found\n";
       defects_tmp.emplace_back(defects[i]);
       defects_d_tmp.emplace_back(defects_d[i]);
     }
@@ -457,15 +513,17 @@ namespace larocv {
 	::cv::Point2f pt1 = ctor.at(ix);
 	::cv::Point2f pt2 = ctor.at((ix+1)%pts_c);
 
-	inters += four_pt_intersect(pt1,pt2,p3,pt4);
+	inters += SegmentSegmentTest(pt1,pt2,p3,pt4);
 	
-	if (inters>=3) break;
+	if (inters>1) break;
+	
       }
-      
-      if(inters>=3) continue;
+
+      if(inters>1) continue;
       
       float dd = std::sqrt( std::pow(pt4.x-p3.x,2) + std::pow(pt4.y-p3.y,2) );
-      
+
+      //std::cout << "dd : " << dd << "\n";
       if ( dd > mdist ) continue;
 
       mdist = dd;
@@ -482,17 +540,80 @@ namespace larocv {
     return Line(slope,yinter);
   }
 
-  void Algo::split_contour(const Contour_t& ctor,Contour_t& ctor1,Contour_t& ctor2, const Line& line) {
+  void Algo::split_contour(Contour_t& ctor,Contour_t& ctor1,Contour_t& ctor2, const Line& line) {
 
-    for(auto& pt : ctor) {
+    //get the two intersection points of this contour and this line
+    //one of these points is presumably on the contour
+    //the other needs to be calculated
 
-      if ( test_point_above(line,pt) )
-	{ ctor1.emplace_back(pt); continue; }
+    //get the Y coordinate for the right most X co
+    auto cs = ctor.size();
 
-      ctor2.emplace_back(pt);
+    std::cout << "\t==>called split_contour with size: " << cs << "\n";
+    std::cout << "\t==>this line is slope " << line.slope << " with offset " << line.offset << "\n";
+    
+    Contour_t ctor_copy;
+    ctor_copy.reserve(ctor.size());
+    
+    for(unsigned i=0; i<ctor.size(); ++i) {
+
+      auto& p1 = ctor[ i   %cs];
+      auto& p2 = ctor[(i+1)%cs];
+
+      //std::cout << "Checking p1: " << p1 << " , p2: " << p2 << "\n";
+      ctor_copy.emplace_back(p1);
+      
+      float x1=p1.x;
+      float x2=p2.x;
+      
+      float y1=p1.y;
+      float y2=p2.y;
+
+      auto min_x = std::min(p1.x,p2.x);
+      auto max_x = std::max(p1.x,p2.x);
+
+      if (min_x == max_x) { min_x-=5; max_x+=5; }
+
+      float x3=min_x;
+      float y3=line.slope*x3 + line.offset;
+      
+      float x4=max_x;
+      float y4=line.slope*x4 + line.offset;
+
+      ::cv::Point2f p3(x3,y3);
+      ::cv::Point2f p4(x4,y4);
+      
+      if ( ! four_pt_intersect(p1,p2,p3,p4) ) continue;
+
+      //std::cout << "\t==>They intersect\n";
+      // they intersect, get their intersection point
+      auto ip = intersection_point( x1, x2, y1, y2, x3, x4, y3, y4);
+
+      cv::Point inter_pt(ip.x,ip.y);
+
+      //std::cout << "\t==>its @ " << inter_pt << "\n";
+      
+      if ( inter_pt == p1 or inter_pt == p2 ) continue;
+
+      //std::cout << "\t==>Putting it in\n";
+      ctor_copy.emplace_back(inter_pt);
+      
     }
 
-    if ( ctor.size() != (ctor1.size() + ctor2.size()) ) throw std::exception();
+    //std::cout << "ctor.size(): " << ctor.size() << " copy size is " << ctor_copy.size() << "\n";
+    
+    for(auto& pt : ctor_copy) {
+
+      if ( on_line(line,pt) )
+	{ ctor1.emplace_back(pt); ctor2.emplace_back(pt); continue; }
+      
+      if ( test_point_above(line,pt) )
+	{ ctor1.emplace_back(pt); continue; }
+      
+      ctor2.emplace_back(pt);
+      
+    }
+    
     
   }
 
@@ -519,6 +640,28 @@ namespace larocv {
     return defects.at(max_idx);
       
   }
+
+  float Algo::Signed2DTriArea(const ::cv::Point2f& a,const cv::Point2f& b, const cv::Point2f& c)
+  {
+    return (a.x - c.x) * (b.y - c.y) - (a.y - c.y) * (b.x - c.x);
+  }
+
+  int Algo::SegmentSegmentTest(const ::cv::Point2f& a, const ::cv::Point2f& b, const ::cv::Point2f& c, const ::cv::Point2f& d) {
+    float t;
+    float a1 = Signed2DTriArea(a,b,d);
+    float a2 = Signed2DTriArea(a,b,c);
+    if (a1 * a2 < 0.0f) {
+      float a3 = Signed2DTriArea(c,d,a);
+      float a4 = a3 + a2 - a1;
+      if (a3 * a4 < 0.0f) {
+	t = a3 / (a3 - a4);
+	return 1;
+      }
+    }
+    return 0;
+  }
+
+  
 }
 
 #endif
