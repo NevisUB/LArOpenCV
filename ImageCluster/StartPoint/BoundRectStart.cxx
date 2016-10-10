@@ -234,25 +234,35 @@ namespace larocv {
 
       //get the farthest point from the center as start point
       ::cv::Point* f_start;
-      double far = 0;
+      double st_far = 0;
       for ( auto& h : insides[cstart] ) {
 	auto d = dist(h.x, center.x, h.y, center.y);
-	if ( d > far ) { far = d;  f_start = &h; }
+	if ( d > st_far ) { st_far = d;  f_start = &h; }
       }
 	
       //no start point found...
-      if ( far == 0 && _cutbadreco) continue;
+      if ( st_far == 0 && _cutbadreco) {std::cout<<"1)Why no inside hits> "<<insides[cstart].size()<<std::endl; continue;}
 	
       //end point is on the other side
       ::cv::Point* f_end; //farthest end point
-      far = 0;
+      double end_far = 0;
       for ( auto& h : insides[cend] ) {
 	auto d = dist(h.x, center.x, h.y, center.y);
-	if ( d > far ) { far = d;  f_end = &h; }
+	if ( d > end_far ) { end_far = d;  f_end = &h; }
       }
 	
       //no end point found...
-      if ( far == 0 && _cutbadreco) continue;
+      if ( end_far == 0 && _cutbadreco) {
+         //Add a check on whether start point was found; if so, 
+	 //find the end point in this segment as well.  Else, continue
+	 if(st_far){
+           for ( auto& h : insides[cstart] ) {
+	     auto d = dist(h.x, center.x, h.y, center.y);
+	     if ( d > end_far ) { end_far = d;  f_end = &h; }
+             }
+	   }
+	 else continue;
+	 }
 
       if(_use_roi_vertex){
 
