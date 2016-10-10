@@ -7,8 +7,8 @@
 
 #include "Core/Line.h"
 
-typedef std::vector<std::vector<geo2d::Vector2D<int> > > GEO2D_ContourArray_t;
-typedef std::vector<geo2d::Vector2D<int> >               GEO2D_Contour_t;
+typedef std::vector<std::vector<geo2d::Vector<int> > > GEO2D_ContourArray_t;
+typedef std::vector<geo2d::Vector<int> >               GEO2D_Contour_t;
 
 
 namespace larocv {

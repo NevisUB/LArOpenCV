@@ -84,7 +84,7 @@ namespace larocv {
     ::cv::Mat mip_thresh_m = img_thresh_m.clone();
     
     // get the non zero points of the mip
-    std::vector<geo2d::Vector2D<int> > all_locations;
+    std::vector<geo2d::Vector<int> > all_locations;
     ::cv::findNonZero(mip_thresh_m, all_locations); 
     
      for( const auto& loc: all_locations ) {
@@ -164,7 +164,7 @@ namespace larocv {
      std::vector<::cv::Vec4i> defects;
      std::vector<float> defects_d;
 
-     while( _break_ctor_v.size() != 0 and nbreaks<=20) {
+     while( _break_ctor_v.size() != 0 and nbreaks<=100) {
 
        // get a contour out off the front
        auto  ctor_itr = _break_ctor_v.begin();
@@ -223,8 +223,8 @@ namespace larocv {
        _break_ctor_v.erase(ctor_itr);
 
        //put inside
-       _break_ctor_v.emplace_back(ctor1);
-       _break_ctor_v.emplace_back(ctor2);
+       _break_ctor_v.emplace_back(std::move(ctor1));
+       _break_ctor_v.emplace_back(std::move(ctor2));
 
        LAROCV_DEBUG((*this)) << "~~Next\n";
      }
@@ -233,7 +233,8 @@ namespace larocv {
 
 
      // debug
-     for(auto& bc : _break_ctor_v) throw larbys("Max break condition found, not all contours atomic\n");//_atomic_ctor_v.emplace_back(bc);
+     //for(auto& bc : _break_ctor_v) throw larbys("Max break condition found, not all contours atomic\n");//_atomic_ctor_v.emplace_back(bc);
+     for(auto& bc : _break_ctor_v) _atomic_ctor_v.emplace_back(bc);
      
      for(auto& atomic_ctor : _atomic_ctor_v) {
        
@@ -280,7 +281,7 @@ namespace larocv {
       ocluster._boundingBox = ::cv::boundingRect(contour);
       auto& min_rect      = ocluster._minAreaBox;
       auto& bounding_rect = ocluster._boundingBox;
-      geo2d::Vector2D<float> vertices[4];
+      geo2d::Vector<float> vertices[4];
 
       //rotated rect coordinates
       min_rect.points(vertices);
@@ -299,7 +300,7 @@ namespace larocv {
       ocluster._centerPt  = Point2D(min_rect.center.x,min_rect.center.y);
     }
     
-    std::vector<geo2d::Vector2D<int> > all_locations;
+    std::vector<geo2d::Vector<int> > all_locations;
     ::cv::findNonZero(img, all_locations); // get the non zero points
     
     for( auto& loc: all_locations ) {
@@ -377,17 +378,21 @@ namespace larocv {
       defects_d_tmp.emplace_back(defects_d[i]);
     }
 
-
     std::swap(defects_tmp  ,defects);
     std::swap(defects_d_tmp,defects_d);
-    
   }
 
   geo2d::Line<float> Algo::find_line_hull_defect(const GEO2D_Contour_t& ctor, cv::Vec4i defect) {
 
     //number of points in contour
     int pts_c = ctor.size();
-    
+
+    // contour segment
+    geo2d::LineSegment<float> ctor_segment(-1,-1,-1,-1);
+
+    // hull defect segment
+    geo2d::LineSegment<float> hull_defect_segment(-1,-1,-1,-1);
+	
     auto start = ctor[defect[0]];
     auto end   = ctor[defect[1]];
     auto far   = ctor[defect[2]];
@@ -401,19 +406,19 @@ namespace larocv {
     
     int npts=_hull_edge_pts_split;
 
-    std::vector< geo2d::Vector2D<float> > l_;
+    std::vector< geo2d::Vector<float> > l_;
     l_.resize(npts);
 
-    geo2d::Vector2D<float> dir_(x2-x1,y2-y1);
+    geo2d::Vector<float> dir_(x2-x1,y2-y1);
     
     // make the points on the hull edge
     for(int j=0;j<npts;++j) {
       float k = ( (float) j ) / ( (float) npts );
-      l_[j] = dir_*k+geo2d::Vector2D<float>(x1,y1);
+      l_[j] = dir_*k+geo2d::Vector<float>(x1,y1);
     }
     
-    geo2d::Vector2D<float> p3(x3,y3);
-    geo2d::Vector2D<float> p4(-1,-1);
+    geo2d::Vector<float> p3(x3,y3);
+    geo2d::Vector<float> p4(-1,-1);
 
     float mdist = 9.e9;
     
@@ -426,16 +431,18 @@ namespace larocv {
       auto minidx = std::min(defect[0],defect[1]);
       auto maxidx = std::max(defect[0],defect[1]);
 
-      // this point on segmented hull
-      const auto& pt4 = l;
-
+      hull_defect_segment.pt1.x=p3.x;
+      hull_defect_segment.pt1.y=p3.y;
+      hull_defect_segment.pt2.x=l.x;
+      hull_defect_segment.pt2.y=l.y;
+      
       // loop over portion of contour facing edge
       for(unsigned ix=minidx;ix<maxidx;++ix) {
-	
-	geo2d::Vector2D<float> pt1 = ctor[  ix         ];
-	geo2d::Vector2D<float> pt2 = ctor[ (ix+1)%pts_c];
 
-	inters += geo2d::SegmentIntersection(pt1,pt2,p3,pt4);
+	ctor_segment.pt1 = ctor[ ix         ];
+	ctor_segment.pt2 = ctor[(ix+1)%pts_c];
+	
+	inters += geo2d::Intersection(ctor_segment,hull_defect_segment);
 
 	//There is more than one intersection for this line
 	//between the contour and the hull
@@ -446,13 +453,13 @@ namespace larocv {
       //the line cut through the contour
       if(inters>1) continue;
       
-      float dd = geo2d::dist(p3,pt4);
+      float dd = geo2d::length(hull_defect_segment);
 
       if ( dd > mdist ) continue;
 
       mdist = dd;
 
-      p4 = pt4;
+      p4 = l;
       
     }
 
@@ -460,9 +467,10 @@ namespace larocv {
     
     float dir    = (p4.y-p3.y) / (p4.x-p3.x);
     float yinter = -1.0*dir*p4.x+p4.y;
-    
-    return geo2d::Line<float>(geo2d::Vector2D<float>(0,yinter),
-			      geo2d::Vector2D<float>(1,dir));
+
+    LAROCV_DEBUG((*this)) << dir << "*x+" << yinter << "\n";
+    return geo2d::Line<float>(geo2d::Vector<float>(0,yinter),
+			      geo2d::Vector<float>(1,dir));
   }
 
   void Algo::split_contour(const GEO2D_Contour_t& ctor,GEO2D_Contour_t& ctor1,GEO2D_Contour_t& ctor2, const geo2d::Line<float>& line) {
@@ -475,12 +483,18 @@ namespace larocv {
 
     GEO2D_Contour_t ctor_copy;
     ctor_copy.reserve(ctor.size());
-    
+
+    geo2d::LineSegment<float> ctor_segment(-1,-1,-1,-1);
+    geo2d::LineSegment<float> span_segment(-1,-1,-1,-1);
+
     for(unsigned i=0; i<ctor.size(); ++i) {
       
       auto p1 = cv::Point2f(ctor[ i   %pts_c]);
       auto p2 = cv::Point2f(ctor[(i+1)%pts_c]);
 
+      ctor_segment.pt1 = p1;
+      ctor_segment.pt2 = p2;
+      
       // put the first point into the copy contour
       ctor_copy.emplace_back(p1);
 
@@ -492,16 +506,17 @@ namespace larocv {
 
       if (min_x == max_x) { min_x-=5; max_x+=5; }
 
-      geo2d::Vector2D<float> p3(min_x,line.y(min_x));
-      geo2d::Vector2D<float> p4(max_x,line.y(max_x));
-
+      geo2d::Vector<float> p3(min_x,line.y(min_x));
+      geo2d::Vector<float> p4(max_x,line.y(max_x));
+      span_segment.pt1 = p3;
+      span_segment.pt2 = p4;
+      
       // intersection points for the two segments, one I made
       // and the other is the contour itself
-      geo2d::Vector2D<float> ip(0,0);
-
+      geo2d::Vector<float> ip(0,0);
 
       // do they intersect
-      if ( ! geo2d::SegmentIntersection(p1,p2,p3,p4,ip) ) continue;
+      if ( ! geo2d::Intersection(ctor_segment,span_segment,ip) ) continue;
 
       //they intersect, cast to int
       cv::Point inter_pt(ip.x,ip.y);
