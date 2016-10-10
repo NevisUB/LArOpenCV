@@ -156,73 +156,84 @@ namespace larocv {
        ctor.emplace_back(ctor.at(0));
 
      //for each contour lets do the breaking
-     std::cout << "ctors to break: " << _break_ctor_v.size() << "\n";
+     LAROCV_DEBUG((*this)) << "ctors to break: " << _break_ctor_v.size() << "\n";
 
      int nbreaks=0;
 
+     std::vector<int> hullpts;
+     std::vector<::cv::Vec4i> defects;
+     std::vector<float> defects_d;
+
      while( _break_ctor_v.size() != 0 and nbreaks<=20) {
 
-       //get a contour out off the front
+       // get a contour out off the front
        auto  ctor_itr = _break_ctor_v.begin();
        auto& ctor     = *ctor_itr;
-       
+
+       // approximate contour with `more simple` polygon
        cv::approxPolyDP(cv::Mat(ctor), ctor, 3, true);
-  
-       std::cout << "\t====>breakctor : " << _break_ctor_v.size() << ", atomic_ctor : " << _atomic_ctor_v.size() << "\n";
-       std::cout << "\t===>Found contour of size : " << ctor.size() << "\n";
 
-       if (ctor.size() <= 2) {
-	 _break_ctor_v.erase(ctor_itr);
-	 continue;
-       }
+       LAROCV_DEBUG((*this)) << "\t====>_breakctor : " << _break_ctor_v.size() << ", atomic_ctor : " << _atomic_ctor_v.size() << "\n";
+       LAROCV_DEBUG((*this)) << "\t===>Found contour of size : " << ctor.size() << "\n";
+
+       //this contour contains only two points. it's a line. erase and ignore
+       if (ctor.size() <= 2)
+	 { _break_ctor_v.erase(ctor_itr); continue; }
        
-       // get the hull and defects for this contour
-       std::vector<int> hullpts;
-       std::vector<::cv::Vec4i> defects;
-       std::vector<float> defects_d;
+       // clear the hull and defects for this contour
+       hullpts.clear();
+       defects.clear();
+       defects_d.clear();
 
+       // fill the hull and defects
        fill_hull_and_defects(ctor,hullpts,defects,defects_d);
+
+       // filter the hull and defects based on fcl minimum size
        filter_defects(defects,defects_d,_min_defect_size);
-       
-       if ( !defects_d.size() ) { // it's atomic 
+
+       // no defects of minimum size found! the contour is atomic
+       if ( !defects_d.size() ) {
 	 _atomic_ctor_v.emplace_back(ctor);
-	 std::cout << "\t==> not breaking it\n";
 	 _break_ctor_v.erase(ctor_itr);
+	 LAROCV_DEBUG((*this)) << "\t==> atomic found: not breaking it\n";
 	 continue;
        }
 
-       std::cout << "\t=>Breaking it nbreaks: " << nbreaks << "\n";
+       LAROCV_DEBUG((*this)) << "\t=>Breaking it nbreaks: " << nbreaks << "\n";
 
        nbreaks+=1;
        
-       //get the chosen edge
+       //get the chosen edge, currently take the defect facing the longest hull edge
        auto chosen_edge = max_hull_edge(ctor,defects);
-       std::cout << "Chosen edge pts: [" << ctor[chosen_edge[0]].x << "," << ctor[chosen_edge[1]].x << "],["
-		 << ctor[chosen_edge[0]].y << "," << ctor[chosen_edge[1]].y << "]\n"; 
-       // lets break this line up and find the line between the hull edge and
-       // the defect point, which does not intersect the contour itself
-
+       LAROCV_DEBUG((*this)) << "Chosen edge pts: [" << ctor[chosen_edge[0]].x << "," << ctor[chosen_edge[1]].x << "],["
+			   << ctor[chosen_edge[0]].y << "," << ctor[chosen_edge[1]].y << "]\n"; 
+       
+       // segment the hull line and find the line between the hull edge and
+       // the defect point, which does not intersect the contour itself, other than at the defect point
        auto min_line = find_line_hull_defect(ctor,chosen_edge);
 
-       GEO2D_Contour_t ctor1;
-       GEO2D_Contour_t ctor2;
+       GEO2D_Contour_t ctor1,ctor2;
 
+       // split the contour into two by this line
        split_contour(ctor,ctor1,ctor2,min_line);
-       std::cout << "1 and 2: " << ctor1.size() << "," << ctor2.size() << "\n";
+       
+       LAROCV_DEBUG((*this)) << "1 and 2: " << ctor1.size() << "," << ctor2.size() << "\n";
+
+       //remove this contour
        _break_ctor_v.erase(ctor_itr);
 
+       //put inside
        _break_ctor_v.emplace_back(ctor1);
        _break_ctor_v.emplace_back(ctor2);
 
-       std::cout << "~~Next\n";
+       LAROCV_DEBUG((*this)) << "~~Next\n";
      }
 
-     std::cout << "Done~\n";
+     LAROCV_DEBUG((*this)) << "Done~\n";
 
 
-     //debug
-
-     for(auto& bc : _break_ctor_v) _atomic_ctor_v.emplace_back(bc);
+     // debug
+     for(auto& bc : _break_ctor_v) throw larbys("Max break condition found, not all contours atomic\n");//_atomic_ctor_v.emplace_back(bc);
      
      for(auto& atomic_ctor : _atomic_ctor_v) {
        
@@ -243,7 +254,7 @@ namespace larocv {
 
   bool Algo::on_line(const geo2d::Line<float>& line,::cv::Point pt) { 
 
-    float eps=0.99;
+    float eps = 0.99;
 
     float xpos = pt.x;
     float ypos = pt.y;
@@ -252,8 +263,8 @@ namespace larocv {
 	(ypos > line.y(xpos) - eps))
       return true;
 
-    if ((ypos < line.y(xpos+eps)) and
-	(ypos > line.y(xpos-eps)))
+    if ((ypos < line.y(xpos + eps)) and
+	(ypos > line.y(xpos - eps)))
       return true;
     
     return false;
@@ -322,33 +333,30 @@ namespace larocv {
     //Put the defects distances specially into vector of doubles
     defects_d.resize( defects.size() );
        
-    for( int j = 0; j < defects.size(); ++j ) {
+    for( int j = 0; j < defects.size(); ++j )
 	defects_d[j]  = ( ( (float) defects[j][3] ) / 256.0 );
-	// std::cout << "j : " << defects[j] << "\n";
-      }
 
-    
-    std::cout << "\tHull is\n";
-    std::cout << "[";
-    for(auto hullpt : hullpts) {
-      std::cout << ctor[hullpt].x << ",";
-    }
-    std::cout << "],[";
-    for(auto hullpt : hullpts) {
-      std::cout << ctor[hullpt].y << ",";
-    }
-    std::cout << "]\n";
+    // LAROCV_DEBUG((*this)) << "\tHull is\n";
+    // LAROCV_DEBUG((*this)) << "[";
+    // for(auto hullpt : hullpts) {
+    //   LAROCV_DEBUG((*this)) << ctor[hullpt].x << ",";
+    // }
+    // LAROCV_DEBUG((*this)) << "],[";
+    // for(auto hullpt : hullpts) {
+    //   LAROCV_DEBUG((*this)) << ctor[hullpt].y << ",";
+    // }
+    // LAROCV_DEBUG((*this)) << "]\n";
 
-    std::cout << "\tctor is\n";
-    std::cout << "[";
-    for(auto hullpt : ctor) {
-      std::cout << hullpt.x << ",";
-    }
-    std::cout << "],[";
-    for(auto hullpt : ctor) {
-      std::cout << hullpt.y << ",";
-    }
-    std::cout << "]\n";
+    // LAROCV_DEBUG((*this)) << "\tctor is\n";
+    // LAROCV_DEBUG((*this)) << "[";
+    // for(auto hullpt : ctor) {
+    //   LAROCV_DEBUG((*this)) << hullpt.x << ",";
+    // }
+    // LAROCV_DEBUG((*this)) << "],[";
+    // for(auto hullpt : ctor) {
+    //   LAROCV_DEBUG((*this)) << hullpt.y << ",";
+    // }
+    // LAROCV_DEBUG((*this)) << "]\n";
     
   }
   void Algo::filter_defects(std::vector<cv::Vec4i>& defects,
@@ -361,11 +369,10 @@ namespace larocv {
     std::vector<float> defects_d_tmp;
     defects_d_tmp.reserve(defects.size());
 
-
     for(unsigned i=0;i<defects.size();++i) {
 
       if (defects_d[i] < min_defect_size) continue;
-      std::cout << "*Defect of size : " << defects_d[i] << " found\n";
+      //LAROCV_DEBUG((*this)) << "*Defect of size : " << defects_d[i] << " found\n";
       defects_tmp.emplace_back(defects[i]);
       defects_d_tmp.emplace_back(defects_d[i]);
     }
@@ -394,7 +401,7 @@ namespace larocv {
     
     int npts=_hull_edge_pts_split;
 
-    std::vector<geo2d::Vector2D<float>> l_;
+    std::vector< geo2d::Vector2D<float> > l_;
     l_.resize(npts);
 
     geo2d::Vector2D<float> dir_(x2-x1,y2-y1);
@@ -409,37 +416,37 @@ namespace larocv {
     geo2d::Vector2D<float> p4(-1,-1);
 
     float mdist = 9.e9;
+    
     for ( const auto& l : l_ ) {
 
-      // pont on hull
-      auto x4 = l.x;
-      auto y4 = l.y;
-
-      //intersection counter
+      // number intersections counter
       int inters = 0;
 
-      //min and max idx from start end
+      // min and max index from contour start to end, so we know how to order the loop
       auto minidx = std::min(defect[0],defect[1]);
       auto maxidx = std::max(defect[0],defect[1]);
 
-      // point on hull as cv
-      geo2d::Vector2D<float> pt4(x4,y4);
+      // this point on segmented hull
+      const auto& pt4 = l;
 
       // loop over portion of contour facing edge
       for(unsigned ix=minidx;ix<maxidx;++ix) {
 	
-	geo2d::Vector2D<float> pt1 = ctor.at(ix);
-	geo2d::Vector2D<float> pt2 = ctor.at((ix+1)%pts_c);
+	geo2d::Vector2D<float> pt1 = ctor[  ix         ];
+	geo2d::Vector2D<float> pt2 = ctor[ (ix+1)%pts_c];
 
 	inters += geo2d::SegmentIntersection(pt1,pt2,p3,pt4);
-	
-	if (inters>1) break;
+
+	//There is more than one intersection for this line
+	//between the contour and the hull
+	if (inters > 1) break;
 	
       }
 
+      //the line cut through the contour
       if(inters>1) continue;
       
-      float dd = std::sqrt( std::pow(pt4.x-p3.x,2) + std::pow(pt4.y-p3.y,2) );
+      float dd = geo2d::dist(p3,pt4);
 
       if ( dd > mdist ) continue;
 
@@ -449,108 +456,103 @@ namespace larocv {
       
     }
 
-    if (p4.x == -1 || p4.y == -1) throw std::exception();
+    if (p4.x == -1 || p4.y == -1) throw larbys("Could not find hull defect, p4 uninitialized\n");
     
-    float dir  = (p4.y-p3.y)/(p4.x-p3.x);
+    float dir    = (p4.y-p3.y) / (p4.x-p3.x);
     float yinter = -1.0*dir*p4.x+p4.y;
     
     return geo2d::Line<float>(geo2d::Vector2D<float>(0,yinter),
 			      geo2d::Vector2D<float>(1,dir));
   }
 
-  void Algo::split_contour(GEO2D_Contour_t& ctor,GEO2D_Contour_t& ctor1,GEO2D_Contour_t& ctor2, const geo2d::Line<float>& line) {
-
-    float slope = line.dir.y / line.dir.x;
+  void Algo::split_contour(const GEO2D_Contour_t& ctor,GEO2D_Contour_t& ctor1,GEO2D_Contour_t& ctor2, const geo2d::Line<float>& line) {
 
     //get the two intersection points of this contour and this line
     //one of these points is presumably on the contour
-    //the other needs to be calculated
+    //the other needs to be extended through the contour, and calculated
 
-    //get the Y coordinate for the right most X co
-    auto cs = ctor.size();
+    auto pts_c = ctor.size();
 
-    std::cout << "\t==>called split_contour with size: " << cs << "\n";
-    std::cout << "\t==>this line is dir " << line.dir << " with offset " << line.y(0) << "\n";
-    
     GEO2D_Contour_t ctor_copy;
     ctor_copy.reserve(ctor.size());
     
     for(unsigned i=0; i<ctor.size(); ++i) {
       
-      auto p1 = cv::Point2f(ctor[ i   %cs]);
-      auto p2 = cv::Point2f(ctor[(i+1)%cs]);
+      auto p1 = cv::Point2f(ctor[ i   %pts_c]);
+      auto p2 = cv::Point2f(ctor[(i+1)%pts_c]);
 
-      //std::cout << "Checking p1: " << p1 << " , p2: " << p2 << "\n";
+      // put the first point into the copy contour
       ctor_copy.emplace_back(p1);
+
+      //make a line segment which spans the full range of
+      //X from this contour segment
       
       auto min_x = std::min(p1.x,p2.x);
       auto max_x = std::max(p1.x,p2.x);
 
       if (min_x == max_x) { min_x-=5; max_x+=5; }
 
-      
-      float x3=min_x;
-      float y3=line.y(x3);
-      
-      float x4=max_x;
-      float y4=line.y(x4);
+      geo2d::Vector2D<float> p3(min_x,line.y(min_x));
+      geo2d::Vector2D<float> p4(max_x,line.y(max_x));
 
-      geo2d::Vector2D<float> p3(x3,y3);
-      geo2d::Vector2D<float> p4(x4,y4);
+      // intersection points for the two segments, one I made
+      // and the other is the contour itself
       geo2d::Vector2D<float> ip(0,0);
-      
+
+
+      // do they intersect
       if ( ! geo2d::SegmentIntersection(p1,p2,p3,p4,ip) ) continue;
 
-      //std::cout << "\t==>They intersect\n";
-
+      //they intersect, cast to int
       cv::Point inter_pt(ip.x,ip.y);
 
-      //std::cout << "\t==>its @ " << inter_pt << "\n";
-      
+      //this point is already a part of the contour, don't put a duplicate inside
+      //avoid this step by putting it in, then calling approxPolyDP(...)
       if ( inter_pt == cv::Point(p1) or inter_pt == cv::Point(p2) ) continue;
 
-      //std::cout << "\t==>Putting it in\n";
-      ctor_copy.emplace_back(inter_pt);
-      
+      ctor_copy.emplace_back(std::move(inter_pt));
     }
 
-    //std::cout << "ctor.size(): " << ctor.size() << " copy size is " << ctor_copy.size() << "\n";
-    
+
+    // for each point in the copy contour
     for(auto& pt : ctor_copy) {
 
+      // point on the line (with tolerance) --  we should put it into both output contours
       if ( on_line(line,pt) )
 	{ ctor1.emplace_back(pt); ctor2.emplace_back(pt); continue; }
-      
+
+      // point is above the line -- put in contour 1
       if ( pt.y > line.y(pt.x) )
 	{ ctor1.emplace_back(pt); continue; }
-      
+
+      // it's below the line -- put in contour 2
       ctor2.emplace_back(pt);
-      
     }
-    
     
   }
 
   cv::Vec4i Algo::max_hull_edge(const GEO2D_Contour_t& ctor, std::vector<cv::Vec4i> defects) {
 
-    auto ctor_size = ctor.size();
-
     float max_dist = -1;
-    int max_idx = -1;
+    int max_idx    = -1;
     
     for(unsigned i=0;i<defects.size();++i) {
 
-      auto d1=defects[i];
+      const auto& d1=defects[i];
       
-      float ll=std::sqrt(std::pow(ctor[d1[0]].x-ctor[d1[1]].x,2)+std::pow(ctor[d1[0]].y-ctor[d1[1]].y,2));
+      float ll=std::sqrt(std::pow(ctor[d1[0]].x-ctor[d1[1]].x,2)
+			 +
+			 std::pow(ctor[d1[0]].y-ctor[d1[1]].y,2));
 
       if (ll > max_dist) {
-	max_dist=ll;
-	max_idx=i;
+	max_dist = ll;
+	max_idx  = i;
       }
       
     }
 
+    if (max_idx == -1) throw larbys("maximum hull edge could not be calculated\n");
+    
     return defects.at(max_idx);
       
   }

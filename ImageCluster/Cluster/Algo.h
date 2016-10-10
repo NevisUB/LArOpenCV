@@ -50,19 +50,15 @@ namespace larocv {
   private:
     
     
-    cv::Vec4i max_hull_edge(const Contour_t& ctor, std::vector<cv::Vec4i> defects);
+    cv::Vec4i max_hull_edge(const GEO2D_Contour_t& ctor, std::vector<cv::Vec4i> defects);
     
     void clear();
 
     bool on_line(const geo2d::Line<float>& line,::cv::Point pt);
     
-    // bool test_point_above(std::pair<geo2d::Vector2D<float>,geo2d::Vector2D<float>> segment,geo2d::Vector2D<float> pt);
-
-    // bool test_point_above(const geo2d::Line<float>& line,::cv::Point pt);
-    
     void FillClusterParams(Cluster2DArray_t& cluster2d_v,const ::cv::Mat& img);
 
-    void split_contour(Contour_t& ctor,Contour_t& ctor1,Contour_t& ctor2, const geo2d::Line<float>& line);
+    void split_contour(const GEO2D_Contour_t& ctor,GEO2D_Contour_t& ctor1,GEO2D_Contour_t& ctor2, const geo2d::Line<float>& line);
     
     void fill_hull_and_defects(const Contour_t& ctor,
 			       std::vector<int>& hullpts,
