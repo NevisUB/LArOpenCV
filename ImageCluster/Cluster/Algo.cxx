@@ -3,6 +3,7 @@
 
 #include "Algo.h"
 #include "VicData.h"
+#include "Core/Geo2D.h"
 
 namespace larocv {
 
@@ -73,7 +74,6 @@ namespace larocv {
 	hip_ctor_v_tmp.emplace_back(hip_ctor);
     
     //swap them out -- the thresholded hips and all hips
-    //_hip_ctor_v == HIP contours
     std::swap(_hip_ctor_v,hip_ctor_v_tmp);
     
     ///////////////////////////////////////////////
@@ -84,7 +84,7 @@ namespace larocv {
     ::cv::Mat mip_thresh_m = img_thresh_m.clone();
     
     // get the non zero points of the mip
-    std::vector<geo2d::Vector2D<float> > all_locations;
+    std::vector<geo2d::Vector2D<int> > all_locations;
     ::cv::findNonZero(mip_thresh_m, all_locations); 
     
      for( const auto& loc: all_locations ) {
@@ -118,7 +118,6 @@ namespace larocv {
 	 mip_ctor_v_tmp.emplace_back(mip_ctor);
 
      //swap them out -- the thresholded mips and all mips
-     //hip_ctor_v == HIP contours
      std::swap(_mip_ctor_v,mip_ctor_v_tmp);
      
      ///////////////////////////////////////////////
@@ -158,7 +157,9 @@ namespace larocv {
 
      //for each contour lets do the breaking
      std::cout << "ctors to break: " << _break_ctor_v.size() << "\n";
+
      int nbreaks=0;
+
      while( _break_ctor_v.size() != 0 and nbreaks<=20) {
 
        //get a contour out off the front
@@ -200,7 +201,8 @@ namespace larocv {
 		 << ctor[chosen_edge[0]].y << "," << ctor[chosen_edge[1]].y << "]\n"; 
        // lets break this line up and find the line between the hull edge and
        // the defect point, which does not intersect the contour itself
-       Line min_line = find_line_hull_defect(ctor,chosen_edge);
+
+       auto min_line = find_line_hull_defect(ctor,chosen_edge);
 
        GEO2D_Contour_t ctor1;
        GEO2D_Contour_t ctor2;
@@ -238,108 +240,24 @@ namespace larocv {
      return _ocluster_v;
   }
   
-  
-  bool Algo::test_point_above(std::pair<::cv::Point2f,::cv::Point2f> segment,::cv::Point2f pt) { 
-    
-    ::cv::Point2f p1=segment.first;
-    ::cv::Point2f p2=segment.second;
-    
-    float slope=(p2.y-p1.y)/(p2.x-p1.x);
-    float yinter = -1.0*slope*p1.x+p1.y;
-    
-    if (pt.y > pt.x*slope+yinter)
-      return true;
-    
-    return false;
-    
-  }
 
-  bool Algo::on_line(const Line& line,::cv::Point pt) { 
+  bool Algo::on_line(const geo2d::Line<float>& line,::cv::Point pt) { 
 
     float eps=0.99;
 
     float xpos = pt.x;
     float ypos = pt.y;
     
-    if ((ypos < xpos*line.slope + line.offset + eps) and
-	(ypos > xpos*line.slope + line.offset - eps))
+    if ((ypos < line.y(xpos) + eps) and
+	(ypos > line.y(xpos) - eps))
       return true;
 
-    if ((ypos < (xpos+eps)*line.slope + line.offset) and
-	(ypos > (xpos-eps)*line.slope + line.offset))
-      return true;
-    
-    return false;
-    
-  }
-
-  
-  bool Algo::test_point_above(const Line& line,::cv::Point pt) { 
-    
-    if (pt.y > pt.x*line.slope + line.offset)
+    if ((ypos < line.y(xpos+eps)) and
+	(ypos > line.y(xpos-eps)))
       return true;
     
     return false;
     
-  }
-
-  int Algo::four_pt_intersect(::cv::Point2f p1,
-			      ::cv::Point2f p2,
-			      ::cv::Point2f p3,
-			      ::cv::Point2f p4) {
-    
-    float p0_x = p1.x;
-    float p0_y = p1.y;
-    
-    float p1_x = p2.x;
-    float p1_y = p2.y;
-    
-    float p2_x = p3.x;
-    float p2_y = p3.y;
-
-    float p3_x = p4.x;
-    float p3_y = p4.y;
-    
-    float s1_x = p1_x - p0_x;
-    float s1_y = p1_y - p0_y; 
-    float s2_x = p3_x - p2_x;
-    float s2_y = p3_y - p2_y;
-    
-    float s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
-    float t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
-    
-    if (s >= 0 and s <= 1 and t >= 0 and t <= 1)
-      return 1;
-    
-    return 0;
-  }
-  
-  ::cv::Point2f Algo::intersect(float x1,float y1,
-				float x2,float y2,
-				float x3,float y3) {
-    
-    float k = ((y2-y1) * (x3-x1) - (x2-x1) * (y3-y1)) / (std::pow(y2-y1,2) + std::pow(x2-x1,2));
-    float x4 = x3 - k * (y2-y1);
-    float y4 = y3 + k * (x2-x1);
-    return ::cv::Point2f(x4,y4);
-  }
-
-  double Algo::intersect_distance(float x1,float y1,float x2,float y2,float x3,float y3){
-    float k = ((y2-y1) * (x3-x1) - (x2-x1) * (y3-y1)) / ( std::pow(y2-y1,2) + std::pow(x2-x1,2));
-    float x4 = x3 - k * (y2-y1);
-    float y4 = y3 + k * (x2-x1);
-    return std::sqrt(std::pow(x4-x3,2)+std::pow(y4-y3,2));
-  }
-  
-  ::cv::Point2f Algo::intersection_point(float x1,float x2,float y1,float y2,float x3,float x4,float y3,float y4){
-    float denom = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
-    float xx = ( (x1*y2 - y1*x2)*(x3-x4) - (x1-x2)*(x3*y4-y3*x4) ) / denom;
-    float yy = ( (x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-y3*x4) ) / denom;
-    return ::cv::Point2f(xx,yy);
-  }
-
-  double Algo::distance(float x1,float x2,float y1,float y2){
-    return std::sqrt(std::pow(x2-x1,2)+std::pow(y2-y1,2));
   }
 
 
@@ -351,7 +269,7 @@ namespace larocv {
       ocluster._boundingBox = ::cv::boundingRect(contour);
       auto& min_rect      = ocluster._minAreaBox;
       auto& bounding_rect = ocluster._boundingBox;
-      ::cv::Point2f vertices[4];
+      geo2d::Vector2D<float> vertices[4];
 
       //rotated rect coordinates
       min_rect.points(vertices);
@@ -370,7 +288,7 @@ namespace larocv {
       ocluster._centerPt  = Point2D(min_rect.center.x,min_rect.center.y);
     }
     
-    std::vector<geo2d::Vector2D<float> > all_locations;
+    std::vector<geo2d::Vector2D<int> > all_locations;
     ::cv::findNonZero(img, all_locations); // get the non zero points
     
     for( auto& loc: all_locations ) {
@@ -458,7 +376,7 @@ namespace larocv {
     
   }
 
-  Line Algo::find_line_hull_defect(const GEO2D_Contour_t& ctor, cv::Vec4i defect) {
+  geo2d::Line<float> Algo::find_line_hull_defect(const GEO2D_Contour_t& ctor, cv::Vec4i defect) {
 
     //number of points in contour
     int pts_c = ctor.size();
@@ -476,19 +394,19 @@ namespace larocv {
     
     int npts=_hull_edge_pts_split;
 
-    std::vector<::cv::Point2f> l_;
+    std::vector<geo2d::Vector2D<float>> l_;
     l_.resize(npts);
 
-    ::cv::Point2f dir_(x2-x1,y2-y1);
+    geo2d::Vector2D<float> dir_(x2-x1,y2-y1);
     
     // make the points on the hull edge
     for(int j=0;j<npts;++j) {
       float k = ( (float) j ) / ( (float) npts );
-      l_[j] = dir_*k+::cv::Point2f(x1,y1);
+      l_[j] = dir_*k+geo2d::Vector2D<float>(x1,y1);
     }
     
-    ::cv::Point2f p3(x3,y3);
-    ::cv::Point2f p4(-1,-1);
+    geo2d::Vector2D<float> p3(x3,y3);
+    geo2d::Vector2D<float> p4(-1,-1);
 
     float mdist = 9.e9;
     for ( const auto& l : l_ ) {
@@ -505,15 +423,15 @@ namespace larocv {
       auto maxidx = std::max(defect[0],defect[1]);
 
       // point on hull as cv
-      ::cv::Point2f pt4(x4,y4);
+      geo2d::Vector2D<float> pt4(x4,y4);
 
       // loop over portion of contour facing edge
       for(unsigned ix=minidx;ix<maxidx;++ix) {
 	
-	::cv::Point2f pt1 = ctor.at(ix);
-	::cv::Point2f pt2 = ctor.at((ix+1)%pts_c);
+	geo2d::Vector2D<float> pt1 = ctor.at(ix);
+	geo2d::Vector2D<float> pt2 = ctor.at((ix+1)%pts_c);
 
-	inters += SegmentSegmentTest(pt1,pt2,p3,pt4);
+	inters += geo2d::SegmentIntersection(pt1,pt2,p3,pt4);
 	
 	if (inters>1) break;
 	
@@ -523,7 +441,6 @@ namespace larocv {
       
       float dd = std::sqrt( std::pow(pt4.x-p3.x,2) + std::pow(pt4.y-p3.y,2) );
 
-      //std::cout << "dd : " << dd << "\n";
       if ( dd > mdist ) continue;
 
       mdist = dd;
@@ -534,13 +451,16 @@ namespace larocv {
 
     if (p4.x == -1 || p4.y == -1) throw std::exception();
     
-    float slope  = (p4.y-p3.y)/(p4.x-p3.x);
-    float yinter = -1.0*slope*p4.x+p4.y;
+    float dir  = (p4.y-p3.y)/(p4.x-p3.x);
+    float yinter = -1.0*dir*p4.x+p4.y;
     
-    return Line(slope,yinter);
+    return geo2d::Line<float>(geo2d::Vector2D<float>(0,yinter),
+			      geo2d::Vector2D<float>(1,dir));
   }
 
-  void Algo::split_contour(GEO2D_Contour_t& ctor,GEO2D_Contour_t& ctor1,GEO2D_Contour_t& ctor2, const Line& line) {
+  void Algo::split_contour(GEO2D_Contour_t& ctor,GEO2D_Contour_t& ctor1,GEO2D_Contour_t& ctor2, const geo2d::Line<float>& line) {
+
+    float slope = line.dir.y / line.dir.x;
 
     //get the two intersection points of this contour and this line
     //one of these points is presumably on the contour
@@ -550,50 +470,44 @@ namespace larocv {
     auto cs = ctor.size();
 
     std::cout << "\t==>called split_contour with size: " << cs << "\n";
-    std::cout << "\t==>this line is slope " << line.slope << " with offset " << line.offset << "\n";
+    std::cout << "\t==>this line is dir " << line.dir << " with offset " << line.y(0) << "\n";
     
     GEO2D_Contour_t ctor_copy;
     ctor_copy.reserve(ctor.size());
     
     for(unsigned i=0; i<ctor.size(); ++i) {
-
-      auto& p1 = ctor[ i   %cs];
-      auto& p2 = ctor[(i+1)%cs];
+      
+      auto p1 = cv::Point2f(ctor[ i   %cs]);
+      auto p2 = cv::Point2f(ctor[(i+1)%cs]);
 
       //std::cout << "Checking p1: " << p1 << " , p2: " << p2 << "\n";
       ctor_copy.emplace_back(p1);
       
-      float x1=p1.x;
-      float x2=p2.x;
-      
-      float y1=p1.y;
-      float y2=p2.y;
-
       auto min_x = std::min(p1.x,p2.x);
       auto max_x = std::max(p1.x,p2.x);
 
       if (min_x == max_x) { min_x-=5; max_x+=5; }
 
+      
       float x3=min_x;
-      float y3=line.slope*x3 + line.offset;
+      float y3=line.y(x3);
       
       float x4=max_x;
-      float y4=line.slope*x4 + line.offset;
+      float y4=line.y(x4);
 
-      ::cv::Point2f p3(x3,y3);
-      ::cv::Point2f p4(x4,y4);
+      geo2d::Vector2D<float> p3(x3,y3);
+      geo2d::Vector2D<float> p4(x4,y4);
+      geo2d::Vector2D<float> ip(0,0);
       
-      if ( ! four_pt_intersect(p1,p2,p3,p4) ) continue;
+      if ( ! geo2d::SegmentIntersection(p1,p2,p3,p4,ip) ) continue;
 
       //std::cout << "\t==>They intersect\n";
-      // they intersect, get their intersection point
-      auto ip = intersection_point( x1, x2, y1, y2, x3, x4, y3, y4);
 
       cv::Point inter_pt(ip.x,ip.y);
 
       //std::cout << "\t==>its @ " << inter_pt << "\n";
       
-      if ( inter_pt == p1 or inter_pt == p2 ) continue;
+      if ( inter_pt == cv::Point(p1) or inter_pt == cv::Point(p2) ) continue;
 
       //std::cout << "\t==>Putting it in\n";
       ctor_copy.emplace_back(inter_pt);
@@ -607,7 +521,7 @@ namespace larocv {
       if ( on_line(line,pt) )
 	{ ctor1.emplace_back(pt); ctor2.emplace_back(pt); continue; }
       
-      if ( test_point_above(line,pt) )
+      if ( pt.y > line.y(pt.x) )
 	{ ctor1.emplace_back(pt); continue; }
       
       ctor2.emplace_back(pt);
@@ -640,27 +554,6 @@ namespace larocv {
     return defects.at(max_idx);
       
   }
-
-  float Algo::Signed2DTriArea(const ::cv::Point2f& a,const cv::Point2f& b, const cv::Point2f& c)
-  {
-    return (a.x - c.x) * (b.y - c.y) - (a.y - c.y) * (b.x - c.x);
-  }
-
-  int Algo::SegmentSegmentTest(const ::cv::Point2f& a, const ::cv::Point2f& b, const ::cv::Point2f& c, const ::cv::Point2f& d) {
-    float t;
-    float a1 = Signed2DTriArea(a,b,d);
-    float a2 = Signed2DTriArea(a,b,c);
-    if (a1 * a2 < 0.0f) {
-      float a3 = Signed2DTriArea(c,d,a);
-      float a4 = a3 + a2 - a1;
-      if (a3 * a4 < 0.0f) {
-	t = a3 / (a3 - a4);
-	return 1;
-      }
-    }
-    return 0;
-  }
-
   
 }
 
