@@ -34,7 +34,7 @@ namespace larocv {
     /// Default constructor
     HIPClusterData(std::string name="NoName", AlgorithmID_t id=0)
       : AlgoDataBase(name,id)
-    { std::cout << "\n\n\n\n\n\nConstructing, calling clear: \n\n\n\n\n\n\n"; Clear(); }
+    { Clear(); }
     
     /// Default destructor
     ~HIPClusterData(){}

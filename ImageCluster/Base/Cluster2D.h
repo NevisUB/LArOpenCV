@@ -99,12 +99,8 @@ namespace larocv {
     Point2D _centerPt;
     /// If using PCA, principle eigenvector
     Point2D _eigenVecFirst;
-    /// If using PCA, second eigenvector
-    Point2D _eigenVecSecond;
     /// If using PCA, principle eigenvalue
     double  _eigenValFirst;
-    /// If using PCA, second eigenvalue
-    double  _eigenValSecond;
     /// Start point
     Point2D _startPt;
     /// End point
@@ -148,12 +144,6 @@ namespace larocv {
     
     /// Forgot
     Polygon2D PolyObject;
-    
-    /// Chosen points as the edge that contains the start point
-    std::vector<::cv::Point2f> _chosen;
-
-    /// 2D vertex point
-    Point2D _vertex_2D;
 
   private:
 

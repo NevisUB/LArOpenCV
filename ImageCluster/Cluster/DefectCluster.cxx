@@ -28,8 +28,7 @@ namespace larocv {
 
      //contours which may be broken up
      GEO2D_ContourArray_t break_ctor_v;
-     break_ctor_v.resize(clusters.size());
-
+     break_ctor_v.reserve(clusters.size());
 
      //copy the incomming ones into the copy
      for(const auto& cluster : clusters)
@@ -134,11 +133,8 @@ namespace larocv {
        oclusters_v.emplace_back(std::move(ocluster));
      }
      
-
      return oclusters_v;
-     
   }
-
 
   bool DefectCluster::on_line(const geo2d::Line<float>& line,::cv::Point pt) { 
 
