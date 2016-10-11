@@ -23,14 +23,26 @@ for x in xrange(len(sys.argv) - 2 - 1):
     my_proc.add_input_file(sys.argv[x+3])
 
 my_proc.set_io_mode(fmwk.storage_manager.kBOTH)
-my_proc.set_output_file("%s_output.root" % name); 
+my_proc.set_output_file("%s.root" % name); 
 
 myunit = fmwk.LArImageHit()
 myunit.set_config(cfg)
 my_proc.add_process(myunit)
 
-#my_proc.run()
-my_proc.run(1,1)
+my_proc.set_data_to_write(fmwk.data.kHit,"gaushit")
+my_proc.set_data_to_write(fmwk.data.kHit,"clusterfilter")
+my_proc.set_data_to_write(fmwk.data.kCluster,"ImageClusterHit")
+my_proc.set_data_to_write(fmwk.data.kVertex,"numuCC_vertex")
+#my_proc.set_data_to_write(fmwk.data.kVertex,"mcvertex")
+my_proc.set_data_to_write(fmwk.data.kAssociation,"ImageClusterHit")
+my_proc.set_data_to_write(fmwk.data.kPFParticle,"ImageClusterHit")
+my_proc.set_data_to_write(fmwk.data.kUserInfo,"ImageClusterHit")
+
+my_proc.run()
+#my_proc.run(0,10)
+#my_proc.run(89,1)
+#my_proc.run(117,1)
+#my_proc.run(147,1)
              
 
 sys.exit(0)

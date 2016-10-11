@@ -246,8 +246,8 @@ namespace larocv {
      
      FillClusterParams(_ocluster_v,img);
 
-     // auto& mydata = AlgoData<larocv::VicData>();
-     // mydata.num_clusters = _ocluster_v.size();
+     auto& mydata = AlgoData<larocv::VicData>();
+     mydata.num_clusters = _ocluster_v.size();
      
      return _ocluster_v;
   }

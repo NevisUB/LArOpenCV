@@ -24,6 +24,7 @@ sm.open()
 
 dx=1
 for evt in xrange(174):
+#for evt in [0]:
     print "~~~~~~~~~~~> event is %d <~~~~~~~~~~~"%evt
     sm.go_to(evt)
 
