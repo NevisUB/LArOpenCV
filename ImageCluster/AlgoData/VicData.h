@@ -15,7 +15,7 @@
 #define VICDATA_H
 
 #include "AlgoDataBase.h"
-
+#include <iostream>
 namespace larocv {
   /**
      \class VicData
@@ -28,7 +28,7 @@ namespace larocv {
     /// Default constructor
     VicData(std::string name="NoName", AlgorithmID_t id=0)
       : AlgoDataBase(name,id)
-    {}
+    {std::cout << "\n\n\n\n\nVicData constructed\n\n\n\n\n";}
     
     /// Default destructor
     ~VicData(){}
