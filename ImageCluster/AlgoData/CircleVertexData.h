@@ -17,6 +17,8 @@
 #include "AlgoDataBase.h"
 #include "Core/Vector.h"
 
+#include "Core/Line.h"
+
 #include <iostream>
 
 typedef std::vector<std::vector<geo2d::Vector<int> > > GEO2D_ContourArray_t;
@@ -41,10 +43,18 @@ namespace larocv {
 
     /// Clear method override
     void Clear();
+
+    std::vector<std::vector<geo2d::Line<float> > > _ctor_lines_v_v;
+    std::vector<std::vector<geo2d::Vector<float> > > _ipoints_v_v;
+
+    void set_data(const std::vector<geo2d::Line<float> >& ctor_lines_v,
+		  const std::vector<geo2d::Vector<float> >& ipoints_v,
+		  short plane);
     
   };
 }
 
 #endif
 /** @} */ // end of doxygen group 
+
 
