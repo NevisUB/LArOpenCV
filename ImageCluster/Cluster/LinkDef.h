@@ -17,6 +17,7 @@
 #pragma link C++ class larocv::FillClusterParams+;
 #pragma link C++ class larocv::HIPCluster+;
 #pragma link C++ class larocv::DefectCluster+;
+#pragma link C++ class larocv::CircleVertex+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

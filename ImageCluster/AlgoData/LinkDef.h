@@ -11,6 +11,8 @@
 
 #pragma link C++ class larocv::VicData+;
 #pragma link C++ class larocv::HIPClusterData+;
+#pragma link C++ class larocv::DefectClusterData+;
+#pragma link C++ class larocv::ClusterVertexData+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

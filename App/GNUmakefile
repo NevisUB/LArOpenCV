@@ -41,6 +41,7 @@ LDFLAGS += -lLArOpenCV_ImageClusterFilter
 LDFLAGS += -lLArOpenCV_ImageClusterReCluster
 LDFLAGS += -lLArOpenCV_ImageClusterStartPoint
 LDFLAGS += -lLArOpenCV_ImageClusterDebug
+LDFLAGS += -lLArOpenCV_ImageClusterVertex
 
 LDFLAGS += -lLArOpenCV_Utils -lLArOpenCV_Core -lRecoTool_ClusterRecoUtil
 

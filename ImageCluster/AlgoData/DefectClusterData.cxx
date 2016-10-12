@@ -8,10 +8,17 @@ namespace larocv {
 
   void DefectClusterData::Clear()
   {
-    std::cout << "ahoahoa!\n";
+    _atomic_ctor_v_v.clear();
+    _atomic_ctor_v_v.resize(3);
   }
 
+  void DefectClusterData::set_data(const GEO2D_ContourArray_t& atomic_ctor_v,
+				   short plane) {
 
+    if (plane>2 or plane<0) throw std::exception();
+    _atomic_ctor_v_v[plane] = atomic_ctor_v;
+    
+  }
 
 }
 

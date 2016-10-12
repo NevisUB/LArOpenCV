@@ -120,8 +120,8 @@ namespace larocv {
 
      //for(auto& bc : break_ctor_v) atomic_ctor_v.emplace_back(bc);
 
-     //auto& defectcluster_data = AlgoData<larocv::DefectClusterData>();
-     //defectcluster_data.set_data();
+     auto& defectcluster_data = AlgoData<larocv::DefectClusterData>();
+     defectcluster_data.set_data(atomic_ctor_v,meta.plane());
 
 
      Cluster2DArray_t oclusters_v;
