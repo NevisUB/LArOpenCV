@@ -30,14 +30,9 @@ namespace larocv {
      GEO2D_ContourArray_t break_ctor_v;
      break_ctor_v.reserve(clusters.size());
 
-     //copy the incomming ones into the copy
-     for(const auto& cluster : clusters)
-       break_ctor_v.emplace_back(cluster._contour);
-
-     //close the contours up (no verified this matters just yet)
-     for(auto& ctor : break_ctor_v)
-       ctor.emplace_back(ctor.at(0));
-
+     //associated indicies
+     std::vector<size_t> atomic_ctor_ass_v;
+     
      //for each contour lets do the breaking
      LAROCV_DEBUG((*this)) << "ctors to break: " << break_ctor_v.size() << "\n";
 
@@ -47,89 +42,100 @@ namespace larocv {
      std::vector<::cv::Vec4i> defects;
      std::vector<float> defects_d;
 
-     while( break_ctor_v.size() != 0 and nbreaks<=100) {
+     //for each initial cluster
+     for(unsigned ic=0;ic<clusters.size();++ic) {
 
-       // get a contour out off the front
-       auto  ctor_itr = break_ctor_v.begin();
-       auto& ctor     = *ctor_itr;
-
-       // approximate contour with `more simple` polygon
-       cv::approxPolyDP(cv::Mat(ctor), ctor, 3, true);
-
-       LAROCV_DEBUG((*this)) << "\t====>_breakctor : " << break_ctor_v.size() << ", atomic_ctor : " << atomic_ctor_v.size() << "\n";
-       LAROCV_DEBUG((*this)) << "\t===>Found contour of size : " << ctor.size() << "\n";
-
-       //this contour contains only two points. it's a line. erase and ignore
-       if (ctor.size() <= 2)
-	 { break_ctor_v.erase(ctor_itr); continue; }
+       //ge this contour
+       auto contour = clusters[ic]._contour;
+       break_ctor_v.clear();
        
-       // clear the hull and defects for this contour
-       hullpts.clear();
-       defects.clear();
-       defects_d.clear();
+       //put the first contour in the fifo for breaking
+       break_ctor_v.emplace_back(std::move(contour));
 
-       // fill the hull and defects
-       fill_hull_and_defects(ctor,hullpts,defects,defects_d);
+       while( break_ctor_v.size() != 0 and nbreaks<=100) {
+	 
+	 // get a contour out off the front
+	 auto  ctor_itr = break_ctor_v.begin();
+	 auto& ctor     = *ctor_itr;
+	 
+	 // approximate contour with `more simple` polygon
+	 cv::approxPolyDP(cv::Mat(ctor), ctor, 3, true);
+	 
+	 LAROCV_DEBUG((*this)) << "\t====>_breakctor : " << break_ctor_v.size() << ", atomic_ctor : " << atomic_ctor_v.size() << "\n";
+	 LAROCV_DEBUG((*this)) << "\t===>Found contour of size : " << ctor.size() << "\n";
+	 
+	 //this contour contains only two points. it's a line. erase and ignore
+	 if (ctor.size() <= 2)
+	   { break_ctor_v.erase(ctor_itr); continue; }
+	 
+	 // clear the hull and defects for this contour
+	 hullpts.clear();
+	 defects.clear();
+	 defects_d.clear();
+	 
+	 // fill the hull and defects
+	 fill_hull_and_defects(ctor,hullpts,defects,defects_d);
+	 
+	 // filter the hull and defects based on fcl minimum size
+	 filter_defects(defects,defects_d,_min_defect_size);
+	 
+	 // no defects of minimum size found! the contour is atomic
+	 if ( !defects_d.size() ) {
 
-       // filter the hull and defects based on fcl minimum size
-       filter_defects(defects,defects_d,_min_defect_size);
+	   atomic_ctor_v.emplace_back(ctor);
 
-       // no defects of minimum size found! the contour is atomic
-       if ( !defects_d.size() ) {
-	 atomic_ctor_v.emplace_back(ctor);
+	   atomic_ctor_ass_v.push_back(ic);
+
+	   break_ctor_v.erase(ctor_itr);
+
+	   LAROCV_DEBUG((*this)) << "\t==> atomic found: not breaking it\n";
+	   continue;
+	 }
+	 
+	 LAROCV_DEBUG((*this)) << "\t=>Breaking it nbreaks: " << nbreaks << "\n";
+	 
+	 nbreaks+=1;
+	 
+	 //get the chosen edge, currently take the defect facing the longest hull edge
+	 auto chosen_edge = max_hull_edge(ctor,defects);
+	 LAROCV_DEBUG((*this)) << "Chosen edge pts: [" << ctor[chosen_edge[0]].x << "," << ctor[chosen_edge[1]].x << "],["
+			       << ctor[chosen_edge[0]].y << "," << ctor[chosen_edge[1]].y << "]\n"; 
+	 
+	 // segment the hull line and find the line between the hull edge and
+	 // the defect point, which does not intersect the contour itself, other than at the defect point
+	 auto min_line = find_line_hull_defect(ctor,chosen_edge);
+	 
+	 GEO2D_Contour_t ctor1,ctor2;
+	 
+	 // split the contour into two by this line
+	 split_contour(ctor,ctor1,ctor2,min_line);
+	 
+	 LAROCV_DEBUG((*this)) << "1 and 2: " << ctor1.size() << "," << ctor2.size() << "\n";
+	 
+	 //remove this contour
 	 break_ctor_v.erase(ctor_itr);
-	 LAROCV_DEBUG((*this)) << "\t==> atomic found: not breaking it\n";
-	 continue;
+	 
+	 //put inside
+	 break_ctor_v.emplace_back(std::move(ctor1));
+	 break_ctor_v.emplace_back(std::move(ctor2));
+	 
+	 LAROCV_DEBUG((*this)) << "~~Next\n";
        }
-
-       LAROCV_DEBUG((*this)) << "\t=>Breaking it nbreaks: " << nbreaks << "\n";
-
-       nbreaks+=1;
        
-       //get the chosen edge, currently take the defect facing the longest hull edge
-       auto chosen_edge = max_hull_edge(ctor,defects);
-       LAROCV_DEBUG((*this)) << "Chosen edge pts: [" << ctor[chosen_edge[0]].x << "," << ctor[chosen_edge[1]].x << "],["
-			   << ctor[chosen_edge[0]].y << "," << ctor[chosen_edge[1]].y << "]\n"; 
-       
-       // segment the hull line and find the line between the hull edge and
-       // the defect point, which does not intersect the contour itself, other than at the defect point
-       auto min_line = find_line_hull_defect(ctor,chosen_edge);
-
-       GEO2D_Contour_t ctor1,ctor2;
-
-       // split the contour into two by this line
-       split_contour(ctor,ctor1,ctor2,min_line);
-       
-       LAROCV_DEBUG((*this)) << "1 and 2: " << ctor1.size() << "," << ctor2.size() << "\n";
-
-       //remove this contour
-       break_ctor_v.erase(ctor_itr);
-
-       //put inside
-       break_ctor_v.emplace_back(std::move(ctor1));
-       break_ctor_v.emplace_back(std::move(ctor2));
-
-       LAROCV_DEBUG((*this)) << "~~Next\n";
+       //atomic_contour_v is filled, break_ctor_v should be clear;
+       if ( break_ctor_v.size() ) throw larbys("Max break condition found, not all contours atomic\n");
      }
-
      LAROCV_DEBUG((*this)) << "Done~\n";
-
-
-     // debug
-     for(auto& bc : break_ctor_v) throw larbys("Max break condition found, not all contours atomic\n");//atomic_ctor_v.emplace_back(bc);
-
-     //for(auto& bc : break_ctor_v) atomic_ctor_v.emplace_back(bc);
-
+     
      auto& defectcluster_data = AlgoData<larocv::DefectClusterData>();
-     defectcluster_data.set_data(atomic_ctor_v,meta.plane());
-
-
+     defectcluster_data.set_data(atomic_ctor_v,atomic_ctor_ass_v,meta.plane());
+     
      Cluster2DArray_t oclusters_v;
      for(auto& atomic_ctor : atomic_ctor_v) {
        
        Cluster2D ocluster;
        std::swap(ocluster._contour,atomic_ctor);
-
+       
        oclusters_v.emplace_back(std::move(ocluster));
      }
      
