@@ -38,7 +38,8 @@ namespace larocv {
 				      larocv::ROI& roi);
 
   private:
-    
+
+    unsigned _max_radius_size;
   };
 
   /**
