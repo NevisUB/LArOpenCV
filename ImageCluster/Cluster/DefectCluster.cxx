@@ -128,7 +128,11 @@ namespace larocv {
      LAROCV_DEBUG((*this)) << "Done~\n";
      
      auto& defectcluster_data = AlgoData<larocv::DefectClusterData>();
-     defectcluster_data.set_data(atomic_ctor_v,atomic_ctor_ass_v,meta.plane());
+     std::cout << "clusters.size() is " << clusters.size() << "\n";
+     defectcluster_data.set_data(clusters.size(),
+				 atomic_ctor_v,
+				 atomic_ctor_ass_v,
+				 meta.plane());
      
      Cluster2DArray_t oclusters_v;
      for(auto& atomic_ctor : atomic_ctor_v) {
@@ -318,7 +322,10 @@ namespace larocv {
 			      geo2d::Vector<float>(1,dir));
   }
 
-  void DefectCluster::split_contour(const GEO2D_Contour_t& ctor,GEO2D_Contour_t& ctor1,GEO2D_Contour_t& ctor2, const geo2d::Line<float>& line) {
+  void DefectCluster::split_contour(const GEO2D_Contour_t& ctor,
+				    GEO2D_Contour_t& ctor1,
+				    GEO2D_Contour_t& ctor2,
+				    const geo2d::Line<float>& line) {
 
     //get the two intersection points of this contour and this line
     //one of these points is presumably on the contour
@@ -373,7 +380,6 @@ namespace larocv {
       ctor_copy.emplace_back(std::move(inter_pt));
     }
 
-
     // for each point in the copy contour
     for(auto& pt : ctor_copy) {
 
@@ -390,6 +396,7 @@ namespace larocv {
     }
     
   }
+
 
   cv::Vec4i DefectCluster::max_hull_edge(const GEO2D_Contour_t& ctor, std::vector<cv::Vec4i> defects) {
 
@@ -417,7 +424,6 @@ namespace larocv {
       
   }
 
-  
 
 }
 #endif

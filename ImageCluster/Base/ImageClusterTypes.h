@@ -3,6 +3,7 @@
 
 #include "opencv2/core/mat.hpp"
 #include "Core/LArOCVTypes.h"
+#include "Core/Vector.h"
 
 namespace larocv {
 
@@ -29,5 +30,8 @@ namespace larocv {
   /// A constant to signify, in particular, an invalid larocv::ClusterID_t
   static const ClusterID_t kINVALID_CLUSTER_ID = kINVALID_ID;
 
+  typedef std::vector<std::vector<geo2d::Vector<int> > > GEO2D_ContourArray_t;
+  typedef std::vector<geo2d::Vector<int> >               GEO2D_Contour_t;
+  
 }
 #endif

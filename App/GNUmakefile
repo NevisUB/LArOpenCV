@@ -17,7 +17,7 @@ INCFLAGS += $(shell larlite-config --includes)
 INCFLAGS += $(shell recotool-config --includes)
 INCFLAGS += -I$(LAROPENCV_BASEDIR)
 INCFLAGS += -I$(OPENCV_INCDIR)
-#INCFLAGS += -I../
+INCFLAGS += -I$(GEO2D_BASEDIR)
 
 # platform-specific options
 OSNAME          = $(shell uname -s)
@@ -44,6 +44,7 @@ LDFLAGS += -lLArOpenCV_ImageClusterDebug
 LDFLAGS += -lLArOpenCV_ImageClusterVertex
 
 LDFLAGS += -lLArOpenCV_Utils -lLArOpenCV_Core -lRecoTool_ClusterRecoUtil
+LDFLAGS += -L$(GEO2D_LIBDIR) -lGeo2D_Core
 
 # call kernel specific compiler setup
 include $(LARLITE_BASEDIR)/Makefile/Makefile.${OSNAME}

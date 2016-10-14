@@ -22,6 +22,7 @@ INCFLAGS += -I$(LAROPENCV_BASEDIR)
 INCFLAGS += -I$(LAROPENCV_IMAGECLUSTERDIR)/Base
 INCFLAGS += -I$(LAROPENCV_IMAGECLUSTERDIR)/Util
 INCFLAGS += -I$(LAROPENCV_IMAGECLUSTERDIR)/AlgoData
+INCFLAGS += -I$(GEO2D_BASEDIR)
 
 # platform-specific options
 OSNAME          = $(shell uname -s)
@@ -35,7 +36,7 @@ LDFLAGS += $(shell recotool-config --libs)
 LDFLAGS += $(shell larlite-config --libs)
 LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc
 LDFLAGS += -L$(LARLITE_LIBDIR) -lLArOpenCV_Core -lLArOpenCV_Utils -lLArOpenCV_ImageClusterBase -lLArOpenCV_ImageClusterUtil -lRecoTool_ClusterRecoUtil -lRecoTool_ClusterRecoUtilAlg -lLArOpenCV_ImageClusterAlgoData
-
+LDFLAGS += -L$(GEO2D_LIBDIR) -lGeo2D_Core
 # call kernel specific compiler setup
 include $(LARLITE_BASEDIR)/Makefile/Makefile.${OSNAME}
 

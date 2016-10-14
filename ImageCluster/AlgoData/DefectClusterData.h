@@ -19,9 +19,6 @@
 
 #include <iostream>
 
-typedef std::vector<std::vector<geo2d::Vector<int> > > GEO2D_ContourArray_t;
-typedef std::vector<geo2d::Vector<int> >               GEO2D_Contour_t;
-
 namespace larocv {
   /**
      \class DefectClusterData
@@ -41,11 +38,14 @@ namespace larocv {
 
     /// Clear method override
     void Clear();
-    std::vector
-    <GEO2D_ContourArray_t> _atomic_ctor_v_v;
-    std::vector<std::vector<size_t> >   _atomic_ctor_ass_v_v;
 
-    void set_data(const GEO2D_ContourArray_t& atomic_ctor_v,
+    std::vector<unsigned>             _n_original_clusters_v;
+    std::vector<GEO2D_ContourArray_t> _atomic_ctor_v_v;
+    std::vector<std::vector<size_t> > _atomic_ctor_ass_v_v;
+    
+
+    void set_data(unsigned n_original_clusters,
+		  const GEO2D_ContourArray_t& atomic_ctor_v,
 		  const std::vector<size_t>& atomic_ctor_ass_v,
 		  short plane);
     

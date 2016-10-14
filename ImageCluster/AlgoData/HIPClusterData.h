@@ -19,9 +19,6 @@
 
 #include <iostream>
 
-typedef std::vector<std::vector<geo2d::Vector<int> > > GEO2D_ContourArray_t;
-typedef std::vector<geo2d::Vector<int> >               GEO2D_Contour_t;
-
 namespace larocv {
   /**
      \class HIPClusterData

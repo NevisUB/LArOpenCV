@@ -1,28 +1,28 @@
 //by vic
 
-#ifndef __CIRCLEVERTEX_H__
-#define __CIRCLEVERTEX_H__
+#ifndef __PCACANDIDATES_H__
+#define __PCACANDIDATES_H__
 
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
 #include "Core/Geo2D.h"
 
-#include "CircleVertexData.h"
+#include "PCACandidatesData.h"
 
 namespace larocv {
  
-  class CircleVertex : public larocv::ClusterAlgoBase {
+  class PCACandidates : public larocv::ClusterAlgoBase {
     
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
-    CircleVertex(const std::string name = "CircleVertex") :
+    PCACandidates(const std::string name = "PCACandidates") :
       ClusterAlgoBase(name)
     {}
     
     /// Default destructor
-    virtual ~CircleVertex(){}
+    virtual ~PCACandidates(){}
 
     /// Finalize after process
     void Finalize(TFile*) {}
@@ -42,23 +42,23 @@ namespace larocv {
   };
 
   /**
-     \class larocv::CircleVertexFactory
-     \brief A concrete factory class for larocv::CircleVertex
+     \class larocv::PCACandidatesFactory
+     \brief A concrete factory class for larocv::PCACandidates
    */
-  class CircleVertexFactory : public ClusterAlgoFactoryBase {
+  class PCACandidatesFactory : public ClusterAlgoFactoryBase {
   public:
     /// ctor
-    CircleVertexFactory() { ClusterAlgoFactory::get().add_factory("CircleVertex",this); }
+    PCACandidatesFactory() { ClusterAlgoFactory::get().add_factory("PCACandidates",this); }
     /// dtor
-    ~CircleVertexFactory() {}
+    ~PCACandidatesFactory() {}
     /// create method
-    ClusterAlgoBase* create(const std::string instance_name) { return new CircleVertex(instance_name); }
+    ClusterAlgoBase* create(const std::string instance_name) { return new PCACandidates(instance_name); }
     /// data create method
     AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new CircleVertexData(instance_name,id);}
+    { return new PCACandidatesData(instance_name,id);}
   };
-  /// Global larocv::CircleVertexFactory to register ClusterAlgoFactory
-  static CircleVertexFactory __global_CircleVertexFactory__;
+  /// Global larocv::PCACandidatesFactory to register ClusterAlgoFactory
+  static PCACandidatesFactory __global_PCACandidatesFactory__;
   
 }
 #endif
