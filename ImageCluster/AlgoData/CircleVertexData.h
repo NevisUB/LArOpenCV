@@ -15,7 +15,7 @@
 #define CIRCLEVERTEXDATA_H
 
 #include "AlgoDataBase.h"
-#include "Core/Line.h"
+#include "Core/Circle.h"
 
 namespace larocv {
   /**
@@ -37,6 +37,8 @@ namespace larocv {
     /// Clear method override
     void Clear();
     void set_data();
+
+    std::vector<std::vector<geo2d::Circle<float> > > _circledata_v_v;
     
   };
 }
