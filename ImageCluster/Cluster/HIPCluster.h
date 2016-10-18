@@ -43,7 +43,9 @@ namespace larocv {
     int _min_mip_cluster_size;
     int _mip_thresh;
     int _hip_thresh;
-    
+    int _dilation_size;
+    int _dilation_iter;
+    int _blur_size;    
   };
 
   /**

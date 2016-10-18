@@ -25,10 +25,7 @@ namespace larocv {
 				short plane) {
 
     if (plane > 2 or plane < 0) throw std::exception();
-    // std::cout << "Plane is : " << plane << "\n";
-    // std::cout << mips.size() << "==" << _mip_ctors_v_v.size() << "\n";
-    // std::cout << hips.size() << "==" << _hip_ctors_v_v.size() << "\n";
-    // std::cout << alls.size() << "==" << _all_ctors_v_v.size() << "\n";
+
     _mip_ctors_v_v[plane] = mips;
     _hip_ctors_v_v[plane] = hips;
     _all_ctors_v_v[plane] = alls;

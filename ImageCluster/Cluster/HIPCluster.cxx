@@ -9,10 +9,16 @@ namespace larocv {
 
   void HIPCluster::_Configure_(const ::fcllite::PSet &pset)
   {
-    _min_hip_cluster_size = 6;
-    _min_mip_cluster_size = 6;
-    _mip_thresh = 1;
+    _min_hip_cluster_size = 20;
+    _min_mip_cluster_size = 20;
+    _mip_thresh = 15;
     _hip_thresh = 255;
+
+    _dilation_size = 2;
+    _dilation_iter = 1;
+    _blur_size     = 2;
+    
+    set_verbosity(msg::kDEBUG);
   }
 
   larocv::Cluster2DArray_t HIPCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -20,6 +26,17 @@ namespace larocv {
 						larocv::ImageMeta& meta,
 						larocv::ROI& roi)
   {
+
+    
+    ::cv::Mat sb_img;
+    
+    //Dilate
+    auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,::cv::Size(_dilation_size,_dilation_size));
+    ::cv::dilate(img,sb_img,kernel,::cv::Point(-1,-1),_dilation_iter);
+    
+    //Blur
+    ::cv::blur(sb_img,sb_img,::cv::Size(_blur_size,_blur_size));
+
     GEO2D_ContourArray_t mip_ctor_v;
     GEO2D_ContourArray_t hip_ctor_v;
     GEO2D_ContourArray_t all_ctor_v;
@@ -29,11 +46,11 @@ namespace larocv {
     
     //Threshold the input image to certain ADC value, this is our MIP
     ::cv::Mat img_thresh_m;
-    threshold(img, img_thresh_m,THRESH_LOWER,255,0);
+    threshold(sb_img, img_thresh_m,THRESH_LOWER,255,0);
     
     //Threshold the input image to HIP ADC value, this is our HIP
     ::cv::Mat hip_thresh_m;
-    threshold(img, hip_thresh_m,HIP_LEVEL,255,0);
+    threshold(sb_img, hip_thresh_m,HIP_LEVEL,255,0);
 
     //Contour finding on the HIP
     std::vector<::cv::Vec4i> hip_cv_hierarchy_v;
@@ -122,6 +139,11 @@ namespace larocv {
        
      }
      
+     LAROCV_DEBUG((*this)) << "plane : " << meta.plane() << " mip_ctor_v.size() : " << mip_ctor_v.size() << " hip_ctor_v.size() : " << hip_ctor_v.size() << " all_ctor_v.size() : " << all_ctor_v.size() << "\n";
+
+
+     auto& hip_data = AlgoData<larocv::HIPClusterData>();
+     hip_data.set_data(mip_ctor_v,hip_ctor_v,all_ctor_v,meta.plane());
      
      Cluster2DArray_t oclusters;
      oclusters.resize(all_ctor_v.size());
@@ -129,9 +151,6 @@ namespace larocv {
      for(unsigned ik=0;ik<oclusters.size();++ik)
 
        std::swap(oclusters[ik]._contour,all_ctor_v[ik]);
-     
-     auto& hip_data = AlgoData<larocv::HIPClusterData>();
-     hip_data.set_data(mip_ctor_v,hip_ctor_v,all_ctor_v,meta.plane());
      
      return oclusters;
      

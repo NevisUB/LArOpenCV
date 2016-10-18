@@ -30,6 +30,8 @@ namespace larocv {
     //find the points who's circle of _max_radius_size contains other most number of points.
     for(auto& ipoints_v : ipoints_v_v) {
 
+      if ( !ipoints_v.size() ) continue;
+			      
       std::vector<unsigned> n_inside_v(ipoints_v.size(),0);
 
       for(unsigned pidx=0; pidx < ipoints_v.size(); ++pidx) {
@@ -50,16 +52,28 @@ namespace larocv {
 	}
 
       }
+
       auto max_itr = std::max_element(n_inside_v.begin(),n_inside_v.end());
       auto max_idx = max_itr - n_inside_v.begin();
 
-      //max minimum enclosing circle
+      //make this circle
       geo2d::Circle<float> circle_pt(ipoints_v[max_idx],_max_radius_size);
+
+      //GEO2D_Contour_t inside;
+      std::vector<geo2d::Vector<float> > inside;
+
+      double dist;
+      
+      //get the points inside (another loop)
+      for(unsigned pidx=0; pidx < ipoints_v.size(); ++pidx)
+	if ( geo2d::contains(circle_pt,ipoints_v[pidx],dist) )
+	  inside.emplace_back(ipoints_v[pidx]);
+
+      geo2d::Circle<float> circle_min(inside);
+
+      circlevertex_data._circledata_v_v[meta.plane()].emplace_back(std::move(circle_min)); 
     }
-    
-    //geo2d::Circle<float> circ(ipoints_v);
-    //circlevertex_data._circledata_v_v[meta.plane()].emplace_back(std::move(circ));
-    
+
     
     return clusters;
   }
