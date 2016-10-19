@@ -117,7 +117,6 @@ namespace larocv {
 
     _enable_wire_check = main_cfg.get<bool>("EnableWireCheck");
 
-
     if(cluster_instance_type_v.size() != cluster_instance_name_v.size()) {
       LAROCV_CRITICAL((*this)) << "Clustering: AlgoType and AlgoName config parameters have different length! "
 			      << "(" << cluster_instance_type_v.size() << " vs. " << cluster_instance_name_v.size() << ")" << std::endl;

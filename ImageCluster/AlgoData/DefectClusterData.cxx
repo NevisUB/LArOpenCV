@@ -8,11 +8,15 @@ namespace larocv {
 
   void DefectClusterData::Clear()
   {
-    std::cout << ".....DefectClusterData::Clear() called.....\n";
     _n_original_clusters_v.clear();
     _atomic_ctor_v_v.clear();
     _atomic_ctor_ass_v_v.clear();
+    _hull_line_v_v.clear();
+    _split_line_v_v.clear();
 
+
+    _hull_line_v_v.resize(3);
+    _split_line_v_v.resize(3);
     _n_original_clusters_v.resize(3);
     _atomic_ctor_v_v.resize(3);
     _atomic_ctor_ass_v_v.resize(3);

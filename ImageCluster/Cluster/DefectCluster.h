@@ -34,12 +34,12 @@ namespace larocv {
     void _Configure_(const ::fcllite::PSet &pset);
     
     larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
-				      const ::cv::Mat& img,
-				      larocv::ImageMeta& meta,
-				      larocv::ROI& roi);
+				       const ::cv::Mat& img,
+				       larocv::ImageMeta& meta,
+				       larocv::ROI& roi);
 
 
-        cv::Vec4i max_hull_edge(const GEO2D_Contour_t& ctor, std::vector<cv::Vec4i> defects);
+    cv::Vec4i max_hull_edge(const GEO2D_Contour_t& ctor, std::vector<cv::Vec4i> defects);
 
     bool on_line(const geo2d::Line<float>& line,::cv::Point pt);
     
@@ -60,12 +60,13 @@ namespace larocv {
   private:
     int _min_defect_size;
     int _hull_edge_pts_split;
+
   };
 
   /**
      \class larocv::DefectClusterFactory
      \brief A concrete factory class for larocv::DefectCluster
-   */
+  */
   class DefectClusterFactory : public ClusterAlgoFactoryBase {
   public:
     /// ctor
