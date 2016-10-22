@@ -46,7 +46,7 @@ namespace larocv {
     //for each initial cluster
      for(unsigned ic=0;ic<clusters.size();++ic) {
 
-       LAROCV_DEBUG((*this))<< "\t==>On cluster ic: " << ic << "\n";
+       LAROCV_DEBUG()<< "\t==>On cluster ic: " << ic << "\n";
 
        auto contour = clusters[ic]._contour;
 
@@ -63,19 +63,19 @@ namespace larocv {
 
 	 // cv::approxPolyDP(cv::Mat(ctor), ctor, 0.1, true);
 
-	 LAROCV_DEBUG((*this)) << "\t==>break_ctor_v.size() : " << break_ctor_v.size() << "\n";
-	 LAROCV_DEBUG((*this)) << "\t==>contour size : " << ctor.size() << "\n";
-	 LAROCV_DEBUG((*this)) << "\t==>contour dump\n";
+	 LAROCV_DEBUG() << "\t==>break_ctor_v.size() : " << break_ctor_v.size() << "\n";
+	 LAROCV_DEBUG() << "\t==>contour size : " << ctor.size() << "\n";
+	 LAROCV_DEBUG() << "\t==>contour dump\n";
 
-	 // LAROCV_DEBUG((*this))<<"plt.plot([";
-	 // for(auto&c:ctor)LAROCV_DEBUG((*this))<<c.x<<",";
-	 // LAROCV_DEBUG((*this))<<"],\n[";
-	 // for(auto&c:ctor)LAROCV_DEBUG((*this))<<c.y<<",";
-	 // LAROCV_DEBUG((*this))<<"],\n'-o',lw=2)\n";
+	 // LAROCV_DEBUG()<<"plt.plot([";
+	 // for(auto&c:ctor)LAROCV_DEBUG()<<c.x<<",";
+	 // LAROCV_DEBUG()<<"],\n[";
+	 // for(auto&c:ctor)LAROCV_DEBUG()<<c.y<<",";
+	 // LAROCV_DEBUG()<<"],\n'-o',lw=2)\n";
 	 
 	 //this contour contains only two points. it's a line. erase and ignore
 	 if (ctor.size() <= 2)
-	   {  LAROCV_DEBUG((*this)) << "\t==>Contour too small\n"; break_ctor_v.erase(ctor_itr); continue; }
+	   {  LAROCV_DEBUG() << "\t==>Contour too small\n"; break_ctor_v.erase(ctor_itr); continue; }
 	 
 	 // clear the hull and defects for this contour
 	 hullpts.clear();
@@ -90,7 +90,7 @@ namespace larocv {
 	 
 	 // no defects of minimum size found! the contour is atomic
 	 if ( !defects_d.size() ) {
-	   LAROCV_DEBUG((*this)) << "\t==> no defects found\n";
+	   LAROCV_DEBUG() << "\t==> no defects found\n";
 	   atomic_ctor_v.emplace_back(ctor);
 	   atomic_ctor_ass_v.push_back(ic);
 	   break_ctor_v.erase(ctor_itr);
@@ -98,7 +98,7 @@ namespace larocv {
 	 }
 
 	 nbreaks+=1;
-	 LAROCV_DEBUG((*this)) << "\t==>breaking nbreaks : " << nbreaks << "\n";
+	 LAROCV_DEBUG() << "\t==>breaking nbreaks : " << nbreaks << "\n";
 	 
 	 //get the chosen edge, currently take the defect facing the longest hull edge
 	 auto chosen_edge = max_hull_edge(ctor,defects);
@@ -226,9 +226,9 @@ namespace larocv {
     float y2 = end.y;
     float y3 = far.y;
 
-    LAROCV_DEBUG((*this)) << "\t==>Inspecting hull defect\n";
-    LAROCV_DEBUG((*this)) << "\t==>start and end of edge\n";
-    LAROCV_DEBUG((*this)) << "plt.plot(["<<start.x<<","<<end.x<<"],["<<start.y<<","<<end.y<<"],'-',lw=5)\n";
+    LAROCV_DEBUG() << "\t==>Inspecting hull defect\n";
+    LAROCV_DEBUG() << "\t==>start and end of edge\n";
+    LAROCV_DEBUG() << "plt.plot(["<<start.x<<","<<end.x<<"],["<<start.y<<","<<end.y<<"],'-',lw=5)\n";
 
     auto minidx = std::min(defect[0],defect[1]);
     auto maxidx = std::max(defect[0],defect[1]);
@@ -251,14 +251,14 @@ namespace larocv {
 
     float mdist = 9.e9;
 
-    // LAROCV_DEBUG((*this)) << "\t==>Line points\n";
-    // LAROCV_DEBUG((*this)) << "plt.plot([";
+    // LAROCV_DEBUG() << "\t==>Line points\n";
+    // LAROCV_DEBUG() << "plt.plot([";
     // for ( const auto& l : l_ )
-    //   LAROCV_DEBUG((*this)) << l.x << ",";
-    // LAROCV_DEBUG((*this)) << "]\n,[";
+    //   LAROCV_DEBUG() << l.x << ",";
+    // LAROCV_DEBUG() << "]\n,[";
     // for ( const auto& l : l_ )
-    //   LAROCV_DEBUG((*this)) << l.y << ",";
-    // LAROCV_DEBUG((*this)) << "],'o',markersize=5)\n";
+    //   LAROCV_DEBUG() << l.y << ",";
+    // LAROCV_DEBUG() << "],'o',markersize=5)\n";
 
     for ( const auto& l : l_ ) {
       
@@ -272,7 +272,7 @@ namespace larocv {
       hull_defect_segment.pt2.y = l.y;
       
       // loop over portion of contour facing edge
-      //LAROCV_DEBUG((*this)) << "\n\n\n\n";
+      //LAROCV_DEBUG() << "\n\n\n\n";
       for(unsigned ix=minidx;ix<maxidx;++ix) {
 
 	ctor_segment.pt1 = ctor[ ix         ];
@@ -280,7 +280,7 @@ namespace larocv {
 	
 	inters += geo2d::Intersect(ctor_segment,hull_defect_segment);
 
-	//LAROCV_DEBUG((*this)) << ix << " " << (ix+1)%pts_c << " " << ctor[ix] << " " << ctor[(ix+1)%pts_c] << " " << inters << "\n";
+	//LAROCV_DEBUG() << ix << " " << (ix+1)%pts_c << " " << ctor[ix] << " " << ctor[(ix+1)%pts_c] << " " << inters << "\n";
 	
 	//There is more than one intersection for this line
 	//between the contour and the hull
@@ -327,7 +327,7 @@ namespace larocv {
     geo2d::LineSegment<float> ctor_segment(-1,-1,-1,-1);
     geo2d::LineSegment<float> span_segment(-1,-1,-1,-1);
 
-    LAROCV_DEBUG((*this)) << "\t==>Intersections\n";    
+    LAROCV_DEBUG() << "\t==>Intersections\n";    
 
     for(unsigned i=0; i<ctor.size(); ++i) {
       
@@ -367,8 +367,8 @@ namespace larocv {
       //this point is already a part of the contour, don't put a duplicate inside
       if ( inter_pt == cv::Point(p1) or inter_pt == cv::Point(p2) ) continue;
 
-      LAROCV_DEBUG((*this)) << "plt.plot(["<< p3.x << "," << p4.x << "],["<<p3.y<<","<<p4.y<<"],'-o',lw=2)\n";
-      LAROCV_DEBUG((*this)) << "plt.plot(" << ip.x << "," << ip.y << ",'o',markersize=10)\n";
+      LAROCV_DEBUG() << "plt.plot(["<< p3.x << "," << p4.x << "],["<<p3.y<<","<<p4.y<<"],'-o',lw=2)\n";
+      LAROCV_DEBUG() << "plt.plot(" << ip.x << "," << ip.y << ",'o',markersize=10)\n";
 
       ctor_copy.emplace_back(std::move(inter_pt));// this cv::Point2f has been floored with typecast
     }

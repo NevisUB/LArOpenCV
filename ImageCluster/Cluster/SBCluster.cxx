@@ -59,7 +59,7 @@ namespace larocv {
 
     ::larocv::Cluster2D new_clus ;
 
-    LAROCV_DEBUG((*this)) << "Found " << ctor_v.size() << " contours\n";
+    LAROCV_DEBUG() << "Found " << ctor_v.size() << " contours\n";
     
     for(size_t j = 0; j < ctor_v.size(); ++j){
 
@@ -82,7 +82,7 @@ namespace larocv {
 
       uinfo.store("NClusters",(int)result_v.size());
 
-      LAROCV_DEBUG((*this)) << "Writing debug information for " << clusters.size() << "\n";
+      LAROCV_DEBUG() << "Writing debug information for " << clusters.size() << "\n";
       
       for(size_t i = 0; i < result_v.size(); ++i){
 

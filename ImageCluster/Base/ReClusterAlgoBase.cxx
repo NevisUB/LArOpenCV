@@ -7,11 +7,11 @@ namespace larocv {
 
   ReClusterAlgoBase::ReClusterAlgoBase(const std::string name)
     : ImageClusterBase(name)
-  {LAROCV_DEBUG((*this)) << "Constructed" << std::endl;}
+  {LAROCV_DEBUG() << "Constructed" << std::endl;}
 
   void ReClusterAlgoBase::Configure(const ::fcllite::PSet& cfg) {
 
-    LAROCV_DEBUG((*this)) << "start" << std::endl;
+    LAROCV_DEBUG() << "start" << std::endl;
 
     ImageClusterBase::Configure(cfg);
 	
@@ -19,7 +19,7 @@ namespace larocv {
 
     this->_Configure_(cfg);
 
-    LAROCV_DEBUG((*this)) << "end" << std::endl;
+    LAROCV_DEBUG() << "end" << std::endl;
   }
 
   Cluster2DArray_t ReClusterAlgoBase::Process(const larocv::Cluster2DArray_t& clusters,

@@ -1,12 +1,12 @@
-#ifndef __POLARCLUSTER_CXX__
-#define __POLARCLUSTER_CXX__
+#ifndef __VERTEXTRACKCLUSTER_CXX__
+#define __VERTEXTRACKCLUSTER_CXX__
 
-#include "PolarCluster.h"
+#include "VertexTrackCluster.h"
 
 namespace larocv {
 
 
-  void PolarCluster::_Configure_(const ::fcllite::PSet &pset)
+  void VertexTrackCluster::_Configure_(const ::fcllite::PSet &pset)
   {
 
     _dilation_size = pset.get<int>("DilationSize");
@@ -20,7 +20,7 @@ namespace larocv {
 
   }
 
-  larocv::Cluster2DArray_t PolarCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
+  larocv::Cluster2DArray_t VertexTrackCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
 						   const ::cv::Mat& img,
 						   larocv::ImageMeta& meta,
 						   larocv::ROI& roi)
@@ -47,7 +47,6 @@ namespace larocv {
 		      ::cv::Point2f(pi0st.x,pi0st.y), //center point
 		      rad, //radius
 		      ::cv::WARP_FILL_OUTLIERS); //seems like it has to set
-
     
     //Dilate
     auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,

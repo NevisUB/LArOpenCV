@@ -62,13 +62,13 @@ namespace larlite {
 
   void LArImageHit::extract_image(storage_manager* storage) {
 
-    LAROCV_DEBUG((*this)) << "Extracting Image\n";
+    LAROCV_DEBUG() << "Extracting Image\n";
     
     auto const& geom = ::larutil::Geometry::GetME();
     auto const& geomH = ::larutil::GeometryHelper::GetME();
     const size_t nplanes = geom->Nplanes();
 
-    LAROCV_DEBUG((*this)) << "Getting hit producer " << producer() << "\n";
+    LAROCV_DEBUG() << "Getting hit producer " << producer() << "\n";
 
     auto ev_hit = storage->get_data<event_hit>(producer());
 
@@ -137,7 +137,7 @@ namespace larlite {
         else 
           upper_w = ( vtx_w + buffer_w > 3456 ? 3456 : vtx_w + buffer_w );
 
-	LAROCV_DEBUG((*this)) << "Got vertex point (w,t): (" << vtx_w << "," << vtx_t << ")\n";
+	LAROCV_DEBUG() << "Got vertex point (w,t): (" << vtx_w << "," << vtx_t << ")\n";
 		
         roi_bounds.emplace_back(lower_w, upper_t); ///< origin
         roi_bounds.emplace_back(lower_w, lower_t);

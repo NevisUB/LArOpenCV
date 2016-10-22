@@ -139,7 +139,7 @@ namespace larocv {
        
      }
      
-     LAROCV_DEBUG((*this)) << "plane : " << meta.plane() << " mip_ctor_v.size() : " << mip_ctor_v.size() << " hip_ctor_v.size() : " << hip_ctor_v.size() << " all_ctor_v.size() : " << all_ctor_v.size() << "\n";
+     LAROCV_DEBUG() << "plane : " << meta.plane() << " mip_ctor_v.size() : " << mip_ctor_v.size() << " hip_ctor_v.size() : " << hip_ctor_v.size() << " all_ctor_v.size() : " << all_ctor_v.size() << "\n";
 
 
      auto& hip_data = AlgoData<larocv::HIPClusterData>();

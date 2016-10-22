@@ -15,7 +15,7 @@ namespace larocv {
 
   void AlgoDataManager::Register(AlgoDataBase* data)
   {
-    LAROCV_NORMAL((*this)) << "Registering AlgoData " << data->Name() << " ID = " << data->ID() << std::endl;
+    LAROCV_NORMAL() << "Registering AlgoData " << data->Name() << " ID = " << data->ID() << std::endl;
     if(_tree_attached)
       throw larbys("Cannot register after TTree attachment happened!");    
     if(data->ID() >= _data_v.size()) {

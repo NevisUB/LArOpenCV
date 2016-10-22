@@ -117,12 +117,12 @@ namespace larocv {
 //
 // Compiler macro for saving us from text typing
 //
-#define LAROCV_DEBUG(obj)    if(obj.logger().debug())    obj.logger().send(::larocv::msg::kDEBUG,    __FUNCTION__,__LINE__,__FILE__)
-#define LAROCV_INFO(obj)     if(obj.logger().info())     obj.logger().send(::larocv::msg::kINFO,     __FUNCTION__,__LINE__         )
-#define LAROCV_NORMAL(obj)   if(obj.logger().normal())   obj.logger().send(::larocv::msg::kNORMAL,   __FUNCTION__                  )
-#define LAROCV_WARNING(obj)  if(obj.logger().warning())  obj.logger().send(::larocv::msg::kWARNING,  __FUNCTION__                  )
-#define LAROCV_ERROR(obj)    if(obj.logger().error())    obj.logger().send(::larocv::msg::kERROR,    __FUNCTION__,__LINE__         )
-#define LAROCV_CRITICAL(obj) obj.logger().send(::larocv::msg::kCRITICAL, __FUNCTION__,__LINE__,__FILE__)
+#define LAROCV_DEBUG()    if(this->logger().debug())    this->logger().send(::larocv::msg::kDEBUG,    __FUNCTION__,__LINE__,__FILE__)
+#define LAROCV_INFO()     if(this->logger().info())     this->logger().send(::larocv::msg::kINFO,     __FUNCTION__,__LINE__         )
+#define LAROCV_NORMAL()   if(this->logger().normal())   this->logger().send(::larocv::msg::kNORMAL,   __FUNCTION__                  )
+#define LAROCV_WARNING()  if(this->logger().warning())  this->logger().send(::larocv::msg::kWARNING,  __FUNCTION__                  )
+#define LAROCV_ERROR()    if(this->logger().error())    this->logger().send(::larocv::msg::kERROR,    __FUNCTION__,__LINE__         )
+#define LAROCV_CRITICAL() this->logger().send(::larocv::msg::kCRITICAL, __FUNCTION__,__LINE__,__FILE__)
 #endif
 /** @} */ // end of doxygen group 
 

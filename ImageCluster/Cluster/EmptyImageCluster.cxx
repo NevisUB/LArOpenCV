@@ -14,7 +14,7 @@ namespace larocv{
 				       larocv::ImageMeta& meta, larocv::ROI& roi)
   { 
 
-    //LAROCV_INFO((*this)) << "NAMERU JA NAI\n";
+    //LAROCV_INFO() << "NAMERU JA NAI\n";
     return Cluster2DArray_t();
   
    }  

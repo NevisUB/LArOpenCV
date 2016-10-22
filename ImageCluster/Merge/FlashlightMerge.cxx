@@ -339,7 +339,7 @@ namespace larocv{
 
       uinfo.store("N_hulls",(int)oclusters.size());
 
-      LAROCV_DEBUG((*this)) << "Writing debug information for " << oclusters.size() << "\n";
+      LAROCV_DEBUG() << "Writing debug information for " << oclusters.size() << "\n";
     
       for(size_t i = 0; i < oclusters.size(); ++i){
 

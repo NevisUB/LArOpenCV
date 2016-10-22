@@ -24,7 +24,7 @@ namespace larocv{
 
     clear_ss(ss1);
 
-    LAROCV_DEBUG((*this)) << "Writing debug information for " << clusters.size() << "\n";
+    LAROCV_DEBUG() << "Writing debug information for " << clusters.size() << "\n";
     
     for(size_t i = 0; i < clusters.size(); ++i){
 

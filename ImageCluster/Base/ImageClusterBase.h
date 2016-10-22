@@ -66,7 +66,7 @@ namespace larocv {
     const std::string& Name() const { return _name; }
 
     /// Algorithm ID accessor
-    AlgorithmID_t ID() const { return _id; }
+    AlgorithmID_t ID(const std::string& name="") const;
 
     /// Profile flag setter
     void Profile(bool doit) { _profile = doit; }

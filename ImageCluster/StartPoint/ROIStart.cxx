@@ -19,7 +19,7 @@ namespace larocv {
 
     auto pi0st = roi.roivtx_in_image(meta);
     
-    LAROCV_DEBUG((*this)) << "In image coords: (" << pi0st.x << "," << pi0st.y << ")\n";
+    LAROCV_DEBUG() << "In image coords: (" << pi0st.x << "," << pi0st.y << ")\n";
 
     for (size_t k = 0; k < clusters.size(); k++) {
 

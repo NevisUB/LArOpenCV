@@ -126,7 +126,7 @@ namespace larocv{
 
       //uinfo.store("NClusters",(int)result_v.size());
 
-      LAROCV_DEBUG((*this)) << "Writing debug information for " << clusters.size() << "\n";
+      LAROCV_DEBUG() << "Writing debug information for " << clusters.size() << "\n";
 
       for(size_t i = 0; i < oclusters.size(); ++i){
 

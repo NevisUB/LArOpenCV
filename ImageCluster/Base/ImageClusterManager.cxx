@@ -20,14 +20,14 @@ namespace larocv {
     , _profile(true)
     , _tree(nullptr)
   {
-    LAROCV_DEBUG((*this)) << "start" << std::endl;
+    LAROCV_DEBUG() << "start" << std::endl;
     Reset();
-    LAROCV_DEBUG((*this)) << "end" << std::endl;
+    LAROCV_DEBUG() << "end" << std::endl;
   }
   
   void ImageClusterManager::Reset()
   {
-    LAROCV_DEBUG((*this)) << "start" << std::endl;
+    LAROCV_DEBUG() << "start" << std::endl;
     _configured = false;
     _cluster_alg_v.clear();
     _clusters_v_v.clear();
@@ -42,7 +42,7 @@ namespace larocv {
     _roi_v_v.clear();
     _book_keeper.Reset();
     
-    LAROCV_DEBUG((*this)) << "end" << std::endl;
+    LAROCV_DEBUG() << "end" << std::endl;
   }
 
   void ImageClusterManager::Finalize(TFile* file)
@@ -100,7 +100,7 @@ namespace larocv {
   
   void ImageClusterManager::Configure(const ::fcllite::PSet& main_cfg)
   {
-    LAROCV_DEBUG((*this)) << "Start" << std::endl;
+    LAROCV_DEBUG() << "Start" << std::endl;
     _profile = main_cfg.get<bool>("Profile");
 
     this->set_verbosity((msg::Level_t)(main_cfg.get<unsigned short>("Verbosity",(unsigned short)(this->logger().level()))));
@@ -108,7 +108,7 @@ namespace larocv {
     _show_image = main_cfg.get<bool>("ShowImage",false);
 
     if(_show_image) {
-      LAROCV_DEBUG((*this)) << "Configuring Viewer" << std::endl;
+      LAROCV_DEBUG() << "Configuring Viewer" << std::endl;
       _viewer.Configure(main_cfg.get_pset(_viewer.Name()));
     }
     
@@ -118,7 +118,7 @@ namespace larocv {
     _enable_wire_check = main_cfg.get<bool>("EnableWireCheck");
 
     if(cluster_instance_type_v.size() != cluster_instance_name_v.size()) {
-      LAROCV_CRITICAL((*this)) << "Clustering: AlgoType and AlgoName config parameters have different length! "
+      LAROCV_CRITICAL() << "Clustering: AlgoType and AlgoName config parameters have different length! "
 			      << "(" << cluster_instance_type_v.size() << " vs. " << cluster_instance_name_v.size() << ")" << std::endl;
       throw larbys();
     }
@@ -130,7 +130,7 @@ namespace larocv {
       auto const& name = cluster_instance_name_v[i];
       auto const& type = cluster_instance_type_v[i];
       if(_cluster_alg_m.find(name) != _cluster_alg_m.end()) {
-	LAROCV_CRITICAL((*this)) << "Duplicate algorithm name found!" << std::endl;
+	LAROCV_CRITICAL() << "Duplicate algorithm name found!" << std::endl;
 	throw larbys("Duplicate algorithm name found!");
       }
       
@@ -181,7 +181,7 @@ namespace larocv {
     }
     
     _configured=true;
-    LAROCV_DEBUG((*this)) << "Return" << std::endl;
+    LAROCV_DEBUG() << "Return" << std::endl;
   }
 
   void ImageClusterManager::Report() const
@@ -212,7 +212,7 @@ namespace larocv {
   
   void ImageClusterManager::Process()
   {
-    LAROCV_DEBUG((*this)) << "Start Processing" << std::endl;
+    LAROCV_DEBUG() << "Start Processing" << std::endl;
     
     if(!_configured) throw larbys("Must Configure() before Process()!");
     
@@ -230,10 +230,10 @@ namespace larocv {
     
     for(size_t img_index=0; img_index<_raw_img_v.size(); ++img_index) {
 
-      LAROCV_DEBUG((*this)) << "On img_index: " << img_index << "\n";
-      LAROCV_DEBUG((*this)) << "_raw_meta_v.size() " << _raw_meta_v.size() << "\n";
-      LAROCV_DEBUG((*this)) << "_raw_img_v.size() " << _raw_img_v.size() << "\n";
-      LAROCV_DEBUG((*this)) << "_raw_roi_v.size() " << _raw_roi_v.size() << "\n";
+      LAROCV_DEBUG() << "On img_index: " << img_index << "\n";
+      LAROCV_DEBUG() << "_raw_meta_v.size() " << _raw_meta_v.size() << "\n";
+      LAROCV_DEBUG() << "_raw_img_v.size() " << _raw_img_v.size() << "\n";
+      LAROCV_DEBUG() << "_raw_roi_v.size() " << _raw_roi_v.size() << "\n";
       
       auto const& meta = _raw_meta_v[img_index];
       auto const& img  = _raw_img_v[img_index];
@@ -251,7 +251,7 @@ namespace larocv {
       
       for(size_t alg_index=0; alg_index<_cluster_alg_v.size(); ++alg_index) {
 
-	LAROCV_DEBUG((*this)) << "On alg_index: " << alg_index << "\n";
+	LAROCV_DEBUG() << "On alg_index: " << alg_index << "\n";
 	
 	auto& alg_ptr    = _cluster_alg_v[alg_index];
 	auto& meta_v     = _meta_v_v[alg_index];
@@ -262,8 +262,8 @@ namespace larocv {
 	
 	if(alg_ptr == _cluster_alg_v.front()) {
 
-	  LAROCV_DEBUG((*this)) << "alg_ptr is _cluster_alg_v.front()\n" << std::endl;
-	  LAROCV_DEBUG((*this)) << "meta_v.size(): "<< meta_v.size() << " roi_v.size(): " << roi_v.size() << "\n";
+	  LAROCV_DEBUG() << "alg_ptr is _cluster_alg_v.front()\n" << std::endl;
+	  LAROCV_DEBUG() << "meta_v.size(): "<< meta_v.size() << " roi_v.size(): " << roi_v.size() << "\n";
 
 	  Cluster2DArray_t clusters;
 	  meta_v.push_back(meta);
@@ -417,11 +417,11 @@ namespace larocv {
     _process_time += _watch.WallTime();
     ++_process_count;
     
-    LAROCV_DEBUG((*this)) << "clusters_v_v.size() : " << _clusters_v_v.size() << "\n";
+    LAROCV_DEBUG() << "clusters_v_v.size() : " << _clusters_v_v.size() << "\n";
     for (const auto& clusters_v : _clusters_v_v) {
-      LAROCV_DEBUG((*this)) << "clusters_v_v.size() " << clusters_v.size() << "\n";
+      LAROCV_DEBUG() << "clusters_v_v.size() " << clusters_v.size() << "\n";
       for (const auto& clusters : clusters_v) {
-	LAROCV_DEBUG((*this)) << "clusters.size() " << clusters.size() << "\n";
+	LAROCV_DEBUG() << "clusters.size() " << clusters.size() << "\n";
       }
     }
 
@@ -436,7 +436,7 @@ namespace larocv {
 
     if(_tree) _tree->Fill();
     
-    LAROCV_DEBUG((*this)) << "end" << std::endl;
+    LAROCV_DEBUG() << "end" << std::endl;
   }
 
   size_t ImageClusterManager::NumClusters(const AlgorithmID_t alg_id) const
@@ -550,11 +550,11 @@ namespace larocv {
 	continue;
       }
 
-      LAROCV_DEBUG((*this))<<"Inspecting a point ("<<x<<","<<y<<") ... ";
+      LAROCV_DEBUG()<<"Inspecting a point ("<<x<<","<<y<<") ... ";
     
       auto pt = ::cv::Point2d((y-origin.y)/meta.pixel_height(), (x-origin.x)/meta.pixel_width()); 
 
-      LAROCV_DEBUG((*this)) <<"pt...("<<pt.x<<","<<pt.y<<")"<<std::endl;
+      LAROCV_DEBUG() <<"pt...("<<pt.x<<","<<pt.y<<")"<<std::endl;
       
       for(size_t id=0; id<clusters.size(); ++id) {
 	

@@ -69,7 +69,7 @@ namespace larocv{
       double contour_area = cluster._area;
       double hull_area    = ::cv::contourArea(hullcontour);
 
-      LAROCV_DEBUG((*this)) << "\t>> Saw max_defect " << max_defect << " for total of ndefects: " << ndefects << " for cluster " << i << "\n";
+      LAROCV_DEBUG() << "\t>> Saw max_defect " << max_defect << " for total of ndefects: " << ndefects << " for cluster " << i << "\n";
       
       if ( meta.debug() ) {
 
@@ -79,7 +79,7 @@ namespace larocv{
 	  ss1 << "ClusterID_" << cluster.ClusterID() << "_hull_x";
 	  ss2 << "ClusterID_" << cluster.ClusterID() << "_hull_y";
 
-	  LAROCV_DEBUG((*this)) <<"(" << cluster._contour[idx].x << "," << cluster._contour[idx].y << ") : ("
+	  LAROCV_DEBUG() <<"(" << cluster._contour[idx].x << "," << cluster._contour[idx].y << ") : ("
 				<< meta.XtoTimeTick(cluster._contour[idx].x) << "," << meta.YtoWire(cluster._contour[idx].y) << ")\n";
 
 	  double x = meta.XtoTimeTick(cluster._contour[idx].x);

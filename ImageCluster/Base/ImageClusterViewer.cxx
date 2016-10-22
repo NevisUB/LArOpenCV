@@ -19,37 +19,37 @@ namespace larocv {
   
   void ImageClusterViewer::Configure(const ::fcllite::PSet& cfg)
   {
-    LAROCV_DEBUG((*this)) << "Called\n";
+    LAROCV_DEBUG() << "Called\n";
     _display_width    = cfg.get<size_t>("Width");
     _display_height   = cfg.get<size_t>("Height");
     _min_contour_area = cfg.get<double>("MinContourArea");
     /*
     if(_display_ratio<0.5) {
-      LAROCV_WARNING((*this)) << "Ratio cannot be smaller than 0.5 (setting to 0.5...)" << std::endl;
+      LAROCV_WARNING() << "Ratio cannot be smaller than 0.5 (setting to 0.5...)" << std::endl;
       _display_ratio = 0.5;
     }
     if(_display_ratio>2.0) {
-      LAROCV_WARNING((*this)) << "Ratio cannot be larger than 2.0 (ssetting to 2.0...)" << std::endl;
+      LAROCV_WARNING() << "Ratio cannot be larger than 2.0 (ssetting to 2.0...)" << std::endl;
       _display_ratio = 2.0;
     }
     */
     this->set_verbosity((msg::Level_t)(cfg.get<unsigned short>("Verbosity",3)));
-    LAROCV_DEBUG((*this)) << "Return\n";
+    LAROCV_DEBUG() << "Return\n";
   }
 
   void ImageClusterViewer::Display(const ::cv::Mat& img,
 				   const larocv::ContourArray_t& contours,
 				   const std::vector<std::string>& display_name_v)
   {
-    LAROCV_DEBUG((*this)) << "Called\n";
+    LAROCV_DEBUG() << "Called\n";
     
     // if(contours_v.size() != display_name_v.size()) {
-    //   LAROCV_CRITICAL((*this)) << "Provided number of cluster sets and display names do not match!" << std::endl;
+    //   LAROCV_CRITICAL() << "Provided number of cluster sets and display names do not match!" << std::endl;
     //   throw larbys();
     // }
 
     // if(contours_v.empty()) {
-    //   LAROCV_WARNING((*this)) << "Nothing to display..." << std::endl;
+    //   LAROCV_WARNING() << "Nothing to display..." << std::endl;
     //   return;
     // }
     
@@ -80,7 +80,7 @@ namespace larocv {
 	orig_image.at<unsigned char>(j,i,2) = (unsigned char)b;
       }
     }
-    LAROCV_DEBUG((*this))<<minVal<<" => "<<maxVal<<std::endl;
+    LAROCV_DEBUG()<<minVal<<" => "<<maxVal<<std::endl;
 
     //::cv::cvtColor(orig_image,orig_image,CV_GRAY2RGB);
     //size_t imshow_width  = (orig_image.rows > _display_width  ? _display_width  : orig_image.rows);
@@ -88,7 +88,7 @@ namespace larocv {
 
     size_t imshow_width  = _display_width;
     size_t imshow_height = _display_height;
-    LAROCV_INFO((*this)) << "Original size: " << orig_image.rows << " : " << orig_image.cols
+    LAROCV_INFO() << "Original size: " << orig_image.rows << " : " << orig_image.cols
 			 << " ... "
 			 << "Resizing: " << imshow_width << " : " << imshow_height << std::endl;
 
@@ -102,11 +102,11 @@ namespace larocv {
     // 1) Find BoundingBox per set of contours (i.e. per algorithm) to display & prepare specific cv::Mat
     //for(auto const& contours : contours_v) {
 
-    LAROCV_DEBUG((*this)) << "Creating images for " << contours.size() << " contours..." << std::endl;
+    LAROCV_DEBUG() << "Creating images for " << contours.size() << " contours..." << std::endl;
       
     // Find bounding box limits
     auto rect = BoundingBox(contours,_min_contour_area);
-    LAROCV_DEBUG((*this)) << "Bounding box: "
+    LAROCV_DEBUG() << "Bounding box: "
 			  << rect.x << " => " << rect.x + rect.width
 			  << " : "
 			  << rect.y << " => " << rect.y + rect.height << std::endl;
@@ -126,7 +126,7 @@ namespace larocv {
     result_image = result_image(rect).clone();      
     //imshow_width  = (result_image.rows > _display_width  ? _display_width  : result_image.rows);
     //imshow_height = (result_image.cols > _display_height ? _display_height : result_image.cols);
-    LAROCV_INFO((*this)) << "Original size: " << img.rows << " : " << img.cols
+    LAROCV_INFO() << "Original size: " << img.rows << " : " << img.cols
 			 << " ... "
 			 << "Bounded size : " << result_image.rows << " : " << result_image.cols
 			 << " ... "
@@ -157,7 +157,7 @@ namespace larocv {
       if(i) name = display_name_v[i-1];
       cvDestroyWindow(name.c_str());
     }
-    LAROCV_DEBUG((*this)) << "Return\n";
+    LAROCV_DEBUG() << "Return\n";
   }
 }
 
