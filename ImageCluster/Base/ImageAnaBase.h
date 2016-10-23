@@ -1,9 +1,9 @@
 /**
- * \file ReClusterAlgoBase.h
+ * \file ImageAnaBase.h
  *
  * \ingroup ImageCluster
  * 
- * \brief Class def header for a class ReClusterAlgoBase
+ * \brief Class def header for a class ImageAnaBase
  *
  * @author kazuhiro
  */
@@ -11,8 +11,8 @@
 /** \addtogroup ImageCluster
 
     @{*/
-#ifndef __RECLUSTERALGOBASE_H__
-#define __RECLUSTERALGOBASE_H__
+#ifndef __IMAGEANABASE_H__
+#define __IMAGEANABASE_H__
 
 #include "ImageClusterBase.h"
 #include "Cluster2D.h"
@@ -20,30 +20,32 @@
 namespace larocv {
 
   /**
-     \class ReClusterAlgoBase
+     \class ImageAnaBase
+     DESCRIBE ME
   */
-  class ReClusterAlgoBase : public ImageClusterBase {
+  class ImageAnaBase : public ImageClusterBase {
 
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
-    ReClusterAlgoBase(const std::string name = "noname");
+    ImageAnaBase(const std::string name = "noname");
     
     /// Default destructor
-    virtual ~ReClusterAlgoBase(){}
+    virtual ~ImageAnaBase(){}
 
     /// Configuration method
     void Configure(const ::fcllite::PSet &pset);
 
     /// Algorithm Type
-    AlgorithmType_t Type() const { return kAlgoReCluster;}
+    AlgorithmType_t Type() const { return kAlgoImageAna; }
 
     /**
        @brief wrapper execution method: internally executes _Process_ function (see there for details)
     */
-    larocv::Cluster2DArray_t Process(const larocv::Cluster2DArray_t& clusters,
-				    const ::cv::Mat& img,
-				    larocv::ImageMeta& meta);
+    void Process(const larocv::Cluster2DArray_t& clusters,
+		 const ::cv::Mat& img,
+		 larocv::ImageMeta& meta,
+		 larocv::ROI & roi);
 
   protected:
 
@@ -51,14 +53,14 @@ namespace larocv {
     virtual void _Configure_(const ::fcllite::PSet &pset) = 0;
 
     /**
-       TBD
+       DESCRIBE ME
      */
-    virtual larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
-					      const ::cv::Mat& img,
-					      larocv::ImageMeta& meta) = 0;
-    
+    virtual void _Process_(const larocv::Cluster2DArray_t& clusters,
+			   const ::cv::Mat& img,
+			   larocv::ImageMeta& meta,
+			   larocv::ROI& roi) = 0;
   };
-
+  
 }
 #endif
 /** @} */ // end of doxygen group 

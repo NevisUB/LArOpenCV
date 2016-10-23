@@ -6,6 +6,9 @@
 
 namespace larocv{
 
+  /// Global larocv::FlashlightMergeFactory to register AlgoFactory
+  static FlashlightMergeFactory __global_FlashlightMergeFactory__;
+
   void FlashlightMerge::_Configure_(const ::fcllite::PSet &pset)
   {
     _N = pset.get<int>("Keep");

@@ -15,7 +15,7 @@
 #define __ATTACHEDCLUSTERS_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -59,17 +59,16 @@ namespace larocv {
      \class larocv::AttachedClustersFactory
      \brief A concrete factory class for larocv::AttachedClusters
    */
-  class AttachedClustersFactory : public ClusterAlgoFactoryBase {
+  class AttachedClustersFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    AttachedClustersFactory() { ClusterAlgoFactory::get().add_factory("AttachedClusters",this); }
+    AttachedClustersFactory() { AlgoFactory::get().add_factory("AttachedClusters",this); }
     /// dtor
     ~AttachedClustersFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new AttachedClusters(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new AttachedClusters(instance_name); }
   };
-  /// Global larocv::AttachedClustersFactory to register ClusterAlgoFactory
-  static AttachedClustersFactory __global_AttachedClustersFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

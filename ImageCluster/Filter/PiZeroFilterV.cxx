@@ -3,8 +3,10 @@
 
 #include "PiZeroFilterV.h"
 
-
 namespace larocv{
+
+  /// Global larocv::PiZeroFilterVFactory to register AlgoFactory
+  static PiZeroFilterVFactory __global_PiZeroFilterVFactory__;
 
   void PiZeroFilterV::_Configure_(const ::fcllite::PSet &pset)
   {

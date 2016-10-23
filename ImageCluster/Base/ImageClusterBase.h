@@ -86,6 +86,12 @@ namespace larocv {
     /// Finalize after (possibly multiple) process call. Handed TFile may be used to store objects.
     virtual void Finalize(TFile*) = 0;
 
+    /// Algorithm type
+    virtual AlgorithmType_t Type() const = 0;
+
+    /// Total # of image count
+    size_t NImages() const { return _num_images; }
+
     /// Access to ANY algorithm's data (const reference)
     template <class T>
     const T& AlgoData(AlgorithmID_t id) const
@@ -110,6 +116,8 @@ namespace larocv {
     size_t _proc_count;  ///< algorithm execution counter (cumulative)
 
   private:
+
+    size_t _num_images; /// # images to be processed
 
     larocv::AlgorithmID_t _id; ///< unique algorithm identifier 
 

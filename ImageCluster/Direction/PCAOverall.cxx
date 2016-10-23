@@ -6,6 +6,9 @@
 
 namespace larocv{
 
+  /// Global larocv::PCAOverallFactory to register AlgoFactory
+  static PCAOverallFactory __global_PCAOverallFactory__;
+
   void PCAOverall::_Configure_(const ::fcllite::PSet &pset)
   { }
 

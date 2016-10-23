@@ -4,7 +4,7 @@
 #define __HIPCLUSTER_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 #include "Core/Vector.h"
 
@@ -52,20 +52,18 @@ namespace larocv {
      \class larocv::HIPClusterFactory
      \brief A concrete factory class for larocv::HIPCluster
    */
-  class HIPClusterFactory : public ClusterAlgoFactoryBase {
+  class HIPClusterFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    HIPClusterFactory() { ClusterAlgoFactory::get().add_factory("HIPCluster",this); }
+    HIPClusterFactory() { AlgoFactory::get().add_factory("HIPCluster",this); }
     /// dtor
     ~HIPClusterFactory() {}
     /// create method
-    ClusterAlgoBase* create(const std::string instance_name) { return new HIPCluster(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new HIPCluster(instance_name); }
     /// data create method
     AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
     { return new HIPClusterData(instance_name,id);}
   };
-  /// Global larocv::HIPClusterFactory to register ClusterAlgoFactory
-  static HIPClusterFactory __global_HIPClusterFactory__;
   
 }
 #endif

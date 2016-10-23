@@ -15,7 +15,7 @@
 #define __ROIPARAMETERS_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -54,17 +54,16 @@ namespace larocv {
      \class larocv::ROIParametersFactory
      \brief A concrete factory class for larocv::ROIParameters
    */
-  class ROIParametersFactory : public ClusterAlgoFactoryBase {
+  class ROIParametersFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    ROIParametersFactory() { ClusterAlgoFactory::get().add_factory("ROIParameters",this); }
+    ROIParametersFactory() { AlgoFactory::get().add_factory("ROIParameters",this); }
     /// dtor
     ~ROIParametersFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new ROIParameters(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new ROIParameters(instance_name); }
   };
-  /// Global larocv::ROIParametersFactory to register ClusterAlgoFactory
-  static ROIParametersFactory __global_ROIParametersFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

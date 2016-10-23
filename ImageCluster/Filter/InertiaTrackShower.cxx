@@ -5,6 +5,9 @@
 
 namespace larocv {
 
+  /// Global larocv::InertiaTrackShowerFactory to register AlgoFactory
+  static InertiaTrackShowerFactory __global_InertiaTrackShowerFactory__;
+
   void InertiaTrackShower::_Configure_(const ::fcllite::PSet &pset)
   {
     _outtree = new TTree("outtree","outtree");

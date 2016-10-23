@@ -5,6 +5,8 @@
 
 namespace larocv {
 
+  /// Global larocv::FillClusterParamsFactory to register ClusterAlgoFactory
+  static FillClusterParamsFactory __global_FillClusterParamsFactory__;
 
   void FillClusterParams::_Configure_(const ::fcllite::PSet &pset)
   {}

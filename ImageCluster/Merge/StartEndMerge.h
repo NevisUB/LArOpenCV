@@ -15,7 +15,7 @@
 #define __STARTENDMERGE_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -75,17 +75,16 @@ namespace larocv {
      \class larocv::StartEndMergeFactory
      \brief A concrete factory class for larocv::StartEndMerge
    */
-  class StartEndMergeFactory : public ClusterAlgoFactoryBase {
+  class StartEndMergeFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    StartEndMergeFactory() { ClusterAlgoFactory::get().add_factory("StartEndMerge",this); }
+    StartEndMergeFactory() { AlgoFactory::get().add_factory("StartEndMerge",this); }
     /// dtor
     ~StartEndMergeFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new StartEndMerge(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new StartEndMerge(instance_name); }
   };
-  /// Global larocv::StartEndMergeFactory to register ClusterAlgoFactory
-  static StartEndMergeFactory __global_StartEndMergeFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

@@ -5,6 +5,9 @@
 
 namespace larocv{
 
+  /// Global larocv::BoundingRectDirFactory to register AlgoFactory
+  static BoundingRectDirFactory __global_BoundingRectDirFactory__;
+
   void BoundingRectDir::_Configure_(const ::fcllite::PSet &pset)
   {}
   

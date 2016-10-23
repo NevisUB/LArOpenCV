@@ -15,7 +15,7 @@
 #define __CLUSTERWRITEOUT_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -56,17 +56,16 @@ namespace larocv {
      \class larocv::ClusterWriteOutFactory
      \brief A concrete factory class for larocv::ClusterWriteOut
    */
-  class ClusterWriteOutFactory : public ClusterAlgoFactoryBase {
+  class ClusterWriteOutFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    ClusterWriteOutFactory() { ClusterAlgoFactory::get().add_factory("ClusterWriteOut",this); }
+    ClusterWriteOutFactory() { AlgoFactory::get().add_factory("ClusterWriteOut",this); }
     /// dtor
     ~ClusterWriteOutFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new ClusterWriteOut(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new ClusterWriteOut(instance_name); }
   };
-  /// Global larocv::ClusterWriteOutFactory to register ClusterAlgoFactory
-  static ClusterWriteOutFactory __global_ClusterWriteOutFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

@@ -3,7 +3,7 @@
 #define __BOUNDRECTSTART_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
 
@@ -50,17 +50,16 @@ namespace larocv {
      \class larocv::BoundRectStartFactory
      \brief A concrete factory class for larocv::BoundRectStart
    */
-  class BoundRectStartFactory : public ClusterAlgoFactoryBase {
+  class BoundRectStartFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    BoundRectStartFactory() { ClusterAlgoFactory::get().add_factory("BoundRectStart",this); }
+    BoundRectStartFactory() { AlgoFactory::get().add_factory("BoundRectStart",this); }
     /// dtor
     ~BoundRectStartFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new BoundRectStart(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new BoundRectStart(instance_name); }
   };
-  /// Global larocv::BoundRectStartFactory to register ClusterAlgoFactory
-  static BoundRectStartFactory __global_BoundRectStartFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

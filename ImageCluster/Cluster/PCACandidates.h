@@ -4,7 +4,7 @@
 #define __PCACANDIDATES_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 #include "Core/Geo2D.h"
 
@@ -45,20 +45,18 @@ namespace larocv {
      \class larocv::PCACandidatesFactory
      \brief A concrete factory class for larocv::PCACandidates
    */
-  class PCACandidatesFactory : public ClusterAlgoFactoryBase {
+  class PCACandidatesFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    PCACandidatesFactory() { ClusterAlgoFactory::get().add_factory("PCACandidates",this); }
+    PCACandidatesFactory() { AlgoFactory::get().add_factory("PCACandidates",this); }
     /// dtor
     ~PCACandidatesFactory() {}
     /// create method
-    ClusterAlgoBase* create(const std::string instance_name) { return new PCACandidates(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new PCACandidates(instance_name); }
     /// data create method
     AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
     { return new PCACandidatesData(instance_name,id);}
   };
-  /// Global larocv::PCACandidatesFactory to register ClusterAlgoFactory
-  static PCACandidatesFactory __global_PCACandidatesFactory__;
   
 }
 #endif

@@ -5,6 +5,8 @@
 
 namespace larocv {
 
+  /// Global larocv::SBClusterFactory to register AlgoFactory
+  static SBClusterFactory __global_SBClusterFactory__;
 
   void SBCluster::_Configure_(const ::fcllite::PSet &pset)
   {

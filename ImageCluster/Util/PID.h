@@ -15,7 +15,7 @@
 #define __PID_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -56,17 +56,16 @@ namespace larocv {
      \class larocv::PIDFactory
      \brief A concrete factory class for larocv::PID
    */
-  class PIDFactory : public ClusterAlgoFactoryBase {
+  class PIDFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    PIDFactory() { ClusterAlgoFactory::get().add_factory("PID",this); }
+    PIDFactory() { AlgoFactory::get().add_factory("PID",this); }
     /// dtor
     ~PIDFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new PID(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new PID(instance_name); }
   };
-  /// Global larocv::PIDFactory to register ClusterAlgoFactory
-  static PIDFactory __global_PIDFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

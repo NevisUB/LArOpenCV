@@ -7,6 +7,9 @@
 
 namespace larocv {
 
+  /// Global larocv::HoughPTrackShowerFactory to register AlgoFactory
+  static HoughPTrackShowerFactory __global_HoughPTrackShowerFactory__;
+
   void HoughPTrackShower::_Configure_(const ::fcllite::PSet &pset)
   {
     _hough_rho             = pset.get<double>("Rho");

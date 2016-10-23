@@ -5,6 +5,9 @@
 
 namespace larocv{
 
+  /// Global larocv::VertexInHullFactory to register AlgoFactory
+  static VertexInHullFactory __global_VertexInHullFactory__;
+  
   void VertexInHull::_Configure_(const ::fcllite::PSet &pset)
   {}
 

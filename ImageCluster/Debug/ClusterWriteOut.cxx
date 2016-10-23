@@ -5,6 +5,9 @@
 
 namespace larocv{
 
+  /// Global larocv::ClusterWriteOutFactory to register AlgoFactory
+  static ClusterWriteOutFactory __global_ClusterWriteOutFactory__;
+
   void ClusterWriteOut::_Configure_(const ::fcllite::PSet &pset)
   {}
   

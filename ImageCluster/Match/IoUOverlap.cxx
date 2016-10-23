@@ -5,6 +5,9 @@
 
 namespace larocv{
 
+  /// Global larocv::IoUOverlapFactory to register AlgoFactory
+  static IoUOverlapFactory __global_IoUOverlapFactory__;
+
   void IoUOverlap::_Configure_(const ::fcllite::PSet &pset)
   {
     

@@ -5,6 +5,9 @@
 
 namespace larocv {
 
+  /// Global larocv::RecoParametersFactory to register AlgoFactory
+  static RecoParametersFactory __global_RecoParametersFactory__;
+  
   void RecoParameters::_Configure_(const ::fcllite::PSet &pset)
   {}
 

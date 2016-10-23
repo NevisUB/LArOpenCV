@@ -15,7 +15,7 @@
 #define __CLUSDEADWIREOVERLAP_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -58,17 +58,16 @@ namespace larocv {
      \class larocv::ClusDeadWireOverlapFactory
      \brief A concrete factory class for larocv::ClusDeadWireOverlap
    */
-  class ClusDeadWireOverlapFactory : public ClusterAlgoFactoryBase {
+  class ClusDeadWireOverlapFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    ClusDeadWireOverlapFactory() { ClusterAlgoFactory::get().add_factory("ClusDeadWireOverlap",this); }
+    ClusDeadWireOverlapFactory() { AlgoFactory::get().add_factory("ClusDeadWireOverlap",this); }
     /// dtor
     ~ClusDeadWireOverlapFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new ClusDeadWireOverlap(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new ClusDeadWireOverlap(instance_name); }
   };
-  /// Global larocv::ClusDeadWireOverlapFactory to register ClusterAlgoFactory
-  static ClusDeadWireOverlapFactory __global_ClusDeadWireOverlapFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

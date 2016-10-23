@@ -3,7 +3,7 @@
 #define __PCASEGMENTATION_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 #include "TTree.h"
 //#include "ClusterParams.h"
@@ -88,16 +88,16 @@ namespace larocv {
      \class larocv::PCASegmentationFactory
      \brief A concrete factory class for larocv::PCASegmentation
    */
-  class PCASegmentationFactory : public ClusterAlgoFactoryBase {
+  class PCASegmentationFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    PCASegmentationFactory() { ClusterAlgoFactory::get().add_factory("PCASegmentation",this); }
+    PCASegmentationFactory() { AlgoFactory::get().add_factory("PCASegmentation",this); }
     /// dtor
     ~PCASegmentationFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new PCASegmentation(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new PCASegmentation(instance_name); }
   };
-  /// Global larocv::PCASegmentationFactory to register ImageClusterFactory
+  /// Global larocv::PCASegmentationFactory to register AlgoFactory
   static PCASegmentationFactory __global_PCASegmentationFactory__;
 }
 #endif

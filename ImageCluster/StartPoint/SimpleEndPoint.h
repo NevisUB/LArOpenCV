@@ -15,7 +15,7 @@
 #define __SIMPLEENDPOINT_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -55,16 +55,16 @@ namespace larocv {
      \class larocv::SimpleEndPointFactory
      \brief A concrete factory class for larocv::SimpleEndPoint
   */
-  class SimpleEndPointFactory : public ClusterAlgoFactoryBase {
+  class SimpleEndPointFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    SimpleEndPointFactory() { ClusterAlgoFactory::get().add_factory("SimpleEndPoint",this); }
+    SimpleEndPointFactory() { AlgoFactory::get().add_factory("SimpleEndPoint",this); }
     /// dtor
     ~SimpleEndPointFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new SimpleEndPoint(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new SimpleEndPoint(instance_name); }
   };
-  /// Global larocv::SimpleEndPointFactory to register ClusterAlgoFactory
+  /// Global larocv::SimpleEndPointFactory to register AlgoFactory
   static SimpleEndPointFactory __global_SimpleEndPointFactory__;
 }
 #endif

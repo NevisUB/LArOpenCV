@@ -4,7 +4,7 @@
 #define __CIRCLEVERTEX_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 #include "Core/Geo2D.h"
 
@@ -46,20 +46,18 @@ namespace larocv {
      \class larocv::CircleVertexFactory
      \brief A concrete factory class for larocv::CircleVertex
    */
-  class CircleVertexFactory : public ClusterAlgoFactoryBase {
+  class CircleVertexFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    CircleVertexFactory() { ClusterAlgoFactory::get().add_factory("CircleVertex",this); }
+    CircleVertexFactory() { AlgoFactory::get().add_factory("CircleVertex",this); }
     /// dtor
     ~CircleVertexFactory() {}
     /// create method
-    ClusterAlgoBase* create(const std::string instance_name) { return new CircleVertex(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new CircleVertex(instance_name); }
     /// data create method
     AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
     { return new CircleVertexData(instance_name,id);}
   };
-  /// Global larocv::CircleVertexFactory to register ClusterAlgoFactory
-  static CircleVertexFactory __global_CircleVertexFactory__;
   
 }
 #endif

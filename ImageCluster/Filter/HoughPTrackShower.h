@@ -15,7 +15,7 @@
 #define __HOUGHPTRACKSHOWER_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 #include "TTree.h"
 
 namespace larocv {
@@ -73,17 +73,15 @@ namespace larocv {
      \class larocv::HoughPTrackShowerFactory
      \brief A concrete factory class for larocv::HoughPTrackShower
    */
-  class HoughPTrackShowerFactory : public ClusterAlgoFactoryBase {
+  class HoughPTrackShowerFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    HoughPTrackShowerFactory() { ClusterAlgoFactory::get().add_factory("HoughPTrackShower",this); }
+    HoughPTrackShowerFactory() { AlgoFactory::get().add_factory("HoughPTrackShower",this); }
     /// dtor
     ~HoughPTrackShowerFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new HoughPTrackShower(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new HoughPTrackShower(instance_name); }
   };
-  /// Global larocv::HoughPTrackShowerFactory to register ClusterAlgoFactory
-  static HoughPTrackShowerFactory __global_HoughPTrackShowerFactory__;
 
 }
 #endif

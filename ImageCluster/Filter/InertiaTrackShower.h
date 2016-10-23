@@ -15,7 +15,7 @@
 #define __INERTIATRACKSHOWER_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 #include "TTree.h"
 
@@ -59,17 +59,15 @@ namespace larocv {
      \class larocv::InertiaTrackShowerFactory
      \brief A concrete factory class for larocv::InertiaTrackShower
    */
-  class InertiaTrackShowerFactory : public ClusterAlgoFactoryBase {
+  class InertiaTrackShowerFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    InertiaTrackShowerFactory() { ClusterAlgoFactory::get().add_factory("InertiaTrackShower",this); }
+    InertiaTrackShowerFactory() { AlgoFactory::get().add_factory("InertiaTrackShower",this); }
     /// dtor
     ~InertiaTrackShowerFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new InertiaTrackShower(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new InertiaTrackShower(instance_name); }
   };
-  /// Global larocv::InertiaTrackShowerFactory to register ClusterAlgoFactory
-  static InertiaTrackShowerFactory __global_InertiaTrackShowerFactory__;
 
 }
 #endif

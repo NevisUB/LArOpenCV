@@ -2,7 +2,7 @@
 #define __EMPTYIMAGECLUSTER_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -38,14 +38,13 @@ namespace larocv {
 
   };
 
-  class EmptyImageClusterFactory : public ClusterAlgoFactoryBase {
+  class EmptyImageClusterFactory : public AlgoFactoryBase {
   public:
-    EmptyImageClusterFactory() { ClusterAlgoFactory::get().add_factory("EmptyImageCluster",this); }
+    EmptyImageClusterFactory() { AlgoFactory::get().add_factory("EmptyImageCluster",this); }
     ~EmptyImageClusterFactory() {}
-    ClusterAlgoBase* create(const std::string instance_name) { return new EmptyImageCluster(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new EmptyImageCluster(instance_name); }
   };
 
-  static EmptyImageClusterFactory __global_EmptyImageClusterFactory__;
 }
 #endif
 /** @} */ // end of doxygen group 

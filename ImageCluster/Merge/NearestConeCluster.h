@@ -15,7 +15,7 @@
 #define __NEARESTCONECLUSTER_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -66,17 +66,16 @@ namespace larocv {
      \class larocv::NearestConeClusterFactory
      \brief A concrete factory class for larocv::NearestConeCluster
    */
-  class NearestConeClusterFactory : public ClusterAlgoFactoryBase {
+  class NearestConeClusterFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    NearestConeClusterFactory() { ClusterAlgoFactory::get().add_factory("NearestConeCluster",this); }
+    NearestConeClusterFactory() { AlgoFactory::get().add_factory("NearestConeCluster",this); }
     /// dtor
     ~NearestConeClusterFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new NearestConeCluster(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new NearestConeCluster(instance_name); }
   };
-  /// Global larocv::NearestConeClusterFactory to register ClusterAlgoFactory
-  static NearestConeClusterFactory __global_NearestConeClusterFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

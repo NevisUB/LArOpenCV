@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include "ClusterAlgoBase.h"
+#include "ImageAnaBase.h"
 #include "MatchAlgoBase.h"
 #include "ReClusterAlgoBase.h"
 #include "ImageClusterViewer.h"
@@ -56,15 +57,15 @@ namespace larocv {
     /// Clears data
     void ClearData();
     /// Algorithm getter via unique identifier (AlgorithmID_t)
-    const ClusterAlgoBase& GetClusterAlg(const AlgorithmID_t id) const;
+    const ImageClusterBase* GetClusterAlg(const AlgorithmID_t id) const;
     /// Algorithm getter via unique identifier (string name)
-    const ClusterAlgoBase& GetClusterAlg(const std::string name) const;
+    const ImageClusterBase* GetClusterAlg(const std::string name) const;
     /// Clustering algorithm ID getter via unique identifier (string name)
     AlgorithmID_t GetClusterAlgID(const std::string name) const;
     /// Matching agorithm getter
-    const MatchAlgoBase& GetMatchAlg() const;
+    const MatchAlgoBase* GetMatchAlg() const;
     /// ReClustering algorithm getter
-    const ReClusterAlgoBase& GetReClusterAlg() const;
+    const ReClusterAlgoBase* GetReClusterAlg() const;
     /// Read-in configuration object & enforce configurations to algorithms
     void Configure(const ::fcllite::PSet& main_cfg);
     /// Execute algorithms to construct clusters + corresponding meta data
@@ -107,7 +108,7 @@ namespace larocv {
     /// Boolean flag to enforce Configure method to be called before Process.
     bool _configured;
     /// Array of clustering algorithms to be executed
-    std::vector<larocv::ClusterAlgoBase*> _cluster_alg_v;
+    std::vector<larocv::ImageClusterBase*> _cluster_alg_v;
     /// Array of matching algorithms to be executed
     larocv::MatchAlgoBase* _match_alg;
     /// Array of re-clustering algorithms to be executed

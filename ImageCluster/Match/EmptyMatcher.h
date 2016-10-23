@@ -15,7 +15,7 @@
 #define __EMPTYMATCHER_H__
 
 #include "MatchAlgoBase.h"
-#include "MatchAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -52,17 +52,16 @@ namespace larocv {
      \class larocv::EmptyMatcherFactory
      \brief A concrete factory class for larocv::EmptyMatcher
    */
-  class EmptyMatcherFactory : public MatchAlgoFactoryBase {
+  class EmptyMatcherFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    EmptyMatcherFactory() { MatchAlgoFactory::get().add_factory("EmptyMatcher",this); }
+    EmptyMatcherFactory() { AlgoFactory::get().add_factory("EmptyMatcher",this); }
     /// dtor
     ~EmptyMatcherFactory() {}
     /// creation method
-    MatchAlgoBase* create(const std::string instance_name) { return new EmptyMatcher(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new EmptyMatcher(instance_name); }
   };
-  /// Global larocv::EmptyMatcherFactory to register MatchAlgoFactory
-  static EmptyMatcherFactory __global_EmptyMatcherFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

@@ -4,7 +4,7 @@
 #define __VERTEXTRACKCLUSTER_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
  
@@ -56,17 +56,15 @@ namespace larocv {
      \class larocv::VertexTrackClusterFactory
      \brief A concrete factory class for larocv::VertexTrackCluster
    */
-  class VertexTrackClusterFactory : public ClusterAlgoFactoryBase {
+  class VertexTrackClusterFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    VertexTrackClusterFactory() { ClusterAlgoFactory::get().add_factory("VertexTrackCluster",this); }
+    VertexTrackClusterFactory() { AlgoFactory::get().add_factory("VertexTrackCluster",this); }
     /// dtor
     ~VertexTrackClusterFactory() {}
     /// create method
-    ClusterAlgoBase* create(const std::string instance_name) { return new VertexTrackCluster(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new VertexTrackCluster(instance_name); }
   };
-  /// Global larocv::VertexTrackClusterFactory to register ClusterAlgoFactory
-  static VertexTrackClusterFactory __global_VERTEXTRACKClusterFactory__;
   
 }
 #endif

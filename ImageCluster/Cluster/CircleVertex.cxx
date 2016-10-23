@@ -8,6 +8,8 @@
 
 namespace larocv {
 
+  /// Global larocv::CircleVertexFactory to register ClusterAlgoFactory
+  static CircleVertexFactory __global_CircleVertexFactory__;
 
   void CircleVertex::_Configure_(const ::fcllite::PSet &pset)
   {

@@ -15,7 +15,7 @@
 #define __FILTERROI_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 #include "TTree.h"
 
 namespace larocv {
@@ -56,17 +56,15 @@ namespace larocv {
      \class larocv::FilterROIFactory
      \brief A concrete factory class for larocv::FilterROI
    */
-  class FilterROIFactory : public ClusterAlgoFactoryBase {
+  class FilterROIFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    FilterROIFactory() { ClusterAlgoFactory::get().add_factory("FilterROI",this); }
+    FilterROIFactory() { AlgoFactory::get().add_factory("FilterROI",this); }
     /// dtor
     ~FilterROIFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new FilterROI(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new FilterROI(instance_name); }
   };
-  /// Global larocv::FilterROIFactory to register ClusterAlgoFactory
-  static FilterROIFactory __global_FilterROIFactory__;
 
 }
 #endif

@@ -17,6 +17,9 @@
 
 namespace larocv {
 
+  /// Global larocv::SBManClusterFactory to register AlgoFactory
+  static SBManClusterFactory __global_SBManClusterFactory__;
+  
   //Start and end points
   cv::Point start_temp(0,0), end_temp(0,0);
   

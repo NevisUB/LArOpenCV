@@ -15,7 +15,7 @@
 #define __CHECKSTARTDISTANCE_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -59,17 +59,16 @@ namespace larocv {
      \class larocv::CheckStartDistanceFactory
      \brief A concrete factory class for larocv::CheckStartDistance
    */
-  class CheckStartDistanceFactory : public ClusterAlgoFactoryBase {
+  class CheckStartDistanceFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    CheckStartDistanceFactory() { ClusterAlgoFactory::get().add_factory("CheckStartDistance",this); }
+    CheckStartDistanceFactory() { AlgoFactory::get().add_factory("CheckStartDistance",this); }
     /// dtor
     ~CheckStartDistanceFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new CheckStartDistance(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new CheckStartDistance(instance_name); }
   };
-  /// Global larocv::CheckStartDistanceFactory to register ClusterAlgoFactory
-  static CheckStartDistanceFactory __global_CheckStartDistanceFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

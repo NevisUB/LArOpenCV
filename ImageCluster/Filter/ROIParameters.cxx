@@ -5,6 +5,9 @@
 
 namespace larocv {
 
+  /// Global larocv::ROIParametersFactory to register AlgoFactory
+  static ROIParametersFactory __global_ROIParametersFactory__;
+  
   void ROIParameters::_Configure_(const ::fcllite::PSet &pset)
   {}
 

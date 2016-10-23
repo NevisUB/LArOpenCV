@@ -9,6 +9,9 @@
 #include <map>
 namespace larocv{
 
+  /// Global larocv::Refine2DVertexFactory to register ClusterAlgoFactory
+  static Refine2DVertexFactory __global_Refine2DVertexFactory__;
+
   void Refine2DVertex::_Configure_(const ::fcllite::PSet &pset)
   {
     auto const circle_vtx_algo_name = pset.get<std::string>("CircleVertexAlgo");

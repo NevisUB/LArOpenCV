@@ -15,7 +15,7 @@
 #define __REFINE2DVERTEX_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 #include "Core/Circle.h"
 #include "Core/Line.h"
 #include "Core/VectorArray.h"
@@ -99,20 +99,18 @@ namespace larocv {
      \class larocv::Refine2DVertexFactory
      \brief A concrete factory class for larocv::Refine2DVertex
    */
-  class Refine2DVertexFactory : public ClusterAlgoFactoryBase {
+  class Refine2DVertexFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    Refine2DVertexFactory() { ClusterAlgoFactory::get().add_factory("Refine2DVertex",this); }
+    Refine2DVertexFactory() { AlgoFactory::get().add_factory("Refine2DVertex",this); }
     /// dtor
     ~Refine2DVertexFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new Refine2DVertex(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new Refine2DVertex(instance_name); }
     /// data create method
     AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
     { return new Refine2DVertexData(instance_name,id);}
   };
-  /// Global larocv::Refine2DVertexFactory to register ClusterAlgoFactory
-  static Refine2DVertexFactory __global_Refine2DVertexFactory__;
 }
 #endif
 /** @} */ // end of doxygen group 

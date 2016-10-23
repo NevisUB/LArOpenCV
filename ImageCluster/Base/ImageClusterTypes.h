@@ -13,6 +13,14 @@ namespace larocv {
     kParticleTypeMax
   };
 
+  enum AlgorithmType_t {
+    kAlgoCluster,   ///< ClusterAlgoBase inherit class
+    kAlgoImageAna,  ///< ImageAnaBase inherit class
+    kAlgoMatch,     ///< MatchAlgoBase inherit class
+    kAlgoReCluster, ///< ReClusterAlgoBase inherit class
+    kAlgoTypeMax
+  };
+
   /// larocv::ImageClusterBase inherit algorithm's unique identifier within larocv::ClusterImageManager
   typedef size_t AlgorithmID_t;
   /// A image's unique identifier within larocv::ImageClusterManager

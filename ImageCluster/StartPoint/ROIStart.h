@@ -15,7 +15,7 @@
 #define __ROISTART_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -57,17 +57,16 @@ namespace larocv {
      \class larocv::ROIStartFactory
      \brief A concrete factory class for larocv::ROIStart
    */
-  class ROIStartFactory : public ClusterAlgoFactoryBase {
+  class ROIStartFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    ROIStartFactory() { ClusterAlgoFactory::get().add_factory("ROIStart",this); }
+    ROIStartFactory() { AlgoFactory::get().add_factory("ROIStart",this); }
     /// dtor
     ~ROIStartFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new ROIStart(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new ROIStart(instance_name); }
   };
-  /// Global larocv::ROIStartFactory to register ClusterAlgoFactory
-  static ROIStartFactory __global_ROIStartFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

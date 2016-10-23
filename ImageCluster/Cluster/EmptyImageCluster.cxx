@@ -5,6 +5,8 @@
 
 namespace larocv{
 
+  static EmptyImageClusterFactory __global_EmptyImageClusterFactory__;
+
   void EmptyImageCluster::_Configure_(const ::fcllite::PSet &pset)
   {
   }

@@ -5,6 +5,9 @@
 
 namespace larocv{
 
+  /// Global larocv::NearestConeClusterFactory to register AlgoFactory
+  static NearestConeClusterFactory __global_NearestConeClusterFactory__;
+  
   void NearestConeCluster::_Configure_(const ::fcllite::PSet &pset)
   {}
 

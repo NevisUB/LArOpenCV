@@ -15,7 +15,7 @@
 #define __FLASHLIGHTMERGE_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -73,17 +73,16 @@ namespace larocv {
      \class larocv::FlashlightMergeFactory
      \brief A concrete factory class for larocv::FlashlightMerge
    */
-  class FlashlightMergeFactory : public ClusterAlgoFactoryBase {
+  class FlashlightMergeFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    FlashlightMergeFactory() { ClusterAlgoFactory::get().add_factory("FlashlightMerge",this); }
+    FlashlightMergeFactory() { AlgoFactory::get().add_factory("FlashlightMerge",this); }
     /// dtor
     ~FlashlightMergeFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new FlashlightMerge(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new FlashlightMerge(instance_name); }
   };
-  /// Global larocv::FlashlightMergeFactory to register ClusterAlgoFactory
-  static FlashlightMergeFactory __global_FlashlightMergeFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

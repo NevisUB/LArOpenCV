@@ -15,7 +15,7 @@
 #define __TRACKSHOWER_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 #include "TTree.h"
 
 namespace larocv {
@@ -62,17 +62,16 @@ namespace larocv {
      \class larocv::TrackShowerFactory
      \brief A concrete factory class for larocv::TrackShower
    */
-  class TrackShowerFactory : public ClusterAlgoFactoryBase {
+  class TrackShowerFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    TrackShowerFactory() { ClusterAlgoFactory::get().add_factory("TrackShower",this); }
+    TrackShowerFactory() { AlgoFactory::get().add_factory("TrackShower",this); }
     /// dtor
     ~TrackShowerFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new TrackShower(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new TrackShower(instance_name); }
   };
-  /// Global larocv::TrackShowerFactory to register ClusterAlgoFactory
-  static TrackShowerFactory __global_TrackShowerFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

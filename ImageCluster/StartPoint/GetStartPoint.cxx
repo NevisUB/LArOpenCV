@@ -2,6 +2,7 @@
 #define GETSTARTPOINT_CXX
 
 #include "GetStartPoint.h"
+#include "LArUtil/GeometryHelper.h"
 #include "ClusterRecoUtil/Base/CRUException.h"
 #include "ClusterRecoUtil/Base/ClusterParams.h"
 #include "ClusterRecoUtil/Base/Polygon2D.h"

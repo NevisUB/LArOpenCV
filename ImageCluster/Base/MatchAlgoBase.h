@@ -51,6 +51,9 @@ namespace larocv {
     /// Configuration method
     void Configure(const ::fcllite::PSet &pset);
 
+    /// Algorithm Type
+    AlgorithmType_t Type() const { return kAlgoMatch; }
+
     /**
        @brief wrapper execution method: internally executes _Process_ function (see there for details)
     */

@@ -5,6 +5,8 @@
 
 namespace larocv {
 
+  /// Global larocv::DefectClusterFactory to register AlgoFactory
+  static DefectClusterFactory __global_DefectClusterFactory__;
 
   void DefectCluster::_Configure_(const ::fcllite::PSet &pset)
   {

@@ -15,7 +15,7 @@
 #define __SIMPLECUTS_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -69,17 +69,16 @@ namespace larocv {
      \class larocv::SimpleCutsFactory
      \brief A concrete factory class for larocv::SimpleCuts
    */
-  class SimpleCutsFactory : public ClusterAlgoFactoryBase {
+  class SimpleCutsFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    SimpleCutsFactory() { ClusterAlgoFactory::get().add_factory("SimpleCuts",this); }
+    SimpleCutsFactory() { AlgoFactory::get().add_factory("SimpleCuts",this); }
     /// dtor
     ~SimpleCutsFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new SimpleCuts(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new SimpleCuts(instance_name); }
   };
-  /// Global larocv::SimpleCutsFactory to register ClusterAlgoFactory
-  static SimpleCutsFactory __global_SimpleCutsFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

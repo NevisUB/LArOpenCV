@@ -5,9 +5,8 @@
 
 #include <iostream>
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 #include "ClusterRecoUtil/Base/Polygon2D.h"
-#include "LArUtil/GeometryHelper.h"
 
 namespace larocv {
 
@@ -42,16 +41,16 @@ namespace larocv {
 
   };
 
-class GetStartPointFactory : public ClusterAlgoFactoryBase {
+class GetStartPointFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    GetStartPointFactory() { ClusterAlgoFactory::get().add_factory("GetStartPoint",this); }
+    GetStartPointFactory() { AlgoFactory::get().add_factory("GetStartPoint",this); }
     /// dtor
     ~GetStartPointFactory() {}
     /// create method
-    ClusterAlgoBase* create(const std::string instance_name) { return new GetStartPoint(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new GetStartPoint(instance_name); }
   };
-  /// Global larocv::GetStartPointFactory to register ClusterAlgoFactory
+  /// Global larocv::GetStartPointFactory to register AlgoFactory
   static GetStartPointFactory __global_GetStartPointFactory__;
 
 } 

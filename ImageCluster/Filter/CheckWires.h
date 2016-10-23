@@ -15,7 +15,7 @@
 #define __CHECKWIRES_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -58,17 +58,16 @@ namespace larocv {
      \class larocv::CheckWiresFactory
      \brief A concrete factory class for larocv::CheckWires
    */
-  class CheckWiresFactory : public ClusterAlgoFactoryBase {
+  class CheckWiresFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    CheckWiresFactory() { ClusterAlgoFactory::get().add_factory("CheckWires",this); }
+    CheckWiresFactory() { AlgoFactory::get().add_factory("CheckWires",this); }
     /// dtor
     ~CheckWiresFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new CheckWires(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new CheckWires(instance_name); }
   };
-  /// Global larocv::CheckWiresFactory to register ClusterAlgoFactory
-  static CheckWiresFactory __global_CheckWiresFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

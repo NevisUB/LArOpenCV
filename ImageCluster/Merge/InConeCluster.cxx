@@ -8,6 +8,9 @@
 
 namespace larocv {
 
+  /// Global larocv::InConeClusterFactory to register AlgoFactory
+  static InConeClusterFactory __global_InConeClusterFactory__;
+
   void InConeCluster::_Configure_(const ::fcllite::PSet &pset)
   {
     _area_separation  = pset.get<double> ( "AreaCut"    );

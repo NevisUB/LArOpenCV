@@ -6,6 +6,9 @@
 
 namespace larocv{
 
+  /// Global larocv::CheckWiresFactory to register AlgoFactory
+  static CheckWiresFactory __global_CheckWiresFactory__;
+
   void CheckWires::_Configure_(const ::fcllite::PSet &pset)
   {
 

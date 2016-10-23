@@ -7,6 +7,8 @@
 
 namespace larocv {
 
+  /// Global larocv::PCACandidatesFactory to register AlgoFactory
+  static PCACandidatesFactory __global_PCACandidatesFactory__;
 
   void PCACandidates::_Configure_(const ::fcllite::PSet &pset)
   {

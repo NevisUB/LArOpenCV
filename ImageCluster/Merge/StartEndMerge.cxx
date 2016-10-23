@@ -7,6 +7,9 @@
 
 namespace larocv{
 
+  /// Global larocv::StartEndMergeFactory to register AlgoFactory
+  static StartEndMergeFactory __global_StartEndMergeFactory__;
+  
   void StartEndMerge::_Configure_(const ::fcllite::PSet &pset)
   {
     _max_start_end_d   = pset.get<double>("MaxStartEndDistance");

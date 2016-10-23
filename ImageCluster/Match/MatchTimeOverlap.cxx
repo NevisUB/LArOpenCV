@@ -5,6 +5,9 @@
 
 namespace larocv{
 
+  /// Global larocv::MatchTimeOverlapFactory to register AlgoFactory
+  static MatchTimeOverlapFactory __global_MatchTimeOverlapFactory__;
+
   void MatchTimeOverlap::_Configure_(const ::fcllite::PSet &pset)
   {
     _time_ratio_cut  = pset.get<float> ("RatioCut");

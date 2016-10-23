@@ -5,6 +5,8 @@
 
 namespace larocv{
 
+  static TClusterFactory __global_TClusterFactory__;
+
   void TCluster::_Configure_(const ::fcllite::PSet &pset)
   {
     _blur_x          = pset.get<int> ("BlurX");

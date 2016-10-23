@@ -4,7 +4,7 @@
 #define __SBCLUSTER_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
  
@@ -52,17 +52,15 @@ namespace larocv {
      \class larocv::SBClusterFactory
      \brief A concrete factory class for larocv::SBCluster
    */
-  class SBClusterFactory : public ClusterAlgoFactoryBase {
+  class SBClusterFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    SBClusterFactory() { ClusterAlgoFactory::get().add_factory("SBCluster",this); }
+    SBClusterFactory() { AlgoFactory::get().add_factory("SBCluster",this); }
     /// dtor
     ~SBClusterFactory() {}
     /// create method
-    ClusterAlgoBase* create(const std::string instance_name) { return new SBCluster(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new SBCluster(instance_name); }
   };
-  /// Global larocv::SBClusterFactory to register ClusterAlgoFactory
-  static SBClusterFactory __global_SBClusterFactory__;
   
 }
 #endif

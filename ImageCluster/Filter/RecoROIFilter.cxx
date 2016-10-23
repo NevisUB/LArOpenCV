@@ -5,6 +5,9 @@
 
 namespace larocv {
 
+  /// Global larocv::RecoROIFilterFactory to register AlgoFactory
+  static RecoROIFilterFactory __global_RecoROIFilterFactory__;
+
   void RecoROIFilter::_Configure_(const ::fcllite::PSet& pset) {
     _max_rad_length = pset.get<double>("MaxRadLength");  // minimum distance for ROI vertex to start point
 

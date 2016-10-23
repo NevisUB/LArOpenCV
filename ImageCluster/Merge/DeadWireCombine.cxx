@@ -6,6 +6,8 @@
 
 namespace larocv{
 
+  /// Global larocv::DeadWireCombineFactory to register AlgoFactory
+  static DeadWireCombineFactory __global_DeadWireCombineFactory__;
   
   void DeadWireCombine::_Configure_(const ::fcllite::PSet &pset)
   {

@@ -4,7 +4,7 @@
 #define __DEFECTCLUSTER_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 #include "Core/Geo2D.h"
 
@@ -67,20 +67,18 @@ namespace larocv {
      \class larocv::DefectClusterFactory
      \brief A concrete factory class for larocv::DefectCluster
   */
-  class DefectClusterFactory : public ClusterAlgoFactoryBase {
+  class DefectClusterFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    DefectClusterFactory() { ClusterAlgoFactory::get().add_factory("DefectCluster",this); }
+    DefectClusterFactory() { AlgoFactory::get().add_factory("DefectCluster",this); }
     /// dtor
     ~DefectClusterFactory() {}
     /// create method
-    ClusterAlgoBase* create(const std::string instance_name) { return new DefectCluster(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new DefectCluster(instance_name); }
     /// data create method
     AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
     { return new DefectClusterData(instance_name,id);}
   };
-  /// Global larocv::DefectClusterFactory to register ClusterAlgoFactory
-  static DefectClusterFactory __global_DefectClusterFactory__;
   
 }
 #endif

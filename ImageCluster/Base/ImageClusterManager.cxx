@@ -4,9 +4,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include "ImageClusterManager.h"
 #include "Core/larbys.h"
-#include "ClusterAlgoFactory.h"
-#include "MatchAlgoFactory.h"
-#include "ReClusterAlgoFactory.h"
+#include "AlgoFactory.h"
+//#include "MatchAlgoFactory.h"
+//#include "ReClusterAlgoFactory.h"
 #include "BaseUtil.h"
 
 namespace larocv {
@@ -64,13 +64,13 @@ namespace larocv {
     _book_keeper.Reset();
   }
 
-  const ClusterAlgoBase& ImageClusterManager::GetClusterAlg(const AlgorithmID_t id) const
+  const ImageClusterBase* ImageClusterManager::GetClusterAlg(const AlgorithmID_t id) const
   {
     if(id >= _cluster_alg_v.size()) throw larbys("Invalid algorithm ID requested...");
-    return *_cluster_alg_v[id];
+    return _cluster_alg_v[id];
   }
 
-  const ClusterAlgoBase& ImageClusterManager::GetClusterAlg(const std::string name) const
+  const ImageClusterBase* ImageClusterManager::GetClusterAlg(const std::string name) const
   {
     return GetClusterAlg(GetClusterAlgID(name));
   }
@@ -82,11 +82,11 @@ namespace larocv {
     return (*iter).second;
   }
 
-  const MatchAlgoBase& ImageClusterManager::GetMatchAlg() const
-  { return *_match_alg; }
+  const MatchAlgoBase* ImageClusterManager::GetMatchAlg() const
+  { return _match_alg; }
 
-  const ReClusterAlgoBase& ImageClusterManager::GetReClusterAlg() const
-  { return *_recluster_alg; }
+  const ReClusterAlgoBase* ImageClusterManager::GetReClusterAlg() const
+  { return _recluster_alg; }
 
   /*
   AlgorithmID_t ImageClusterManager::AddAlg(ImageClusterBase* alg)
@@ -135,10 +135,24 @@ namespace larocv {
       }
       
       _cluster_alg_m[name] = _cluster_alg_v.size();
-      auto ptr = ClusterAlgoFactory::get().create(type,name);
+      auto ptr = AlgoFactory::get().create(type,name);
+      switch(ptr->Type()) {
+      case kAlgoImageAna:
+	LAROCV_INFO() << "Instantiated ImageAna algorithm type " << type
+		      << " w/ name " << name << " @ " << ptr << std::endl;
+	break;
+      case kAlgoCluster:
+	LAROCV_INFO() << "Instantiated AlgoCluster algorithm type " << type
+		      << " w/ name " << name << " @ " << ptr << std::endl;	
+	break;
+      default:
+	LAROCV_CRITICAL() << "Cannot register type " << type
+			  << " algorithm (neither ImageAna nor Cluster algo type)" << std::endl;
+	throw larbys();
+      }
       ptr->_id = _cluster_alg_v.size();
       ptr->_dataman_ptr = &_algo_dataman;
-      _algo_dataman.Register(ClusterAlgoFactory::get().create_data(type,name,ptr->ID()));
+      _algo_dataman.Register(AlgoFactory::get().create_data(type,name,ptr->ID()));
       _cluster_alg_v.push_back(ptr);
     }
 
@@ -151,10 +165,10 @@ namespace larocv {
     auto const match_alg_type = main_cfg.get<std::string>("MatchAlgoType","");
     auto const match_alg_name = main_cfg.get<std::string>("MatchAlgoName","");
     if(!match_alg_type.empty()) {
-      _match_alg = MatchAlgoFactory::get().create(match_alg_type,match_alg_name);
+      _match_alg = (MatchAlgoBase*)(AlgoFactory::get().create(match_alg_type,match_alg_name));
       _match_alg->_id = _cluster_alg_v.size();
       _match_alg->_dataman_ptr = &_algo_dataman;
-      _algo_dataman.Register(MatchAlgoFactory::get().create_data(match_alg_type,match_alg_name,_match_alg->ID()));
+      _algo_dataman.Register(AlgoFactory::get().create_data(match_alg_type,match_alg_name,_match_alg->ID()));
       _match_alg->Profile(_profile);
       _match_alg->set_verbosity(this->logger().level());
       _match_alg->Configure(main_cfg.get<fcllite::PSet>(_match_alg->Name()));
@@ -163,10 +177,10 @@ namespace larocv {
     auto const recluster_alg_type = main_cfg.get<std::string>("ReClusterAlgoType","");
     auto const recluster_alg_name = main_cfg.get<std::string>("ReClusterAlgoName","");
     if(!recluster_alg_type.empty()) {
-      _recluster_alg = ReClusterAlgoFactory::get().create(recluster_alg_type,recluster_alg_name);
+      _recluster_alg = (ReClusterAlgoBase*)(AlgoFactory::get().create(recluster_alg_type,recluster_alg_name));
       _recluster_alg->_id = _match_alg->ID()+1;
       _recluster_alg->_dataman_ptr = &_algo_dataman;
-      _algo_dataman.Register(ReClusterAlgoFactory::get().create_data(recluster_alg_type,recluster_alg_name,_recluster_alg->ID()));
+      _algo_dataman.Register(AlgoFactory::get().create_data(recluster_alg_type,recluster_alg_name,_recluster_alg->ID()));
       _recluster_alg->Profile(_profile);
       _recluster_alg->set_verbosity(this->logger().level());
       _recluster_alg->Configure(main_cfg.get<fcllite::PSet>(_recluster_alg->Name()));
@@ -230,7 +244,7 @@ namespace larocv {
     
     for(size_t img_index=0; img_index<_raw_img_v.size(); ++img_index) {
 
-      LAROCV_DEBUG() << "On img_index: " << img_index << "\n";
+      LAROCV_DEBUG() << "Pre-Check img_index: " << img_index << "\n";
       LAROCV_DEBUG() << "_raw_meta_v.size() " << _raw_meta_v.size() << "\n";
       LAROCV_DEBUG() << "_raw_img_v.size() " << _raw_img_v.size() << "\n";
       LAROCV_DEBUG() << "_raw_roi_v.size() " << _raw_roi_v.size() << "\n";
@@ -244,50 +258,75 @@ namespace larocv {
       
       if(meta.num_pixel_column()!=img.cols)
 	throw larbys("Provided metadata has incorrect # vertical pixels w.r.t. image!");
-
-      //
-      // First-pass clustering
-      //
+    }
+    
+    //
+    // First-pass clustering
+    //
+    size_t last_cluster_algo = kINVALID_SIZE;
+    for(size_t alg_index=0; alg_index<_cluster_alg_v.size(); ++alg_index) {
       
-      for(size_t alg_index=0; alg_index<_cluster_alg_v.size(); ++alg_index) {
+      LAROCV_DEBUG() << "On alg_index: " << alg_index << "\n";
+      
+      auto& alg_ptr    = _cluster_alg_v[alg_index];
+      auto& meta_v     = _meta_v_v[alg_index];
+      auto& clusters_v = _clusters_v_v[alg_index];
+      auto& roi_v      = _roi_v_v[alg_index];
+      
+      if(!alg_ptr) throw larbys("Invalid algorithm pointer!");
 
-	LAROCV_DEBUG() << "On alg_index: " << alg_index << "\n";
-	
-	auto& alg_ptr    = _cluster_alg_v[alg_index];
-	auto& meta_v     = _meta_v_v[alg_index];
-	auto& clusters_v = _clusters_v_v[alg_index];
-	auto& roi_v      = _roi_v_v[alg_index];
-	
-	if(!alg_ptr) throw larbys("Invalid algorithm pointer!");
-	
-	if(alg_ptr == _cluster_alg_v.front()) {
+      for(size_t img_index=0; img_index<_raw_img_v.size(); ++img_index) {
 
+	LAROCV_DEBUG() << "Processing img_index: " << img_index << "\n";
+	LAROCV_DEBUG() << "_raw_meta_v.size() " << _raw_meta_v.size() << "\n";
+	LAROCV_DEBUG() << "_raw_img_v.size() " << _raw_img_v.size() << "\n";
+	LAROCV_DEBUG() << "_raw_roi_v.size() " << _raw_roi_v.size() << "\n";
+	
+	auto const& meta = _raw_meta_v[img_index];
+	auto const& img  = _raw_img_v[img_index];
+	auto      & roi  = _raw_roi_v[img_index];
+	
+	if(last_cluster_algo == kINVALID_SIZE) {
+	
 	  LAROCV_DEBUG() << "alg_ptr is _cluster_alg_v.front()\n" << std::endl;
 	  LAROCV_DEBUG() << "meta_v.size(): "<< meta_v.size() << " roi_v.size(): " << roi_v.size() << "\n";
-
+	  
 	  Cluster2DArray_t clusters;
 	  meta_v.push_back(meta);
-	  clusters_v.emplace_back(alg_ptr->Process(clusters,img,meta_v.back(),roi));
+
+	  if(alg_ptr->Type() == kAlgoImageAna) {
+	    ((ImageAnaBase*)(alg_ptr))->Process(clusters,img,meta_v.back(),roi);
+	    clusters_v.emplace_back(std::move(clusters));
+	  }
+	  else
+	    clusters_v.emplace_back(((ClusterAlgoBase*)(alg_ptr))->Process(clusters,img,meta_v.back(),roi));
 
 	  roi_v.push_back(roi);
 	  
 	}else{
-
-	  auto const& prev_clusters = _clusters_v_v[alg_index-1][img_index];
+	
+	  auto const& prev_clusters = _clusters_v_v[last_cluster_algo][img_index];
 	  auto prev_meta = _meta_v_v[alg_index-1][img_index];
 	  auto prev_roi  = _roi_v_v[alg_index-1][img_index];
-	  clusters_v.emplace_back(alg_ptr->Process(prev_clusters,img,prev_meta,roi));
+
+	  if(alg_ptr->Type() == kAlgoImageAna) {
+	    ((ImageAnaBase*)(alg_ptr))->Process(prev_clusters,img,meta_v.back(),roi);
+	    clusters_v.emplace_back(Cluster2DArray_t());
+	  }
+	  else
+	    clusters_v.emplace_back(((ClusterAlgoBase*)(alg_ptr))->Process(prev_clusters,img,meta_v.back(),roi));
+
 	  meta_v.push_back(prev_meta);
 	  roi_v.push_back(prev_roi);
 	}
 	
 	// Assign cluster IDs
 	ClusterID_t offset=0;
-
+	
 	for(size_t clusters_index=0; (clusters_index+1)<clusters_v.size(); ++clusters_index)
 	  
 	  offset += clusters_v[clusters_index].size();
-
+	
 	for(size_t cluster_index=0; cluster_index < clusters_v.back().size(); ++cluster_index) {
 	  
 	  auto& c = clusters_v.back()[cluster_index];
@@ -298,7 +337,7 @@ namespace larocv {
 	  c._pixel_width  = meta.pixel_width();
 	  c._pixel_height = meta.pixel_height();
 	}
-	
+      
 	// Sanity check on meta data
 	auto const& result_meta = meta_v.back();
 	if(result_meta.height() > meta.height()) {
@@ -310,8 +349,9 @@ namespace larocv {
 	  throw larbys();
 	}
       }
+      if(alg_ptr->Type() == kAlgoCluster) last_cluster_algo = alg_index;
     }
-
+      
     //
     // Run matching
     //

@@ -15,7 +15,7 @@
 #define __VERTEXINHULL_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -54,17 +54,16 @@ namespace larocv {
      \class larocv::VertexInHullFactory
      \brief A concrete factory class for larocv::VertexInHull
    */
-  class VertexInHullFactory : public ClusterAlgoFactoryBase {
+  class VertexInHullFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    VertexInHullFactory() { ClusterAlgoFactory::get().add_factory("VertexInHull",this); }
+    VertexInHullFactory() { AlgoFactory::get().add_factory("VertexInHull",this); }
     /// dtor
     ~VertexInHullFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new VertexInHull(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new VertexInHull(instance_name); }
   };
-  /// Global larocv::VertexInHullFactory to register ClusterAlgoFactory
-  static VertexInHullFactory __global_VertexInHullFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

@@ -15,7 +15,7 @@
 #define __DEADWIRECOMBINE_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -94,17 +94,16 @@ namespace larocv {
      \class larocv::DeadWireCombineFactory
      \brief A concrete factory class for larocv::DeadWireCombine
    */
-  class DeadWireCombineFactory : public ClusterAlgoFactoryBase {
+  class DeadWireCombineFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    DeadWireCombineFactory() { ClusterAlgoFactory::get().add_factory("DeadWireCombine",this); }
+    DeadWireCombineFactory() { AlgoFactory::get().add_factory("DeadWireCombine",this); }
     /// dtor
     ~DeadWireCombineFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new DeadWireCombine(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new DeadWireCombine(instance_name); }
   };
-  /// Global larocv::DeadWireCombineFactory to register ClusterAlgoFactory
-  static DeadWireCombineFactory __global_DeadWireCombineFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

@@ -8,6 +8,9 @@
 
 namespace larocv {
 
+  /// Global larocv::BoundRectStartFactory to register AlgoFactory
+  static BoundRectStartFactory __global_BoundRectStartFactory__;
+
   void BoundRectStart::_Configure_(const ::fcllite::PSet &pset)
   {
     _nDivWidth = pset.get<int>("NDivWidth");

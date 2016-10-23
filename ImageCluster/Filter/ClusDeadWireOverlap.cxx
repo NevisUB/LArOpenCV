@@ -6,6 +6,9 @@
 
 namespace larocv{
 
+  /// Global larocv::ClusDeadWireOverlapFactory to register ClusterAlgoFactory
+  static ClusDeadWireOverlapFactory __global_ClusDeadWireOverlapFactory__;
+
   void ClusDeadWireOverlap::_Configure_(const ::fcllite::PSet &pset)
   {
     //Wire loading code from Vic's DeadWireCombine Merge algorithm

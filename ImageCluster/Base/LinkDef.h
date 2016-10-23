@@ -12,13 +12,12 @@
 #pragma link C++ class larocv::Contour_t+;
 #pragma link C++ class larocv::ContourArray_t+;
 #pragma link C++ class larocv::ImageClusterBase+;
+#pragma link C++ class larocv::PreClusterAlgoBase+;
 #pragma link C++ class larocv::ClusterAlgoBase+;
 #pragma link C++ class larocv::MatchAlgoBase+;
 #pragma link C++ class larocv::ReClusterAlgoBase+;
 
-#pragma link C++ class larocv::ClusterAlgoFactory+;
-#pragma link C++ class larocv::MatchAlgoFactory+;
-#pragma link C++ class larocv::ReClusterAlgoFactory+;
+#pragma link C++ class larocv::AlgoFactory+;
 
 #pragma link C++ class larocv::ImageClusterManager+;
 #pragma link C++ class larocv::ImageClusterViewer+;

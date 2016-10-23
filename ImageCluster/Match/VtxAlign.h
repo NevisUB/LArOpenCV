@@ -15,7 +15,7 @@
 #define __VTXALIGN_H__
 
 #include "MatchAlgoBase.h"
-#include "MatchAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -56,17 +56,16 @@ namespace larocv {
      \class larocv::VtxAlignFactory
      \brief A concrete factory class for larocv::VtxAlign
    */
-  class VtxAlignFactory : public MatchAlgoFactoryBase {
+  class VtxAlignFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    VtxAlignFactory() { MatchAlgoFactory::get().add_factory("VtxAlign",this); }
+    VtxAlignFactory() { AlgoFactory::get().add_factory("VtxAlign",this); }
     /// dtor
     ~VtxAlignFactory() {}
     /// creation method
-    MatchAlgoBase* create(const std::string instance_name) { return new VtxAlign(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new VtxAlign(instance_name); }
   };
-  /// Global larocv::VtxAlignFactory to register MatchAlgoFactory
-  static VtxAlignFactory __global_VtxAlignFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

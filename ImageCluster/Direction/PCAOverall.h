@@ -15,7 +15,7 @@
 #define __PCAOVERALL_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -55,17 +55,16 @@ namespace larocv {
      \class larocv::PCAOverallFactory
      \brief A concrete factory class for larocv::PCAOverall
    */
-  class PCAOverallFactory : public ClusterAlgoFactoryBase {
+  class PCAOverallFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    PCAOverallFactory() { ClusterAlgoFactory::get().add_factory("PCAOverall",this); }
+    PCAOverallFactory() { AlgoFactory::get().add_factory("PCAOverall",this); }
     /// dtor
     ~PCAOverallFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new PCAOverall(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new PCAOverall(instance_name); }
   };
-  /// Global larocv::PCAOverallFactory to register ClusterAlgoFactory
-  static PCAOverallFactory __global_PCAOverallFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

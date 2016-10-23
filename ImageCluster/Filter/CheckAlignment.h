@@ -15,7 +15,7 @@
 #define __CHECKALIGNMENT_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -59,17 +59,16 @@ namespace larocv {
      \class larocv::CheckAlignmentFactory
      \brief A concrete factory class for larocv::CheckAlignment
    */
-  class CheckAlignmentFactory : public ClusterAlgoFactoryBase {
+  class CheckAlignmentFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    CheckAlignmentFactory() { ClusterAlgoFactory::get().add_factory("CheckAlignment",this); }
+    CheckAlignmentFactory() { AlgoFactory::get().add_factory("CheckAlignment",this); }
     /// dtor
     ~CheckAlignmentFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new CheckAlignment(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new CheckAlignment(instance_name); }
   };
-  /// Global larocv::CheckAlignmentFactory to register ClusterAlgoFactory
-  static CheckAlignmentFactory __global_CheckAlignmentFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

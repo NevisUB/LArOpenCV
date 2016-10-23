@@ -5,6 +5,8 @@
 
 namespace larocv {
 
+  /// Global larocv::PolarClusterFactory to register AlgoFactory
+  static PolarClusterFactory __global_PolarClusterFactory__;
 
   void PolarCluster::_Configure_(const ::fcllite::PSet &pset)
   {

@@ -6,6 +6,8 @@
 
 namespace larocv {
 
+  /// Global larocv::HIPClusterFactory to register AlgoFactory
+  static HIPClusterFactory __global_HIPClusterFactory__;
 
   void HIPCluster::_Configure_(const ::fcllite::PSet &pset)
   {

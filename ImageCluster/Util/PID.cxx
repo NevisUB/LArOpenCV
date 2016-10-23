@@ -5,6 +5,9 @@
 
 namespace larocv{
 
+  /// Global larocv::PIDFactory to register AlgoFactory
+  static PIDFactory __global_PIDFactory__;
+  
   void PID::_Configure_(const ::fcllite::PSet &pset)
   {
     _pdg = pset.get<int> ("PDG");

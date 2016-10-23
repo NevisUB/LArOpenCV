@@ -15,7 +15,7 @@
 #define __BOUNDINGRECTDIR_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -55,17 +55,16 @@ namespace larocv {
      \class larocv::BoundingRectDirFactory
      \brief A concrete factory class for larocv::BoundingRectDir
    */
-  class BoundingRectDirFactory : public ClusterAlgoFactoryBase {
+  class BoundingRectDirFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    BoundingRectDirFactory() { ClusterAlgoFactory::get().add_factory("BoundingRectDir",this); }
+    BoundingRectDirFactory() { AlgoFactory::get().add_factory("BoundingRectDir",this); }
     /// dtor
     ~BoundingRectDirFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new BoundingRectDir(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new BoundingRectDir(instance_name); }
   };
-  /// Global larocv::BoundingRectDirFactory to register ClusterAlgoFactory
-  static BoundingRectDirFactory __global_BoundingRectDirFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

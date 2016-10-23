@@ -5,6 +5,8 @@
 
 namespace larocv {
 
+  /// Global larocv::VertexTrackClusterFactory to register AlgoFactory
+  static VertexTrackClusterFactory __global_VERTEXTRACKClusterFactory__;
 
   void VertexTrackCluster::_Configure_(const ::fcllite::PSet &pset)
   {

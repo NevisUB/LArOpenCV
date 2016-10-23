@@ -15,7 +15,7 @@
 #define __INCONECLUSTER_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -75,17 +75,16 @@ namespace larocv {
      \class larocv::InConeClusterFactory
      \brief A concrete factory class for larocv::InConeCluster
    */
-  class InConeClusterFactory : public ClusterAlgoFactoryBase {
+  class InConeClusterFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    InConeClusterFactory() { ClusterAlgoFactory::get().add_factory("InConeCluster",this); }
+    InConeClusterFactory() { AlgoFactory::get().add_factory("InConeCluster",this); }
     /// dtor
     ~InConeClusterFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new InConeCluster(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new InConeCluster(instance_name); }
   };
-  /// Global larocv::InConeClusterFactory to register ClusterAlgoFactory
-  static InConeClusterFactory __global_InConeClusterFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

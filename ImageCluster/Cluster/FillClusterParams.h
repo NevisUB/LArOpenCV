@@ -4,7 +4,7 @@
 #define __FILLCLUSTERPARAMS_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
  
@@ -40,17 +40,15 @@ namespace larocv {
      \class larocv::FillClusterParamsFactory
      \brief A concrete factory class for larocv::FillClusterParams
    */
-  class FillClusterParamsFactory : public ClusterAlgoFactoryBase {
+  class FillClusterParamsFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    FillClusterParamsFactory() { ClusterAlgoFactory::get().add_factory("FillClusterParams",this); }
+    FillClusterParamsFactory() { AlgoFactory::get().add_factory("FillClusterParams",this); }
     /// dtor
     ~FillClusterParamsFactory() {}
     /// create method
-    ClusterAlgoBase* create(const std::string instance_name) { return new FillClusterParams(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new FillClusterParams(instance_name); }
   };
-  /// Global larocv::FillClusterParamsFactory to register ClusterAlgoFactory
-  static FillClusterParamsFactory __global_FillClusterParamsFactory__;
   
 }
 #endif

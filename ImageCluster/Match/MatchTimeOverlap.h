@@ -15,7 +15,7 @@
 #define __MATCHTIMEOVERLAP_H__
 
 #include "MatchAlgoBase.h"
-#include "MatchAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -60,17 +60,16 @@ namespace larocv {
      \class larocv::MatchTimeOverlapFactory
      \brief A concrete factory class for larocv::MatchTimeOverlap
    */
-  class MatchTimeOverlapFactory : public MatchAlgoFactoryBase {
+  class MatchTimeOverlapFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    MatchTimeOverlapFactory() { MatchAlgoFactory::get().add_factory("MatchTimeOverlap",this); }
+    MatchTimeOverlapFactory() { AlgoFactory::get().add_factory("MatchTimeOverlap",this); }
     /// dtor
     ~MatchTimeOverlapFactory() {}
     /// creation method
-    MatchAlgoBase* create(const std::string instance_name) { return new MatchTimeOverlap(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new MatchTimeOverlap(instance_name); }
   };
-  /// Global larocv::MatchTimeOverlapFactory to register MatchAlgoFactory
-  static MatchTimeOverlapFactory __global_MatchTimeOverlapFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

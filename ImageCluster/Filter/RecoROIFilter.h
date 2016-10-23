@@ -15,7 +15,7 @@
 #define __RECOROIFILTER_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -59,17 +59,16 @@ namespace larocv {
      \class larocv::RecoROIFilterFactory
      \brief A concrete factory class for larocv::RecoROIFilter
    */
-  class RecoROIFilterFactory : public ClusterAlgoFactoryBase {
+  class RecoROIFilterFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    RecoROIFilterFactory() { ClusterAlgoFactory::get().add_factory("RecoROIFilter",this); }
+    RecoROIFilterFactory() { AlgoFactory::get().add_factory("RecoROIFilter",this); }
     /// dtor
     ~RecoROIFilterFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new RecoROIFilter(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new RecoROIFilter(instance_name); }
   };
-  /// Global larocv::RecoROIFilterFactory to register ClusterAlgoFactory
-  static RecoROIFilterFactory __global_RecoROIFilterFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

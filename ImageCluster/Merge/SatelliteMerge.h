@@ -15,7 +15,7 @@
 #define __SATELLITEMERGE_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -64,17 +64,16 @@ namespace larocv {
      \class larocv::SatelliteMergeFactory
      \brief A concrete factory class for larocv::SatelliteMerge
    */
-  class SatelliteMergeFactory : public ClusterAlgoFactoryBase {
+  class SatelliteMergeFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    SatelliteMergeFactory() { ClusterAlgoFactory::get().add_factory("SatelliteMerge",this); }
+    SatelliteMergeFactory() { AlgoFactory::get().add_factory("SatelliteMerge",this); }
     /// dtor
     ~SatelliteMergeFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new SatelliteMerge(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new SatelliteMerge(instance_name); }
   };
-  /// Global larocv::SatelliteMergeFactory to register ClusterAlgoFactory
-  static SatelliteMergeFactory __global_SatelliteMergeFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

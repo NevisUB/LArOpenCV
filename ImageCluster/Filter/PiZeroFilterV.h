@@ -2,7 +2,7 @@
 #define __PIZEROFILTERV_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 #include "Vertex2D.h"
 
@@ -57,17 +57,16 @@ namespace larocv {
      \class larocv::PiZeroFilterVFactory
      \brief A concrete factory class for larocv::PiZeroFilterV
    */
-  class PiZeroFilterVFactory : public ClusterAlgoFactoryBase {
+  class PiZeroFilterVFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    PiZeroFilterVFactory() { ClusterAlgoFactory::get().add_factory("PiZeroFilterV",this); }
+    PiZeroFilterVFactory() { AlgoFactory::get().add_factory("PiZeroFilterV",this); }
     /// dtor
     ~PiZeroFilterVFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new PiZeroFilterV(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new PiZeroFilterV(instance_name); }
   };
-  /// Global larocv::PiZeroFilterVFactory to register ClusterAlgoFactory
-  static PiZeroFilterVFactory __global_PiZeroFilterVFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

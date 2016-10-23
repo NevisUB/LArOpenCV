@@ -15,7 +15,7 @@
 #define __TCLUSTER_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -65,14 +65,13 @@ namespace larocv {
 
   };
 
-  class TClusterFactory : public ClusterAlgoFactoryBase {
+  class TClusterFactory : public AlgoFactoryBase {
   public:
-    TClusterFactory() { ClusterAlgoFactory::get().add_factory("TCluster",this); }
+    TClusterFactory() { AlgoFactory::get().add_factory("TCluster",this); }
     ~TClusterFactory() {}
-    ClusterAlgoBase* create(const std::string instance_name) { return new TCluster(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new TCluster(instance_name); }
   };
 
-  static TClusterFactory __global_TClusterFactory__;
 }
 #endif
 /** @} */ // end of doxygen group 

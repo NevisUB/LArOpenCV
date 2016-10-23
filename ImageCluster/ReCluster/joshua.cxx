@@ -5,6 +5,8 @@
 
 namespace larocv{
 
+  /// Global larocv::joshuaFactory to register AlgoFactory
+  static joshuaFactory __global_joshuaFactory__;
   
   void joshua::_Configure_(const ::fcllite::PSet &pset)
   {

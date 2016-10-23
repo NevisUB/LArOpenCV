@@ -15,7 +15,7 @@
 #define __RECOPARAMETERS_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -54,17 +54,16 @@ namespace larocv {
      \class larocv::RecoParametersFactory
      \brief A concrete factory class for larocv::RecoParameters
    */
-  class RecoParametersFactory : public ClusterAlgoFactoryBase {
+  class RecoParametersFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    RecoParametersFactory() { ClusterAlgoFactory::get().add_factory("RecoParameters",this); }
+    RecoParametersFactory() { AlgoFactory::get().add_factory("RecoParameters",this); }
     /// dtor
     ~RecoParametersFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new RecoParameters(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new RecoParameters(instance_name); }
   };
-  /// Global larocv::RecoParametersFactory to register ClusterAlgoFactory
-  static RecoParametersFactory __global_RecoParametersFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

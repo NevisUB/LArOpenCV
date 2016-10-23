@@ -2,7 +2,7 @@
 #define __JOSHUA_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -44,17 +44,16 @@ namespace larocv {
      \class larocv::joshuaFactory
      \brief A concrete factory class for larocv::joshua
    */
-  class joshuaFactory : public ClusterAlgoFactoryBase {
+  class joshuaFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    joshuaFactory() { ClusterAlgoFactory::get().add_factory("joshua",this); }
+    joshuaFactory() { AlgoFactory::get().add_factory("joshua",this); }
     /// dtor
     ~joshuaFactory() {}
     /// creation method
-    ClusterAlgoBase* create(const std::string instance_name) { return new joshua(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new joshua(instance_name); }
   };
-  /// Global larocv::joshuaFactory to register ClusterAlgoFactory
-  static joshuaFactory __global_joshuaFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

@@ -15,7 +15,7 @@
 #define __CHARGEDISTRIBOVERLAP_H__
 
 #include "MatchAlgoBase.h"
-#include "MatchAlgoFactory.h"
+#include "AlgoFactory.h"
 #include "LArUtil/PxUtils.h"
 #include "LArUtil/GeometryHelper.h"
 #include "LArUtil/DetectorProperties.h"
@@ -63,17 +63,16 @@ namespace larocv {
      \class larocv::ChargeDistribOverlapFactory
      \brief A concrete factory class for larocv::ChargeDistribOverlap
    */
-  class ChargeDistribOverlapFactory : public MatchAlgoFactoryBase {
+  class ChargeDistribOverlapFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    ChargeDistribOverlapFactory() { MatchAlgoFactory::get().add_factory("ChargeDistribOverlap",this); }
+    ChargeDistribOverlapFactory() { AlgoFactory::get().add_factory("ChargeDistribOverlap",this); }
     /// dtor
     ~ChargeDistribOverlapFactory() {}
     /// creation method
-    MatchAlgoBase* create(const std::string instance_name) { return new ChargeDistribOverlap(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new ChargeDistribOverlap(instance_name); }
   };
-  /// Global larocv::ChargeDistribOverlapFactory to register MatchAlgoFactory
-  static ChargeDistribOverlapFactory __global_ChargeDistribOverlapFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 

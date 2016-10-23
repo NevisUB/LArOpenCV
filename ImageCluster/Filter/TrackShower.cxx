@@ -5,6 +5,9 @@
 
 namespace larocv{
 
+  /// Global larocv::TrackShowerFactory to register AlgoFactory
+  static TrackShowerFactory __global_TrackShowerFactory__;
+  
   void TrackShower::_Configure_(const ::fcllite::PSet &pset)
   {
 

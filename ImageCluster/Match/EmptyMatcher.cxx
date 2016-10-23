@@ -5,6 +5,9 @@
 
 namespace larocv{
 
+  /// Global larocv::EmptyMatcherFactory to register AlgoFactory
+  static EmptyMatcherFactory __global_EmptyMatcherFactory__;
+
   void EmptyMatcher::_Configure_(const ::fcllite::PSet &pset)
   {}
 

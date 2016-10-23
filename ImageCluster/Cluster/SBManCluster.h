@@ -4,7 +4,7 @@
 #define __SBCLUSTERMAN_H__
 
 #include "ClusterAlgoBase.h"
-#include "ClusterAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
  
@@ -61,17 +61,15 @@ void onMouse( int event, int x, int y, int f, void* ) ;
      \class larocv::SBManClusterFactory
      \brief A concrete factory class for larocv::SBManCluster
    */
-  class SBManClusterFactory : public ClusterAlgoFactoryBase {
+  class SBManClusterFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    SBManClusterFactory() { ClusterAlgoFactory::get().add_factory("SBManCluster",this); }
+    SBManClusterFactory() { AlgoFactory::get().add_factory("SBManCluster",this); }
     /// dtor
     ~SBManClusterFactory() {}
     /// create method
-    ClusterAlgoBase* create(const std::string instance_name) { return new SBManCluster(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new SBManCluster(instance_name); }
   };
-  /// Global larocv::SBManClusterFactory to register ClusterAlgoFactory
-  static SBManClusterFactory __global_SBManClusterFactory__;
   
 }
 #endif

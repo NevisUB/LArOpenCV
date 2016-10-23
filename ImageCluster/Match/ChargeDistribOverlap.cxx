@@ -3,9 +3,10 @@
 
 #include "ChargeDistribOverlap.h"
 
-
-
 namespace larocv{
+
+  /// Global larocv::ChargeDistribOverlapFactory to register AlgoFactory
+  static ChargeDistribOverlapFactory __global_ChargeDistribOverlapFactory__;
 
   void ChargeDistribOverlap::_Configure_(const ::fcllite::PSet &pset)
   {

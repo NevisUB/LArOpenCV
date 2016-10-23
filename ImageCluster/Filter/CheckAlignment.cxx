@@ -6,6 +6,9 @@
 
 namespace larocv{
 
+  /// Global larocv::CheckAlignmentFactory to register AlgoFactory
+  static CheckAlignmentFactory __global_CheckAlignmentFactory__;
+  
   void CheckAlignment::_Configure_(const ::fcllite::PSet &pset)
   {
     _ratio_cut     = pset.get<float>("RatioCut");

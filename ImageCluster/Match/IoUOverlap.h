@@ -15,7 +15,7 @@
 #define __IOUOVERLAP_H__
 
 #include "MatchAlgoBase.h"
-#include "MatchAlgoFactory.h"
+#include "AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -55,17 +55,16 @@ namespace larocv {
      \class larocv::IoUOverlapFactory
      \brief A concrete factory class for larocv::IoUOverlap
    */
-  class IoUOverlapFactory : public MatchAlgoFactoryBase {
+  class IoUOverlapFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    IoUOverlapFactory() { MatchAlgoFactory::get().add_factory("IoUOverlap",this); }
+    IoUOverlapFactory() { AlgoFactory::get().add_factory("IoUOverlap",this); }
     /// dtor
     ~IoUOverlapFactory() {}
     /// creation method
-    MatchAlgoBase* create(const std::string instance_name) { return new IoUOverlap(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new IoUOverlap(instance_name); }
   };
-  /// Global larocv::IoUOverlapFactory to register MatchAlgoFactory
-  static IoUOverlapFactory __global_IoUOverlapFactory__;
+
 }
 #endif
 /** @} */ // end of doxygen group 
