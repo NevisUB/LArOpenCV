@@ -47,6 +47,11 @@ namespace larocv {
 		 larocv::ImageMeta& meta,
 		 larocv::ROI & roi);
 
+    /**
+       @brief wrapper execution method: internally executes _PostProcess_ function (see there for details)
+     */
+    void PostProcess();
+
   protected:
 
     /// Inherited class configuration method
@@ -59,6 +64,11 @@ namespace larocv {
 			   const ::cv::Mat& img,
 			   larocv::ImageMeta& meta,
 			   larocv::ROI& roi) = 0;
+    /**
+       DESCRIBE ME
+     */
+    virtual void _PostProcess_() {}
+
   };
   
 }

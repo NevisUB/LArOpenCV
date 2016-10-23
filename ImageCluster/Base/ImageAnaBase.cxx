@@ -38,6 +38,19 @@ namespace larocv {
     return;
   }
 
+  void ImageAnaBase::PostProcess()
+  {
+    if(!Profile()) {
+      this->_PostProcess_();
+      return;
+    }
+    _watch.Start();
+    this->_PostProcess_();
+    _proc_time += _watch.WallTime();
+    ++_proc_count;
+    return;
+  }
+
 }
 
 #endif
