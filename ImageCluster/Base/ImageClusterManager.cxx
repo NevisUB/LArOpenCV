@@ -165,7 +165,13 @@ namespace larocv {
     auto const match_alg_type = main_cfg.get<std::string>("MatchAlgoType","");
     auto const match_alg_name = main_cfg.get<std::string>("MatchAlgoName","");
     if(!match_alg_type.empty()) {
-      _match_alg = (MatchAlgoBase*)(AlgoFactory::get().create(match_alg_type,match_alg_name));
+      auto ptr = AlgoFactory::get().create(match_alg_type,match_alg_name);
+      if(ptr->Type() != kAlgoMatch) {
+	LAROCV_CRITICAL() << "Cannot register type " << match_alg_type
+			  << " algorithm (not MatchAlgo)" << std::endl;
+	throw larbys();
+      }
+      _match_alg = (MatchAlgoBase*)ptr;
       _match_alg->_id = _cluster_alg_v.size();
       _match_alg->_dataman_ptr = &_algo_dataman;
       _algo_dataman.Register(AlgoFactory::get().create_data(match_alg_type,match_alg_name,_match_alg->ID()));
@@ -177,7 +183,13 @@ namespace larocv {
     auto const recluster_alg_type = main_cfg.get<std::string>("ReClusterAlgoType","");
     auto const recluster_alg_name = main_cfg.get<std::string>("ReClusterAlgoName","");
     if(!recluster_alg_type.empty()) {
-      _recluster_alg = (ReClusterAlgoBase*)(AlgoFactory::get().create(recluster_alg_type,recluster_alg_name));
+      auto ptr = AlgoFactory::get().create(recluster_alg_type,recluster_alg_name);
+      if(ptr->Type() != kAlgoReCluster){
+	LAROCV_CRITICAL() << "Cannot register type " << recluster_alg_type
+			  << " algorithm (not ReClusterAlgo)" << std::endl;
+	throw larbys();
+      }
+      _recluster_alg = (ReClusterAlgoBase*)(ptr);
       _recluster_alg->_id = _match_alg->ID()+1;
       _recluster_alg->_dataman_ptr = &_algo_dataman;
       _algo_dataman.Register(AlgoFactory::get().create_data(recluster_alg_type,recluster_alg_name,_recluster_alg->ID()));
@@ -293,31 +305,30 @@ namespace larocv {
 	  
 	  Cluster2DArray_t clusters;
 	  meta_v.push_back(meta);
-
+	  roi_v.push_back(roi);
+	  
 	  if(alg_ptr->Type() == kAlgoImageAna) {
-	    ((ImageAnaBase*)(alg_ptr))->Process(clusters,img,meta_v.back(),roi);
+	    ((ImageAnaBase*)(alg_ptr))->Process(clusters,img,meta_v.back(),roi_v.back());
 	    clusters_v.emplace_back(std::move(clusters));
 	  }
 	  else
-	    clusters_v.emplace_back(((ClusterAlgoBase*)(alg_ptr))->Process(clusters,img,meta_v.back(),roi));
-
-	  roi_v.push_back(roi);
+	    clusters_v.emplace_back(((ClusterAlgoBase*)(alg_ptr))->Process(clusters,img,meta_v.back(),roi_v.back()));
 	  
 	}else{
 	
 	  auto const& prev_clusters = _clusters_v_v[last_cluster_algo][img_index];
-	  auto prev_meta = _meta_v_v[alg_index-1][img_index];
-	  auto prev_roi  = _roi_v_v[alg_index-1][img_index];
+	  auto const& prev_meta = _meta_v_v[alg_index-1][img_index];
+	  auto const& prev_roi  = _roi_v_v[alg_index-1][img_index];
+	  meta_v.push_back(prev_meta);
+	  roi_v.push_back(prev_roi);
 
 	  if(alg_ptr->Type() == kAlgoImageAna) {
-	    ((ImageAnaBase*)(alg_ptr))->Process(prev_clusters,img,meta_v.back(),roi);
+	    ((ImageAnaBase*)(alg_ptr))->Process(prev_clusters,img,meta_v.back(),roi_v.back());
 	    clusters_v.emplace_back(Cluster2DArray_t());
 	  }
 	  else
-	    clusters_v.emplace_back(((ClusterAlgoBase*)(alg_ptr))->Process(prev_clusters,img,meta_v.back(),roi));
+	    clusters_v.emplace_back(((ClusterAlgoBase*)(alg_ptr))->Process(prev_clusters,img,meta_v.back(),roi_v.back()));
 
-	  meta_v.push_back(prev_meta);
-	  roi_v.push_back(prev_roi);
 	}
 	
 	// Assign cluster IDs
@@ -349,7 +360,10 @@ namespace larocv {
 	  throw larbys();
 	}
       }
-      if(alg_ptr->Type() == kAlgoCluster) last_cluster_algo = alg_index;
+      if(alg_ptr->Type() == kAlgoCluster)
+	last_cluster_algo = alg_index;
+      else
+	((ImageAnaBase*)(alg_ptr))->PostProcess();
     }
       
     //
