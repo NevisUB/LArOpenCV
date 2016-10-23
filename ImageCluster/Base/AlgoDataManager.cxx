@@ -8,7 +8,8 @@
 namespace larocv {
 
   AlgoDataManager::AlgoDataManager()
-    : _tree_attached(false)
+    : laropencv_base("AlgoDataManager")
+    , _tree_attached(false)
     , _tree(nullptr)
     , _data_v()
   {}
