@@ -20,6 +20,7 @@ namespace larocv {
     _n_original_clusters_v.resize(3);
     _atomic_ctor_v_v.resize(3);
     _atomic_ctor_ass_v_v.resize(3);
+
   }
 
   void DefectClusterData::set_data(unsigned n_original_clusters,
