@@ -50,7 +50,7 @@ namespace larocv {
     /**
        @brief wrapper execution method: internally executes _PostProcess_ function (see there for details)
      */
-    void PostProcess();
+    void PostProcess(const std::vector<const cv::Mat>& img_v);
 
   protected:
 
@@ -67,7 +67,7 @@ namespace larocv {
     /**
        DESCRIBE ME
      */
-    virtual void _PostProcess_() {}
+    virtual void _PostProcess_(const std::vector<const cv::Mat>& img_v) = 0;
 
   };
   

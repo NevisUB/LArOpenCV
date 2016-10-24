@@ -18,124 +18,18 @@ namespace larocv{
   {
     auto const circle_vtx_algo_name = pset.get<std::string>("CircleVertexAlgo");
     _circle_vertex_algo_id = this->ID(circle_vtx_algo_name);
-    _radius = 15;
+    _radius = 10;
     _pi_threshold = 10;
-    _pca_box_size = 3;
+    _pca_box_size = 2;
     _global_bound_size = 25;
 
     _tick_offset_v.resize(3);
     _tick_offset_v[0] = 0.;
-    //_tick_offset_v[1] = 4.54;
-    //_tick_offset_v[2] = 7.78;
-    _tick_offset_v[1] = 0.;
-    _tick_offset_v[2] = 0.;
-    _use_polar_spread = false;
+    _tick_offset_v[1] = 4.54;
+    _tick_offset_v[2] = 7.78;
+
     _comp_factor_v.resize(3);
     
-  }
-
-  float Refine2DVertex::AngularSpread(const ::cv::Mat& polarimg,
-				      float radius_frac_min,
-				      float radius_frac_max,
-				      float angle_mean,
-				      float angle_width)
-  {
-    if(angle_mean < 0) angle_mean += 360.;
-    float angle_min  = angle_mean - angle_width/2.;
-    float angle_max  = angle_mean + angle_width/2.;
-    float radius_min = radius_frac_min * (float)(polarimg.cols);
-    float radius_max = radius_frac_max * (float)(polarimg.cols);
-    float yfactor = (float)(polarimg.rows) / 360.;
-    /*
-    std::cout<<"image dim: rows=" << polarimg.rows << " cols=" << polarimg.cols << std::endl;
-    std::cout<<"radius frac min=" << radius_frac_min << " max=" << radius_frac_max << std::endl;
-    std::cout<<"angle min=" << angle_min << " max=" << angle_max << std::endl;
-    */    
-    if(angle_max > 360. && angle_min < 0.) throw larbys("Angle range too big");
-
-    float res_mean=0;
-    float res_spread=0;
-    if(angle_max > 360.){
-      auto box1 = ::cv::Rect(radius_min, 0, (radius_max - radius_min), yfactor * (angle_max - 360.));
-      auto box2 = ::cv::Rect(radius_min, yfactor * angle_min, (radius_max - radius_min), yfactor * (360. - angle_min));
-      //std::cout<<"Box1: "<<box1<<std::endl;
-      //std::cout<<"Box2: "<<box2<<std::endl;
-
-      auto small_img1 = ::cv::Mat(polarimg,box1);
-      ::cv::Mat thresh_small_img1;
-      ::cv::threshold(small_img1,thresh_small_img1,_pi_threshold,1,CV_THRESH_BINARY);
-      geo2d::VectorArray<int> points1;
-      findNonZero(thresh_small_img1, points1);
-
-      auto small_img2 = ::cv::Mat(polarimg,box2);
-      ::cv::Mat thresh_small_img2;
-      ::cv::threshold(small_img2,thresh_small_img2,_pi_threshold,1,CV_THRESH_BINARY);
-      geo2d::VectorArray<int> points2;
-      findNonZero(thresh_small_img2, points2);
-
-      for (unsigned i = 0; i < points1.size(); ++i)
-	res_mean += (float)(points1[i].y);
-      for (unsigned i = 0; i < points2.size(); ++i)
-	res_mean += (float)(points2[i].y - (float)(polarimg.rows));
-      res_mean /= (float)(points1.size() + points2.size());
-      
-      for (unsigned i = 0; i < points1.size(); ++i)
-	res_spread += ((float)(points1[i].y) - res_mean) * ((float)(points1[i].y) - res_mean);
-      for (unsigned i = 0; i < points2.size(); ++i)
-	res_spread += ((float)(points2[i].y - (float)(polarimg.rows)) - res_mean) * ((float)(points2[i].y - (float)(polarimg.rows)) - res_mean);
-
-      res_spread /= (float)(points1.size()+points2.size());
-      
-    }else if(angle_min < 0.){
-      auto box1 = ::cv::Rect(radius_min, 0, (radius_max - radius_min), yfactor * angle_max);
-      auto box2 = ::cv::Rect(radius_min, polarimg.rows - yfactor * (-1. * angle_min) -1., (radius_max - radius_min), yfactor * (-1. * angle_min));
-      //std::cout<<"Box1: "<<box1<<std::endl;
-      //std::cout<<"Box2: "<<box2<<std::endl;
-
-      auto small_img1 = ::cv::Mat(polarimg,box1);
-      ::cv::Mat thresh_small_img1;
-      ::cv::threshold(small_img1,thresh_small_img1,_pi_threshold,1,CV_THRESH_BINARY);
-      geo2d::VectorArray<int> points1;
-      findNonZero(thresh_small_img1, points1);
-
-      auto small_img2 = ::cv::Mat(polarimg,box2);
-      ::cv::Mat thresh_small_img2;
-      ::cv::threshold(small_img2,thresh_small_img2,_pi_threshold,1,CV_THRESH_BINARY);
-      geo2d::VectorArray<int> points2;
-      findNonZero(thresh_small_img2, points2);
-
-      for (unsigned i = 0; i < points1.size(); ++i)
-	res_mean += (float)(points1[i].y);
-      for (unsigned i = 0; i < points2.size(); ++i)
-	res_mean += (float)(points2[i].y - (float)(polarimg.rows));
-      res_mean /= (float)(points1.size() + points2.size());
-      
-      for (unsigned i = 0; i < points1.size(); ++i)
-	res_spread += ((float)(points1[i].y) - res_mean) * ((float)(points1[i].y) - res_mean);
-      for (unsigned i = 0; i < points2.size(); ++i)
-	res_spread += ((float)(points2[i].y - (float)(polarimg.rows)) - res_mean) * ((float)(points2[i].y - (float)(polarimg.rows)) - res_mean);
-
-      res_spread /= (float)(points1.size()+points2.size());
-
-    }else{
-      auto small_img = ::cv::Mat(polarimg,::cv::Rect(radius_frac_min * (float)(polarimg.cols),
-						     (angle_mean - angle_width/2.) * yfactor,
-						     (radius_frac_max - radius_frac_min) * (float)(polarimg.cols),
-						     angle_width * yfactor)
-				 );
-      ::cv::Mat thresh_small_img;
-      ::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,CV_THRESH_BINARY);
-      geo2d::VectorArray<int> points;
-      findNonZero(thresh_small_img, points);
-      for (unsigned i = 0; i < points.size(); ++i)
-	res_mean += (float)(points[i].y);
-      res_mean /= (float)(points.size());
-      for (unsigned i = 0; i < points.size(); ++i)
-	res_spread += ((float)(points[i].y) - res_mean) * ((float)(points[i].y) - res_mean);
-      res_spread /= (float)(points.size());
-    }
-
-    return res_spread;
   }
 
   geo2d::Line<float> Refine2DVertex::SquarePCA(const ::cv::Mat& img,
@@ -145,8 +39,7 @@ namespace larocv{
 					       
     auto small_img = ::cv::Mat(img,::cv::Rect(pt.x-side, pt.y-side, 2*side+1, 2*side+1));
     ::cv::Mat thresh_small_img;
-    //::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,CV_THRESH_BINARY);
-    ::cv::threshold(small_img,thresh_small_img,_pi_threshold,1000,3);
+    ::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,CV_THRESH_BINARY);
     geo2d::VectorArray<int> points;
     findNonZero(thresh_small_img, points);
     
@@ -164,7 +57,7 @@ namespace larocv{
     auto dir = geo2d::Vector<float>(pcaobj.eigenvectors.at<float>(0,0),
 				    pcaobj.eigenvectors.at<float>(0,1));
 
-    //LAROCV_DEBUG() << "Mean @ (" << pt.x << "," << pt.y << ") ... dir (" << dir.x << "," << dir.y << std::endl;
+    LAROCV_DEBUG() << "Mean @ (" << pt.x << "," << pt.y << ") ... dir (" << dir.x << "," << dir.y << std::endl;
 
     return geo2d::Line<float>(pt,dir);
   }
@@ -325,7 +218,6 @@ namespace larocv{
 	auto small_img = ::cv::Mat(img,::cv::Rect(step_pt.x - 2, step_pt.y - 2, 5, 5));
 	::cv::Mat thresh_small_img;
 	::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,CV_THRESH_BINARY);
-	//::cv::threshold(small_img,thresh_small_img,_pi_threshold,1000,3);
 
 	geo2d::VectorArray<int> points;
 	findNonZero(thresh_small_img, points);
@@ -345,7 +237,7 @@ namespace larocv{
 	// Get xs points for this step. if < 2 continue
 	auto const step_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(trial_pt,_radius));
 
-	//data._circle_trav_vv[meta.plane()].emplace_back(std::move(geo2d::Circle<float>(trial_pt,_radius)));
+	data._circle_trav_vv[meta.plane()].emplace_back(std::move(geo2d::Circle<float>(trial_pt,_radius)));
 	
 	if(step_xs_pts.size()<2) {
 	  step_pt += dir;
@@ -363,31 +255,13 @@ namespace larocv{
 	}
 
 	double dtheta_sum = 0;
-	if(_use_polar_spread) {
-	  // Estimate a polar y-spread as am easure of "dtheta"
-	  ::cv::Mat local_polarimg;
-	  ::cv::linearPolar(img, local_polarimg, trial_pt, _radius+10., ::cv::WARP_FILL_OUTLIERS);
-	  for(auto const& step_xs_pt : step_xs_pts) {
-	    float angle = geo2d::angle(trial_pt,step_xs_pt);
-	    float radius_frac_min = (_radius - 2.) / (_radius+10.);
-	    float radius_frac_max = (_radius + 3.) / (_radius+10.);
-	    dtheta_sum += AngularSpread(local_polarimg,radius_frac_min,radius_frac_max,angle,10.);
-	  }
-	}else{
-	  // Estimate a local PCA and center-to-xs line's angle diff
-	  for(auto const& step_xs_pt : step_xs_pts) {
-	    // Line that connects center to xs
-	    auto center_line = geo2d::Line<float>(step_xs_pt, step_xs_pt - trial_pt);
-	    auto local_pca   = SquarePCA(img,step_xs_pt,_pca_box_size);
-	    dtheta_sum += fabs(geo2d::angle(center_line) - geo2d::angle(local_pca));
-	    // Alternative (and probably better/faster): compute y spread in polar coordinate
-	    LAROCV_DEBUG() << "Line ID " << xs_idx << " found xs " << step_xs_pt << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
-	  }
+	for(auto const& step_xs_pt : step_xs_pts) {
+	  // Line that connects center to xs
+	  auto center_line = geo2d::Line<float>(step_xs_pt, step_xs_pt - trial_pt);
+	  auto local_pca   = SquarePCA(img,step_xs_pt,_pca_box_size);
+	  dtheta_sum += fabs(geo2d::angle(center_line) - geo2d::angle(local_pca));
 	}
-	
-	dtheta_sum /= (float)(step_xs_pts.size());
-	LAROCV_DEBUG() << "    ... dtheta_sum = " << dtheta_sum << std::endl;
-	data._circle_trav_vv[meta.plane()].emplace_back(std::move(geo2d::Circle<float>(trial_pt,_radius)));
+
 	data._dtheta_trav_vv[meta.plane()].push_back(dtheta_sum);
 
 	if(dtheta_sum < min_dtheta_sum) {
@@ -435,7 +309,7 @@ namespace larocv{
 
   }
 
-  void Refine2DVertex::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  void Refine2DVertex::_PostProcess_()
   {
     // Combine 3 plane information and make a best guess.
     // To do this, we loop over time tick over all available planes
@@ -457,49 +331,41 @@ namespace larocv{
     for(size_t plane=0; plane<data._scan_rect_v.size(); ++plane){
       auto const& bbox = data._scan_rect_v[plane];
       float ref_x = bbox.x;
-      ref_x -= tick_offset_v[plane];
+      ref_x += tick_offset_v[plane];
       if(min_tick < 0) min_tick = ref_x;
       else if(min_tick < ref_x) min_tick = ref_x;
       if(max_tick < 0) max_tick = ref_x + bbox.width;
       else if(max_tick > (ref_x + bbox.width)) max_tick = ref_x + bbox.width;
     }
 
-    // Next define score map within a tick resolution of 3
-    const size_t num_ticks = (max_tick - min_tick)/1 + 1;
+    // Next define score map within a tick resolution of 1
+    const size_t num_ticks = (max_tick - min_tick) + 1;
     LAROCV_DEBUG() << "NumTicks to scan in time: " << num_ticks << std::endl;
 
     std::vector< std::vector<std::array<float,3> > > vtx_list_vv;
     vtx_list_vv.resize(data._dtheta_trav_vv.size());
     for(auto& vtx_list_v : vtx_list_vv) {
-      vtx_list_v.resize(num_ticks+1);
+      vtx_list_v.resize(num_ticks);
       for(auto& vtx_list : vtx_list_v) {
-	vtx_list.at(0) = vtx_list.at(1) = vtx_list.at(2) = -1.;
+	vtx_list[0] = vtx_list[1] = vtx_list[2] = -1.;
       }
     }
     
     for(size_t plane=0; plane<data._dtheta_trav_vv.size(); ++plane) {
-      std::cout<<"Plane " << plane << " ..."<<std::endl;
-      auto const& dtheta_trav_v = data._dtheta_trav_vv.at(plane);
-      auto const& circle_trav_v = data._circle_trav_vv.at(plane);
-      auto const& tick_offset = tick_offset_v.at(plane);
-      auto& vtx_list_v = vtx_list_vv.at(plane);
+      auto const& dtheta_trav_v = data._dtheta_trav_vv[plane];
+      auto const& circle_trav_v = data._circle_trav_vv[plane];
+      auto const& tick_offset = tick_offset_v[plane];
+      auto& vtx_list_v = vtx_list_vv[plane];
       for(size_t step=0; step<circle_trav_v.size(); ++step) {
-	auto const& dtheta = dtheta_trav_v.at(step);
-	auto const& circle = circle_trav_v.at(step);
-	float tick = circle.center.x - tick_offset;
-	if(tick < min_tick || tick > max_tick) {
-	  LAROCV_DEBUG() << "tick @ " << tick << " (array idx=" << (float)((tick-min_tick)/1) << ") .... dtheta @ " << dtheta <<  " ... skipping (out-o-range) " << std::endl;
-	  continue;
-	}
-	auto& vtx_list = vtx_list_v.at((size_t)((tick - min_tick)/1));
-	if(vtx_list.at(0) > 0 && vtx_list.at(0) < dtheta) {
-	  LAROCV_DEBUG() << "tick @ " << tick << " (array idx=" << (float)((tick-min_tick)/1) << ") .... dtheta @ " << dtheta <<  " ... skipping (dtheta too big) " << std::endl;
-	  continue;
-	}
-	LAROCV_DEBUG() << "tick @ " << tick << " (array idx=" << (float)((tick-min_tick)/1) << ") .... dtheta @ " << dtheta <<  " ... registering " << std::endl;
-	vtx_list.at(0) = dtheta;
-	vtx_list.at(1) = circle.center.x;
-	vtx_list.at(2) = circle.center.y;
+	auto const& dtheta = dtheta_trav_v[step];
+	auto const& circle = circle_trav_v[step];
+	float tick = circle.center.x + tick_offset;
+	if(tick < min_tick || tick > max_tick) continue;
+	auto& vtx_list = vtx_list_v[(size_t)(tick - min_tick)];
+	if(vtx_list[0] > 0 && vtx_list[0] < dtheta) continue;
+	vtx_list[0] = dtheta;
+	vtx_list[1] = circle.center.x;
+	vtx_list[2] = circle.center.y;
       }
     }
 
@@ -511,19 +377,15 @@ namespace larocv{
     for(size_t tick=0; tick < num_ticks; ++tick) {
       num_valid_planes = 0;
       dtheta_sum = 0.;
-      LAROCV_DEBUG() << "At tick " << tick << "/" << num_ticks << std::endl;
       for(size_t plane=0; plane < vtx_list_vv.size(); ++plane) {
-	LAROCV_DEBUG() << "    Plane " << plane << " dtheta = " << vtx_list_vv[plane][tick][0] << std::endl;
 	if(vtx_list_vv[plane][tick][0] < 0) continue;
 	dtheta_sum += vtx_list_vv[plane][tick][0];
 	num_valid_planes +=1;
       }
-      LAROCV_DEBUG() << "    # valid plane = " << num_valid_planes << " dtheta = " << dtheta_sum << std::endl;
-      if(num_valid_planes < 2) continue;
+      if(num_valid_planes < 0) continue;
       // compute average dtheta_sum
       dtheta_sum /= (float)(num_valid_planes);
       if(dtheta_sum > min_dtheta_sum) continue;
-      LAROCV_DEBUG() << "    ... new minimum!" << std::endl;
       min_dtheta_sum = dtheta_sum;
       min_dtheta_sum_tick = tick;
     }
@@ -533,15 +395,7 @@ namespace larocv{
       auto const& best_vtx = vtx_list_vv[plane][min_dtheta_sum_tick];
       data._cand_vtx_v[plane] = geo2d::Vector<float>(best_vtx[1],best_vtx[2]);
       data._cand_score_v[plane] = best_vtx[0];
-
-      // Obtain crossing point w/ a circle around the vertex. These are particle cluster candidates.
-      geo2d::Circle<float> circle;
-      circle.center.x = best_vtx[1];
-      circle.center.y = best_vtx[2];
-      circle.radius = _radius;
-      data._cand_xs_vv[plane] = QPointOnCircle(img_v[plane],circle);
     }
-
   }
 
 }

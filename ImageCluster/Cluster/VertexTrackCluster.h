@@ -5,6 +5,7 @@
 
 #include "ClusterAlgoBase.h"
 #include "AlgoFactory.h"
+#include "Core/VectorArray.h"
 
 namespace larocv {
  
@@ -49,7 +50,26 @@ namespace larocv {
     
     float _thresh;
     float _thresh_maxval;
+
+    float _mask_radius;
+    AlgorithmID_t _vtx_algo_id;
     
+  };
+  
+  class VertexTrackClusterData : public larocv::AlgoDataBase {
+  public:
+    VertexTrackClusterData(std::string name="NoName", AlgorithmID_t id=0)
+      : AlgoDataBase(name,id)
+    { Clear();}
+    ~VertexTrackClusterData(){}
+
+    void Clear() {
+      _ctor_vv.clear();
+      _ctor_vv.resize(3);
+    }
+
+    std::vector< std::vector< geo2d::VectorArray<int> > > _ctor_vv;
+
   };
 
   /**
@@ -64,6 +84,8 @@ namespace larocv {
     ~VertexTrackClusterFactory() {}
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new VertexTrackCluster(instance_name); }
+    AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
+    { return new VertexTrackClusterData(instance_name,id);}
   };
   
 }

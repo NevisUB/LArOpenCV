@@ -362,8 +362,12 @@ namespace larocv {
       }
       if(alg_ptr->Type() == kAlgoCluster)
 	last_cluster_algo = alg_index;
-      else
-	((ImageAnaBase*)(alg_ptr))->PostProcess();
+      else {
+	std::vector<const cv::Mat> img_v;
+	for(size_t img_index=0; img_index<_raw_img_v.size(); ++img_index)
+	  img_v.push_back(_raw_img_v[img_index]);
+	((ImageAnaBase*)(alg_ptr))->PostProcess(img_v);
+      }
     }
       
     //

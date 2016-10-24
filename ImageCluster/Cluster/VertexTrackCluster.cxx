@@ -2,6 +2,7 @@
 #define __VERTEXTRACKCLUSTER_CXX__
 
 #include "VertexTrackCluster.h"
+#include "Refine2DVertex.h"
 
 namespace larocv {
 
@@ -20,137 +21,159 @@ namespace larocv {
     _thresh        = pset.get<float>("Thresh");
     _thresh_maxval = pset.get<float>("ThreshMaxVal");
 
+    _mask_radius = 10.;
+
+    auto const vtx_algo_name = pset.get<std::string>("Refine2DVertexAlgo");
+    _vtx_algo_id = this->ID(vtx_algo_name);
+    
   }
 
   larocv::Cluster2DArray_t VertexTrackCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
-						   const ::cv::Mat& img,
-						   larocv::ImageMeta& meta,
-						   larocv::ROI& roi)
+							 const ::cv::Mat& img,
+							 larocv::ImageMeta& meta,
+							 larocv::ROI& roi)
   {
-
-    if ( clusters.size() )
-      throw larbys("This algo can only be executed first in algo chain!");
-					
-    ::cv::Mat polarimg, sb_img;
-
-    //get the vertex in the image
-    auto pi0st = roi.roivtx_in_image(meta);
-
-    auto roib1 = roi.roibounds_in_image(meta,0);
-    auto roib2 = roi.roibounds_in_image(meta,2);
-
-    auto radx = std::abs(roib1.x - roib2.x);
-    auto rady = std::abs(roib1.y - roib2.y);
-
-    double rad = radx;
     
-    ::cv::linearPolar(img,        //input
-		      polarimg,   //output
-		      ::cv::Point2f(pi0st.x,pi0st.y), //center point
-		      rad, //radius
-		      ::cv::WARP_FILL_OUTLIERS); //seems like it has to set
+    auto const& ref_data = AlgoData<larocv::Refine2DVertexData>(_vtx_algo_id);
+    auto const& ref_vtx = ref_data._cand_vtx_v[meta.plane()];
+    auto const& ref_xs_v = ref_data._cand_xs_vv[meta.plane()];
+    auto& data = AlgoData<larocv::VertexTrackClusterData>();
+
+    LAROCV_DEBUG() << "Found " << ref_xs_v.size() << " crossing points (track cluster candidates)" << std::endl;
     
-    //Dilate
-    auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,
-					      ::cv::Size(_dilation_size,_dilation_size));
-    ::cv::dilate(polarimg,sb_img,
-		 kernel,::cv::Point(-1,-1),_dilation_iter);
-    
-    //Blur
-    ::cv::blur(sb_img,sb_img,
-	       ::cv::Size(_blur_size_r,_blur_size_t));
+    for(size_t xs_pt_idx=0; xs_pt_idx<ref_xs_v.size(); ++xs_pt_idx) {
 
-    //Threshold
-    auto t_value = ::cv::threshold(sb_img,
-				   sb_img,
-				   _thresh,
-				   _thresh_maxval,
-				   CV_THRESH_BINARY); //return type is "threshold value?"
-    (void) t_value;
-    
-    //Contour finding
-    ContourArray_t ctor_v;    
-    std::vector<::cv::Vec4i> cv_hierarchy_v;
-    ctor_v.clear(); cv_hierarchy_v.clear();
-    
-    ::cv::findContours(sb_img,ctor_v,cv_hierarchy_v,
-		       CV_RETR_EXTERNAL,
-		       CV_CHAIN_APPROX_SIMPLE);
+      auto const& xs = ref_xs_v[xs_pt_idx];
 
-    //Fill some cluster parameters 
-    Cluster2DArray_t result_v;
-    result_v.reserve(ctor_v.size());
-
-    ::larocv::Cluster2D new_clus ;
-
-    LAROCV_DEBUG() << "Found " << ctor_v.size() << " contours\n";
-
-    float rows = img.rows;
-    float cols = img.cols;
+      LAROCV_DEBUG() << "Inspecting XS @ " << xs << std::endl;
       
-    for(size_t j = 0; j < ctor_v.size(); ++j){
+      float angle = geo2d::angle(ref_vtx,xs);
+      angle += 180.;
       
-      Contour_t contour = ctor_v[j];
+      auto rot = ::cv::getRotationMatrix2D(ref_vtx,angle+180,1.);
 
-      for (auto& pt : contour) {
-	//up case to floating point
-	float r = pt.x;
-	float t = pt.y;
-	
-	r = (r / cols) * rad;
-	t = (t / rows) * 360.0 * 3.14159 / 180.0;
-	
-	pt.x = (int) r * std::cos(t) + pi0st.x;
-	pt.y = (int) r * std::sin(t) + pi0st.y;
-      }
+      //cv::Rect bbox = cv::RotatedRect(ref_vtx,img.size(),(angle+180)).boundingRect();
+
+      //rot.at<double>(0,2) += bbox.width/2.0 - ref_vtx.x;
+      //rot.at<double>(1,2) += bbox.height/2.0 - ref_vtx.y;
+
+      cv::Mat rot_img;
+      cv::warpAffine(img, rot_img, rot, img.size());//, bbox.size());
+
+      std::stringstream ss1,ss2;
+      ss1 << "norm_plane" << meta.plane() << "_xs" << xs_pt_idx << ".png";
+      ss2 << "rot_plane" << meta.plane() << "_xs" << xs_pt_idx << ".png";
+
+      cv::imwrite(std::string(ss1.str()).c_str(), img);
+      cv::imwrite(std::string(ss2.str()).c_str(), rot_img);
+
+      cv::Mat rot_polarimg, sb_img;
       
-      std::swap(new_clus._contour,contour);
-       
-      result_v.emplace_back(new_clus);
-    }
-    
-    if ( meta.debug() ) {
-
-      std::stringstream ss1, ss2;
-
-      ::larlite::user_info uinfo{};
-      ss1 << "Algo_"<<Name()<<"_Plane_"<<meta.plane()<<"_clusters";
-      uinfo.store("ID",ss1.str());
-
-      ss1.str(std::string());
-      ss1.clear();
-
-      uinfo.store("NClusters",(int)result_v.size());
-
-      LAROCV_DEBUG() << "Writing debug information for " << clusters.size() << "\n";
-    
-      for(size_t i = 0; i < result_v.size(); ++i){
-
-	const auto& cluster = result_v[i];
-
-	////////////////////////////////////////////
-	/////Contour points
+      // Cluster per xs-point found in Refine2DVertex
       
-	ss1  <<  "ClusterID_" << i << "_contour_x";
-	ss2  <<  "ClusterID_" << i << "_contour_y";
+      ::cv::linearPolar(rot_img,        //input
+			rot_polarimg,   //output
+			ref_vtx,
+			1000,
+			::cv::WARP_FILL_OUTLIERS); //seems like it has to set
 
-	for(const auto& point : cluster._contour) {
-	  double x = meta.XtoTimeTick(point.x);
-	  double y = meta.YtoWire(point.y);
-	
-	  uinfo.append(ss1.str(),x);
-	  uinfo.append(ss2.str(),y);
+      std::stringstream ss3;
+      ss3 << "polar_plane" << meta.plane() << "_xs" << xs_pt_idx << ".png";
+      cv::imwrite(std::string(ss3.str()).c_str(), rot_polarimg);
+
+      // mask-out very-near vtx pixels
+      size_t mask_col_max = _mask_radius/1000. * rot_polarimg.cols + 1;
+      for(size_t row=0; row<rot_polarimg.rows; row++) {
+	for(size_t col=0; col<mask_col_max; ++col) {
+	  rot_polarimg.at<unsigned char>(row, col) = (unsigned char)0;
 	}
-	
-	ss1.str(std::string());
-	ss1.clear();
-	ss2.str(std::string());
-	ss2.clear();
+      }
+      // mask-out a bit further pixels for angles outside the range
+      size_t row_min, row_max;
+      row_min = (size_t)((float)(rot_polarimg.rows) * (0.5 - 5./360.));
+      row_max = (size_t)((float)(rot_polarimg.rows) * (0.5 + 5./360.));
+      for(size_t row=row_min; row<=row_max; ++row) {
+	for(size_t col=0; col<mask_col_max*5; col++) {
+	  rot_polarimg.at<unsigned char>(row,col) = (unsigned char)0;
+	}
       }
 
-      meta.ev_user()->emplace_back(uinfo);
-    }
+      std::stringstream ss4;
+      ss4 << "mask_plane" << meta.plane() << "_xs" << xs_pt_idx << ".png";
+      cv::imwrite(std::string(ss4.str()).c_str(), rot_polarimg);
+      
     
+      //Dilate
+      auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,
+						::cv::Size(_dilation_size,_dilation_size));
+      ::cv::dilate(rot_polarimg,sb_img,
+		   kernel,::cv::Point(-1,-1),_dilation_iter);
+      
+      //Blur
+      ::cv::blur(sb_img,sb_img,
+		 ::cv::Size(_blur_size_r,_blur_size_t));
+      
+      //Threshold
+      auto t_value = ::cv::threshold(sb_img,
+				     sb_img,
+				     _thresh,
+				     _thresh_maxval,
+				     CV_THRESH_BINARY); //return type is "threshold value?"
+      (void) t_value;
+    
+      //Contour finding
+      ContourArray_t polar_ctor_v;    
+      std::vector<::cv::Vec4i> cv_hierarchy_v;
+      polar_ctor_v.clear(); cv_hierarchy_v.clear();
+      
+      ::cv::findContours(sb_img,polar_ctor_v,cv_hierarchy_v,
+			 CV_RETR_EXTERNAL,
+			 CV_CHAIN_APPROX_SIMPLE);
+
+      LAROCV_DEBUG() << "Found " << polar_ctor_v.size() << " contours\n";
+      // Find one contour that is closest to the vtx
+      float min_radius=1e4;
+      int   target_idx=-1;
+      for(size_t polar_ctor_idx = 0; polar_ctor_idx < polar_ctor_v.size(); ++polar_ctor_idx) {
+	auto const& polar_ctor = polar_ctor_v[polar_ctor_idx];
+	for(auto const& pt : polar_ctor) {
+	  float angle = pt.y / (float)(rot_polarimg.rows) * 360.;
+	  if(angle < -5 || angle > 5) continue;
+	  if(pt.x > min_radius) continue;
+	  min_radius = pt.x;
+	  target_idx = polar_ctor_idx;
+	}
+      }
+      if(target_idx < 0) {
+	LAROCV_DEBUG() << "No relevant contour find for this xs point" << std::endl;
+	continue;
+      }
+      auto const& polar_contour = polar_ctor_v[target_idx];
+      auto& contour_v = data._ctor_vv[meta.plane()];
+      
+      float rows = img.rows;
+      float cols = img.cols;
+      
+      geo2d::VectorArray<int> contour;
+      contour.resize(polar_contour.size());
+	
+      for (size_t pt_idx=0; pt_idx<polar_contour.size(); ++pt_idx) {
+	auto const& polar_pt = polar_contour[pt_idx];
+	auto& pt = contour[pt_idx];
+	//up case to floating point
+	float r = polar_pt.x;
+	float t = polar_pt.y;
+	
+	r = (r / cols) * 1000;
+	t = ((t / rows) * 360.0 - 180.) * 3.14159 / 180.0;
+	
+	pt.x = (int) r * std::cos(t) + ref_vtx.x;
+	pt.y = (int) r * std::sin(t) + ref_vtx.y;
+      }
+
+      contour_v.emplace_back(std::move(contour));
+    }
+    Cluster2DArray_t result_v;    
     return result_v;
   }
  

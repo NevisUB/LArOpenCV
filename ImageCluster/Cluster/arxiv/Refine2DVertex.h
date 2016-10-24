@@ -51,17 +51,12 @@ namespace larocv {
 		   larocv::ROI& roi);
 
     /// PostProcess method
-    void _PostProcess_(const std::vector<const cv::Mat>& img_v);
+    void _PostProcess_();
 
     geo2d::Line<float> SquarePCA(const ::cv::Mat& img,
 				 geo2d::Vector<float> pt,
 				 const size_t side);
     geo2d::VectorArray<float> QPointOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle);
-    float AngularSpread(const ::cv::Mat& polarimg,
-			float radius_frac_min,
-			float radius_frac_max,
-			float angle_mean,
-			float angle_width);
     
   private:
 
@@ -72,7 +67,6 @@ namespace larocv {
     float _global_bound_size;
     std::vector<float> _tick_offset_v;
     std::vector<float> _comp_factor_v;
-    bool _use_polar_spread;
   };
 
   class Refine2DVertexData : public larocv::AlgoDataBase {
@@ -98,13 +92,12 @@ namespace larocv {
       _pca_vv.resize(3);
       _circle_trav_vv.resize(3);
       _dtheta_trav_vv.resize(3);
-      _cand_xs_vv.resize(3);
       
       for(auto& d : _xs_vv)         d.clear();
       for(auto& d : _pca_vv)        d.clear();
       for(auto& d : _circle_trav_vv)  d.clear();
       for(auto& d : _dtheta_trav_vv)  d.clear();
-      for(auto& d : _cand_xs_vv) d.clear();
+      
     }
 
     std::vector< geo2d::Vector<float>           > _vtx_v;
@@ -113,9 +106,8 @@ namespace larocv {
     std::vector< std::vector< geo2d::Circle<float> > > _circle_trav_vv;
     std::vector< std::vector< float >           > _dtheta_trav_vv;
     std::vector< geo2d::Rect >  _scan_rect_v;
-    geo2d::VectorArray<float>   _cand_vtx_v;
     std::vector< float >        _cand_score_v;
-    std::vector< geo2d::VectorArray<float> > _cand_xs_vv;
+    geo2d::VectorArray<float>   _cand_vtx_v;
   };
   
   /**
