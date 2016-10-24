@@ -54,8 +54,9 @@ namespace larocv {
       
       auto rot = ::cv::getRotationMatrix2D(ref_vtx,angle,1.);
 
-      cv::Mat thresh_img;
-      ::cv::threshold(img, thresh_img, 10,255,CV_THRESH_BINARY);
+      //cv::Mat thresh_img;
+      //::cv::threshold(img, thresh_img, 10,255,CV_THRESH_BINARY);
+      //::cv::threshold(img, thresh_img, 10,255,3);
       
       cv::Rect bbox = cv::RotatedRect(ref_vtx,img.size(),angle).boundingRect();
       //rot.at<double>(0,2) += bbox.width/2.0 - ref_vtx.x;
@@ -80,7 +81,8 @@ namespace larocv {
 			ref_vtx,
 			1000,
 			::cv::WARP_FILL_OUTLIERS); //seems like it has to set
-      ::cv::threshold(rot_polarimg,rot_polarimg,10,255,CV_THRESH_BINARY);
+      //::cv::threshold(rot_polarimg,rot_polarimg,10,255,CV_THRESH_BINARY);
+      //::cv::threshold(rot_polarimg,rot_polarimg,10,255,3);
 
       std::stringstream ss3;
       ss3 << "polar_plane" << meta.plane() << "_xs" << xs_pt_idx << ".png";
@@ -116,7 +118,7 @@ namespace larocv {
       
     
       //Dilate
-      /*
+
       auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,
 						::cv::Size(_dilation_size,_dilation_size));
       ::cv::dilate(rot_polarimg,sb_img,
@@ -133,7 +135,7 @@ namespace larocv {
 				     _thresh_maxval,
 				     CV_THRESH_BINARY); //return type is "threshold value?"
       (void) t_value;
-      */    
+
       //Contour finding
       ContourArray_t polar_ctor_v;    
       std::vector<::cv::Vec4i> cv_hierarchy_v;

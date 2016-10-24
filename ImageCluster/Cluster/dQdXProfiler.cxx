@@ -46,13 +46,18 @@ namespace larocv {
     }
 
     // Define a bounding box in which we will work
-    geo2d::Vector<float> box_tl;
-    geo2d::Vector<float> box_br;
+    geo2d::Vector<float> box_tl(-1,-1);
+    geo2d::Vector<float> box_br(-1,-1);
     for(size_t c_idx=0; c_idx < clusters.size(); ++c_idx) {
+      if(clusters[c_idx]._contour.size()<3) continue;
+      for(auto const& pt : clusters[c_idx]._contour)
+	LAROCV_DEBUG() << "    Pt: " << pt << std::endl;
       auto const rect = cv::boundingRect( cv::Mat(clusters[c_idx]._contour) );
+      LAROCV_DEBUG() << "Cluster ID " << c_idx
+		     << " points=" << clusters[c_idx]._contour.size() << " ... Box: " << rect << std::endl;
       auto const tl = rect.tl();
       auto const br = rect.br();
-      if(!c_idx) {
+      if(box_tl.x < 0) {
 	box_tl.x = tl.x; box_tl.y = tl.y;
 	box_br.x = br.x; box_br.y = br.y;
 	continue;
@@ -62,10 +67,11 @@ namespace larocv {
       if(br.x > box_br.x) box_br.x = br.x;
       if(br.y < box_br.y) box_br.y = br.y;
     }
-    
+
     auto const& box_origin = box_tl;
     const float box_width  = box_br.x - box_tl.x;
     const float box_height = box_tl.y - box_br.y;
+    LAROCV_DEBUG() << "Ground BBox TL: " << box_tl << " width: " << box_width << " height: " << box_height << std::endl;
     auto const  bbox = cv::Rect(box_origin.x, box_origin.y, box_width, box_height);
 
     // Crop the image

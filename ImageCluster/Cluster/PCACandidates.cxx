@@ -40,15 +40,15 @@ namespace larocv {
 
       for(unsigned atomic_idx=0; atomic_idx < atomic_ctor_ass_v.size(); ++atomic_idx){
 
-	if (orig_idx != atomic_ctor_ass_v[atomic_idx] ) continue;
+	if (orig_idx != atomic_ctor_ass_v.at(atomic_idx) ) continue;
 
-	auto const& ctor = clusters[atomic_idx]._contour;
+	auto const& ctor = clusters.at(atomic_idx)._contour;
 	
 	cv::Mat ctor_pts(ctor.size(), 2, CV_32FC1); //32 bit precision is fine
 	
 	for (unsigned i = 0; i < ctor_pts.rows; ++i) {
-	  ctor_pts.at<float>(i, 0) = ctor[i].x;
-	  ctor_pts.at<float>(i, 1) = ctor[i].y;
+	  ctor_pts.at<float>(i, 0) = ctor.at(i).x;
+	  ctor_pts.at<float>(i, 1) = ctor.at(i).y;
 	}
 	
 	cv::PCA pca_ana(ctor_pts, cv::Mat(), CV_PCA_DATA_AS_ROW,0);
