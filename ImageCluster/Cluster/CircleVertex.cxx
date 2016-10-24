@@ -70,8 +70,10 @@ namespace larocv {
 	if ( geo2d::contains(circle_pt,ipoints_v[pidx],dist) )
 	  inside.emplace_back(ipoints_v[pidx]);
 
-      geo2d::Circle<float> circle_min(inside);
+      geo2d::Circle<float> circle_min(inside); 
 
+      LAROCV_DEBUG() << "Candidate circle on plane " << meta.plane()
+		     << " center @ " << circle_min.center << " radius " << circle_min.radius << std::endl;
       circlevertex_data._circledata_v_v[meta.plane()].emplace_back(std::move(circle_min)); 
     }
   }
