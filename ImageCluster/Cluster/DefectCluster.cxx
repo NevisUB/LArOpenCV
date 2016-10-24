@@ -103,10 +103,12 @@ namespace larocv {
 	 
 	 //get the chosen edge, currently take the defect facing the longest hull edge
 	 auto chosen_edge = max_hull_edge(ctor,defects);
+	 LAROCV_DEBUG() << "HullEdge: " << chosen_edge << std::endl;
 	 
 	 // segment the hull line and find the line between the hull edge and
 	 // the defect point, which does not intersect the contour itself, other than at the defect point
 	 auto min_line = find_line_hull_defect(ctor,chosen_edge);
+	 LAROCV_DEBUG() << "MinLine: " << min_line.pt << " => " << min_line.dir << std::endl;
 
 	 defectcluster_data._split_line_v_v[meta.plane()].emplace_back(min_line);
 	 
