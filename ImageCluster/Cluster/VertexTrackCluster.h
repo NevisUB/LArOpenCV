@@ -68,7 +68,7 @@ namespace larocv {
       _ctor_vv.resize(3);
     }
 
-    std::vector< std::vector< geo2d::VectorArray<int> > > _ctor_vv;
+    std::vector< std::vector< geo2d::VectorArray<float> > > _ctor_vv;
 
   };
 
