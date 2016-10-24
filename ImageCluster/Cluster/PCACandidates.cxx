@@ -37,6 +37,7 @@ namespace larocv {
 
       std::vector<geo2d::Line<float> > ctor_lines_v;
       std::vector<size_t> atomic_id_v;
+
       for(unsigned atomic_idx=0; atomic_idx < atomic_ctor_ass_v.size(); ++atomic_idx){
 
 	if (orig_idx != atomic_ctor_ass_v[atomic_idx] ) continue;
@@ -59,6 +60,7 @@ namespace larocv {
 
 	ctor_lines_v.emplace_back(std::move(pca_principle));
 	atomic_id_v.push_back(atomic_idx);
+
       }
       
       std::vector<geo2d::Vector<float> > ipoints_v;
@@ -69,6 +71,10 @@ namespace larocv {
 	  auto ipoint = geo2d::IntersectionPoint(ctor_lines_v[i],ctor_lines_v[j]);
 	  ipoints_v.emplace_back(std::move(ipoint));
 	}
+      }
+
+      for ( auto & ctor_line : ctor_lines_v) {
+	LAROCV_DEBUG() << "meta.plane() : " << meta.plane() <<  " orig_index : " <<  orig_idx << " pt: " <<  ctor_line.pt << " dir : " << ctor_line.dir << std::endl;
       }
       
       //copy into algodata
