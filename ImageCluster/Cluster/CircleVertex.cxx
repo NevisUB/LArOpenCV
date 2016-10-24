@@ -29,16 +29,16 @@ namespace larocv {
     auto& circlevertex_data = AlgoData<larocv::CircleVertexData>();
     
     //find the points who's circle of _max_radius_size contains other most number of points.
-    for(auto& ipoints_v : ipoints_v_v) {
+    for(auto const& ipoints_v : ipoints_v_v) {
 
-      if ( !ipoints_v.size() ) continue;
+      if ( ipoints_v.size() < 2 ) continue;
 			      
       std::vector<unsigned> n_inside_v(ipoints_v.size(),0);
 
       for(unsigned pidx=0; pidx < ipoints_v.size(); ++pidx) {
 	
-	auto& pt       = ipoints_v[pidx];
-	auto& n_inside = n_inside_v[pidx];
+	auto const& pt       = ipoints_v[pidx];
+	auto&       n_inside = n_inside_v[pidx];
 	
 	geo2d::Circle<float> circle_pt(pt,_max_radius_size);
 
