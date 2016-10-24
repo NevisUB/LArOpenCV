@@ -231,7 +231,7 @@ namespace larocv {
 
     LAROCV_DEBUG() << "\t==>Inspecting hull defect\n";
     LAROCV_DEBUG() << "\t==>start and end of edge\n";
-    LAROCV_DEBUG() << "plt.plot(["<<start.x<<","<<end.x<<"],["<<start.y<<","<<end.y<<"],'-',lw=5)\n";
+    //LAROCV_DEBUG() << "plt.plot(["<<start.x<<","<<end.x<<"],["<<start.y<<","<<end.y<<"],'-',lw=5)\n";
 
     auto minidx = std::min(defect[0],defect[1]);
     auto maxidx = std::max(defect[0],defect[1]);
@@ -370,8 +370,8 @@ namespace larocv {
       //this point is already a part of the contour, don't put a duplicate inside
       if ( inter_pt == cv::Point(p1) or inter_pt == cv::Point(p2) ) continue;
 
-      LAROCV_DEBUG() << "plt.plot(["<< p3.x << "," << p4.x << "],["<<p3.y<<","<<p4.y<<"],'-o',lw=2)\n";
-      LAROCV_DEBUG() << "plt.plot(" << ip.x << "," << ip.y << ",'o',markersize=10)\n";
+      //LAROCV_DEBUG() << "plt.plot(["<< p3.x << "," << p4.x << "],["<<p3.y<<","<<p4.y<<"],'-o',lw=2)\n";
+      //LAROCV_DEBUG() << "plt.plot(" << ip.x << "," << ip.y << ",'o',markersize=10)\n";
 
       ctor_copy.emplace_back(std::move(inter_pt));// this cv::Point2f has been floored with typecast
     }
