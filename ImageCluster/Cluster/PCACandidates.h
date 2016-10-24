@@ -3,7 +3,7 @@
 #ifndef __PCACANDIDATES_H__
 #define __PCACANDIDATES_H__
 
-#include "ClusterAlgoBase.h"
+#include "ImageAnaBase.h"
 #include "AlgoFactory.h"
 
 #include "Core/Geo2D.h"
@@ -12,13 +12,13 @@
 
 namespace larocv {
  
-  class PCACandidates : public larocv::ClusterAlgoBase {
+  class PCACandidates : public larocv::ImageAnaBase {
     
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
     PCACandidates(const std::string name = "PCACandidates") :
-      ClusterAlgoBase(name)
+      ImageAnaBase(name)
     {}
     
     /// Default destructor
@@ -32,11 +32,12 @@ namespace larocv {
     /// Inherited class configuration method
     void _Configure_(const ::fcllite::PSet &pset);
     
-    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
-				      const ::cv::Mat& img,
-				      larocv::ImageMeta& meta,
-				      larocv::ROI& roi);
+    void _Process_(const larocv::Cluster2DArray_t& clusters,
+		   const ::cv::Mat& img,
+		   larocv::ImageMeta& meta,
+		   larocv::ROI& roi);
 
+    void _PostProcess_(const std::vector<const cv::Mat>& img_v);
   private:
     
   };

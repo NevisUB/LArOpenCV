@@ -16,11 +16,10 @@ namespace larocv {
     _max_radius_size = 10;
   }
   
-  larocv::Cluster2DArray_t CircleVertex::_Process_(const larocv::Cluster2DArray_t& clusters,
-						   const ::cv::Mat& img,
-						   larocv::ImageMeta& meta,
-						   larocv::ROI& roi) {
-
+  void CircleVertex::_Process_(const larocv::Cluster2DArray_t& clusters,
+			       const ::cv::Mat& img,
+			       larocv::ImageMeta& meta,
+			       larocv::ROI& roi) {
     
     const auto& pcacandidates_data = AlgoData<PCACandidatesData>(ID()-1);
 
@@ -75,12 +74,9 @@ namespace larocv {
 
       circlevertex_data._circledata_v_v[meta.plane()].emplace_back(std::move(circle_min)); 
     }
-
-    
-    return clusters;
   }
-  
-  
-  
+
+  void CircleVertex::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  {}
 }
 #endif

@@ -15,10 +15,10 @@ namespace larocv {
 
   }
   
-  larocv::Cluster2DArray_t PCACandidates::_Process_(const larocv::Cluster2DArray_t& clusters,
-						   const ::cv::Mat& img,
-						   larocv::ImageMeta& meta,
-						   larocv::ROI& roi)
+  void PCACandidates::_Process_(const larocv::Cluster2DArray_t& clusters,
+				const ::cv::Mat& img,
+				larocv::ImageMeta& meta,
+				larocv::ROI& roi)
   {
 
     //get the defect cluster data atomic associations for broken clusters => original clusters
@@ -42,7 +42,7 @@ namespace larocv {
 
 	if (orig_idx != atomic_ctor_ass_v[atomic_idx] ) continue;
 
-	auto& ctor = clusters[atomic_idx]._contour;
+	auto const& ctor = clusters[atomic_idx]._contour;
 	
 	cv::Mat ctor_pts(ctor.size(), 2, CV_32FC1); //32 bit precision is fine
 	
@@ -71,15 +71,14 @@ namespace larocv {
 	  ipoints_v.emplace_back(std::move(ipoint));
 	}
       }
-
+      
       //copy into algodata
       circlevertex_data.set_data(ctor_lines_v,ipoints_v,meta.plane());
+    }
   }
 
-    
-    return clusters;
-  }
-  
+  void PCACandidates::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  {}
   
   
 }
