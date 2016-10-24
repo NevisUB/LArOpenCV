@@ -66,10 +66,12 @@ namespace larocv {
       double dist;
       
       //get the points inside (another loop)
-      for(unsigned pidx=0; pidx < ipoints_v.size(); ++pidx)
-	if ( geo2d::contains(circle_pt,ipoints_v[pidx],dist) )
+      for(unsigned pidx=0; pidx < ipoints_v.size(); ++pidx) {
+	if ( geo2d::contains(circle_pt,ipoints_v[pidx],dist) ) {
+	  LAROCV_DEBUG() << "Point coordinate: " << ipoints_v[pidx] << std::endl;
 	  inside.emplace_back(ipoints_v[pidx]);
-
+	}
+      }
       geo2d::Circle<float> circle_min(inside); 
 
       LAROCV_DEBUG() << "Candidate circle on plane " << meta.plane()
