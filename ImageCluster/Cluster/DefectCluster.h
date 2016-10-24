@@ -56,6 +56,7 @@ namespace larocv {
     
     geo2d::Line<float> find_line_hull_defect(const Contour_t& ctor, cv::Vec4i defect);
 
+    geo2d::Line<float> scan_breaker(const Contour_t& ctor, cv::Vec4i defect);
     
   private:
     int _min_defect_size;

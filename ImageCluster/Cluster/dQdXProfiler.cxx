@@ -49,6 +49,7 @@ namespace larocv {
     geo2d::Vector<float> box_tl(-1,-1);
     geo2d::Vector<float> box_br(-1,-1);
     for(size_t c_idx=0; c_idx < clusters.size(); ++c_idx) {
+      LAROCV_DEBUG() << "Current box1:" << box_tl << " => " << box_br << std::endl;
       if(clusters[c_idx]._contour.size()<3) continue;
       for(auto const& pt : clusters[c_idx]._contour)
 	LAROCV_DEBUG() << "    Pt: " << pt << std::endl;
@@ -63,14 +64,16 @@ namespace larocv {
 	continue;
       }
       if(tl.x < box_tl.x) box_tl.x = tl.x;
-      if(tl.y > box_tl.y) box_tl.y = tl.y;
+      if(tl.y < box_tl.y) box_tl.y = tl.y;
       if(br.x > box_br.x) box_br.x = br.x;
-      if(br.y < box_br.y) box_br.y = br.y;
+      if(br.y > box_br.y) box_br.y = br.y;
+
+      LAROCV_DEBUG() << "Current box2:" << box_tl << " => " << box_br << std::endl;
     }
 
     auto const& box_origin = box_tl;
     const float box_width  = box_br.x - box_tl.x;
-    const float box_height = box_tl.y - box_br.y;
+    const float box_height = box_br.y - box_tl.y;
     LAROCV_DEBUG() << "Ground BBox TL: " << box_tl << " width: " << box_width << " height: " << box_height << std::endl;
     auto const  bbox = cv::Rect(box_origin.x, box_origin.y, box_width, box_height);
 
