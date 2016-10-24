@@ -42,6 +42,8 @@ namespace larocv {
     /// Clear method override
     void Clear();
 
+    AlgorithmID_t _input_id;
+    
     std::vector<GEO2D_ContourArray_t> _atomic_ctor_v_v;
     std::vector<std::vector<size_t> > _atomic_ctor_ass_v_v;
 

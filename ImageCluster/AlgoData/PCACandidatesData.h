@@ -37,11 +37,13 @@ namespace larocv {
     /// Clear method override
     void Clear();
 
+    AlgorithmID_t _input_id;
     std::vector<std::vector<std::vector<geo2d::Line<float> > > >   _ctor_lines_v_v_v;
     std::vector<std::vector<std::vector<geo2d::Vector<float> > > > _ipoints_v_v_v;
-
+    std::vector<std::vector<std::vector<size_t > > > _atomic_id_v_v_v;
     void set_data(const std::vector<geo2d::Line<float> >& ctor_lines_v,
 		  const std::vector<geo2d::Vector<float> >& ipoints_v,
+		  const std::vector<size_t>& atomic_id_v,
 		  short plane);
     
   };

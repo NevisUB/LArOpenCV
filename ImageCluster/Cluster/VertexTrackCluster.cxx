@@ -40,7 +40,9 @@ namespace larocv {
     auto& data = AlgoData<larocv::VertexTrackClusterData>();
 
     LAROCV_DEBUG() << "Found " << ref_xs_v.size() << " crossing points (track cluster candidates)" << std::endl;
-    
+
+    Cluster2DArray_t result_v;
+	
     for(size_t xs_pt_idx=0; xs_pt_idx<ref_xs_v.size(); ++xs_pt_idx) {
 
       auto const& xs = ref_xs_v[xs_pt_idx];
@@ -164,7 +166,9 @@ namespace larocv {
       
       float rows = rot_polarimg.rows;
       float cols = rot_polarimg.cols;
-      
+
+      Cluster2D res_contour;
+      res_contour._contour.resize(polar_contour.size());
       geo2d::VectorArray<float> contour;
       contour.resize(polar_contour.size());
 	
@@ -180,11 +184,14 @@ namespace larocv {
 	
 	pt.x = (float) r * std::cos(t) + ref_vtx.x;
 	pt.y = (float) r * std::sin(t) + ref_vtx.y;
-      }
 
+	res_contour._contour[pt_idx].x = (int)(pt.x + 0.5);
+	res_contour._contour[pt_idx].y = (int)(pt.y + 0.5);
+      }
+      result_v.emplace_back(std::move(res_contour));
       contour_v.emplace_back(std::move(contour));
     }
-    Cluster2DArray_t result_v;    
+
     return result_v;
   }
  

@@ -12,9 +12,7 @@ namespace larocv {
   {
     _min_defect_size      = 5;
     _hull_edge_pts_split  = 50;
-    set_verbosity(msg::kDEBUG);
-
-    
+    set_verbosity(msg::kDEBUG);    
   }
 
   larocv::Cluster2DArray_t DefectCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -22,8 +20,9 @@ namespace larocv {
 						    larocv::ImageMeta& meta,
 						    larocv::ROI& roi)
   {
+    if(this->ID()==0) throw larbys("DefectCluster should not be run 1st!");
     auto& defectcluster_data = AlgoData<larocv::DefectClusterData>();
-    
+    defectcluster_data._input_id = (this->ID() - 1);
     ////////////////////////////////////////////
     // Take a single contour, find the defect on the side with 
     // longest hull edge. Break the contour into two. Re insert into master
