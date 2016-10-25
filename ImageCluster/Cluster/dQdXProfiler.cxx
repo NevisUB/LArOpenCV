@@ -24,6 +24,9 @@ namespace larocv {
 				larocv::ImageMeta& meta,
 				larocv::ROI& roi)
   {
+    cv::Mat thresh_img = img;
+    //::cv::threshold(img, thresh_img, 10,255,CV_THRESH_BINARY);
+
     auto const& pca_data    = AlgoData<larocv::PCACandidatesData>(_pca_algo_id);
     auto const& defect_data = AlgoData<larocv::DefectClusterData>(pca_data._input_id);
     auto& data = AlgoData<larocv::dQdXProfilerData>();
@@ -51,8 +54,8 @@ namespace larocv {
     for(size_t c_idx=0; c_idx < clusters.size(); ++c_idx) {
       LAROCV_DEBUG() << "Current box1:" << box_tl << " => " << box_br << std::endl;
       if(clusters[c_idx]._contour.size()<3) continue;
-      for(auto const& pt : clusters[c_idx]._contour)
-	LAROCV_DEBUG() << "    Pt: " << pt << std::endl;
+      // for(auto const& pt : clusters[c_idx]._contour)
+      // 	LAROCV_DEBUG() << "    Pt: " << pt << std::endl;
       auto const rect = cv::boundingRect( cv::Mat(clusters[c_idx]._contour) );
       LAROCV_DEBUG() << "Cluster ID " << c_idx
 		     << " points=" << clusters[c_idx]._contour.size() << " ... Box: " << rect << std::endl;
@@ -75,16 +78,17 @@ namespace larocv {
     const float box_width  = box_br.x - box_tl.x;
     const float box_height = box_br.y - box_tl.y;
     LAROCV_DEBUG() << "Ground BBox TL: " << box_tl << " width: " << box_width << " height: " << box_height << std::endl;
-    auto const  bbox = cv::Rect(box_origin.x, box_origin.y, box_width, box_height);
+    auto const bbox = cv::Rect(box_origin.x, box_origin.y, box_width, box_height);
 
     // Crop the image
-    auto const small_img = cv::Mat(img,bbox);
+    auto const small_img = cv::Mat(thresh_img,bbox);
+
     //cv::threshold(small_img,small_img,_pi_threshold,1000,3);
 
     // List points that we care
     auto& pts = data._pts_vv[meta.plane()];
     pts.clear();
-    findNonZero(small_img, pts);
+    cv::findNonZero(small_img, pts);
     // Correct point's coordinate
     for(auto& pt : pts) {
       pt.x += box_origin.x;
@@ -100,7 +104,7 @@ namespace larocv {
       auto const& pt = pts[pt_idx];
       for(size_t c_idx = 0; c_idx < clusters.size(); ++c_idx) {
 	auto const& ctor = clusters[c_idx]._contour;
-	if( pointPolygonTest(ctor, pt, false) <0 ) continue;
+	if( cv::pointPolygonTest(ctor, pt, false) < 0 ) continue;
 	pt2cluster[pt_idx] = c_idx;
 	break;
       }
@@ -150,8 +154,7 @@ namespace larocv {
     for(size_t c_idx = 0; c_idx < dqdx_vv.size(); ++c_idx) {
       auto& dqdx_v = dqdx_vv.at(c_idx);
       auto const& bounds = bounds_v.at(c_idx);
-      if(bounds.first == bounds.second)
-	continue;
+      if(bounds.first == bounds.second)	continue;
       size_t num_dqdx = (bounds.second - bounds.first) / _dx_resolution + 1;
       LAROCV_DEBUG() << "Plane " << meta.plane() << " Cluster " << c_idx
 		     << " got bounds " << bounds.first << " => " << bounds.second
@@ -170,11 +173,117 @@ namespace larocv {
       auto const& bounds = bounds_v.at(c_idx);
       auto const& dist   = pt2dist.at(pt_idx);
       size_t dqdx_idx = (dist - bounds.first) / _dx_resolution;
-      LAROCV_DEBUG() << "Point " << pt_idx << " @ (" << pt.x << "," << pt.y << ") @ " << dist
-		     << " belongs to cluster " << c_idx << std::endl;
-      dqdx_vv.at(c_idx).at(dqdx_idx) += (float)(img.at<unsigned char>(pt.y,pt.x));
+      // LAROCV_DEBUG() << "Point " << pt_idx << " @ (" << pt.x << "," << pt.y << ") @ " << dist
+      // 	        << " belongs to cluster " << c_idx << std::endl;
+      dqdx_vv.at(c_idx).at(dqdx_idx) += (float)(thresh_img.at<unsigned char>(pt.y,pt.x));
     }
     LAROCV_DEBUG() << "Number of points not processed: " << num_invalid_pts << "/" << pts.size() << std::endl;
+
+
+    // order the contours
+    const auto& n_clusters = defect_data._n_original_clusters_v[meta.plane()];
+    const auto& atomic_ctor_ass_v = defect_data._atomic_ctor_ass_v_v[meta.plane()];
+
+    
+    std::vector<std::vector<uint> > dfect_cidx_v_v;
+    std::vector<std::vector<uint> > odfect_cidx_v_v;
+    
+    dfect_cidx_v_v.resize(n_clusters);
+    odfect_cidx_v_v.resize(n_clusters);
+
+    //for each of the original atomic cluster
+    for(unsigned atomic_cidx=0; atomic_cidx<n_clusters; ++atomic_cidx) {
+
+      //get this set of indicies
+      auto& dfect_cidx_v  = dfect_cidx_v_v[atomic_cidx];
+
+      //get this ordered (to be determined...) set of indicies
+      auto& odfect_cidx_v = odfect_cidx_v_v[atomic_cidx];
+      
+      odfect_cidx_v.clear();
+
+      //for each of the associated broken=>atomic association
+      for(unsigned jj=0;jj<atomic_ctor_ass_v.size();++jj) {
+	const auto& atomic_ctor_ass=atomic_ctor_ass_v[jj];
+
+	//if this associated, broken cluster is not from atomic cluster atomic_cidx, move on
+	if ( atomic_ctor_ass != atomic_cidx ) continue;
+
+	//else this broken cluster came from same atomic
+	dfect_cidx_v.emplace_back(jj);
+      } 
+      
+      //lets get the left most contour
+      uint min_idx=-1;
+      int min_x=9e6;	
+
+      //for each broken cluster (from the same atomic!)
+      for(unsigned kk=0;kk<dfect_cidx_v.size();++kk)  {
+	auto& ctor=clusters[ dfect_cidx_v[kk] ]._contour;
+	for(const auto& pt: ctor) {
+	  if(pt.x<min_x) {
+	    min_x = pt.x;
+	    min_idx=dfect_cidx_v[kk];
+	  }
+	}
+      }
+
+      //put in the left most index
+      odfect_cidx_v.push_back(min_idx);
+
+      //until the ordered index vector is filled
+      while(odfect_cidx_v.size() != dfect_cidx_v.size()) {
+
+	//get the last index in ordered vector
+	auto  curr_cidx= odfect_cidx_v.back();
+	auto& curr_ctor    = clusters[curr_cidx]._contour;
+	
+	int min_idx=-1;
+	int min_d=9e6;
+	  
+	//for each of the broken clusters from the same atomic
+	for(unsigned kk=0;kk<dfect_cidx_v.size();++kk)  {
+
+	  //if this broken cluster aleady ordered, move on
+	  if ( std::find(odfect_cidx_v.begin(), odfect_cidx_v.end(), dfect_cidx_v[kk]) != odfect_cidx_v.end() )
+	    continue;
+
+	  auto& part_ctor=clusters[dfect_cidx_v[kk]]._contour;
+	  
+	  //else, loop pairwire between current contour and this one, and determine the min distance
+	  for(const auto& curr_pt : curr_ctor) {
+	    for(const auto& part_pt: part_ctor) {
+	      float d=std::sqrt(std::pow(part_pt.x-curr_pt.x,2)+std::pow(part_pt.y-curr_pt.y,2));
+	      if (d < min_d) {
+		min_d=d;
+		min_idx=dfect_cidx_v[kk];
+	      }
+	    }
+	  }
+	}
+
+	//min_idx now filled with index which contains the closest contour
+	
+	if (min_idx==-1) throw larbys("Could not find minimum index for this contour\n");
+	
+	//put it into ordering scheme
+	odfect_cidx_v.push_back(min_idx);
+      }
+      
+    }
+
+    auto& o_dqdx_vv=data._o_dqdx_vvv[meta.plane()];
+    o_dqdx_vv.resize(n_clusters);
+    for(unsigned atomic_cidx=0; atomic_cidx<n_clusters; ++atomic_cidx) {
+      auto& o_dqdx_v=o_dqdx_vv[atomic_cidx];
+      for (const auto& odfect_cidx : odfect_cidx_v_v[atomic_cidx]) {
+	for(const auto& dqdx : dqdx_vv.at(odfect_cidx)) {
+	  o_dqdx_v.push_back(dqdx);
+	}
+      }
+    }
+    
+    
   }
 
   void dQdXProfiler::_PostProcess_(const std::vector<const cv::Mat>& img_v)
