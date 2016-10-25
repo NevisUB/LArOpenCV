@@ -23,6 +23,10 @@ namespace larocv {
     if(this->ID()==0) throw larbys("DefectCluster should not be run 1st!");
     auto& defectcluster_data = AlgoData<larocv::DefectClusterData>();
     defectcluster_data._input_id = (this->ID() - 1);
+    auto& atomic_defects_v_v = defectcluster_data._atomic_defect_v_v_v[meta.plane()];
+    atomic_defects_v_v.clear();
+    atomic_defects_v_v.resize(clusters.size());
+
     ////////////////////////////////////////////
     // Take a single contour, find the defect on the side with 
     // longest hull edge. Break the contour into two. Re insert into master
@@ -47,8 +51,10 @@ namespace larocv {
     LAROCV_DEBUG() << "On plane : " << meta.plane() << std::endl;
     //for each initial cluster
     for(unsigned ic=0;ic<clusters.size();++ic) {
+      
+      auto& atomic_defects_v = atomic_defects_v_v[ic];
 
-       LAROCV_DEBUG()<< "Atomic cluster: " << ic << "\n";
+      LAROCV_DEBUG()<< "Atomic cluster: " << ic << "\n";
 
        auto contour = clusters[ic]._contour;
 
@@ -90,7 +96,7 @@ namespace larocv {
 	 // clear the hull and defects for this contour
 	 hullpts.clear();
 	 defects.clear();
-	 defects_d.clear();
+	 defects_d.clear ();
 	 
 	 // fill the hull and defects
 	 fill_hull_and_defects(ctor,hullpts,defects,defects_d);
@@ -174,7 +180,10 @@ namespace larocv {
 	 
 	 // split the contour into two by this line
 	 split_contour(ctor,ctor1,ctor2,min_line);
-
+	 
+	 // write the defect POINT to algo data....
+	 atomic_defects_v.push_back(ctor.at(chosen_edge[2]));	
+	 LAROCV_DEBUG() << "Number of defects points"<<atomic_defects_v.size()<<std::endl;
 	 LAROCV_DEBUG() << "Split contour of size " << ctor.size() << " into " << ctor1.size() << " + " << ctor2.size() << " = " << ctor1.size()+ctor2.size() << std::endl;
 	 
 	 //remove this contour

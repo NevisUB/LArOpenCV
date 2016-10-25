@@ -13,13 +13,14 @@ namespace larocv {
     _atomic_ctor_ass_v_v.clear();
     _hull_line_v_v.clear();
     _split_line_v_v.clear();
-
+    _atomic_defect_v_v_v.clear();
 
     _hull_line_v_v.resize(3);
     _split_line_v_v.resize(3);
     _n_original_clusters_v.resize(3);
     _atomic_ctor_v_v.resize(3);
     _atomic_ctor_ass_v_v.resize(3);
+    _atomic_defect_v_v_v.resize(3);
 
     _input_id = kINVALID_ID;
   }
