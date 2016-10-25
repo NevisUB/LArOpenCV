@@ -65,14 +65,22 @@ namespace larocv {
     
   private:
 
+    void PlaneScan(const ::cv::Mat& img, const size_t plane,
+		   const ::geo2d::Circle<float> init_circle);
+
+    void XPlaneScan(const std::vector<const cv::Mat>& img_v);
+
     AlgorithmID_t _circle_vertex_algo_id;
     double _radius;
     float _pi_threshold;
     float _pca_box_size;
     float _global_bound_size;
     std::vector<float> _tick_offset_v;
-    std::vector<float> _comp_factor_v;
+    std::vector<float> _time_comp_factor_v;
+    std::vector<float> _wire_comp_factor_v;
     bool _use_polar_spread;
+    float _xplane_tick_resolution;
+    float _xplane_guess_max_dist;
   };
 
   class Refine2DVertexData : public larocv::AlgoDataBase {
@@ -83,36 +91,53 @@ namespace larocv {
     ~Refine2DVertexData(){}
 
     void Clear() {
+
+      _xplane_tick_min = _xplane_tick_max = -1;
       
-      _vtx_v.clear();
+      _valid_plane_v.clear();
+      _init_vtx_v.clear();
       _scan_rect_v.clear();
+      _cand_valid_v.clear();
       _cand_score_v.clear();
       _cand_vtx_v.clear();
 
-      _vtx_v.resize(3);
+      _valid_plane_v.resize(3,false);
+      _init_vtx_v.resize(3);
       _scan_rect_v.resize(3);
+      _cand_valid_v.resize(3,false);
       _cand_score_v.resize(3,-1);
       _cand_vtx_v.resize(3);
       
-      _xs_vv.resize(3);
-      _pca_vv.resize(3);
+      _init_xs_vv.resize(3);
+      _init_pca_vv.resize(3);
       _circle_trav_vv.resize(3);
       _dtheta_trav_vv.resize(3);
       _cand_xs_vv.resize(3);
+      _xplane_binned_vtx_vv.resize(3);
+      _xplane_binned_score_vv.resize(3);
       
-      for(auto& d : _xs_vv)         d.clear();
-      for(auto& d : _pca_vv)        d.clear();
+      for(auto& d : _init_xs_vv)      d.clear();
+      for(auto& d : _init_pca_vv)     d.clear();
       for(auto& d : _circle_trav_vv)  d.clear();
       for(auto& d : _dtheta_trav_vv)  d.clear();
-      for(auto& d : _cand_xs_vv) d.clear();
+      for(auto& d : _cand_xs_vv)      d.clear();
+
+      for(auto& d : _xplane_binned_vtx_vv)   d.clear();
+      for(auto& d : _xplane_binned_score_vv) d.clear();
     }
 
-    std::vector< geo2d::Vector<float>           > _vtx_v;
-    std::vector< geo2d::VectorArray<float>      > _xs_vv;
-    std::vector< std::vector<geo2d::Line<float> > > _pca_vv;
+    std::vector< bool > _valid_plane_v;
+    std::vector< geo2d::Vector<float>           > _init_vtx_v;
+    std::vector< geo2d::VectorArray<float>      > _init_xs_vv;
+    std::vector< std::vector<geo2d::Line<float> > > _init_pca_vv;
     std::vector< std::vector< geo2d::Circle<float> > > _circle_trav_vv;
     std::vector< std::vector< float >           > _dtheta_trav_vv;
     std::vector< geo2d::Rect >  _scan_rect_v;
+    float _xplane_tick_min;
+    float _xplane_tick_max;
+    std::vector< geo2d::VectorArray<float> > _xplane_binned_vtx_vv;
+    std::vector< std::vector<float > > _xplane_binned_score_vv;
+    std::vector< bool  >        _cand_valid_v;
     geo2d::VectorArray<float>   _cand_vtx_v;
     std::vector< float >        _cand_score_v;
     std::vector< geo2d::VectorArray<float> > _cand_xs_vv;
