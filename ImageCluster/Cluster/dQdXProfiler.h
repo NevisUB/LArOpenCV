@@ -53,13 +53,14 @@ namespace larocv {
       _dqdx_vv.resize(3);
       _pt2dist_vv.resize(3);
       _bounds_vv.resize(3);
-
+      _o_dqdx_vvv.resize(3);
       for(size_t i=0; i<3; ++i) {
 	_pt2cluster_vv[i].clear();
 	_pts_vv[i].clear();
 	_dqdx_vv[i].clear();
 	_pt2dist_vv[i].clear();
 	_bounds_vv[i].clear();
+	_o_dqdx_vvv[i].clear();
       }
     }
 
@@ -68,6 +69,8 @@ namespace larocv {
     std::vector<std::vector<float> > _dqdx_vv;
     std::vector<std::vector<float> > _pt2dist_vv;
     std::vector<std::vector<std::pair<float,float> > > _bounds_vv;
+    std::vector<std::vector<std::vector<float> > > _o_dqdx_vvv;
+    
   };
 
   /**
