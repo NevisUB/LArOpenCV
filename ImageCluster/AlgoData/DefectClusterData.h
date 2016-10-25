@@ -47,9 +47,13 @@ namespace larocv {
     std::vector<GEO2D_ContourArray_t> _atomic_ctor_v_v;
     std::vector<std::vector<size_t> > _atomic_ctor_ass_v_v;
 
+    //plane/////per atomic//list of defect points///// 
+    std::vector<std::vector<std::vector<cv::Point> > > _atomic_defect_v_v_v;
+    
+    
     std::vector<std::vector<geo2d::LineSegment<float>> >  _hull_line_v_v;
     std::vector<std::vector<geo2d::Line<float> > > _split_line_v_v;
-
+    
     std::vector<unsigned> _n_original_clusters_v;
     
     void set_data(unsigned n_original_clusters,
