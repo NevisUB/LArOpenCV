@@ -24,5 +24,22 @@ namespace larocv {
     return g->WireCoordinate(xyz,plane);
   }
 
+  std::pair<double,double> OverlapWireRange(const size_t wire, const size_t plane, const size_t target_plane)
+  {
+    double start[3];
+    double end[3];
+    auto g = ::larutil::Geometry::GetME();
+    g->WireEndPoints(plane,wire,start,end);
+
+    std::pair<double,double> res;
+    
+    res.first = g->WireCoordinate(start,target_plane);
+    res.second = g->WireCoordinate(end,target_plane);
+
+    if(res.first > res.second) std::swap(res.first,res.second);
+
+    return res;
+  }
+
 }
 #endif

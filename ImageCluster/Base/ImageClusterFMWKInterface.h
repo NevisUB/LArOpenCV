@@ -11,5 +11,6 @@ namespace larocv {
 
   double WireCoordinate(const double y, const double z, const size_t plane);
 
+  std::pair<double,double> OverlapWireRange(const size_t wire, const size_t plane, const size_t target_plane);
 }
 #endif

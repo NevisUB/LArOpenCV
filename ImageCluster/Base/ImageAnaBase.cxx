@@ -38,17 +38,17 @@ namespace larocv {
     return;
   }
 
-  void ImageAnaBase::PostProcess(const std::vector<const cv::Mat>& img_v)
+  bool ImageAnaBase::PostProcess(const std::vector<const cv::Mat>& img_v)
   {
     if(!Profile()) {
-      this->_PostProcess_(img_v);
-      return;
+      return this->_PostProcess_(img_v);
     }
+    bool state=true;
     _watch.Start();
-    this->_PostProcess_(img_v);
+    state = this->_PostProcess_(img_v);
     _proc_time += _watch.WallTime();
     ++_proc_count;
-    return;
+    return state;
   }
 
 }

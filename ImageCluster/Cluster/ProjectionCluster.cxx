@@ -39,8 +39,8 @@ namespace larocv{
     auto const& pca_data     = this->AlgoData<larocv::PCACandidatesData>      ( _pca_algo_id     );
   }
 
-  void ProjectionCluster::_PostProcess_(const std::vector<const cv::Mat>& img_v)
-  {}
+  bool ProjectionCluster::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  {return true;}
 
 }
 

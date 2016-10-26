@@ -51,7 +51,7 @@ namespace larocv {
 		   larocv::ROI& roi);
 
     /// PostProcess method
-    void _PostProcess_(const std::vector<const cv::Mat>& img_v);
+    bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
 
     geo2d::Line<float> SquarePCA(const ::cv::Mat& img,
 				 geo2d::Vector<float> pt,
@@ -70,6 +70,10 @@ namespace larocv {
 
     void XPlaneScan(const std::vector<const cv::Mat>& img_v);
 
+    geo2d::Vector<float> MeanPixel(const cv::Mat& img, const geo2d::Vector<float>& center);
+
+    double PointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
+
     AlgorithmID_t _circle_vertex_algo_id;
     double _radius;
     float _pi_threshold;
@@ -81,6 +85,7 @@ namespace larocv {
     bool _use_polar_spread;
     float _xplane_tick_resolution;
     float _xplane_guess_max_dist;
+
   };
 
   class Refine2DVertexData : public larocv::AlgoDataBase {

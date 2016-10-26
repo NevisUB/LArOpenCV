@@ -73,7 +73,7 @@ namespace larocv {
     /// Execute algorithms to construct clusters + corresponding meta data + roi data
     void Add(const ::cv::Mat& img, const larocv::ImageMeta& meta, const larocv::ROI& roi);
     /// Execute algorithms to construct clusters + corresponding meta data
-    void Process();
+    bool Process();
     /// Finalize after multiple Process call
     void Finalize(TFile* file=nullptr);
     /// Accessor to total number of clusters

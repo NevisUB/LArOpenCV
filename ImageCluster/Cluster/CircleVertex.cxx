@@ -13,7 +13,7 @@ namespace larocv {
 
   void CircleVertex::_Configure_(const ::fcllite::PSet &pset)
   {
-    _max_radius_size = 10;
+    _max_radius_size = 15;
   }
   
   void CircleVertex::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -81,7 +81,7 @@ namespace larocv {
     }
   }
 
-  void CircleVertex::_PostProcess_(const std::vector<const cv::Mat>& img_v)
-  {}
+  bool CircleVertex::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  {return true;}
 }
 #endif

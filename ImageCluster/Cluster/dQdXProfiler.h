@@ -32,7 +32,7 @@ namespace larocv {
 		   larocv::ImageMeta& meta,
 		   larocv::ROI& roi);
 
-    void _PostProcess_(const std::vector<const cv::Mat>& img_v);
+    bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
 
   private:
     AlgorithmID_t _pca_algo_id;

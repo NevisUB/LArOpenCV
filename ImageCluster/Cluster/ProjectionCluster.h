@@ -48,8 +48,8 @@ namespace larocv {
 		   larocv::ROI& roi);
 
     /// PostProcess method
-    void _PostProcess_(const std::vector<const cv::Mat>& img_v);
-
+    bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
+    
   private:
     AlgorithmID_t _vtx_algo_id;
     AlgorithmID_t _cluster_algo_id;

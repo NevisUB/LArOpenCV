@@ -20,9 +20,9 @@ namespace larocv {
   }
   
   void dQdXProfiler::_Process_(const larocv::Cluster2DArray_t& clusters,
-				const ::cv::Mat& img,
-				larocv::ImageMeta& meta,
-				larocv::ROI& roi)
+			       const ::cv::Mat& img,
+			       larocv::ImageMeta& meta,
+			       larocv::ROI& roi)
   {
     cv::Mat thresh_img = img;
     //::cv::threshold(img, thresh_img, 10,255,CV_THRESH_BINARY);
@@ -286,8 +286,8 @@ namespace larocv {
     
   }
 
-  void dQdXProfiler::_PostProcess_(const std::vector<const cv::Mat>& img_v)
-  {}
+  bool dQdXProfiler::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  { return true; }
   
   
 }

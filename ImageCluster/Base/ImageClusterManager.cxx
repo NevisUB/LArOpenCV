@@ -236,7 +236,7 @@ namespace larocv {
     _raw_roi_v.push_back(roi);
   }
   
-  void ImageClusterManager::Process()
+  bool ImageClusterManager::Process()
   {
     LAROCV_DEBUG() << "Start Processing" << std::endl;
     
@@ -276,6 +276,7 @@ namespace larocv {
     // First-pass clustering
     //
     size_t last_cluster_algo = kINVALID_SIZE;
+    bool good_state = true;
     for(size_t alg_index=0; alg_index<_cluster_alg_v.size(); ++alg_index) {
       
       LAROCV_DEBUG() << "On alg_index: " << alg_index << "\n";
@@ -366,14 +367,18 @@ namespace larocv {
 	std::vector<const cv::Mat> img_v;
 	for(size_t img_index=0; img_index<_raw_img_v.size(); ++img_index)
 	  img_v.push_back(_raw_img_v[img_index]);
-	((ImageAnaBase*)(alg_ptr))->PostProcess(img_v);
+	good_state = ((ImageAnaBase*)(alg_ptr))->PostProcess(img_v);
+      }
+      if(!good_state) {
+	LAROCV_WARNING() << "Break state assigned by algorithm " << alg_ptr->Name() << " (ID=" << alg_ptr->ID() << ")" << std::endl;
+	break;
       }
     }
-      
+
     //
     // Run matching
     //
-    if(_match_alg) {
+    if(_match_alg && good_state) {
 
       auto const& clusters_v = _clusters_v_v.back();
 
@@ -495,6 +500,7 @@ namespace larocv {
     if(_tree) _tree->Fill();
     
     LAROCV_DEBUG() << "end" << std::endl;
+    return true;
   }
 
   size_t ImageClusterManager::NumClusters(const AlgorithmID_t alg_id) const

@@ -82,8 +82,8 @@ namespace larocv {
     }
   }
 
-  void PCACandidates::_PostProcess_(const std::vector<const cv::Mat>& img_v)
-  {}
+  bool PCACandidates::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  {return true;}
   
   
 }

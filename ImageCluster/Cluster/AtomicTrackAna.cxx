@@ -23,8 +23,8 @@ namespace larocv{
     auto const& pca_data = this->AlgoData<larocv::PCACandidatesData>(_pca_algo_id);
   }
 
-  void AtomicTrackAna::_PostProcess_(const std::vector<const cv::Mat>& img_v)
-  {}
+  bool AtomicTrackAna::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  { return true; }
 
 }
 
