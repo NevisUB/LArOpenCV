@@ -19,7 +19,17 @@
 #pragma link C++ class larocv::DefectCluster+;
 #pragma link C++ class larocv::PCACandidates+;
 #pragma link C++ class larocv::CircleVertex+;
+#pragma link C++ class larocv::Refine2DVertex;
 #pragma link C++ class larocv::Refine2DVertexData+;
+#pragma link C++ class larocv::ProjectionCluster+;
+#pragma link C++ class larocv::ProjectionClusterData+;
+#pragma link C++ class larocv::VertexTrackCluster+;
+#pragma link C++ class larocv::VertexTrackClusterData+;
+#pragma link C++ class larocv::HIPCluster+;
+#pragma link C++ class larocv::AtomicTrackAna+;
+#pragma link C++ class larocv::AtomicTrackAnaData+;
+#pragma link C++ class larocv::dQdXProfiler+;
+#pragma link C++ class larocv::dQdXProfilerData+;
 #pragma link C++ class larocv::MatchCluster+;
 
 //ADD_NEW_CLASS ... do not change this line
