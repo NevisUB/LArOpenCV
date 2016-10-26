@@ -25,10 +25,10 @@ namespace larocv{
 
     _tick_offset_v.resize(3);
     _tick_offset_v[0] = 0.;
-    //_tick_offset_v[1] = 4.54;
-    //_tick_offset_v[2] = 7.78;
-    _tick_offset_v[1] = 0.;
-    _tick_offset_v[2] = 0.;
+    _tick_offset_v[1] = 4.54;
+    _tick_offset_v[2] = 7.78;
+    //_tick_offset_v[1] = 0.;
+    //_tick_offset_v[2] = 0.;
     _use_polar_spread = false;
     _wire_comp_factor_v.resize(3);
     _time_comp_factor_v.resize(3);
