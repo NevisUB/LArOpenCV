@@ -20,6 +20,8 @@
 #pragma link C++ class larocv::PCACandidates+;
 #pragma link C++ class larocv::CircleVertex+;
 #pragma link C++ class larocv::Refine2DVertexData+;
+#pragma link C++ class larocv::MatchCluster+;
+
 //ADD_NEW_CLASS ... do not change this line
 #endif
 
