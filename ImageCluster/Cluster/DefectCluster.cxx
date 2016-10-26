@@ -3,6 +3,7 @@
 
 #include "DefectCluster.h"
 #include "Core/Geo2D.h"
+
 namespace larocv {
 
   /// Global larocv::DefectClusterFactory to register AlgoFactory

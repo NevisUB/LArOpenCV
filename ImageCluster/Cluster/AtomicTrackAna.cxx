@@ -2,7 +2,7 @@
 #define __ATOMICTRACKANA_CXX__
 
 #include "AtomicTrackAna.h"
-#include "PCACandidatesData.h"
+#include "PCACandidates.h"
 
 namespace larocv{
 

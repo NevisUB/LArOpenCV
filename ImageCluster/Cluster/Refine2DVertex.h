@@ -20,6 +20,7 @@
 #include "Core/Line.h"
 #include "Core/VectorArray.h"
 #include "Core/BoundingBox.h"
+
 namespace larocv {
   /**
      \class Refine2DVertex
