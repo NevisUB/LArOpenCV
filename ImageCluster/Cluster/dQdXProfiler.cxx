@@ -16,7 +16,7 @@ namespace larocv {
     auto const pca_algo_name = pset.get<std::string>("PCACandidatesName");
     _pca_algo_id = this->ID(pca_algo_name);
     _pi_threshold  = 10;
-    _dx_resolution = 3.;
+    _dx_resolution = 1.;
   }
   
   void dQdXProfiler::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -110,6 +110,33 @@ namespace larocv {
       }
     }
 
+    //some points not associated to a cluster, lets "attach" them to the nearest one, with distance cut
+    for (unsigned pt_idx = 0; pt_idx < pts.size(); ++pt_idx) {
+      auto const& pt = pts[pt_idx];
+      if (pt2cluster[pt_idx] != kINVALID_SIZE) continue;
+
+      int   min_idx=-1;
+      float min_d  =9.e6;
+      
+      for(size_t c_idx = 0; c_idx < clusters.size(); ++c_idx) {
+	auto const& ctor = clusters[c_idx]._contour;
+	for(const auto& ctor_pt : ctor) {
+	  float d=std::sqrt(std::pow(pt.x-ctor_pt.x,2)+std::pow(pt.y-ctor_pt.y,2));
+	  if (d < min_d) {
+	    min_d   = d;
+	    min_idx = c_idx;
+	  }
+	}
+      }
+
+      if ( min_d>5 )   min_idx=-1;
+      if (min_idx==-1) continue;
+
+      pt2cluster[pt_idx] = min_idx;
+    }
+    
+
+    
     // compute a point projection on each corresponding pca
     // record min/max bounds later for binning
     std::pair<float,float> def_bound;
@@ -135,7 +162,7 @@ namespace larocv {
       pt1 -= pcaptr->pt;
 
       if(pcaptr->dir.x) dist = pt1.x / pcaptr->dir.x;
-      else dist = pt1.y / pcaptr->dir.y;
+      else              dist = pt1.y / pcaptr->dir.y;
 
       pt2dist[pt_idx] = dist;
 
@@ -179,19 +206,21 @@ namespace larocv {
     }
     LAROCV_DEBUG() << "Number of points not processed: " << num_invalid_pts << "/" << pts.size() << std::endl;
 
-
     // order the contours
     const auto& n_clusters = defect_data._n_original_clusters_v[meta.plane()];
     const auto& atomic_ctor_ass_v = defect_data._atomic_ctor_ass_v_v[meta.plane()];
 
-    
     std::vector<std::vector<uint> > dfect_cidx_v_v;
     std::vector<std::vector<uint> > odfect_cidx_v_v;
     
     dfect_cidx_v_v.resize(n_clusters);
     odfect_cidx_v_v.resize(n_clusters);
 
-    //for each of the original atomic cluster
+
+    LAROCV_DEBUG() << " N : " << n_clusters << " atomic clusters incoming " << std::endl;
+    LAROCV_DEBUG() << " Number of defect clusters should be " << atomic_ctor_ass_v.size() << std::endl;
+
+    //for each of the original atomic cluster	  
     for(unsigned atomic_cidx=0; atomic_cidx<n_clusters; ++atomic_cidx) {
 
       //get this set of indicies
@@ -211,11 +240,13 @@ namespace larocv {
 
 	//else this broken cluster came from same atomic
 	dfect_cidx_v.emplace_back(jj);
-      } 
+      }
+
+      LAROCV_DEBUG() << " N : " << dfect_cidx_v.size() << " associated defect clusters to atomic " << atomic_cidx << std::endl;
       
       //lets get the left most contour
       uint min_idx=-1;
-      int min_x=9e6;	
+      int min_x=9e6;
 
       //for each broken cluster (from the same atomic!)
       for(unsigned kk=0;kk<dfect_cidx_v.size();++kk)  {
@@ -228,6 +259,8 @@ namespace larocv {
 	}
       }
 
+      LAROCV_DEBUG() << " Putting min_idx : " << min_idx << " into odfect_cidx_v\n";
+      
       //put in the left most index
       odfect_cidx_v.push_back(min_idx);
 
@@ -235,8 +268,8 @@ namespace larocv {
       while(odfect_cidx_v.size() != dfect_cidx_v.size()) {
 
 	//get the last index in ordered vector
-	auto  curr_cidx= odfect_cidx_v.back();
-	auto& curr_ctor    = clusters[curr_cidx]._contour;
+	auto  curr_cidx  = odfect_cidx_v.back();
+	auto& curr_ctor  = clusters[curr_cidx]._contour;
 	
 	int min_idx=-1;
 	int min_d=9e6;
@@ -261,15 +294,16 @@ namespace larocv {
 	    }
 	  }
 	}
-
-	//min_idx now filled with index which contains the closest contour
 	
-	if (min_idx==-1) throw larbys("Could not find minimum index for this contour\n");
+	//min_idx now filled with index which contains the closest contour
+	if (min_idx==-1){
+	  LAROCV_CRITICAL() << "curr_cidx: " << curr_cidx << " min_d : " << min_d << " min_idx : " << min_idx << std::endl;
+	  throw larbys("Could not find minimum index for this contour\n");
+	}
 	
 	//put it into ordering scheme
 	odfect_cidx_v.push_back(min_idx);
       }
-      
     }
 
     auto& o_dqdx_vv=data._o_dqdx_vvv[meta.plane()];
