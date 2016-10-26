@@ -54,6 +54,10 @@ namespace larocv {
     float _mask_radius;
     AlgorithmID_t _vtx_algo_id;
     
+    float _theta_hi;
+    float _theta_lo;
+
+    bool _use_theta_half_angle;
   };
   
   class VertexTrackClusterData : public larocv::AlgoDataBase {
