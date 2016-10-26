@@ -19,7 +19,7 @@ namespace larocv{
   {
     auto const circle_vtx_algo_name = pset.get<std::string>("CircleVertexAlgo");
     _circle_vertex_algo_id = this->ID(circle_vtx_algo_name);
-    _radius = 14;
+    _radius = 20;
     _pi_threshold = 10;
     _pca_box_size = 3;
     _global_bound_size = 25;
@@ -303,6 +303,73 @@ namespace larocv{
     return dtheta_sum;
   }
 
+  double Refine2DVertex::TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt)
+  {
+    // Get xs points for this step. if < 2 continue
+    auto const inner_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius));
+    if(inner_xs_pts.size()<2) { return -1; }    
+    if(inner_xs_pts.size()==2) {
+      auto center_line0 = geo2d::Line<float>(inner_xs_pts[0], inner_xs_pts[0] - pt);
+      auto center_line1 = geo2d::Line<float>(inner_xs_pts[1], inner_xs_pts[1] - pt);
+      auto dtheta = fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
+      if(dtheta < 10) { return -1; }
+    }
+
+    auto const outer_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius*2));
+    
+    double inner_dtheta_sum = 0;
+    double outer_dtheta_sum = 0;
+    if(_use_polar_spread) {
+      // Estimate a polar y-spread as am easure of "dtheta"
+      ::cv::Mat local_polarimg;
+      ::cv::linearPolar(img, local_polarimg, pt, _radius*2.5, ::cv::WARP_FILL_OUTLIERS);
+      for(auto const& xs_pt : inner_xs_pts) {
+	float angle = geo2d::angle(pt,xs_pt);
+	float radius_frac_min = (_radius - 2.) / (_radius*2.5);
+	float radius_frac_max = (_radius + 3.) / (_radius*2.5);
+	inner_dtheta_sum += AngularSpread(local_polarimg,radius_frac_min,radius_frac_max,angle,10.);
+      }
+      for(auto const& xs_pt : outer_xs_pts) {
+	float angle = geo2d::angle(pt,xs_pt);
+	float radius_frac_min = (_radius*2 - 2.) / (_radius*2.5);
+	float radius_frac_max = (_radius*2 + 3.) / (_radius*2.5);
+	outer_dtheta_sum += AngularSpread(local_polarimg,radius_frac_min,radius_frac_max,angle,10.);
+      }
+    }else{
+      // Estimate a local PCA and center-to-xs line's angle diff
+      for(size_t xs_idx=0; xs_idx < inner_xs_pts.size(); ++xs_idx) {
+	auto const& xs_pt = inner_xs_pts[xs_idx];
+	// Line that connects center to xs
+	try{
+	  auto local_pca   = SquarePCA(img,xs_pt,_pca_box_size);
+	  auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
+	  inner_dtheta_sum += fabs(geo2d::angle(center_line) - geo2d::angle(local_pca));
+	  // Alternative (and probably better/faster): compute y spread in polar coordinate
+	  LAROCV_DEBUG() << "Line (inner) ID " << xs_idx << " found xs " << xs_pt << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
+	}catch(const larbys& err){
+	  return -1;
+	}
+      }
+      // Estimate a local PCA and center-to-xs line's angle diff
+      for(size_t xs_idx=0; xs_idx < outer_xs_pts.size(); ++xs_idx) {
+	auto const& xs_pt = outer_xs_pts[xs_idx];
+	// Line that connects center to xs
+	try{
+	  auto local_pca   = SquarePCA(img,xs_pt,_pca_box_size);
+	  auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
+	  outer_dtheta_sum += fabs(geo2d::angle(center_line) - geo2d::angle(local_pca));
+	  // Alternative (and probably better/faster): compute y spread in polar coordinate
+	  LAROCV_DEBUG() << "Line (outer) ID " << xs_idx << " found xs " << xs_pt << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
+	}catch(const larbys& err){
+	  return -1;
+	}
+      }
+    }
+    
+    //dtheta_sum /= (float)(xs_pts.size());
+    return (inner_dtheta_sum + outer_dtheta_sum) / ((float)(inner_xs_pts.size() + outer_xs_pts.size()));
+  }
+
   void Refine2DVertex::PlaneScan(const ::cv::Mat& img, const size_t plane,
 				 const ::geo2d::Circle<float> init_circle)
   {
@@ -426,7 +493,7 @@ namespace larocv{
 
 	auto trial_pt = this->MeanPixel(img,step_pt);
 
-	auto dtheta_sum = this->PointInspection(img,trial_pt);
+	auto dtheta_sum = this->TwoPointInspection(img,trial_pt);
 
 	if(dtheta_sum < 0) {
 	  step_pt+= dir;
@@ -728,7 +795,7 @@ namespace larocv{
 	  if(q < _pi_threshold) continue;
 
 	  auto trial_pt = this->MeanPixel(img_v[plane],step_pt);
-	  auto dtheta_sum = this->PointInspection(img_v[plane],trial_pt);
+	  auto dtheta_sum = this->TwoPointInspection(img_v[plane],trial_pt);
 
 	  if(dtheta_sum < 0) continue;
 	  

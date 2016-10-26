@@ -75,6 +75,8 @@ namespace larocv {
 
     double PointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
 
+    double TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
+
     AlgorithmID_t _circle_vertex_algo_id;
     double _radius;
     float _pi_threshold;
