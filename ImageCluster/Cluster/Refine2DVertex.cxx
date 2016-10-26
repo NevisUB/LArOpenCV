@@ -2,13 +2,14 @@
 #define __REFINE2DVERTEX_CXX__
 
 #include "Refine2DVertex.h"
-#include "CircleVertexData.h"
+#include "CircleVertex.h"
 #include "Core/HalfLine.h"
 #include "Core/Line.h"
 #include "Core/BoundingBox.h"
 #include "ImageClusterFMWKInterface.h"
 #include <array>
 #include <map>
+
 namespace larocv{
 
   /// Global larocv::Refine2DVertexFactory to register ClusterAlgoFactory

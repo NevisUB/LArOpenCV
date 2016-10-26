@@ -2,10 +2,11 @@
 #define __DQDXPROFILER_CXX__
 
 #include "dQdXProfiler.h"
-#include "PCACandidatesData.h"
-#include "DefectClusterData.h"
+#include "PCACandidates.h"
+#include "DefectCluster.h"
 #include "Core/VectorArray.h"
 #include "Core/Geo2D.h"
+
 namespace larocv {
 
   /// Global larocv::dQdXProfilerFactory to register AlgoFactory
