@@ -8,8 +8,6 @@
 
 #include "Core/Vector.h"
 
-#include "HIPClusterData.h"
-
 namespace larocv {
  
   class HIPCluster : public larocv::ClusterAlgoBase {
@@ -41,13 +39,49 @@ namespace larocv {
 
     int _min_hip_cluster_size;
     int _min_mip_cluster_size;
-    int _mip_thresh;
-    int _hip_thresh;
+    std::vector<int> _mip_thresh_v;
+    std::vector<int> _hip_thresh_v;
     int _dilation_size;
     int _dilation_iter;
-    int _blur_size;    
+    int _blur_size;
+    
   };
 
+
+  class HIPClusterData : public AlgoDataBase {
+       
+  public:
+    
+    /// Default constructor
+    HIPClusterData(std::string name="NoName", AlgorithmID_t id=0)
+      : AlgoDataBase(name,id)
+    { Clear(); }
+    
+    /// Default destructor
+    ~HIPClusterData(){}
+
+    /// Clear method override
+    void Clear() {
+      _mip_idx_v_v.clear();
+      _hip_idx_v_v.clear();
+      
+      _mip_idx_v_v.resize(3);
+      _hip_idx_v_v.resize(3);
+    }
+    
+    std::vector<std::vector<size_t> > _mip_idx_v_v;
+    std::vector<std::vector<size_t> > _hip_idx_v_v;
+
+    void set_data(const std::vector<size_t>& mips,
+		  const std::vector<size_t>& hips,
+		  short plane) {
+      if (plane > 2 or plane < 0) throw std::exception();
+
+      _mip_idx_v_v[plane] = mips;
+      _hip_idx_v_v[plane] = hips;
+    }
+    
+  };
   /**
      \class larocv::HIPClusterFactory
      \brief A concrete factory class for larocv::HIPCluster

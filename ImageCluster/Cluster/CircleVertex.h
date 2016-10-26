@@ -8,8 +8,6 @@
 
 #include "Core/Geo2D.h"
 
-#include "CircleVertexData.h"
-
 namespace larocv {
  
   class CircleVertex : public larocv::ImageAnaBase {
@@ -43,7 +41,31 @@ namespace larocv {
 
     unsigned _max_radius_size;
   };
+  
+  class CircleVertexData : public AlgoDataBase {
+    
+  public:
+    
+    /// Default constructor
+    CircleVertexData(std::string name="NoName", AlgorithmID_t id=0)
+      : AlgoDataBase(name,id)
+    {  Clear(); }
+    
+    /// Default destructor
+    ~CircleVertexData(){}
 
+    /// Clear method override
+    void Clear() {
+      _circledata_v_v.clear();
+      _circledata_v_v.resize(3);
+    }
+    
+    void set_data() {}
+
+    std::vector<std::vector<geo2d::Circle<float> > > _circledata_v_v;
+    
+  };
+  
   /**
      \class larocv::CircleVertexFactory
      \brief A concrete factory class for larocv::CircleVertex
