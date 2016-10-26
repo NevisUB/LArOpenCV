@@ -131,20 +131,59 @@ namespace larocv {
       for(auto& d : _xplane_binned_score_vv) d.clear();
     }
 
+    /// bool/plane ... true = input seed existed for vertex scanning 
     std::vector< bool > _valid_plane_v;
+    /// initial vertex guess (seed) [plane]
     std::vector< geo2d::Vector<float>           > _init_vtx_v;
+    /// initial crossing point between the circumference and charge deposition pixel [plane][cross-point]
     std::vector< geo2d::VectorArray<float>      > _init_xs_vv;
+    /// initial local PCA @ crossing point [plane][cross-point]
     std::vector< std::vector<geo2d::Line<float> > > _init_pca_vv;
+    /// an array of circles that traversed to scan for the correct vtx [plane][trial]
     std::vector< std::vector< geo2d::Circle<float> > > _circle_trav_vv;
+    /// an array of angle-diff-sum-over-all-xs-point [plane][trial]
     std::vector< std::vector< float >           > _dtheta_trav_vv;
+    /// an array of suare box used to scan circles for vtx search
     std::vector< geo2d::Rect >  _scan_rect_v;
+    /// tick range scanned for cross-plane consistency check
     float _xplane_tick_min;
+    /// tick range scanned for cross-plane consistency check
     float _xplane_tick_max;
+    /// "binned" (in time) best vtx estimation position per-plane, used to match across planes 
     std::vector< geo2d::VectorArray<float> > _xplane_binned_vtx_vv;
+    /// "binned" (in time) best vtx estimation score per-plane, used to match across planes
     std::vector< std::vector<float > > _xplane_binned_score_vv;
-    std::vector< bool  >        _cand_valid_v;
+
+    //
+    // Important variables for analysis
+    //
+
+    /// the best estimate for a candidate interaction vertex per plane
     geo2d::VectorArray<float>   _cand_vtx_v;
+
+    /*
+      The scores, per plane, associated with the estimated interaction vertex.
+      -1 means that it was found by a projecting a vertex found by other planes
+      AND local search centered around the estimated position did not find good
+      candidate. In other words, -1 shows the quality is unknown (rather not good).
+      Else the value must be positive real value and the smaller the better quality.
+    */
     std::vector< float >        _cand_score_v;
+
+    /*
+      Boolean flag per estimated vertex that is set if the vertex is found by
+      analyzing neighboring pixels in the corresponding plane image. Similar to
+      score == -1 situation if false.
+    */
+    std::vector< bool  >        _cand_valid_v;
+
+    /*
+      A list of points per candidate vertex that are on the circumference of
+      a circle centered at the interaction vertex. It provides an estimate of
+      secondary particles' trajectory point that start from the interaction
+      vertex. Combining those two, particle's initial track angle can be
+      obtained.
+     */
     std::vector< geo2d::VectorArray<float> > _cand_xs_vv;
   };
   
