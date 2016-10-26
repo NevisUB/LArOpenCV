@@ -113,13 +113,24 @@ namespace larocv {
 	   continue;
 	 }
 
-	 nbreaks+=1;
-	 LAROCV_DEBUG() << "Breaking. Number of total breaks : " << nbreaks << std::endl;
-	 
 	 //get the chosen edge, currently take the defect facing the longest hull edge
 	 auto chosen_edge = max_hull_edge(ctor,defects);
 	 LAROCV_DEBUG() << "HullEdge: " << chosen_edge << std::endl;
+	 auto start = ctor[chosen_edge[0]];
+	 auto end   = ctor[chosen_edge[1]];
+	 auto diff  = end - start;
 
+	 if (std::abs(diff.x)<=3 and std::abs(diff.y)<=3) {
+	   LAROCV_CRITICAL() << "This hull suspect... start : " <<  start << " end : " << end << " diff : " << diff << std::endl;
+	   atomic_ctor_v.emplace_back(ctor);
+	   atomic_ctor_ass_v.push_back(ic);
+	   break_ctor_v.erase(ctor_itr);
+	   continue;
+	 }
+
+	 nbreaks+=1;
+	 LAROCV_DEBUG() << "Breaking! Number of total breaks : " << nbreaks << std::endl;
+	 
 	 // Check the sanity of a chosen edge
 	 //size_t minidx = std::min(chosen_edge[0],chosen_edge[1]);
 	 //size_t maxidx = std::max(chosen_edge[0],chosen_edge[1]);
