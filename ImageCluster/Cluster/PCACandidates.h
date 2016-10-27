@@ -59,16 +59,19 @@ namespace larocv {
 
     AlgorithmID_t _input_id;
     std::vector<std::vector<std::vector<geo2d::Line<float> > > >   _ctor_lines_v_v_v;
+    std::vector<std::vector<geo2d::Line<float> > >  _ctor_lines_v_v;
     std::vector<std::vector<geo2d::Vector<float> > > _ipoints_v_v;
     std::vector<std::vector<std::vector<size_t > > > _atomic_id_v_v_v;
 
 
     void Clear() {
       _ctor_lines_v_v_v.clear();
+      _ctor_lines_v_v.clear();
       _ipoints_v_v.clear();
       _atomic_id_v_v_v.clear();
 
       _ctor_lines_v_v_v.resize(3);
+      _ctor_lines_v_v.resize(3);
       _ipoints_v_v.resize(3);
       _atomic_id_v_v_v.resize(3);
 

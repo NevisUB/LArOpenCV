@@ -29,19 +29,23 @@ namespace larocv {
 
     std::vector<geo2d::Line<float> > cross_ctor_lines_v;
     
-    auto& circlevertex_data = AlgoData<larocv::PCACandidatesData>();
-    circlevertex_data._input_id = this->ID() - 1;
+    auto& data = AlgoData<larocv::PCACandidatesData>();
+    data._input_id = this->ID() - 1;
 
     //find the intersection points of the PCAs per clusters
     //it's current stored in unfortunately bloated Cluster2D object
     //as eigenVecFirst, let just do the PCA here
 
+
+    auto& _ctor_lines_v = data._ctor_lines_v_v[meta.plane()];
+    _ctor_lines_v.resize(clusters.size());
+    
     for(unsigned orig_idx=0; orig_idx < n_original_clusters; ++orig_idx) {
 
       std::vector<geo2d::Line<float> > ctor_lines_v;
       std::vector<size_t> atomic_id_v;
 
-      for(unsigned atomic_idx=0; atomic_idx < atomic_ctor_ass_v.size(); ++atomic_idx){
+      for(unsigned atomic_idx=0; atomic_idx < atomic_ctor_ass_v.size(); ++atomic_idx) {
 
 	if (orig_idx != atomic_ctor_ass_v.at(atomic_idx) ) continue;
 
@@ -63,21 +67,25 @@ namespace larocv {
 
 
 
-	ctor_lines_v.emplace_back(std::move(pca_principle));
-	//cross_ctor_lines_v.push_back( &ctor_lines_v.back() );
-	cross_ctor_lines_v.push_back( ctor_lines_v.back() );
 
+	_ctor_lines_v[atomic_idx] = pca_principle;
+
+	ctor_lines_v.emplace_back(std::move(pca_principle));
+
+	cross_ctor_lines_v.push_back( ctor_lines_v.back() );
+	
 	atomic_id_v.push_back(atomic_idx);
 	
       }
-      circlevertex_data._ctor_lines_v_v_v[meta.plane()].emplace_back( std::move(ctor_lines_v) ); //dont move it
-      circlevertex_data._atomic_id_v_v_v[meta.plane()].emplace_back(std::move(atomic_id_v));
+
+      data._ctor_lines_v_v_v[meta.plane()].emplace_back( std::move(ctor_lines_v) ); //dont move it
+      data._atomic_id_v_v_v[meta.plane()].emplace_back(std::move(atomic_id_v));
 
       LAROCV_DEBUG() << "Found " << ctor_lines_v.size() << " PCA lines for original index " << orig_idx << std::endl;
     }
 
 
-    std::cout << "Total cross PCA lines found: " << cross_ctor_lines_v.size() << std::endl;
+    LAROCV_DEBUG() << "Total cross PCA lines found: " << cross_ctor_lines_v.size() << std::endl;
     std::vector<geo2d::Vector<float> > ipoints_v;
     
     for(unsigned i=0;i<cross_ctor_lines_v.size();++i) { 
@@ -87,7 +95,7 @@ namespace larocv {
       }
     }
 
-    circlevertex_data._ipoints_v_v[meta.plane()] = ipoints_v;
+    data._ipoints_v_v[meta.plane()] = ipoints_v;
   }
 
   bool PCACandidates::_PostProcess_(const std::vector<const cv::Mat>& img_v)
