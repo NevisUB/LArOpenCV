@@ -33,6 +33,7 @@
 #pragma link C++ class larocv::AtomicTrackAnaData+;
 #pragma link C++ class larocv::dQdXProfiler+;
 #pragma link C++ class larocv::dQdXProfilerData+;
+#pragma link C++ class larocv::MatchCluster+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
