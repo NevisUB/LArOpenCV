@@ -34,6 +34,8 @@
 #pragma link C++ class larocv::dQdXProfiler+;
 #pragma link C++ class larocv::dQdXProfilerData+;
 #pragma link C++ class larocv::MatchCluster+;
+#pragma link C++ class larocv::DefectVertex+;
+#pragma link C++ class larocv::DefectVertexData+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
