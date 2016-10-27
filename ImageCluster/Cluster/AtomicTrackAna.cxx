@@ -2,8 +2,8 @@
 #define __ATOMICTRACKANA_CXX__
 
 #include "AtomicTrackAna.h"
-#include "PCACandidatesData.h"
-#include "DefectClusterData.h" 
+#include "PCACandidates.h"
+#include "DefectCluster.h" 
 #include "Refine2DVertex.h"
 
 
@@ -40,11 +40,13 @@ namespace larocv{
       data._atomic_kink_v.resize(3);
     }
 
-    const auto& defectcluster_data  = this->AlgoData<larocv::DefectClusterData>(_def_algo_id); //Read defect points from previous calculations
-    auto const& pcacandidates_data  = this->AlgoData<larocv::PCACandidatesData>(_pca_algo_id); //Read PCA results from previous calculations
-    auto const& refine2dvertex_data = this->AlgoData<larocv::Refine2DVertexData>(_ref_algo_id);//Read vertex info from Refine2D
+    //const auto& defectcluster_data  = this->AlgoData<larocv::DefectClusterData>(_def_algo_id); //Read defect points from previous calculations
+    //auto const& pcacandidates_data  = this->AlgoData<larocv::PCACandidatesData>(_pca_algo_id); //Read PCA results from previous calculations
+    //auto const& refine2dvertex_data = this->AlgoData<larocv::Refine2DVertexData>(_ref_algo_id);//Read vertex info from Refine2D
     
-    
+    auto const& defectcluster_data  = AlgoData<DefectClusterData>(_def_algo_id); //Read defect points from previous calculations
+    auto const& pcacandidates_data  = AlgoData<PCACandidatesData>(_pca_algo_id); //Read PCA results from previous calculations
+    auto const& refine2dvertex_data = AlgoData<Refine2DVertexData>(_ref_algo_id);//Read vertex info from Refine2D    
     
     LAROCV_DEBUG() << "On plane : " << meta.plane() << std::endl;
     LAROCV_DEBUG()<<"4_ref_algo_id is "<<_ref_algo_id<<std::endl;
