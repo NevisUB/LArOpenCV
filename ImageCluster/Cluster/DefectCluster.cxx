@@ -100,7 +100,16 @@ namespace larocv {
 	 defects_d.clear ();
 	 
 	 // fill the hull and defects
-	 fill_hull_and_defects(ctor,hullpts,defects,defects_d);
+	 try{
+	   fill_hull_and_defects(ctor,hullpts,defects,defects_d);
+	 }catch(...) {
+	   LAROCV_NORMAL() << "Failed to compute defects point (cv::convexityDefects)" << std::endl
+			   << "Size of hullpts: " << hullpts.size() << std::endl
+			   << "Size of defects: " << defects.size() << std::endl
+			   << "Size of contour: " << ctor.size() << std::endl;
+	   break_ctor_v.erase(ctor_itr);
+	   continue;
+	 }
 	 
 	 // filter the hull and defects based on fcl minimum size
 	 filter_defects(defects,defects_d,_min_defect_size);
@@ -262,7 +271,7 @@ namespace larocv {
 
     //Compute the defects
     ::cv::convexityDefects(ctor,hullpts,defects);
-       
+    
     //Put the defects distances specially into vector of doubles
     defects_d.resize( defects.size() );
        
