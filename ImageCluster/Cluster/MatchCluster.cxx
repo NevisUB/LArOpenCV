@@ -21,6 +21,8 @@ namespace larocv{
     auto const cont_algo_name = pset.get<std::string>("VertexTrackClusterName");
     _contour_algo_id = this->ID(cont_algo_name);
 
+    _score = pset.get<float>("Score");
+
   }
 
  void MatchCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -181,20 +183,24 @@ namespace larocv{
 
       //// calculate overlap
       double iou_score = (t_max_common - t_min_common) / (t_max_abs - t_min_abs);
-      //std::cout<<"Iou is: "<<iou_score <<std::endl ;
 
       std::vector<unsigned int> tmp_index_v;
       tmp_index_v.reserve(comb.size());
+
+
+      //std::cout<<"Iou is: "<<iou_score <<std::endl ;
 
       for(auto const& cinfo : comb) {
 
         auto const& plane = cinfo.first;
         auto const& index = cinfo.second;
         tmp_index_v.push_back(clusters[plane][index].ClusterID());
+        //std::cout<<tmp_index_v.at(tmp_index_v.size() - 1)<<", "<<clusters[plane][index]._insideHits.size()<<std::endl; ;
       
         }   
+
       
-      if(iou_score>0)
+      if(iou_score > _score )
         _book_keeper.Match(tmp_index_v,iou_score);
 
       }

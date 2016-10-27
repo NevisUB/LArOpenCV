@@ -28,7 +28,9 @@ namespace larocv {
   public:
     
     /// Default constructor
-    MatchCluster(const std::string name="MatchCluster") : ImageAnaBase(name)
+    MatchCluster(const std::string name="MatchCluster") : 
+    ImageAnaBase(name),
+    _score      (0.4)
     {}
     
     /// Default destructor
@@ -65,6 +67,8 @@ namespace larocv {
     AlgorithmID_t _vtx_algo_id;
     AlgorithmID_t _contour_algo_id;
     MatchBookKeeper _book_keeper;
+
+    float _score ;
 
   };
 
