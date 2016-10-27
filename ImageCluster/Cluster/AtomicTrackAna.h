@@ -53,6 +53,9 @@ namespace larocv {
   private:
 
     AlgorithmID_t _pca_algo_id;
+    AlgorithmID_t _def_algo_id;
+    AlgorithmID_t _ref_algo_id;
+
   };
 
   class AtomicTrackAnaData : public larocv::AlgoDataBase {
@@ -63,7 +66,17 @@ namespace larocv {
     ~AtomicTrackAnaData(){}
 
     void Clear() {}
-
+    
+    //Plane//Track//atomics
+    std::vector<std::vector<GEO2D_ContourArray_t>> _atomic_order_ctor_v_v;
+    std::vector<std::vector<std::vector<cv::Point>>> _atomic_kink_v;  //Each cluster has 2 kink points which also make a linesegment.
+    //std::vector<std::vector<float>>     _atomic_track_spread_v_v;//Each cluser has an average value of spread form pixels to PCA line
+    //std::vector<std::vector<size_t>>    _atomic_track_ass_v_v;   //Association Number between cluster and linesegmen
+    //plane//atomic
+    //std::vector<std::vector<std::vector<cv::Point>>> _atomic_track_order_v_v_v;
+    //plane //original cluster
+    
+    
   };
   
   /**
