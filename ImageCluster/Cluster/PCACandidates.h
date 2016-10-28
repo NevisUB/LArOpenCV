@@ -36,6 +36,9 @@ namespace larocv {
 		   larocv::ROI& roi);
 
     bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
+
+  private:
+    uint _defect_cluster_algo_id;
     
   };
 

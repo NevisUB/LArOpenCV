@@ -40,6 +40,7 @@ namespace larocv {
   private:
     
     cv::Rect edge_aware_box(const cv::Mat& img,geo2d::Vector<float> center,int hwidth,int hheight);
+    uint _defect_cluster_algo_id;
     
   };
   

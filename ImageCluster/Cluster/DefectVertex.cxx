@@ -14,6 +14,8 @@ namespace larocv {
 
   void DefectVertex::_Configure_(const ::fcllite::PSet &pset)
   {
+    auto const defect_cluster_algo_name = pset.get<std::string>("DefectClusterAlgo","defbreak1");
+    _defect_cluster_algo_id = this->ID(defect_cluster_algo_name);
   }
 
   cv::Rect DefectVertex::edge_aware_box(const cv::Mat& img,geo2d::Vector<float> center,int hwidth,int hheight)
@@ -40,17 +42,13 @@ namespace larocv {
 			       larocv::ImageMeta& meta,
 			       larocv::ROI& roi) {
     
-    const auto& pcacandidates_data = AlgoData<PCACandidatesData>(ID()-1);
-    const auto& ctor_lines_v   = pcacandidates_data._ctor_lines_v_v[meta.plane()];
+    //const auto& pcacandidates_data = AlgoData<PCACandidatesData>(ID()-1);
+    //const auto& ctor_lines_v   = pcacandidates_data._ctor_lines_v_v[meta.plane()];
 
-    const auto& defectcluster_data = AlgoData<DefectClusterData>(ID()-2);
-    const auto& n_original_clusters= defectcluster_data._n_original_clusters_v[meta.plane()];
+    const auto& defectcluster_data = AlgoData<DefectClusterData>(_defect_cluster_algo_id);
     const auto& atomic_defect_v_v  = defectcluster_data._atomic_defect_v_v_v[meta.plane()];
-    
-    //to save time -- we can considered consolidating nearby defect points
-    //by a simple check on the distance between them. Lets go over
-    //each one to see if idea is feasible
 
+    //count the number of defects
     int n=0;
     for(const auto& atomic_defect_v : atomic_defect_v_v)
       for(const auto& atomic_defect : atomic_defect_v)
@@ -59,20 +57,22 @@ namespace larocv {
     LAROCV_DEBUG() << "Plane: " << meta.plane() << std::endl;
     LAROCV_DEBUG() << "See: " << n << " defects" << std::endl;
     
-    //circle, and "score", you decide who wins
+    //circle, and "score"
     std::vector<std::pair<geo2d::Circle<float>,float> > circle_score_p_v;
     circle_score_p_v.resize(n);
 
     n = -1;
+    float radius_size=10;
     
+    //for each track cluster
     for(const auto& atomic_defect_v : atomic_defect_v_v) {
+      //for each atomic defect in this track cluster
       for(const auto& atomic_defect : atomic_defect_v) {
 	n++;
 	LAROCV_DEBUG() << "Defect point is " << atomic_defect << std::endl;
-	
-	float score=360;
 
-	float radius_size=10;
+	float score=-1.;
+	
 	LAROCV_DEBUG() << "Radius : " << radius_size << "... current score: " << score << std::endl;
 	
 	geo2d::Circle<float> defect_circle(atomic_defect,radius_size);
@@ -181,24 +181,22 @@ namespace larocv {
 	// LAROCV_DEBUG() << "CONTOUR std_y :  " << std_y / ctor->size() << std::endl;
       }
     }
-      
-    std::vector<geo2d::Circle<float> > circle_data_v;
+
+    auto& data = AlgoData<DefectVertexData>();
+    auto& circle_data_v = data._circledata_v_v[meta.plane()];
     circle_data_v.resize(1);
     
-    float max_score=10.;
+    float min_score=10.;
     
     for(const auto& circle_score_p : circle_score_p_v) {
-      auto score = circle_score_p.second;
-      LAROCV_DEBUG() << "See score : " << score << "... max_score : " << max_score << std::endl;
-      if (score < max_score){
+      const auto score = circle_score_p.second;
+      LAROCV_DEBUG() << "See score : " << score << "... min_score : " << min_score << std::endl;
+      if (score < min_score){
 	LAROCV_DEBUG() << "Smaller!" << std::endl;
-	max_score=score;
+	min_score=score;
 	circle_data_v[0] = circle_score_p.first;
       }
-      }
-    auto& data = AlgoData<DefectVertexData>();
-    data._circledata_v_v[meta.plane()] = circle_data_v;
-    
+    }
   }
   
   bool DefectVertex::_PostProcess_(const std::vector<const cv::Mat>& img_v)

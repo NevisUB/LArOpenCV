@@ -13,7 +13,7 @@ namespace larocv {
   {
     _min_defect_size      = 5;
     _hull_edge_pts_split  = 50;
-    set_verbosity(msg::kDEBUG);    
+    //set_verbosity(msg::kDEBUG);    
   }
 
   larocv::Cluster2DArray_t DefectCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -131,7 +131,7 @@ namespace larocv {
 	 auto diff  = end - start;
 
 	 if (std::abs(diff.x)<=3 and std::abs(diff.y)<=3) {
-	   LAROCV_CRITICAL() << "This hull suspect... start : " <<  start << " end : " << end << " diff : " << diff << std::endl;
+	   LAROCV_DEBUG() << "This hull suspect... start : " <<  start << " end : " << end << " diff : " << diff << std::endl;
 	   atomic_ctor_v.emplace_back(ctor);
 	   atomic_ctor_ass_v.push_back(ic);
 	   break_ctor_v.erase(ctor_itr);
