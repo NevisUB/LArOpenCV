@@ -243,7 +243,9 @@ namespace larocv {
       res_contour._contour.resize(polar_contour.size());
       geo2d::VectorArray<float> contour;
       contour.resize(polar_contour.size());
-	
+
+      std::stringstream ss5;
+      //ss3 << "Inserting into contour : ";
       for (size_t pt_idx=0; pt_idx<polar_contour.size(); ++pt_idx) {
       	auto const& polar_pt = polar_contour[pt_idx];
       	auto& pt = contour[pt_idx];
@@ -263,18 +265,23 @@ namespace larocv {
       	res_contour._contour[pt_idx].x = (int)(pt.x + 0.5) - padding;
       	res_contour._contour[pt_idx].y = (int)(pt.y + 0.5) - padding;
 
+	pt.x -= padding;
+	pt.y -= padding;
+	
+	//ss5<<"[" << res_contour._contour[pt_idx].x << "," << res_contour._contour[pt_idx].y << "],";
       }
+      //ss5<<std::endl;
+      //LAROCV_DEBUG() << ss5.str();
+      // for(auto& cpt : res_contour._contour)
+      // 	cart_ctor_mat.at<unsigned char>(cpt.y,cpt.x) = (unsigned char) 255;
 
-      for(auto& cpt : res_contour._contour)
-	cart_ctor_mat.at<unsigned char>(cpt.y,cpt.x) = (unsigned char) 255;
+      // std::stringstream pp0;
+      // pp0 << "cart_ctor_mat_"<<meta.plane()<<".png";
+      // cv::imwrite(pp0.str().c_str(),cart_ctor_mat);
 
-      std::stringstream pp0;
-      pp0 << "cart_ctor_mat_"<<meta.plane()<<".png";
-      cv::imwrite(pp0.str().c_str(),cart_ctor_mat);
-
-      std::stringstream pp1;
-      pp1 << "polar_ctor_mat_"<<meta.plane()<<".png";
-      cv::imwrite(pp1.str().c_str(),polar_ctor_mat);
+      // std::stringstream pp1;
+      // pp1 << "polar_ctor_mat_"<<meta.plane()<<".png";
+      // cv::imwrite(pp1.str().c_str(),polar_ctor_mat);
       
       result_v.emplace_back(std::move(res_contour));
       contour_v.emplace_back(std::move(contour));
