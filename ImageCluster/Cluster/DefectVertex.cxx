@@ -46,12 +46,12 @@ namespace larocv {
     //const auto& ctor_lines_v   = pcacandidates_data._ctor_lines_v_v[meta.plane()];
 
     const auto& defectcluster_data = AlgoData<DefectClusterData>(_defect_cluster_algo_id);
-    const auto& atomic_defect_v_v  = defectcluster_data._atomic_defect_v_v_v[meta.plane()];
+    const auto& atomic_defect_pts_v_v  = defectcluster_data._atomic_defect_pts_v_v_v[meta.plane()];
 
     //count the number of defects
     int n=0;
-    for(const auto& atomic_defect_v : atomic_defect_v_v)
-      for(const auto& atomic_defect : atomic_defect_v)
+    for(const auto& atomic_defect_pts_v : atomic_defect_pts_v_v)
+      for(const auto& atomic_defect : atomic_defect_pts_v)
 	n++;
     
     LAROCV_DEBUG() << "Plane: " << meta.plane() << std::endl;
@@ -65,9 +65,9 @@ namespace larocv {
     float radius_size=10;
     
     //for each track cluster
-    for(const auto& atomic_defect_v : atomic_defect_v_v) {
+    for(const auto& atomic_defect_pts_v : atomic_defect_pts_v_v) {
       //for each atomic defect in this track cluster
-      for(const auto& atomic_defect : atomic_defect_v) {
+      for(const auto& atomic_defect : atomic_defect_pts_v) {
 	n++;
 	LAROCV_DEBUG() << "Defect point is " << atomic_defect << std::endl;
 

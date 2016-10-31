@@ -42,7 +42,6 @@ namespace larocv {
     auto const& defect_data = AlgoData<larocv::DefectClusterData>(pca_data._input_id);
     //    auto const& atomic_data = AlgoData<larocv::AtomicTrackAnaData>(_atomic_algo_id);
 
-    
     auto& data = AlgoData<larocv::dQdXProfilerData>();
 
     // Construct cluster=>line mapping ... elaborated due to how PCACandidates stores info
@@ -50,17 +49,16 @@ namespace larocv {
     std::vector<const geo2d::Line<float>*> pcaptr_v;
     std::vector<int> cluster2pca;
     pcaptr_v.reserve(clusters.size());
-    cluster2pca.resize(clusters.size());			 
-    auto const& pca_lines_v_v = pca_data._ctor_lines_v_v_v[meta.plane()];
-    auto const& pca_aid_v_v  = pca_data._atomic_id_v_v_v[meta.plane()];
-    for(size_t i = 0; i < pca_lines_v_v.size(); i++) {
-      for(size_t j = 0; j < pca_lines_v_v[i].size(); j++) {
-	auto const& atomic_id = pca_aid_v_v[i][j];
-	if(atomic_id >= clusters.size()) throw larbys("Atomic ID out of bound!");
-	cluster2pca.at(atomic_id) = pcaptr_v.size();
-	pcaptr_v.push_back(&(pca_lines_v_v[i][j]));
-      }
+    cluster2pca.resize(clusters.size());
+    auto const& pca_lines_v  = pca_data._ctor_lines_v_v[meta.plane()];
+    
+    //for(size_t i = 0; i < pca_lines_v_v.size(); i++)
+    //for(size_t j = 0; j < pca_lines_v_v[i].size(); j++)
+    for(size_t atomic_id=0;atomic_id<clusters.size();++atomic_id) {
+      cluster2pca.at(atomic_id) = pcaptr_v.size();
+      pcaptr_v.push_back(&(pca_lines_v.at(atomic_id)));
     }
+
 
     // Define a bounding box in which we will work
     geo2d::Vector<float> box_tl(-1,-1);
@@ -223,9 +221,9 @@ namespace larocv {
     }
     LAROCV_DEBUG() << "Number of points not processed: " << num_invalid_pts << "/" << pts.size() << std::endl;
 
-    // order the contours
+    // order the contours -- the vic way... 
     const auto& n_clusters = defect_data._n_original_clusters_v[meta.plane()];
-    const auto& atomic_ctor_ass_v = defect_data._atomic_ctor_ass_v_v[meta.plane()];
+    const auto& atomic_ctor_ass_v_v = defect_data._atomic_ctor_ass_v_v_v[meta.plane()];
 
     std::vector<std::vector<uint> > dfect_cidx_v_v;
     std::vector<std::vector<uint> > odfect_cidx_v_v;
@@ -233,33 +231,29 @@ namespace larocv {
     dfect_cidx_v_v.resize(n_clusters);
     odfect_cidx_v_v.resize(n_clusters);
 
-
     LAROCV_DEBUG() << " N : " << n_clusters << " atomic clusters incoming " << std::endl;
-    LAROCV_DEBUG() << " Number of defect clusters should be " << atomic_ctor_ass_v.size() << std::endl;
+    LAROCV_DEBUG() << " Number of defect clusters should be " << atomic_ctor_ass_v_v.size() << std::endl;
 
     //for each of the original atomic cluster	  
-    for(unsigned atomic_cidx=0; atomic_cidx<n_clusters; ++atomic_cidx) {
+    for(unsigned track_cidx=0; track_cidx<n_clusters; ++track_cidx) {
 
       //get this set of indicies
-      auto& dfect_cidx_v  = dfect_cidx_v_v[atomic_cidx];
+      auto& dfect_cidx_v  = dfect_cidx_v_v[track_cidx];
 
       //get this ordered (to be determined...) set of indicies
-      auto& odfect_cidx_v = odfect_cidx_v_v[atomic_cidx];
+      auto& odfect_cidx_v = odfect_cidx_v_v[track_cidx];
       
       odfect_cidx_v.clear();
 
       //for each of the associated broken=>atomic association
-      for(unsigned jj=0;jj<atomic_ctor_ass_v.size();++jj) {
-	const auto& atomic_ctor_ass=atomic_ctor_ass_v[jj];
-
-	//if this associated, broken cluster is not from atomic cluster atomic_cidx, move on
-	if ( atomic_ctor_ass != atomic_cidx ) continue;
+      //for(unsigned jj=0;jj<atomic_ctor_ass_v.size();++jj) {
+      for(const auto atomic_ctor_ass : atomic_ctor_ass_v_v[track_cidx] ) 
 
 	//else this broken cluster came from same atomic
-	dfect_cidx_v.emplace_back(jj);
-      }
+	dfect_cidx_v.emplace_back(atomic_ctor_ass);
+      
 
-      LAROCV_DEBUG() << " N : " << dfect_cidx_v.size() << " associated defect clusters to atomic " << atomic_cidx << std::endl;
+      LAROCV_DEBUG() << " N : " << dfect_cidx_v.size() << " associated defect clusters to atomic " << track_cidx << std::endl;
       
       //lets get the left most contour
       uint min_idx=-1;
@@ -325,9 +319,9 @@ namespace larocv {
 
     auto& o_dqdx_vv=data._o_dqdx_vvv[meta.plane()];
     o_dqdx_vv.resize(n_clusters);
-    for(unsigned atomic_cidx=0; atomic_cidx<n_clusters; ++atomic_cidx) {
-      auto& o_dqdx_v=o_dqdx_vv[atomic_cidx];
-      for (const auto& odfect_cidx : odfect_cidx_v_v[atomic_cidx]) {
+    for(unsigned track_cidx=0; track_cidx<n_clusters; ++track_cidx) {
+      auto& o_dqdx_v=o_dqdx_vv[track_cidx];
+      for (const auto& odfect_cidx : odfect_cidx_v_v[track_cidx]) {
 	for(const auto& dqdx : dqdx_vv.at(odfect_cidx)) {
 	  o_dqdx_v.push_back(dqdx);
 	}
@@ -340,7 +334,7 @@ namespace larocv {
     //auto const& refine2dvertex_data = AlgoData<Refine2DVertexData>(_ref_algo_id);
     LAROCV_DEBUG()<<"9 _atomic_algo_id is "<<_atomic_algo_id<<std::endl;
     
-    auto const& atomic_ass_v        = defectcluster_data._atomic_ctor_ass_v_v[meta.plane()];    
+    auto const& atomic_ass_v_v        = defectcluster_data._atomic_ctor_ass_v_v_v[meta.plane()];    
     auto const& n_track_clusters    = defectcluster_data._n_original_clusters_v[meta.plane()];
     auto const& atomic_idx_per_clu  = atomictrackana_data._atomic_idx_per_clu_v_v_v[meta.plane()];
     //auto const& ref_vtx             = refine2dvertex_data._cand_vtx_v[meta.plane()];//Get vertex per plane
@@ -360,8 +354,9 @@ namespace larocv {
       atomic_index_v.clear();
       
       //Find associated atomics in one track cluster
-      for(size_t j=0;j<atomic_ass_v.size();++j){ 
-	if (atomic_ass_v[j] != i) continue;
+      //for(size_t j=0;j<atomic_ass_v_v.size();++j){
+      for(const auto j : atomic_ass_v_v[i] ) {
+	if (j != i) continue;
 	atomic_index_v.push_back(j);
       }
       

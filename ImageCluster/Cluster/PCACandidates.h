@@ -38,8 +38,12 @@ namespace larocv {
     bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
 
   private:
+
+    geo2d::Line<float> calculate_pca(const GEO2D_Contour_t& ctor);
+
     uint _defect_cluster_algo_id;
-    
+    float _pca_x_d_to_q;
+    int _nonzero_pixel_thresh;
   };
 
   /**
@@ -61,22 +65,20 @@ namespace larocv {
     /// Clear method override
 
     AlgorithmID_t _input_id;
-    std::vector<std::vector<std::vector<geo2d::Line<float> > > >   _ctor_lines_v_v_v;
     std::vector<std::vector<geo2d::Line<float> > >  _ctor_lines_v_v;
     std::vector<std::vector<geo2d::Vector<float> > > _ipoints_v_v;
-    std::vector<std::vector<std::vector<size_t > > > _atomic_id_v_v_v;
+    std::vector<std::vector<std::vector<size_t > > > _atomic_ctor_ass_v_v_v;
 
 
     void Clear() {
-      _ctor_lines_v_v_v.clear();
-      _ctor_lines_v_v.clear();
+      _ctor_lines_v_v.clear();      
       _ipoints_v_v.clear();
-      _atomic_id_v_v_v.clear();
+      _atomic_ctor_ass_v_v_v.clear();
 
-      _ctor_lines_v_v_v.resize(3);
-      _ctor_lines_v_v.resize(3);
+
+      _ctor_lines_v_v.resize(3);      
       _ipoints_v_v.resize(3);
-      _atomic_id_v_v_v.resize(3);
+      _atomic_ctor_ass_v_v_v.resize(3);
 
       _input_id = kINVALID_ID;
     }
