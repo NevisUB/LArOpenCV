@@ -67,10 +67,12 @@ namespace larocv {
     //for each original cluster
     for(unsigned c_idx=0; c_idx < n_original_clusters; ++c_idx) {
 
+      LAROCV_DEBUG() << "Input clust c_idx : " << c_idx << std::endl;
+      
       std::vector<size_t> atomic_id_v;
-
+      
       //for each atomic
-      for(const auto atomic_idx : atomic_ctor_ass_v_v[c_idx]) {
+      for(const auto atomic_idx : atomic_ctor_ass_v_v.at(c_idx)) {
 
 	//yes, get this contour at atomic index
 	auto const& ctor = clusters[atomic_idx]._contour;

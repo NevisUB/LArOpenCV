@@ -334,7 +334,7 @@ namespace larocv {
     //auto const& refine2dvertex_data = AlgoData<Refine2DVertexData>(_ref_algo_id);
     LAROCV_DEBUG()<<"9 _atomic_algo_id is "<<_atomic_algo_id<<std::endl;
     
-    auto const& atomic_ass_v_v        = defectcluster_data._atomic_ctor_ass_v_v_v[meta.plane()];    
+    auto const& atomic_ass_v_v      = defectcluster_data._atomic_ctor_ass_v_v_v[meta.plane()];    
     auto const& n_track_clusters    = defectcluster_data._n_original_clusters_v[meta.plane()];
     auto const& atomic_idx_per_clu  = atomictrackana_data._atomic_idx_per_clu_v_v_v[meta.plane()];
     //auto const& ref_vtx             = refine2dvertex_data._cand_vtx_v[meta.plane()];//Get vertex per plane
@@ -355,8 +355,7 @@ namespace larocv {
       
       //Find associated atomics in one track cluster
       //for(size_t j=0;j<atomic_ass_v_v.size();++j){
-      for(const auto j : atomic_ass_v_v[i] ) {
-	if (j != i) continue;
+      for(const auto j : atomic_ass_v_v.at(i) ) {
 	atomic_index_v.push_back(j);
       }
       
