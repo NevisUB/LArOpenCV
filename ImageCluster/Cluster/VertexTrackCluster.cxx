@@ -51,23 +51,42 @@ namespace larocv {
     
     for(int xs_pt_idx=0; xs_pt_idx<ref_xs_v.size(); ++xs_pt_idx) {
 
+      auto ref_vtx_copy = ref_vtx;
+
       float angle,theta_lo,theta_hi;
-	
+
+      cv::Mat rot_img;
+      cv::Mat img_copy = img;
+
+      cv::Mat img_padded;
+      int padding = sqrt(img.rows*img.rows+img.cols*img.cols)/2;
+      LAROCV_DEBUG() << "Diagonal is: " << padding << "... from row: " << img.rows << "... and cols: " << img.cols << std::endl;
+
+      img_padded.create(img_copy.rows + 2*padding, img_copy.cols + 2*padding, img_copy.type());
+      img_padded.setTo(cv::Scalar::all(0));
+      img_copy.copyTo(img_padded(cv::Rect(padding, padding, img.cols, img.rows)));
+
+      ref_vtx_copy.x+=padding;
+      ref_vtx_copy.y+=padding;
+      
+      LAROCV_DEBUG() << "Reference vertex @ " << ref_vtx_copy << std::endl;
+      
       if (use_half_angle) {
 	int idx0  = xs_pt_idx-1 >= 0 ? (xs_pt_idx-1)%ref_xs_v.size() : xs_pt_idx-1+ref_xs_v.size();
 	int idx1  = xs_pt_idx;
 	int idx2  = (xs_pt_idx+1)%ref_xs_v.size();
+	
 	LAROCV_DEBUG() << "idx0 : " << idx0 << "... idx1: " << idx1 << "... idx2: " << idx2 << std::endl;
-	      
-	auto const& xs0 = ref_xs_v[idx0];
-	auto const& xs1 = ref_xs_v[idx1];
-	auto const& xs2 = ref_xs_v[idx2];
-      
+
+	auto xs0 = ref_xs_v[idx0]; xs0.x+=padding; xs0.y+=padding;
+	auto xs1 = ref_xs_v[idx1]; xs1.x+=padding; xs1.y+=padding;
+	auto xs2 = ref_xs_v[idx2]; xs2.x+=padding; xs2.y+=padding;
+	
 	LAROCV_DEBUG() << "Inspecting XS0 @ " << xs0 << " XS1 @ " << xs1 << " XS2 @ " << xs2 << std::endl;
 
-	float angle0    = geo2d::angle(ref_vtx,xs0);
-	float angle1    = geo2d::angle(ref_vtx,xs1);
-	float angle2    = geo2d::angle(ref_vtx,xs2);
+	float angle0  = geo2d::angle(ref_vtx_copy,xs0);
+	float angle1  = geo2d::angle(ref_vtx_copy,xs1);
+	float angle2  = geo2d::angle(ref_vtx_copy,xs2);
 
 	LAROCV_DEBUG() << "Angles are 0: " << angle0 << "... 1: " << angle1 << "... 2: " << angle2 << std::endl;
 
@@ -87,11 +106,11 @@ namespace larocv {
 	
       } else { 
       
-	auto const& xs = ref_xs_v[xs_pt_idx];
+	auto xs = ref_xs_v[xs_pt_idx]; xs.x+=padding; xs.y+=padding;
 	
 	LAROCV_DEBUG() << "Inspecting XS @ " << xs << std::endl;
 	
-	angle = geo2d::angle(ref_vtx,xs);
+	angle = geo2d::angle(ref_vtx_copy,xs);
 	angle += 180.;
 
 	theta_lo = _theta_lo;
@@ -99,28 +118,35 @@ namespace larocv {
       
       }
       
-      auto rot = ::cv::getRotationMatrix2D(ref_vtx,angle,1.);
-
-      cv::Mat rot_img;
-      cv::warpAffine(img, rot_img, rot, img.size());
+      auto rot = ::cv::getRotationMatrix2D(ref_vtx_copy,angle,1.);
+      cv::Rect bbox = cv::RotatedRect(ref_vtx_copy,img_padded.size(),angle).boundingRect();
+      
+      cv::warpAffine(img_padded, rot_img, rot, bbox.size());
 
       std::stringstream ss1,ss2;
       ss1 << "norm_plane" << meta.plane() << "_xs" << xs_pt_idx << ".png";
       ss2 << "rot_plane" << meta.plane() << "_xs" << xs_pt_idx << ".png";
 
-      cv::imwrite(std::string(ss1.str()).c_str(), img);
+      cv::imwrite(std::string(ss1.str()).c_str(), img_padded);
       cv::imwrite(std::string(ss2.str()).c_str(), rot_img);
 
       cv::Mat rot_polarimg, sb_img;
       
       // Cluster per xs-point found in Refine2DVertex
+
+      int max_radius=1000;
+
+      ::cv::threshold(rot_img,rot_img,10,255,CV_THRESH_BINARY);
       
-      ::cv::linearPolar(rot_img,        //input
-			rot_polarimg,   //output
-			ref_vtx,
-			1000,
-			::cv::WARP_FILL_OUTLIERS); //seems like it has to set
-      ::cv::threshold(rot_polarimg,rot_polarimg,10,255,CV_THRESH_BINARY);
+      cv::linearPolar(rot_img,        //input
+		      rot_polarimg,   //output
+		      ref_vtx_copy,
+		      max_radius,
+		      cv::WARP_FILL_OUTLIERS); //seems like it has to set
+
+      auto kernel = ::cv::getStructuringElement(cv::MORPH_RECT,
+      						cv::Size(20,2));
+      ::cv::dilate(rot_polarimg,rot_polarimg,kernel,::cv::Point(-1,-1),1);     
 
       std::stringstream ss3;
       ss3 << "polar_plane" << meta.plane() << "_xs" << xs_pt_idx << ".png";
@@ -139,9 +165,14 @@ namespace larocv {
       // mask-out a bit further pixels for angles outside the range
       size_t row_min, row_max;
 
+      LAROCV_DEBUG() << "rot_polarimg... rows: " << rot_polarimg.rows << "... cols: " << rot_polarimg.cols << std::endl;
+      LAROCV_DEBUG() << "theta_lo: " << theta_lo << "... theta_hi: " << theta_hi << std::endl;
+
       row_min = (size_t)((float)(rot_polarimg.rows) * (0.5 - theta_lo/360.)); // was 10/360.
       row_max = (size_t)((float)(rot_polarimg.rows) * (0.5 + theta_hi/360.));
-      
+
+      LAROCV_DEBUG() << "row min: " << row_min << "... row max: " << row_max << std::endl;      
+
       for(size_t row=0; row<=row_min; ++row) {
 	for(size_t col=0; col<rot_polarimg.cols; col++) {
 	  rot_polarimg.at<unsigned char>(row,col) = (unsigned char)0;
@@ -157,26 +188,8 @@ namespace larocv {
       std::stringstream ss4;
       ss4 << "mask_plane" << meta.plane() << "_xs" << xs_pt_idx << ".png";
       cv::imwrite(std::string(ss4.str()).c_str(), rot_polarimg);
-      
-      /*
-      //Dilate
-      auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,
-						::cv::Size(_dilation_size,_dilation_size));
-      ::cv::dilate(rot_polarimg,sb_img,
-		   kernel,::cv::Point(-1,-1),_dilation_iter);
-      
-      //Blur
-      ::cv::blur(sb_img,sb_img,
-		 ::cv::Size(_blur_size_r,_blur_size_t));
-      
-      //Threshold
-      auto t_value = ::cv::threshold(sb_img,
-				     sb_img,
-				     _thresh,
-				     _thresh_maxval,
-				     CV_THRESH_BINARY); //return type is "threshold value?"
-      (void) t_value;
-      */
+     
+
       //Contour finding
       ContourArray_t polar_ctor_v;    
       std::vector<::cv::Vec4i> cv_hierarchy_v;
@@ -188,7 +201,9 @@ namespace larocv {
 			 CV_CHAIN_APPROX_SIMPLE);
       */
 
-      ::cv::findContours(rot_polarimg,polar_ctor_v,cv_hierarchy_v,
+      ::cv::findContours(rot_polarimg,
+			 polar_ctor_v,
+			 cv_hierarchy_v,
 			 CV_RETR_EXTERNAL,
 			 CV_CHAIN_APPROX_SIMPLE);
 
@@ -220,53 +235,9 @@ namespace larocv {
       
       float rows = rot_polarimg.rows;
       float cols = rot_polarimg.cols;
-
-      // auto const& ctor = polar_contour;
-      // std::vector<geo2d::Vector<int> > all_pts_v;
-      // std::vector<geo2d::Vector<int> > inside_pts_v;
-
-      // cv::findNonZero(rot_polarimg, all_pts_v);
-      // inside_pts_v.reserve(all_pts_v.size());
       
-      // for ( auto & pt : all_pts_v) {
-      // 	if( pointPolygonTest(ctor, pt, false) < 0 ) continue;
-
-      // 	float r = pt.x;
-      // 	float t = pt.y;
-
-      // 	r = (r / cols) * 1000;
-      // 	t = ((t / rows) * 360.0 + angle) * M_PI / 180.0;
-	
-      // 	pt.x = (float) r * std::cos(t) + ref_vtx.x;
-      // 	pt.y = (float) r * std::sin(t) + ref_vtx.y;
-
-      // 	pt.x = (int)(pt.x + 0.5);
-      // 	pt.y = (int)(pt.y + 0.5);
-
-      // 	inside_pts_v.emplace_back(std::move(pt));
-      // }
-
-      // LAROCV_DEBUG() << "inside_pts_v.size() " << inside_pts_v.size() << "\n";
-      // cv::Mat m1 = cv::Mat(img.rows,img.cols, CV_8UC1, cvScalar(0.));
-      // for (auto& pt : inside_pts_v)
-      // 	m1.at<unsigned char>((size_t)pt.y,(size_t)pt.x) = (unsigned char)255;
-
-      // cv::imwrite("poop1.png",m1);
-      
-      // ContourArray_t actor_v;
-      // std::vector<::cv::Vec4i> cv_hierarchy_v1;
-      // actor_v.clear(); cv_hierarchy_v1.clear();
-      // ::cv::findContours(m1,actor_v,
-      // 			 cv_hierarchy_v1,
-      // 			 CV_RETR_EXTERNAL,
-      // 			 CV_CHAIN_APPROX_SIMPLE);
-
-
-      // LAROCV_DEBUG() << "ACTOR_V size is : " << actor_v.size() << "\n";
-      // Cluster2D res_contour;
-      // geo2d::VectorArray<float> contour;
-      // for (auto& pt : actor_v[0]) contour.emplace_back(pt.x,pt.y);
-      // res_contour._contour=actor_v[0];
+      cv::Mat polar_ctor_mat = cv::Mat(img_padded.rows,img_padded.cols,CV_8UC1,cvScalar(0.));
+      cv::Mat cart_ctor_mat = cv::Mat(img_padded.rows,img_padded.cols,CV_8UC1,cvScalar(0.));
       
       Cluster2D res_contour;
       res_contour._contour.resize(polar_contour.size());
@@ -276,20 +247,34 @@ namespace larocv {
       for (size_t pt_idx=0; pt_idx<polar_contour.size(); ++pt_idx) {
       	auto const& polar_pt = polar_contour[pt_idx];
       	auto& pt = contour[pt_idx];
-
+	
+	polar_ctor_mat.at<unsigned char>(polar_pt.y,polar_pt.x) = (unsigned char) 255;
+	
       	//up case to floating point
       	float r = polar_pt.x;
       	float t = polar_pt.y;
 	
-      	r = (r / cols) * 1000;
+      	r = (r / cols) * max_radius;
       	t = ((t / rows) * 360.0 + angle) * M_PI / 180.0;
 	
-      	pt.x = (float) r * std::cos(t) + ref_vtx.x;
-      	pt.y = (float) r * std::sin(t) + ref_vtx.y;
+      	pt.x = (float) r * std::cos(t) + ref_vtx_copy.x;
+      	pt.y = (float) r * std::sin(t) + ref_vtx_copy.y;
+	
+      	res_contour._contour[pt_idx].x = (int)(pt.x + 0.5) - padding;
+      	res_contour._contour[pt_idx].y = (int)(pt.y + 0.5) - padding;
 
-      	res_contour._contour[pt_idx].x = (int)(pt.x + 0.5);
-      	res_contour._contour[pt_idx].y = (int)(pt.y + 0.5);
       }
+
+      for(auto& cpt : res_contour._contour)
+	cart_ctor_mat.at<unsigned char>(cpt.y,cpt.x) = (unsigned char) 255;
+
+      std::stringstream pp0;
+      pp0 << "cart_ctor_mat_"<<meta.plane()<<".png";
+      cv::imwrite(pp0.str().c_str(),cart_ctor_mat);
+
+      std::stringstream pp1;
+      pp1 << "polar_ctor_mat_"<<meta.plane()<<".png";
+      cv::imwrite(pp1.str().c_str(),polar_ctor_mat);
       
       result_v.emplace_back(std::move(res_contour));
       contour_v.emplace_back(std::move(contour));
@@ -298,6 +283,15 @@ namespace larocv {
     return result_v;
   }
  
+
+
+
+
+
+
+
+
+
 }
 
 #endif
