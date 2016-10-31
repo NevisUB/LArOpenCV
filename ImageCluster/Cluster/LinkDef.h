@@ -36,6 +36,8 @@
 #pragma link C++ class larocv::MatchCluster+;
 #pragma link C++ class larocv::DefectVertex+;
 #pragma link C++ class larocv::DefectVertexData+;
+#pragma link C++ class larocv::HIPMIPTouch+;
+#pragma link C++ class larocv::HIPMIPTouchData+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
