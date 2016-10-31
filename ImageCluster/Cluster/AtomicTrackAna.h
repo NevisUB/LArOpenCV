@@ -16,6 +16,7 @@
 
 #include "ImageAnaBase.h"
 #include "AlgoFactory.h"
+#include "Core/VectorArray.h"
 
 namespace larocv {
   /**
@@ -65,11 +66,30 @@ namespace larocv {
     { Clear();}
     ~AtomicTrackAnaData(){}
 
-    void Clear() {}
+    void Clear() {
+      _atomic_idx_per_clu_v_v_v.resize(3);
+      _atomic_spread_vvv.resize(3);
+      _pts_vv.resize(3);
+      for (unsigned i=0;i<3;++i){
+	_atomic_idx_per_clu_v_v_v[i].clear();
+	_atomic_spread_vvv[i].clear();
+	_pts_vv[i].clear();
+      }
+      
+    }
     
-    //Plane//Track//atomics
-    std::vector<std::vector<GEO2D_ContourArray_t>> _atomic_order_ctor_v_v;
-    std::vector<std::vector<std::vector<cv::Point>>> _atomic_kink_v;  //Each cluster has 2 kink points which also make a linesegment.
+    //Plane//Track//Atomics
+    std::vector<std::vector<GEO2D_ContourArray_t>>   _atomic_order_ctor_v_v;
+    //Plane//Track//Atomic Kink
+    std::vector<std::vector<std::vector<cv::Point>>> _atomic_kink_vv;
+    //Plane//Track//Atomic Spread
+    std::vector<std::vector<std::vector<double> > >  _atomic_spread_vvv;
+    //Plane//Track//Atomic Index
+    std::vector<std::vector<std::vector<int>>>       _atomic_idx_per_clu_v_v_v;
+    //Plane//Points
+    std::vector<geo2d::VectorArray<int>>             _pts_vv;
+
+    //cv::Mat _img;
     //std::vector<std::vector<float>>     _atomic_track_spread_v_v;//Each cluser has an average value of spread form pixels to PCA line
     //std::vector<std::vector<size_t>>    _atomic_track_ass_v_v;   //Association Number between cluster and linesegmen
     //plane//atomic

@@ -36,6 +36,9 @@ namespace larocv {
 
   private:
     AlgorithmID_t _pca_algo_id;
+    AlgorithmID_t _atomic_algo_id;
+    AlgorithmID_t _def_algo_id;
+    AlgorithmID_t _ref_algo_id;
     float _pi_threshold;
     float _dx_resolution;
   };
@@ -54,6 +57,7 @@ namespace larocv {
       _pt2dist_vv.resize(3);
       _bounds_vv.resize(3);
       _o_dqdx_vvv.resize(3);
+      _dqdx_atomic_vvvv.resize(3);
       for(size_t i=0; i<3; ++i) {
 	_pt2cluster_vv[i].clear();
 	_pts_vv[i].clear();
@@ -61,6 +65,7 @@ namespace larocv {
 	_pt2dist_vv[i].clear();
 	_bounds_vv[i].clear();
 	_o_dqdx_vvv[i].clear();
+	_dqdx_atomic_vvvv[i].clear();
       }
     }
 
@@ -70,6 +75,8 @@ namespace larocv {
     std::vector<std::vector<float> > _pt2dist_vv;
     std::vector<std::vector<std::pair<float,float> > > _bounds_vv;
     std::vector<std::vector<std::vector<float> > > _o_dqdx_vvv;
+    //plane/////cluster////dqdx
+    std::vector<std::vector<std::vector<std::vector<float>> > > _dqdx_atomic_vvvv;//dqdx based on order from AtomicTrackAna
     
   };
 
