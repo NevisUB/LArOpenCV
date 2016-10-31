@@ -13,8 +13,8 @@ namespace larocv {
     _min_hip_cluster_size = pset.get<int>("MinHIPClusterSize",20);
     _min_mip_cluster_size = pset.get<int>("MinMIPClusterSize",20);
 
-    _mip_thresh_v = pset.get<std::vector<int> >("MIPLevels",{10,10,10});
-    _hip_thresh_v = pset.get<std::vector<int> >("HIPLevels",{255,255,255});
+    _mip_thresh_v    = pset.get<std::vector<int> >("MIPLevels",{10,10,10});
+    _hip_thresh_v    = pset.get<std::vector<int> >("HIPLevels",{55,55,50});
 
     if (_mip_thresh_v.size() != 3) throw larbys("Provided MIP level is not size 3 (1 values per plane)");
     if (_hip_thresh_v.size() != 3) throw larbys("Provided MIP level is not size 3 (1 values per plane)");
@@ -52,13 +52,19 @@ namespace larocv {
     LAROCV_DEBUG() << "Plane : " << meta.plane() << "... MIP level: " << MIP_LEVEL << "... HIP level: " << HIP_LEVEL << std::endl;
     
     //Threshold the input image to certain ADC value, this is our MIP
-    ::cv::Mat img_thresh_m;
-    threshold(sb_img, img_thresh_m,MIP_LEVEL,255,0);
+    ::cv::Mat mip_thresh_m;
+    inRange(sb_img, MIP_LEVEL, HIP_LEVEL, mip_thresh_m);
+    std::stringstream ss0;
+    ss0 << "mip_thresh_m_"<<meta.plane()<<".png";
+    cv::imwrite(ss0.str().c_str(),mip_thresh_m);
     
     //Threshold the input image to HIP ADC value, this is our HIP
     ::cv::Mat hip_thresh_m;
     threshold(sb_img, hip_thresh_m,HIP_LEVEL,255,0);
-
+    std::stringstream ss1;
+    ss1 << "hip_thresh_m_"<<meta.plane()<<".png";
+    cv::imwrite(ss1.str().c_str(),hip_thresh_m);
+    
     //Contour finding on the HIP
     std::vector<::cv::Vec4i> hip_cv_hierarchy_v;
     hip_cv_hierarchy_v.clear();
@@ -86,9 +92,6 @@ namespace larocv {
     //Masking away the hip in the original image
     //find the non zero pixels in the hip contours. Mask them out of the MIP image.
 
-    // //clone the current mip image
-    ::cv::Mat mip_thresh_m = img_thresh_m.clone();
-    
     // // get the non zero points of the mip
     // std::vector<geo2d::Vector<int> > all_locations;
     // ::cv::findNonZero(mip_thresh_m, all_locations); 
@@ -149,7 +152,8 @@ namespace larocv {
 		    << " Summed : " << all_ctor_v.size() << "\n";
 
      auto& hip_data = AlgoData<larocv::HIPClusterData>();
-     hip_data.set_data(mip_idx_v,hip_idx_v,meta.plane());
+     hip_data._mip_idx_v_v[meta.plane()] = mip_idx_v;
+     hip_data._hip_idx_v_v[meta.plane()] = hip_idx_v;
      
      Cluster2DArray_t oclusters;
      oclusters.resize(all_ctor_v.size());

@@ -72,15 +72,6 @@ namespace larocv {
     std::vector<std::vector<size_t> > _mip_idx_v_v;
     std::vector<std::vector<size_t> > _hip_idx_v_v;
 
-    void set_data(const std::vector<size_t>& mips,
-		  const std::vector<size_t>& hips,
-		  short plane) {
-      if (plane > 2 or plane < 0) throw std::exception();
-
-      _mip_idx_v_v[plane] = mips;
-      _hip_idx_v_v[plane] = hips;
-    }
-    
   };
   /**
      \class larocv::HIPClusterFactory
