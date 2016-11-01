@@ -393,6 +393,8 @@ namespace larocv{
     
     LAROCV_DEBUG() << "PlaneScan running on plane " << plane
 		   << " @ point " << init_circle.center << std::endl;
+
+    auto& scan_marker = _scan_marker_v[plane];
     
     auto& plane_data  = AlgoData<larocv::Refine2DVertexData>()._plane_data.at(plane);
     auto& init_xs_vv  = plane_data._init_xs_vv;
@@ -516,10 +518,19 @@ namespace larocv{
 	// Check if this point has any charge. if not continue
 	col = (size_t)(step_pt.x);
 	row = (size_t)(step_pt.y);
+
+	size_t marker_index = row + col * img.rows;
+	if(scan_marker[marker_index]) {
+	  step_pt += dir;
+	  continue;
+	}
+	
+	scan_marker[marker_index] = true;
+	
 	q = (float)(img.at<unsigned char>(row,col));
 
 	if(q < _pi_threshold) {
-	  step_pt += dir / 2.;
+	  step_pt += dir;
 	  continue;
 	}
 
@@ -556,7 +567,16 @@ namespace larocv{
 				 larocv::ROI& roi)
   {
     auto& data = AlgoData<larocv::Refine2DVertexData>();
-    
+
+    if(_scan_marker_v.size() <= meta.plane())
+      _scan_marker_v.resize(meta.plane()+1);
+
+    auto& scan_marker = _scan_marker_v[meta.plane()];
+    scan_marker.resize((size_t)(img.rows) * (size_t)(img.cols),false);
+
+    for(size_t idx=0; idx<scan_marker.size(); ++idx)
+      scan_marker[idx] = false;
+
     _time_comp_factor_v[meta.plane()] = meta.pixel_height();
     _wire_comp_factor_v[meta.plane()] = meta.pixel_width();
     LAROCV_DEBUG() << "Plane " << meta.plane()

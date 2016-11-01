@@ -92,7 +92,7 @@ namespace larocv {
     float _pca_box_size;
     float _global_bound_size;
     bool _use_polar_spread;
-
+    std::vector< std::vector<bool> > _scan_marker_v;
   };
 
   class Refine2DVertexPlaneData {
