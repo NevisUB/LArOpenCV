@@ -3,6 +3,8 @@
 
 #include "Refine2DVertex.h"
 #include "CircleVertex.h"
+#include "DefectCluster.h"
+#include "PCACandidates.h"
 #include "Core/HalfLine.h"
 #include "Core/Line.h"
 #include "Core/BoundingBox.h"
@@ -17,8 +19,21 @@ namespace larocv{
 
   void Refine2DVertex::_Configure_(const ::fcllite::PSet &pset)
   {
-    auto const circle_vtx_algo_name = pset.get<std::string>("CircleVertexAlgo");
-    _circle_vertex_algo_id = this->ID(circle_vtx_algo_name);
+    //auto const circle_vtx_algo_name = pset.get<std::string>("CircleVertexAlgo");
+    //_circle_vertex_algo_id = this->ID(circle_vtx_algo_name);
+    _defect_algo_id = _pca_algo_id = kINVALID_ID;
+
+    auto const defect_algo_name = pset.get<std::string>("DefectClusterAlgo","");
+    if(!defect_algo_name.empty()) _defect_algo_id = this->ID(defect_algo_name);
+
+    auto const pca_algo_name = pset.get<std::string>("PCACandidatesAlgo","");
+    if(!pca_algo_name.empty()) _pca_algo_id = this->ID(pca_algo_name);
+    
+    if(_defect_algo_id == kINVALID_ID && _pca_algo_id == kINVALID_ID) {
+      LAROCV_CRITICAL() << "Must provide either PCACandidates or DefectCluster algorithm ID!" << std::endl;
+      throw larbys();
+    }
+
     _radius = 20;
     _pi_threshold = 10;
     _pca_box_size = 3;
@@ -143,10 +158,10 @@ namespace larocv{
 
   geo2d::Line<float> Refine2DVertex::SquarePCA(const ::cv::Mat& img,
 					       geo2d::Vector<float> pt,
-					       const size_t side)
+					       float width, float height)
   {
 					       
-    auto small_img = ::cv::Mat(img,::cv::Rect(pt.x-side, pt.y-side, 2*side+1, 2*side+1));
+    auto small_img = ::cv::Mat(img,::cv::Rect(pt.x-width, pt.y-height, 2*width+1, 2*height+1));
     ::cv::Mat thresh_small_img;
     //::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,CV_THRESH_BINARY);
     ::cv::threshold(small_img,thresh_small_img,1,1000,3);
@@ -166,8 +181,8 @@ namespace larocv{
 
     ::cv::PCA pcaobj(mat_points,::cv::Mat(),::cv::PCA::DATA_AS_ROW,0);
     
-    pt.x += pcaobj.mean.at<float>(0,0) - side;
-    pt.y += pcaobj.mean.at<float>(0,1) - side;
+    pt.x += pcaobj.mean.at<float>(0,0) - width;
+    pt.y += pcaobj.mean.at<float>(0,1) - height;
     
     auto dir = geo2d::Vector<float>(pcaobj.eigenvectors.at<float>(0,0),
 				    pcaobj.eigenvectors.at<float>(0,1));
@@ -288,7 +303,7 @@ namespace larocv{
 	auto const& xs_pt = xs_pts[xs_idx];
 	// Line that connects center to xs
 	try{
-	  auto local_pca   = SquarePCA(img,xs_pt,_pca_box_size);
+	  auto local_pca   = SquarePCA(img,xs_pt,_pca_box_size,_pca_box_size);
 	  auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
 	  dtheta_sum += fabs(geo2d::angle(center_line) - geo2d::angle(local_pca));
 	  // Alternative (and probably better/faster): compute y spread in polar coordinate
@@ -341,7 +356,7 @@ namespace larocv{
 	auto const& xs_pt = inner_xs_pts[xs_idx];
 	// Line that connects center to xs
 	try{
-	  auto local_pca   = SquarePCA(img,xs_pt,_pca_box_size);
+	  auto local_pca   = SquarePCA(img,xs_pt,_pca_box_size,_pca_box_size);
 	  auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
 	  inner_dtheta_sum += fabs(geo2d::angle(center_line) - geo2d::angle(local_pca));
 	  // Alternative (and probably better/faster): compute y spread in polar coordinate
@@ -355,7 +370,7 @@ namespace larocv{
 	auto const& xs_pt = outer_xs_pts[xs_idx];
 	// Line that connects center to xs
 	try{
-	  auto local_pca   = SquarePCA(img,xs_pt,_pca_box_size);
+	  auto local_pca   = SquarePCA(img,xs_pt,_pca_box_size,_pca_box_size);
 	  auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
 	  outer_dtheta_sum += fabs(geo2d::angle(center_line) - geo2d::angle(local_pca));
 	  // Alternative (and probably better/faster): compute y spread in polar coordinate
@@ -370,21 +385,38 @@ namespace larocv{
     return (inner_dtheta_sum + outer_dtheta_sum) / ((float)(inner_xs_pts.size() + outer_xs_pts.size()));
   }
 
-  void Refine2DVertex::PlaneScan(const ::cv::Mat& img, const size_t plane,
-				 const ::geo2d::Circle<float> init_circle)
+  bool Refine2DVertex::PlaneScan(const ::cv::Mat& img, const size_t plane,
+				 const geo2d::Circle<float> init_circle,
+				 const geo2d::Vector<float> pt_err)
   {
+    bool res = false;
+    
     LAROCV_DEBUG() << "PlaneScan running on plane " << plane
 		   << " @ point " << init_circle.center << std::endl;
-    auto& data       = AlgoData<larocv::Refine2DVertexData>();
-    auto& init_xs_v  = data._init_xs_vv[plane];
-    auto& init_pca_v = data._init_pca_vv[plane];
-    auto& init_vtx   = data._init_vtx_v[plane];
+    
+    auto& plane_data  = AlgoData<larocv::Refine2DVertexData>()._plane_data.at(plane);
+    auto& init_xs_vv  = plane_data._init_xs_vv;
+    auto& init_pca_vv = plane_data._init_pca_vv;
+    auto& init_vtx_v  = plane_data._init_vtx_v;
+    auto& scan_rect_v = plane_data._scan_rect_v;
+    auto& circle_trav_v = plane_data._circle_trav_v;
+    auto& dtheta_trav_v = plane_data._dtheta_trav_v;
+
+    // Initialize variables for this scan
+    init_vtx_v.resize(init_vtx_v.size()+1);
+    init_xs_vv.resize(init_xs_vv.size()+1);
+    init_pca_vv.resize(init_xs_vv.size()+1);
+
+    auto& init_vtx   = init_vtx_v.back();
+    auto& init_xs_v  = init_xs_vv.back();
+    auto& init_pca_v = init_pca_vv.back();
+
     init_vtx = init_circle.center;
 
-    data._circle_trav_vv[plane].clear();
-    data._dtheta_trav_vv[plane].clear();
-    init_pca_v.clear();
-    init_xs_v.clear();
+    //data._circle_trav_vv[plane].clear();
+    //data._dtheta_trav_vv[plane].clear();
+    //init_pca_v.clear();
+    //init_xs_v.clear();
 
     // Create another circle with 1/2 radius
     auto half_circle = init_circle;
@@ -397,7 +429,7 @@ namespace larocv{
     // Find valid PCAs per xs point 
     for(auto const& pt : QPointOnCircle(img,init_circle)) {
       try{
-	auto const line = SquarePCA(img,pt,_pca_box_size);
+	auto const line = SquarePCA(img,pt,_pca_box_size,_pca_box_size);
 	temp1_xs_v.push_back(pt);
 	temp1_pca_v.push_back(line);
       }catch(const larbys& err){
@@ -408,7 +440,7 @@ namespace larocv{
     // Find valid PCAs per xs point 
     for(auto const& pt : QPointOnCircle(img,half_circle)) {
       try{
-	auto const line = SquarePCA(img,pt,_pca_box_size);
+	auto const line = SquarePCA(img,pt,_pca_box_size,_pca_box_size);
 	temp2_xs_v.push_back(pt);
 	temp2_pca_v.push_back(line);
       }catch(const larbys& err){
@@ -433,7 +465,7 @@ namespace larocv{
 				      init_vtx.y - _global_bound_size);
     
     geo2d::Rect bbox(top_left, bottom_right);
-    data._scan_rect_v[plane] = bbox;
+    scan_rect_v.push_back(bbox);
     
     LAROCV_DEBUG() << "Plane " << plane << " scanning bbox:" << bbox << std::endl;
     // Now we loop over per-xs-on-init-circle, and find a candidate vertex per xs point
@@ -476,8 +508,8 @@ namespace larocv{
       size_t row, col;
       float q;
       auto step_pt = start + dir / 2.;
-      double min_dtheta_sum = 1e4;
-      geo2d::Vector<float> candidate_vtx = start;
+      //double min_dtheta_sum = 1e4;
+      //geo2d::Vector<float> candidate_vtx = start;
       
       while(bbox.contains(step_pt)) {
 
@@ -501,18 +533,21 @@ namespace larocv{
 	}
 
 	LAROCV_DEBUG() << "    ... dtheta_sum = " << dtheta_sum << std::endl;
-	data._circle_trav_vv[plane].emplace_back(std::move(geo2d::Circle<float>(trial_pt,_radius)));
-	data._dtheta_trav_vv[plane].push_back(dtheta_sum);
+	circle_trav_v.emplace_back(std::move(geo2d::Circle<float>(trial_pt,_radius)));
+	dtheta_trav_v.push_back(dtheta_sum);
+	res = true;
 
+	/*
 	if(dtheta_sum < min_dtheta_sum) {
 	  min_dtheta_sum = dtheta_sum;
 	  candidate_vtx = trial_pt;
 	}
-	
+	*/	
 	// Increment the step and continue or break
 	step_pt += dir;	
       }
     }
+    return res;
   }
 
   void Refine2DVertex::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -528,48 +563,60 @@ namespace larocv{
 		   << " wire comp factor: " << _wire_comp_factor_v[meta.plane()]
 		   << " time comp factor: " << _time_comp_factor_v[meta.plane()]
 		   << std::endl;
-    
-    auto const& cvtx_data = AlgoData<larocv::CircleVertexData>(_circle_vertex_algo_id);
-    auto const& circle_vv = cvtx_data._circledata_v_v;
-    
-    if(circle_vv.empty()) {
-      LAROCV_CRITICAL() << "No plane? Failed to retrieve circles from CircleVertexAlgo" << std::endl;
-      throw larbys();
-    }
-    auto const& circle_v = circle_vv[meta.plane()];
 
-    if(circle_v.empty()) {
-      LAROCV_DEBUG() << "No circle found: nothing to refine" << std::endl;
-      //throw larbys();
+    geo2d::VectorArray<float> pt_v;
+    geo2d::VectorArray<float> pt_err_v;
+    geo2d::Vector<float> pt_err(2.,2.);
+
+    bool found=false;
+    geo2d::Circle<float> circle;
+    circle.radius = _radius;
+
+    if(_defect_algo_id != kINVALID_ID) {
+      auto const& defect_pts = AlgoData<larocv::DefectClusterData>(_defect_algo_id);
+      for(auto const& pts : defect_pts._atomic_defect_pts_v_v_v[meta.plane()]) {
+	for(auto const& pt : pts) {
+	  LAROCV_INFO() << "Scanning Defect point: " << pt << std::endl;
+	  circle.center = pt;
+	  found = PlaneScan(img,meta.plane(),circle,pt_err) || found;
+	}
+      }
+    }
+
+    if(_pca_algo_id != kINVALID_ID) {
+      auto const& pca_pts    = AlgoData<larocv::PCACandidatesData>(_pca_algo_id);    
+      for(auto const& pt : pca_pts._ipoints_v_v[meta.plane()]) {
+	LAROCV_INFO() << "Scanning PCACandidate point: " << pt << std::endl;
+	circle.center = pt;
+	found = PlaneScan(img,meta.plane(),circle,pt_err) || found;
+      }
+    }
+    
+    if(!found) {
+      data._plane_data.at(meta.plane())._valid_plane = false;
       return;
     }
 
-    auto const& init_circle = circle_v.front();
-
-    data._valid_plane_v[meta.plane()] = true;
-
-    PlaneScan(img,meta.plane(),init_circle);
+    data._plane_data.at(meta.plane())._valid_plane = true;
 
   }
 
-  void Refine2DVertex::XPlaneScan(const std::vector<const cv::Mat>& img_v)
+  void Refine2DVertex::XPlaneTimeScan(const std::vector<const cv::Mat>& img_v)
   {
-    // Combine 3 plane information and make a best guess.
-    // To do this, we loop over time tick over all available planes
+    // Combine 3 plane information and make the best guesses as to which time tick may contain vertex(es)
+    // To do this, we loop over time tick over all available planes first
     auto& data = AlgoData<larocv::Refine2DVertexData>();
-    auto& xplane_vtx_vv   = data._xplane_binned_vtx_vv;
-    auto& xplane_score_vv = data._xplane_binned_score_vv;
+    auto& plane_data_v = data._plane_data;
     // Initialize results
     for(size_t plane=0; plane<img_v.size(); ++plane) {
-      auto& pt = data._cand_vtx_v[plane];
-      pt.x = pt.y = -1;
-      xplane_vtx_vv[plane].clear();
-      xplane_score_vv[plane].clear();
+      auto& plane_data = data._plane_data.at(plane);
+      auto& time_binned_score_v = plane_data._time_binned_score_v;
+      time_binned_score_v.clear();
     }
 
     // Compute tick offset per plane
-    std::vector<float> tick_offset_v = _tick_offset_v;
-    for(size_t plane=0; plane<data._scan_rect_v.size(); ++plane) {
+    auto tick_offset_v = _tick_offset_v; // should be a copy
+    for(size_t plane=0; plane<img_v.size(); ++plane) {
       tick_offset_v[plane] /= _time_comp_factor_v[plane];
       LAROCV_DEBUG() << "Plane " << plane
 		     << " offset = " << tick_offset_v[plane]
@@ -583,51 +630,52 @@ namespace larocv{
     
     xplane_tick_min = -1;
     xplane_tick_max = -1;
-    for(size_t plane=0; plane<data._scan_rect_v.size(); ++plane){
-      if(!data._valid_plane_v[plane]) continue;
-      auto const& bbox = data._scan_rect_v[plane];
-      LAROCV_DEBUG() << "Plane " << plane << " scanned within a box " << bbox << std::endl;
-      float ref_x = bbox.x;
-      ref_x -= tick_offset_v[plane];
-      /*
-      // This is exclusive boundary
-      if(xplane_tick_min < 0) xplane_tick_min = ref_x;
-      else if(xplane_tick_min < ref_x) xplane_tick_min = ref_x;
-      if(xplane_tick_max < 0) xplane_tick_max = ref_x + bbox.width;
-      else if(xplane_tick_max > (ref_x + bbox.width)) xplane_tick_max = ref_x + bbox.width;
-      */
-      if(xplane_tick_min < 0) xplane_tick_min = ref_x;
-      else if(xplane_tick_min > ref_x) xplane_tick_min = ref_x;
-      if(xplane_tick_max < 0) xplane_tick_max = ref_x + bbox.width;
-      else if(xplane_tick_max < (ref_x + bbox.width)) xplane_tick_max = ref_x + bbox.width;
-    }
+    for(size_t plane=0; plane<img_v.size(); ++plane){
+      auto const& plane_data = plane_data_v.at(plane);
+      if(!plane_data._valid_plane) continue;
+      for(auto const& bbox : plane_data._scan_rect_v) {
 
-    // Next define score map within a tick resolution of 3
-    const size_t num_ticks = (xplane_tick_max - xplane_tick_min)/_xplane_tick_resolution + 1;
-    LAROCV_DEBUG() << "NumTicks to scan in time: " << num_ticks << " (" << xplane_tick_min << " => " << xplane_tick_max << ")" << std::endl;
-
-    for(size_t plane=0; plane<data._dtheta_trav_vv.size(); ++plane) {
-      xplane_vtx_vv[plane].resize(num_ticks);
-      xplane_score_vv[plane].resize(num_ticks+1);
-      for(size_t tick=0; tick<=num_ticks; ++tick) {
-	auto& pt = xplane_vtx_vv[plane][tick];
-	pt.x = pt.y = -1;
-	xplane_score_vv[plane][tick] = -1;
+	LAROCV_DEBUG() << "Plane " << plane << " scanned within a box " << bbox << std::endl;
+	float ref_x = bbox.x;
+	ref_x -= tick_offset_v[plane];
+	/*
+	// This is exclusive boundary
+	if(xplane_tick_min < 0) xplane_tick_min = ref_x;
+	else if(xplane_tick_min < ref_x) xplane_tick_min = ref_x;
+	if(xplane_tick_max < 0) xplane_tick_max = ref_x + bbox.width;
+	else if(xplane_tick_max > (ref_x + bbox.width)) xplane_tick_max = ref_x + bbox.width;
+	*/
+	if(xplane_tick_min < 0) xplane_tick_min = ref_x;
+	else if(xplane_tick_min > ref_x) xplane_tick_min = ref_x;
+	if(xplane_tick_max < 0) xplane_tick_max = ref_x + bbox.width;
+	else if(xplane_tick_max < (ref_x + bbox.width)) xplane_tick_max = ref_x + bbox.width;
       }
     }
     
-    for(size_t plane=0; plane<data._dtheta_trav_vv.size(); ++plane) {
+    // Next define score map within a pre-defined tick resolution
+    const size_t num_ticks = (xplane_tick_max - xplane_tick_min)/_xplane_tick_resolution + 1;
+    LAROCV_DEBUG() << "NumTicks to scan in time: " << num_ticks << " (" << xplane_tick_min << " => " << xplane_tick_max << ")" << std::endl;
+
+    for(size_t plane=0; plane<img_v.size(); ++plane) {
+      auto& plane_data = plane_data_v.at(plane);
+      auto& time_binned_score_v = plane_data._time_binned_score_v;
+      time_binned_score_v.resize(num_ticks+1);
+      for(size_t tick=0; tick<=num_ticks; ++tick)
+	time_binned_score_v[tick] = -1;
+    }
+    
+    for(size_t plane=0; plane<img_v.size(); ++plane) {
+      auto& plane_data = plane_data_v.at(plane);
       std::cout<<"Plane " << plane << " ..."<<std::endl;
-      if(!data._valid_plane_v[plane]) continue;
-      auto const& dtheta_trav_v  = data._dtheta_trav_vv.at(plane);
-      auto const& circle_trav_v  = data._circle_trav_vv.at(plane);
+      if(!plane_data._valid_plane) continue;
+      auto const& dtheta_trav_v  = plane_data._dtheta_trav_v;
+      auto const& circle_trav_v  = plane_data._circle_trav_v;
       auto const& tick_offset    = tick_offset_v.at(plane);
-      auto&       xplane_vtx_v   = xplane_vtx_vv[plane];
-      auto&       xplane_score_v = xplane_score_vv[plane];
+      auto&       time_binned_score_v = plane_data._time_binned_score_v;
       
       for(size_t step=0; step<circle_trav_v.size(); ++step) {
-	auto const& dtheta = dtheta_trav_v.at(step);
-	auto const& circle = circle_trav_v.at(step);
+	auto const& dtheta = dtheta_trav_v[step];
+	auto const& circle = circle_trav_v[step];
 	float tick = circle.center.x - tick_offset;
 	size_t tick_idx = (size_t)((tick - xplane_tick_min)/_xplane_tick_resolution + 0.5);
 	if(tick < xplane_tick_min || tick > xplane_tick_max) {
@@ -635,15 +683,13 @@ namespace larocv{
 	  continue;
 	}
 
-	auto& xplane_vtx   = xplane_vtx_v.at(tick_idx);
-	auto& xplane_score = xplane_score_v.at(tick_idx);
-	if(xplane_score > 0 && xplane_score < dtheta) {
+	auto& time_binned_score = time_binned_score_v[tick_idx];
+	if(time_binned_score > 0 && time_binned_score < dtheta) {
 	  LAROCV_DEBUG() << "tick @ " << tick << " (array idx=" << tick_idx << ") .... dtheta @ " << dtheta <<  " ... skipping (dtheta too big) " << std::endl;
 	  continue;
 	}
 	LAROCV_DEBUG() << "tick @ " << tick << " (array idx=" << tick_idx << ") .... dtheta @ " << dtheta <<  " ... registering " << std::endl;
-	xplane_vtx   = circle.center;
-	xplane_score = dtheta;
+	time_binned_score = dtheta;
       }
     }
 
@@ -654,33 +700,48 @@ namespace larocv{
     float  min_dtheta_sum_1plane=1e4;
     size_t min_dtheta_sum_tick = kINVALID_SIZE;
     size_t min_dtheta_sum_1plane_tick = kINVALID_SIZE;
+    auto& xplane_time_binned_score0_v = data._xplane_time_binned_score0_v;
+    auto& xplane_time_binned_score1_v = data._xplane_time_binned_score1_v;
+    xplane_time_binned_score0_v.clear();
+    xplane_time_binned_score1_v.clear();
+    xplane_time_binned_score0_v.resize(num_ticks+1,-1);
+    xplane_time_binned_score1_v.resize(num_ticks+1,-1);
     for(size_t tick=0; tick < num_ticks; ++tick) {
       num_valid_planes = 0;
       dtheta_sum = 0.;
       LAROCV_DEBUG() << "At tick " << tick << "/" << num_ticks << std::endl;
-      for(size_t plane=0; plane < xplane_vtx_vv.size(); ++plane) {
-	if(!data._valid_plane_v[plane]) continue;
-	LAROCV_DEBUG() << "    Plane " << plane << " vtx @ " << xplane_vtx_vv[plane][tick] << " dtheta = " << xplane_score_vv[plane][tick] << std::endl;
-	if(xplane_score_vv[plane][tick] < 0) continue;
-	dtheta_sum += xplane_score_vv[plane][tick];
+      for(size_t plane=0; plane < img_v.size(); ++plane) {
+	auto const& plane_data = data._plane_data[plane];
+	if(!plane_data._valid_plane) continue;
+	auto const& time_binned_score_v = plane_data._time_binned_score_v;
+	LAROCV_DEBUG() << "    Plane " << plane << " dtheta = " << time_binned_score_v[tick] << std::endl;
+	if(time_binned_score_v[tick] < 0) continue;
+	dtheta_sum += time_binned_score_v[tick];
 	num_valid_planes +=1;
       }
       LAROCV_DEBUG() << "    # valid plane = " << num_valid_planes << " dtheta = " << dtheta_sum << std::endl;
+
       // compute average dtheta_sum
       dtheta_sum /= (float)(num_valid_planes);
+
       if(num_valid_planes < 1) continue;
+      xplane_time_binned_score0_v[tick] = dtheta_sum;
       if(dtheta_sum < min_dtheta_sum_1plane) {
 	min_dtheta_sum_1plane = dtheta_sum;
 	min_dtheta_sum_1plane_tick = tick;
 	LAROCV_DEBUG() << "    ... new minimum (1plane)!" << std::endl;
       }
-      if(num_valid_planes < 2) continue;      
+
+      if(num_valid_planes < 2) continue;
+      xplane_time_binned_score1_v[tick] = dtheta_sum;
       if(dtheta_sum > min_dtheta_sum) continue;
       LAROCV_DEBUG() << "    ... new minimum (>1plane)!" << std::endl;
       min_dtheta_sum = dtheta_sum;
       min_dtheta_sum_tick = tick;
     }
 
+    return;
+    /*
     size_t target_tick = kINVALID_SIZE;
     if(min_dtheta_sum_tick != kINVALID_SIZE) target_tick = min_dtheta_sum_tick;
     else target_tick = min_dtheta_sum_1plane_tick;
@@ -705,195 +766,12 @@ namespace larocv{
       data._cand_xs_vv[plane] = QPointOnCircle(img_v[plane],circle);
       data._cand_valid_v[plane] = true;
     }
+    */
   }
 
   bool Refine2DVertex::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
-    auto& data = AlgoData<larocv::Refine2DVertexData>();
-    XPlaneScan(img_v);
-
-    auto const& xplane_vtx_vv   = data._xplane_binned_vtx_vv;
-    auto const& xplane_score_vv = data._xplane_binned_score_vv;
-    auto const& valid_plane_v   = data._valid_plane_v;
-    auto&       cand_vtx_v      = data._cand_vtx_v;
-    auto&       cand_xs_vv      = data._cand_xs_vv;
-    auto&       cand_score_v    = data._cand_score_v;
-
-    /*
-    // Handle the case of valid-but-vtx-not-found planes
-    for(size_t plane=0; plane<xplane_vtx_vv.size(); ++plane){
-      if(!valid_plane_v[plane]) continue;
-      if(cand_vtx_v[plane].x>=0) continue;
-      // See if this plane has a data point surrounding the found "time"
-      bool time_low_exist=false;
-      bool time_hi_exist=false;
-      const num_ticks = xplane_vtx_vv[plane].size();
-      for(size_t tick=0; tick<num_ticks; ++tick) {
-	if(xplane_score_vv[plane][tick] < 0) continue;
-	if(tick < min_dtheta_sum_tick) time_low_exist=true;
-	if(tick > min_dtheta_sum_tick) time_hi_exist=true;
-      }
-      if(time_low_exist && time_hi_exist) {
-	int min_dtick=1e4;
-	int target_tick=-1;
-	for(size_t tick=0; tick < num_ticks; ++tick) {
-	  if(xplane_score_vv[plane][tick] < 0) continue;
-	  int dtick = std::abs(((int)tick) - ((int)(min_dtheta_sum_tick)));
-	  if(dtick < min_dtick) {
-	    min_dtick = dtick;
-	    target_tick = tick;
-	  }
-	}
-	if(target_tick>=0) {
-	  cand_vtx_v[plane] = xplane_vtx_vv[plane][target_tick];
-	  cand_score_v[plane] = xplane_score_vv[plane][target_tick];
-	  geo2d::Circle<float> circle;
-	  circle.center = cand_vtx_v[plane];
-	  circle.radius = _radius/2.;
-	  cand_xs_vv[plane] = QPointOnCircle(img_v[plane],circle);
-	}
-      }
-    }
-    */
-    
-    // Handle the case of invalid planes
-    int good_plane0 = -1;
-    int good_plane1 = -1;
-    for(size_t plane=0; plane<xplane_vtx_vv.size(); ++plane) {
-      if(!valid_plane_v[plane]) continue;
-      if(!data._cand_valid_v[plane]) continue;
-      if(good_plane0<0) { good_plane0 = plane; continue; }
-      if(good_plane1<0) { good_plane1 = plane; break; }
-    }
-
-    if(good_plane0<0) {
-      LAROCV_WARNING() << "No vertex candidate found!" << std::endl;
-      return false;
-    }
-
-    if(good_plane0 >=0 && good_plane1 < 0) {
-      LAROCV_DEBUG() << "Only 1 good plane found. Scanning other planes in possible wire range..." << std::endl;
-      // Perform a vertical scan for overlapping region
-      auto const& good_pt = cand_vtx_v[good_plane0];
-      for(size_t plane=0; plane<xplane_vtx_vv.size(); ++plane) {
-	if(plane == good_plane0) continue;
-	// Get the wire range
-	const size_t source_wire = (size_t)(good_pt.y * _wire_comp_factor_v[good_plane0]+0.5);
-	auto const wrange = larocv::OverlapWireRange(source_wire,good_plane0,plane);
-	size_t wire_start = (size_t)(wrange.first  / _wire_comp_factor_v[good_plane0] - 0.5);
-	size_t wire_end   = (size_t)(wrange.second / _wire_comp_factor_v[good_plane0] - 0.5) + 1;
-	LAROCV_DEBUG() << "Scanning plane " << plane << " in wire range " << wire_start << " => " << wire_end << std::endl;
-	geo2d::Vector<float> step_pt, candidate_vtx;
-	step_pt.x = good_pt.x;
-	double min_dtheta_sum = 1e9;
-	for(size_t wire = wire_start; wire < wire_end; ++wire) {
-
-	  step_pt.y = (float)(wire);
-	  size_t col = (size_t)(step_pt.x);
-	  size_t row = (size_t)(step_pt.y);
-	  float q = (float)(img_v[plane].at<unsigned char>(row,col));
-	  if(q < _pi_threshold) continue;
-
-	  auto trial_pt = this->MeanPixel(img_v[plane],step_pt);
-	  auto dtheta_sum = this->TwoPointInspection(img_v[plane],trial_pt);
-
-	  if(dtheta_sum < 0) continue;
-	  
-	  LAROCV_DEBUG() << " @ " << trial_pt << " ... dtheta_sum = " << dtheta_sum << std::endl;
-	  data._circle_trav_vv[plane].emplace_back(std::move(geo2d::Circle<float>(trial_pt,_radius)));
-	  data._dtheta_trav_vv[plane].push_back(dtheta_sum);
-	  
-	  if(dtheta_sum < min_dtheta_sum) {
-	    min_dtheta_sum = dtheta_sum;
-	    candidate_vtx = trial_pt;
-	  }
-	}
-	if(min_dtheta_sum < 1.e9) {
-	  geo2d::Circle<float> circle;
-	  circle.center = candidate_vtx;
-	  cand_score_v[plane] = min_dtheta_sum;
-
-	  circle.radius = _radius/2.;
-	  cand_xs_vv[plane] = QPointOnCircle(img_v[plane],circle);
-	  cand_vtx_v[plane] = circle.center;
-	  
-	  data._cand_valid_v[plane] = true;
-	}
-      }
-      // See if now we can have more than 1 good plane. If so, pick the one closest to good_plane0 vtx
-      float min_vtx_dist = 1e9;
-      for(size_t plane=0; plane < xplane_vtx_vv.size(); ++plane) {
-	if(plane == good_plane0) continue;
-	if(!data._cand_valid_v[plane]) continue;
-	auto dist = geo2d::dist(cand_vtx_v[plane],cand_vtx_v[good_plane0]);
-	if(dist < min_vtx_dist) {
-	  min_vtx_dist = dist;
-	  good_plane1 = plane;
-	}
-      }
-    }
-    if(good_plane1 >= 0) {
-      LAROCV_DEBUG() << ">= 2 planes found with good vertex." << std::endl;
-      auto const& good_pt0 = cand_vtx_v[good_plane0];
-      auto const& good_pt1 = cand_vtx_v[good_plane1];
-      
-      for(size_t plane=0; plane<xplane_vtx_vv.size(); ++plane) {
-	if(data._cand_valid_v[plane]) continue;
-	LAROCV_DEBUG() << "Scanning plane " << plane
-		       << " using plane " << good_plane0 << " vtx @ " << good_pt0
-		       << " and plane " << good_plane1 << " vtx @ " << good_pt1
-		       << std::endl;
-	double y, z;
-	size_t wire0 = (size_t)(good_pt0.y * _wire_comp_factor_v[good_plane0] + 0.5);
-	size_t wire1 = (size_t)(good_pt1.y * _wire_comp_factor_v[good_plane1] + 0.5);
-	larocv::IntersectionPoint(wire0,good_plane0,wire1,good_plane1,y,z);
-
-	cand_vtx_v[plane].x = (good_pt0.x + good_pt1.x)/2.;
-	cand_vtx_v[plane].y = larocv::WireCoordinate(y,z,plane) / _wire_comp_factor_v[plane];
-
-	// Attempt a search
-	geo2d::Circle<float> circle;
-	circle.center = cand_vtx_v[plane];
-	circle.radius = _radius;
-	PlaneScan(img_v[plane],plane,circle);
-
-	// See if the scan improved. Accept a new result if within the reach
-	auto const& dtheta_trav_v = data._dtheta_trav_vv.at(plane);
-	auto const& circle_trav_v = data._circle_trav_vv.at(plane);
-	auto const max_dist = pow(_xplane_guess_max_dist,2);
-	float min_dtheta_val = 1e6;
-	int   min_dtheta_idx = -1;
-	for(size_t scan_idx=0; scan_idx<dtheta_trav_v.size(); ++scan_idx) {
-	  if(geo2d::dist2(circle_trav_v[scan_idx].center, circle.center) > max_dist)
-	    continue;
-	  if(dtheta_trav_v[scan_idx] < min_dtheta_val) {
-	    min_dtheta_val = dtheta_trav_v[scan_idx];
-	    min_dtheta_idx = scan_idx;
-	  }
-	}
-	// if new scan found something consistent, use it
-	if(min_dtheta_idx >= 0) {
-	  circle = circle_trav_v[min_dtheta_idx];
-	  cand_score_v[plane] = min_dtheta_val;
-	}
-	// otherwise make 2 attempts:
-	// 0) use x-plane guessed position + small-square img w/ surrounding pixel mean (x,y) position
-	// 1) if no non-zero pixel found in 0), then use x-plane guessed position (could be in dead wire region)
-	else{
-	  
-	  // Make a better guess
-	  auto mean_pixel = this->MeanPixel(img_v[plane],circle.center);
-	  if(mean_pixel.x >= 0 && mean_pixel.y >=0)
-	    circle.center = mean_pixel;
-	}
-
-	circle.radius = _radius/2.;
-	cand_xs_vv[plane] = QPointOnCircle(img_v[plane],circle);
-	cand_vtx_v[plane] = circle.center;
-
-	data._cand_valid_v[plane] = true;
-      }
-    }
+    XPlaneTimeScan(img_v);
     return true;
   }
 

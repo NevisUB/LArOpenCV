@@ -56,8 +56,10 @@ namespace larocv {
 
     geo2d::Line<float> SquarePCA(const ::cv::Mat& img,
 				 geo2d::Vector<float> pt,
-				 const size_t side);
+				 float width, float height);
+      
     geo2d::VectorArray<float> QPointOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle);
+
     float AngularSpread(const ::cv::Mat& polarimg,
 			float radius_frac_min,
 			float radius_frac_max,
@@ -66,10 +68,11 @@ namespace larocv {
     
   private:
 
-    void PlaneScan(const ::cv::Mat& img, const size_t plane,
-		   const ::geo2d::Circle<float> init_circle);
+    bool PlaneScan(const ::cv::Mat& img, const size_t plane,
+		   const geo2d::Circle<float> init_circle,
+		   const geo2d::Vector<float> pt_err);
 
-    void XPlaneScan(const std::vector<const cv::Mat>& img_v);
+    void XPlaneTimeScan(const std::vector<const cv::Mat>& img_v);
 
     geo2d::Vector<float> MeanPixel(const cv::Mat& img, const geo2d::Vector<float>& center);
 
@@ -77,18 +80,60 @@ namespace larocv {
 
     double TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
 
-    AlgorithmID_t _circle_vertex_algo_id;
+    AlgorithmID_t _pca_algo_id;
+    AlgorithmID_t _defect_algo_id;
+    std::vector<float> _tick_offset_v;
+    std::vector<float> _wire_comp_factor_v;
+    std::vector<float> _time_comp_factor_v;
+    float _xplane_tick_resolution;
+    float _xplane_guess_max_dist;
     double _radius;
     float _pi_threshold;
     float _pca_box_size;
     float _global_bound_size;
-    std::vector<float> _tick_offset_v;
-    std::vector<float> _time_comp_factor_v;
-    std::vector<float> _wire_comp_factor_v;
     bool _use_polar_spread;
-    float _xplane_tick_resolution;
-    float _xplane_guess_max_dist;
 
+  };
+
+  class Refine2DVertexPlaneData {
+  public:
+    Refine2DVertexPlaneData() { Clear(); }
+    ~Refine2DVertexPlaneData() {}
+
+    void Clear() {
+
+      _valid_plane = false;
+      _init_vtx_v.clear();
+      _init_vtx_err_v.clear();
+      _init_xs_vv.clear();
+      _init_pca_vv.clear();
+      _scan_rect_v.clear();
+      _circle_trav_v.clear();
+      _dtheta_trav_v.clear();
+      _time_binned_score_v.clear();
+    }
+    
+    /// bool ... true = there is at least one 2D vtx candidate found on this plane
+    bool _valid_plane;
+    /// initial vertex guess (seed), could be multiple
+    std::vector< geo2d::Vector<float> > _init_vtx_v;
+    /// initial vertex error guess (seed), could be multiple
+    std::vector< geo2d::Vector<float> > _init_vtx_err_v;
+    /// initial crossing point between the circumference and charge deposition pixel per candidate
+    std::vector< std::vector< geo2d::Vector<float> > > _init_xs_vv;
+    /// initial local PCA @ crossing point 
+    std::vector< std::vector< geo2d::Line<float>   > > _init_pca_vv;
+    /// an array of suare box used to scan circles for vtx search
+    std::vector< geo2d::Rect >  _scan_rect_v;
+
+    /// an array of circles that traversed to scan for the correct vtx 
+    std::vector< geo2d::Circle<float> > _circle_trav_v;
+
+    /// an array of angle-diff-sum-over-all-xs-point
+    std::vector< float > _dtheta_trav_v;
+
+    /// "binned" (in time) best vtx estimation score per-plane, used to match across planes
+    std::vector<float> _time_binned_score_v;
   };
 
   class Refine2DVertexData : public larocv::AlgoDataBase {
@@ -100,62 +145,35 @@ namespace larocv {
 
     void Clear() {
 
+      _plane_data.resize(3);
+      for(auto& d : _plane_data) d.Clear();
+
       _xplane_tick_min = _xplane_tick_max = -1;
-      
-      _valid_plane_v.clear();
-      _init_vtx_v.clear();
-      _scan_rect_v.clear();
+      _xplane_time_binned_score0_v.clear();
+      _xplane_time_binned_score1_v.clear();
       _cand_valid_v.clear();
       _cand_score_v.clear();
       _cand_vtx_v.clear();
 
-      _valid_plane_v.resize(3,false);
-      _init_vtx_v.resize(3);
-      _scan_rect_v.resize(3);
       _cand_valid_v.resize(3,false);
       _cand_score_v.resize(3,-1);
       _cand_vtx_v.resize(3);
       
-      _init_xs_vv.resize(3);
-      _init_pca_vv.resize(3);
-      _circle_trav_vv.resize(3);
-      _dtheta_trav_vv.resize(3);
       _cand_xs_vv.resize(3);
-      _xplane_binned_vtx_vv.resize(3);
-      _xplane_binned_score_vv.resize(3);
-      
-      for(auto& d : _init_xs_vv)      d.clear();
-      for(auto& d : _init_pca_vv)     d.clear();
-      for(auto& d : _circle_trav_vv)  d.clear();
-      for(auto& d : _dtheta_trav_vv)  d.clear();
       for(auto& d : _cand_xs_vv)      d.clear();
 
-      for(auto& d : _xplane_binned_vtx_vv)   d.clear();
-      for(auto& d : _xplane_binned_score_vv) d.clear();
     }
 
-    /// bool/plane ... true = input seed existed for vertex scanning 
-    std::vector< bool > _valid_plane_v;
-    /// initial vertex guess (seed) [plane]
-    std::vector< geo2d::Vector<float>           > _init_vtx_v;
-    /// initial crossing point between the circumference and charge deposition pixel [plane][cross-point]
-    std::vector< geo2d::VectorArray<float>      > _init_xs_vv;
-    /// initial local PCA @ crossing point [plane][cross-point]
-    std::vector< std::vector<geo2d::Line<float> > > _init_pca_vv;
-    /// an array of circles that traversed to scan for the correct vtx [plane][trial]
-    std::vector< std::vector< geo2d::Circle<float> > > _circle_trav_vv;
-    /// an array of angle-diff-sum-over-all-xs-point [plane][trial]
-    std::vector< std::vector< float >           > _dtheta_trav_vv;
-    /// an array of suare box used to scan circles for vtx search
-    std::vector< geo2d::Rect >  _scan_rect_v;
+    std::vector<Refine2DVertexPlaneData> _plane_data;
+
     /// tick range scanned for cross-plane consistency check
     float _xplane_tick_min;
     /// tick range scanned for cross-plane consistency check
     float _xplane_tick_max;
-    /// "binned" (in time) best vtx estimation position per-plane, used to match across planes 
-    std::vector< geo2d::VectorArray<float> > _xplane_binned_vtx_vv;
-    /// "binned" (in time) best vtx estimation score per-plane, used to match across planes
-    std::vector< std::vector<float > > _xplane_binned_score_vv;
+    /// combined time-binned score across planes
+    std::vector<float> _xplane_time_binned_score0_v;
+    /// combined time-binned score across planes
+    std::vector<float> _xplane_time_binned_score1_v;
 
     //
     // Important variables for analysis
