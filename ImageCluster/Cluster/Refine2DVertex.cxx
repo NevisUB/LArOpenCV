@@ -125,8 +125,10 @@ namespace larocv{
     int prestep, poststep;
     bool found;
     for(size_t idx=0; idx<array.size(); ++idx) {
+      //std::cout << "dtheta: " << array[idx] << " slope: " << slope[idx] << " @ idx " << idx << std::endl;
+      if(array[idx] == invalid_value) continue;
       if(slope[idx] == invalid_value) continue;
-
+      
       preval  = 0.;
       prestep = idx-1;
       found = false;
@@ -906,13 +908,13 @@ namespace larocv{
     auto& mean_score0_v   = data._time_binned_score0_mean_v;
     auto& minidx_score0_v = data._time_binned_score0_minidx_v;
     mean_score0_v   = RollingMean(score0_v,3,3,-1);
-    minidx_score0_v = ExtremePoints(mean_score0_v,5,5,-1,true);
+    minidx_score0_v = ExtremePoints(mean_score0_v,5,5,true,-1);
 
     auto const& score1_v  = data._time_binned_score1_v;
     auto& mean_score1_v   = data._time_binned_score1_mean_v;
     auto& minidx_score1_v = data._time_binned_score1_minidx_v;
     mean_score1_v   = RollingMean(score1_v,3,3,-1);
-    minidx_score1_v = ExtremePoints(mean_score1_v,5,5,-1,true);
+    minidx_score1_v = ExtremePoints(mean_score1_v,5,5,true,-1);
   }
 
   bool Refine2DVertex::_PostProcess_(const std::vector<const cv::Mat>& img_v)
