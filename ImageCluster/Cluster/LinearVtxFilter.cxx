@@ -2,7 +2,6 @@
 #define __LINEARVTXFILTER_CXX__
 
 #include "LinearVtxFilter.h"
-
 #include "DefectCluster.h"
 
 namespace larocv {
@@ -59,7 +58,6 @@ namespace larocv {
 	continue;
       }
       
-      //std::cout << row << " / " << polarimg.rows << " ... " << q << std::endl;
       if(range.first < 0) range.first = range.second = row;
 
       else range.second = row;
@@ -75,7 +73,6 @@ namespace larocv {
     // Compute xs points
     for(auto const& r : range_v) {
 
-      //std::cout << "XS @ " << r.first << " => " << r.second << " ... " << polarimg.rows << std::endl;
       float angle = ((float)(r.first + r.second))/2.;
       if(angle < 0) angle += (float)(polarimg.rows);
       angle = angle * M_PI * 2. / ((float)(polarimg.rows));
@@ -83,14 +80,12 @@ namespace larocv {
       geo2d::Vector<float> pt;
       pt.x = circle.center.x + circle.radius * cos(angle);
       pt.y = circle.center.y + circle.radius * sin(angle);
-
+      
       res.push_back(pt);      
     }
     return res;
   }
-
-
-
+  
   
   void LinearVtxFilter::_Configure_(const ::fcllite::PSet &pset)
   {
@@ -109,11 +104,12 @@ namespace larocv {
     
     for(int ctr=0; ctr <= _r_div; ++ctr)
       _radii_v[ctr] = _r_min + step*((float) ctr);
+    
   }
 
   
+  bool LinearVtxFilter::ScanRadii(const cv::Mat& img,const cv::Point_<float>& pt) {
 
-  bool LinearVtxFilter::ScanRadii(const cv::Mat& img, const cv::Point_<float>& pt) {
     
     std::vector<float> xs_dist;
     LAROCV_DEBUG() << "Observing defect point : " << pt << std::endl;
@@ -166,11 +162,12 @@ namespace larocv {
 
 	LAROCV_DEBUG() << "Inserting pt: " << xs << "... at idx: " << min_qidx << std::endl;
 	qpt_vv[min_qidx].emplace_back(xs);
-	
       }
     }
 
-    std::cout << std::endl;
+
+    _xs_vvv.emplace_back(qpt_vv);
+    
 
     std::vector<geo2d::Line<float> > qpt_dir_v;
     qpt_dir_v.resize(qpt_vv.size());
@@ -188,6 +185,7 @@ namespace larocv {
 
       auto direction = qpt_v.back() - qpt_v.front();
       if (direction.x < 0) qpt_dir_v[qidx].dir *= -1.0;
+      
     }
 
     for(uint qidx1=0;qidx1<qpt_dir_v.size();++qidx1)  { 
@@ -195,7 +193,7 @@ namespace larocv {
 
 	auto& d1=qpt_dir_v[qidx1].dir;
 	auto& d2=qpt_dir_v[qidx2].dir;
-
+	
 	if (d1.x==0 and d1.y==0) continue;
 	if (d2.x==0 and d2.y==0) continue;
 	
@@ -210,8 +208,6 @@ namespace larocv {
       }
     }
     
-    std::cout << std::endl;
-
     LAROCV_DEBUG() << "linearity detected, returning false" << std::endl;
     
     return false;
@@ -238,12 +234,17 @@ namespace larocv {
       for (const auto& defect_pt : atomic_defect_pts_v) {
 
 	//determine this linearity
-	if ( !ScanRadii(thresh_img,defect_pt) ) continue; 
-
+	bool notlinear = ScanRadii(thresh_img,defect_pt);
+	if(!notlinear) continue;
+	
+	
 	filter_vtx_v.emplace_back(defect_pt.x,defect_pt.y); //typcast in to float
       }
     }
-    
+
+    data._xs_v_v_v_v[meta.plane()] = _xs_vvv;
+    _xs_vvv.clear();
+      
   }
 
   bool LinearVtxFilter::_PostProcess_(const std::vector<const cv::Mat>& img_v)
