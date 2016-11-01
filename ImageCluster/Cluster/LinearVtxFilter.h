@@ -44,12 +44,14 @@ namespace larocv {
 
     geo2d::VectorArray<float> QPtOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle);
 
-    geo2d::Line<float> SquarePCA(const ::cv::Mat& img,geo2d::Vector<float> pt,const size_t side);
-      
+    geo2d::Line<float> calculate_pca(const std::vector<cv::Point_<float> > & ctor);
+    
     float _r_min;
     float _r_max;
     float _r_div;
     float _r_cut;
+    float _angle_cut;
+
     
     int _thresh;
 

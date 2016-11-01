@@ -10,6 +10,28 @@ namespace larocv {
   /// Global larocv::LinearVtxFilterFactory to register AlgoFactory
   static LinearVtxFilterFactory __global_LinearVtxFilterFactory__;
 
+
+  //geo2d::Line<float> LinearVtxFilter::calculate_pca(const GEO2D_Contour_t& ctor) {
+  geo2d::Line<float> LinearVtxFilter::calculate_pca(const std::vector<cv::Point_<float> > & ctor) {
+    
+    cv::Mat ctor_pts(ctor.size(), 2, CV_32FC1); //32 bit precision is fine
+    
+    for (unsigned i = 0; i < ctor_pts.rows; ++i) {
+      ctor_pts.at<float>(i, 0) = ctor.at(i).x;
+      ctor_pts.at<float>(i, 1) = ctor.at(i).y;
+    }
+    
+    cv::PCA pca_ana(ctor_pts, cv::Mat(), CV_PCA_DATA_AS_ROW,0);
+    
+    geo2d::Line<float> pca_principle(geo2d::Vector<float>(pca_ana.mean.at<float>(0,0),
+							  pca_ana.mean.at<float>(0,1)),
+				     geo2d::Vector<float>(pca_ana.eigenvectors.at<float>(0,0),
+							  pca_ana.eigenvectors.at<float>(0,1)));
+    return pca_principle;
+  }
+  
+  
+  
   geo2d::VectorArray<float> LinearVtxFilter::QPtOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle)
   {
     geo2d::VectorArray<float> res;
@@ -72,10 +94,11 @@ namespace larocv {
   
   void LinearVtxFilter::_Configure_(const ::fcllite::PSet &pset)
   {
-    _r_min  = pset.get<float>("RMin",5);
-    _r_max  = pset.get<float>("RMax",15);
-    _r_div  = pset.get<float>("RDiv",10);
-    _r_cut  = pset.get<float>("RCut",0.5);
+    _r_min     = pset.get<float>("RMin",5);
+    _r_max     = pset.get<float>("RMax",15);
+    _r_div     = pset.get<float>("RDiv",10);
+    _r_cut     = pset.get<float>("RCut",0.5);
+    _angle_cut = pset.get<float>("AngleCut",160); // 20 degree angle...
     
     _thresh = pset.get<int>  ("Threshold",10);
 
@@ -88,45 +111,6 @@ namespace larocv {
       _radii_v[ctr] = _r_min + step*((float) ctr);
   }
 
-
-
-
-  geo2d::Line<float> LinearVtxFilter::SquarePCA(const ::cv::Mat& img,
-						geo2d::Vector<float> pt,
-						const size_t side)
-  {
-					       
-    auto small_img = ::cv::Mat(img,::cv::Rect(pt.x-side, pt.y-side, 2*side+1, 2*side+1));
-    ::cv::Mat thresh_small_img;
-    //::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,CV_THRESH_BINARY);
-    ::cv::threshold(small_img,thresh_small_img,1,1000,3);
-    geo2d::VectorArray<int> points;
-    findNonZero(thresh_small_img, points);
-
-    if(points.size() < 2) {
-      LAROCV_DEBUG() << "SquarePCA approx cannot be made (# points " << points.size() << " < 2)" << std::endl;
-      throw larbys("SquarePCA found no point...");
-    }
-    
-    cv::Mat mat_points(points.size(), 2, CV_32FC1);
-    for (unsigned i = 0; i < mat_points.rows; ++i) {
-      mat_points.at<float>(i, 0) = points[i].x;
-      mat_points.at<float>(i, 1) = points[i].y;
-    }
-
-    ::cv::PCA pcaobj(mat_points,::cv::Mat(),::cv::PCA::DATA_AS_ROW,0);
-    
-    pt.x += pcaobj.mean.at<float>(0,0) - side;
-    pt.y += pcaobj.mean.at<float>(0,1) - side;
-    
-    auto dir = geo2d::Vector<float>(pcaobj.eigenvectors.at<float>(0,0),
-				    pcaobj.eigenvectors.at<float>(0,1));
-
-    //LAROCV_DEBUG() << "Mean @ (" << pt.x << "," << pt.y << ") ... dir (" << dir.x << "," << dir.y << std::endl;
-
-    return geo2d::Line<float>(pt,dir);
-  }
-
   
 
   bool LinearVtxFilter::ScanRadii(const cv::Mat& img, const cv::Point_<float>& pt) {
@@ -134,16 +118,18 @@ namespace larocv {
     std::vector<float> xs_dist;
     LAROCV_DEBUG() << "Observing defect point : " << pt << std::endl;
 
-    std::vector<std::vector<cv::Point_<float> > > qpt_vv;    
+    std::vector<std::vector<cv::Point_<float> > > qpt_vv;
+    // GEO2D_ContourArray_t qpt_vv;    
     
     for(uint ridx=0; ridx < _radii_v.size(); ++ridx) {
       auto radii = _radii_v[ridx];
-      LAROCV_DEBUG() << "Radii: " << radii << "... qpt_vv size: " << qpt_vv.size() << std::endl;
 
       geo2d::Circle<float> circ(pt,radii);
       auto xs_v = QPtOnCircle(img,circ);
+
       LAROCV_DEBUG() << "ridx: " << ridx << " w/ xs_v size: " << xs_v.size() << std::endl;
-      
+      LAROCV_DEBUG() << "Radii: " << radii << "... qpt_vv size: " << qpt_vv.size() << std::endl;
+
       if (!ridx) {
 	qpt_vv.resize(xs_v.size());
 	for(uint xidx=0;xidx<xs_v.size();++xidx)
@@ -177,12 +163,58 @@ namespace larocv {
 	  qpt_vv.emplace_back(std::move(tmp));
 	  continue;
 	}
-	
+
+	LAROCV_DEBUG() << "Inserting pt: " << xs << "... at idx: " << min_qidx << std::endl;
 	qpt_vv[min_qidx].emplace_back(xs);
 	
       }
     }
+
+    std::cout << std::endl;
+
+    std::vector<geo2d::Line<float> > qpt_dir_v;
+    qpt_dir_v.resize(qpt_vv.size());
+    for(uint qidx=0;qidx<qpt_vv.size();++qidx) {
+      auto& qpt_v = qpt_vv[qidx];
+
+      // std::cout << "qidx: " << qidx << "... qpt_v.size(): " << qpt_v.size() << std::endl;
+      // std::cout << "np.array([";
+      // for(auto& qpt : qpt_v) std::cout << qpt << ",";
+      // std::cout << "])" << std::endl;
+      
+      if (qpt_v.size() <= 1) continue;
+      
+      qpt_dir_v[qidx] = calculate_pca(qpt_v);
+
+      auto direction = qpt_v.back() - qpt_v.front();
+      if (direction.x < 0) qpt_dir_v[qidx].dir *= -1.0;
+    }
+
+    for(uint qidx1=0;qidx1<qpt_dir_v.size();++qidx1)  { 
+      for(uint qidx2=qidx1+1;qidx2<qpt_dir_v.size();++qidx2)  {
+
+	auto& d1=qpt_dir_v[qidx1].dir;
+	auto& d2=qpt_dir_v[qidx2].dir;
+
+	if (d1.x==0 and d1.y==0) continue;
+	if (d2.x==0 and d2.y==0) continue;
+	
+	float angle = acos(d1.dot(d2))*180/3.14159;
+	LAROCV_DEBUG() << "qidx1, qidx2, d1, d2, angle... " << qidx1 << ", " << qidx2 << ", " << d1 << ", " << d2 << ", " << angle << std::endl;
+
+	if (angle < _angle_cut) {
+	  LAROCV_DEBUG() << "angle < angle_cut return true" << std::endl;
+	  return true;
+	}
+	
+      }
+    }
     
+    std::cout << std::endl;
+
+    LAROCV_DEBUG() << "linearity detected, returning false" << std::endl;
+    
+    return false;
   }
 
   void LinearVtxFilter::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -206,7 +238,7 @@ namespace larocv {
       for (const auto& defect_pt : atomic_defect_pts_v) {
 
 	//determine this linearity
-	if ( !ScanRadii(thresh_img,defect_pt) )continue;
+	if ( !ScanRadii(thresh_img,defect_pt) ) continue; 
 
 	filter_vtx_v.emplace_back(defect_pt.x,defect_pt.y); //typcast in to float
       }
