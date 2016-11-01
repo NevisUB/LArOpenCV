@@ -51,14 +51,16 @@ namespace larocv {
     float _r_div;
     float _r_cut;
     float _angle_cut;
-
     
     int _thresh;
 
     std::vector<float> _radii_v;
 
-    bool ScanRadii(const cv::Mat& img, const cv::Point_<float>& pt);
-    
+    //bool ScanRadii(const cv::Mat& img, const cv::Point_<float>& pt);
+    bool ScanRadii(const cv::Mat& img,const cv::Point_<float>& pt);
+
+    std::vector<std::vector<std::vector<cv::Point_<float> > > > _xs_vvv;
+
   };
 
   /**
@@ -84,10 +86,14 @@ namespace larocv {
       _filter_vtx_v_v.clear();
       _filter_vtx_v_v.resize(3);
 
+      _xs_v_v_v_v.clear();
+      _xs_v_v_v_v.resize(3);
+      
       _input_id = kINVALID_ID;
     }
-
+    
     std::vector<std::vector<cv::Point_<float> > > _filter_vtx_v_v;
+    std::vector<std::vector<std::vector<std::vector<cv::Point_<float> > > > > _xs_v_v_v_v;
     
   };
 
