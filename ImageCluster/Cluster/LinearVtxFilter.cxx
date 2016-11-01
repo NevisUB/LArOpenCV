@@ -138,26 +138,29 @@ namespace larocv {
     
     for(uint ridx=0; ridx < _radii_v.size(); ++ridx) {
       auto radii = _radii_v[ridx];
-      LAROCV_DEBUG() << "Radii : " << radii << std::endl;
-      
+      LAROCV_DEBUG() << "Radii: " << radii << "... qpt_vv size: " << qpt_vv.size() << std::endl;
+
       geo2d::Circle<float> circ(pt,radii);
       auto xs_v = QPtOnCircle(img,circ);
-
+      LAROCV_DEBUG() << "ridx: " << ridx << " w/ xs_v size: " << xs_v.size() << std::endl;
+      
       if (!ridx) {
 	qpt_vv.resize(xs_v.size());
 	for(uint xidx=0;xidx<xs_v.size();++xidx)
 	  qpt_vv[xidx].emplace_back(xs_v[xidx]);
+	continue;
       }
-      
+
+      LAROCV_DEBUG() << "ridx: " << ridx << " w/ xs_v size: " << xs_v.size() << std::endl;	
 
       for(uint xidx=0;xidx<xs_v.size();++xidx) {
-
-	auto xs = xs_v[xidx];
-
-	uint min_qidx;
-	float min_d=6.e6;
 	
-	for(uint qidx=0;qidx<xs_v.size();++qidx) {
+	auto xs = xs_v[xidx];
+	
+	int min_qidx=-1;
+	float min_d=6.e6;
+
+	for(uint qidx=0;qidx<qpt_vv.size();++qidx) {
 	  auto d = geo2d::dist(xs,qpt_vv[qidx].back());
 	  if (d < min_d) {
 	    min_qidx = qidx;
@@ -165,13 +168,18 @@ namespace larocv {
 	  }
 	}
 
-	if ( min_d < _r_cut * radii  ) {
+	LAROCV_DEBUG() << "Got min_qidx: " << min_qidx << "... min_d: " << min_d << std::endl;
+	if (min_qidx < 0) throw larbys("no way");
+	
+	if ( min_d > _r_cut * radii  ) {
+	  LAROCV_DEBUG() << "Far away from all with cut: " << _r_cut*radii << "... inserting pt: " << xs << std::endl;
 	  std::vector<cv::Point_<float> > tmp = { xs };
 	  qpt_vv.emplace_back(std::move(tmp));
 	  continue;
 	}
 	
 	qpt_vv[min_qidx].emplace_back(xs);
+	
       }
     }
     
