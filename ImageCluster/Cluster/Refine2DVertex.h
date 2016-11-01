@@ -80,6 +80,18 @@ namespace larocv {
 
     double TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
 
+    std::vector<float> RollingMean(const std::vector<float>& array,
+				   size_t pre, size_t post,
+				   float invalid_value=kINVALID_FLOAT);
+
+    std::vector<float> RollingGradient(const std::vector<float>& array,
+				       size_t pre, size_t post,
+				       float invalid_value=kINVALID_FLOAT);
+
+    std::vector<size_t> ExtremePoints(const std::vector<float>& array,
+				      size_t pre, size_t post, bool minimum,
+				      float invalid_value=kINVALID_FLOAT);
+    void XPlaneTickProposal();
     AlgorithmID_t _pca_algo_id;
     AlgorithmID_t _defect_algo_id;
     std::vector<float> _tick_offset_v;
@@ -149,8 +161,13 @@ namespace larocv {
       for(auto& d : _plane_data) d.Clear();
 
       _xplane_tick_min = _xplane_tick_max = -1;
-      _xplane_time_binned_score0_v.clear();
-      _xplane_time_binned_score1_v.clear();
+      _time_binned_score0_v.clear();
+      _time_binned_score0_mean_v.clear();
+      _time_binned_score0_minidx_v.clear();
+      _time_binned_score1_v.clear();
+      _time_binned_score1_mean_v.clear();
+      _time_binned_score1_minidx_v.clear();
+      
       _cand_valid_v.clear();
       _cand_score_v.clear();
       _cand_vtx_v.clear();
@@ -171,9 +188,13 @@ namespace larocv {
     /// tick range scanned for cross-plane consistency check
     float _xplane_tick_max;
     /// combined time-binned score across planes
-    std::vector<float> _xplane_time_binned_score0_v;
+    std::vector<float> _time_binned_score0_v;
+    std::vector<float> _time_binned_score0_mean_v;
+    std::vector<size_t> _time_binned_score0_minidx_v;
     /// combined time-binned score across planes
-    std::vector<float> _xplane_time_binned_score1_v;
+    std::vector<float> _time_binned_score1_v;
+    std::vector<float> _time_binned_score1_mean_v;
+    std::vector<size_t> _time_binned_score1_minidx_v;
 
     //
     // Important variables for analysis

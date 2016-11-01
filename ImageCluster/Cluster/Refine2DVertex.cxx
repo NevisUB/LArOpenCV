@@ -48,8 +48,117 @@ namespace larocv{
     _use_polar_spread = false;
     _wire_comp_factor_v.resize(3);
     _time_comp_factor_v.resize(3);
-    _xplane_tick_resolution = 2.;
+    _xplane_tick_resolution = 1.;
     _xplane_guess_max_dist  = 3.;
+  }
+
+  std::vector<float> Refine2DVertex::RollingMean(const std::vector<float>& array,
+						 size_t pre, size_t post,
+						 float ignore_value)
+  {
+    std::vector<float> res(array.size(),ignore_value);
+    float  local_sum = 0;
+    size_t valid_ctr = 0;
+    for(size_t idx=0; idx<array.size(); ++idx) {
+      if(array[idx] == ignore_value) continue;
+      if(idx < pre) continue;
+      if((idx+post) >= array.size()) continue;
+      local_sum = 0;
+      valid_ctr = 0;
+      for(size_t subidx=(idx-pre); subidx <= idx+post; ++subidx) {
+	if(array[subidx] == ignore_value) continue;
+	local_sum += array[subidx];
+	++valid_ctr;
+      }
+      if(valid_ctr < 2) continue;
+      res[idx] = local_sum / (float)(valid_ctr);
+    }
+    return res;
+  }
+
+  std::vector<float> Refine2DVertex::RollingGradient(const std::vector<float>& array,
+						     size_t pre, size_t post,
+						     float ignore_value)
+  {
+    std::vector<float> slope(array.size(),ignore_value);
+    float  local_sum = 0;
+    size_t valid_ctr = 0;
+    float  post_mean = 0;
+    float  pre_mean  = 0;
+    for(size_t idx=0; idx<array.size(); ++idx) {
+      if(array[idx] == ignore_value) continue;
+      if(idx < pre) continue;
+      if(idx+post >= array.size()) continue;
+      // Compute average in pre sample
+      local_sum = 0;
+      valid_ctr = 0;
+      for(size_t subidx=(idx-pre); subidx < idx; ++subidx){
+	if(array[subidx] == ignore_value) continue;
+	local_sum += array[subidx];
+	++valid_ctr;
+      }
+      if(valid_ctr < 2) continue;
+      pre_mean = local_sum / (float)(valid_ctr);
+      // Compute average in post sample
+      local_sum = 0;
+      valid_ctr = 0;
+      for(size_t subidx=idx+1; subidx <= idx+post; ++subidx){
+	if(array[subidx] == ignore_value) continue;
+	local_sum += array[subidx];
+	++valid_ctr;
+      }
+      if(valid_ctr < 2) continue;
+      post_mean = local_sum / (float)(valid_ctr);
+
+      slope[idx] = (post_mean - pre_mean) / (((float)pre)/2. + ((float)post)/2. + 1.);
+    }
+    return slope;
+  }
+  
+  std::vector<size_t> Refine2DVertex::ExtremePoints(const std::vector<float>& array,
+						    size_t pre, size_t post, bool minimum,
+						    float invalid_value)
+  {
+    auto const& slope = RollingGradient(array,pre,post,invalid_value);
+    std::vector<size_t> res_index;
+    float preval, postval;
+    int prestep, poststep;
+    bool found;
+    for(size_t idx=0; idx<array.size(); ++idx) {
+      if(slope[idx] == invalid_value) continue;
+
+      preval  = 0.;
+      prestep = idx-1;
+      found = false;
+      while(prestep>=0) {
+	if(slope[prestep]==invalid_value) {
+	  prestep -=1;
+	  continue;
+	}
+	preval = slope[prestep];
+	found=true;
+	break;
+      }
+      if(!found) continue;
+      
+      postval = 0.;
+      poststep = idx+1;
+      found=false;
+      while(poststep<=slope.size()) {
+	if(slope[poststep]==invalid_value) {
+	  poststep +=1;
+	  continue;
+	}
+	postval = slope[poststep];
+	found=true;
+	break;
+      }
+      if(!found) continue;
+
+      if(  minimum && preval < 0 and postval > 0 ) res_index.push_back(idx);
+      if( !minimum && preval > 0 and postval < 0 ) res_index.push_back(idx);
+    }
+    return res_index;
   }
 
   float Refine2DVertex::AngularSpread(const ::cv::Mat& polarimg,
@@ -720,12 +829,12 @@ namespace larocv{
     float  min_dtheta_sum_1plane=1e4;
     size_t min_dtheta_sum_tick = kINVALID_SIZE;
     size_t min_dtheta_sum_1plane_tick = kINVALID_SIZE;
-    auto& xplane_time_binned_score0_v = data._xplane_time_binned_score0_v;
-    auto& xplane_time_binned_score1_v = data._xplane_time_binned_score1_v;
-    xplane_time_binned_score0_v.clear();
-    xplane_time_binned_score1_v.clear();
-    xplane_time_binned_score0_v.resize(num_ticks+1,-1);
-    xplane_time_binned_score1_v.resize(num_ticks+1,-1);
+    auto&  time_binned_score0_v = data._time_binned_score0_v;
+    auto&  time_binned_score1_v = data._time_binned_score1_v;
+    time_binned_score0_v.clear();
+    time_binned_score1_v.clear();
+    time_binned_score0_v.resize(num_ticks+1,-1);
+    time_binned_score1_v.resize(num_ticks+1,-1);
     for(size_t tick=0; tick < num_ticks; ++tick) {
       num_valid_planes = 0;
       dtheta_sum = 0.;
@@ -745,7 +854,7 @@ namespace larocv{
       dtheta_sum /= (float)(num_valid_planes);
 
       if(num_valid_planes < 1) continue;
-      xplane_time_binned_score0_v[tick] = dtheta_sum;
+      time_binned_score0_v[tick] = dtheta_sum;
       if(dtheta_sum < min_dtheta_sum_1plane) {
 	min_dtheta_sum_1plane = dtheta_sum;
 	min_dtheta_sum_1plane_tick = tick;
@@ -753,7 +862,7 @@ namespace larocv{
       }
 
       if(num_valid_planes < 2) continue;
-      xplane_time_binned_score1_v[tick] = dtheta_sum;
+      time_binned_score1_v[tick] = dtheta_sum;
       if(dtheta_sum > min_dtheta_sum) continue;
       LAROCV_DEBUG() << "    ... new minimum (>1plane)!" << std::endl;
       min_dtheta_sum = dtheta_sum;
@@ -789,9 +898,27 @@ namespace larocv{
     */
   }
 
+  void Refine2DVertex::XPlaneTickProposal()
+  {
+    auto& data = AlgoData<larocv::Refine2DVertexData>();
+    // Find local minimum for >2 plane score array
+    auto const& score0_v  = data._time_binned_score0_v;
+    auto& mean_score0_v   = data._time_binned_score0_mean_v;
+    auto& minidx_score0_v = data._time_binned_score0_minidx_v;
+    mean_score0_v   = RollingMean(score0_v,3,3,-1);
+    minidx_score0_v = ExtremePoints(mean_score0_v,5,5,-1,true);
+
+    auto const& score1_v  = data._time_binned_score1_v;
+    auto& mean_score1_v   = data._time_binned_score1_mean_v;
+    auto& minidx_score1_v = data._time_binned_score1_minidx_v;
+    mean_score1_v   = RollingMean(score1_v,3,3,-1);
+    minidx_score1_v = ExtremePoints(mean_score1_v,5,5,-1,true);
+  }
+
   bool Refine2DVertex::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
     XPlaneTimeScan(img_v);
+    XPlaneTickProposal();
     return true;
   }
 
