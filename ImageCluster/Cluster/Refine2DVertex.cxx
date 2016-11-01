@@ -50,6 +50,8 @@ namespace larocv{
     _time_comp_factor_v.resize(3);
     _xplane_tick_resolution = 1.;
     _xplane_guess_max_dist  = 3.;
+    _time_exclusion_radius = 20;
+    _wire_exclusion_radius = 20;
   }
 
   std::vector<float> Refine2DVertex::RollingMean(const std::vector<float>& array,
@@ -132,7 +134,7 @@ namespace larocv{
       preval  = 0.;
       prestep = idx-1;
       found = false;
-      while(prestep>=0) {
+      while(prestep>=0 && prestep>((int)idx - pre - 1)) {
 	if(slope[prestep]==invalid_value) {
 	  prestep -=1;
 	  continue;
@@ -146,7 +148,7 @@ namespace larocv{
       postval = 0.;
       poststep = idx+1;
       found=false;
-      while(poststep<=slope.size()) {
+      while(poststep<=slope.size() && poststep < ((int)idx + post +1)) {
 	if(slope[poststep]==invalid_value) {
 	  poststep +=1;
 	  continue;
@@ -915,6 +917,66 @@ namespace larocv{
     auto& minidx_score1_v = data._time_binned_score1_minidx_v;
     mean_score1_v   = RollingMean(score1_v,3,3,-1);
     minidx_score1_v = ExtremePoints(mean_score1_v,5,5,true,-1);
+
+    // Now work on excluding neighbors for local minimum tick estimation
+    auto& minidx_v = data._time_binned_minidx_v;
+    for(auto const& central_idx : minidx_score1_v) {
+      int min_idx = (int)(central_idx) - _time_exclusion_radius;
+      int max_idx = (int)(central_idx) + _time_exclusion_radius;
+      if(min_idx<=0) min_idx = 0;
+      if(max_idx>=mean_score1_v.size()) max_idx = mean_score1_v.size() - 1;
+      // find true minimum
+      float  min_score=1e9;
+      size_t target_idx=kINVALID_SIZE;
+      for(size_t idx=min_idx; idx<=max_idx; ++idx) {
+	if(mean_score1_v[idx]<0) continue;
+	if(target_idx == kINVALID_SIZE || mean_score1_v[idx] < min_score) {
+	  target_idx = idx;
+	  min_score  = mean_score1_v[idx];
+	}
+      }
+      if(target_idx == kINVALID_SIZE) continue;
+      // check if this minimum is not a neighbor of others
+      bool valid=true;
+      for(auto const& minidx : minidx_v) {
+	int dist = std::abs((int)(target_idx) - (int)(minidx));
+	if(dist < _time_exclusion_radius) {
+	  valid=false;
+	  break;
+	}
+      }
+      if(valid && target_idx != kINVALID_SIZE) minidx_v.push_back(target_idx);
+    }
+    for(auto const& central_idx : minidx_score0_v) {
+      int min_idx = (int)(central_idx) - _time_exclusion_radius;
+      int max_idx = (int)(central_idx) + _time_exclusion_radius;
+      if(min_idx<=0) min_idx = 0;
+      if(max_idx>=mean_score0_v.size()) max_idx = mean_score0_v.size() - 1;
+      // find true minimum
+      float  min_score=1e9;
+      size_t target_idx=kINVALID_SIZE;
+      for(size_t idx=min_idx; idx<=max_idx; ++idx) {
+	if(mean_score1_v[idx]>=0) continue;
+	if(mean_score0_v[idx]<0) continue;
+	if(target_idx == kINVALID_SIZE || mean_score0_v[idx] < min_score) {
+	  target_idx = idx;
+	  min_score  = mean_score0_v[idx];
+	}
+      }
+      if(target_idx == kINVALID_SIZE) continue;
+      // check if this minimum is not a neighbor of others
+      bool valid=true;
+      for(auto const& minidx : minidx_v) {
+	int dist = std::abs((int)(target_idx) - (int)(minidx));
+	if(dist < _time_exclusion_radius) {
+	  valid=false;
+	  break;
+	}
+      }
+      if(valid && target_idx != kINVALID_SIZE) minidx_v.push_back(target_idx);
+    }
+
+    
   }
 
   bool Refine2DVertex::_PostProcess_(const std::vector<const cv::Mat>& img_v)

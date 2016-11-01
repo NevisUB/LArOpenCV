@@ -104,7 +104,10 @@ namespace larocv {
     float _pca_box_size;
     float _global_bound_size;
     bool _use_polar_spread;
+    float _time_exclusion_radius;
+    float _wire_exclusion_radius;
     std::vector< std::vector<bool> > _scan_marker_v;
+    
   };
 
   class Refine2DVertexPlaneData {
@@ -167,6 +170,8 @@ namespace larocv {
       _time_binned_score1_v.clear();
       _time_binned_score1_mean_v.clear();
       _time_binned_score1_minidx_v.clear();
+
+      _time_binned_minidx_v.clear();
       
       _cand_valid_v.clear();
       _cand_score_v.clear();
@@ -195,7 +200,9 @@ namespace larocv {
     std::vector<float> _time_binned_score1_v;
     std::vector<float> _time_binned_score1_mean_v;
     std::vector<size_t> _time_binned_score1_minidx_v;
-
+    /// overall local minimum index in sampled time bins
+    std::vector<size_t> _time_binned_minidx_v;
+    
     //
     // Important variables for analysis
     //
