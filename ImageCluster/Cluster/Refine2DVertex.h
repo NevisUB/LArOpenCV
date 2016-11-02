@@ -20,7 +20,8 @@
 #include "Core/Line.h"
 #include "Core/VectorArray.h"
 #include "Core/BoundingBox.h"
-
+#include "AlgoData/Vertex.h"
+#include "AlgoData/Refine2DVertexData.h"
 namespace larocv {
   /**
      \class Refine2DVertex
@@ -40,6 +41,20 @@ namespace larocv {
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
     void Finalize(TFile*) {}
 
+    const float TimeBinMin() const { return _xplane_tick_min; }
+    const float TimeBinMax() const { return _xplane_tick_max; }
+
+    const std::vector<float>&  TimeBinnedScore0()         const { return _time_binned_score0_v;        }
+    const std::vector<float>&  TimeBinnedScore0Mean()     const { return _time_binned_score0_mean_v;   }
+    const std::vector<size_t>& TimeBinnedScore0MinIndex() const { return _time_binned_score0_minidx_v; }
+
+    const std::vector<float>&  TimeBinnedScore1()         const { return _time_binned_score1_v;        }
+    const std::vector<float>&  TimeBinnedScore1Mean()     const { return _time_binned_score1_mean_v;   }
+    const std::vector<size_t>& TimeBinnedScore1MinIndex() const { return _time_binned_score1_minidx_v; }
+
+    const std::vector<float>&  TimeBinnedScore()         const { return _time_binned_score_v;   }
+    const std::vector<size_t>& TimeBinnedScoreMinIndex() const { return _time_binned_minidx_v;  }
+    
   protected:
 
     /// Configuration method
@@ -65,7 +80,7 @@ namespace larocv {
 			float radius_frac_max,
 			float angle_mean,
 			float angle_width);
-    
+
   private:
 
     bool PlaneScan(const ::cv::Mat& img, const size_t plane,
@@ -79,7 +94,7 @@ namespace larocv {
 
     double PointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
 
-    double TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
+    CircleVertex TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
 
     std::vector<float> RollingMean(const std::vector<float>& array,
 				   size_t pre, size_t post,
@@ -110,94 +125,13 @@ namespace larocv {
     bool _use_polar_spread;
     float _time_exclusion_radius;
     float _wire_exclusion_radius;
+    float _trigger_tick;
     std::vector< std::vector<bool> > _scan_marker_v;
     std::vector< size_t > _seed_plane_v;
     bool _require_3planes;
-  };
 
-  class Refine2DVertexPlaneData {
-  public:
-    Refine2DVertexPlaneData() { Clear(); }
-    ~Refine2DVertexPlaneData() {}
 
-    void Clear() {
-
-      _valid_plane = false;
-      _init_vtx_v.clear();
-      _init_vtx_err_v.clear();
-      _init_xs_vv.clear();
-      _init_pca_vv.clear();
-      _scan_rect_v.clear();
-      _circle_trav_v.clear();
-      _dtheta_trav_v.clear();
-      _time_binned_score_v.clear();
-      _vtx_v.clear();
-    }
-    
-    /// bool ... true = there is at least one 2D vtx candidate found on this plane
-    bool _valid_plane;
-    /// initial vertex guess (seed), could be multiple
-    std::vector< geo2d::Vector<float> > _init_vtx_v;
-    /// initial vertex error guess (seed), could be multiple
-    std::vector< geo2d::Vector<float> > _init_vtx_err_v;
-    /// initial crossing point between the circumference and charge deposition pixel per candidate
-    std::vector< std::vector< geo2d::Vector<float> > > _init_xs_vv;
-    /// initial local PCA @ crossing point 
-    std::vector< std::vector< geo2d::Line<float>   > > _init_pca_vv;
-    /// an array of suare box used to scan circles for vtx search
-    std::vector< geo2d::Rect >  _scan_rect_v;
-
-    /// an array of circles that traversed to scan for the correct vtx 
-    std::vector< geo2d::Circle<float> > _circle_trav_v;
-
-    /// an array of angle-diff-sum-over-all-xs-point
-    std::vector< float > _dtheta_trav_v;
-
-    /// "binned" (in time) best vtx estimation score per-plane, used to match across planes
-    std::vector<float> _time_binned_score_v;
-
-    /// Final 2D vertex candidate
-    std::vector<geo2d::Vector<float> > _vtx_v;
-  };
-
-  class Refine2DVertexData : public larocv::AlgoDataBase {
-  public:
-    Refine2DVertexData(std::string name="NoName", AlgorithmID_t id=0)
-      : AlgoDataBase(name,id)
-    { Clear();}
-    ~Refine2DVertexData(){}
-
-    void Clear() {
-
-      _plane_data.resize(3);
-      for(auto& d : _plane_data) d.Clear();
-
-      _xplane_tick_min = _xplane_tick_max = -1;
-      _time_binned_score0_v.clear();
-      _time_binned_score0_mean_v.clear();
-      _time_binned_score0_minidx_v.clear();
-      _time_binned_score1_v.clear();
-      _time_binned_score1_mean_v.clear();
-      _time_binned_score1_minidx_v.clear();
-
-      _time_binned_minidx_v.clear();
-      _vtx_yz_v.clear();
-      
-      _cand_valid_v.clear();
-      _cand_score_v.clear();
-      _cand_vtx_v.clear();
-
-      _cand_valid_v.resize(3,false);
-      _cand_score_v.resize(3,-1);
-      _cand_vtx_v.resize(3);
-      
-      _cand_xs_vv.resize(3);
-      for(auto& d : _cand_xs_vv)      d.clear();
-
-    }
-
-    std::vector<Refine2DVertexPlaneData> _plane_data;
-
+    // temporary data
     /// tick range scanned for cross-plane consistency check
     float _xplane_tick_min;
     /// tick range scanned for cross-plane consistency check
@@ -210,42 +144,11 @@ namespace larocv {
     std::vector<float> _time_binned_score1_v;
     std::vector<float> _time_binned_score1_mean_v;
     std::vector<size_t> _time_binned_score1_minidx_v;
+    /// "binned" (in time) best vtx estimation score per-plane, used to match across planes
+    std::vector<float> _time_binned_score_v;
     /// overall local minimum index in sampled time bins
     std::vector<size_t> _time_binned_minidx_v;
-    std::vector<geo2d::Vector<float> > _vtx_yz_v;
-    //
-    // Important variables for analysis
-    //
-
-    /// the best estimate for a candidate interaction vertex per plane
-    geo2d::VectorArray<float>   _cand_vtx_v;
-
-    /*
-      The scores, per plane, associated with the estimated interaction vertex.
-      -1 means that it was found by a projecting a vertex found by other planes
-      AND local search centered around the estimated position did not find good
-      candidate. In other words, -1 shows the quality is unknown (rather not good).
-      Else the value must be positive real value and the smaller the better quality.
-    */
-    std::vector< float >        _cand_score_v;
-
-    /*
-      Boolean flag per estimated vertex that is set if the vertex is found by
-      analyzing neighboring pixels in the corresponding plane image. Similar to
-      score == -1 situation if false.
-    */
-    std::vector< bool  >        _cand_valid_v;
-
-    /*
-      A list of points per candidate vertex that are on the circumference of
-      a circle centered at the interaction vertex. It provides an estimate of
-      secondary particles' trajectory point that start from the interaction
-      vertex. Combining those two, particle's initial track angle can be
-      obtained.
-     */
-    std::vector< geo2d::VectorArray<float> > _cand_xs_vv;
   };
-  
   /**
      \class larocv::Refine2DVertexFactory
      \brief A concrete factory class for larocv::Refine2DVertex

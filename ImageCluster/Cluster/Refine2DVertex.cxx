@@ -2,7 +2,6 @@
 #define __REFINE2DVERTEX_CXX__
 
 #include "Refine2DVertex.h"
-#include "CircleVertex.h"
 #include "DefectCluster.h"
 #include "PCACandidates.h"
 #include "Core/HalfLine.h"
@@ -34,6 +33,8 @@ namespace larocv{
       throw larbys();
     }
 
+    _trigger_tick = 2400;
+
     _radius = 10;
     _pi_threshold = 10;
     _pca_box_size = 3;
@@ -51,10 +52,10 @@ namespace larocv{
     _xplane_tick_resolution = 1.;
     _xplane_wire_resolution = 2.;
     _xplane_guess_max_dist  = 3.;
-    _time_exclusion_radius = 10;
+    _time_exclusion_radius = 20;
     _wire_exclusion_radius = 20;
 
-    _require_3planes = true;
+    _require_3planes = false;
     _vtx_3d_resolution = 10.;
 
     _seed_plane_v.resize(3);
@@ -440,22 +441,29 @@ namespace larocv{
     return dtheta_sum;
   }
 
-  double Refine2DVertex::TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt)
+  CircleVertex Refine2DVertex::TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt)
   {
+    CircleVertex invalid_circle, inner_circle, outer_circle;
+    invalid_circle.Clear();
+    inner_circle.Clear();
+    outer_circle.Clear();
+    inner_circle.center = outer_circle.center = pt;
+    inner_circle.radius = _radius;
+    outer_circle.radius = _radius * 2.;
     // Get xs points for this step. if < 2 continue
     auto const inner_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius));
-    if(inner_xs_pts.size()<2) { return -1; }    
+    if(inner_xs_pts.size()<2) { return invalid_circle; }    
     if(inner_xs_pts.size()==2) {
       auto center_line0 = geo2d::Line<float>(inner_xs_pts[0], inner_xs_pts[0] - pt);
       auto center_line1 = geo2d::Line<float>(inner_xs_pts[1], inner_xs_pts[1] - pt);
       auto dtheta = fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
-      if(dtheta < 10) { return -1; }
+      if(dtheta < 10) { return invalid_circle; }
     }
 
     auto const outer_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius*2));
-    
     double inner_dtheta_sum = 0;
     double outer_dtheta_sum = 0;
+    /*
     if(_use_polar_spread) {
       // Estimate a polar y-spread as am easure of "dtheta"
       ::cv::Mat local_polarimg;
@@ -472,39 +480,47 @@ namespace larocv{
 	float radius_frac_max = (_radius*2 + 3.) / (_radius*2.5);
 	outer_dtheta_sum += AngularSpread(local_polarimg,radius_frac_min,radius_frac_max,angle,10.);
       }
-    }else{
-      // Estimate a local PCA and center-to-xs line's angle diff
-      for(size_t xs_idx=0; xs_idx < inner_xs_pts.size(); ++xs_idx) {
-	auto const& xs_pt = inner_xs_pts[xs_idx];
-	// Line that connects center to xs
-	try{
-	  auto local_pca   = SquarePCA(img,xs_pt,_pca_box_size,_pca_box_size);
-	  auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
-	  inner_dtheta_sum += fabs(geo2d::angle(center_line) - geo2d::angle(local_pca));
-	  // Alternative (and probably better/faster): compute y spread in polar coordinate
-	  LAROCV_DEBUG() << "Line (inner) ID " << xs_idx << " found xs " << xs_pt << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
-	}catch(const larbys& err){
-	  return -1;
-	}
+    */
+
+    // Estimate a local PCA and center-to-xs line's angle diff
+    for(size_t xs_idx=0; xs_idx < inner_xs_pts.size(); ++xs_idx) {
+      auto const& xs_pt = inner_xs_pts[xs_idx];
+      // Line that connects center to xs
+      try{
+	auto local_pca   = SquarePCA(img,xs_pt,_pca_box_size,_pca_box_size);
+	auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
+	// Alternative (and probably better/faster): compute y spread in polar coordinate
+	LAROCV_DEBUG() << "Line (inner) ID " << xs_idx << " found xs " << xs_pt << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
+	inner_circle.xs_v.push_back(larocv::PointPCA(xs_pt,local_pca));
+	inner_circle.dtheta_v.push_back(fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)));
+	inner_dtheta_sum += inner_circle.dtheta_v.back();
+      }catch(const larbys& err){
+	return invalid_circle;
       }
-      // Estimate a local PCA and center-to-xs line's angle diff
-      for(size_t xs_idx=0; xs_idx < outer_xs_pts.size(); ++xs_idx) {
-	auto const& xs_pt = outer_xs_pts[xs_idx];
-	// Line that connects center to xs
-	try{
-	  auto local_pca   = SquarePCA(img,xs_pt,_pca_box_size,_pca_box_size);
-	  auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
-	  outer_dtheta_sum += fabs(geo2d::angle(center_line) - geo2d::angle(local_pca));
-	  // Alternative (and probably better/faster): compute y spread in polar coordinate
-	  LAROCV_DEBUG() << "Line (outer) ID " << xs_idx << " found xs " << xs_pt << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
-	}catch(const larbys& err){
-	  return -1;
-	}
+    }
+    // Estimate a local PCA and center-to-xs line's angle diff
+    for(size_t xs_idx=0; xs_idx < outer_xs_pts.size(); ++xs_idx) {
+      auto const& xs_pt = outer_xs_pts[xs_idx];
+      // Line that connects center to xs
+      try{
+	auto local_pca   = SquarePCA(img,xs_pt,_pca_box_size,_pca_box_size);
+	auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
+	// Alternative (and probably better/faster): compute y spread in polar coordinate
+	LAROCV_DEBUG() << "Line (outer) ID " << xs_idx << " found xs " << xs_pt << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
+	outer_circle.xs_v.push_back(larocv::PointPCA(xs_pt,local_pca));
+	outer_circle.dtheta_v.push_back(fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)));
+	outer_dtheta_sum += outer_circle.dtheta_v.back();
+      }catch(const larbys& err){
+	return invalid_circle;
       }
     }
     
     //dtheta_sum /= (float)(xs_pts.size());
-    return (inner_dtheta_sum + outer_dtheta_sum) / ((float)(inner_xs_pts.size() + outer_xs_pts.size()));
+    //return (inner_dtheta_sum + outer_dtheta_sum) / ((float)(inner_xs_pts.size() + outer_xs_pts.size()));
+
+    // Pick which one to return ... 0) more xs points is better, else 1) outer is better
+    if(inner_circle.xs_v.size() > outer_circle.xs_v.size()) return inner_circle;
+    return outer_circle;
   }
 
   bool Refine2DVertex::PlaneScan(const ::cv::Mat& img, const size_t plane,
@@ -517,30 +533,16 @@ namespace larocv{
 		   << " @ point " << init_circle.center << std::endl;
 
     auto& scan_marker = _scan_marker_v[plane];
-    
     auto& plane_data  = AlgoData<larocv::Refine2DVertexData>()._plane_data.at(plane);
-    auto& init_xs_vv  = plane_data._init_xs_vv;
-    auto& init_pca_vv = plane_data._init_pca_vv;
     auto& init_vtx_v  = plane_data._init_vtx_v;
-    auto& scan_rect_v = plane_data._scan_rect_v;
-    auto& circle_trav_v = plane_data._circle_trav_v;
-    auto& dtheta_trav_v = plane_data._dtheta_trav_v;
+    auto& scan_rect_v = plane_data._scan_rect_v;    
+    auto& circle_scan_v = plane_data._circle_scan_v;
 
     // Initialize variables for this scan
     init_vtx_v.resize(init_vtx_v.size()+1);
-    init_xs_vv.resize(init_xs_vv.size()+1);
-    init_pca_vv.resize(init_xs_vv.size()+1);
-
     auto& init_vtx   = init_vtx_v.back();
-    auto& init_xs_v  = init_xs_vv.back();
-    auto& init_pca_v = init_pca_vv.back();
 
-    init_vtx = init_circle.center;
-
-    //data._circle_trav_vv[plane].clear();
-    //data._dtheta_trav_vv[plane].clear();
-    //init_pca_v.clear();
-    //init_xs_v.clear();
+    init_vtx.center = init_circle.center;
 
     // Create another circle with 1/2 radius
     auto half_circle = init_circle;
@@ -575,29 +577,35 @@ namespace larocv{
     // If # xs points are larger in one of two, pick that one.
     // Else pick a larger circle (likely have a better angle estimate)
     if(temp1_xs_v.size() == temp2_xs_v.size()) {
-      init_xs_v  = temp1_xs_v;
-      init_pca_v = temp1_pca_v;
+      init_vtx.xs_v.clear();
+      for(size_t xs_idx=0; xs_idx<temp1_xs_v.size(); ++xs_idx)
+	init_vtx.xs_v.push_back(PointPCA(temp1_xs_v[xs_idx],temp1_pca_v[xs_idx]));
     }else{
-      init_xs_v  = (temp1_xs_v.size()  > temp2_xs_v.size()  ? temp1_xs_v  : temp2_xs_v );
-      init_pca_v = (temp1_pca_v.size() > temp2_pca_v.size() ? temp1_pca_v : temp2_pca_v);
+      init_vtx.xs_v.clear();
+      if(temp1_xs_v.size() > temp2_xs_v.size()) {
+	for(size_t xs_idx=0; xs_idx<temp1_xs_v.size(); ++xs_idx)
+	  init_vtx.xs_v.push_back(PointPCA(temp1_xs_v[xs_idx],temp1_pca_v[xs_idx]));
+      }else{
+	for(size_t xs_idx=0; xs_idx<temp2_xs_v.size(); ++xs_idx)
+	  init_vtx.xs_v.push_back(PointPCA(temp1_xs_v[xs_idx],temp1_pca_v[xs_idx]));
+      }
     }
 
     // Define the (x,y) region to traverse along initial pca
-    geo2d::Vector<float> top_left(init_vtx.x - _global_bound_size,
-				  init_vtx.y + _global_bound_size);
-    geo2d::Vector<float> bottom_right(init_vtx.x + _global_bound_size,
-				      init_vtx.y - _global_bound_size);
+    geo2d::Vector<float> top_left(init_vtx.center.x - _global_bound_size,
+				  init_vtx.center.y + _global_bound_size);
+    geo2d::Vector<float> bottom_right(init_vtx.center.x + _global_bound_size,
+				      init_vtx.center.y - _global_bound_size);
     
     geo2d::Rect bbox(top_left, bottom_right);
     scan_rect_v.push_back(bbox);
     
     LAROCV_DEBUG() << "Plane " << plane << " scanning bbox:" << bbox << std::endl;
     // Now we loop over per-xs-on-init-circle, and find a candidate vertex per xs point
-    //std::multimap< double, geo2d::Vector<float> > candidate_vtx_m;
-    for(size_t xs_idx=0; xs_idx < init_xs_v.size(); ++xs_idx){
+    for(size_t xs_idx=0; xs_idx < init_vtx.xs_v.size(); ++xs_idx){
 
-      auto const& xs  = init_xs_v [xs_idx];
-      auto const& pca = init_pca_v[xs_idx];
+      auto const& xs  = init_vtx.xs_v[xs_idx].pt;
+      auto const& pca = init_vtx.xs_v[xs_idx].line;
 
       // Get a unit vector to traverse, starting from X-min edge point
       geo2d::Vector<float> start,end;
@@ -634,7 +642,7 @@ namespace larocv{
       auto step_pt = start + dir / 2.;
       //double min_dtheta_sum = 1e4;
       //geo2d::Vector<float> candidate_vtx = start;
-      
+
       while(bbox.contains(step_pt)) {
 
 	// Check if this point has any charge. if not continue
@@ -658,16 +666,14 @@ namespace larocv{
 
 	auto trial_pt = this->MeanPixel(img,step_pt);
 
-	auto dtheta_sum = this->TwoPointInspection(img,trial_pt);
-
-	if(dtheta_sum < 0) {
+	auto circle = this->TwoPointInspection(img,trial_pt);
+	if(circle.xs_v.empty()) {
 	  step_pt+= dir;
 	  continue;
 	}
-
-	LAROCV_DEBUG() << "    ... dtheta_sum = " << dtheta_sum << std::endl;
-	circle_trav_v.emplace_back(std::move(geo2d::Circle<float>(trial_pt,_radius)));
-	dtheta_trav_v.push_back(dtheta_sum);
+	
+	LAROCV_DEBUG() << "    ... dtheta_sum = " << circle.sum_dtheta() << std::endl;
+	circle_scan_v.emplace_back(circle);
 	res = true;
 
 	/*
@@ -757,8 +763,7 @@ namespace larocv{
     // Initialize results
     for(size_t plane=0; plane<img_v.size(); ++plane) {
       auto& plane_data = data._plane_data.at(plane);
-      auto& time_binned_score_v = plane_data._time_binned_score_v;
-      time_binned_score_v.clear();
+      _time_binned_score_v.clear();
     }
 
     // Compute tick offset per plane
@@ -772,11 +777,8 @@ namespace larocv{
     }
 
     // First obtain inclusive overlapping time tick regions
-    auto& xplane_tick_min = data._xplane_tick_min;
-    auto& xplane_tick_max = data._xplane_tick_max;
-    
-    xplane_tick_min = -1;
-    xplane_tick_max = -1;
+    _xplane_tick_min = -1;
+    _xplane_tick_max = -1;
     for(size_t plane=0; plane<img_v.size(); ++plane){
       auto const& plane_data = plane_data_v.at(plane);
       if(!plane_data._valid_plane) continue;
@@ -792,45 +794,41 @@ namespace larocv{
 	if(xplane_tick_max < 0) xplane_tick_max = ref_x + bbox.width;
 	else if(xplane_tick_max > (ref_x + bbox.width)) xplane_tick_max = ref_x + bbox.width;
 	*/
-	if(xplane_tick_min < 0) xplane_tick_min = ref_x;
-	else if(xplane_tick_min > ref_x) xplane_tick_min = ref_x;
-	if(xplane_tick_max < 0) xplane_tick_max = ref_x + bbox.width;
-	else if(xplane_tick_max < (ref_x + bbox.width)) xplane_tick_max = ref_x + bbox.width;
+	if(_xplane_tick_min < 0) _xplane_tick_min = ref_x;
+	else if(_xplane_tick_min > ref_x) _xplane_tick_min = ref_x;
+	if(_xplane_tick_max < 0) _xplane_tick_max = ref_x + bbox.width;
+	else if(_xplane_tick_max < (ref_x + bbox.width)) _xplane_tick_max = ref_x + bbox.width;
       }
     }
     
     // Next define score map within a pre-defined tick resolution
-    const size_t num_ticks = (xplane_tick_max - xplane_tick_min)/_xplane_tick_resolution + 1;
-    LAROCV_DEBUG() << "NumTicks to scan in time: " << num_ticks << " (" << xplane_tick_min << " => " << xplane_tick_max << ")" << std::endl;
+    const size_t num_ticks = (_xplane_tick_max - _xplane_tick_min)/_xplane_tick_resolution + 1;
+    LAROCV_DEBUG() << "NumTicks to scan in time: " << num_ticks << " (" << _xplane_tick_min << " => " << _xplane_tick_max << ")" << std::endl;
 
     for(size_t plane=0; plane<img_v.size(); ++plane) {
-      auto& plane_data = plane_data_v.at(plane);
-      auto& time_binned_score_v = plane_data._time_binned_score_v;
-      time_binned_score_v.resize(num_ticks+1);
+      _time_binned_score_v.resize(num_ticks+1);
       for(size_t tick=0; tick<=num_ticks; ++tick)
-	time_binned_score_v[tick] = -1;
+	_time_binned_score_v[tick] = -1;
     }
-    
+     
     for(size_t plane=0; plane<img_v.size(); ++plane) {
       auto& plane_data = plane_data_v.at(plane);
       std::cout<<"Plane " << plane << " ..."<<std::endl;
       if(!plane_data._valid_plane) continue;
-      auto const& dtheta_trav_v  = plane_data._dtheta_trav_v;
-      auto const& circle_trav_v  = plane_data._circle_trav_v;
+      auto const& circle_scan_v  = plane_data._circle_scan_v;
       auto const& tick_offset    = tick_offset_v.at(plane);
-      auto&       time_binned_score_v = plane_data._time_binned_score_v;
       
-      for(size_t step=0; step<circle_trav_v.size(); ++step) {
-	auto const& dtheta = dtheta_trav_v[step];
-	auto const& circle = circle_trav_v[step];
+      for(size_t step=0; step<circle_scan_v.size(); ++step) {
+	auto const& circle = circle_scan_v[step];
+	auto const  dtheta = circle.sum_dtheta();
 	float tick = circle.center.x - tick_offset;
-	size_t tick_idx = (size_t)((tick - xplane_tick_min)/_xplane_tick_resolution + 0.5);
-	if(tick < xplane_tick_min || tick > xplane_tick_max) {
+	size_t tick_idx = (size_t)((tick - _xplane_tick_min)/_xplane_tick_resolution + 0.5);
+	if(tick < _xplane_tick_min || tick > _xplane_tick_max) {
 	  LAROCV_DEBUG() << "tick @ " << tick << " (array idx=" << tick_idx << ") .... dtheta @ " << dtheta <<  " ... skipping (out-o-range) " << std::endl;
 	  continue;
 	}
 
-	auto& time_binned_score = time_binned_score_v[tick_idx];
+	auto& time_binned_score = _time_binned_score_v[tick_idx];
 	if(time_binned_score > 0 && time_binned_score < dtheta) {
 	  LAROCV_DEBUG() << "tick @ " << tick << " (array idx=" << tick_idx << ") .... dtheta @ " << dtheta <<  " ... skipping (dtheta too big) " << std::endl;
 	  continue;
@@ -843,16 +841,11 @@ namespace larocv{
     // Now loop over each "tick" and compute the best matching vertex point
     size_t num_valid_planes = 0;
     float  dtheta_sum = 0.;
-    float  min_dtheta_sum = 1e4;
-    float  min_dtheta_sum_1plane=1e4;
-    size_t min_dtheta_sum_tick = kINVALID_SIZE;
-    size_t min_dtheta_sum_1plane_tick = kINVALID_SIZE;
-    auto&  time_binned_score0_v = data._time_binned_score0_v;
-    auto&  time_binned_score1_v = data._time_binned_score1_v;
-    time_binned_score0_v.clear();
-    time_binned_score1_v.clear();
-    time_binned_score0_v.resize(num_ticks+1,-1);
-    time_binned_score1_v.resize(num_ticks+1,-1);
+
+    _time_binned_score0_v.clear();
+    _time_binned_score0_v.resize(num_ticks+1,-1);
+    _time_binned_score1_v.clear();
+    _time_binned_score1_v.resize(num_ticks+1,-1);
     for(size_t tick=0; tick < num_ticks; ++tick) {
       num_valid_planes = 0;
       dtheta_sum = 0.;
@@ -860,10 +853,10 @@ namespace larocv{
       for(size_t plane=0; plane < img_v.size(); ++plane) {
 	auto const& plane_data = data._plane_data[plane];
 	if(!plane_data._valid_plane) continue;
-	auto const& time_binned_score_v = plane_data._time_binned_score_v;
-	LAROCV_DEBUG() << "    Plane " << plane << " dtheta = " << time_binned_score_v[tick] << std::endl;
-	if(time_binned_score_v[tick] < 0) continue;
-	dtheta_sum += time_binned_score_v[tick];
+
+	LAROCV_DEBUG() << "    Plane " << plane << " dtheta = " << _time_binned_score_v[tick] << std::endl;
+	if(_time_binned_score_v[tick] < 0) continue;
+	dtheta_sum += _time_binned_score_v[tick];
 	num_valid_planes +=1;
       }
       LAROCV_DEBUG() << "    # valid plane = " << num_valid_planes << " dtheta = " << dtheta_sum << std::endl;
@@ -872,68 +865,33 @@ namespace larocv{
       dtheta_sum /= (float)(num_valid_planes);
 
       if(num_valid_planes < 1) continue;
-      time_binned_score0_v[tick] = dtheta_sum;
-      if(dtheta_sum < min_dtheta_sum_1plane) {
-	min_dtheta_sum_1plane = dtheta_sum;
-	min_dtheta_sum_1plane_tick = tick;
-	LAROCV_DEBUG() << "    ... new minimum (1plane)!" << std::endl;
-      }
+      _time_binned_score0_v[tick] = dtheta_sum;
 
       if(num_valid_planes < 2) continue;
-      time_binned_score1_v[tick] = dtheta_sum;
-      if(dtheta_sum > min_dtheta_sum) continue;
-      LAROCV_DEBUG() << "    ... new minimum (>1plane)!" << std::endl;
-      min_dtheta_sum = dtheta_sum;
-      min_dtheta_sum_tick = tick;
+      _time_binned_score1_v[tick] = dtheta_sum;
     }
 
     return;
-    /*
-    size_t target_tick = kINVALID_SIZE;
-    if(min_dtheta_sum_tick != kINVALID_SIZE) target_tick = min_dtheta_sum_tick;
-    else target_tick = min_dtheta_sum_1plane_tick;
-
-    if(target_tick == kINVALID_SIZE) return;
-    
-    // Now record best vtx point per plane
-    for(size_t plane=0; plane < xplane_vtx_vv.size(); ++plane) {
-      data._cand_valid_v[plane] = false;
-      if(!data._valid_plane_v[plane]) continue;
-      if(xplane_score_vv[plane][target_tick]<0) continue;
-      
-      data._cand_vtx_v[plane] = xplane_vtx_vv[plane][target_tick];
-      data._cand_score_v[plane] = xplane_score_vv[plane][target_tick];
-      LAROCV_DEBUG() << "Vtx @ plane " << plane << " ... " << data._cand_vtx_v[plane]
-		     << " @ dtheta " << data._cand_score_v[plane] << std::endl;
-
-      // Obtain crossing point w/ a circle around the vertex. These are particle cluster candidates.
-      geo2d::Circle<float> circle;
-      circle.center = data._cand_vtx_v[plane];
-      circle.radius = _radius / 2.;
-      data._cand_xs_vv[plane] = QPointOnCircle(img_v[plane],circle);
-      data._cand_valid_v[plane] = true;
-    }
-    */
   }
 
   void Refine2DVertex::XPlaneTickProposal()
   {
     auto& data = AlgoData<larocv::Refine2DVertexData>();
     // Find local minimum for >2 plane score array
-    auto const& score0_v  = data._time_binned_score0_v;
-    auto& mean_score0_v   = data._time_binned_score0_mean_v;
-    auto& minidx_score0_v = data._time_binned_score0_minidx_v;
+    auto const& score0_v  = _time_binned_score0_v;
+    auto& mean_score0_v   = _time_binned_score0_mean_v;
+    auto& minidx_score0_v = _time_binned_score0_minidx_v;
     mean_score0_v   = RollingMean(score0_v,3,3,-1);
     minidx_score0_v = ExtremePoints(mean_score0_v,5,5,true,-1);
 
-    auto const& score1_v  = data._time_binned_score1_v;
-    auto& mean_score1_v   = data._time_binned_score1_mean_v;
-    auto& minidx_score1_v = data._time_binned_score1_minidx_v;
+    auto const& score1_v  = _time_binned_score1_v;
+    auto& mean_score1_v   = _time_binned_score1_mean_v;
+    auto& minidx_score1_v = _time_binned_score1_minidx_v;
     mean_score1_v   = RollingMean(score1_v,3,3,-1);
     minidx_score1_v = ExtremePoints(mean_score1_v,5,5,true,-1);
 
     // Now work on excluding neighbors for local minimum tick estimation
-    auto& minidx_v = data._time_binned_minidx_v;
+    auto& minidx_v = _time_binned_minidx_v;
     std::vector<bool> used_v;
     used_v.resize(minidx_score1_v.size(),false);
     
@@ -1049,9 +1007,9 @@ namespace larocv{
   {
     auto& data = AlgoData<larocv::Refine2DVertexData>();
     // Find candidate circles nearby proposed ticks
-    for(auto const& binned_tick_idx : data._time_binned_minidx_v) {
+    for(auto const& binned_tick_idx : _time_binned_minidx_v) {
 
-      const float target_tick = binned_tick_idx * _xplane_tick_resolution + data._xplane_tick_min;
+      const float target_tick = binned_tick_idx * _xplane_tick_resolution + _xplane_tick_min;
 
       LAROCV_DEBUG() << "Scanning wire space for vertex tick " << target_tick << std::endl;
 
@@ -1067,8 +1025,8 @@ namespace larocv{
 
 	auto const& plane_data = data._plane_data[plane];
 	float dist=0;
-	for(size_t circle_idx=0; circle_idx<plane_data._circle_trav_v.size(); ++circle_idx) {
-	  auto const& circle = plane_data._circle_trav_v[circle_idx];
+	for(size_t circle_idx=0; circle_idx<plane_data._circle_scan_v.size(); ++circle_idx) {
+	  auto const& circle = plane_data._circle_scan_v[circle_idx];
 	  dist = std::fabs(circle.center.x - _tick_offset_v[plane] / _time_comp_factor_v[plane] - target_tick);
 	  if(dist > (float)(_xplane_tick_resolution + 1.0)) continue;
 	  seed_circle_idx_v[plane].push_back(circle_idx);
@@ -1099,11 +1057,11 @@ namespace larocv{
       auto const& seed1_data = data._plane_data[seed1_plane];      
       // Construct all possible candidate vertexes
       for(auto const& circle0_idx : seed_circle_idx_v[seed0_plane]) {
-	auto const& circle0 = seed0_data._circle_trav_v[circle0_idx];
-	auto const& dtheta0 = seed0_data._dtheta_trav_v[circle0_idx];
+	auto const& circle0 = seed0_data._circle_scan_v[circle0_idx];
+	auto const  dtheta0 = circle0.sum_dtheta();
 	for(auto const& circle1_idx : seed_circle_idx_v[seed1_plane]) {
-	  auto const& circle1 = seed1_data._circle_trav_v[circle1_idx];
-	  auto const& dtheta1 = seed1_data._dtheta_trav_v[circle1_idx];
+	  auto const& circle1 = seed1_data._circle_scan_v[circle1_idx];
+	  auto const  dtheta1 = circle1.sum_dtheta();
 	  double y, z;
 	  size_t wire0 = (size_t)(_origin_v[seed0_plane].y + circle0.center.y * _wire_comp_factor_v[seed0_plane] + 0.5);
 	  size_t wire1 = (size_t)(_origin_v[seed1_plane].y + circle1.center.y * _wire_comp_factor_v[seed1_plane] + 0.5);
@@ -1136,8 +1094,8 @@ namespace larocv{
 	    auto const& check_data = data._plane_data[check_plane];
 	    float  check_dtheta  = -1;
 	    for(auto const& circle2_idx : seed_circle_idx_v[check_plane]) {
-	      auto const& circle2 = check_data._circle_trav_v[circle2_idx];
-	      auto const& dtheta2 = check_data._dtheta_trav_v[circle2_idx];
+	      auto const& circle2 = check_data._circle_scan_v[circle2_idx];
+	      auto const  dtheta2 = circle2.sum_dtheta();
 	      float dist = std::fabs(_origin_v[check_plane].y + circle2.center.y * _wire_comp_factor_v[check_plane] - approx_wire2 );
 	      if(dist < dist_min) {
 		dist_min = dist;
@@ -1175,14 +1133,14 @@ namespace larocv{
 	for(auto const& key_value : scoremap_2plane) seed_pair_v.push_back(key_value.second);
       
       // loop over results and generate unique vertex set w/o neighbors
-      auto& vtx_yz_v = data._vtx_yz_v;
+      geo2d::VectorArray<float> vtx_yz_v;
       for(auto const& seed_pair : seed_pair_v) {
 	auto const& circle0_idx = seed_pair.first;
 	auto const& circle1_idx = seed_pair.second;
 	if(seed0_used_idx_s.find(circle0_idx) != seed0_used_idx_s.end()) continue;
 	if(seed1_used_idx_s.find(circle0_idx) != seed1_used_idx_s.end()) continue;
-	auto const& circle0 = seed0_data._circle_trav_v[circle0_idx];
-	auto const& circle1 = seed1_data._circle_trav_v[circle1_idx];
+	auto const& circle0 = seed0_data._circle_scan_v[circle0_idx];
+	auto const& circle1 = seed1_data._circle_scan_v[circle1_idx];
 	double y,z;
 	size_t wire0 = (size_t)(_origin_v[seed0_plane].y + circle0.center.y * _wire_comp_factor_v[seed0_plane] + 0.5);
 	size_t wire1 = (size_t)(_origin_v[seed1_plane].y + circle1.center.y * _wire_comp_factor_v[seed1_plane] + 0.5);
@@ -1198,6 +1156,7 @@ namespace larocv{
 	}
 	if(neighbor) continue;
 
+	// Concrete vertex found
 	LAROCV_INFO() << "Claiming candiate @ (y,z) = (" << y << "," << z << ") ... "
 		      << "plane " << seed0_plane << " @ " << circle0.center << " ... "
 		      << "plane " << seed1_plane << " @ " << circle1.center << std::endl;
@@ -1205,24 +1164,36 @@ namespace larocv{
 	vtx_yz_v.emplace_back(yz_pt);
 	seed0_used_idx_s.insert(circle0_idx);
 	seed1_used_idx_s.insert(circle1_idx);
-	
-	// record seed's candidate 2D vertex
-	data._plane_data[seed0_plane]._vtx_v.push_back(circle0.center);
-     	data._plane_data[seed1_plane]._vtx_v.push_back(circle1.center);
 
+	// Construct & fill 3D vertex container
+	larocv::Vertex3D vtx3d;
+	vtx3d.y = y;
+	vtx3d.z = z;
+	vtx3d.x = larocv::TriggerTick2Cm(circle0.center.x * _time_comp_factor_v[seed0_plane] +
+					 _origin_v[seed0_plane].x - _trigger_tick);
+	vtx3d.vtx2d_v.resize(img_v.size());
+	vtx3d.vtx2d_v[seed0_plane].pt    = circle0.center;
+	vtx3d.vtx2d_v[seed0_plane].score = circle0.sum_dtheta();
+	vtx3d.vtx2d_v[seed1_plane].pt    = circle1.center;
+	vtx3d.vtx2d_v[seed1_plane].score = circle1.sum_dtheta();
+	
+	// Construct & fill candidate 2D CircleVertex for seed planes
+	std::vector<larocv::CircleVertex> circle_vtx_v(img_v.size());
+	circle_vtx_v[seed0_plane] = circle0;
+	circle_vtx_v[seed1_plane] = circle1;
+	float approx_x = (circle0.center.x + circle1.center.x)/2.;
 	// record other planes'
-	for(size_t plane=0; plane<img_v.size(); ++plane) {
-	  if(plane == seed0_plane || plane == seed1_plane) continue;
-	  
+	for(size_t plane=0; plane<img_v.size(); ++plane) {	  
 	  size_t closest_idx = kINVALID_SIZE;
 	  float  approx_wire = larocv::WireCoordinate(y,z,plane);
+	  float  approx_y = (approx_wire - _origin_v[plane].y) / _wire_comp_factor_v[plane];
 	  float  dist_min = 1e9;
 	  auto const& plane_data = data._plane_data[plane];
 	  float  closest_dtheta = -1;
 	  for(auto const& circle_idx : seed_circle_idx_v[plane]) {
-	    auto const& circle = plane_data._circle_trav_v[circle_idx];
-	    auto const& dtheta = plane_data._dtheta_trav_v[circle_idx];
-	    float dist = std::fabs(_origin_v[plane].y + circle.center.y * _wire_comp_factor_v[plane] - approx_wire );
+	    auto const& circle = plane_data._circle_scan_v[circle_idx];
+	    auto const  dtheta = circle.sum_dtheta();
+	    float dist = std::fabs(approx_y - circle.center.y);
 	    if(dist < dist_min) {
 	      dist_min = dist;
 	      closest_idx = circle_idx;
@@ -1231,15 +1202,27 @@ namespace larocv{
 	  }
 	  if(dist_min > _xplane_wire_resolution) closest_idx = kINVALID_SIZE;
 
+	  // Fill candidate 2D CircleVertex for non-seed planes
 	  if(closest_idx != kINVALID_SIZE)
-	    data._plane_data[plane]._vtx_v.push_back(plane_data._circle_trav_v[closest_idx].center);
+	    circle_vtx_v[plane] = plane_data._circle_scan_v[closest_idx];
 	  else {
 	    geo2d::Vector<float> guess_pt;
-	    guess_pt.x = (circle0.center.x + circle1.center.x)/2.;
-	    guess_pt.y = (float)(approx_wire - _origin_v[plane].y) / _wire_comp_factor_v[plane];
-	    data._plane_data[plane]._vtx_v.push_back(guess_pt);
+	    guess_pt.x = approx_x;
+	    guess_pt.y = approx_y;
+	    auto guess_circle = TwoPointInspection(img_v[plane],guess_pt);
+	    if(guess_circle.xs_v.empty()) {
+	      guess_circle.center = guess_pt;
+	      guess_circle.radius = _radius;
+	    }
+	    circle_vtx_v[plane] = guess_circle;
 	  }
+	  vtx3d.vtx2d_v[plane].pt.x  = approx_x;
+	  vtx3d.vtx2d_v[plane].pt.y  = approx_y;
+	  vtx3d.vtx2d_v[plane].score = circle_vtx_v[plane].sum_dtheta();
+	  if(!vtx3d.vtx2d_v[plane].score) vtx3d.vtx2d_v[plane].score = -1;
 	}
+	data._circle_vtx_vv.push_back(circle_vtx_v);
+	data._vtx3d_v.push_back(vtx3d);
       }
     }
   }
@@ -1250,6 +1233,16 @@ namespace larocv{
       LAROCV_CRITICAL() << "seed_plane_v size != # planges ..." << std::endl;
       throw larbys();
     }
+        
+    _xplane_tick_min = _xplane_tick_max = -1;
+    _time_binned_score0_v.clear();
+    _time_binned_score0_mean_v.clear();
+    _time_binned_score0_minidx_v.clear();
+    _time_binned_score1_v.clear();
+    _time_binned_score1_mean_v.clear();
+    _time_binned_score1_minidx_v.clear();
+    _time_binned_minidx_v.clear();
+
     XPlaneTimeScan(img_v);
     XPlaneTickProposal();
     XPlaneWireScan(img_v);

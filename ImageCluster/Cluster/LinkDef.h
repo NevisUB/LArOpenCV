@@ -22,7 +22,7 @@
 #pragma link C++ class larocv::DefectClusterData+;
 #pragma link C++ class larocv::PCACandidates+;
 #pragma link C++ class larocv::PCACandidatesData+;
-#pragma link C++ class larocv::CircleVertex+;
+//#pragma link C++ class larocv::CircleVertex+;
 #pragma link C++ class larocv::CircleVertexData+;
 #pragma link C++ class larocv::Refine2DVertex;
 #pragma link C++ class larocv::Refine2DVertexData+;

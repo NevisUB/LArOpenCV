@@ -3,6 +3,8 @@
 
 #include "ImageClusterFMWKInterface.h"
 #include "LArUtil/Geometry.h"
+#include "LArUtil/LArProperties.h"
+#include "LArUtil/TimeService.h"
 #include "Core/larbys.h"
 namespace larocv {
 
@@ -39,6 +41,13 @@ namespace larocv {
     if(res.first > res.second) std::swap(res.first,res.second);
 
     return res;
+  }
+
+  double TriggerTick2Cm(double tick)
+  {
+    static auto tpc_clock = larutil::TimeService::GetME()->TPCClock();
+    static auto drift_velocity = larutil::LArProperties::GetME()->DriftVelocity();
+    return (tick * tpc_clock.TickPeriod()) * drift_velocity;
   }
 
 }

@@ -44,7 +44,7 @@ namespace larocv {
     
     LAROCV_DEBUG() << "end" << std::endl;
   }
-
+  
   void ImageClusterManager::Finalize(TFile* file)
   {
     if(file && _tree) {file->cd(); _tree->Write();}
