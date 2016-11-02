@@ -90,10 +90,10 @@ namespace larocv {
   void LinearVtxFilter::_Configure_(const ::fcllite::PSet &pset)
   {
     _r_min     = pset.get<float>("RMin",2);
-    _r_max     = pset.get<float>("RMax",12);
-    _r_div     = pset.get<float>("RDiv",10);
+    _r_max     = pset.get<float>("RMax",22);
+    _r_div     = pset.get<float>("RDiv",20);
     _r_cut     = pset.get<float>("RCut",0.5);
-    _angle_cut = pset.get<float>("AngleCut",170); // 20 degree angle...
+    _angle_cut = pset.get<float>("AngleCut",165); // 15 degree angle...
     
     _thresh = pset.get<int>  ("Threshold",10);
 
@@ -204,6 +204,7 @@ namespace larocv {
     
     //get the index of the second largest
     for(uint qidx=0;qidx<qpt_vv.size();++qidx) {
+      if (qidx==qidx1) continue;
       int s=qpt_vv[qidx].size();
       if (s>qidx2_size) { qidx2_size=s; qidx2=qidx; }
     }
