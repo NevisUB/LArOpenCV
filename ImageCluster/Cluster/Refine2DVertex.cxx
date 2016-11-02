@@ -49,7 +49,7 @@ namespace larocv{
     _wire_comp_factor_v.resize(3);
     _time_comp_factor_v.resize(3);
     _xplane_tick_resolution = 1.;
-    _xplane_wire_resolution = 1.;
+    _xplane_wire_resolution = 2.;
     _xplane_guess_max_dist  = 3.;
     _time_exclusion_radius = 10;
     _wire_exclusion_radius = 20;
@@ -1070,7 +1070,7 @@ namespace larocv{
 	for(size_t circle_idx=0; circle_idx<plane_data._circle_trav_v.size(); ++circle_idx) {
 	  auto const& circle = plane_data._circle_trav_v[circle_idx];
 	  dist = std::fabs(circle.center.x - _tick_offset_v[plane] / _time_comp_factor_v[plane] - target_tick);
-	  if(dist > (float)(_xplane_tick_resolution)) continue;
+	  if(dist > (float)(_xplane_tick_resolution + 1.0)) continue;
 	  seed_circle_idx_v[plane].push_back(circle_idx);
 	}
 	if(!seed_circle_idx_v[plane].empty()) {
@@ -1150,17 +1150,19 @@ namespace larocv{
 	  }
 	  if(closest_circle2_idx != kINVALID_SIZE) {
 	    ave_dtheta /= 3.;
-	    scoremap_3plane.emplace(1./ave_dtheta,std::pair<size_t,size_t>(circle0_idx,circle1_idx));
+	    scoremap_3plane.emplace(ave_dtheta,std::pair<size_t,size_t>(circle0_idx,circle1_idx));
 	    LAROCV_INFO() << "Found a 3-plane vertex candiate @ (y,z) = (" << y << "," << z << ") ... "
 			  << "plane " << seed0_plane << " @ " << circle0.center << " ... "
-			  << "plane " << seed1_plane << " @ " << circle1.center << std::endl;
+			  << "plane " << seed1_plane << " @ " << circle1.center << " ... "
+			  << "dtheta = " << ave_dtheta << std::endl;
 	  }
 	  else {
 	    ave_dtheta /= 2.;
-	    scoremap_2plane.emplace(1./ave_dtheta,std::pair<size_t,size_t>(circle0_idx,circle1_idx));
+	    scoremap_2plane.emplace(ave_dtheta,std::pair<size_t,size_t>(circle0_idx,circle1_idx));
 	    LAROCV_INFO() << "Found a 2-plane vertex candiate @ (y,z) = (" << y << "," << z << ") ... "
 			  << "plane " << seed0_plane << " @ " << circle0.center << " ... "
-			  << "plane " << seed1_plane << " @ " << circle1.center << std::endl;
+			  << "plane " << seed1_plane << " @ " << circle1.center << " ... "
+			  << "dtheta = " << ave_dtheta << std::endl;
 	  }
 	}
       }
