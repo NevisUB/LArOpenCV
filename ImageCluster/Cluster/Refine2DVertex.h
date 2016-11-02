@@ -73,6 +73,7 @@ namespace larocv {
 		   const geo2d::Vector<float> pt_err);
 
     void XPlaneTimeScan(const std::vector<const cv::Mat>& img_v);
+    void XPlaneWireScan(const std::vector<const cv::Mat>& img_v);
 
     geo2d::Vector<float> MeanPixel(const cv::Mat& img, const geo2d::Vector<float>& center);
 
@@ -97,8 +98,11 @@ namespace larocv {
     std::vector<float> _tick_offset_v;
     std::vector<float> _wire_comp_factor_v;
     std::vector<float> _time_comp_factor_v;
+    geo2d::VectorArray<float> _origin_v;
     float _xplane_tick_resolution;
+    float _xplane_wire_resolution;
     float _xplane_guess_max_dist;
+    float _vtx_3d_resolution;
     double _radius;
     float _pi_threshold;
     float _pca_box_size;
@@ -107,7 +111,8 @@ namespace larocv {
     float _time_exclusion_radius;
     float _wire_exclusion_radius;
     std::vector< std::vector<bool> > _scan_marker_v;
-    
+    std::vector< size_t > _seed_plane_v;
+    bool _require_3planes;
   };
 
   class Refine2DVertexPlaneData {
@@ -126,6 +131,7 @@ namespace larocv {
       _circle_trav_v.clear();
       _dtheta_trav_v.clear();
       _time_binned_score_v.clear();
+      _vtx_v.clear();
     }
     
     /// bool ... true = there is at least one 2D vtx candidate found on this plane
@@ -149,6 +155,9 @@ namespace larocv {
 
     /// "binned" (in time) best vtx estimation score per-plane, used to match across planes
     std::vector<float> _time_binned_score_v;
+
+    /// Final 2D vertex candidate
+    std::vector<geo2d::Vector<float> > _vtx_v;
   };
 
   class Refine2DVertexData : public larocv::AlgoDataBase {
@@ -172,6 +181,7 @@ namespace larocv {
       _time_binned_score1_minidx_v.clear();
 
       _time_binned_minidx_v.clear();
+      _vtx_yz_v.clear();
       
       _cand_valid_v.clear();
       _cand_score_v.clear();
@@ -202,7 +212,7 @@ namespace larocv {
     std::vector<size_t> _time_binned_score1_minidx_v;
     /// overall local minimum index in sampled time bins
     std::vector<size_t> _time_binned_minidx_v;
-    
+    std::vector<geo2d::Vector<float> > _vtx_yz_v;
     //
     // Important variables for analysis
     //

@@ -34,10 +34,10 @@ namespace larocv{
       throw larbys();
     }
 
-    _radius = 20;
+    _radius = 10;
     _pi_threshold = 10;
     _pca_box_size = 3;
-    _global_bound_size = 25;
+    _global_bound_size = 20;
 
     _tick_offset_v.resize(3);
     _tick_offset_v[0] = 0.;
@@ -49,9 +49,18 @@ namespace larocv{
     _wire_comp_factor_v.resize(3);
     _time_comp_factor_v.resize(3);
     _xplane_tick_resolution = 1.;
+    _xplane_wire_resolution = 1.;
     _xplane_guess_max_dist  = 3.;
-    _time_exclusion_radius = 20;
+    _time_exclusion_radius = 10;
     _wire_exclusion_radius = 20;
+
+    _require_3planes = true;
+    _vtx_3d_resolution = 10.;
+
+    _seed_plane_v.resize(3);
+    _seed_plane_v[0] = 2;
+    _seed_plane_v[1] = 0;
+    _seed_plane_v[2] = 1;
   }
 
   std::vector<float> Refine2DVertex::RollingMean(const std::vector<float>& array,
@@ -697,6 +706,11 @@ namespace larocv{
 		   << " time comp factor: " << _time_comp_factor_v[meta.plane()]
 		   << std::endl;
 
+    if(_origin_v.size() <= meta.plane())
+      _origin_v.resize(meta.plane()+1);
+    _origin_v[meta.plane()].x = meta.origin().x;
+    _origin_v[meta.plane()].y = meta.origin().y;
+
     geo2d::VectorArray<float> pt_v;
     geo2d::VectorArray<float> pt_err_v;
     geo2d::Vector<float> pt_err(2.,2.);
@@ -920,12 +934,21 @@ namespace larocv{
 
     // Now work on excluding neighbors for local minimum tick estimation
     auto& minidx_v = data._time_binned_minidx_v;
-    for(auto const& central_idx : minidx_score1_v) {
+    std::vector<bool> used_v;
+    used_v.resize(minidx_score1_v.size(),false);
+    
+    for(size_t i=0; i<minidx_score1_v.size(); ++i) {
+      auto const& central_idx = minidx_score1_v[i];
+      if(used_v[i]) continue;
+      
       int min_idx = (int)(central_idx) - _time_exclusion_radius;
       int max_idx = (int)(central_idx) + _time_exclusion_radius;
       if(min_idx<=0) min_idx = 0;
       if(max_idx>=mean_score1_v.size()) max_idx = mean_score1_v.size() - 1;
-      // find true minimum
+      LAROCV_DEBUG() << "Scanning 3-plane dtheta minimum around " << central_idx
+		     << " in range [" << min_idx << "," << max_idx << "]" << std::endl;
+      // method 1: find true minimum using dtheta
+      /*
       float  min_score=1e9;
       size_t target_idx=kINVALID_SIZE;
       for(size_t idx=min_idx; idx<=max_idx; ++idx) {
@@ -936,6 +959,20 @@ namespace larocv{
 	}
       }
       if(target_idx == kINVALID_SIZE) continue;
+      */
+      // method 2: find minimum in terms of average of neighbor local minima
+      float average_idx=central_idx;
+      float average_ctr=1;
+      for(size_t j=0; j<minidx_score1_v.size(); ++j) {
+	if(used_v[j]) continue;
+	auto const& neighbor_idx = minidx_score1_v[j];
+	if(neighbor_idx < min_idx || max_idx < neighbor_idx) continue;
+	average_idx += neighbor_idx;
+	used_v[j] = true;
+	++average_ctr;
+      }
+      size_t target_idx = (size_t)(average_idx/average_ctr+0.5);
+      
       // check if this minimum is not a neighbor of others
       bool valid=true;
       for(auto const& minidx : minidx_v) {
@@ -945,14 +982,28 @@ namespace larocv{
 	  break;
 	}
       }
-      if(valid && target_idx != kINVALID_SIZE) minidx_v.push_back(target_idx);
+      if(valid && target_idx != kINVALID_SIZE) {
+	minidx_v.push_back(target_idx);
+	LAROCV_INFO() << "Found valid 3-plane tick @ " << target_idx
+		      << " neargy found local minimum dtheta minimum around " << central_idx << std::endl;
+      }
     }
-    for(auto const& central_idx : minidx_score0_v) {
+
+    used_v.clear();
+    used_v.resize(minidx_score0_v.size(),false);
+    for(size_t i=0; i<minidx_score0_v.size(); ++i) {
+      auto const& central_idx = minidx_score0_v[i];
+      if(used_v[i]) continue;
+
       int min_idx = (int)(central_idx) - _time_exclusion_radius;
       int max_idx = (int)(central_idx) + _time_exclusion_radius;
       if(min_idx<=0) min_idx = 0;
       if(max_idx>=mean_score0_v.size()) max_idx = mean_score0_v.size() - 1;
-      // find true minimum
+      LAROCV_DEBUG() << "Scanning 3-plane dtheta minimum around " << central_idx
+		     << " in range [" << min_idx << "," << max_idx << "]" << std::endl;
+
+      // method 1 find true minimum
+      /*
       float  min_score=1e9;
       size_t target_idx=kINVALID_SIZE;
       for(size_t idx=min_idx; idx<=max_idx; ++idx) {
@@ -964,6 +1015,19 @@ namespace larocv{
 	}
       }
       if(target_idx == kINVALID_SIZE) continue;
+      */
+      // method 2: find minimum in terms of average of neighbor local minima
+      float average_idx=central_idx;
+      float average_ctr=1;
+      for(size_t j=0; j<minidx_score0_v.size(); ++j) {
+	if(used_v[j]) continue;
+	auto const& neighbor_idx = minidx_score0_v[j];
+	if(neighbor_idx < min_idx || max_idx < neighbor_idx) continue;
+	average_idx += neighbor_idx;
+	used_v[j] = true;
+	++average_ctr;
+      }
+      size_t target_idx = (size_t)(average_idx/average_ctr+0.5);
       // check if this minimum is not a neighbor of others
       bool valid=true;
       for(auto const& minidx : minidx_v) {
@@ -973,16 +1037,220 @@ namespace larocv{
 	  break;
 	}
       }
-      if(valid && target_idx != kINVALID_SIZE) minidx_v.push_back(target_idx);
+      if(valid && target_idx != kINVALID_SIZE) {
+	minidx_v.push_back(target_idx);
+	LAROCV_INFO() << "Found valid 3-plane tick @ " << target_idx
+		      << " neargy found local minimum dtheta minimum around " << central_idx << std::endl;
+      }
     }
+  }
 
-    
+  void Refine2DVertex::XPlaneWireScan(const std::vector<const cv::Mat>& img_v)
+  {
+    auto& data = AlgoData<larocv::Refine2DVertexData>();
+    // Find candidate circles nearby proposed ticks
+    for(auto const& binned_tick_idx : data._time_binned_minidx_v) {
+
+      const float target_tick = binned_tick_idx * _xplane_tick_resolution + data._xplane_tick_min;
+
+      LAROCV_DEBUG() << "Scanning wire space for vertex tick " << target_tick << std::endl;
+
+      // Find two valid seed planes to construct 3D vertex hypothesis
+      std::vector<size_t> valid_plane_v;
+      std::vector<std::vector<size_t> > seed_circle_idx_v(img_v.size());
+      
+      for(auto const& plane : _seed_plane_v) {
+	if(plane >= img_v.size()) {
+	  LAROCV_CRITICAL() << "Invalid plane ID as a seed: " << plane << std::endl;
+	  throw larbys();
+	}
+
+	auto const& plane_data = data._plane_data[plane];
+	float dist=0;
+	for(size_t circle_idx=0; circle_idx<plane_data._circle_trav_v.size(); ++circle_idx) {
+	  auto const& circle = plane_data._circle_trav_v[circle_idx];
+	  dist = std::fabs(circle.center.x - _tick_offset_v[plane] / _time_comp_factor_v[plane] - target_tick);
+	  if(dist > (float)(_xplane_tick_resolution)) continue;
+	  seed_circle_idx_v[plane].push_back(circle_idx);
+	}
+	if(!seed_circle_idx_v[plane].empty()) {
+	  LAROCV_DEBUG() << "Found seed plane " << plane << std::endl;
+	  valid_plane_v.push_back(plane);
+	}
+      }
+
+      if(valid_plane_v.size() < 2) continue;
+
+      // Construct 3D vertex using 2+ plane
+      std::set<size_t> seed0_used_idx_s;
+      std::set<size_t> seed1_used_idx_s;
+      std::vector<geo2d::VectorArray<float> > vertex_plane_vv(img_v.size());
+      
+      const size_t seed0_plane = valid_plane_v[0];
+      const size_t seed1_plane = valid_plane_v[1];
+      const size_t check_plane = ( valid_plane_v.size() > 2 ? valid_plane_v[2] : kINVALID_SIZE);
+      LAROCV_INFO() << "Using two seed planes (" << seed0_plane << " and " << seed1_plane << ") "
+		    << "to determine (y,z) vertex position" << std::endl;
+
+      std::multimap<float,std::pair<size_t,size_t> > scoremap_2plane;
+      std::multimap<float,std::pair<size_t,size_t> > scoremap_3plane;
+      
+      auto const& seed0_data = data._plane_data[seed0_plane];
+      auto const& seed1_data = data._plane_data[seed1_plane];      
+      // Construct all possible candidate vertexes
+      for(auto const& circle0_idx : seed_circle_idx_v[seed0_plane]) {
+	auto const& circle0 = seed0_data._circle_trav_v[circle0_idx];
+	auto const& dtheta0 = seed0_data._dtheta_trav_v[circle0_idx];
+	for(auto const& circle1_idx : seed_circle_idx_v[seed1_plane]) {
+	  auto const& circle1 = seed1_data._circle_trav_v[circle1_idx];
+	  auto const& dtheta1 = seed1_data._dtheta_trav_v[circle1_idx];
+	  double y, z;
+	  size_t wire0 = (size_t)(_origin_v[seed0_plane].y + circle0.center.y * _wire_comp_factor_v[seed0_plane] + 0.5);
+	  size_t wire1 = (size_t)(_origin_v[seed1_plane].y + circle1.center.y * _wire_comp_factor_v[seed1_plane] + 0.5);
+	  /*
+	  LAROCV_DEBUG() << "Intersection pt1 ... plane " << seed0_plane
+			 << " circle center @ " << circle0.center
+			 << " image origin  @ " << _origin_v[seed0_plane]
+			 << " wire comp factor = " << _wire_comp_factor_v[seed0_plane]
+			 << " ... target wire = " << wire0 << std::endl;
+	  LAROCV_DEBUG() << "Intersection pt2 ... plane " << seed1_plane
+			 << " circle center @ " << circle1.center
+			 << " image origin  @ " << _origin_v[seed1_plane]
+			 << " wire comp factor = " << _wire_comp_factor_v[seed1_plane]
+			 << " ... target wire = " << wire1 << std::endl;
+	  */
+	  try{
+	    larocv::IntersectionPoint(wire0,seed0_plane,wire1,seed1_plane,y,z);
+	  }catch(...){ continue; }
+
+	  float ave_dtheta = dtheta0 + dtheta1;
+	  /*
+	  LAROCV_DEBUG() << "Vertex candidate (y,z) @ (" << y << "," << z << ") ... "
+			 << "plane " << seed0_plane << " @ " << circle0.center << " ... "
+			 << "plane " << seed1_plane << " @ " << circle1.center << std::endl;
+	  */	  
+	  size_t closest_circle2_idx = kINVALID_SIZE;
+	  if(check_plane != kINVALID_SIZE) {
+	    float  approx_wire2 = larocv::WireCoordinate(y,z,check_plane);
+	    float  dist_min = 1e9;
+	    auto const& check_data = data._plane_data[check_plane];
+	    float  check_dtheta  = -1;
+	    for(auto const& circle2_idx : seed_circle_idx_v[check_plane]) {
+	      auto const& circle2 = check_data._circle_trav_v[circle2_idx];
+	      auto const& dtheta2 = check_data._dtheta_trav_v[circle2_idx];
+	      float dist = std::fabs(_origin_v[check_plane].y + circle2.center.y * _wire_comp_factor_v[check_plane] - approx_wire2 );
+	      if(dist < dist_min) {
+		dist_min = dist;
+		closest_circle2_idx = circle2_idx;
+		check_dtheta = dtheta2;
+	      }
+	    }
+	    if(dist_min > _xplane_wire_resolution) closest_circle2_idx = kINVALID_SIZE;
+	    ave_dtheta += check_dtheta;
+	  }
+	  if(closest_circle2_idx != kINVALID_SIZE) {
+	    ave_dtheta /= 3.;
+	    scoremap_3plane.emplace(1./ave_dtheta,std::pair<size_t,size_t>(circle0_idx,circle1_idx));
+	    LAROCV_INFO() << "Found a 3-plane vertex candiate @ (y,z) = (" << y << "," << z << ") ... "
+			  << "plane " << seed0_plane << " @ " << circle0.center << " ... "
+			  << "plane " << seed1_plane << " @ " << circle1.center << std::endl;
+	  }
+	  else {
+	    ave_dtheta /= 2.;
+	    scoremap_2plane.emplace(1./ave_dtheta,std::pair<size_t,size_t>(circle0_idx,circle1_idx));
+	    LAROCV_INFO() << "Found a 2-plane vertex candiate @ (y,z) = (" << y << "," << z << ") ... "
+			  << "plane " << seed0_plane << " @ " << circle0.center << " ... "
+			  << "plane " << seed1_plane << " @ " << circle1.center << std::endl;
+	  }
+	}
+      }
+
+      // Now construct an array of possible candidates
+      std::vector<std::pair<size_t,size_t> > seed_pair_v;
+      seed_pair_v.reserve(scoremap_3plane.size()+scoremap_2plane.size());
+      for(auto const& key_value : scoremap_3plane) seed_pair_v.push_back(key_value.second);
+      if(!_require_3planes)
+	for(auto const& key_value : scoremap_2plane) seed_pair_v.push_back(key_value.second);
+      
+      // loop over results and generate unique vertex set w/o neighbors
+      auto& vtx_yz_v = data._vtx_yz_v;
+      for(auto const& seed_pair : seed_pair_v) {
+	auto const& circle0_idx = seed_pair.first;
+	auto const& circle1_idx = seed_pair.second;
+	if(seed0_used_idx_s.find(circle0_idx) != seed0_used_idx_s.end()) continue;
+	if(seed1_used_idx_s.find(circle0_idx) != seed1_used_idx_s.end()) continue;
+	auto const& circle0 = seed0_data._circle_trav_v[circle0_idx];
+	auto const& circle1 = seed1_data._circle_trav_v[circle1_idx];
+	double y,z;
+	size_t wire0 = (size_t)(_origin_v[seed0_plane].y + circle0.center.y * _wire_comp_factor_v[seed0_plane] + 0.5);
+	size_t wire1 = (size_t)(_origin_v[seed1_plane].y + circle1.center.y * _wire_comp_factor_v[seed1_plane] + 0.5);
+	larocv::IntersectionPoint(wire0,seed0_plane,wire1,seed1_plane,y,z);
+	// Check if this vertex can be taken as a unique one w/o neighbors
+	bool neighbor=false;
+	geo2d::Vector<float> yz_pt(y,z);
+	for(auto const& pt : vtx_yz_v) {
+	  if(geo2d::dist(pt,yz_pt) < _vtx_3d_resolution) {
+	    neighbor = true;
+	    break;
+	  }
+	}
+	if(neighbor) continue;
+
+	LAROCV_INFO() << "Claiming candiate @ (y,z) = (" << y << "," << z << ") ... "
+		      << "plane " << seed0_plane << " @ " << circle0.center << " ... "
+		      << "plane " << seed1_plane << " @ " << circle1.center << std::endl;
+	
+	vtx_yz_v.emplace_back(yz_pt);
+	seed0_used_idx_s.insert(circle0_idx);
+	seed1_used_idx_s.insert(circle1_idx);
+	
+	// record seed's candidate 2D vertex
+	data._plane_data[seed0_plane]._vtx_v.push_back(circle0.center);
+     	data._plane_data[seed1_plane]._vtx_v.push_back(circle1.center);
+
+	// record other planes'
+	for(size_t plane=0; plane<img_v.size(); ++plane) {
+	  if(plane == seed0_plane || plane == seed1_plane) continue;
+	  
+	  size_t closest_idx = kINVALID_SIZE;
+	  float  approx_wire = larocv::WireCoordinate(y,z,plane);
+	  float  dist_min = 1e9;
+	  auto const& plane_data = data._plane_data[plane];
+	  float  closest_dtheta = -1;
+	  for(auto const& circle_idx : seed_circle_idx_v[plane]) {
+	    auto const& circle = plane_data._circle_trav_v[circle_idx];
+	    auto const& dtheta = plane_data._dtheta_trav_v[circle_idx];
+	    float dist = std::fabs(_origin_v[plane].y + circle.center.y * _wire_comp_factor_v[plane] - approx_wire );
+	    if(dist < dist_min) {
+	      dist_min = dist;
+	      closest_idx = circle_idx;
+	      closest_dtheta = dtheta;
+	    }
+	  }
+	  if(dist_min > _xplane_wire_resolution) closest_idx = kINVALID_SIZE;
+
+	  if(closest_idx != kINVALID_SIZE)
+	    data._plane_data[plane]._vtx_v.push_back(plane_data._circle_trav_v[closest_idx].center);
+	  else {
+	    geo2d::Vector<float> guess_pt;
+	    guess_pt.x = (circle0.center.x + circle1.center.x)/2.;
+	    guess_pt.y = (float)(approx_wire - _origin_v[plane].y) / _wire_comp_factor_v[plane];
+	    data._plane_data[plane]._vtx_v.push_back(guess_pt);
+	  }
+	}
+      }
+    }
   }
 
   bool Refine2DVertex::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
+    if(img_v.size() != _seed_plane_v.size()) {
+      LAROCV_CRITICAL() << "seed_plane_v size != # planges ..." << std::endl;
+      throw larbys();
+    }
     XPlaneTimeScan(img_v);
     XPlaneTickProposal();
+    XPlaneWireScan(img_v);
     return true;
   }
 
