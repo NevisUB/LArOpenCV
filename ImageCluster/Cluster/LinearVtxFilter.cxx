@@ -89,11 +89,11 @@ namespace larocv {
   
   void LinearVtxFilter::_Configure_(const ::fcllite::PSet &pset)
   {
-    _r_min     = pset.get<float>("RMin",5);
-    _r_max     = pset.get<float>("RMax",15);
-    _r_div     = pset.get<float>("RDiv",10);
+    _r_min     = pset.get<float>("RMin",2);
+    _r_max     = pset.get<float>("RMax",22);
+    _r_div     = pset.get<float>("RDiv",20);
     _r_cut     = pset.get<float>("RCut",0.5);
-    _angle_cut = pset.get<float>("AngleCut",160); // 20 degree angle...
+    _angle_cut = pset.get<float>("AngleCut",165); // 15 degree angle...
     
     _thresh = pset.get<int>  ("Threshold",10);
 
@@ -109,13 +109,13 @@ namespace larocv {
 
   
   bool LinearVtxFilter::ScanRadii(const cv::Mat& img,const cv::Point_<float>& pt) {
-
     
     std::vector<float> xs_dist;
     LAROCV_DEBUG() << "Observing defect point : " << pt << std::endl;
 
     std::vector<std::vector<cv::Point_<float> > > qpt_vv;
-    // GEO2D_ContourArray_t qpt_vv;    
+
+    int start=-1;
     
     for(uint ridx=0; ridx < _radii_v.size(); ++ridx) {
       auto radii = _radii_v[ridx];
@@ -126,10 +126,15 @@ namespace larocv {
       LAROCV_DEBUG() << "ridx: " << ridx << " w/ xs_v size: " << xs_v.size() << std::endl;
       LAROCV_DEBUG() << "Radii: " << radii << "... qpt_vv size: " << qpt_vv.size() << std::endl;
 
-      if (!ridx) {
+      if (xs_v.size()>0 and start<0) start=1;
+      
+      if ( start == 1 ) {
 	qpt_vv.resize(xs_v.size());
 	for(uint xidx=0;xidx<xs_v.size();++xidx)
 	  qpt_vv[xidx].emplace_back(xs_v[xidx]);
+
+	start = 0;
+	LAROCV_DEBUG() << "start found, resizing" << std::endl;
 	continue;
       }
 
@@ -150,8 +155,7 @@ namespace larocv {
 	  }
 	}
 
-	LAROCV_DEBUG() << "Got min_qidx: " << min_qidx << "... min_d: " << min_d << std::endl;
-	if (min_qidx < 0) throw larbys("no way");
+	if (min_qidx < 0) throw larbys("min_qidx < 0 still, die");
 	
 	if ( min_d > _r_cut * radii  ) {
 	  LAROCV_DEBUG() << "Far away from all with cut: " << _r_cut*radii << "... inserting pt: " << xs << std::endl;
@@ -162,23 +166,19 @@ namespace larocv {
 
 	LAROCV_DEBUG() << "Inserting pt: " << xs << "... at idx: " << min_qidx << std::endl;
 	qpt_vv[min_qidx].emplace_back(xs);
-      }
-    }
+      } //end loop over xs_v
 
-
+    } //end loop over radii
+    
+    if (qpt_vv.size() == 0) return false;
+    
     _xs_vvv.emplace_back(qpt_vv);
     
-
     std::vector<geo2d::Line<float> > qpt_dir_v;
     qpt_dir_v.resize(qpt_vv.size());
     for(uint qidx=0;qidx<qpt_vv.size();++qidx) {
       auto& qpt_v = qpt_vv[qidx];
 
-      // std::cout << "qidx: " << qidx << "... qpt_v.size(): " << qpt_v.size() << std::endl;
-      // std::cout << "np.array([";
-      // for(auto& qpt : qpt_v) std::cout << qpt << ",";
-      // std::cout << "])" << std::endl;
-      
       if (qpt_v.size() <= 1) continue;
       
       qpt_dir_v[qidx] = calculate_pca(qpt_v);
@@ -188,24 +188,45 @@ namespace larocv {
       
     }
 
-    for(uint qidx1=0;qidx1<qpt_dir_v.size();++qidx1)  { 
-      for(uint qidx2=qidx1+1;qidx2<qpt_dir_v.size();++qidx2)  {
+    //we need need the two largest d1 && d2
+    int qidx1=-1;
+    int qidx2=-1;
+    int qidx1_size=-1;
+    int qidx2_size=-1;
 
-	auto& d1=qpt_dir_v[qidx1].dir;
-	auto& d2=qpt_dir_v[qidx2].dir;
-	
-	if (d1.x==0 and d1.y==0) continue;
-	if (d2.x==0 and d2.y==0) continue;
-	
-	float angle = acos(d1.dot(d2))*180/3.14159;
-	LAROCV_DEBUG() << "qidx1, qidx2, d1, d2, angle... " << qidx1 << ", " << qidx2 << ", " << d1 << ", " << d2 << ", " << angle << std::endl;
+    LAROCV_DEBUG() << "qpt_vv.size(): " << qpt_vv.size() << std::endl;
+    
+    //get the index of largest
+    for(uint qidx=0;qidx<qpt_vv.size();++qidx) {
+      int s=qpt_vv[qidx].size();
+      if (s>qidx1_size) { qidx1_size=s; qidx1=qidx; }
+    }
+    
+    //get the index of the second largest
+    for(uint qidx=0;qidx<qpt_vv.size();++qidx) {
+      if (qidx==qidx1) continue;
+      int s=qpt_vv[qidx].size();
+      if (s>qidx2_size) { qidx2_size=s; qidx2=qidx; }
+    }
 
-	if (angle < _angle_cut) {
-	  LAROCV_DEBUG() << "angle < angle_cut return true" << std::endl;
-	  return true;
-	}
+    LAROCV_DEBUG() << "qidx1: " << qidx1 << "... qidx2: " << qidx2 << std::endl;
+    
+    if (qidx1<0) throw larbys("qidx1 NOT FOUND");
+
+    if (qidx2<0) return true; // there was only 1 "leg" found, OK candidate...
+
+    auto& d1=qpt_dir_v[qidx1].dir;
+    auto& d2=qpt_dir_v[qidx2].dir;
 	
-      }
+    if (d1.x==0 and d1.y==0) return false;
+    if (d2.x==0 and d2.y==0) return false;
+    
+    float angle = acos(d1.dot(d2))*180/3.14159;
+    LAROCV_DEBUG() << "qidx1, qidx2, d1, d2, angle... " << qidx1 << ", " << qidx2 << ", " << d1 << ", " << d2 << ", " << angle << std::endl;
+    
+    if (angle < _angle_cut) {
+      LAROCV_DEBUG() << "angle < angle_cut return true" << std::endl;
+      return true;
     }
     
     LAROCV_DEBUG() << "linearity detected, returning false" << std::endl;
@@ -220,7 +241,7 @@ namespace larocv {
   {
     const auto& defectcluster_data = AlgoData<DefectClusterData>(this->ID() - 1);
     const auto& atomic_defect_pts_v_v = defectcluster_data._atomic_defect_pts_v_v_v[meta.plane()];
-
+    
     auto& data = AlgoData<LinearVtxFilterData>();
     auto& filter_vtx_v = data._filter_vtx_v_v[meta.plane()];
       
@@ -234,9 +255,7 @@ namespace larocv {
       for (const auto& defect_pt : atomic_defect_pts_v) {
 
 	//determine this linearity
-	bool notlinear = ScanRadii(thresh_img,defect_pt);
-	if(!notlinear) continue;
-	
+	if ( !ScanRadii(thresh_img,defect_pt) ) continue;
 	
 	filter_vtx_v.emplace_back(defect_pt.x,defect_pt.y); //typcast in to float
       }

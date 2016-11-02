@@ -40,9 +40,9 @@ namespace larocv {
 
     bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
 
-  private:
 
-    geo2d::VectorArray<float> QPtOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle);
+    
+  private:
 
     geo2d::Line<float> calculate_pca(const std::vector<cv::Point_<float> > & ctor);
     
@@ -56,9 +56,10 @@ namespace larocv {
 
     std::vector<float> _radii_v;
 
-    //bool ScanRadii(const cv::Mat& img, const cv::Point_<float>& pt);
-    bool ScanRadii(const cv::Mat& img,const cv::Point_<float>& pt);
+  public:
 
+    geo2d::VectorArray<float> QPtOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle);
+    bool ScanRadii(const cv::Mat& img,const cv::Point_<float>& pt);
     std::vector<std::vector<std::vector<cv::Point_<float> > > > _xs_vvv;
 
   };
