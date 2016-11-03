@@ -49,12 +49,6 @@ namespace larocv {
     //atomic associations for atomic clusters => original clusters
     const auto& defectcluster_data = AlgoData<data::DefectClusterData>(_defect_cluster_algo_id);
     const auto& defectcluster_plane_data = defectcluster_data._plane_data[meta.plane()];
-    
-    //original clusters (track clusters, MIP/HIP clusters for example)
-    unsigned n_original_clusters   = defectcluster_plane_data.num_clusters();
-
-    //association between atomic cluster and original cluster
-    const auto& atomic_ctor_ass_v_v  = defectcluster_plane_data._atomic_ctor_ass_vv;
 
     //this data
     auto& data = AlgoData<data::PCACandidatesData>();
@@ -63,31 +57,21 @@ namespace larocv {
     //pca lines, indexed by atomic ID
     auto& ctor_lines_v = data._ctor_lines_v_v[meta.plane()];
     //same size as input clusters (atomic clusters...)
-    ctor_lines_v.resize(clusters.size());
-
-    //for each original cluster
-    for(unsigned c_idx=0; c_idx < n_original_clusters; ++c_idx) {
-
-      LAROCV_DEBUG() << "Input clust c_idx : " << c_idx << std::endl;
+    //ctor_lines_v.resize(clusters.size());
+    ctor_lines_v.reserve(clusters.size());
+    
+    //for each atomic
+    for(const auto& cluster : clusters) {
       
-      std::vector<size_t> atomic_id_v;
+      //yes, get this contour at atomic index
+      auto const& ctor = cluster._contour;
       
-      //for each atomic
-      for(const auto atomic_idx : atomic_ctor_ass_v_v.at(c_idx)) {
-
-	//yes, get this contour at atomic index
-	auto const& ctor = clusters[atomic_idx]._contour;
-
-	geo2d::Line<float> pca_principle = calculate_pca(ctor);
-
-	//copy the pca into atomic index-ed vector
-	ctor_lines_v[atomic_idx] = pca_principle;
-	
-      }
-
-      LAROCV_DEBUG() << "Found " << ctor_lines_v.size() << " PCA lines for original index " << c_idx << std::endl;
+      geo2d::Line<float> pca_principle = calculate_pca(ctor);
+      
+      ctor_lines_v.emplace_back(std::move(pca_principle));
     }
 
+      
     LAROCV_DEBUG() << "Total crossing PCA lines found: " << ctor_lines_v.size() << std::endl;
     
     std::vector<geo2d::Vector<float> > ipoints_v;
@@ -116,9 +100,7 @@ namespace larocv {
       }
     }
 
-    data._atomic_ctor_ass_v_v_v[meta.plane()] = defectcluster_plane_data._atomic_ctor_ass_vv;
     data._ipoints_v_v[meta.plane()] = ipoints_v;
-
   }
 
   bool PCACandidates::_PostProcess_(const std::vector<const cv::Mat>& img_v)
