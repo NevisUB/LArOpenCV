@@ -23,7 +23,11 @@
 
 namespace larocv {
   namespace data {
-    
+
+    /**
+       \class ParticleCluster
+       @brief A cluster associated with a vertex and hence represents a particle
+    */
     class ParticleCluster {
     public:
       ParticleCluster(size_t id=kINVALID_SIZE) : _cluster_id(id) {}
@@ -38,7 +42,11 @@ namespace larocv {
     private:
       size_t _cluster_id; ///< unique cluster id
     };
-    
+
+    /**
+       \class ParticleClusterArray
+       @brief per-vertex collection container for track clusters across planes
+    */
     class ParticleClusterArray {
     public:
       ParticleClusterArray() { clear(); }
@@ -51,7 +59,7 @@ namespace larocv {
       /// get # of planes
       size_t num_planes() const;
       /// get # clusters
-      size_t num_clusters() const;
+      size_t num_clusters(size_t plane) const;
       /// Vertex3D getter
       const larocv::data::Vertex3D& get_vertex() const;
       /// CircleVertex (plane-wise) getter
@@ -63,8 +71,6 @@ namespace larocv {
       //
       /// clear data attributes
       void clear();
-      /// set # of planes
-      void num_planes(size_t n);
       /// Vertex3D setter (CircleVertex omitted)
       void set_vertex(const larocv::data::Vertex3D& vtx);
       /// Vertex3D + CircleVertex cetter
@@ -83,7 +89,7 @@ namespace larocv {
       /// CircleVertex (per plane) ... optional
       std::vector<larocv::data::CircleVertex> _circle_vtx_v;
     };
-    
+
     /**
        \class VertexClusterArray
        @brief Collection container for track clusters organized vertex-wise

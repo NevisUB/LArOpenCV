@@ -22,8 +22,11 @@ namespace larocv {
     size_t ParticleClusterArray::num_planes() const
     { return _cluster_vv.size(); }
     
-    size_t ParticleClusterArray::num_clusters() const
-    { return _cluster_vv.front().size(); }
+    size_t ParticleClusterArray::num_clusters(size_t plane) const
+    {
+      if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
+      return _cluster_vv[plane].size();
+    }
     
     const larocv::data::Vertex3D& ParticleClusterArray::get_vertex() const
     { return _vtx; }
@@ -50,16 +53,9 @@ namespace larocv {
       for( auto& v : _cluster_vv   ) v.clear();
     }
     
-    void ParticleClusterArray::num_planes(size_t n)
-    {
-      _circle_vtx_v.resize(n);
-      _cluster_vv.resize(n);
-      clear();
-    }
-    
     void ParticleClusterArray::set_vertex(const larocv::data::Vertex3D& vtx)
     {
-      if(_circle_vtx_v.empty()) num_planes(vtx.vtx2d_v.size());
+      if(_circle_vtx_v.size() != vtx.vtx2d_v.size()) throw larbys("Invalid # planes!");
       _vtx = vtx;
     }
     
@@ -68,8 +64,7 @@ namespace larocv {
     {
       if(vtx.vtx2d_v.size() != circle_vtx_v.size())
 	throw larbys("2D plane count mismatch!");
-      
-      num_planes(vtx.vtx2d_v.size());
+      if(_circle_vtx_v.size() != vtx.vtx2d_v.size()) throw larbys("Invalid # planes!");
       _vtx = vtx;
       _circle_vtx_v = circle_vtx_v;
     }

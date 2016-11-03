@@ -149,6 +149,47 @@ namespace larocv {
       if(c.id() >= _cluster_v.size()) _cluster_v.resize(c.id()+1);
       _cluster_v[c.id()] = std::move(c);
     }
+
+    ///////////////////////////////////////////////////////////////
+
+    size_t ParticleCompoundArray::id() const
+    { return _id; }
+
+    size_t ParticleCompoundArray::num_planes() const
+    { return _cluster_vv.size(); }
+
+    size_t ParticleCompoundArray::num_clusters(size_t plane) const
+    {
+      return get_compound(plane).size();
+    }
+
+    const std::vector<larocv::data::ClusterCompound>& ParticleCompoundArray::get_compound(size_t plane) const
+    {
+      if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
+      return _cluster_vv[plane];
+    }
+
+    void ParticleCompoundArray::clear()
+    {
+      _cluster_vv.clear();
+      _cluster_vv.resize(3);
+    }
+    
+    void ParticleCompoundArray::insert(size_t plane, const larocv::data::ClusterCompound& cluster)
+    {
+      if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
+      auto& cluster_v = _cluster_vv[plane];
+      if(cluster_v.size() <= cluster.id()) cluster_v.resize(cluster.id()+1);
+      cluster_v[cluster.id()] = cluster;
+    }
+
+    void ParticleCompoundArray::move(size_t plane, larocv::data::ClusterCompound&& cluster)
+    {
+      if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
+      auto& cluster_v = _cluster_vv[plane];
+      if(cluster_v.size() <= cluster.id()) cluster_v.resize(cluster.id()+1);
+      cluster_v[cluster.id()] = std::move(cluster);
+    }
     
     ///////////////////////////////////////////////////////////////
     
@@ -156,6 +197,7 @@ namespace larocv {
     {
       _plane_data.clear();
       _plane_data.resize(3);
+      _vtx_cluster_v.clear();
     }
   }
 }
