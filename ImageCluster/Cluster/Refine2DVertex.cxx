@@ -1165,7 +1165,7 @@ namespace larocv{
 	seed1_used_idx_s.insert(circle1_idx);
 
 	// Construct & fill 3D vertex container
-	larocv::Vertex3D vtx3d;
+	data::Vertex3D vtx3d;
 	vtx3d.y = y;
 	vtx3d.z = z;
 	vtx3d.x = larocv::TriggerTick2Cm(circle0.center.x * _time_comp_factor_v[seed0_plane] +
