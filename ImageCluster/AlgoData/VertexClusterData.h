@@ -18,7 +18,7 @@
 #include "Core/LArOCVTypes.h"
 #include "Core/Vector.h"
 #include "Base/AlgoDataBase.h"
-#include "Vertex.h"
+#include "AlgoDataVertex.h"
 #include "Refine2DVertexData.h"
 
 namespace larocv {
