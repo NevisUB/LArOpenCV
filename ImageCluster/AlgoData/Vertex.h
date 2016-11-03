@@ -56,3 +56,4 @@ namespace larocv {
 
 }
 #endif
+/** @} */ // end of doxygen group

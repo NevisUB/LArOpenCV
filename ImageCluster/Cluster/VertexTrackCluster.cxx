@@ -27,25 +27,20 @@ namespace larocv {
     _theta_lo = 10;
     
     auto const vtx_algo_name = pset.get<std::string>("Refine2DVertexAlgo");
-    _vtx_algo_id = this->ID(vtx_algo_name);
+    _refine2d_algo_id = this->ID(vtx_algo_name);
     
     _use_theta_half_angle = true;
   }
 
-  larocv::Cluster2DArray_t VertexTrackCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
-							 const ::cv::Mat& img,
-							 larocv::ImageMeta& meta,
-							 larocv::ROI& roi)
+  std::vector<std::vector<geo2d::Vector<float> > >
+  VertexTrackCluster::TrackHypothesis(const ::cv::Mat& img,
+				      const larocv::CircleVertex& vtx)
   {
-    
-    auto const& ref_data = AlgoData<larocv::Refine2DVertexData>(_vtx_algo_id);
-    auto const& ref_vtx = ref_data._cand_vtx_v[meta.plane()];
-    auto const& ref_xs_v = ref_data._cand_xs_vv[meta.plane()];
-    auto& data = AlgoData<larocv::VertexTrackClusterData>();
 
-    LAROCV_DEBUG() << "Found " << ref_xs_v.size() << " crossing points (track cluster candidates)" << std::endl;
+    auto const& ref_vtx  = vtx.center;
+    auto const& ref_xs_v = vtx.xs_v;
 
-    Cluster2DArray_t result_v;
+    std::vector< std::vector< geo2d::Vector<float> > >result_v;
 
     bool use_half_angle = (ref_xs_v.size() > 2) && _use_theta_half_angle;
     
@@ -78,9 +73,9 @@ namespace larocv {
 	
 	LAROCV_DEBUG() << "idx0 : " << idx0 << "... idx1: " << idx1 << "... idx2: " << idx2 << std::endl;
 
-	auto xs0 = ref_xs_v[idx0]; xs0.x+=padding; xs0.y+=padding;
-	auto xs1 = ref_xs_v[idx1]; xs1.x+=padding; xs1.y+=padding;
-	auto xs2 = ref_xs_v[idx2]; xs2.x+=padding; xs2.y+=padding;
+	auto xs0 = ref_xs_v[idx0].pt; xs0.x+=padding; xs0.y+=padding;
+	auto xs1 = ref_xs_v[idx1].pt; xs1.x+=padding; xs1.y+=padding;
+	auto xs2 = ref_xs_v[idx2].pt; xs2.x+=padding; xs2.y+=padding;
 	
 	LAROCV_DEBUG() << "Inspecting XS0 @ " << xs0 << " XS1 @ " << xs1 << " XS2 @ " << xs2 << std::endl;
 
@@ -106,7 +101,7 @@ namespace larocv {
 	
       } else { 
       
-	auto xs = ref_xs_v[xs_pt_idx]; xs.x+=padding; xs.y+=padding;
+	auto xs = ref_xs_v[xs_pt_idx].pt; xs.x+=padding; xs.y+=padding;
 	
 	LAROCV_DEBUG() << "Inspecting XS @ " << xs << std::endl;
 	
@@ -124,8 +119,8 @@ namespace larocv {
       cv::warpAffine(img_padded, rot_img, rot, bbox.size());
 
       std::stringstream ss1,ss2;
-      ss1 << "norm_plane" << meta.plane() << "_xs" << xs_pt_idx << ".png";
-      ss2 << "rot_plane" << meta.plane() << "_xs" << xs_pt_idx << ".png";
+      ss1 << "norm_plane" << "_xs" << xs_pt_idx << ".png";
+      ss2 << "rot_plane" << "_xs" << xs_pt_idx << ".png";
 
       cv::imwrite(std::string(ss1.str()).c_str(), img_padded);
       cv::imwrite(std::string(ss2.str()).c_str(), rot_img);
@@ -149,7 +144,7 @@ namespace larocv {
       ::cv::dilate(rot_polarimg,rot_polarimg,kernel,::cv::Point(-1,-1),1);     
 
       std::stringstream ss3;
-      ss3 << "polar_plane" << meta.plane() << "_xs" << xs_pt_idx << ".png";
+      ss3 << "polar_plane" << "_xs" << xs_pt_idx << ".png";
       cv::imwrite(std::string(ss3.str()).c_str(), rot_polarimg);
 
       /*
@@ -186,7 +181,7 @@ namespace larocv {
       }
       
       std::stringstream ss4;
-      ss4 << "mask_plane" << meta.plane() << "_xs" << xs_pt_idx << ".png";
+      ss4 << "mask_plane" << "_xs" << xs_pt_idx << ".png";
       cv::imwrite(std::string(ss4.str()).c_str(), rot_polarimg);
      
 
@@ -231,17 +226,15 @@ namespace larocv {
       auto const& polar_contour = polar_ctor_v[target_idx];
       LAROCV_DEBUG() << "Chose polar contour at index : " << target_idx << " of size " << polar_contour.size() << std::endl;
       
-      auto& contour_v = data._ctor_vv[meta.plane()];
-      
       float rows = rot_polarimg.rows;
       float cols = rot_polarimg.cols;
       
       cv::Mat polar_ctor_mat = cv::Mat(img_padded.rows,img_padded.cols,CV_8UC1,cvScalar(0.));
       cv::Mat cart_ctor_mat = cv::Mat(img_padded.rows,img_padded.cols,CV_8UC1,cvScalar(0.));
       
-      Cluster2D res_contour;
-      res_contour._contour.resize(polar_contour.size());
-      geo2d::VectorArray<float> contour;
+      //Cluster2D res_contour;
+      //res_contour._contour.resize(polar_contour.size());
+      std::vector<geo2d::Vector<float> > contour;
       contour.resize(polar_contour.size());
 
       std::stringstream ss5;
@@ -262,8 +255,8 @@ namespace larocv {
       	pt.x = (float) r * std::cos(t) + ref_vtx_copy.x;
       	pt.y = (float) r * std::sin(t) + ref_vtx_copy.y;
 	
-      	res_contour._contour[pt_idx].x = (int)(pt.x + 0.5) - padding;
-      	res_contour._contour[pt_idx].y = (int)(pt.y + 0.5) - padding;
+      	//res_contour._contour[pt_idx].x = (int)(pt.x + 0.5) - padding;
+      	//res_contour._contour[pt_idx].y = (int)(pt.y + 0.5) - padding;
 
 	pt.x -= padding;
 	pt.y -= padding;
@@ -283,11 +276,54 @@ namespace larocv {
       // pp1 << "polar_ctor_mat_"<<meta.plane()<<".png";
       // cv::imwrite(pp1.str().c_str(),polar_ctor_mat);
       
-      result_v.emplace_back(std::move(res_contour));
-      contour_v.emplace_back(std::move(contour));
+      result_v.emplace_back(std::move(contour));
     }
 
     return result_v;
+  }
+
+  larocv::Cluster2DArray_t VertexTrackCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
+							 const ::cv::Mat& img,
+							 larocv::ImageMeta& meta,
+							 larocv::ROI& roi)
+  {
+    // Algorithm data
+    auto& data = AlgoData<larocv::VertexClusterArray>();
+    
+    // if given from Refine2DVertex, fill
+    if(_refine2d_algo_id!=kINVALID_ID && data._vtx_cluster_v.empty()) {
+
+      auto const& ref_data = AlgoData<larocv::Refine2DVertexData>(_refine2d_algo_id);
+
+      data._vtx_cluster_v.resize(ref_data._vtx3d_v.size());
+      
+      for(size_t vtx_id = 0; vtx_id < ref_data._vtx3d_v.size(); ++vtx_id) {
+
+	auto const& vtx3d = ref_data._vtx3d_v[vtx_id];
+	auto const& circle_vtx_v = ref_data._circle_vtx_vv[vtx_id];
+
+	auto& vtx_cluster = data._vtx_cluster_v[vtx_id];
+	if(!vtx_cluster.num_planes())
+	  vtx_cluster.set_vertex(vtx3d, circle_vtx_v);
+      }
+    }
+
+    // Run clustering for this plane & store
+    auto const plane = meta.plane();
+    for(size_t vtx_id = 0; vtx_id < data._vtx_cluster_v.size(); ++vtx_id) {
+      auto& vtx_cluster = data._vtx_cluster_v[vtx_id];
+      auto const& circle_vtx = vtx_cluster.get_circle_vertex(plane);
+      auto cluster_v = TrackHypothesis(img,circle_vtx);
+      for(size_t cidx=0; cidx<cluster_v.size(); ++cidx) {
+	auto& cluster = cluster_v[cidx];
+	vtx_cluster.emplace(plane,std::move(cluster));
+      }
+    }
+
+    // If only 1 cluster, return that cluster
+    // NOT IMPLEMENTED YET
+
+    return clusters;
   }
  
 

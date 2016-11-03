@@ -1,3 +1,18 @@
+/**
+ * \file Refine2DVertexData.h
+ *
+ * \ingroup AlgoData
+ * 
+ * \brief Class def header for a class Refine2DVertexData and sub classes
+ *
+ * @author kazuhiro
+ */
+
+/** \addtogroup AlgoData
+
+    @{*/
+
+
 #ifndef __ALGODATA_REFINE2DVERTEXDATA_H__
 #define __ALGODATA_REFINE2DVERTEXDATA_H__
 
@@ -90,3 +105,4 @@ namespace larocv {
   };
 }
 #endif
+/** @} */ // end of doxygen group

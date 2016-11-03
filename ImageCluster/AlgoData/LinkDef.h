@@ -16,6 +16,9 @@
 #pragma link C++ class larocv::CircleVertex+;
 #pragma link C++ class larocv::Refine2DVertexData+;
 #pragma link C++ class larocv::Refine2DVertexPlaneData+;
+
+#pragma link C++ class larocv::VertexCluster+;
+#pragma link C++ class larocv::VertexClusterArray+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
 
