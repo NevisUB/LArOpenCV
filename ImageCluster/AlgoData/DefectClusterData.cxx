@@ -86,28 +86,24 @@ namespace larocv {
     
     void ClusterCompound::push_back(const AtomicContour& atom)
     {
-      if(atom.id() == kINVALID_SIZE) throw larbys("Cannot add an atom with invalid id...");
       _atomic_ctor_v.push_back(atom);
       _atomic_ctor_v.back()._atomic_id = _atomic_ctor_v.size() - 1;
     }
     
     void ClusterCompound::push_back(const ContourDefect& defect)
     {
-      if(defect.id() == kINVALID_SIZE) throw larbys("Cannot add an defect with invalid id...");
       _ctor_defect_v.push_back(defect);
       _ctor_defect_v.back()._defect_id = _ctor_defect_v.size() - 1;
     }
     
     void ClusterCompound::emplace_back(AtomicContour&& atom)
     {
-      if(atom.id() == kINVALID_SIZE) throw larbys("Cannot add an atom with invalid id...");
       _atomic_ctor_v.emplace_back(std::move(atom));
       _atomic_ctor_v.back()._atomic_id = _atomic_ctor_v.size() - 1;
     }
     
     void ClusterCompound::emplace_back(ContourDefect&& defect)
     {
-      if(defect.id() == kINVALID_SIZE) throw larbys("Cannot add an defect with invalid id...");
       _ctor_defect_v.emplace_back(std::move(defect));
       _ctor_defect_v.back()._defect_id = _ctor_defect_v.size() - 1;
     }
@@ -163,14 +159,12 @@ namespace larocv {
     
     void DefectClusterPlaneData::push_back(const ClusterCompound& c)
     {
-      if(c.id() == kINVALID_SIZE) throw larbys("Cannot insert ClusterCompound with an invalid id");
       _cluster_v.push_back(c);
       _cluster_v.back()._cluster_id = _cluster_v.size()-1;
     }
     
     void DefectClusterPlaneData::emplace_back(ClusterCompound&& c)
     {
-      if(c.id() == kINVALID_SIZE) throw larbys("Cannot insert ClusterCompound with an invalid id");
       _cluster_v.emplace_back(std::move(c));
       _cluster_v.back()._cluster_id = _cluster_v.size() - 1;
     }
