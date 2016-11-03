@@ -7,7 +7,7 @@ endif
 #
 # Define directories to be compile upon a global "make"...
 #
-SUBDIRS := Base AlgoData Util Cluster Direction Filter StartPoint Merge Match ReCluster Debug #Vertex
+SUBDIRS := Base AlgoData Util Cluster Direction Filter StartPoint Merge Match Debug #Vertex
 
 #####################################################################################
 #
