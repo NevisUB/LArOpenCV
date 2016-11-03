@@ -11,7 +11,7 @@
 
 #pragma link C++ class larocv::PCABox+;
 #pragma link C++ class larocv::PCAPath+;
-#pragma link C++ class larocv::Vertex2D+;
+//#pragma link C++ class larocv::Vertex2D+;
 #pragma link C++ class larocv::PCAUtilities+;
 #pragma link C++ class larocv::PID+;
 #pragma link C++ class larocv::StatUtilities+;

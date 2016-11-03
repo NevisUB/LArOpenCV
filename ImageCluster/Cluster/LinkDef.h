@@ -36,11 +36,9 @@
 #pragma link C++ class larocv::dQdXProfilerData+;
 //#pragma link C++ class larocv::MatchCluster+;
 #pragma link C++ class larocv::DefectVertex+;
-#pragma link C++ class larocv::DefectVertexData+;
 #pragma link C++ class larocv::HIPMIPTouch+;
 #pragma link C++ class larocv::HIPMIPTouchData+;
 #pragma link C++ class larocv::LinearVtxFilter+;
-#pragma link C++ class larocv::LinearVtxFilterData+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
