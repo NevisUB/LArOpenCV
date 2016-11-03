@@ -90,28 +90,20 @@ namespace larocv {
       return _plane_data[plane];
     }
     
-    void Refine2DVertexData::insert(const larocv::data::Vertex3D& vtx, const std::vector<larocv::data::CircleVertex>& circle_v)
+    void Refine2DVertexData::push_back(const larocv::data::Vertex3D& vtx, const std::vector<larocv::data::CircleVertex>& circle_v)
     {
-      if(vtx.id() == kINVALID_SIZE) throw larbys("Cannot regiser Vertex3D with an invalid id!");
       if(circle_v.size() != _plane_data.size()) throw larbys("# CircleVertex != # planes!");
-      if(_vtx3d_v.size() <= vtx.id()) {
-	_vtx3d_v.resize(vtx.id()+1);
-	_circle_vtx_vv.resize(vtx.id()+1,std::vector<larocv::data::CircleVertex>(_plane_data.size()));
-      }
-      _vtx3d_v[vtx.id()] = vtx;
-      _circle_vtx_vv[vtx.id()] = circle_v;
+      _circle_vtx_vv.push_back(circle_v);
+      _vtx3d_v.push_back(vtx);
+      _vtx3d_v.back()._id = _vtx3d_v.size() - 1;
     }
     
-    void Refine2DVertexData::move(larocv::data::Vertex3D&& vtx, std::vector<larocv::data::CircleVertex>&& circle_v)
+    void Refine2DVertexData::emplace_back(larocv::data::Vertex3D&& vtx, std::vector<larocv::data::CircleVertex>&& circle_v)
     {
-      if(vtx.id() == kINVALID_SIZE) throw larbys("Cannot regiser Vertex3D with an invalid id!");
       if(circle_v.size() != _plane_data.size()) throw larbys("# CircleVertex != # planes!");
-      if(_vtx3d_v.size() <= vtx.id()) {
-	_vtx3d_v.resize(vtx.id()+1);
-	_circle_vtx_vv.resize(vtx.id()+1,std::vector<larocv::data::CircleVertex>(_plane_data.size()));
-      }
-      _vtx3d_v[vtx.id()] = std::move(vtx);
-      _circle_vtx_vv[vtx.id()] = std::move(circle_v);
+      _circle_vtx_vv.emplace_back(std::move(circle_v));
+      _vtx3d_v.emplace_back(std::move(vtx));
+      _vtx3d_v.back()._id = _vtx3d_v.size() - 1;
     }
     
   }

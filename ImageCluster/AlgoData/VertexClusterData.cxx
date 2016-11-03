@@ -68,23 +68,30 @@ namespace larocv {
       _vtx = vtx;
       _circle_vtx_v = circle_vtx_v;
     }
-    
-    void ParticleClusterArray::insert(size_t plane, const larocv::data::ParticleCluster& cluster)
+
+    ParticleCluster& ParticleClusterArray::make_cluster(size_t plane)
     {
       if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
-      if(cluster.id() == kINVALID_SIZE) throw larbys("Cannot insert cluster with an invalid id");
       auto& cluster_v = _cluster_vv[plane];
-      if(cluster_v.size() <= cluster.id()) cluster_v.resize(cluster.id()+1);
-      cluster_v[cluster.id()] = cluster;
+      cluster_v.push_back(ParticleCluster());
+      cluster_v.back()._cluster_id = cluster_v.size() - 1;
+      return cluster_v.back();
     }
     
-    void ParticleClusterArray::move(size_t plane, larocv::data::ParticleCluster&& cluster)
+    void ParticleClusterArray::push_back(size_t plane, const larocv::data::ParticleCluster& cluster)
     {
       if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
-      if(cluster.id() == kINVALID_SIZE) throw larbys("Cannot insert cluster with an invalid id");
       auto& cluster_v = _cluster_vv[plane];
-      if(cluster_v.size() <= cluster.id()) cluster_v.resize(cluster.id()+1);
-      cluster_v[cluster.id()] = std::move(cluster);
+      cluster_v.push_back(cluster);
+      cluster_v.back()._cluster_id = cluster_v.size() - 1;
+    }
+    
+    void ParticleClusterArray::emplace_back(size_t plane, larocv::data::ParticleCluster&& cluster)
+    {
+      if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
+      auto& cluster_v = _cluster_vv[plane];
+      cluster_v.emplace_back(cluster);
+      cluster_v.back()._cluster_id = cluster_v.size() - 1;
     }
   }
 }

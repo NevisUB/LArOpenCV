@@ -24,11 +24,15 @@
 namespace larocv {
   namespace data {
 
+    // friend class forward declaration
+    class ParticleClusterArray;
+
     /**
        \class ParticleCluster
        @brief A cluster associated with a vertex and hence represents a particle
     */
     class ParticleCluster {
+      friend class ParticleClusterArray;
     public:
       ParticleCluster(size_t id=kINVALID_SIZE) : _cluster_id(id) {}
       ~ParticleCluster() {}
@@ -76,10 +80,12 @@ namespace larocv {
       /// Vertex3D + CircleVertex cetter
       void set_vertex(const larocv::data::Vertex3D& vtx,
 		      const std::vector<larocv::data::CircleVertex>& circle_vtx_v);
+      /// generate a new cluster
+      ParticleCluster& make_cluster(size_t plane);
       /// Cluster (per plane) appender
-      void insert(size_t plane, const larocv::data::ParticleCluster& cluster);
+      void push_back(size_t plane, const larocv::data::ParticleCluster& cluster);
       /// Cluster (per plane) appender
-      void move(size_t plane, larocv::data::ParticleCluster&& cluster);
+      void emplace_back(size_t plane, larocv::data::ParticleCluster&& cluster);
       
     private:
       /// 3D vertex + 2D projection 

@@ -21,6 +21,9 @@
 namespace larocv {
 
   namespace data {
+
+    class Refine2DVertexData;
+    
     /**
        \class Vertex2D
        @brief A simple 2D vertex class with a sense of "goodness" (score, algorithm dependent)
@@ -43,6 +46,7 @@ namespace larocv {
        @brief A simple 3D vertex class with a colleciton of 2D projections
     */
     class Vertex3D {
+      friend class Refine2DVertexData;
     public:
       Vertex3D(size_t id=kINVALID_SIZE) : _id(id) {clear();}
       ~Vertex3D() {}

@@ -112,9 +112,9 @@ namespace larocv {
       /// retrieve write-able plane data
       larocv::data::Refine2DVertexPlaneData& get_plane_data_writeable(size_t plane);
       /// insert new vertex
-      void insert(const larocv::data::Vertex3D& vtx, const std::vector<larocv::data::CircleVertex>& circle_v);
+      void push_back(const larocv::data::Vertex3D& vtx, const std::vector<larocv::data::CircleVertex>& circle_v);
       /// in-place move new vertex
-      void move(larocv::data::Vertex3D&& vtx, std::vector<larocv::data::CircleVertex>&& circle_v);
+      void emplace_back(larocv::data::Vertex3D&& vtx, std::vector<larocv::data::CircleVertex>&& circle_v);
       
     private:
       
