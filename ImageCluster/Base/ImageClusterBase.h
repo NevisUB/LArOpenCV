@@ -125,7 +125,7 @@ namespace larocv {
 
     bool _profile;       ///< measure process time if profile flag is on
 
-    AlgoDataManager* _dataman_ptr; ///< pointer to AlgoDataManager
+    data::AlgoDataManager* _dataman_ptr; ///< pointer to AlgoDataManager
 
   };
 

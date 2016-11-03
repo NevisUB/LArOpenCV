@@ -36,8 +36,8 @@ namespace larocv {
     /// Abstract constructor method
     virtual ImageClusterBase* create(const std::string instance_name) = 0;
     /// Algorithm data creation method (can be re-implemented)
-    virtual AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return (new AlgoDataEmpty(instance_name,id)); }
+    virtual data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
+    { return (new data::AlgoDataEmpty(instance_name,id)); }
   };
 
   /**
@@ -72,7 +72,7 @@ namespace larocv {
       return (*iter).second->create(instance_name);
     }
     /// Factory creation method for algorithm data
-    AlgoDataBase* create_data(const std::string name, const std::string instance_name, const AlgorithmID_t id)
+    larocv::data::AlgoDataBase* create_data(const std::string name, const std::string instance_name, const AlgorithmID_t id)
     {
       auto iter = _factory_map.find(name);
       if(iter == _factory_map.end() || !((*iter).second)) {

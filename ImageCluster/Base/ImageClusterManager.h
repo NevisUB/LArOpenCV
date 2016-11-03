@@ -101,7 +101,7 @@ namespace larocv {
     /// Plane weights getter and setter
     std::vector<float>& MatchPlaneWeights() { return _match_plane_weights; }
     /// Algorithm data manager accessor
-    const AlgoDataManager& DataManager() const { return _algo_dataman; }
+    const data::AlgoDataManager& DataManager() const { return _algo_dataman; }
   private:
     /// Name identifier: used to fetch a block of configuration parameters
     std::string _name;
@@ -146,7 +146,7 @@ namespace larocv {
     /// Switch for dead wire check
     bool _enable_wire_check ;
     /// Algorithm data container
-    AlgoDataManager _algo_dataman;
+    data::AlgoDataManager _algo_dataman;
     /// Algorithm data storage TTree
     TTree* _tree;
     int _required_plane;

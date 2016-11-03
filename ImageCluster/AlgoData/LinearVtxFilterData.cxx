@@ -5,19 +5,22 @@
 
 namespace larocv {
 
-  void LinearVtxFilterPlaneData::Clear()
-  {
+  namespace data {
     
-  }
-
-  void LinearVtxFilterData::Clear()
-  {
-    _plane_data.clear();
-
-    _vtx3d_kink_ass_v.clear();
-    _vtx3d_curve_ass_v.clear();
+    void LinearVtxFilterPlaneData::Clear()
+    {
+      
+    }
     
-    _plane_data.resize(3);
+    void LinearVtxFilterData::Clear()
+    {
+      _plane_data.clear();
+      
+      _vtx3d_kink_ass_v.clear();
+      _vtx3d_curve_ass_v.clear();
+      
+      _plane_data.resize(3);
+    }
   }
 }
 

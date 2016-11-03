@@ -10,20 +10,26 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class larocv::Vertex3D+;
-#pragma link C++ class larocv::Vertex2D+;
-#pragma link C++ class larocv::PointPCA+;
-#pragma link C++ class larocv::CircleVertex+;
-#pragma link C++ class larocv::Refine2DVertexData+;
-#pragma link C++ class larocv::Refine2DVertexPlaneData+;
-#pragma link C++ class larocv::LinearVtxFilterData+;
-#pragma link C++ class larocv::LinearVtxFilterPlaneData+;
-#pragma link C++ class larocv::ContourDefect+;
-#pragma link C++ class larocv::AtomicContour+;
-#pragma link C++ class larocv::DefectClusterData+;
-#pragma link C++ class larocv::DefectClusterPlaneData+;
-#pragma link C++ class larocv::VertexCluster+;
-#pragma link C++ class larocv::VertexClusterArray+;
+#pragma link C++ class larocv::data::Vertex3D+;
+#pragma link C++ class larocv::data::Vertex2D+;
+#pragma link C++ class larocv::data::PointPCA+;
+#pragma link C++ class larocv::data::CircleVertex+;
+#pragma link C++ class larocv::data::Refine2DVertexData+;
+#pragma link C++ class larocv::data::Refine2DVertexPlaneData+;
+
+#pragma link C++ class larocv::data::LinearVtxFilterData+;
+#pragma link C++ class larocv::data::LinearVtxFilterPlaneData+;
+
+#pragma link C++ class larocv::data::ContourDefect+;
+#pragma link C++ class larocv::data::AtomicContour+;
+#pragma link C++ class larocv::data::ClusterCompound+;
+#pragma link C++ class larocv::data::DefectClusterPlaneData+;
+#pragma link C++ class larocv::data::DefectClusterData+;
+
+
+#pragma link C++ class larocv::data::ParticleCluster+;
+#pragma link C++ class larocv::data::ParticleClusterArray+;
+#pragma link C++ class larocv::data::VertexClusterArray+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

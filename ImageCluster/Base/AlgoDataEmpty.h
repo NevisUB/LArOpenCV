@@ -17,27 +17,29 @@
 #include "AlgoDataBase.h"
 
 namespace larocv {
-  /**
-     \class AlgoDataEmpty
-     @brief only for vic
-  */
-  class AlgoDataEmpty : public AlgoDataBase {
-    
-  public:
-    
-    /// Default constructor
-    AlgoDataEmpty(std::string name="NoName", AlgorithmID_t id=0)
-      : AlgoDataBase(name,id)
-    {}
-    
-    /// Default destructor
-    ~AlgoDataEmpty(){}
-
-    /// Clear method override
-    void Clear() {}
-
-    double num_clusters;
-  };
+  namespace data {
+    /**
+       \class AlgoDataEmpty
+       @brief only for vic
+    */
+    class AlgoDataEmpty : public AlgoDataBase {
+      
+    public:
+      
+      /// Default constructor
+      AlgoDataEmpty(std::string name="NoName", AlgorithmID_t id=0)
+	: AlgoDataBase(name,id)
+      {}
+      
+      /// Default destructor
+      ~AlgoDataEmpty(){}
+      
+      /// Clear method override
+      void Clear() {}
+      
+      double num_clusters;
+    };
+  }
 }
 
 #endif

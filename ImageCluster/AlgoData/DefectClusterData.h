@@ -3,98 +3,162 @@
 
 #include "Base/AlgoDataBase.h"
 #include "Core/Line.h"
+#include <set>
 
 namespace larocv {
 
-  class AtomicContour {
-  public:
-    
-    AtomicContour(){Clear();}
-    AtomicContour(const GEO2D_Contour_t& ctor,size_t parent_idx)
-      :
-      _ctor(ctor),
-      _parent_idx(parent_idx)
-    {}
-    
-    ~AtomicContour(){}
+  namespace data {
 
-    void Clear() { _ctor.clear(); _parent_idx = -1; }
+    class ContourDefect;
     
-    GEO2D_Contour_t _ctor;
-    size_t _parent_idx;
+    class AtomicContour {
+    public:
+      
+      AtomicContour(size_t atomic_id = kINVALID_SIZE)
+	: _atomic_id(atomic_id) { clear(); }
+      AtomicContour(const GEO2D_Contour_t& ctor,size_t parent_idx,size_t atomic_id)
+	: _ctor(ctor)
+	, _parent_idx(parent_idx)
+	, _atomic_id(atomic_id)
+      {clear();}
+      ~AtomicContour(){}
+      
+      /// clears data
+      void clear();
+      /// returns unique atomic cluster id
+      size_t id() const;
+      
+      GEO2D_Contour_t _ctor;
+      size_t _parent_idx;
+      
+      /// asociate argument defect point
+      void associate(const ContourDefect& ac);
+      /// check if the argument defect point is associated
+      bool is_associated(const ContourDefect& ac) const;
+      /// retrieve a list of defect points associated
+      const std::set<size_t> associated_defects() const;
+      
+    private:
+      size_t _atomic_id; ///< unique atomic cluster id
+      std::set<size_t> _defect_id_s;  ///< associated defect point(s) id
+    };
     
-  };
-
-  class ContourDefect {
-  public:
-
-    ContourDefect() {}
-    ContourDefect(const geo2d::Vector<int>& pt_start,
-		  const geo2d::Vector<int>& pt_end,
-		  const geo2d::Vector<int>& pt_defect,
-		  float dist,
-		  const geo2d::Line<float>& split_line)
-      :
-      _pt_start(pt_start),
-      _pt_end(pt_end),
-      _pt_defect(pt_defect),
-      _dist(dist),
-      _split_line(split_line){}
-
-    ~ContourDefect() {}
-
-    void Clear() {
-      _pt_start.x  = _pt_start.y  = -1;
-      _pt_end.x    = _pt_end.y    = -1;
-      _pt_defect.x = _pt_defect.y = -1;
-      _dist = -1;
-      _split_line.pt.x  = _split_line.pt.y  = -1;
-      _split_line.dir.x = _split_line.dir.y = -1;
-    }
+    class ContourDefect {
+    public:
+      
+      ContourDefect(size_t defect_id = kINVALID_SIZE)
+	: _defect_id(defect_id) {clear();}
+      ContourDefect(const geo2d::Vector<int>& pt_start,
+		    const geo2d::Vector<int>& pt_end,
+		    const geo2d::Vector<int>& pt_defect,
+		    float dist,
+		    const geo2d::Line<float>& split_line,
+		    size_t defect_id);
+      ~ContourDefect() {}
+      
+      /// clears data
+      void clear();
+      /// returns unique defect id
+      size_t id() const;
+      
+      geo2d::Vector<float> _pt_start;
+      geo2d::Vector<float> _pt_end;
+      geo2d::Vector<float> _pt_defect;
+      float _dist;
+      geo2d::Line<float> _split_line;
+      
+      /// asociate argument atomic cluster
+      void associate(const AtomicContour& ac);
+      /// check if the argument atomic cluster is associated
+      bool is_associated(const AtomicContour& ac) const;
+      /// retrieve a list of atomic clusters associated
+      const std::set<size_t> associated_atoms() const;
+      
+    private:
+      size_t _defect_id; ///< unique ID of a defect point
+      std::set<size_t> _atomic_id_s; ///< associated ID of atomic clusters
+    };
     
-    geo2d::Vector<float> _pt_start;
-    geo2d::Vector<float> _pt_end;
-    geo2d::Vector<float> _pt_defect;
+    class ClusterCompound {
+    public:
+      
+      ClusterCompound(size_t id=kINVALID_SIZE)
+	: _cluster_id(id) {clear();}
+      ~ClusterCompound() {}
+      
+      /// clears data
+      void clear();
+      /// returns unique cluster id
+      size_t id() const;
+      
+      /// copy-add atomic cluster
+      void insert(const AtomicContour& atom);
+      /// copy-add defect
+      void insert(const ContourDefect& defect);
+      /// in-place-add atomic cluster
+      void move(AtomicContour&& atom);
+      /// in-place-add defect
+      void move(ContourDefect&& defect);
+      /// retrieve a list of atomic clusters
+      const std::vector<larocv::data::AtomicContour>& get_atoms() const;
+      /// retrieve a list of defects
+      const std::vector<larocv::data::ContourDefect>& get_defects() const;
+      /// retrieve an atomic cluster by id
+      const larocv::data::AtomicContour& get_atom(size_t id) const;
+      /// retrieve a defect by id
+      const larocv::data::ContourDefect& get_defect(size_t id) const;
+      
+    private:
+      std::vector< AtomicContour > _atomic_ctor_v; ///< a list of atomic cluster, ordered by their unique ID
+      std::vector< ContourDefect > _ctor_defect_v; ///< a list of contour defect, ordered by their unique ID
+      size_t _cluster_id; ///< unique ID associated with original cluster
+    };
     
-    float _dist;
+    /*
+      \class DefectClusterPlaneData
+    */
+    class DefectClusterPlaneData {
+    public:
+      DefectClusterPlaneData() { clear(); }
+      ~DefectClusterPlaneData() {}
+      
+      /// Attribute clear method
+      void clear();
+      /// number of currently registered clusters
+      size_t num_clusters() const;
+      /// retrieve a list of clusters on this plane
+      const std::vector<larocv::data::ClusterCompound>& get_cluster() const;
+      /// retrieve a list of clusters on this plane via id
+      const larocv::data::ClusterCompound& get_cluster(size_t id) const;
+      /// reset total number of clusters on this plane
+      void set_num_clusters(size_t n);
+      /// copy-insert a cluster
+      void insert(const ClusterCompound& c);
+      /// move-insert a cluster
+      void move(ClusterCompound&& c);
+      
+    private:
+      
+      /// list of cluster compounds
+      std::vector<larocv::data::ClusterCompound> _cluster_v;
+      int _n_input_ctors;
+    };
     
-    geo2d::Line<float> _split_line;
-   
-  };
-  
-  /*
-    \class DefectClusterPlaneData
-   */
-  class DefectClusterPlaneData {
-  public:
-    DefectClusterPlaneData() { Clear(); }
-    ~DefectClusterPlaneData() {}
-
-    /// list of atomic contours for this plane
-    std::vector< AtomicContour > _atomic_ctor_v;
-    std::vector< ContourDefect > _ctor_defect_v;
-    std::vector< std::vector< size_t > > _atomic_ctor_ass_vv;//outer index is cluster index on this plane; inner index is the atomic index in outter index cluster; in this way you get atomic on the same cluster
-    int _n_input_ctors;
-    
-    
-    /// Attribute clear method
-    void Clear();
-  };
-
-  /*
-    \class DefectClusterData
-   */
-  class DefectClusterData : public larocv::AlgoDataBase {
-  public:
-    DefectClusterData(std::string name="NoName", AlgorithmID_t id=0)
-      : AlgoDataBase(name,id)
-    { Clear();}
-    ~DefectClusterData(){}
-
-    void Clear();
-
-    std::vector<larocv::DefectClusterPlaneData> _plane_data;
-    
-  };
+    /*
+      \class DefectClusterData
+    */
+    class DefectClusterData : public larocv::data::AlgoDataBase {
+    public:
+      DefectClusterData(std::string name="NoName", AlgorithmID_t id=0)
+	: AlgoDataBase(name,id)
+      { Clear();}
+      ~DefectClusterData(){}
+      
+      void Clear();
+      
+      std::vector<larocv::data::DefectClusterPlaneData> _plane_data;
+      
+    };
+  }
 }
 #endif

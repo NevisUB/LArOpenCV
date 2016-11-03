@@ -20,40 +20,47 @@
 
 namespace larocv {
 
-  /**
-     \class Vertex2D
-     @brief A simple 2D vertex class with a sense of "goodness" (score, algorithm dependent)
-  */
-  class Vertex2D {
-  public:
-    Vertex2D() {Clear();}
-    ~Vertex2D() {}
-
-    void Clear() { pt.x = pt.y = -1; score = -1; }
+  namespace data {
+    /**
+       \class Vertex2D
+       @brief A simple 2D vertex class with a sense of "goodness" (score, algorithm dependent)
+    */
+    class Vertex2D {
+    public:
+      Vertex2D() {clear();}
+      ~Vertex2D() {}
+      
+      void clear() { pt.x = pt.y = -1; score = -1; }
+      
+      /// 2D vertex point
+      geo2d::Vector<float> pt;
+      /// Associated score, definition is algorithm dependent
+      float score;
+    };
     
-    /// 2D vertex point
-    geo2d::Vector<float> pt;
-    /// Associated score, definition is algorithm dependent
-    float score;
-  };
-
-  /**
-     \class Vertex3D
-     @brief A simple 3D vertex class with a colleciton of 2D projections
-  */
-  class Vertex3D {
-  public:
-    Vertex3D() {Clear();}
-    ~Vertex3D() {}
-
-    void Clear() { vtx2d_v.clear(); x = y = z = kINVALID_DOUBLE; }
-
-    /// Plane-wise 2D vertex point
-    std::vector<larocv::Vertex2D> vtx2d_v;
-    /// 3D vertex location
-    double x, y, z;
-  };
-
+    /**
+       \class Vertex3D
+       @brief A simple 3D vertex class with a colleciton of 2D projections
+    */
+    class Vertex3D {
+    public:
+      Vertex3D(size_t id=kINVALID_SIZE) : _id(id) {clear();}
+      ~Vertex3D() {}
+      
+      /// id retriever
+      size_t id() const { return _id; }
+      /// attribute clear method
+      void clear() { vtx2d_v.clear(); x = y = z = kINVALID_DOUBLE; }
+      
+      /// Plane-wise 2D vertex point
+      std::vector<larocv::data::Vertex2D> vtx2d_v;
+      /// 3D vertex location
+      double x, y, z;
+    private:
+      /// unique vertex id
+      size_t _id;
+    };
+  }
 }
 #endif
 /** @} */ // end of doxygen group

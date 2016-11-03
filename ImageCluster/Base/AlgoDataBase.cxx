@@ -5,12 +5,14 @@
 
 namespace larocv {
 
-  const std::string& AlgoDataBase::Name() const
-  { return _name; }
-  
-  AlgorithmID_t AlgoDataBase::ID() const
-  { return _id;   }
-
+  namespace data {
+    
+    const std::string& AlgoDataBase::Name() const
+    { return _name; }
+    
+    AlgorithmID_t AlgoDataBase::ID() const
+    { return _id;   }
+  }
 }
 
 #endif
