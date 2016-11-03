@@ -15,7 +15,7 @@ namespace larocv {
     _min_defect_size      = pset.get<int>("MinDefectSize",5);
     _hull_edge_pts_split  = pset.get<int>("NHullEdgePoints",50);
 
-    auto const vertextrack_algo_name = pset.get<std::string>("VertexTrackClusterAlgo");
+    auto const vertextrack_algo_name = pset.get<std::string>("VertexTrackClusterAlgo","vtxctor");
     _vertextrack_algo_id = this->ID(vertextrack_algo_name);
   }
 
