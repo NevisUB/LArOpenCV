@@ -128,48 +128,48 @@ namespace larocv {
     
     ////////////////////////////////////////////////////////////////
     
-    void DefectClusterPlaneData::clear()
+    void ClusterCompoundArray::clear()
     { _cluster_v.clear(); }
 
-    size_t DefectClusterPlaneData::num_clusters() const
+    size_t ClusterCompoundArray::num_clusters() const
     { return _cluster_v.size(); }
 
-    size_t DefectClusterPlaneData::num_defects() const
+    size_t ClusterCompoundArray::num_defects() const
     {
       size_t res=0;
       for(auto const& c : _cluster_v) res += c.get_defects().size();
       return res;
     }
     
-    size_t DefectClusterPlaneData::num_atoms() const
+    size_t ClusterCompoundArray::num_atoms() const
     {
       size_t res=0;
       for(auto const& c : _cluster_v) res += c.get_atoms().size();
       return res;
     }
 
-    const std::vector<larocv::data::ClusterCompound>& DefectClusterPlaneData::get_cluster() const
+    const std::vector<larocv::data::ClusterCompound>& ClusterCompoundArray::get_cluster() const
     { return _cluster_v; }
     
-    const larocv::data::ClusterCompound& DefectClusterPlaneData::get_cluster(size_t id) const
+    const larocv::data::ClusterCompound& ClusterCompoundArray::get_cluster(size_t id) const
     {
       if(id >= _cluster_v.size()) throw larbys("Invalid ClusterCompound ID requested");
       return _cluster_v[id];
     }
     
-    void DefectClusterPlaneData::push_back(const ClusterCompound& c)
+    void ClusterCompoundArray::push_back(const ClusterCompound& c)
     {
       _cluster_v.push_back(c);
       _cluster_v.back()._cluster_id = _cluster_v.size()-1;
     }
     
-    void DefectClusterPlaneData::emplace_back(ClusterCompound&& c)
+    void ClusterCompoundArray::emplace_back(ClusterCompound&& c)
     {
       _cluster_v.emplace_back(std::move(c));
       _cluster_v.back()._cluster_id = _cluster_v.size() - 1;
     }
 
-    larocv::data::ClusterCompound& DefectClusterPlaneData::make_cluster()
+    larocv::data::ClusterCompound& ClusterCompoundArray::make_cluster()
     {
       _cluster_v.push_back(ClusterCompound());
       _cluster_v.back()._cluster_id = _cluster_v.size() - 1;
@@ -230,8 +230,8 @@ namespace larocv {
     
     void DefectClusterData::Clear()
     {
-      _plane_data.clear();
-      _plane_data.resize(3);
+      _raw_cluster_vv.clear();
+      _raw_cluster_vv.resize(3);
       _vtx_cluster_v.clear();
     }
 

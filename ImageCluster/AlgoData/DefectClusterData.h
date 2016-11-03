@@ -12,7 +12,7 @@ namespace larocv {
     // forward declaration for friends
     class ContourDefect;
     class ClusterCompound;
-    class DefectClusterPlaneData;
+    class ClusterCompoundArray;
     class ParticleCompoundArray;
     class DefectClusterData;
     
@@ -87,7 +87,7 @@ namespace larocv {
     };
 
     class ClusterCompound {
-      friend class DefectClusterPlaneData;
+      friend class ClusterCompoundArray;
       friend class ParticleCompoundArray;
     public:
       
@@ -128,12 +128,12 @@ namespace larocv {
     };
     
     /*
-      \class DefectClusterPlaneData
+      \class ClusterCompoundArray
     */
-    class DefectClusterPlaneData {
+    class ClusterCompoundArray {
     public:
-      DefectClusterPlaneData() { clear(); }
-      ~DefectClusterPlaneData() {}
+      ClusterCompoundArray() { clear(); }
+      ~ClusterCompoundArray() {}
       
       /// Attribute clear method
       void clear();
@@ -214,7 +214,7 @@ namespace larocv {
       
       void Clear();
       
-      std::vector<larocv::data::DefectClusterPlaneData> _plane_data;
+      std::vector<larocv::data::ClusterCompoundArray> _raw_cluster_vv;
 
       /// copy-add vertex-wise ParticleClusterArray compound information
       void push_back(const larocv::data::ParticleCompoundArray& col);

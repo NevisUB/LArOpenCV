@@ -23,7 +23,8 @@
 #pragma link C++ class larocv::data::ContourDefect+;
 #pragma link C++ class larocv::data::AtomicContour+;
 #pragma link C++ class larocv::data::ClusterCompound+;
-#pragma link C++ class larocv::data::DefectClusterPlaneData+;
+#pragma link C++ class larocv::data::ClusterCompoundArray+;
+#pragma link C++ class larocv::data::ParticleCompoundArray+;
 #pragma link C++ class larocv::data::DefectClusterData+;
 
 

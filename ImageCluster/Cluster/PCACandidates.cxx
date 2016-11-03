@@ -48,7 +48,7 @@ namespace larocv {
     //get the defect cluster data
     //atomic associations for atomic clusters => original clusters
     const auto& defectcluster_data = AlgoData<data::DefectClusterData>(_defect_cluster_algo_id);
-    const auto& defectcluster_plane_data = defectcluster_data._plane_data[meta.plane()];
+    const auto& defectcluster_plane_data = defectcluster_data._raw_cluster_vv[meta.plane()];
 
     //this data
     auto& data = AlgoData<data::PCACandidatesData>();
@@ -110,7 +110,7 @@ namespace larocv {
 
     for(uint plane=0;plane<3;++plane) {
 
-      const auto& defectcluster_plane_data = defectcluster_data._plane_data.at(plane);
+      const auto& defectcluster_plane_data = defectcluster_data._raw_cluster_vv.at(plane);
       n_defects += defectcluster_plane_data.num_defects();
       
     }

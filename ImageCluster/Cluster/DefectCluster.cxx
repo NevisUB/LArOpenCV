@@ -30,8 +30,7 @@ namespace larocv {
   {
     if(this->ID()==0) throw larbys("DefectCluster should not be run 1st!");
     auto& data          = AlgoData<data::DefectClusterData>();
-    auto& plane_data    = data._plane_data[meta.plane()];
-
+    auto& plane_data    = data._raw_cluster_vv[meta.plane()];
 
     std::vector<const GEO2D_Contour_t*> ctor_ptr_v;
     

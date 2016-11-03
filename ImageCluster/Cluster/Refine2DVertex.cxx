@@ -727,7 +727,7 @@ namespace larocv{
 
     if(_defect_algo_id != kINVALID_ID) {
       auto const& defect_pts = AlgoData<data::DefectClusterData>(_defect_algo_id);
-      for(auto const& compound : defect_pts._plane_data[meta.plane()].get_cluster()) {
+      for(auto const& compound : defect_pts._raw_cluster_vv[meta.plane()].get_cluster()) {
 	for(auto const& defect_pt : compound.get_defects()) {
 	  const auto pt = defect_pt._pt_defect;
 	  LAROCV_INFO() << "Scanning Defect point: " << pt << std::endl;
