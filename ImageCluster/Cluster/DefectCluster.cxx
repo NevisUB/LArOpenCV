@@ -19,10 +19,6 @@ namespace larocv {
     _vertextrack_algo_id = this->ID(vertextrack_algo_name);
   }
 
-
-
-
-  
   larocv::Cluster2DArray_t DefectCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
 						    const ::cv::Mat& img,
 						    larocv::ImageMeta& meta,
@@ -33,35 +29,41 @@ namespace larocv {
     auto& plane_data    = data._raw_cluster_vv[meta.plane()];
 
     std::vector<const GEO2D_Contour_t*> ctor_ptr_v;
-    
-    if( _vertextrack_algo_id!=kINVALID_ID ) {
+
+    // process vertex associated particle clusters if provided, and if not yet processed
+    if( _vertextrack_algo_id!=kINVALID_ID && data.get_vertex_clusters().empty()) {
 
       auto const& vtxtrack_data = AlgoData<data::VertexClusterArray>(_vertextrack_algo_id);
 
-      //particle vertex cluster array
+      // particle vertex cluster array
       const auto& vtx_cluster_v = vtxtrack_data._vtx_cluster_v;
-
-      for(const auto& parclus_arr : vtx_cluster_v) 
-	for(const auto& parclus : parclus_arr.get_clusters(meta.plane()) ) 
-	  ctor_ptr_v.emplace_back( &parclus._ctor );
       
-    } else { 
-      
-      for(const auto& cluster : clusters)
-	ctor_ptr_v.emplace_back(&cluster._contour);
-      
+      // loop over vtx
+      for(auto const& vtx_cluster : vtx_cluster_v) {
+	data::ParticleCompoundArray pcompound_set;
+	// loop over plane
+	for(size_t plane = 0 ; plane < vtx_cluster.num_planes(); ++plane) {
+	  // loop over clusters on this plane
+	  for(auto const& pcluster : vtx_cluster.get_clusters(plane)) {
+	    auto pcompound = BreakContour(pcluster._ctor);
+	    pcompound_set.emplace_back(plane,std::move(pcompound));
+	  }
+	}
+	// record
+	data.emplace_back(std::move(pcompound_set));
+      }
     }
-    
-    
-    for(const auto& ctor_ptr : ctor_ptr_v) {
 
-      auto cluscomp = BreakContour(*ctor_ptr);
+    // Process input clusters on this plane
+    for(auto const& cluster : clusters) {
+
+      auto cluscomp = BreakContour(cluster._contour);
 
       plane_data.emplace_back(std::move(cluscomp));
-      
-    }//end loop over input clusters
-    
 
+    }
+
+    // Construct output
     Cluster2DArray_t oclusters_v;
     for(auto& cluscomp : plane_data.get_cluster()) {
       for(auto& atomic : cluscomp.get_atoms()) {
@@ -70,8 +72,6 @@ namespace larocv {
 	oclusters_v.emplace_back(std::move(ocluster));
       }
     }
-    
-
     return oclusters_v;
   }
 

@@ -241,7 +241,7 @@ namespace larocv {
       _vtx_cluster_v.back()._id = _vtx_cluster_v.size() - 1;
     }
 
-    void DefectClusterData::emplace_back(const larocv::data::ParticleCompoundArray& col)
+    void DefectClusterData::emplace_back(larocv::data::ParticleCompoundArray&& col)
     {
       _vtx_cluster_v.emplace_back(std::move(col));
       _vtx_cluster_v.back()._id = _vtx_cluster_v.size() - 1;
@@ -256,6 +256,10 @@ namespace larocv {
       _vtx_cluster_v[vtx_id] = col;
       _vtx_cluster_v[vtx_id]._id = vtx_id;
     }
+
+    const std::vector<larocv::data::ParticleCompoundArray>&
+    DefectClusterData::get_vertex_clusters() const
+    { return _vtx_cluster_v; }
 
   }
 }
