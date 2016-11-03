@@ -6,15 +6,13 @@
 #include "ImageAnaBase.h"
 #include "AlgoFactory.h"
 
-#include "Core/Circle.h"
-#include "Core/VectorArray.h"
-#include "Core/Line.h"
-
+#include "AlgoData/LinearVtxFilterData.h"
 
 namespace larocv {
  
   class LinearVtxFilter : public larocv::ImageAnaBase {
     
+
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
@@ -45,60 +43,26 @@ namespace larocv {
   private:
 
     geo2d::Line<float> calculate_pca(const std::vector<cv::Point_<float> > & ctor);
+    geo2d::VectorArray<float> QPtOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle);
     
     float _r_min;
     float _r_max;
     float _r_div;
     float _r_cut;
     float _angle_cut;
-    
+    int _kink_threshold;
     int _thresh;
 
     std::vector<float> _radii_v;
 
+    int _refine2d_algo_id;
+    
   public:
 
-    geo2d::VectorArray<float> QPtOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle);
     bool ScanRadii(const cv::Mat& img,const cv::Point_<float>& pt);
-    std::vector<std::vector<std::vector<cv::Point_<float> > > > _xs_vvv;
 
   };
 
-  /**
-     \class LinearVtxFilterData
-     @brief only for vic
-  */
-  class LinearVtxFilterData : public AlgoDataBase {
-    
-  public:
-    
-    /// Default constructor
-    LinearVtxFilterData(std::string name="NoName", AlgorithmID_t id=0)
-      : AlgoDataBase(name,id)
-    {  Clear(); }
-    
-    /// Default destructor
-    ~LinearVtxFilterData(){}
-
-    /// Clear method override
-    AlgorithmID_t _input_id;
-
-    void Clear() {
-      _filter_vtx_v_v.clear();
-      _filter_vtx_v_v.resize(3);
-
-      _xs_v_v_v_v.clear();
-      _xs_v_v_v_v.resize(3);
-      
-      _input_id = kINVALID_ID;
-    }
-    
-    std::vector<std::vector<cv::Point_<float> > > _filter_vtx_v_v;
-    std::vector<std::vector<std::vector<std::vector<cv::Point_<float> > > > > _xs_v_v_v_v;
-    
-  };
-
-  
   /**
      \class larocv::LinearVtxFilterFactory
      \brief A concrete factory class for larocv::LinearVtxFilter

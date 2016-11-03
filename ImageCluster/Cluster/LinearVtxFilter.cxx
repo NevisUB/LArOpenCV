@@ -2,15 +2,13 @@
 #define __LINEARVTXFILTER_CXX__
 
 #include "LinearVtxFilter.h"
-#include "DefectCluster.h"
+
 
 namespace larocv {
 
   /// Global larocv::LinearVtxFilterFactory to register AlgoFactory
   static LinearVtxFilterFactory __global_LinearVtxFilterFactory__;
 
-
-  //geo2d::Line<float> LinearVtxFilter::calculate_pca(const GEO2D_Contour_t& ctor) {
   geo2d::Line<float> LinearVtxFilter::calculate_pca(const std::vector<cv::Point_<float> > & ctor) {
     
     cv::Mat ctor_pts(ctor.size(), 2, CV_32FC1); //32 bit precision is fine
@@ -28,7 +26,6 @@ namespace larocv {
 							  pca_ana.eigenvectors.at<float>(0,1)));
     return pca_principle;
   }
-  
   
   
   geo2d::VectorArray<float> LinearVtxFilter::QPtOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle)
@@ -49,14 +46,14 @@ namespace larocv {
       float q = (float)(polarimg.at<unsigned char>(row, col));
 
       //vic: unsure about this
-      float pi_threshold=10.0;
-      if(q < pi_threshold) {
-	if(range.first >= 0) {
-	  range_v.push_back(range);
-	  range.first = range.second = -1;
-	}
-	continue;
-      }
+      //float pi_threshold=10.0;
+      // if(q < pi_threshold) {
+      // 	if(range.first >= 0) {
+      // 	  range_v.push_back(range);
+      // 	  range.first = range.second = -1;
+      // 	}
+      // 	continue;
+      // }
       
       if(range.first < 0) range.first = range.second = row;
 
@@ -89,14 +86,19 @@ namespace larocv {
   
   void LinearVtxFilter::_Configure_(const ::fcllite::PSet &pset)
   {
-    _r_min     = pset.get<float>("RMin",2);
-    _r_max     = pset.get<float>("RMax",22);
-    _r_div     = pset.get<float>("RDiv",20);
+    _r_min     = pset.get<float>("RMin",3);
+    _r_max     = pset.get<float>("RMax",13);
+    _r_div     = pset.get<float>("RDiv",10);
     _r_cut     = pset.get<float>("RCut",0.5);
     _angle_cut = pset.get<float>("AngleCut",165); // 15 degree angle...
     
-    _thresh = pset.get<int>  ("Threshold",10);
+    _thresh = pset.get<int>("Threshold",10);
 
+    auto const refine2d_algo_name = pset.get<std::string>("Refine2DVertexAlgo","refine_vtx");
+    _refine2d_algo_id = this->ID(refine2d_algo_name);
+
+    _kink_threshold = pset.get<int>("NKinks",1);
+    
     _radii_v.resize(_r_div);
     
     float step = (_r_max - _r_min) / _r_div;
@@ -139,7 +141,7 @@ namespace larocv {
       }
 
       LAROCV_DEBUG() << "ridx: " << ridx << " w/ xs_v size: " << xs_v.size() << std::endl;	
-
+      
       for(uint xidx=0;xidx<xs_v.size();++xidx) {
 	
 	auto xs = xs_v[xidx];
@@ -149,30 +151,27 @@ namespace larocv {
 
 	for(uint qidx=0;qidx<qpt_vv.size();++qidx) {
 	  auto d = geo2d::dist(xs,qpt_vv[qidx].back());
-	  if (d < min_d) {
-	    min_qidx = qidx;
-	    min_d    = d;
-	  }
+	  if (d < min_d) { min_qidx = qidx; min_d = d; }
 	}
 
 	if (min_qidx < 0) throw larbys("min_qidx < 0 still, die");
 	
 	if ( min_d > _r_cut * radii  ) {
-	  LAROCV_DEBUG() << "Far away from all with cut: " << _r_cut*radii << "... inserting pt: " << xs << std::endl;
+	  LAROCV_DEBUG() << "Far away from all others with cut: " << _r_cut*radii << "... inserting pt: " << xs << std::endl;
 	  std::vector<cv::Point_<float> > tmp = { xs };
 	  qpt_vv.emplace_back(std::move(tmp));
 	  continue;
 	}
-
+	
 	LAROCV_DEBUG() << "Inserting pt: " << xs << "... at idx: " << min_qidx << std::endl;
 	qpt_vv[min_qidx].emplace_back(xs);
       } //end loop over xs_v
-
+      
     } //end loop over radii
     
+
+    //no qpoint associations found
     if (qpt_vv.size() == 0) return false;
-    
-    _xs_vvv.emplace_back(qpt_vv);
     
     std::vector<geo2d::Line<float> > qpt_dir_v;
     qpt_dir_v.resize(qpt_vv.size());
@@ -238,36 +237,51 @@ namespace larocv {
 				  const ::cv::Mat& img,
 				  larocv::ImageMeta& meta,
 				  larocv::ROI& roi)
-  {
-    const auto& defectcluster_data = AlgoData<DefectClusterData>(this->ID() - 1);
-    const auto& atomic_defect_pts_v_v = defectcluster_data._atomic_defect_pts_v_v_v[meta.plane()];
-    
-    auto& data = AlgoData<LinearVtxFilterData>();
-    auto& filter_vtx_v = data._filter_vtx_v_v[meta.plane()];
-      
-    cv::Mat thresh_img;
-    cv::threshold(img,thresh_img,_thresh,255,0);
-    
-    for(uint track_cidx = 0; track_cidx < atomic_defect_pts_v_v.size(); ++ track_cidx) {
-      const auto& atomic_defect_pts_v = atomic_defect_pts_v_v[track_cidx];
-
-      //for each defect point
-      for (const auto& defect_pt : atomic_defect_pts_v) {
-
-	//determine this linearity
-	if ( !ScanRadii(thresh_img,defect_pt) ) continue;
-	
-	filter_vtx_v.emplace_back(defect_pt.x,defect_pt.y); //typcast in to float
-      }
-    }
-
-    data._xs_v_v_v_v[meta.plane()] = _xs_vvv;
-    _xs_vvv.clear();
-      
-  }
+  {}
 
   bool LinearVtxFilter::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
+    
+    auto& data = AlgoData<LinearVtxFilterData>();
+
+    auto& vtx3d_kink_ass_v = data._vtx3d_kink_ass_v;
+    auto& vtx3d_curve_ass_v = data._vtx3d_curve_ass_v;
+    
+    const auto& refine2d_data = AlgoData<Refine2DVertexData>(_refine2d_algo_id);
+    const auto& vtx3d_v = refine2d_data._vtx3d_v;
+
+    std::vector<cv::Mat> thresh_img_v;
+    thresh_img_v.resize(img_v.size());
+    
+    for(uint img_id=0;img_id<img_v.size();++img_id)
+      cv::threshold(img_v[img_id],thresh_img_v[img_id],_thresh,255,0);
+
+    //for each vtx3d point
+    for(size_t vtx3d_id=0; vtx3d_id < vtx3d_v.size(); ++vtx3d_id){
+      auto& vtx3d = vtx3d_v[vtx3d_id];
+      
+      int n_kink(0),n_curve(0);
+      
+      for(short plane_id = 0; plane_id < 3; ++plane_id) {
+
+	//get this plane vertex
+	auto& plane_vtx = vtx3d.vtx2d_v.at(plane_id);
+	
+	//get the associated 2D thresholded image
+	auto& img = thresh_img_v.at(plane_id);
+	  
+	//determine this linearity
+	ScanRadii(img,plane_vtx.pt) ? n_kink++ : n_curve++;
+	
+      }
+
+      if ( n_kink >= _kink_threshold )
+	vtx3d_kink_ass_v.push_back(vtx3d_id);
+      else
+	vtx3d_curve_ass_v.push_back(vtx3d_id);
+
+    }
+
     return true;
   }
   
