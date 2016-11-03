@@ -47,7 +47,7 @@ namespace larocv {
     
     //get the defect cluster data
     //atomic associations for atomic clusters => original clusters
-    const auto& defectcluster_data = AlgoData<DefectClusterData>(_defect_cluster_algo_id);
+    const auto& defectcluster_data = AlgoData<data::DefectClusterData>(_defect_cluster_algo_id);
     const auto& defectcluster_plane_data = defectcluster_data._plane_data[meta.plane()];
     
     //original clusters (track clusters, MIP/HIP clusters for example)
@@ -57,7 +57,7 @@ namespace larocv {
     const auto& atomic_ctor_ass_v_v  = defectcluster_plane_data._atomic_ctor_ass_vv;
 
     //this data
-    auto& data = AlgoData<larocv::PCACandidatesData>();
+    auto& data = AlgoData<data::PCACandidatesData>();
     data._input_id = this->ID() - 1;
 
     //pca lines, indexed by atomic ID
@@ -123,7 +123,7 @@ namespace larocv {
 
   bool PCACandidates::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
-    const auto& defectcluster_data = AlgoData<DefectClusterData>(ID()-1);
+    const auto& defectcluster_data = AlgoData<data::DefectClusterData>(ID()-1);
     uint n_defects=0;
 
     for(uint plane=0;plane<3;++plane) {

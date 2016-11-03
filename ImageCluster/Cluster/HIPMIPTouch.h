@@ -43,39 +43,40 @@ namespace larocv {
     
   };
 
-  /**
-     \class HIPMIPTouchData
-     @brief only for vic
-  */
-  class HIPMIPTouchData : public AlgoDataBase {
+  namespace data {
+    /**
+       \class HIPMIPTouchData
+       @brief only for vic
+    */
+    class HIPMIPTouchData : public AlgoDataBase {
     
-  public:
+    public:
     
-    /// Default constructor
-    HIPMIPTouchData(std::string name="NoName", AlgorithmID_t id=0)
-      : AlgoDataBase(name,id)
-    {  Clear(); }
+      /// Default constructor
+      HIPMIPTouchData(std::string name="NoName", AlgorithmID_t id=0)
+	: AlgoDataBase(name,id)
+      {  Clear(); }
     
-    /// Default destructor
-    ~HIPMIPTouchData(){}
+      /// Default destructor
+      ~HIPMIPTouchData(){}
 
-    /// Clear method override
+      /// Clear method override
 
-    AlgorithmID_t _input_id;
+      AlgorithmID_t _input_id;
 
-    void Clear() {
+      void Clear() {
       
 
-      _hip_mip_touch_pts_v_v.clear();
-      _hip_mip_touch_pts_v_v.resize(3);
+	_hip_mip_touch_pts_v_v.clear();
+	_hip_mip_touch_pts_v_v.resize(3);
 
-      _input_id = kINVALID_ID;
-    }
+	_input_id = kINVALID_ID;
+      }
 
-    std::vector<std::vector< geo2d::Vector<float> > > _hip_mip_touch_pts_v_v;
+      std::vector<std::vector< geo2d::Vector<float> > > _hip_mip_touch_pts_v_v;
 
-  };
-
+    };
+  }
   
   /**
      \class larocv::HIPMIPTouchFactory
@@ -90,8 +91,8 @@ namespace larocv {
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new HIPMIPTouch(instance_name); }
     /// data create method
-    AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new HIPMIPTouchData(instance_name,id);}
+    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
+    { return new data::HIPMIPTouchData(instance_name,id);}
   };
   
 }

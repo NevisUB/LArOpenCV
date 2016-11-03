@@ -44,7 +44,7 @@ namespace larocv {
   private:
     
     std::vector< std::vector<geo2d::Vector<float> > >  TrackHypothesis(const ::cv::Mat& img,
-								       const larocv::CircleVertex& vtx);
+								       const data::CircleVertex& vtx);
 
     AlgorithmID_t _refine2d_algo_id;
 
@@ -77,8 +77,8 @@ namespace larocv {
     ~VertexTrackClusterFactory() {}
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new VertexTrackCluster(instance_name); }
-    AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new VertexClusterArray(instance_name,id);}
+    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
+    { return new data::VertexClusterArray(instance_name,id);}
   };
   
 }

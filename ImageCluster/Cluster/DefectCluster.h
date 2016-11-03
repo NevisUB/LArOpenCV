@@ -76,8 +76,8 @@ namespace larocv {
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new DefectCluster(instance_name); }
     /// data create method
-    AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new DefectClusterData(instance_name,id);}
+    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
+    { return new data::DefectClusterData(instance_name,id);}
   };
   
 }

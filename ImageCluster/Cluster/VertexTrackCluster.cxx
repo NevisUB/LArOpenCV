@@ -34,7 +34,7 @@ namespace larocv {
 
   std::vector<std::vector<geo2d::Vector<float> > >
   VertexTrackCluster::TrackHypothesis(const ::cv::Mat& img,
-				      const larocv::CircleVertex& vtx)
+				      const data::CircleVertex& vtx)
   {
 
     auto const& ref_vtx  = vtx.center;
@@ -288,12 +288,12 @@ namespace larocv {
 							 larocv::ROI& roi)
   {
     // Algorithm data
-    auto& data = AlgoData<larocv::VertexClusterArray>();
+    auto& data = AlgoData<data::VertexClusterArray>();
     
     // if given from Refine2DVertex, fill
     if(_refine2d_algo_id!=kINVALID_ID && data._vtx_cluster_v.empty()) {
 
-      auto const& ref_data = AlgoData<larocv::Refine2DVertexData>(_refine2d_algo_id);
+      auto const& ref_data = AlgoData<data::Refine2DVertexData>(_refine2d_algo_id);
 
       data._vtx_cluster_v.resize(ref_data._vtx3d_v.size());
       

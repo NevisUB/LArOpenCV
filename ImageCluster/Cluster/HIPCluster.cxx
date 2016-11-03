@@ -151,7 +151,7 @@ namespace larocv {
 		    << " HIPs : " << hip_ctor_v.size()
 		    << " Summed : " << all_ctor_v.size() << "\n";
 
-     auto& hip_data = AlgoData<larocv::HIPClusterData>();
+     auto& hip_data = AlgoData<data::HIPClusterData>();
      hip_data._mip_idx_v_v[meta.plane()] = mip_idx_v;
      hip_data._hip_idx_v_v[meta.plane()] = hip_idx_v;
      

@@ -94,7 +94,7 @@ namespace larocv {
 
     double PointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
 
-    CircleVertex TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
+    data::CircleVertex TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
 
     std::vector<float> RollingMean(const std::vector<float>& array,
 				   size_t pre, size_t post,
@@ -162,8 +162,8 @@ namespace larocv {
     /// creation method
     ImageClusterBase* create(const std::string instance_name) { return new Refine2DVertex(instance_name); }
     /// data create method
-    AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new Refine2DVertexData(instance_name,id);}
+    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
+    { return new data::Refine2DVertexData(instance_name,id);}
   };
 }
 #endif
