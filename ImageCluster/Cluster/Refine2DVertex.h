@@ -20,7 +20,7 @@
 #include "Core/Line.h"
 #include "Core/VectorArray.h"
 #include "Core/BoundingBox.h"
-#include "AlgoData/Vertex.h"
+#include "AlgoData/AlgoDataVertex.h"
 #include "AlgoData/Refine2DVertexData.h"
 namespace larocv {
   /**

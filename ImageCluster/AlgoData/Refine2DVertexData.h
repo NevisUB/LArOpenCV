@@ -19,7 +19,7 @@
 #include "Core/Line.h"
 #include "Core/Circle.h"
 #include "Core/BoundingBox.h"
-#include "AlgoData/Vertex.h"
+#include "AlgoData/AlgoDataVertex.h"
 #include "Base/AlgoDataBase.h"
 namespace larocv {
 
