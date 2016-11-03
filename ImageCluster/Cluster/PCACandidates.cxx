@@ -51,7 +51,7 @@ namespace larocv {
     const auto& defectcluster_plane_data = defectcluster_data._plane_data[meta.plane()];
     
     //original clusters (track clusters, MIP/HIP clusters for example)
-    unsigned n_original_clusters   = defectcluster_plane_data._n_input_ctors;
+    unsigned n_original_clusters   = defectcluster_plane_data.num_clusters();
 
     //association between atomic cluster and original cluster
     const auto& atomic_ctor_ass_v_v  = defectcluster_plane_data._atomic_ctor_ass_vv;
