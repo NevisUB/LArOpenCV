@@ -38,7 +38,7 @@ LDFLAGS += -lLArOpenCV_ImageClusterUtil
 LDFLAGS += -lLArOpenCV_ImageClusterMatch
 LDFLAGS += -lLArOpenCV_ImageClusterMerge
 LDFLAGS += -lLArOpenCV_ImageClusterFilter
-LDFLAGS += -lLArOpenCV_ImageClusterReCluster
+#LDFLAGS += -lLArOpenCV_ImageClusterReCluster
 LDFLAGS += -lLArOpenCV_ImageClusterStartPoint
 LDFLAGS += -lLArOpenCV_ImageClusterDebug
 
