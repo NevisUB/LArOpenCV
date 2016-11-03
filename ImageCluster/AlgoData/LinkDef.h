@@ -18,7 +18,8 @@
 #pragma link C++ class larocv::Refine2DVertexPlaneData+;
 #pragma link C++ class larocv::LinearVtxFilterData+;
 #pragma link C++ class larocv::LinearVtxFilterPlaneData+;
-
+#pragma link C++ class larocv::VertexCluster+;
+#pragma link C++ class larocv::VertexClusterArray+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
 
