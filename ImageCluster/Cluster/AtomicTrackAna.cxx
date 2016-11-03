@@ -28,7 +28,7 @@ namespace larocv{
 				 larocv::ImageMeta& meta,
 				 larocv::ROI& roi)
   {
-    auto& data = AlgoData<larocv::AtomicTrackAnaData>();
+    auto& data = AlgoData<data::AtomicTrackAnaData>();
     
     if(meta.plane()==0) {
       data._atomic_order_ctor_v_v.clear();
@@ -37,9 +37,9 @@ namespace larocv{
       data._atomic_kink_vv.resize(3);
     }
 
-    auto const& defectcluster_data  = AlgoData<DefectClusterData>(_def_algo_id); //Read defect points from previous calculations
-    auto const& pcacandidates_data  = AlgoData<PCACandidatesData>(_pca_algo_id); //Read PCA results from previous calculations
-    auto const& refine2dvertex_data = AlgoData<Refine2DVertexData>(_ref_algo_id);//Read vertex info from Refine2D    
+    auto const& defectcluster_data  = AlgoData<data::DefectClusterData>(_def_algo_id); //Read defect points from previous calculations
+    auto const& pcacandidates_data  = AlgoData<data::PCACandidatesData>(_pca_algo_id); //Read PCA results from previous calculations
+    auto const& refine2dvertex_data = AlgoData<data::Refine2DVertexData>(_ref_algo_id);//Read vertex info from Refine2D    
     
     LAROCV_DEBUG()<< " On plane : " << meta.plane() << std::endl;
     LAROCV_DEBUG()<< " 4_ref_algo_id is : "<<_ref_algo_id<<std::endl;
@@ -289,7 +289,7 @@ namespace larocv{
 
     }
     
-    //auto const& ref_data = this->AlgoData<larocv::Refine2DVertexData>(_vtx_algo_id);
+    //auto const& ref_data = this->AlgoData<data::Refine2DVertexData>(_vtx_algo_id);
     
     
     }

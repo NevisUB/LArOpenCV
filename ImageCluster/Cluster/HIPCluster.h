@@ -31,9 +31,9 @@ namespace larocv {
     void _Configure_(const ::fcllite::PSet &pset);
     
     larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
-				      const ::cv::Mat& img,
-				      larocv::ImageMeta& meta,
-				      larocv::ROI& roi);
+				       const ::cv::Mat& img,
+				       larocv::ImageMeta& meta,
+				       larocv::ROI& roi);
     
   private:
 
@@ -48,35 +48,37 @@ namespace larocv {
   };
 
 
-  class HIPClusterData : public AlgoDataBase {
+  namespace data {
+    class HIPClusterData : public AlgoDataBase {
        
-  public:
+    public:
     
-    /// Default constructor
-    HIPClusterData(std::string name="NoName", AlgorithmID_t id=0)
-      : AlgoDataBase(name,id)
-    { Clear(); }
+      /// Default constructor
+      HIPClusterData(std::string name="NoName", AlgorithmID_t id=0)
+	: AlgoDataBase(name,id)
+      { Clear(); }
     
-    /// Default destructor
-    ~HIPClusterData(){}
+      /// Default destructor
+      ~HIPClusterData(){}
 
-    /// Clear method override
-    void Clear() {
-      _mip_idx_v_v.clear();
-      _hip_idx_v_v.clear();
+      /// Clear method override
+      void Clear() {
+	_mip_idx_v_v.clear();
+	_hip_idx_v_v.clear();
       
-      _mip_idx_v_v.resize(3);
-      _hip_idx_v_v.resize(3);
-    }
+	_mip_idx_v_v.resize(3);
+	_hip_idx_v_v.resize(3);
+      }
     
-    std::vector<std::vector<size_t> > _mip_idx_v_v;
-    std::vector<std::vector<size_t> > _hip_idx_v_v;
+      std::vector<std::vector<size_t> > _mip_idx_v_v;
+      std::vector<std::vector<size_t> > _hip_idx_v_v;
 
-  };
+    };
+  }
   /**
      \class larocv::HIPClusterFactory
      \brief A concrete factory class for larocv::HIPCluster
-   */
+  */
   class HIPClusterFactory : public AlgoFactoryBase {
   public:
     /// ctor
@@ -86,8 +88,8 @@ namespace larocv {
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new HIPCluster(instance_name); }
     /// data create method
-    AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new HIPClusterData(instance_name,id);}
+    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
+    { return new data::HIPClusterData(instance_name,id);}
   };
   
 }

@@ -23,8 +23,8 @@ namespace larocv {
 			      larocv::ROI& roi)
   {
 
-    const auto& hipcluster_data = AlgoData<HIPClusterData>(_hip_cluster_algo_id);
-    auto& data            = AlgoData<HIPMIPTouchData>();
+    const auto& hipcluster_data = AlgoData<data::HIPClusterData>(_hip_cluster_algo_id);
+    auto& data            = AlgoData<data::HIPMIPTouchData>();
     auto& hip_mip_touch_pts_v = data._hip_mip_touch_pts_v_v[meta.plane()];
     
     //get the mip/hip indices

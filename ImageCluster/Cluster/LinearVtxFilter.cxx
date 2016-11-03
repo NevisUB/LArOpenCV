@@ -240,12 +240,12 @@ namespace larocv {
   bool LinearVtxFilter::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
     
-    auto& data = AlgoData<LinearVtxFilterData>();
+    auto& data = AlgoData<data::LinearVtxFilterData>();
 
     auto& vtx3d_kink_ass_v = data._vtx3d_kink_ass_v;
     auto& vtx3d_curve_ass_v = data._vtx3d_curve_ass_v;
     
-    const auto& refine2d_data = AlgoData<Refine2DVertexData>(_refine2d_algo_id);
+    const auto& refine2d_data = AlgoData<data::Refine2DVertexData>(_refine2d_algo_id);
     const auto& vtx3d_v = refine2d_data._vtx3d_v;
 
     std::vector<cv::Mat> thresh_img_v;

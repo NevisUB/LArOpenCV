@@ -441,9 +441,9 @@ namespace larocv{
     return dtheta_sum;
   }
 
-  CircleVertex Refine2DVertex::TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt)
+  data::CircleVertex Refine2DVertex::TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt)
   {
-    CircleVertex invalid_circle, inner_circle, outer_circle;
+    data::CircleVertex invalid_circle, inner_circle, outer_circle;
     invalid_circle.Clear();
     inner_circle.Clear();
     outer_circle.Clear();
@@ -491,7 +491,7 @@ namespace larocv{
 	auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
 	// Alternative (and probably better/faster): compute y spread in polar coordinate
 	LAROCV_DEBUG() << "Line (inner) ID " << xs_idx << " found xs " << xs_pt << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
-	inner_circle.xs_v.push_back(larocv::PointPCA(xs_pt,local_pca));
+	inner_circle.xs_v.push_back(data::PointPCA(xs_pt,local_pca));
 	inner_circle.dtheta_v.push_back(fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)));
 	inner_dtheta_sum += inner_circle.dtheta_v.back();
       }catch(const larbys& err){
@@ -507,7 +507,7 @@ namespace larocv{
 	auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
 	// Alternative (and probably better/faster): compute y spread in polar coordinate
 	LAROCV_DEBUG() << "Line (outer) ID " << xs_idx << " found xs " << xs_pt << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
-	outer_circle.xs_v.push_back(larocv::PointPCA(xs_pt,local_pca));
+	outer_circle.xs_v.push_back(data::PointPCA(xs_pt,local_pca));
 	outer_circle.dtheta_v.push_back(fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)));
 	outer_dtheta_sum += outer_circle.dtheta_v.back();
       }catch(const larbys& err){
@@ -533,7 +533,7 @@ namespace larocv{
 		   << " @ point " << init_circle.center << std::endl;
 
     auto& scan_marker = _scan_marker_v[plane];
-    auto& plane_data  = AlgoData<larocv::Refine2DVertexData>()._plane_data.at(plane);
+    auto& plane_data  = AlgoData<data::Refine2DVertexData>()._plane_data.at(plane);
     auto& init_vtx_v  = plane_data._init_vtx_v;
     auto& scan_rect_v = plane_data._scan_rect_v;    
     auto& circle_scan_v = plane_data._circle_scan_v;
@@ -694,7 +694,7 @@ namespace larocv{
 				 larocv::ImageMeta& meta,
 				 larocv::ROI& roi)
   {
-    auto& data = AlgoData<larocv::Refine2DVertexData>();
+    auto& data = AlgoData<data::Refine2DVertexData>();
 
     if(_scan_marker_v.size() <= meta.plane())
       _scan_marker_v.resize(meta.plane()+1);
@@ -726,7 +726,7 @@ namespace larocv{
     circle.radius = _radius;
 
     if(_defect_algo_id != kINVALID_ID) {
-      auto const& defect_pts = AlgoData<larocv::DefectClusterData>(_defect_algo_id);
+      auto const& defect_pts = AlgoData<data::DefectClusterData>(_defect_algo_id);
       for(auto const& defect_pt : defect_pts._plane_data[meta.plane()]._ctor_defect_v) {
 	const auto pt = defect_pt._pt_defect;
 	LAROCV_INFO() << "Scanning Defect point: " << pt << std::endl;
@@ -736,7 +736,7 @@ namespace larocv{
     }
 
     if(_pca_algo_id != kINVALID_ID) {
-      auto const& pca_pts    = AlgoData<larocv::PCACandidatesData>(_pca_algo_id);    
+      auto const& pca_pts    = AlgoData<data::PCACandidatesData>(_pca_algo_id);    
       for(auto const& pt : pca_pts._ipoints_v_v[meta.plane()]) {
 	LAROCV_INFO() << "Scanning PCACandidate point: " << pt << std::endl;
 	circle.center = pt;
@@ -757,7 +757,7 @@ namespace larocv{
   {
     // Combine 3 plane information and make the best guesses as to which time tick may contain vertex(es)
     // To do this, we loop over time tick over all available planes first
-    auto& data = AlgoData<larocv::Refine2DVertexData>();
+    auto& data = AlgoData<data::Refine2DVertexData>();
     auto& plane_data_v = data._plane_data;
     // Initialize results
     for(size_t plane=0; plane<img_v.size(); ++plane) {
@@ -1004,7 +1004,7 @@ namespace larocv{
 
   void Refine2DVertex::XPlaneWireScan(const std::vector<const cv::Mat>& img_v)
   {
-    auto& data = AlgoData<larocv::Refine2DVertexData>();
+    auto& data = AlgoData<data::Refine2DVertexData>();
     // Find candidate circles nearby proposed ticks
     for(auto const& binned_tick_idx : _time_binned_minidx_v) {
 
@@ -1177,7 +1177,7 @@ namespace larocv{
 	vtx3d.vtx2d_v[seed1_plane].score = circle1.sum_dtheta();
 	
 	// Construct & fill candidate 2D CircleVertex for seed planes
-	std::vector<larocv::CircleVertex> circle_vtx_v(img_v.size());
+	std::vector<data::CircleVertex> circle_vtx_v(img_v.size());
 	circle_vtx_v[seed0_plane] = circle0;
 	circle_vtx_v[seed1_plane] = circle1;
 	float approx_x = (circle0.center.x + circle1.center.x)/2.;

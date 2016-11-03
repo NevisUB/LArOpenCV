@@ -21,7 +21,7 @@ namespace larocv {
 						    larocv::ROI& roi)
   {
     if(this->ID()==0) throw larbys("DefectCluster should not be run 1st!");
-    auto& data          = AlgoData<larocv::DefectClusterData>();
+    auto& data          = AlgoData<data::DefectClusterData>();
 
     auto& plane_data    = data._plane_data[meta.plane()];
 

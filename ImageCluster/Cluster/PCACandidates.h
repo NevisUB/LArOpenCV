@@ -46,46 +46,47 @@ namespace larocv {
     int _nonzero_pixel_thresh;
   };
 
-  /**
-     \class PCACandidatesData
-     @brief only for vic
-  */
-  class PCACandidatesData : public AlgoDataBase {
+  namespace data {
+    /**
+       \class PCACandidatesData
+       @brief only for vic
+    */
+    class PCACandidatesData : public AlgoDataBase {
     
-  public:
+    public:
     
-    /// Default constructor
-    PCACandidatesData(std::string name="NoName", AlgorithmID_t id=0)
-      : AlgoDataBase(name,id)
-    {  Clear(); }
+      /// Default constructor
+      PCACandidatesData(std::string name="NoName", AlgorithmID_t id=0)
+	: AlgoDataBase(name,id)
+      {  Clear(); }
     
-    /// Default destructor
-    ~PCACandidatesData(){}
+      /// Default destructor
+      ~PCACandidatesData(){}
 
-    /// Clear method override
+      /// Clear method override
 
-    AlgorithmID_t _input_id;
-    std::vector<std::vector<geo2d::Line<float> > >  _ctor_lines_v_v;
-    std::vector<std::vector<geo2d::Vector<float> > > _ipoints_v_v;
-    std::vector<std::vector<std::vector<size_t > > > _atomic_ctor_ass_v_v_v;
-
-
-    void Clear() {
-      _ctor_lines_v_v.clear();      
-      _ipoints_v_v.clear();
-      _atomic_ctor_ass_v_v_v.clear();
+      AlgorithmID_t _input_id;
+      std::vector<std::vector<geo2d::Line<float> > >  _ctor_lines_v_v;
+      std::vector<std::vector<geo2d::Vector<float> > > _ipoints_v_v;
+      std::vector<std::vector<std::vector<size_t > > > _atomic_ctor_ass_v_v_v;
 
 
-      _ctor_lines_v_v.resize(3);      
-      _ipoints_v_v.resize(3);
-      _atomic_ctor_ass_v_v_v.resize(3);
+      void Clear() {
+	_ctor_lines_v_v.clear();      
+	_ipoints_v_v.clear();
+	_atomic_ctor_ass_v_v_v.clear();
 
-      _input_id = kINVALID_ID;
-    }
 
-  };
+	_ctor_lines_v_v.resize(3);      
+	_ipoints_v_v.resize(3);
+	_atomic_ctor_ass_v_v_v.resize(3);
 
-  
+	_input_id = kINVALID_ID;
+      }
+
+    };
+
+  }  
   /**
      \class larocv::PCACandidatesFactory
      \brief A concrete factory class for larocv::PCACandidates
@@ -99,8 +100,8 @@ namespace larocv {
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new PCACandidates(instance_name); }
     /// data create method
-    AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new PCACandidatesData(instance_name,id);}
+    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
+    { return new data::PCACandidatesData(instance_name,id);}
   };
   
 }
