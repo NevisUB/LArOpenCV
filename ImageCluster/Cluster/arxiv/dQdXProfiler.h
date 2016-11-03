@@ -43,43 +43,44 @@ namespace larocv {
     float _dx_resolution;
   };
 
-  class dQdXProfilerData : public AlgoDataBase {
-  public:
-    dQdXProfilerData(std::string name="NoName", AlgorithmID_t id=0)
-      : AlgoDataBase(name,id)
-    { Clear();}
-    ~dQdXProfilerData() {}
+  namespace data {
+    class dQdXProfilerData : public AlgoDataBase {
+    public:
+      dQdXProfilerData(std::string name="NoName", AlgorithmID_t id=0)
+	: AlgoDataBase(name,id)
+      { Clear();}
+      ~dQdXProfilerData() {}
 
-    void Clear() {
-      _pt2cluster_vv.resize(3);
-      _pts_vv.resize(3);
-      _dqdx_vv.resize(3);
-      _pt2dist_vv.resize(3);
-      _bounds_vv.resize(3);
-      _o_dqdx_vvv.resize(3);
-      _dqdx_atomic_vvvv.resize(3);
-      for(size_t i=0; i<3; ++i) {
-	_pt2cluster_vv[i].clear();
-	_pts_vv[i].clear();
-	_dqdx_vv[i].clear();
-	_pt2dist_vv[i].clear();
-	_bounds_vv[i].clear();
-	_o_dqdx_vvv[i].clear();
-	_dqdx_atomic_vvvv[i].clear();
+      void Clear() {
+	_pt2cluster_vv.resize(3);
+	_pts_vv.resize(3);
+	_dqdx_vv.resize(3);
+	_pt2dist_vv.resize(3);
+	_bounds_vv.resize(3);
+	_o_dqdx_vvv.resize(3);
+	_dqdx_atomic_vvvv.resize(3);
+	for(size_t i=0; i<3; ++i) {
+	  _pt2cluster_vv[i].clear();
+	  _pts_vv[i].clear();
+	  _dqdx_vv[i].clear();
+	  _pt2dist_vv[i].clear();
+	  _bounds_vv[i].clear();
+	  _o_dqdx_vvv[i].clear();
+	  _dqdx_atomic_vvvv[i].clear();
+	}
       }
-    }
 
-    std::vector<std::vector<size_t> > _pt2cluster_vv;
-    std::vector<geo2d::VectorArray<int> > _pts_vv;
-    std::vector<std::vector<float> > _dqdx_vv;
-    std::vector<std::vector<float> > _pt2dist_vv;
-    std::vector<std::vector<std::pair<float,float> > > _bounds_vv;
-    std::vector<std::vector<std::vector<float> > > _o_dqdx_vvv;
-    //plane/////cluster////dqdx
-    std::vector<std::vector<std::vector<std::vector<float>> > > _dqdx_atomic_vvvv;//dqdx based on order from AtomicTrackAna
+      std::vector<std::vector<size_t> > _pt2cluster_vv;
+      std::vector<geo2d::VectorArray<int> > _pts_vv;
+      std::vector<std::vector<float> > _dqdx_vv;
+      std::vector<std::vector<float> > _pt2dist_vv;
+      std::vector<std::vector<std::pair<float,float> > > _bounds_vv;
+      std::vector<std::vector<std::vector<float> > > _o_dqdx_vvv;
+      //plane/////cluster////dqdx
+      std::vector<std::vector<std::vector<std::vector<float>> > > _dqdx_atomic_vvvv;//dqdx based on order from AtomicTrackAna
     
-  };
-
+    };
+  }
   /**
      \class larocv::dQdXProfilerFactory
      \brief A concrete factory class for larocv::dQdXProfiler
@@ -93,8 +94,8 @@ namespace larocv {
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new dQdXProfiler(instance_name); }
     /// data create method
-    AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new dQdXProfilerData(instance_name,id);}
+    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
+    { return new data::dQdXProfilerData(instance_name,id);}
   };
   
 }

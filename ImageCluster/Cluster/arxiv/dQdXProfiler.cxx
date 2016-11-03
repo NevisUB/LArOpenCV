@@ -38,11 +38,11 @@ namespace larocv {
     cv::Mat thresh_img = img;
     //::cv::threshold(img, thresh_img, 10,255,CV_THRESH_BINARY);
 
-    auto const& pca_data    = AlgoData<larocv::PCACandidatesData>(_pca_algo_id);
-    auto const& defect_data = AlgoData<larocv::DefectClusterData>(pca_data._input_id);
+    auto const& pca_data    = AlgoData<data::PCACandidatesData>(_pca_algo_id);
+    auto const& defect_data = AlgoData<data::DefectClusterData>(pca_data._input_id);
     //    auto const& atomic_data = AlgoData<larocv::AtomicTrackAnaData>(_atomic_algo_id);
 
-    auto& data = AlgoData<larocv::dQdXProfilerData>();
+    auto& data = AlgoData<data::dQdXProfilerData>();
 
     // Construct cluster=>line mapping ... elaborated due to how PCACandidates stores info
     // First construct a pointer vector
@@ -329,9 +329,9 @@ namespace larocv {
     }
     
     //reorder dqdx
-    auto const& defectcluster_data   = AlgoData<DefectClusterData>(_def_algo_id);     //Read defect points from previous calculations
-    auto const& atomictrackana_data  = AlgoData<AtomicTrackAnaData>(_atomic_algo_id); //Read atomics info from previous calculations
-    //auto const& refine2dvertex_data = AlgoData<Refine2DVertexData>(_ref_algo_id);
+    auto const& defectcluster_data   = AlgoData<data::DefectClusterData>(_def_algo_id);     //Read defect points from previous calculations
+    auto const& atomictrackana_data  = AlgoData<data::AtomicTrackAnaData>(_atomic_algo_id); //Read atomics info from previous calculations
+    //auto const& refine2dvertex_data = AlgoData<data::Refine2DVertexData>(_ref_algo_id);
     LAROCV_DEBUG()<<"9 _atomic_algo_id is "<<_atomic_algo_id<<std::endl;
     
     auto const& atomic_ass_v_v      = defectcluster_data._plane_data[meta.plane()]._atomic_ctor_ass_vv;

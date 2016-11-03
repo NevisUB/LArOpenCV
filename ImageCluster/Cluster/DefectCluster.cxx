@@ -156,7 +156,7 @@ namespace larocv {
 	   continue;	   
 	 }
 
-	 ContourDefect contour_defect;
+	 data::ContourDefect contour_defect;
 	 ctor_defect_v.emplace_back(ctor[chosen_edge[0]],
 				    ctor[chosen_edge[1]],
 				    ctor[chosen_edge[2]],
