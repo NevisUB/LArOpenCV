@@ -32,7 +32,7 @@ namespace larocv {
     _use_theta_half_angle = true;
   }
 
-  std::vector<std::vector<geo2d::Vector<float> > >
+  std::vector<larocv::data::ParticleCluster >
   VertexTrackCluster::TrackHypothesis(const ::cv::Mat& img,
 				      const data::CircleVertex& vtx)
   {
@@ -40,7 +40,7 @@ namespace larocv {
     auto const& ref_vtx  = vtx.center;
     auto const& ref_xs_v = vtx.xs_v;
 
-    std::vector< std::vector< geo2d::Vector<float> > >result_v;
+    std::vector< larocv::data::ParticleCluster >result_v;
 
     bool use_half_angle = (ref_xs_v.size() > 2) && _use_theta_half_angle;
     
@@ -234,7 +234,8 @@ namespace larocv {
       
       //Cluster2D res_contour;
       //res_contour._contour.resize(polar_contour.size());
-      std::vector<geo2d::Vector<float> > contour;
+      larocv::data::ParticleCluster part;
+      auto& contour = part._ctor;
       contour.resize(polar_contour.size());
 
       std::stringstream ss5;
@@ -275,8 +276,8 @@ namespace larocv {
       // std::stringstream pp1;
       // pp1 << "polar_ctor_mat_"<<meta.plane()<<".png";
       // cv::imwrite(pp1.str().c_str(),polar_ctor_mat);
-      
-      result_v.emplace_back(std::move(contour));
+
+      result_v.emplace_back(std::move(part));
     }
 
     return result_v;
@@ -295,12 +296,12 @@ namespace larocv {
 
       auto const& ref_data = AlgoData<data::Refine2DVertexData>(_refine2d_algo_id);
 
-      data._vtx_cluster_v.resize(ref_data._vtx3d_v.size());
+      data._vtx_cluster_v.resize(ref_data.get_vertex().size());
       
-      for(size_t vtx_id = 0; vtx_id < ref_data._vtx3d_v.size(); ++vtx_id) {
+      for(size_t vtx_id = 0; vtx_id < ref_data.get_vertex().size(); ++vtx_id) {
 
-	auto const& vtx3d = ref_data._vtx3d_v[vtx_id];
-	auto const& circle_vtx_v = ref_data._circle_vtx_vv[vtx_id];
+	auto const& vtx3d = ref_data.get_vertex()[vtx_id];
+	auto const& circle_vtx_v = ref_data.get_circle_vertex(vtx3d.id());
 
 	auto& vtx_cluster = data._vtx_cluster_v[vtx_id];
 	if(!vtx_cluster.num_planes())
@@ -316,7 +317,7 @@ namespace larocv {
       auto cluster_v = TrackHypothesis(img,circle_vtx);
       for(size_t cidx=0; cidx<cluster_v.size(); ++cidx) {
 	auto& cluster = cluster_v[cidx];
-	vtx_cluster.emplace(plane,std::move(cluster));
+	vtx_cluster.emplace_back(plane,std::move(cluster));
       }
     }
 

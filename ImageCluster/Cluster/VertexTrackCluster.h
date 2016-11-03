@@ -43,7 +43,7 @@ namespace larocv {
     
   private:
     
-    std::vector< std::vector<geo2d::Vector<float> > >  TrackHypothesis(const ::cv::Mat& img,
+    std::vector<larocv::data::ParticleCluster>  TrackHypothesis(const ::cv::Mat& img,
 								       const data::CircleVertex& vtx);
 
     AlgorithmID_t _refine2d_algo_id;

@@ -533,7 +533,7 @@ namespace larocv{
 		   << " @ point " << init_circle.center << std::endl;
 
     auto& scan_marker = _scan_marker_v[plane];
-    auto& plane_data  = AlgoData<data::Refine2DVertexData>()._plane_data.at(plane);
+    auto& plane_data  = AlgoData<data::Refine2DVertexData>().get_plane_data_writeable(plane);
     auto& init_vtx_v  = plane_data._init_vtx_v;
     auto& scan_rect_v = plane_data._scan_rect_v;    
     auto& circle_scan_v = plane_data._circle_scan_v;
@@ -579,15 +579,15 @@ namespace larocv{
     if(temp1_xs_v.size() == temp2_xs_v.size()) {
       init_vtx.xs_v.clear();
       for(size_t xs_idx=0; xs_idx<temp1_xs_v.size(); ++xs_idx)
-	init_vtx.xs_v.push_back(PointPCA(temp1_xs_v[xs_idx],temp1_pca_v[xs_idx]));
+	init_vtx.xs_v.push_back(data::PointPCA(temp1_xs_v[xs_idx],temp1_pca_v[xs_idx]));
     }else{
       init_vtx.xs_v.clear();
       if(temp1_xs_v.size() > temp2_xs_v.size()) {
 	for(size_t xs_idx=0; xs_idx<temp1_xs_v.size(); ++xs_idx)
-	  init_vtx.xs_v.push_back(PointPCA(temp1_xs_v[xs_idx],temp1_pca_v[xs_idx]));
+	  init_vtx.xs_v.push_back(data::PointPCA(temp1_xs_v[xs_idx],temp1_pca_v[xs_idx]));
       }else{
 	for(size_t xs_idx=0; xs_idx<temp2_xs_v.size(); ++xs_idx)
-	  init_vtx.xs_v.push_back(PointPCA(temp1_xs_v[xs_idx],temp1_pca_v[xs_idx]));
+	  init_vtx.xs_v.push_back(data::PointPCA(temp1_xs_v[xs_idx],temp1_pca_v[xs_idx]));
       }
     }
 
@@ -727,11 +727,13 @@ namespace larocv{
 
     if(_defect_algo_id != kINVALID_ID) {
       auto const& defect_pts = AlgoData<data::DefectClusterData>(_defect_algo_id);
-      for(auto const& defect_pt : defect_pts._plane_data[meta.plane()]._ctor_defect_v) {
-	const auto pt = defect_pt._pt_defect;
-	LAROCV_INFO() << "Scanning Defect point: " << pt << std::endl;
-	circle.center = pt;
-	found = PlaneScan(img,meta.plane(),circle,pt_err) || found;
+      for(auto const& compound : defect_pts._plane_data[meta.plane()].get_cluster()) {
+	for(auto const& defect_pt : compound.get_defects()) {
+	  const auto pt = defect_pt._pt_defect;
+	  LAROCV_INFO() << "Scanning Defect point: " << pt << std::endl;
+	  circle.center = pt;
+	  found = PlaneScan(img,meta.plane(),circle,pt_err) || found;
+	}
       }
     }
 
@@ -745,11 +747,11 @@ namespace larocv{
     }
     
     if(!found) {
-      data._plane_data.at(meta.plane())._valid_plane = false;
+      data.get_plane_data_writeable(meta.plane())._valid_plane = false;
       return;
     }
 
-    data._plane_data.at(meta.plane())._valid_plane = true;
+    data.get_plane_data_writeable(meta.plane())._valid_plane = true;
 
   }
 
@@ -758,12 +760,9 @@ namespace larocv{
     // Combine 3 plane information and make the best guesses as to which time tick may contain vertex(es)
     // To do this, we loop over time tick over all available planes first
     auto& data = AlgoData<data::Refine2DVertexData>();
-    auto& plane_data_v = data._plane_data;
     // Initialize results
-    for(size_t plane=0; plane<img_v.size(); ++plane) {
-      //auto& plane_data = data._plane_data.at(plane);
+    for(size_t plane=0; plane<img_v.size(); ++plane)
       _time_binned_score_v.clear();
-    }
 
     // Compute tick offset per plane
     auto tick_offset_v = _tick_offset_v; // should be a copy
@@ -779,7 +778,7 @@ namespace larocv{
     _xplane_tick_min = -1;
     _xplane_tick_max = -1;
     for(size_t plane=0; plane<img_v.size(); ++plane){
-      auto const& plane_data = plane_data_v.at(plane);
+      auto const& plane_data = data.get_plane_data(plane);
       if(!plane_data._valid_plane) continue;
       for(auto const& bbox : plane_data._scan_rect_v) {
 
@@ -811,7 +810,7 @@ namespace larocv{
     }
      
     for(size_t plane=0; plane<img_v.size(); ++plane) {
-      auto& plane_data = plane_data_v.at(plane);
+      auto& plane_data = data.get_plane_data_writeable(plane);
       std::cout<<"Plane " << plane << " ..."<<std::endl;
       if(!plane_data._valid_plane) continue;
       auto const& circle_scan_v  = plane_data._circle_scan_v;
@@ -850,7 +849,7 @@ namespace larocv{
       dtheta_sum = 0.;
       LAROCV_DEBUG() << "At tick " << tick << "/" << num_ticks << std::endl;
       for(size_t plane=0; plane < img_v.size(); ++plane) {
-	auto const& plane_data = data._plane_data[plane];
+	auto const& plane_data = data.get_plane_data(plane);
 	if(!plane_data._valid_plane) continue;
 
 	LAROCV_DEBUG() << "    Plane " << plane << " dtheta = " << _time_binned_score_v[tick] << std::endl;
@@ -1022,7 +1021,7 @@ namespace larocv{
 	  throw larbys();
 	}
 
-	auto const& plane_data = data._plane_data[plane];
+	auto const& plane_data = data.get_plane_data(plane);
 	float dist=0;
 	for(size_t circle_idx=0; circle_idx<plane_data._circle_scan_v.size(); ++circle_idx) {
 	  auto const& circle = plane_data._circle_scan_v[circle_idx];
@@ -1052,8 +1051,8 @@ namespace larocv{
       std::multimap<float,std::pair<size_t,size_t> > scoremap_2plane;
       std::multimap<float,std::pair<size_t,size_t> > scoremap_3plane;
       
-      auto const& seed0_data = data._plane_data[seed0_plane];
-      auto const& seed1_data = data._plane_data[seed1_plane];      
+      auto const& seed0_data = data.get_plane_data(seed0_plane);
+      auto const& seed1_data = data.get_plane_data(seed1_plane);      
       // Construct all possible candidate vertexes
       for(auto const& circle0_idx : seed_circle_idx_v[seed0_plane]) {
 	auto const& circle0 = seed0_data._circle_scan_v[circle0_idx];
@@ -1090,7 +1089,7 @@ namespace larocv{
 	  if(check_plane != kINVALID_SIZE) {
 	    float  approx_wire2 = larocv::WireCoordinate(y,z,check_plane);
 	    float  dist_min = 1e9;
-	    auto const& check_data = data._plane_data[check_plane];
+	    auto const& check_data = data.get_plane_data(check_plane);
 	    float  check_dtheta  = -1;
 	    for(auto const& circle2_idx : seed_circle_idx_v[check_plane]) {
 	      auto const& circle2 = check_data._circle_scan_v[circle2_idx];
@@ -1187,7 +1186,7 @@ namespace larocv{
 	  float  approx_wire = larocv::WireCoordinate(y,z,plane);
 	  float  approx_y = (approx_wire - _origin_v[plane].y) / _wire_comp_factor_v[plane];
 	  float  dist_min = 1e9;
-	  auto const& plane_data = data._plane_data[plane];
+	  auto const& plane_data = data.get_plane_data(plane);
 	  float  closest_dtheta = -1;
 	  for(auto const& circle_idx : seed_circle_idx_v[plane]) {
 	    auto const& circle = plane_data._circle_scan_v[circle_idx];
@@ -1220,8 +1219,7 @@ namespace larocv{
 	  vtx3d.vtx2d_v[plane].score = circle_vtx_v[plane].sum_dtheta();
 	  if(!vtx3d.vtx2d_v[plane].score) vtx3d.vtx2d_v[plane].score = -1;
 	}
-	data._circle_vtx_vv.push_back(circle_vtx_v);
-	data._vtx3d_v.push_back(vtx3d);
+	data.emplace_back(std::move(vtx3d),std::move(circle_vtx_v));
       }
     }
   }
