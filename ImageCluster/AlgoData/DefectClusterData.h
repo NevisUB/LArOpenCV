@@ -9,9 +9,15 @@ namespace larocv {
 
   namespace data {
 
+    // forward declaration for friends
     class ContourDefect;
+    class ClusterCompound;
+    class DefectClusterPlaneData;
+    class ParticleCompoundArray;
+    class DefectClusterData;
     
     class AtomicContour {
+      friend class ClusterCompound;
     public:
       
       AtomicContour(size_t atomic_id = kINVALID_SIZE)
@@ -44,6 +50,7 @@ namespace larocv {
     };
     
     class ContourDefect {
+      friend class ClusterCompound;
     public:
       
       ContourDefect(size_t defect_id = kINVALID_SIZE)
@@ -78,8 +85,10 @@ namespace larocv {
       size_t _defect_id; ///< unique ID of a defect point
       std::set<size_t> _atomic_id_s; ///< associated ID of atomic clusters
     };
-    
+
     class ClusterCompound {
+      friend class DefectClusterPlaneData;
+      friend class ParticleCompoundArray;
     public:
       
       ClusterCompound(size_t id=kINVALID_SIZE)
@@ -90,15 +99,19 @@ namespace larocv {
       void clear();
       /// returns unique cluster id
       size_t id() const;
-      
+
+      /// generate new atomic cluster w/ valid id
+      AtomicContour& make_atom();
+      /// generate new defect w/ valid id
+      ContourDefect& make_defect();
       /// copy-add atomic cluster
-      void insert(const AtomicContour& atom);
+      void push_back(const AtomicContour& atom);
       /// copy-add defect
-      void insert(const ContourDefect& defect);
+      void push_back(const ContourDefect& defect);
       /// in-place-add atomic cluster
-      void move(AtomicContour&& atom);
+      void emplace_back(AtomicContour&& atom);
       /// in-place-add defect
-      void move(ContourDefect&& defect);
+      void emplace_back(ContourDefect&& defect);
       /// retrieve a list of atomic clusters
       const std::vector<larocv::data::AtomicContour>& get_atoms() const;
       /// retrieve a list of defects
@@ -130,12 +143,12 @@ namespace larocv {
       const std::vector<larocv::data::ClusterCompound>& get_cluster() const;
       /// retrieve a list of clusters on this plane via id
       const larocv::data::ClusterCompound& get_cluster(size_t id) const;
-      /// reset total number of clusters on this plane
-      void set_num_clusters(size_t n);
+      /// generate a new cluster container
+      larocv::data::ClusterCompound& make_cluster();
       /// copy-insert a cluster
-      void insert(const ClusterCompound& c);
+      void push_back(const ClusterCompound& c);
       /// move-insert a cluster
-      void move(ClusterCompound&& c);
+      void emplace_back(ClusterCompound&& c);
       
     private:
       
@@ -148,6 +161,7 @@ namespace larocv {
        @brief per-vertex collection container for track clusters' defects across planes
     */
     class ParticleCompoundArray {
+      friend class DefectClusterData;
     public:
       ParticleCompoundArray(size_t id=kINVALID_SIZE) : _id(id)
       { clear(); }
@@ -155,14 +169,16 @@ namespace larocv {
       //
       // accessors
       //
-      /// get id (from Vertex3D)
+      /// get id 
       size_t id() const;
       /// get # of planes
       size_t num_planes() const;
       /// get # clusters
       size_t num_clusters(size_t plane) const;
       /// Plane-wise cluster list accessor
-      const std::vector<larocv::data::ClusterCompound>& get_compound(size_t plane) const;
+      const std::vector<larocv::data::ClusterCompound>& get_cluster(size_t plane) const;
+      /// Plane-wise cluster generation
+      larocv::data::ClusterCompound& make_cluster(size_t plane);
       //
       // modifiers
       //
@@ -171,12 +187,12 @@ namespace larocv {
       /// set # of planes
       void num_planes(size_t n);
       /// Cluster (per plane) appender
-      void insert(size_t plane, const larocv::data::ClusterCompound& cluster);
+      void push_back(size_t plane, const larocv::data::ClusterCompound& cluster);
       /// Cluster (per plane) appender
-      void move(size_t plane, larocv::data::ClusterCompound&& cluster);
+      void emplace_back(size_t plane, larocv::data::ClusterCompound&& cluster);
       
     private:
-      ///< ID that should correspond to Vertex3D
+      ///< ID 
       size_t _id;
       ///< an array of 2D clusters (per plane)
       std::vector<std::vector< larocv::data::ClusterCompound > > _cluster_vv;
@@ -195,6 +211,15 @@ namespace larocv {
       void Clear();
       
       std::vector<larocv::data::DefectClusterPlaneData> _plane_data;
+
+      /// copy-add vertex-wise ParticleClusterArray compound information
+      void push_back(const larocv::data::ParticleCompoundArray& col);
+      /// move-add vertex-wise ParticleClusterArray compound information
+      void emplace_back(const larocv::data::ParticleCompoundArray& col);
+      /// insert vertex-wise ParticleClusterArray compound specifying vertex id to be used as index
+      void insert(size_t vtx_id, const larocv::data::ParticleCompoundArray& col);
+      
+    private:
       std::vector<larocv::data::ParticleCompoundArray> _vtx_cluster_v;
     };
   }

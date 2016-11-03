@@ -69,33 +69,47 @@ namespace larocv {
     
     size_t ClusterCompound::id() const
     { return _cluster_id; }
+
+    AtomicContour& ClusterCompound::make_atom()
+    {
+      _atomic_ctor_v.push_back(AtomicContour());
+      _atomic_ctor_v.back()._atomic_id = _atomic_ctor_v.size() - 1;
+      return _atomic_ctor_v.back();
+    }
+
+    ContourDefect& ClusterCompound::make_defect()
+    {
+      _ctor_defect_v.push_back(ContourDefect());
+      _ctor_defect_v.back()._defect_id = _ctor_defect_v.size() - 1;
+      return _ctor_defect_v.back();
+    }
     
-    void ClusterCompound::insert(const AtomicContour& atom)
+    void ClusterCompound::push_back(const AtomicContour& atom)
     {
       if(atom.id() == kINVALID_SIZE) throw larbys("Cannot add an atom with invalid id...");
-      if(_atomic_ctor_v.size() <= atom.id()) _atomic_ctor_v.resize(atom.id()+1);
-      _atomic_ctor_v[atom.id()] = atom;
+      _atomic_ctor_v.push_back(atom);
+      _atomic_ctor_v.back()._atomic_id = _atomic_ctor_v.size() - 1;
     }
     
-    void ClusterCompound::insert(const ContourDefect& defect)
+    void ClusterCompound::push_back(const ContourDefect& defect)
     {
       if(defect.id() == kINVALID_SIZE) throw larbys("Cannot add an defect with invalid id...");
-      if(_ctor_defect_v.size() <= defect.id()) _ctor_defect_v.resize(defect.id()+1);
-      _ctor_defect_v[defect.id()] = defect;
+      _ctor_defect_v.push_back(defect);
+      _ctor_defect_v.back()._defect_id = _ctor_defect_v.size() - 1;
     }
     
-    void ClusterCompound::move(AtomicContour&& atom)
+    void ClusterCompound::emplace_back(AtomicContour&& atom)
     {
       if(atom.id() == kINVALID_SIZE) throw larbys("Cannot add an atom with invalid id...");
-      if(_atomic_ctor_v.size() <= atom.id()) _atomic_ctor_v.resize(atom.id()+1);
-      _atomic_ctor_v[atom.id()] = std::move(atom);
+      _atomic_ctor_v.emplace_back(std::move(atom));
+      _atomic_ctor_v.back()._atomic_id = _atomic_ctor_v.size() - 1;
     }
     
-    void ClusterCompound::move(ContourDefect&& defect)
+    void ClusterCompound::emplace_back(ContourDefect&& defect)
     {
       if(defect.id() == kINVALID_SIZE) throw larbys("Cannot add an defect with invalid id...");
-      if(_ctor_defect_v.size() <= defect.id()) _ctor_defect_v.resize(defect.id()+1);
-      _ctor_defect_v[defect.id()] = std::move(defect);
+      _ctor_defect_v.emplace_back(std::move(defect));
+      _ctor_defect_v.back()._defect_id = _ctor_defect_v.size() - 1;
     }
     
     const std::vector<larocv::data::AtomicContour>& ClusterCompound::get_atoms() const
@@ -133,21 +147,25 @@ namespace larocv {
       return _cluster_v[id];
     }
     
-    void DefectClusterPlaneData::set_num_clusters(size_t n)
-    { _cluster_v.resize(n); }
-    
-    void DefectClusterPlaneData::insert(const ClusterCompound& c)
+    void DefectClusterPlaneData::push_back(const ClusterCompound& c)
     {
       if(c.id() == kINVALID_SIZE) throw larbys("Cannot insert ClusterCompound with an invalid id");
-      if(c.id() >= _cluster_v.size()) _cluster_v.resize(c.id()+1);
-      _cluster_v[c.id()] = c;
+      _cluster_v.push_back(c);
+      _cluster_v.back()._cluster_id = _cluster_v.size()-1;
     }
     
-    void DefectClusterPlaneData::move(ClusterCompound&& c)
+    void DefectClusterPlaneData::emplace_back(ClusterCompound&& c)
     {
       if(c.id() == kINVALID_SIZE) throw larbys("Cannot insert ClusterCompound with an invalid id");
-      if(c.id() >= _cluster_v.size()) _cluster_v.resize(c.id()+1);
-      _cluster_v[c.id()] = std::move(c);
+      _cluster_v.emplace_back(std::move(c));
+      _cluster_v.back()._cluster_id = _cluster_v.size() - 1;
+    }
+
+    larocv::data::ClusterCompound& DefectClusterPlaneData::make_cluster()
+    {
+      _cluster_v.push_back(ClusterCompound());
+      _cluster_v.back()._cluster_id = _cluster_v.size() - 1;
+      return _cluster_v.back();
     }
 
     ///////////////////////////////////////////////////////////////
@@ -160,10 +178,10 @@ namespace larocv {
 
     size_t ParticleCompoundArray::num_clusters(size_t plane) const
     {
-      return get_compound(plane).size();
+      return get_cluster(plane).size();
     }
 
-    const std::vector<larocv::data::ClusterCompound>& ParticleCompoundArray::get_compound(size_t plane) const
+    const std::vector<larocv::data::ClusterCompound>& ParticleCompoundArray::get_cluster(size_t plane) const
     {
       if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
       return _cluster_vv[plane];
@@ -175,20 +193,29 @@ namespace larocv {
       _cluster_vv.resize(3);
     }
     
-    void ParticleCompoundArray::insert(size_t plane, const larocv::data::ClusterCompound& cluster)
+    void ParticleCompoundArray::push_back(size_t plane, const larocv::data::ClusterCompound& cluster)
     {
       if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
       auto& cluster_v = _cluster_vv[plane];
-      if(cluster_v.size() <= cluster.id()) cluster_v.resize(cluster.id()+1);
-      cluster_v[cluster.id()] = cluster;
+      cluster_v.push_back(cluster);
+      cluster_v.back()._cluster_id = cluster_v.size() - 1;
     }
 
-    void ParticleCompoundArray::move(size_t plane, larocv::data::ClusterCompound&& cluster)
+    void ParticleCompoundArray::emplace_back(size_t plane, larocv::data::ClusterCompound&& cluster)
     {
       if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
       auto& cluster_v = _cluster_vv[plane];
-      if(cluster_v.size() <= cluster.id()) cluster_v.resize(cluster.id()+1);
-      cluster_v[cluster.id()] = std::move(cluster);
+      cluster_v.emplace_back(std::move(cluster));
+      cluster_v.back()._cluster_id = cluster_v.size() - 1;
+    }
+
+    larocv::data::ClusterCompound& ParticleCompoundArray::make_cluster(size_t plane)
+    {
+      if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
+      auto& cluster_v = _cluster_vv[plane];
+      cluster_v.push_back(ClusterCompound());
+      cluster_v.back()._cluster_id = cluster_v.size() - 1;
+      return cluster_v.back();
     }
     
     ///////////////////////////////////////////////////////////////
@@ -199,6 +226,29 @@ namespace larocv {
       _plane_data.resize(3);
       _vtx_cluster_v.clear();
     }
+
+    void DefectClusterData::push_back(const larocv::data::ParticleCompoundArray& col)
+    {
+      _vtx_cluster_v.push_back(col);
+      _vtx_cluster_v.back()._id = _vtx_cluster_v.size() - 1;
+    }
+
+    void DefectClusterData::emplace_back(const larocv::data::ParticleCompoundArray& col)
+    {
+      _vtx_cluster_v.emplace_back(std::move(col));
+      _vtx_cluster_v.back()._id = _vtx_cluster_v.size() - 1;
+    }
+    
+    void DefectClusterData::insert(size_t vtx_id, const larocv::data::ParticleCompoundArray& col)
+    {
+      while(_vtx_cluster_v.size() <= vtx_id) {
+	_vtx_cluster_v.push_back(ParticleCompoundArray());
+	_vtx_cluster_v.back()._id = _vtx_cluster_v.size() - 1;
+      }
+      _vtx_cluster_v[vtx_id] = col;
+      _vtx_cluster_v[vtx_id]._id = vtx_id;
+    }
+
   }
 }
 #endif
