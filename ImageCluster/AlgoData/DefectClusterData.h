@@ -73,7 +73,7 @@ namespace larocv {
     /// list of atomic contours for this plane
     std::vector< AtomicContour > _atomic_ctor_v;
     std::vector< ContourDefect > _ctor_defect_v;
-    std::vector< std::vector< size_t > > _atomic_ctor_ass_vv;
+    std::vector< std::vector< size_t > > _atomic_ctor_ass_vv;//outer index is cluster index on this plane; inner index is the atomic index in outter index cluster; in this way you get atomic on the same cluster
     int _n_input_ctors;
     
     
