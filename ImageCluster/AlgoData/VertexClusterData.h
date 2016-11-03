@@ -23,13 +23,29 @@
 
 namespace larocv {
 
-  class VertexCluster {
+  class ParticleCluster {
   public:
-    VertexCluster() { clear(); }
-    ~VertexCluster() {}
+    ParticleCluster(size_t id=kINVALID_SIZE) : _cluster_id(id) {}
+    ~ParticleCluster() {}
+    /// attribute clear method
+    void clear();
+    /// cluster id retriever
+    size_t id() const;
+    
+    GEO2D_Contour_t _ctor; ///< contour to define a cluster
+  private:
+    size_t _cluster_id; ///< unique cluster id
+  };
+
+  class ParticleClusterArray {
+  public:
+    ParticleClusterArray() { clear(); }
+    ~ParticleClusterArray() {}
     //
     // accessors
     //
+    /// get id (from Vertex3D)
+    size_t id() const;
     /// get # of planes
     size_t num_planes() const;
     /// Vertex3D getter
@@ -51,22 +67,22 @@ namespace larocv {
     void set_vertex(const larocv::Vertex3D& vtx,
 		    const std::vector<larocv::CircleVertex>& circle_vtx_v);
     /// Cluster (per plane) appender
-    void append(size_t plane, const std::vector<geo2d::Vector<float> >& cluster);
+    void insert(size_t plane, const larocv::ParticleCluster& cluster);
     /// Cluster (per plane) appender
-    void emplace(size_t plane, std::vector<geo2d::Vector<float> >&& cluster);
+    void move(size_t plane, larocv::ParticleCluster&& cluster);
     
   private:
     /// 3D vertex + 2D projection 
     larocv::Vertex3D _vtx;
     ///< an array of 2D clusters (per plane)
-    std::vector<std::vector< std::vector<geo2d::Vector<float> > > > _cluster_vv;
+    std::vector<std::vector< larocv::ParticleCluster > > _cluster_vv;
     /// CircleVertex (per plane) ... optional
     std::vector<larocv::CircleVertex> _circle_vtx_v;
   };
 
   /**
      \class VertexClusterArray
-     @brief Collection container for clusters organized vertex-wise
+     @brief Collection container for track clusters organized vertex-wise
   */
   class VertexClusterArray : public larocv::AlgoDataBase {
   public:
@@ -76,7 +92,7 @@ namespace larocv {
     ~VertexClusterArray() {}
 
     /// Simply a list of VertexCluster (i.e. vertex-wise list of clusters)
-    std::vector<larocv::VertexCluster> _vtx_cluster_v;
+    std::vector<larocv::ParticleClusterArray> _vtx_cluster_v;
 
     /// Data attribute clear method
     void Clear() { _vtx_cluster_v.clear(); }
