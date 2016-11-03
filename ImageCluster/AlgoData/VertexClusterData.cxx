@@ -3,6 +3,7 @@
 
 #include "Core/larbys.h"
 #include "VertexClusterData.h"
+
 namespace larocv {
   
   size_t VertexCluster::num_planes() const

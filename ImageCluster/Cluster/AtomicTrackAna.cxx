@@ -49,11 +49,10 @@ namespace larocv{
     
     //atomic_defect_v_v_v
     //3planes//clusters//defects
-    
-    auto const& atomic_defect_pts_vv  = defectcluster_data._atomic_defect_pts_v_v_v[meta.plane()];//Get defects per track cluster after vertex clustering
-    //    auto const& atomic_ctr_v        = defectcluster_data._atomic_ctor_v_v[meta.plane()];
-    auto const& atomic_ass_vv     = defectcluster_data._atomic_ctor_ass_v_v_v[meta.plane()];    
-    auto const& n_track_clusters  = defectcluster_data._n_original_clusters_v[meta.plane()];
+
+    const auto& defectcluster_plane_data = defectcluster_data._plane_data[meta.plane()];
+    auto const& atomic_ass_vv     = defectcluster_plane_data._atomic_ctor_ass_vv;
+    auto const& n_track_clusters  = defectcluster_plane_data._n_input_ctors;
     auto const& pca_ctor_lines_v  = pcacandidates_data._ctor_lines_v_v[meta.plane()];
     
     auto& ctor_order_v     = data._atomic_order_ctor_v_v[meta.plane()];
@@ -66,7 +65,6 @@ namespace larocv{
         
     auto const& ref_vtx = refine2dvertex_data._cand_vtx_v[meta.plane()];//Get vertex per plane
     LAROCV_DEBUG() << "For now there is one vertex per plane, x is  : " << ref_vtx.x << " y is " << ref_vtx.y<< std::endl;
-    LAROCV_DEBUG() << "size of atomics "<<atomic_defect_pts_vv.size()<<std::endl;//
     LAROCV_DEBUG() << "size of clusters(after defects)  "<<clusters.size()<<std::endl;
     
     ctor_order_v.resize(n_track_clusters);

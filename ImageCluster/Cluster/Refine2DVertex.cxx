@@ -727,12 +727,11 @@ namespace larocv{
 
     if(_defect_algo_id != kINVALID_ID) {
       auto const& defect_pts = AlgoData<larocv::DefectClusterData>(_defect_algo_id);
-      for(auto const& pts : defect_pts._atomic_defect_pts_v_v_v[meta.plane()]) {
-	for(auto const& pt : pts) {
-	  LAROCV_INFO() << "Scanning Defect point: " << pt << std::endl;
-	  circle.center = pt;
-	  found = PlaneScan(img,meta.plane(),circle,pt_err) || found;
-	}
+      for(auto const& defect_pt : defect_pts._plane_data[meta.plane()]._ctor_defect_v) {
+	const auto pt = defect_pt._pt_defect;
+	LAROCV_INFO() << "Scanning Defect point: " << pt << std::endl;
+	circle.center = pt;
+	found = PlaneScan(img,meta.plane(),circle,pt_err) || found;
       }
     }
 
@@ -762,7 +761,7 @@ namespace larocv{
     auto& plane_data_v = data._plane_data;
     // Initialize results
     for(size_t plane=0; plane<img_v.size(); ++plane) {
-      auto& plane_data = data._plane_data.at(plane);
+      //auto& plane_data = data._plane_data.at(plane);
       _time_binned_score_v.clear();
     }
 
@@ -876,7 +875,7 @@ namespace larocv{
 
   void Refine2DVertex::XPlaneTickProposal()
   {
-    auto& data = AlgoData<larocv::Refine2DVertexData>();
+    //auto& data = AlgoData<larocv::Refine2DVertexData>();
     // Find local minimum for >2 plane score array
     auto const& score0_v  = _time_binned_score0_v;
     auto& mean_score0_v   = _time_binned_score0_mean_v;

@@ -222,8 +222,8 @@ namespace larocv {
     LAROCV_DEBUG() << "Number of points not processed: " << num_invalid_pts << "/" << pts.size() << std::endl;
 
     // order the contours -- the vic way... 
-    const auto& n_clusters = defect_data._n_original_clusters_v[meta.plane()];
-    const auto& atomic_ctor_ass_v_v = defect_data._atomic_ctor_ass_v_v_v[meta.plane()];
+    const auto& n_clusters = defect_data._plane_data[meta.plane()]._n_input_ctors;
+    const auto& atomic_ctor_ass_v_v = defect_data._plane_data[meta.plane()]._atomic_ctor_ass_vv;
 
     std::vector<std::vector<uint> > dfect_cidx_v_v;
     std::vector<std::vector<uint> > odfect_cidx_v_v;
@@ -334,8 +334,8 @@ namespace larocv {
     //auto const& refine2dvertex_data = AlgoData<Refine2DVertexData>(_ref_algo_id);
     LAROCV_DEBUG()<<"9 _atomic_algo_id is "<<_atomic_algo_id<<std::endl;
     
-    auto const& atomic_ass_v_v      = defectcluster_data._atomic_ctor_ass_v_v_v[meta.plane()];    
-    auto const& n_track_clusters    = defectcluster_data._n_original_clusters_v[meta.plane()];
+    auto const& atomic_ass_v_v      = defectcluster_data._plane_data[meta.plane()]._atomic_ctor_ass_vv;
+    auto const& n_track_clusters    = defectcluster_data._plane_data[meta.plane()]._n_input_ctors;
     auto const& atomic_idx_per_clu  = atomictrackana_data._atomic_idx_per_clu_v_v_v[meta.plane()];
     //auto const& ref_vtx             = refine2dvertex_data._cand_vtx_v[meta.plane()];//Get vertex per plane
     //auto const& kink_vv             = atomictrackana_data._atomic_kink_vv[meta.plane()];

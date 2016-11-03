@@ -325,15 +325,6 @@ namespace larocv {
 
     return clusters;
   }
- 
-
-
-
-
-
-
-
-
 
 }
 

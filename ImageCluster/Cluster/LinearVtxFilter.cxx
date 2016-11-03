@@ -43,8 +43,6 @@ namespace larocv {
 
     for(size_t row=0; row<polarimg.rows; ++row) {
 
-      float q = (float)(polarimg.at<unsigned char>(row, col));
-
       //vic: unsure about this
       //float pi_threshold=10.0;
       // if(q < pi_threshold) {

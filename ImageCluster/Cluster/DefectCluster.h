@@ -7,7 +7,7 @@
 #include "AlgoFactory.h"
 
 #include "Core/Geo2D.h"
-
+#include "AlgoData/DefectClusterData.h"
 
 namespace larocv {
  
@@ -61,59 +61,6 @@ namespace larocv {
     int _hull_edge_pts_split;
 
   };
-
-
-
-  class DefectClusterData : public AlgoDataBase {
-    
-  public:
-    
-    /// Default constructor
-    DefectClusterData(std::string name="NoName", AlgorithmID_t id=0)
-      : AlgoDataBase(name,id)
-    {  Clear(); }
-    
-    /// Default destructor
-    ~DefectClusterData(){}
-
-    /// Clear method override
-    void Clear() {
-
-    _n_original_clusters_v.clear();
-    _atomic_ctor_v_v.clear();
-    _atomic_ctor_ass_v_v_v.clear();
-    _split_line_v_v.clear();
-    _atomic_defect_pts_v_v_v.clear();
-
-    _split_line_v_v.resize(3);
-    _n_original_clusters_v.resize(3);
-    _atomic_ctor_v_v.resize(3);
-    _atomic_ctor_ass_v_v_v.resize(3);
-    _atomic_defect_pts_v_v_v.resize(3);
-
-    _input_id = kINVALID_ID;
-
-    }
-
-    AlgorithmID_t _input_id;
-
-    //per plane//atomic contour
-    std::vector<GEO2D_ContourArray_t> _atomic_ctor_v_v;
-
-    //plane////per original//atomic contour idx
-    std::vector<std::vector<std::vector<size_t> > > _atomic_ctor_ass_v_v_v;
-
-    //plane/////per original//list of defect points///// 
-    std::vector<std::vector<std::vector<cv::Point> > > _atomic_defect_pts_v_v_v;
-    
-    std::vector<std::vector<geo2d::Line<float> > > _split_line_v_v;
-    
-    std::vector<unsigned> _n_original_clusters_v;
-    
-    
-  };
-
-
 
   
   /**
