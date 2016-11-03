@@ -137,7 +137,21 @@ namespace larocv {
 
     size_t DefectClusterPlaneData::num_clusters() const
     { return _cluster_v.size(); }
+
+    size_t DefectClusterPlaneData::num_defects() const
+    {
+      size_t res=0;
+      for(auto const& c : _cluster_v) res += c.get_defects().size();
+      return res;
+    }
     
+    size_t DefectClusterPlaneData::num_atoms() const
+    {
+      size_t res=0;
+      for(auto const& c : _cluster_v) res += c.get_atoms().size();
+      return res;
+    }
+
     const std::vector<larocv::data::ClusterCompound>& DefectClusterPlaneData::get_cluster() const
     { return _cluster_v; }
     

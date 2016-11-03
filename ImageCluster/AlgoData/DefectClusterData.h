@@ -139,6 +139,10 @@ namespace larocv {
       void clear();
       /// number of currently registered clusters
       size_t num_clusters() const;
+      /// total number of defects
+      size_t num_defects() const;
+      /// total number of atoms
+      size_t num_atoms() const;
       /// retrieve a list of clusters on this plane
       const std::vector<larocv::data::ClusterCompound>& get_cluster() const;
       /// retrieve a list of clusters on this plane via id

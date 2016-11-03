@@ -129,9 +129,7 @@ namespace larocv {
     for(uint plane=0;plane<3;++plane) {
 
       const auto& defectcluster_plane_data = defectcluster_data._plane_data.at(plane);
-      const auto& atomic_defect_pts_v = defectcluster_plane_data._ctor_defect_v;
-      
-      n_defects+=atomic_defect_pts_v.size();
+      n_defects += defectcluster_plane_data.num_defects();
       
     }
     
