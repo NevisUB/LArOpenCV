@@ -242,11 +242,11 @@ namespace larocv {
 	    // construct dq/dx
 	    auto atom_dqdx = AtomdQdX(img, atom, pca, start_end.first, start_end.second);
 	    // append
-	    part_dqdx.emplace_back(std::move(atom_dqdx));
+	    part_dqdx.push_back(atom_id, start_end.first, atom_dqdx);
 	  }// end loop over atoms to create dq/dx
 
 	  // register to vtx-wise dqdx collection
-	  vtx_dqdx.emplace_back(plane_id, std::move(part_dqdx));
+	  vtx_dqdx.move(plane_id, particle.id(), std::move(part_dqdx));
 
 	}// end loop over particles for one plane
 
