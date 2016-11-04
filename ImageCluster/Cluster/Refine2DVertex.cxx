@@ -201,7 +201,7 @@ namespace larocv{
       auto box2 = ::cv::Rect(radius_min, yfactor * angle_min, (radius_max - radius_min), yfactor * (360. - angle_min));
       //std::cout<<"Box1: "<<box1<<std::endl;
       //std::cout<<"Box2: "<<box2<<std::endl;
-
+      
       auto small_img1 = ::cv::Mat(polarimg,box1);
       ::cv::Mat thresh_small_img1;
       ::cv::threshold(small_img1,thresh_small_img1,_pi_threshold,1,CV_THRESH_BINARY);
@@ -283,8 +283,11 @@ namespace larocv{
 					       geo2d::Vector<float> pt,
 					       float width, float height)
   {
-					       
-    auto small_img = ::cv::Mat(img,::cv::Rect(pt.x-width, pt.y-height, 2*width+1, 2*height+1));
+
+    cv::Rect rect(pt.x-width, pt.y-height, 2*width+1, 2*height+1);
+    edge_rect(img,rect,2*width+1,2*height+1);
+    
+    auto small_img = ::cv::Mat(img,rect);
     ::cv::Mat thresh_small_img;
     //::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,CV_THRESH_BINARY);
     ::cv::threshold(small_img,thresh_small_img,1,1000,3);
@@ -366,10 +369,25 @@ namespace larocv{
     return res;
   }
 
+  void Refine2DVertex::edge_rect(const ::cv::Mat& img, cv::Rect& rect,int w, int h) {
+
+    //make it edge aware
+    if ( rect.x < 0 ) rect.x = 0;
+    if ( rect.y < 0 ) rect.y = 0;
+    
+    if ( rect.x > img.cols - w ) rect.x = img.cols - w;
+    if ( rect.y > img.rows - h ) rect.y = img.rows - h;
+    
+  }
+  
   geo2d::Vector<float> Refine2DVertex::MeanPixel(const cv::Mat& img, const geo2d::Vector<float>& center)
   {
     // Make a better guess
-    auto small_img = ::cv::Mat(img,::cv::Rect(center.x - 2, center.y - 2, 5, 5));
+    ::cv::Rect rect(center.x - 2, center.y - 2, 5, 5);
+    edge_rect(img,rect,5,5);
+    
+    LAROCV_DEBUG() << "rows cols " << img.rows << "," << img.cols << " and rect " << rect << std::endl;
+    auto small_img = ::cv::Mat(img,rect);
     ::cv::Mat thresh_small_img;
     ::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,CV_THRESH_BINARY);
     //::cv::threshold(small_img,thresh_small_img,_pi_threshold,1000,3);
@@ -599,7 +617,7 @@ namespace larocv{
     
     geo2d::Rect bbox(top_left, bottom_right);
     scan_rect_v.push_back(bbox);
-    
+
     LAROCV_DEBUG() << "Plane " << plane << " scanning bbox:" << bbox << std::endl;
     // Now we loop over per-xs-on-init-circle, and find a candidate vertex per xs point
     for(size_t xs_idx=0; xs_idx < init_vtx.xs_v.size(); ++xs_idx){
@@ -658,7 +676,7 @@ namespace larocv{
 	scan_marker[marker_index] = true;
 	
 	q = (float)(img.at<unsigned char>(row,col));
-
+	
 	if(q < _pi_threshold) {
 	  step_pt += dir;
 	  continue;

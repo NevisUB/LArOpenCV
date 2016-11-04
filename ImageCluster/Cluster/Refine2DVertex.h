@@ -83,6 +83,9 @@ namespace larocv {
 
   private:
 
+    void edge_rect(const ::cv::Mat& img, cv::Rect& rect,int w, int h);
+    
+    
     bool PlaneScan(const ::cv::Mat& img, const size_t plane,
 		   const geo2d::Circle<float> init_circle,
 		   const geo2d::Vector<float> pt_err);
