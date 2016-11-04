@@ -1,9 +1,8 @@
 #ifndef __HIPMIPTOUCH_CXX__
 #define __HIPMIPTOUCH_CXX__
 
-#include "HIPMIPTouch.h"
-
 #include "HIPCluster.h"
+#include "HIPMIPTouch.h"
 
 namespace larocv {
 
@@ -23,13 +22,13 @@ namespace larocv {
 			      larocv::ROI& roi)
   {
 
-    const auto& hipcluster_data = AlgoData<data::HIPClusterData>(_hip_cluster_algo_id);
-    auto& data            = AlgoData<data::HIPMIPTouchData>();
-    auto& hip_mip_touch_pts_v = data._hip_mip_touch_pts_v_v[meta.plane()];
+    const auto& hipcluster_data = AlgoData<data::HIPClusterData>(_hip_cluster_algo_id)._plane_data_v[meta.plane()];
+    auto& data                  = AlgoData<data::HIPMIPTouchData>();
+    auto& hip_mip_touch_pts_v   = data._hip_mip_touch_pts_v_v[meta.plane()];
     
     //get the mip/hip indices
-    auto& mip_ass_v = hipcluster_data._mip_idx_v_v[meta.plane()];
-    auto& hip_ass_v = hipcluster_data._hip_idx_v_v[meta.plane()];
+    auto& mip_ass_v = hipcluster_data._mip_idx_v;
+    auto& hip_ass_v = hipcluster_data._hip_idx_v;
 
     if (mip_ass_v.size() + hip_ass_v.size() != clusters.size()) {
       LAROCV_ERROR() << "HIP/MIP touch algo called after contour breaking" << std::endl;

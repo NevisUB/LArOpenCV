@@ -34,7 +34,7 @@ namespace larocv {
       _name_v[data->ID()] = data->Name();
     }
     
-    AlgorithmID_t AlgoDataManager::ID(const std::string& name)
+    AlgorithmID_t AlgoDataManager::ID(const std::string& name) const
     {
       AlgorithmID_t id=kINVALID_ALGO_ID;
       for(size_t i=0; i<_name_v.size(); ++i) {
@@ -63,7 +63,7 @@ namespace larocv {
       _tree_attached = true;
     }
     
-    const AlgoDataBase* AlgoDataManager::Data(AlgorithmID_t id)
+    const AlgoDataBase* AlgoDataManager::Data(AlgorithmID_t id) const
     {
       if( id >= _data_v.size() ) {
 	std::stringstream ss;

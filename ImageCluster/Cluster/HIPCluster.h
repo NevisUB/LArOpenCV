@@ -5,7 +5,7 @@
 
 #include "ClusterAlgoBase.h"
 #include "AlgoFactory.h"
-
+#include "AlgoData/HIPClusterData.h"
 #include "Core/Vector.h"
 
 namespace larocv {
@@ -48,33 +48,7 @@ namespace larocv {
   };
 
 
-  namespace data {
-    class HIPClusterData : public AlgoDataBase {
-       
-    public:
-    
-      /// Default constructor
-      HIPClusterData(std::string name="NoName", AlgorithmID_t id=0)
-	: AlgoDataBase(name,id)
-      { Clear(); }
-    
-      /// Default destructor
-      ~HIPClusterData(){}
 
-      /// Clear method override
-      void Clear() {
-	_mip_idx_v_v.clear();
-	_hip_idx_v_v.clear();
-      
-	_mip_idx_v_v.resize(3);
-	_hip_idx_v_v.resize(3);
-      }
-    
-      std::vector<std::vector<size_t> > _mip_idx_v_v;
-      std::vector<std::vector<size_t> > _hip_idx_v_v;
-
-    };
-  }
   /**
      \class larocv::HIPClusterFactory
      \brief A concrete factory class for larocv::HIPCluster

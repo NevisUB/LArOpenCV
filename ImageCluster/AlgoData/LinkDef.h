@@ -10,6 +10,9 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ class larocv::data::HIPClusterPlaneData+;
+#pragma link C++ class larocv::data::HIPClusterData+;
+
 #pragma link C++ class larocv::data::Vertex3D+;
 #pragma link C++ class larocv::data::Vertex2D+;
 #pragma link C++ class larocv::data::PointPCA+;

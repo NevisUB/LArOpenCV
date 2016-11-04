@@ -42,10 +42,10 @@ namespace larocv {
       void Register(TTree* tree);
       
       /// Algorithm ID getter from name (slow search)
-      AlgorithmID_t ID(const std::string& name);
+      AlgorithmID_t ID (const std::string& name) const;
       
       /// Data access method
-      const AlgoDataBase* Data(AlgorithmID_t id);
+      const AlgoDataBase* Data (AlgorithmID_t id) const;
       
     private:
       
