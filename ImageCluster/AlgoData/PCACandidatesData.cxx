@@ -13,12 +13,8 @@ namespace larocv {
       _input_id = kINVALID_ALGO_ID;
       _line_v.clear();      
       _points_vv.clear();
-      
-      _line_v.resize(3);      
-      _points_vv.resize(3);
-      
-      _input_id = kINVALID_ID;
 
+      _input_id = kINVALID_ID;
       _reverse_index_map.clear();
       _index_map.clear();
     }
@@ -130,6 +126,7 @@ namespace larocv {
     void PCACandidatesData::insert_points(const std::vector<geo2d::Vector<float> >& pts,
 					  size_t plane_id, size_t vtx_id)
     {
+      if(plane_id >=3) throw larbys("Invalid plane_id requested!");
       if(vtx_id == kINVALID_SIZE) vtx_id = 0;
       if(_points_vv.size() <= vtx_id) {
 	_points_vv.resize(vtx_id+1);
@@ -142,6 +139,7 @@ namespace larocv {
     void PCACandidatesData::emplace_points(std::vector<geo2d::Vector<float> >&& pts,
 					   size_t plane_id, size_t vtx_id)
     {
+      if(plane_id >=3) throw larbys("Invalid plane_id requested!");
       if(vtx_id == kINVALID_SIZE) vtx_id = 0;
       if(_points_vv.size() <= vtx_id) {
 	_points_vv.resize(vtx_id+1);
