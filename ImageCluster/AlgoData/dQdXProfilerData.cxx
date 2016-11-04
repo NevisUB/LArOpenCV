@@ -13,15 +13,45 @@ namespace larocv {
     size_t ParticledQdX::id() const
     { return _cluster_id; }
     
-    void ParticledQdX::push_back(const std::vector<float>& dqdx)
+    void ParticledQdX::push_back(size_t atom_id,
+				 const geo2d::Vector<float>& start,
+				 const std::vector<float>& dqdx)
     {
-      //std::vector<float>  _dqdx_v;
-      //std::vector<size_t> _defects_v;
+      _atom_id_v.push_back(atom_id);
+      _start_pt_v.push_back(start);
+      _start_index_v.push_back(_dqdx_v.size());
+      _dqdx_v.reserve(_dqdx_v.size() + dqdx.size());
+      for(auto const& v : dqdx) _dqdx_v.push_back(v);
+    }
+
+    size_t ParticledQdX::num_atoms() const
+    { return _start_pt_v.size(); }
+
+    const std::vector<size_t>& ParticledQdX::atom_start_index_array() const
+    { return _start_index_v; }
+
+    const std::vector<size_t>& ParticledQdX::atom_id_array() const
+    { return _atom_id_v; }
+
+    const std::vector<geo2d::Vector<float> >& ParticledQdX::atom_start_pt_array() const
+    { return _start_pt_v; }
+
+    size_t ParticledQdX::atom_start_index(size_t atom_index) const
+    {
+      if(atom_index >= _start_index_v.size()) throw larbys("Invalid atom index requested!");
+      return _start_index_v[atom_index];
+    }
+
+    size_t ParticledQdX::atom_id(size_t atom_index) const
+    {
+      if(atom_index >= _atom_id_v.size()) throw larbys("Invalid atom index requested!");
+      return _atom_id_v[atom_index];
     }
     
-    void ParticledQdX::emplace_back(const std::vector<float>& dqdx)
+    const geo2d::Vector<float>& ParticledQdX::atom_start_pt(size_t atom_index) const
     {
-
+      if(atom_index >= _start_pt_v.size()) throw larbys("Invalid atom index requested!");
+      return _start_pt_v[atom_index];
     }
 
     //////////////////////////////////////////////////////////////
@@ -49,20 +79,26 @@ namespace larocv {
       _cluster_vv.resize(3);
     }
     
-    void ParticledQdXArray::push_back(size_t plane, const larocv::data::ParticledQdX& cluster)
+    void ParticledQdXArray::insert(size_t plane, size_t cluster_id, const larocv::data::ParticledQdX& cluster)
     {
       if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
       auto& cluster_v = _cluster_vv[plane];
-      cluster_v.push_back(cluster);
-      cluster_v.back()._cluster_id = cluster_v.size() - 1;
+      while(cluster_v.size() <= cluster_id) {
+	cluster_v.push_back(ParticledQdX());
+	cluster_v.back()._cluster_id = cluster_v.size() - 1;
+      }
+      cluster_v[cluster_id] = cluster;
     }
 
-    void ParticledQdXArray::emplace_back(size_t plane, larocv::data::ParticledQdX&& cluster)
+    void ParticledQdXArray::move(size_t plane, size_t cluster_id, larocv::data::ParticledQdX&& cluster)
     {
       if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
       auto& cluster_v = _cluster_vv[plane];
-      cluster_v.emplace_back(std::move(cluster));
-      cluster_v.back()._cluster_id = cluster_v.size() - 1;
+      while(cluster_v.size() <= cluster_id) {
+	cluster_v.push_back(ParticledQdX());
+	cluster_v.back()._cluster_id = cluster_v.size() - 1;
+      }
+      cluster_v[cluster_id] = std::move(cluster);
     }
 
     larocv::data::ParticledQdX& ParticledQdXArray::make_cluster(size_t plane)
