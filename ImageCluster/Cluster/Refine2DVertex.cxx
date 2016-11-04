@@ -739,7 +739,7 @@ namespace larocv{
 
     if(_pca_algo_id != kINVALID_ID) {
       auto const& pca_pts    = AlgoData<data::PCACandidatesData>(_pca_algo_id);    
-      for(auto const& pt : pca_pts._ipoints_v_v[meta.plane()]) {
+      for(auto const& pt : pca_pts.points(meta.plane())) {
 	LAROCV_INFO() << "Scanning PCACandidate point: " << pt << std::endl;
 	circle.center = pt;
 	found = PlaneScan(img,meta.plane(),circle,pt_err) || found;

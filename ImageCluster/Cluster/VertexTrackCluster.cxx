@@ -304,8 +304,7 @@ namespace larocv {
 	auto const& circle_vtx_v = ref_data.get_circle_vertex(vtx3d.id());
 
 	auto& vtx_cluster = data._vtx_cluster_v[vtx_id];
-	if(!vtx_cluster.num_planes())
-	  vtx_cluster.set_vertex(vtx3d, circle_vtx_v);
+	vtx_cluster.set_vertex(vtx3d, circle_vtx_v);
       }
     }
 

@@ -234,7 +234,7 @@ namespace larocv {
       _raw_cluster_vv.resize(3);
       _vtx_cluster_v.clear();
     }
-
+    /*
     void DefectClusterData::push_back(const larocv::data::ParticleCompoundArray& col)
     {
       _vtx_cluster_v.push_back(col);
@@ -246,7 +246,7 @@ namespace larocv {
       _vtx_cluster_v.emplace_back(std::move(col));
       _vtx_cluster_v.back()._id = _vtx_cluster_v.size() - 1;
     }
-    
+    */
     void DefectClusterData::insert(size_t vtx_id, const larocv::data::ParticleCompoundArray& col)
     {
       while(_vtx_cluster_v.size() <= vtx_id) {
@@ -254,6 +254,16 @@ namespace larocv {
 	_vtx_cluster_v.back()._id = _vtx_cluster_v.size() - 1;
       }
       _vtx_cluster_v[vtx_id] = col;
+      _vtx_cluster_v[vtx_id]._id = vtx_id;
+    }
+    
+    void DefectClusterData::move(size_t vtx_id, larocv::data::ParticleCompoundArray&& col)
+    {
+      while(_vtx_cluster_v.size() <= vtx_id) {
+	_vtx_cluster_v.push_back(ParticleCompoundArray());
+	_vtx_cluster_v.back()._id = _vtx_cluster_v.size() - 1;
+      }
+      _vtx_cluster_v[vtx_id] = std::move(col);
       _vtx_cluster_v[vtx_id]._id = vtx_id;
     }
 

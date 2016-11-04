@@ -5,7 +5,7 @@
 
 #include "ImageAnaBase.h"
 #include "AlgoFactory.h"
-
+#include "AlgoData/PCACandidatesData.h"
 #include "Core/Geo2D.h"
 
 namespace larocv {
@@ -41,52 +41,12 @@ namespace larocv {
 
     geo2d::Line<float> calculate_pca(const GEO2D_Contour_t& ctor);
 
-    uint _defect_cluster_algo_id;
+    AlgorithmID_t _defect_cluster_algo_id;
     float _pca_x_d_to_q;
-    int _nonzero_pixel_thresh;
+    int   _nonzero_pixel_thresh;
+    bool  _per_vertex;
   };
 
-  namespace data {
-    /**
-       \class PCACandidatesData
-       @brief only for vic
-    */
-    class PCACandidatesData : public AlgoDataBase {
-    
-    public:
-    
-      /// Default constructor
-      PCACandidatesData(std::string name="NoName", AlgorithmID_t id=0)
-	: AlgoDataBase(name,id)
-      {  Clear(); }
-    
-      /// Default destructor
-      ~PCACandidatesData(){}
-
-      /// Clear method override
-
-      AlgorithmID_t _input_id;
-      std::vector<std::vector<geo2d::Line<float> > >  _ctor_lines_v_v;
-      std::vector<std::vector<geo2d::Vector<float> > > _ipoints_v_v;
-      std::vector<std::vector<std::vector<size_t > > > _atomic_ctor_ass_v_v_v;
-
-
-      void Clear() {
-	_ctor_lines_v_v.clear();      
-	_ipoints_v_v.clear();
-	_atomic_ctor_ass_v_v_v.clear();
-
-
-	_ctor_lines_v_v.resize(3);      
-	_ipoints_v_v.resize(3);
-	_atomic_ctor_ass_v_v_v.resize(3);
-
-	_input_id = kINVALID_ID;
-      }
-
-    };
-
-  }  
   /**
      \class larocv::PCACandidatesFactory
      \brief A concrete factory class for larocv::PCACandidates

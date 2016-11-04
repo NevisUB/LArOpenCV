@@ -12,11 +12,28 @@ namespace larocv {
 
   void PCACandidates::_Configure_(const ::fcllite::PSet &pset)
   {
-    auto const defect_cluster_algo_name = pset.get<std::string>("DefectClusterAlgo","defbreak1");
-    _defect_cluster_algo_id = this->ID(defect_cluster_algo_name);
+    // default is empty string which signals not to use defect cluster algo data
+    auto const defect_cluster_algo_name = pset.get<std::string>("DefectClusterAlgo","");
+    if(defect_cluster_algo_name.empty())
+      _defect_cluster_algo_id = kINVALID_ALGO_ID;
+    else {
+      _defect_cluster_algo_id = this->ID(defect_cluster_algo_name);
+      if(_defect_cluster_algo_id == kINVALID_ALGO_ID) {
+	LAROCV_CRITICAL() << "Invalid defect cluster algorithm name given: "
+			  << defect_cluster_algo_name
+			  << std::endl;
+	throw larbys();
+      }
+    }
+    if(_defect_cluster_algo_id == kINVALID_ALGO_ID)
+      LAROCV_NORMAL() << "PCACandidates " << this->Name()
+		      << " will compute PCA for input clusters (not atomics) "
+		      << std::endl;
 
     _pca_x_d_to_q         = pset.get<float>("PCAXDistance",5.0);
     _nonzero_pixel_thresh = pset.get<int>  ("PixelThreshold",10);
+
+    _per_vertex = pset.get<bool>("BreakPerVertex");
   }
 
 
@@ -44,85 +61,165 @@ namespace larocv {
 				larocv::ROI& roi)
   {
     if(this->ID() == 0) throw larbys("PCACandidates should not be run first!");
-    
-    //get the defect cluster data
-    //atomic associations for atomic clusters => original clusters
-    const auto& defectcluster_data = AlgoData<data::DefectClusterData>(_defect_cluster_algo_id);
-    const auto& defectcluster_plane_data = defectcluster_data._raw_cluster_vv[meta.plane()];
 
-    //this data
+    // this data
     auto& data = AlgoData<data::PCACandidatesData>();
-    data._input_id = this->ID() - 1;
 
-    //pca lines, indexed by atomic ID
-    auto& ctor_lines_v = data._ctor_lines_v_v[meta.plane()];
-    //same size as input clusters (atomic clusters...)
-    //ctor_lines_v.resize(clusters.size());
-    ctor_lines_v.reserve(clusters.size());
-    
-    //for each atomic
-    for(const auto& cluster : clusters) {
-      
-      //yes, get this contour at atomic index
-      auto const& ctor = cluster._contour;
-      
-      geo2d::Line<float> pca_principle = calculate_pca(ctor);
-      
-      ctor_lines_v.emplace_back(std::move(pca_principle));
-    }
+    // boolean for algorithm logic
+    bool point_analysis_done = false;
 
-      
-    LAROCV_DEBUG() << "Total crossing PCA lines found: " << ctor_lines_v.size() << std::endl;
-    
-    std::vector<geo2d::Vector<float> > ipoints_v;
-    ipoints_v.reserve(ctor_lines_v.size() * ctor_lines_v.size());
-
+    // image preparation for later use
     cv::Mat thresh_img;
     cv::threshold(img,thresh_img,_nonzero_pixel_thresh,255,CV_THRESH_BINARY);
     std::vector<cv::Point_<int> > nonzero;
     findNonZero(thresh_img,nonzero);
-
+    // distance threshold for point registration (used later for pca crossing points)
     auto d_to_q_2 = _pca_x_d_to_q*_pca_x_d_to_q;
     
-    for(unsigned i=0;i<ctor_lines_v.size();++i) { 
-      for(unsigned j=i+1;j<ctor_lines_v.size();++j) {
-	auto ipoint = geo2d::IntersectionPoint(ctor_lines_v[i],ctor_lines_v[j]);
+    // if defect algo is not provided, use input clusters
+    if(_defect_cluster_algo_id == kINVALID_ALGO_ID) {
 
-	//condition that Xsing point must be near a non-zero pixel value
-	for(const auto& pt : nonzero) {
-	  if ( geo2d::dist2(geo2d::Vector<float>(pt),ipoint) < d_to_q_2 ) {
-	    //it's near nonzero, put it in, continue
-	    ipoints_v.emplace_back(std::move(ipoint));
-	    break;
+      data._input_id = this->ID() - 1;
+
+      //for each input cluster
+      for(size_t cidx=0; cidx<clusters.size(); ++cidx) {
+
+	auto const& ctor = clusters[cidx]._contour;
+	
+	auto pca_principle = calculate_pca(ctor);
+	
+	data.move(std::move(pca_principle),cidx,cidx,meta.plane());
+      }
+      
+    }else{
+
+      // use defect data to analyze pca for atoms.
+      // for defect cluster, there are two type of atoms:
+      // 0) those organized by vertex
+      // 1) those not
+      // user's boolean flag tell us which type of atoms to analyze
+      
+      data._input_id = _defect_cluster_algo_id;
+
+      auto const& defect_data = AlgoData<larocv::data::DefectClusterData>(_defect_cluster_algo_id);
+      
+      if(!_per_vertex && defect_data._raw_cluster_vv.size() > meta.plane()) {
+	// analyze atomic clusters that are not organized by vertex
+
+	// obtain this plane's clusters
+	auto const& plane_clusters = defect_data._raw_cluster_vv[meta.plane()];
+
+	// loop over clusters
+	for(auto const& compound : plane_clusters.get_cluster()) {
+	  // loop over atoms
+	  for(auto const& atom : compound.get_atoms()) {
+	    // estimate pca
+	    auto pca_principle = calculate_pca(atom._ctor);
+	    // register this pca w/ id
+	    data.move(std::move(pca_principle),
+		      atom.id(), compound.id(), meta.plane());
 	  }
 	}
-	
       }
-    }
 
-    data._ipoints_v_v[meta.plane()] = ipoints_v;
+      else{
+	// analyze atomic clusters that are organized by vertex
+
+	// loop over vertex
+	for(auto const& vtx_data : defect_data.get_vertex_clusters()) {
+	  // loop over clusters
+	  for(auto const& compound : vtx_data.get_cluster(meta.plane())) {
+	    // loop over atoms
+	    for(auto const& atom : compound.get_atoms()) {
+	      // estimate pca
+	      auto pca_principle = calculate_pca(atom._ctor);
+	      // register this pca w/ id
+	      data.move(std::move(pca_principle),
+			atom.id(), compound.id(), meta.plane(), vtx_data.id());
+	    }
+	  }// end loop over clusters to make PCA lines
+
+	  //
+	  // crossing point analysis should be done here for per-vtx case
+	  // because there are "multiple planes" in general (i.e. different vtx)
+	  //
+	  // get a list of line index for this vtx & plane
+	  auto const line_index_v = data.index_plane(meta.plane(),vtx_data.id());
+	  std::vector<geo2d::Vector<float> > points_v;
+	  points_v.reserve(line_index_v.size() * line_index_v.size());
+	  // loop over line
+	  for(size_t i=0; i<line_index_v.size(); ++i) {
+	    auto const& line1 = data.line(line_index_v[i]);
+	    // N^2 loop over line
+	    for(size_t j=i+1; j<line_index_v.size(); ++j) {
+	      auto const& line2 = data.line(line_index_v[j]);
+	      // estimate crossing point
+	      auto ipoint = geo2d::IntersectionPoint(line1,line2);
+	      //condition that Xsing point must be near a non-zero pixel value
+	      for(const auto& pt : nonzero) {
+		if ( geo2d::dist2(geo2d::Vector<float>(pt),ipoint) < d_to_q_2 ) {
+		  //it's near nonzero, put it in, continue
+		  points_v.emplace_back(std::move(ipoint));
+		  break;
+		}
+	      }
+	    }
+	  } // end loop over finding xs points
+	  bool point_analysis_done = true;
+	  data.emplace_points(std::move(points_v), meta.plane(), vtx_data.id());
+	}// end loop over ertex
+      }// vertex-wise condition for pca/point analysis
+    }// defect atomic cluster analysis done
+
+    // if pca crossing point analysis is not done, perform
+    if(!point_analysis_done) {
+      auto const line_index_v = data.index_plane(meta.plane());
+      std::vector<geo2d::Vector<float> > points_v;
+      points_v.reserve(line_index_v.size() * line_index_v.size());
+      // loop over line
+      for(size_t i=0; i<line_index_v.size(); ++i) {
+	auto const& line1 = data.line(line_index_v[i]);
+	// N^2 loop over line
+	for(size_t j=i+1; j<line_index_v.size(); ++j) {
+	  auto const& line2 = data.line(line_index_v[j]);
+	  // estimate crossing point
+	  auto ipoint = geo2d::IntersectionPoint(line1,line2);
+	  //condition that Xsing point must be near a non-zero pixel value
+	  for(const auto& pt : nonzero) {
+	    if ( geo2d::dist2(geo2d::Vector<float>(pt),ipoint) < d_to_q_2 ) {
+	      //it's near nonzero, put it in, continue
+	      points_v.emplace_back(std::move(ipoint));
+	      break;
+	    }
+	  }
+	}
+      } // end loop over finding xs points
+      bool point_analysis_done = true;
+      data.emplace_points(std::move(points_v), meta.plane());
+    }
   }
 
   bool PCACandidates::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
-    const auto& defectcluster_data = AlgoData<data::DefectClusterData>(ID()-1);
-    uint n_defects=0;
 
-    for(uint plane=0;plane<3;++plane) {
-
-      const auto& defectcluster_plane_data = defectcluster_data._raw_cluster_vv.at(plane);
-      n_defects += defectcluster_plane_data.num_defects();
+    if(_defect_cluster_algo_id != kINVALID_ALGO_ID) {
+      const auto& defectcluster_data = AlgoData<data::DefectClusterData>(_defect_cluster_algo_id);
+      uint n_defects=0;
       
-    }
+      for(uint plane=0;plane<3;++plane) {
+	
+	const auto& defectcluster_plane_data = defectcluster_data._raw_cluster_vv.at(plane);
+	n_defects += defectcluster_plane_data.num_defects();
+	
+      }
     
-    if ( !n_defects ) {
-      LAROCV_DEBUG() << "PostProcess found NO defect points in any plane" << std::endl;
-      return false;
+      if ( !n_defects ) {
+	LAROCV_DEBUG() << "PostProcess found NO defect points in any plane" << std::endl;
+	return false;
+      }
     }
 	
     return true;
   }
-  
-  
 }
 #endif

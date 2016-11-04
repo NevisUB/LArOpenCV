@@ -50,7 +50,7 @@ namespace larocv {
 	  }
 	}
 	// record
-	data.emplace_back(std::move(pcompound_set));
+	data.move(vtx_cluster.id(),std::move(pcompound_set));
       }
     }
 

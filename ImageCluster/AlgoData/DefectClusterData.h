@@ -216,18 +216,24 @@ namespace larocv {
       
       std::vector<larocv::data::ClusterCompoundArray> _raw_cluster_vv;
 
+      /*
       /// copy-add vertex-wise ParticleClusterArray compound information
-      void push_back(const larocv::data::ParticleCompoundArray& col);
+      void push_back(const Vertex3D& vtx, const larocv::data::ParticleCompoundArray& col);
       /// move-add vertex-wise ParticleClusterArray compound information
-      void emplace_back(larocv::data::ParticleCompoundArray&& col);
-      /// insert vertex-wise ParticleClusterArray compound specifying vertex id to be used as index
+      void emplace_back(const Vertex3D& vtx, larocv::data::ParticleCompoundArray&& col);
+      */
+      /// register with Vertex3D ID using copy
       void insert(size_t vtx_id, const larocv::data::ParticleCompoundArray& col);
-
-      /// accessor to vtx-wise ParticleCompoundArray
+      /// register with Vertex3D ID using move
+      void move(size_t vtx_id, larocv::data::ParticleCompoundArray&& col);
+      /// accessor to vtx-wise ParticleCompoundArray set
       const std::vector<larocv::data::ParticleCompoundArray>& get_vertex_clusters() const;
+      /// accessor to a single ParticleCompoundArray ( clusters for 1 vertex )
+      const larocv::data::ParticleCompoundArray& get_vertex_cluster(size_t id) const;
       
     private:
       std::vector<larocv::data::ParticleCompoundArray> _vtx_cluster_v;
+      
     };
   }
 }
