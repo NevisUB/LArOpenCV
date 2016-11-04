@@ -48,6 +48,9 @@ namespace larocv {
       }
       return id;
     }
+
+    void AlgoDataManager::ClearData()
+    { for(auto& ptr : _data_v) ptr->Clear(); }
     
     void AlgoDataManager::Register(TTree* tree)
     {

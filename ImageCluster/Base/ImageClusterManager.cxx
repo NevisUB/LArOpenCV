@@ -244,6 +244,7 @@ namespace larocv {
     
     _watch.Start();
 
+    _algo_dataman.ClearData();
     _book_keeper.Reset();
     _meta_v_v.clear();
     _meta_v_v.resize(_cluster_alg_v.size());

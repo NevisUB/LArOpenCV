@@ -40,6 +40,9 @@ namespace larocv {
       
       /// Registration of algorithm data storage ttree (optional)
       void Register(TTree* tree);
+
+      /// Clear data method
+      void ClearData();
       
       /// Algorithm ID getter from name (slow search)
       AlgorithmID_t ID (const std::string& name) const;
