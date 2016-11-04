@@ -267,9 +267,16 @@ namespace larocv {
       _vtx_cluster_v[vtx_id]._id = vtx_id;
     }
 
-    const std::vector<larocv::data::ParticleCompoundArray>&
-    DefectClusterData::get_vertex_clusters() const
+    const std::vector<larocv::data::ParticleCompoundArray>& DefectClusterData::get_vertex_clusters() const
     { return _vtx_cluster_v; }
+
+    const larocv::data::ParticleCompoundArray& DefectClusterData::get_vertex_cluster(size_t vtx_id) const
+    {
+      if(vtx_id >= _vtx_cluster_v.size()) throw larbys("Invalid vertex id requested!");
+      return _vtx_cluster_v[vtx_id];
+    }
+
+
 
   }
 }
