@@ -112,6 +112,8 @@ namespace larocv {
       void emplace_back(AtomicContour&& atom);
       /// in-place-add defect
       void emplace_back(ContourDefect&& defect);
+      /// save association
+      void associate(size_t atom_id, size_t defect_id);
       /// retrieve a list of atomic clusters
       const std::vector<larocv::data::AtomicContour>& get_atoms() const;
       /// retrieve a list of defects

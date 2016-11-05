@@ -24,6 +24,9 @@ namespace larocv {
       for(auto const& v : dqdx) _dqdx_v.push_back(v);
     }
 
+    const std::vector<float>& ParticledQdX::dqdx() const
+    { return _dqdx_v; }
+
     size_t ParticledQdX::num_atoms() const
     { return _start_pt_v.size(); }
 
@@ -88,6 +91,7 @@ namespace larocv {
 	cluster_v.back()._cluster_id = cluster_v.size() - 1;
       }
       cluster_v[cluster_id] = cluster;
+      cluster_v[cluster_id]._cluster_id = cluster_id;
     }
 
     void ParticledQdXArray::move(size_t plane, size_t cluster_id, larocv::data::ParticledQdX&& cluster)
@@ -99,6 +103,7 @@ namespace larocv {
 	cluster_v.back()._cluster_id = cluster_v.size() - 1;
       }
       cluster_v[cluster_id] = std::move(cluster);
+      cluster_v[cluster_id]._cluster_id = cluster_id;
     }
 
     larocv::data::ParticledQdX& ParticledQdXArray::make_cluster(size_t plane)

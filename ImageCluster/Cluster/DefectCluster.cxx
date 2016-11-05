@@ -667,6 +667,7 @@ namespace larocv {
     
     //contours which may be broken up are put in this queue
     GEO2D_ContourArray_t break_ctor_v;
+    //std::vector<larocv::data::AtomicContour> break_ctor_v;
     break_ctor_v.reserve(10);
     
     int nbreaks=0;
@@ -674,6 +675,8 @@ namespace larocv {
     std::vector<int> hullpts;
     std::vector<::cv::Vec4i> defects;
     std::vector<float> defects_d;
+
+    LAROCV_DEBUG() << "Original contour size: " << ctor.size() << std::endl;
 
     break_ctor_v.emplace_back(ctor);
     
@@ -684,14 +687,27 @@ namespace larocv {
       auto& ctor     = *ctor_itr;
 	
       LAROCV_DEBUG() << "Break vector size " << break_ctor_v.size() << "... this contour size " << ctor.size() << "\n";
-	
-      //this contour contains only two points. it's a line. erase and ignore
+
+      //this contour contains only two points. it's a line. should not exist.
       if (ctor.size() <= 2) {
-	LAROCV_DEBUG() << "Contour too small" << std::endl;
+	LAROCV_CRITICAL() << "Contour too small (size<=2)... should not appear!" << std::endl;
+	throw larbys();
+	//break_ctor_v.erase(ctor_itr);
+	//continue;
+      }
+
+      //this contour cannot have a defect by definition
+      if (ctor.size() == 3) {
+	LAROCV_DEBUG() << "Contour too small to look for a defect (size=3)" << std::endl;
+	auto& atomic = cluscomp.make_atom();
+	atomic._ctor = *ctor_itr;
+	LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
+		       << " ... # defects = " << cluscomp.get_defects().size()
+		       << std::endl;
 	break_ctor_v.erase(ctor_itr);
 	continue;
       }
-	 
+		 
       // clear the hull and defects for this contour
       hullpts.clear();
       defects.clear();
@@ -717,6 +733,9 @@ namespace larocv {
 	LAROCV_DEBUG() << "No defects found for this ctor" << std::endl;
 	auto& atomic = cluscomp.make_atom();
 	atomic._ctor = *ctor_itr;
+	LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
+		       << " ... # defects = " << cluscomp.get_defects().size()
+		       << std::endl;
 	break_ctor_v.erase(ctor_itr);
 	continue;
       }
@@ -733,6 +752,9 @@ namespace larocv {
 	LAROCV_DEBUG() << "This hull suspect... start : " <<  start << " end : " << end << " diff : " << diff << std::endl;
 	auto& atomic = cluscomp.make_atom();
 	atomic._ctor = *ctor_itr;
+	LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
+		       << " ... # defects = " << cluscomp.get_defects().size()
+		       << std::endl;
 	break_ctor_v.erase(ctor_itr);
 	continue;
       }
@@ -763,30 +785,54 @@ namespace larocv {
 	LAROCV_NORMAL() << "Registering un-breakable contour into an atomic contour list..." << std::endl;
 	auto& atomic = cluscomp.make_atom();
 	atomic._ctor = *ctor_itr;
+	LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
+		       << " ... # defects = " << cluscomp.get_defects().size()
+		       << std::endl;
 	break_ctor_v.erase(ctor_itr);
 	continue;	   
       }
 
-
-      auto& defect = cluscomp.make_defect();
-      defect._pt_start  = ctor[chosen_edge[0]];
-      defect._pt_end    = ctor[chosen_edge[1]];
-      defect._pt_defect = ctor[chosen_edge[2]];
-      defect._dist      = (float)chosen_edge[3] / 256.;
-      defect._split_line = min_line;
-      
       GEO2D_Contour_t ctor1, ctor2;
-	 
       // split the contour into two by this line
       split_contour(ctor,ctor1,ctor2,min_line);
-	 	 
-      LAROCV_DEBUG() << "Split contour of size: " << ctor.size() << " into " << ctor1.size() << " + " << ctor2.size() << " = " << ctor1.size()+ctor2.size() << std::endl;
-	 
-      break_ctor_v.erase(ctor_itr);
-	 
-      break_ctor_v.emplace_back(std::move(ctor1));
-      break_ctor_v.emplace_back(std::move(ctor2));
 
+      if(ctor1.size()<=2  && ctor2.size()<=2) {
+	LAROCV_DEBUG() << "Contour got split into 2 too small contours (size<=2) ... storing original as an atom" << std::endl;
+	auto& atomic = cluscomp.make_atom();
+	atomic._ctor = *ctor_itr;
+	LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
+		       << " ... # defects = " << cluscomp.get_defects().size()
+		       << std::endl;
+	break_ctor_v.erase(ctor_itr);
+	continue;
+      }
+	 	 
+      LAROCV_DEBUG() << "Split contour of size: " << ctor.size()
+		     << " into " << ctor1.size() << " + " << ctor2.size()
+		     << " = " << ctor1.size()+ctor2.size() << std::endl;
+      
+      if(ctor1.size() >2 && ctor2.size() >2) {
+	auto& defect = cluscomp.make_defect();
+	defect._pt_start  = ctor[chosen_edge[0]];
+	defect._pt_end    = ctor[chosen_edge[1]];
+	defect._pt_defect = ctor[chosen_edge[2]];
+	defect._dist      = (float)chosen_edge[3] / 256.;
+	defect._split_line = min_line;
+
+	break_ctor_v.emplace_back(std::move(ctor1));
+	break_ctor_v.emplace_back(std::move(ctor2));
+
+      }else {
+
+	if(ctor1.size()<=2) { LAROCV_INFO() << "Broken contour too small (size<=2)... ignoring..." << std::endl; }
+	else { break_ctor_v.emplace_back(std::move(ctor1)); }
+
+	if(ctor2.size()<=2) { LAROCV_INFO() << "Broken contour too small (size<=2)... ignoring..." << std::endl; }
+	else { break_ctor_v.emplace_back(std::move(ctor2)); }
+	
+      }
+      LAROCV_DEBUG() << "Break vector size " << break_ctor_v.size()-1 << " @ end of loop..." << std::endl;
+      break_ctor_v.erase(ctor_itr);
     } //end of breaking
 
     //atomic_contour_v is filled, break_ctor_v should be clear, if its not, put what's inside into atomics
@@ -797,10 +843,65 @@ namespace larocv {
 	LAROCV_CRITICAL() << "Putting defect ctor of size : " << break_ctor.size() << " into atomic_atomic_ctor_v "<< std::endl;
 	auto& atomic = cluscomp.make_atom();
 	atomic._ctor = break_ctor;
+	LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
+		       << " ... # defects = " << cluscomp.get_defects().size()
+		       << std::endl;
       }
     }
 
-
+    // now perform correlation between defects and atomic contours.
+    // this is not done in the loop above because it appears hard in the 1st pass.
+    // we implement using a geometrical approximation.
+    auto const& ctor_defect_v = cluscomp.get_defects();
+    auto const& atomic_ctor_v = cluscomp.get_atoms();
+    // make sure logic stands: # defects should be 1 less than # contours
+    if(ctor_defect_v.size()+1 != atomic_ctor_v.size()) {
+      LAROCV_CRITICAL() << "Logic error ... # of defects = " << ctor_defect_v.size()
+			<< " ... "
+			<< "# of atoms = " << atomic_ctor_v.size()
+			<< std::endl;
+      throw larbys();
+    }
+    LAROCV_DEBUG() << "Constructing association:"
+		   << " # defects = " << ctor_defect_v.size()
+		   << " # atoms = " << atomic_ctor_v.size() << std::endl;
+    // loop over defects, look for 2 closest atoms
+    for(auto const& defect : ctor_defect_v) {
+      double mindist1=1e10;
+      double mindist2=1e10;
+      size_t atomid1=kINVALID_SIZE;
+      size_t atomid2=kINVALID_SIZE;
+      auto const& defect_pt = defect._pt_defect;
+      LAROCV_DEBUG() << "Defect @ " << defect_pt << " (ID=" << defect.id() << ")" << std::endl;
+      for(auto const& atom : atomic_ctor_v) {
+	double mindist =1e10;
+	double dist=0;
+	for(auto const& pt : atom._ctor) {
+	  dist = pow(pt.x - defect_pt.x,2) + pow(pt.y - defect_pt.y,2);
+	  if(dist < mindist) mindist = dist;
+	}
+	LAROCV_DEBUG() << "Defect ID " << defect.id()
+		       << " to Atom ID " << atom.id()
+		       << " distance = " << mindist << std::endl;
+	if(mindist < mindist1) {
+	  // update 2nd closest one as well
+	  mindist2 = mindist1;
+	  atomid2  = atomid1;
+	  
+	  mindist1 = mindist;
+	  atomid1  = atom.id();
+	}else if(mindist < mindist2) {
+	  mindist2 = mindist;
+	  atomid2  = atom.id();
+	}
+      }
+      if(atomid1 == kINVALID_SIZE || atomid2 == kINVALID_SIZE) {
+	LAROCV_CRITICAL() << "Could not find 2 associated atoms for defect " << defect.id() << std::endl;
+	throw larbys();
+      }
+      cluscomp.associate(atomid1,defect.id());
+      cluscomp.associate(atomid2,defect.id());
+    }
     return cluscomp;
   }
 

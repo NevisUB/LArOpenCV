@@ -37,6 +37,8 @@ namespace larocv {
       void push_back(size_t atom_id,
 		     const geo2d::Vector<float>& start,
 		     const std::vector<float>& dqdx);
+      /// queries dqdx
+      const std::vector<float>& dqdx() const;
       /// queries # atoms in this dQ/dX
       size_t num_atoms() const;
       /// queries dq/dx index array that corresponds to atoms' start position
@@ -70,7 +72,7 @@ namespace larocv {
     class ParticledQdXArray {
       friend class dQdXProfilerData;
     public:
-      ParticledQdXArray() {}
+      ParticledQdXArray() { clear(); }
       ~ParticledQdXArray() {}
 
       /// get id
