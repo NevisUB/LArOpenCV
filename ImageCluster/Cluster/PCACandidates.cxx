@@ -202,7 +202,7 @@ namespace larocv {
   bool PCACandidates::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
 
-    if(_defect_cluster_algo_id != kINVALID_ALGO_ID) {
+    if(_defect_cluster_algo_id == kINVALID_ALGO_ID) {
       const auto& defectcluster_data = AlgoData<data::DefectClusterData>(_defect_cluster_algo_id);
       uint n_defects=0;
       
@@ -218,7 +218,7 @@ namespace larocv {
 	return false;
       }
     }
-	
+
     return true;
   }
 }

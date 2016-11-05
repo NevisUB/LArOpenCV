@@ -53,6 +53,8 @@ namespace larocv {
 
   std::vector<size_t> dQdXProfiler::OrderAtoms(const data::ClusterCompound& cluster, const data::CircleVertex& vtx2d) const
   {
+    LAROCV_DEBUG() << "called for ClusterCompound ID " << cluster.id()
+		   << " ... 2D vtx @ " << vtx2d.center << std::endl;
     // goal: order atoms in the cluster from start to the end of a trajectory
     // 0) find the atom closest to 2d vtx
     // 1) follow the association chain with defects to order the rest
@@ -70,13 +72,16 @@ namespace larocv {
     // Loop over atoms to find the closest to the 2D vertex on this plane
     double first_atom_dist2vtx = 1e9;
     double atom_dist2vtx = 0;
+    LAROCV_DEBUG() << "Looping over " << atoms.size() << " atoms to find the closest one to the vtx" << std::endl;
     for(auto const& atom : atoms) {
       atom_dist2vtx = DistanceAtom2Vertex(atom, vtx2d);
+      LAROCV_DEBUG() << "Atom " << atom.id() << " distance = " << atom_dist2vtx << std::endl;
       if(atom_dist2vtx < first_atom_dist2vtx) {
 	first_atom_dist2vtx = atom_dist2vtx;
 	result_v[0] = atom.id();
       }
     }
+    LAROCV_DEBUG() << "Closest atom ID " << result_v[0] << " distance " << first_atom_dist2vtx << std::endl;
     
     // Do book keeping of used atom IDs
     size_t last_atom_id = result_v[0];
@@ -91,13 +96,18 @@ namespace larocv {
       // retrieve defects' id array
       auto const& defect_id_s = last_atom.associated_defects();
 
+      LAROCV_DEBUG() << "Searching next atom (current ID=" << last_atom.id()
+		     << ") asociated # defects = " << defect_id_s.size() << std::endl;
+
       // loop over associated defects, find the next associated atom
       size_t next_atom_id = kINVALID_SIZE;
       for(auto const& defect_id : defect_id_s) {
+	LAROCV_DEBUG() << "  associated defect ID " << defect_id << std::endl;
 	// retrieve a defect
 	auto const& defect = cluster.get_defect(defect_id);
 	// loop over associated atoms' id array
 	for(auto const& ass_atom_id : defect.associated_atoms()) {
+	  LAROCV_DEBUG() << "  association defect " << defect_id << " => atom " << ass_atom_id << std::endl;
 	  // if found in "used atom id list", ignore
 	  if(used_atom_id_v[ass_atom_id]) continue;
 	  // else this atom is our target. make sure there's no duplication
@@ -106,6 +116,7 @@ namespace larocv {
 	    throw larbys();
 	  }
 	  next_atom_id = ass_atom_id;
+	  LAROCV_DEBUG() << "  ... found next atom ID " << next_atom_id << std::endl;
 	  // Note one can just "break" the loop here to save time.
 	  // In this attempt we won't break to explicitly check the association's validity.
 	}
@@ -118,7 +129,7 @@ namespace larocv {
       }
       used_atom_id_v[next_atom_id] = true;
       result_v.push_back(next_atom_id);
-      
+      last_atom_id = next_atom_id;
     } // end looping over to order atoms
     
     return result_v;
@@ -230,7 +241,7 @@ namespace larocv {
 	  // get start/end
 	  auto const atom_edges_v = AtomsEdge(particle, vtx2d, ordered_atom_id_v);
 
-	  // loop atoms
+	  // loop atoms (from last one)
 	  for(auto const& atom_id : ordered_atom_id_v) {
 	    // retrieve atom
 	    auto const& atom = particle.get_atom(atom_id);
@@ -283,31 +294,36 @@ namespace larocv {
     // Crop the image
     auto const bbox = cv::Rect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
     auto const small_img = cv::Mat(img, bbox);
+    LAROCV_DEBUG() << "Calculating dQ/dX for atom " << atom.id()
+		   << " within the cropped image " << bbox << std::endl;
 
     // List points that we care
     std::vector<geo2d::Vector<int> > pts_in_bbox;
     cv::findNonZero(small_img, pts_in_bbox);
+    LAROCV_DEBUG() << "Found " << pts_in_bbox.size() << " non zero points" << std::endl;
     // Cropped image is rectangular and some points in the image has nothing to do with an atom
     // Collect only points that matter to this atom by using user defined distance cut to a contour
     // Also correct its coordinate system w.r.t. bbox origin
     std::vector<geo2d::Vector<float> > pts;
     pts.reserve(pts_in_bbox.size());
-    double dist_threshold = _atomic_contour_pad * -1.;
+    double dist_threshold = _atomic_contour_pad;
     for(auto const& pt : pts_in_bbox) {
       double dist = cv::pointPolygonTest(atom._ctor, pt, true);
-      if(dist < dist_threshold) continue;
+      if(dist > dist_threshold) continue;
       geo2d::Vector<float> pt_float;
       pt_float.x = pt.x + tl.x;
       pt_float.y = pt.y + tl.y;
       pts.emplace_back(std::move(pt_float));
     }
-
+    LAROCV_DEBUG() << "Found " << pts.size() << " non zero points including neighbors" << std::endl;
+    
     // compute a point projection on pca line
     // 0) loop over points, for each point find the closest point of appraoch, A, on the PCA line
     // 1) compute position of A w.r.t. pt1 that defines pca line (1D scalar)
     // 2) record two edge points to figure out ordering in inter-atom perspective
 
     size_t minpt_index, maxpt_index;
+    minpt_index = maxpt_index = kINVALID_SIZE;
     double minpt_dist =  1e10;
     double maxpt_dist = -1e10;
     std::vector<float> pts_1dcoord;
@@ -322,7 +338,11 @@ namespace larocv {
       auto dist = geo2d::ClosestPoint(pca, pt, scratch_pt1, scratch_pt2);
 
       // find the distance from a reference point on line
-      dist = geo2d::dist(pca.pt,scratch_pt1);
+      //dist = geo2d::dist(pca.pt,scratch_pt1);
+      scratch_pt1 -= pca.pt;
+      if(pca.dir.x > pca.dir.y) { dist = scratch_pt1.x / pca.dir.x; }
+      else{ dist = scratch_pt1.y / pca.dir.y; }
+      
       pts_1dcoord[pt_index] = dist;
 
       // record edge points
@@ -336,12 +356,19 @@ namespace larocv {
       }
     }
 
+    LAROCV_DEBUG() << " Min pt index " << minpt_index 
+		   << " Max pt index " << maxpt_index << std::endl;
+    LAROCV_DEBUG() << " Min pt @ " << pts[minpt_index]
+		   << " Max pt @ " << pts[maxpt_index] << std::endl;
+    LAROCV_DEBUG() << " Start  @ " << start << std::endl;
     // Figure out the edge that should correspond to the start
-    if(geo2d::dist(pts[minpt_dist],start) < geo2d::dist(pts[maxpt_dist],start)) {
+    if(geo2d::dist(pts[minpt_index],start) < geo2d::dist(pts[maxpt_index],start)) {
+      LAROCV_DEBUG() << " Start edge is Min pt @ " << pts[minpt_index] << std::endl;
       // minpt is closer to start ... shift 1D coordinate location accordingly
       for(auto& dist : pts_1dcoord)
 	dist = fabs(dist - minpt_dist);
     }else{
+      LAROCV_DEBUG() << " Start edge is Max pt @ " << pts[maxpt_index] << std::endl;
       // maxpt is closer to start ... shift 1D coordinate location accordingly
       for(auto& dist : pts_1dcoord)
 	dist = fabs(dist - maxpt_dist);
@@ -355,7 +382,7 @@ namespace larocv {
 
       auto const& pt = pts[pt_index];
       
-      float q = (float)(img.at<unsigned char>((size_t)(pt.y),(size_t(pt.x))));
+      float q = (float)(img.at<unsigned char>((size_t)(pt.y),(size_t)(pt.x)));
 
       size_t bin = (pts_1dcoord[pt_index] / _dx_resolution);
 

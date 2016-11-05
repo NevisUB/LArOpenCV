@@ -107,6 +107,21 @@ namespace larocv {
       _ctor_defect_v.emplace_back(std::move(defect));
       _ctor_defect_v.back()._defect_id = _ctor_defect_v.size() - 1;
     }
+
+    void ClusterCompound::associate(size_t atom_id, size_t defect_id)
+    {
+      if( atom_id   >= _atomic_ctor_v.size() ) throw larbys("Cannot associate invalid atomic id!");
+      if( defect_id >= _ctor_defect_v.size() ) throw larbys("Cannot associate invalid defect id!");
+
+      auto& atomic_ctor = _atomic_ctor_v[ atom_id   ];
+      auto& ctor_defect = _ctor_defect_v[ defect_id ];
+
+      if( atomic_ctor.id() != atom_id   ) throw larbys("Found inconsistent atomic id and index location!");
+      if( ctor_defect.id() != defect_id ) throw larbys("Found inconsistent defect id and index location!");
+
+      atomic_ctor.associate(ctor_defect);
+      ctor_defect.associate(atomic_ctor);
+    }
     
     const std::vector<larocv::data::AtomicContour>& ClusterCompound::get_atoms() const
     { return _atomic_ctor_v; }

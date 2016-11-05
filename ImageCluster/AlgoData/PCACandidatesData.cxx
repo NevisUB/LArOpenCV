@@ -70,13 +70,17 @@ namespace larocv {
     size_t PCACandidatesData::index_atom(size_t atom_id, size_t cluster_id, size_t plane_id, size_t vtx_id) const
     {
       if(vtx_id == kINVALID_SIZE) vtx_id = 0;
-      if(vtx_id >= _index_map.size()) throw larbys("Invalid vertex ID requested!");
+      //if(vtx_id >= _index_map.size()) throw larbys("Invalid vertex ID requested!");
+      if(vtx_id >= _index_map.size()) return kINVALID_SIZE;
       auto& vtx = _index_map[vtx_id];
-      if(plane_id >= vtx.size()) throw larbys("Invalid plane ID requested!");
+      //if(plane_id >= vtx.size()) throw larbys("Invalid plane ID requested!");
+      if(plane_id >= vtx.size()) return kINVALID_SIZE;
       auto& plane = vtx[plane_id];
-      if(cluster_id >= plane.size()) throw larbys("Invalid cluster ID requested!");
+      //if(cluster_id >= plane.size()) throw larbys("Invalid cluster ID requested!");
+      if(cluster_id >= plane.size()) return kINVALID_SIZE;
       auto& cluster = plane[cluster_id];
-      if(atom_id >= cluster.size()) throw larbys("Invalid atomic ID requested!");
+      //if(atom_id >= cluster.size()) throw larbys("Invalid atomic ID requested!");
+      if(atom_id >= cluster.size()) return kINVALID_SIZE;
       return cluster[atom_id];
     }
 
@@ -84,11 +88,14 @@ namespace larocv {
     {
       std::vector<size_t> res;
       if(vtx_id == kINVALID_SIZE) vtx_id = 0;
-      if(vtx_id >= _index_map.size()) throw larbys("Invalid vertex ID requested!");
+      //if(vtx_id >= _index_map.size()) throw larbys("Invalid vertex ID requested!");
+      if(vtx_id >= _index_map.size()) return res;
       auto& vtx = _index_map[vtx_id];
-      if(plane_id >= vtx.size()) throw larbys("Invalid plane ID requested!");
+      //if(plane_id >= vtx.size()) throw larbys("Invalid plane ID requested!");
+      if(plane_id >= vtx.size()) return res;
       auto& plane = vtx[plane_id];
-      if(cluster_id >= plane.size()) throw larbys("Invalid cluster ID requested!");
+      //if(cluster_id >= plane.size()) throw larbys("Invalid cluster ID requested!");
+      if(cluster_id >= plane.size()) return res;
       auto& cluster = plane[cluster_id];
       res.reserve(cluster.size());
       for(auto const& atom_id : cluster) {
@@ -102,9 +109,11 @@ namespace larocv {
     {
       std::vector<size_t> res;
       if(vtx_id == kINVALID_SIZE) vtx_id = 0;
-      if(vtx_id >= _index_map.size()) throw larbys("Invalid vertex ID requested!");
+      //if(vtx_id >= _index_map.size()) throw larbys("Invalid vertex ID requested!");
+      if(vtx_id >= _index_map.size()) return res;
       auto& vtx = _index_map[vtx_id];
-      if(plane_id >= vtx.size()) throw larbys("Invalid plane ID requested!");
+      //if(plane_id >= vtx.size()) throw larbys("Invalid plane ID requested!");
+      if(plane_id >= vtx.size()) return res;
       auto& plane = vtx[plane_id];
       for(auto const& cluster : plane) {
 	res.reserve(res.size() + cluster.size());
