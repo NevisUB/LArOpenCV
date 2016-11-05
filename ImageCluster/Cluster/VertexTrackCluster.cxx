@@ -121,13 +121,14 @@ namespace larocv {
 
       LAROCV_DEBUG() << "rot_img rows: " << rot_img.rows << "... cols: " << rot_img.cols << std::endl;
       
-      std::stringstream ss1,ss2;
-      ss1 << "norm_plane" << "_xs" << xs_pt_idx << ".png";
-      ss2 << "rot_plane" << "_xs" << xs_pt_idx << ".png";
-
-      //cv::imwrite(std::string(ss1.str()).c_str(), img_padded);
-      //cv::imwrite(std::string(ss2.str()).c_str(), rot_img);
-
+      /*
+	std::stringstream ss1,ss2;
+	ss1 << "norm_plane" << "_xs" << xs_pt_idx << ".png";
+	ss2 << "rot_plane" << "_xs" << xs_pt_idx << ".png";
+	cv::imwrite(std::string(ss1.str()).c_str(), img_padded);
+	cv::imwrite(std::string(ss2.str()).c_str(), rot_img);
+      */
+      
       cv::Mat rot_polarimg, sb_img;
       
       // Cluster per xs-point found in Refine2DVertex
@@ -145,11 +146,11 @@ namespace larocv {
       auto kernel = ::cv::getStructuringElement(cv::MORPH_RECT,
       						cv::Size(20,2));
       ::cv::dilate(rot_polarimg,rot_polarimg,kernel,::cv::Point(-1,-1),1);     
-
+      /*
       std::stringstream ss3;
       ss3 << "polar_plane" << "_xs" << xs_pt_idx << ".png";
-      //cv::imwrite(std::string(ss3.str()).c_str(), rot_polarimg);
-
+      cv::imwrite(std::string(ss3.str()).c_str(), rot_polarimg);
+      */
       /*
       // mask-out very-near vtx pixels
       size_t mask_col_max = _mask_radius/1000. * rot_polarimg.cols + 1;
@@ -182,11 +183,11 @@ namespace larocv {
 	  rot_polarimg.at<unsigned char>(row,col) = (unsigned char)0;
 	}
       }
-      
+      /*
       std::stringstream ss4;
       ss4 << "mask_plane" << "_xs" << xs_pt_idx << ".png";
-      //cv::imwrite(std::string(ss4.str()).c_str(), rot_polarimg);
-     
+      cv::imwrite(std::string(ss4.str()).c_str(), rot_polarimg);
+      */     
 
       //Contour finding
       ContourArray_t polar_ctor_v;    
