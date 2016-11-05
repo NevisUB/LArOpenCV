@@ -10,7 +10,7 @@ namespace larocv {
 
   void HIPCluster::_Configure_(const ::fcllite::PSet &pset)
   {
-    _min_hip_cluster_size = pset.get<int>("MinHIPClusterSize",20);
+    _min_hip_cluster_size = pset.get<int>("MinHIPClusterSize",4);
     _min_mip_cluster_size = pset.get<int>("MinMIPClusterSize",20);
 
     _mip_thresh_v    = pset.get<std::vector<int> >("MIPLevels",{10,10,10});
@@ -23,7 +23,6 @@ namespace larocv {
     _dilation_iter = pset.get<int>("DilationIter",1);
     _blur_size     = pset.get<int>("BlurSize",2);
 
-    set_verbosity(msg::kDEBUG);
   }
 
   larocv::Cluster2DArray_t HIPCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -54,16 +53,16 @@ namespace larocv {
     //Threshold the input image to certain ADC value, this is our MIP
     ::cv::Mat mip_thresh_m;
     inRange(sb_img, MIP_LEVEL, HIP_LEVEL, mip_thresh_m);
-    std::stringstream ss0;
-    ss0 << "mip_thresh_m_"<<meta.plane()<<".png";
-    cv::imwrite(ss0.str().c_str(),mip_thresh_m);
+    //std::stringstream ss0;
+    //ss0 << "mip_thresh_m_"<<meta.plane()<<".png";
+    //cv::imwrite(ss0.str().c_str(),mip_thresh_m);
     
     //Threshold the input image to HIP ADC value, this is our HIP
     ::cv::Mat hip_thresh_m;
     threshold(sb_img, hip_thresh_m,HIP_LEVEL,255,0);
-    std::stringstream ss1;
-    ss1 << "hip_thresh_m_"<<meta.plane()<<".png";
-    cv::imwrite(ss1.str().c_str(),hip_thresh_m);
+    //std::stringstream ss1;
+    //ss1 << "hip_thresh_m_"<<meta.plane()<<".png";
+    //cv::imwrite(ss1.str().c_str(),hip_thresh_m);
     
     //Contour finding on the HIP
     std::vector<::cv::Vec4i> hip_cv_hierarchy_v;
