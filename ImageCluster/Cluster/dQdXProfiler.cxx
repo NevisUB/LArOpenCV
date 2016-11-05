@@ -291,8 +291,17 @@ namespace larocv {
     tl.y -= _atomic_region_pad;
     br.x += _atomic_region_pad;
     br.y += _atomic_region_pad;
+
+    // Enforce image boundary condition
+    if(tl.x < 0) tl.x = 0;
+    if(tl.y < 0) tl.y = 0;
+    if(br.x >= img.cols) br.x = img.cols-1;
+    if(br.y >= img.rows) br.y = img.rows-1;
+    
     // Crop the image
     auto const bbox = cv::Rect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+    
+    
     auto const small_img = cv::Mat(img, bbox);
     LAROCV_DEBUG() << "Calculating dQ/dX for atom " << atom.id()
 		   << " within the cropped image " << bbox << std::endl;

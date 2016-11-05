@@ -202,23 +202,37 @@ namespace larocv {
   bool PCACandidates::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
 
-    if(_defect_cluster_algo_id == kINVALID_ALGO_ID) {
-      const auto& defectcluster_data = AlgoData<data::DefectClusterData>(_defect_cluster_algo_id);
-      uint n_defects=0;
+    if(_defect_cluster_algo_id != kINVALID_ALGO_ID) {
       
-      for(uint plane=0;plane<3;++plane) {
+      const auto& def_data = AlgoData<data::DefectClusterData>(_defect_cluster_algo_id);
+
+      uint n_defects=0;
+
+      if(!_per_vertex) {
+
+	for(uint plane=0;plane<3;++plane)
 	
-	const auto& defectcluster_plane_data = defectcluster_data._raw_cluster_vv.at(plane);
-	n_defects += defectcluster_plane_data.num_defects();
-	
+	  n_defects += def_data._raw_cluster_vv.at(plane).num_defects();
+
+      } else {
+
+	for(auto const& vtx_cluster : def_data.get_vertex_clusters()) {
+
+	  for(size_t plane=0; plane < vtx_cluster.num_planes(); ++plane) {
+
+	    for(auto const& part_compound : vtx_cluster.get_cluster(plane)) {
+
+	      n_defects += part_compound.get_defects().size();
+	      
+	    }
+	  }
+	}
       }
-    
       if ( !n_defects ) {
 	LAROCV_DEBUG() << "PostProcess found NO defect points in any plane" << std::endl;
 	return false;
       }
     }
-
     return true;
   }
 }

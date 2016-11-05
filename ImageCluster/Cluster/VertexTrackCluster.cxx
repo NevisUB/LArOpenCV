@@ -128,7 +128,7 @@ namespace larocv {
 	cv::imwrite(std::string(ss1.str()).c_str(), img_padded);
 	cv::imwrite(std::string(ss2.str()).c_str(), rot_img);
       */
-      
+
       cv::Mat rot_polarimg, sb_img;
       
       // Cluster per xs-point found in Refine2DVertex
