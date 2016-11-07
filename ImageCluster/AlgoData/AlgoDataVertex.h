@@ -54,12 +54,14 @@ namespace larocv {
       /// id retriever
       size_t id() const { return _id; }
       /// attribute clear method
-      void clear() { vtx2d_v.clear(); x = y = z = kINVALID_DOUBLE; }
+      void clear() { vtx2d_v.clear(); x = y = z = kINVALID_DOUBLE; num_planes=0; }
       
       /// Plane-wise 2D vertex point
       std::vector<larocv::data::Vertex2D> vtx2d_v;
       /// 3D vertex location
       double x, y, z;
+      /// # of valid planes used in this estimate
+      size_t num_planes;
     private:
       /// unique vertex id
       size_t _id;

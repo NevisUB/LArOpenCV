@@ -922,7 +922,6 @@ namespace larocv{
       LAROCV_DEBUG() << "Scanning 3-plane dtheta minimum around " << central_idx
 		     << " in range [" << min_idx << "," << max_idx << "]" << std::endl;
       // method 1: find true minimum using dtheta
-      /*
       float  min_score=1e9;
       size_t target_idx=kINVALID_SIZE;
       for(size_t idx=min_idx; idx<=max_idx; ++idx) {
@@ -933,8 +932,9 @@ namespace larocv{
 	}
       }
       if(target_idx == kINVALID_SIZE) continue;
-      */
+
       // method 2: find minimum in terms of average of neighbor local minima
+      /*
       float average_idx=central_idx;
       float average_ctr=1;
       for(size_t j=0; j<minidx_score1_v.size(); ++j) {
@@ -946,7 +946,7 @@ namespace larocv{
 	++average_ctr;
       }
       size_t target_idx = (size_t)(average_idx/average_ctr+0.5);
-      
+      */      
       // check if this minimum is not a neighbor of others
       bool valid=true;
       for(auto const& minidx : minidx_v) {
@@ -1066,8 +1066,8 @@ namespace larocv{
       LAROCV_INFO() << "Using two seed planes (" << seed0_plane << " and " << seed1_plane << ") "
 		    << "to determine (y,z) vertex position" << std::endl;
 
-      std::multimap<float,std::pair<size_t,size_t> > scoremap_2plane;
-      std::multimap<float,std::pair<size_t,size_t> > scoremap_3plane;
+      std::multimap<float,std::vector<size_t> > scoremap_2plane;
+      std::multimap<float,std::vector<size_t> > scoremap_3plane;
       
       auto const& seed0_data = data.get_plane_data(seed0_plane);
       auto const& seed1_data = data.get_plane_data(seed1_plane);      
@@ -1124,7 +1124,9 @@ namespace larocv{
 	  }
 	  if(closest_circle2_idx != kINVALID_SIZE) {
 	    ave_dtheta /= 3.;
-	    scoremap_3plane.emplace(ave_dtheta,std::pair<size_t,size_t>(circle0_idx,circle1_idx));
+	    std::vector<size_t> mapval(3);
+	    mapval[0] = circle0_idx; mapval[1] = circle1_idx; mapval[2] = 3;
+	    scoremap_3plane.emplace(ave_dtheta,mapval);
 	    LAROCV_INFO() << "Found a 3-plane vertex candiate @ (y,z) = (" << y << "," << z << ") ... "
 			  << "plane " << seed0_plane << " @ " << circle0.center << " ... "
 			  << "plane " << seed1_plane << " @ " << circle1.center << " ... "
@@ -1132,7 +1134,9 @@ namespace larocv{
 	  }
 	  else {
 	    ave_dtheta /= 2.;
-	    scoremap_2plane.emplace(ave_dtheta,std::pair<size_t,size_t>(circle0_idx,circle1_idx));
+	    std::vector<size_t> mapval(3);
+	    mapval[0] = circle0_idx; mapval[1] = circle1_idx; mapval[2] = 2;
+	    scoremap_2plane.emplace(ave_dtheta,mapval);
 	    LAROCV_INFO() << "Found a 2-plane vertex candiate @ (y,z) = (" << y << "," << z << ") ... "
 			  << "plane " << seed0_plane << " @ " << circle0.center << " ... "
 			  << "plane " << seed1_plane << " @ " << circle1.center << " ... "
@@ -1142,17 +1146,18 @@ namespace larocv{
       }
 
       // Now construct an array of possible candidates
-      std::vector<std::pair<size_t,size_t> > seed_pair_v;
-      seed_pair_v.reserve(scoremap_3plane.size()+scoremap_2plane.size());
-      for(auto const& key_value : scoremap_3plane) seed_pair_v.push_back(key_value.second);
+      std::vector<std::vector<size_t> > seeds_v;
+      seeds_v.reserve(scoremap_3plane.size()+scoremap_2plane.size());
+      for(auto const& key_value : scoremap_3plane) seeds_v.push_back(key_value.second);
       if(!_require_3planes)
-	for(auto const& key_value : scoremap_2plane) seed_pair_v.push_back(key_value.second);
+	for(auto const& key_value : scoremap_2plane) seeds_v.push_back(key_value.second);
       
       // loop over results and generate unique vertex set w/o neighbors
       geo2d::VectorArray<float> vtx_yz_v;
-      for(auto const& seed_pair : seed_pair_v) {
-	auto const& circle0_idx = seed_pair.first;
-	auto const& circle1_idx = seed_pair.second;
+      for(auto const& seeds : seeds_v) {
+	auto const& circle0_idx = seeds[0];
+	auto const& circle1_idx = seeds[1];
+	auto const& nplanes     = seeds[2];
 	if(seed0_used_idx_s.find(circle0_idx) != seed0_used_idx_s.end()) continue;
 	if(seed1_used_idx_s.find(circle0_idx) != seed1_used_idx_s.end()) continue;
 	auto const& circle0 = seed0_data._circle_scan_v[circle0_idx];
@@ -1187,6 +1192,7 @@ namespace larocv{
 	vtx3d.z = z;
 	vtx3d.x = larocv::TriggerTick2Cm(circle0.center.x * _time_comp_factor_v[seed0_plane] +
 					 _origin_v[seed0_plane].x - _trigger_tick);
+	vtx3d.num_planes = nplanes;
 	vtx3d.vtx2d_v.resize(img_v.size());
 	vtx3d.vtx2d_v[seed0_plane].pt    = circle0.center;
 	vtx3d.vtx2d_v[seed0_plane].score = circle0.sum_dtheta();
