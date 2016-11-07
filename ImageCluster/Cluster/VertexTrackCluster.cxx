@@ -314,11 +314,16 @@ namespace larocv {
 
     // Prepare image for analysis per vertex
     ::cv::Mat thresh_img;
-    auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,::cv::Size(_dilation_size,_dilation_size));
-    ::cv::dilate(img,thresh_img,kernel,::cv::Point(-1,-1),_dilation_iter);
-    ::cv::blur(thresh_img,thresh_img,::cv::Size(_blur_size,_blur_size));
-    ::cv::threshold(thresh_img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
-
+    /* 
+       // Using dilate/blur/threshold
+       auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,::cv::Size(_dilation_size,_dilation_size));
+       ::cv::dilate(img,thresh_img,kernel,::cv::Point(-1,-1),_dilation_iter);
+       ::cv::blur(thresh_img,thresh_img,::cv::Size(_blur_size,_blur_size));
+       ::cv::threshold(thresh_img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
+    */
+    // OR using just threshold
+    ::cv::threshold(img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
+    
     // Run clustering for this plane & store
     auto const plane = meta.plane();
     for(size_t vtx_id = 0; vtx_id < data._vtx_cluster_v.size(); ++vtx_id) {
