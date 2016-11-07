@@ -52,8 +52,8 @@ namespace larocv{
     _xplane_tick_resolution = 1.;
     _xplane_wire_resolution = 2.;
     _xplane_guess_max_dist  = 3.;
-    _time_exclusion_radius = 20;
-    _wire_exclusion_radius = 20;
+    _time_exclusion_radius = 10;
+    _wire_exclusion_radius = 10;
 
     _require_3planes = false;
     _vtx_3d_resolution = 10.;
@@ -128,7 +128,7 @@ namespace larocv{
   }
 
   void Refine2DVertex::ExtremePoints(const std::vector<float>& array,
-				     size_t pre, size_t post, bool minimum,
+				     size_t pre, size_t post, bool minimum, bool inspect_edges,
 				     std::vector<size_t>& local_extreme_idx_v,
 				     std::vector<std::pair<size_t,size_t> >& local_extreme_range_v,
 				     float invalid_value)
@@ -225,6 +225,83 @@ namespace larocv{
       temp_extreme_range_v[minima_idx] = std::make_pair(range_start,range_end);
     }
 
+    // If the range does not cover the start/end of array, and if a user specified to check, check.
+    if(inspect_edges) {
+      // get first and last valid index
+      size_t first_valid_index=kINVALID_SIZE;
+      size_t last_valid_index=kINVALID_SIZE;
+      for(size_t idx=0; idx<array.size(); ++idx) {
+	if(array[idx] == invalid_value) continue;
+	first_valid_index = idx;
+	break;
+      }
+      for(size_t idx=0; idx<array.size(); ++idx) {
+	if(array[array.size()-idx-1] == invalid_value) continue;
+	last_valid_index = array.size() - idx - 1;
+	break;
+      }
+      // check the start: use 2*pre range to check if the beginning has a slope w/ same sign.
+      // if that's the case it is possible that the edge is a true extreme
+      bool start_included=false;
+      for(auto const& range : temp_extreme_range_v) {
+	if(range.first <= first_valid_index && first_valid_index <= range.second) {
+	  start_included = true;
+	  break;
+	}
+      }
+      if(!start_included && first_valid_index != kINVALID_SIZE && (first_valid_index+pre*2) <= array.size()) {
+	bool include_start = true;
+	size_t num_index = 0;
+	while(num_index<(pre*2)) {
+	  if(array[first_valid_index + num_index] == invalid_value) {
+	    include_start = false;
+	    break;
+	  }	  
+	  if(  minimum && slope[first_valid_index + num_index] <= 0 ) {
+	    include_start = false;
+	    break;
+	  }
+	  if( !minimum && slope[first_valid_index + num_index] >= 0 ) {
+	    include_start = false;
+	    break;
+	  }
+	  ++num_index;
+	}
+	if(include_start)
+	  temp_extreme_range_v.push_back(std::make_pair((size_t)(first_valid_index),(size_t)(first_valid_index + pre*2)));
+      }
+      // check the end: use 2*post range to check if the ending has a slope w/ same sign.
+      // if that's the case it is possible that the edge is a true extreme
+      bool end_included=false;
+      for(auto const& range : temp_extreme_range_v) {
+	if(range.first <= last_valid_index && last_valid_index <= range.second) {
+	  end_included = true;
+	  break;
+	}
+      }
+      if(!end_included && last_valid_index != kINVALID_SIZE && array.size() > (post*2)) {
+	bool include_end = true;
+	size_t num_index = 0;
+	while(num_index<(post*2)) {
+	  if(array[last_valid_index - num_index] == invalid_value) {
+	    include_end = false;
+	    break;
+	  }	  
+	  if(  minimum && slope[last_valid_index - num_index] >= 0 ) {
+	    include_end = false;
+	    break;
+	  }
+	  if( !minimum && slope[last_valid_index - num_index] <= 0 ) {
+	    include_end = false;
+	    break;
+	  }
+	  ++num_index;
+	}
+	if(include_end)
+	  temp_extreme_range_v.push_back(std::make_pair((size_t)(last_valid_index-post*2+1),(size_t)(last_valid_index)));
+      }
+    }
+
     // Now choose the unique range
     local_extreme_range_v.reserve(temp_extreme_range_v.size());
     for(auto const& temp_range : temp_extreme_range_v) {
@@ -241,6 +318,7 @@ namespace larocv{
       }
       if(!overlap) local_extreme_range_v.push_back(temp_range);
     }
+        
     // Now find local minima within the unique range
     for(auto const& range : local_extreme_range_v) {
       auto const& start = range.first;
@@ -993,14 +1071,14 @@ namespace larocv{
     auto& minrange_score0_v = _time_binned_score0_minrange_v;
     
     mean_score0_v = RollingMean(score0_v,3,3,-1);
-    ExtremePoints(mean_score0_v,3,3,true,minidx_score0_v,minrange_score0_v,-1);
+    ExtremePoints(mean_score0_v,3,3,true,true,minidx_score0_v,minrange_score0_v,-1);
 
     auto const& score1_v    = _time_binned_score1_v;
     auto& mean_score1_v     = _time_binned_score1_mean_v;
     auto& minidx_score1_v   = _time_binned_score1_minidx_v;
     auto& minrange_score1_v = _time_binned_score1_minrange_v;
     mean_score1_v = RollingMean(score1_v,3,3,-1);
-    ExtremePoints(mean_score1_v,3,3,true,minidx_score1_v,minrange_score1_v,-1);
+    ExtremePoints(mean_score1_v,3,3,true,true,minidx_score1_v,minrange_score1_v,-1);
 
     // Now work on excluding neighbors for local minimum tick estimation
     auto& minidx_v   = _time_binned_minidx_v;

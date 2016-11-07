@@ -111,7 +111,7 @@ namespace larocv {
 				       float invalid_value=kINVALID_FLOAT);
 
     void ExtremePoints(const std::vector<float>& array,
-		       size_t pre, size_t post, bool minimum,
+		       size_t pre, size_t post, bool minimum, bool inspect_edges,
 		       std::vector<size_t>& local_extreme_idx_v,
 		       std::vector<std::pair<size_t,size_t> >& local_extreme_range_v,
 		       float invalid_value=kINVALID_FLOAT);
