@@ -47,13 +47,16 @@ namespace larocv {
     const std::vector<float>&  TimeBinnedScore0()         const { return _time_binned_score0_v;        }
     const std::vector<float>&  TimeBinnedScore0Mean()     const { return _time_binned_score0_mean_v;   }
     const std::vector<size_t>& TimeBinnedScore0MinIndex() const { return _time_binned_score0_minidx_v; }
+    const std::vector<std::pair<size_t,size_t> >& TimeBinnedScore0MinRange() const { return _time_binned_score0_minrange_v; }
 
     const std::vector<float>&  TimeBinnedScore1()         const { return _time_binned_score1_v;        }
     const std::vector<float>&  TimeBinnedScore1Mean()     const { return _time_binned_score1_mean_v;   }
     const std::vector<size_t>& TimeBinnedScore1MinIndex() const { return _time_binned_score1_minidx_v; }
+    const std::vector<std::pair<size_t,size_t> >& TimeBinnedScore1MinRange() const { return _time_binned_score1_minrange_v; }
 
     const std::vector<float>&  TimeBinnedScore()         const { return _time_binned_score_v;   }
     const std::vector<size_t>& TimeBinnedScoreMinIndex() const { return _time_binned_minidx_v;  }
+    const std::vector<std::pair<size_t,size_t> >& TimeBinnedScoreMinRange() const { return _time_binned_minrange_v;  }
     
   protected:
 
@@ -107,9 +110,12 @@ namespace larocv {
 				       size_t pre, size_t post,
 				       float invalid_value=kINVALID_FLOAT);
 
-    std::vector<size_t> ExtremePoints(const std::vector<float>& array,
-				      size_t pre, size_t post, bool minimum,
-				      float invalid_value=kINVALID_FLOAT);
+    void ExtremePoints(const std::vector<float>& array,
+		       size_t pre, size_t post, bool minimum,
+		       std::vector<size_t>& local_extreme_idx_v,
+		       std::vector<std::pair<size_t,size_t> >& local_extreme_range_v,
+		       float invalid_value=kINVALID_FLOAT);
+    
     void XPlaneTickProposal();
     AlgorithmID_t _pca_algo_id;
     AlgorithmID_t _defect_algo_id;
@@ -143,14 +149,17 @@ namespace larocv {
     std::vector<float> _time_binned_score0_v;
     std::vector<float> _time_binned_score0_mean_v;
     std::vector<size_t> _time_binned_score0_minidx_v;
+    std::vector<std::pair<size_t,size_t> > _time_binned_score0_minrange_v;
     /// combined time-binned score across planes
     std::vector<float> _time_binned_score1_v;
     std::vector<float> _time_binned_score1_mean_v;
     std::vector<size_t> _time_binned_score1_minidx_v;
+    std::vector<std::pair<size_t,size_t> > _time_binned_score1_minrange_v;
     /// "binned" (in time) best vtx estimation score per-plane, used to match across planes
     std::vector<float> _time_binned_score_v;
     /// overall local minimum index in sampled time bins
     std::vector<size_t> _time_binned_minidx_v;
+    std::vector<std::pair<size_t,size_t> > _time_binned_minrange_v;
   };
   /**
      \class larocv::Refine2DVertexFactory

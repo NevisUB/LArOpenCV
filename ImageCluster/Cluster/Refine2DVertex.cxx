@@ -126,16 +126,24 @@ namespace larocv{
     }
     return slope;
   }
-  
-  std::vector<size_t> Refine2DVertex::ExtremePoints(const std::vector<float>& array,
-						    size_t pre, size_t post, bool minimum,
-						    float invalid_value)
+
+  void Refine2DVertex::ExtremePoints(const std::vector<float>& array,
+				     size_t pre, size_t post, bool minimum,
+				     std::vector<size_t>& local_extreme_idx_v,
+				     std::vector<std::pair<size_t,size_t> >& local_extreme_range_v,
+				     float invalid_value)
   {
+    local_extreme_idx_v.clear();
+    local_extreme_range_v.clear();
+
+    std::vector<size_t> temp_extreme_idx_v;
+    std::vector<std::pair<size_t,size_t> > temp_extreme_range_v;
+    
     auto const& slope = RollingGradient(array,pre,post,invalid_value);
-    std::vector<size_t> res_index;
     float preval, postval;
     int prestep, poststep;
     bool found;
+    // First find the "bottom of a valley", a local minimum
     for(size_t idx=0; idx<array.size(); ++idx) {
       //std::cout << "dtheta: " << array[idx] << " slope: " << slope[idx] << " @ idx " << idx << std::endl;
       if(array[idx] == invalid_value) continue;
@@ -144,6 +152,7 @@ namespace larocv{
       preval  = 0.;
       prestep = idx-1;
       found = false;
+      // Find a pre-step that holds the "previous slope"
       while(prestep>=0 && prestep>((int)idx - pre - 1)) {
 	if(slope[prestep]==invalid_value) {
 	  prestep -=1;
@@ -153,11 +162,13 @@ namespace larocv{
 	found=true;
 	break;
       }
+      // If no "previous slope" found, ignore this tick
       if(!found) continue;
       
       postval = 0.;
       poststep = idx+1;
       found=false;
+      // Find a post-step that holds the "later slope"
       while(poststep<=slope.size() && poststep < ((int)idx + post +1)) {
 	if(slope[poststep]==invalid_value) {
 	  poststep +=1;
@@ -167,12 +178,90 @@ namespace larocv{
 	found=true;
 	break;
       }
+      // If no "later slope" found, ignore this tick
       if(!found) continue;
 
-      if(  minimum && preval < 0 and postval > 0 ) res_index.push_back(idx);
-      if( !minimum && preval > 0 and postval < 0 ) res_index.push_back(idx);
+      if(  minimum && preval < 0 and postval > 0 ) temp_extreme_idx_v.push_back(idx);
+      if( !minimum && preval > 0 and postval < 0 ) temp_extreme_idx_v.push_back(idx);
     }
-    return res_index;
+
+    // Now figure out range of "valley"
+    temp_extreme_range_v.resize(temp_extreme_idx_v.size());
+    for(size_t minima_idx = 0; minima_idx < temp_extreme_idx_v.size(); ++minima_idx) {
+      auto const& minima_candidate = temp_extreme_idx_v[minima_idx];
+
+      // target range to be figured out
+      size_t range_start = minima_candidate;
+      size_t range_end   = minima_candidate;
+      // loop control variables
+      size_t next_idx, consecutive_invalid_count;
+
+      consecutive_invalid_count = 0;
+      while(range_start > consecutive_invalid_count && consecutive_invalid_count < pre) {
+	next_idx = range_start - consecutive_invalid_count - 1 ;
+	auto const& local_slope = slope[next_idx];
+	if(local_slope != invalid_value) consecutive_invalid_count = 0;
+	else {
+	  ++consecutive_invalid_count;
+	  continue;
+	}
+	if( (minimum && local_slope>=0) || (!minimum && local_slope<=0) ) break;
+	range_start = next_idx;
+      }
+
+      consecutive_invalid_count = 0;
+      while( (range_end+consecutive_invalid_count) < slope.size() && consecutive_invalid_count < pre) {
+	next_idx = range_end + consecutive_invalid_count + 1 ;
+	auto const& local_slope = slope[next_idx];
+	if(local_slope != invalid_value) consecutive_invalid_count = 0;
+	else {
+	  ++consecutive_invalid_count;
+	  continue;
+	}
+	if( (minimum && local_slope<=0) || (!minimum && local_slope>=0) ) break;
+	range_end = next_idx;
+      }
+      
+      temp_extreme_range_v[minima_idx] = std::make_pair(range_start,range_end);
+    }
+
+    // Now choose the unique range
+    local_extreme_range_v.reserve(temp_extreme_range_v.size());
+    for(auto const& temp_range : temp_extreme_range_v) {
+      auto const& start = temp_range.first;
+      auto const& end   = temp_range.second;
+      // check if there is an overlap with constructed range
+      bool overlap=false;
+      for(auto& range : local_extreme_range_v) {
+	if(end < range.first || range.second < start) continue;
+	overlap=true;
+	range.first  = (range.first  < start ? range.first  : start );
+	range.second = (range.second > end   ? range.second : end   );
+	break;
+      }
+      if(!overlap) local_extreme_range_v.push_back(temp_range);
+    }
+    // Now find local minima within the unique range
+    for(auto const& range : local_extreme_range_v) {
+      auto const& start = range.first;
+      auto const& end   = range.second;
+      float extreme_val = 1e9;
+      size_t extreme_idx = kINVALID_SIZE;
+      if(!minimum) extreme_val = 0;
+      
+      for(size_t idx=start; idx<=end; ++idx) {
+	if(array[idx] == invalid_value) continue;
+	if(minimum && array[idx] < extreme_val) {
+	  extreme_idx = idx;
+	  extreme_val = array[idx];
+	}
+	if(!minimum && array[idx] > extreme_val) {
+	  extreme_idx = idx;
+	  extreme_val = array[idx];
+	}
+      }
+      local_extreme_idx_v.push_back(extreme_idx);
+    }
   }
 
   float Refine2DVertex::AngularSpread(const ::cv::Mat& polarimg,
@@ -898,127 +987,93 @@ namespace larocv{
   {
     //auto& data = AlgoData<larocv::Refine2DVertexData>();
     // Find local minimum for >2 plane score array
-    auto const& score0_v  = _time_binned_score0_v;
-    auto& mean_score0_v   = _time_binned_score0_mean_v;
-    auto& minidx_score0_v = _time_binned_score0_minidx_v;
-    mean_score0_v   = RollingMean(score0_v,3,3,-1);
-    minidx_score0_v = ExtremePoints(mean_score0_v,5,5,true,-1);
+    auto const& score0_v    = _time_binned_score0_v;
+    auto& mean_score0_v     = _time_binned_score0_mean_v;
+    auto& minidx_score0_v   = _time_binned_score0_minidx_v;
+    auto& minrange_score0_v = _time_binned_score0_minrange_v;
+    
+    mean_score0_v = RollingMean(score0_v,3,3,-1);
+    ExtremePoints(mean_score0_v,3,3,true,minidx_score0_v,minrange_score0_v,-1);
 
-    auto const& score1_v  = _time_binned_score1_v;
-    auto& mean_score1_v   = _time_binned_score1_mean_v;
-    auto& minidx_score1_v = _time_binned_score1_minidx_v;
-    mean_score1_v   = RollingMean(score1_v,3,3,-1);
-    minidx_score1_v = ExtremePoints(mean_score1_v,5,5,true,-1);
+    auto const& score1_v    = _time_binned_score1_v;
+    auto& mean_score1_v     = _time_binned_score1_mean_v;
+    auto& minidx_score1_v   = _time_binned_score1_minidx_v;
+    auto& minrange_score1_v = _time_binned_score1_minrange_v;
+    mean_score1_v = RollingMean(score1_v,3,3,-1);
+    ExtremePoints(mean_score1_v,3,3,true,minidx_score1_v,minrange_score1_v,-1);
 
     // Now work on excluding neighbors for local minimum tick estimation
-    auto& minidx_v = _time_binned_minidx_v;
-    std::vector<bool> used_v;
-    used_v.resize(minidx_score1_v.size(),false);
+    auto& minidx_v   = _time_binned_minidx_v;
+    auto& minrange_v = _time_binned_minrange_v;
+    std::vector<float> minscore_v;
+    std::vector<bool>  threeplane_v;
     
     for(size_t i=0; i<minidx_score1_v.size(); ++i) {
-      auto const& central_idx = minidx_score1_v[i];
-      if(used_v[i]) continue;
-      
-      int min_idx = (int)(central_idx) - _time_exclusion_radius;
-      int max_idx = (int)(central_idx) + _time_exclusion_radius;
-      if(min_idx<=0) min_idx = 0;
-      if(max_idx>=mean_score1_v.size()) max_idx = mean_score1_v.size() - 1;
-      LAROCV_DEBUG() << "Scanning 3-plane dtheta minimum around " << central_idx
-		     << " in range [" << min_idx << "," << max_idx << "]" << std::endl;
-      // method 1: find true minimum using dtheta
-      float  min_score=1e9;
-      size_t target_idx=kINVALID_SIZE;
-      for(size_t idx=min_idx; idx<=max_idx; ++idx) {
-	if(mean_score1_v[idx]<0) continue;
-	if(target_idx == kINVALID_SIZE || mean_score1_v[idx] < min_score) {
-	  target_idx = idx;
-	  min_score  = mean_score1_v[idx];
-	}
-      }
-      if(target_idx == kINVALID_SIZE) continue;
 
-      // method 2: find minimum in terms of average of neighbor local minima
-      /*
-      float average_idx=central_idx;
-      float average_ctr=1;
-      for(size_t j=0; j<minidx_score1_v.size(); ++j) {
-	if(used_v[j]) continue;
-	auto const& neighbor_idx = minidx_score1_v[j];
-	if(neighbor_idx < min_idx || max_idx < neighbor_idx) continue;
-	average_idx += neighbor_idx;
-	used_v[j] = true;
-	++average_ctr;
-      }
-      size_t target_idx = (size_t)(average_idx/average_ctr+0.5);
-      */      
-      // check if this minimum is not a neighbor of others
-      bool valid=true;
-      for(auto const& minidx : minidx_v) {
-	int dist = std::abs((int)(target_idx) - (int)(minidx));
+      auto const& candidate_idx   = minidx_score1_v[i];
+      auto const& candidate_range = minrange_score1_v[i];
+      auto const& candidate_score = mean_score1_v[candidate_idx];
+      
+      // Check if this candidate is within the exclusion radius of the previously registered index
+      // If so, pick the "smaller score" one
+      bool overlap=false;
+      for(size_t i=0; i<minidx_v.size(); ++i) {
+	auto const& prev_idx = minidx_v[i];
+	int dist = std::abs((int)(candidate_idx) - (int)(prev_idx));
 	if(dist < _time_exclusion_radius) {
-	  valid=false;
-	  break;
+	  overlap = true;
+	  if(minscore_v[i] > candidate_score) {
+	    //update
+	    minidx_v[i]   = candidate_idx;
+	    minrange_v[i] = candidate_range;
+	    minscore_v[i] = candidate_score;
+	  }
 	}
       }
-      if(valid && target_idx != kINVALID_SIZE) {
-	minidx_v.push_back(target_idx);
-	LAROCV_INFO() << "Found valid 3-plane tick @ " << target_idx
-		      << " neargy found local minimum dtheta minimum around " << central_idx << std::endl;
+      if(!overlap) {
+	minidx_v.push_back(candidate_idx);
+	minrange_v.push_back(candidate_range);
+	minscore_v.push_back(candidate_score);
+	threeplane_v.push_back(true);
       }
     }
 
-    used_v.clear();
-    used_v.resize(minidx_score0_v.size(),false);
+    for(size_t i=0; i<minidx_v.size(); ++i)
+      LAROCV_INFO() << "Found valid 3-plane @ " << minidx_v[i] << " score " << minscore_v[i] << std::endl;
+
     for(size_t i=0; i<minidx_score0_v.size(); ++i) {
-      auto const& central_idx = minidx_score0_v[i];
-      if(used_v[i]) continue;
 
-      int min_idx = (int)(central_idx) - _time_exclusion_radius;
-      int max_idx = (int)(central_idx) + _time_exclusion_radius;
-      if(min_idx<=0) min_idx = 0;
-      if(max_idx>=mean_score0_v.size()) max_idx = mean_score0_v.size() - 1;
-      LAROCV_DEBUG() << "Scanning 3-plane dtheta minimum around " << central_idx
-		     << " in range [" << min_idx << "," << max_idx << "]" << std::endl;
-
-      // method 1 find true minimum
-      /*
-      float  min_score=1e9;
-      size_t target_idx=kINVALID_SIZE;
-      for(size_t idx=min_idx; idx<=max_idx; ++idx) {
-	if(mean_score1_v[idx]>=0) continue;
-	if(mean_score0_v[idx]<0) continue;
-	if(target_idx == kINVALID_SIZE || mean_score0_v[idx] < min_score) {
-	  target_idx = idx;
-	  min_score  = mean_score0_v[idx];
-	}
-      }
-      if(target_idx == kINVALID_SIZE) continue;
-      */
-      // method 2: find minimum in terms of average of neighbor local minima
-      float average_idx=central_idx;
-      float average_ctr=1;
-      for(size_t j=0; j<minidx_score0_v.size(); ++j) {
-	if(used_v[j]) continue;
-	auto const& neighbor_idx = minidx_score0_v[j];
-	if(neighbor_idx < min_idx || max_idx < neighbor_idx) continue;
-	average_idx += neighbor_idx;
-	used_v[j] = true;
-	++average_ctr;
-      }
-      size_t target_idx = (size_t)(average_idx/average_ctr+0.5);
-      // check if this minimum is not a neighbor of others
-      bool valid=true;
-      for(auto const& minidx : minidx_v) {
-	int dist = std::abs((int)(target_idx) - (int)(minidx));
+      auto const& candidate_idx   = minidx_score0_v[i];
+      auto const& candidate_range = minrange_score0_v[i];
+      auto const& candidate_score = mean_score0_v[candidate_idx];
+      
+      // Check if this candidate is within the exclusion radius of the previously registered index
+      // If so, pick the "smaller score" one
+      bool overlap=false;
+      for(size_t i=0; i<minidx_v.size(); ++i) {
+	auto const& prev_idx = minidx_v[i];
+	int dist = std::abs((int)(candidate_idx) - (int)(prev_idx));
 	if(dist < _time_exclusion_radius) {
-	  valid=false;
-	  break;
+	  overlap = true;
+	  if(!threeplane_v[i] && minscore_v[i] > candidate_score) {
+	    //update
+	    minidx_v[i]   = candidate_idx;
+	    minrange_v[i] = candidate_range;
+	    minscore_v[i] = candidate_score;
+	  }
 	}
       }
-      if(valid && target_idx != kINVALID_SIZE) {
-	minidx_v.push_back(target_idx);
-	LAROCV_INFO() << "Found valid 3-plane tick @ " << target_idx
-		      << " neargy found local minimum dtheta minimum around " << central_idx << std::endl;
+      if(!overlap) {
+	minidx_v.push_back(candidate_idx);
+	minrange_v.push_back(candidate_range);
+	minscore_v.push_back(candidate_score);
+	threeplane_v.push_back(false);
+      }
+    }
+
+    for(size_t i=0; i<minidx_v.size(); ++i) {
+      if(!threeplane_v[i]) {
+	LAROCV_INFO() << "Found valid 2-plane @ " << minidx_v[i] << " score " << minscore_v[i] << std::endl;
       }
     }
   }
@@ -1263,11 +1318,13 @@ namespace larocv{
     _time_binned_score0_v.clear();
     _time_binned_score0_mean_v.clear();
     _time_binned_score0_minidx_v.clear();
+    _time_binned_score0_minrange_v.clear();
     _time_binned_score1_v.clear();
     _time_binned_score1_mean_v.clear();
     _time_binned_score1_minidx_v.clear();
+    _time_binned_score1_minrange_v.clear();
     _time_binned_minidx_v.clear();
-
+    _time_binned_minrange_v.clear();
     XPlaneTimeScan(img_v);
     XPlaneTickProposal();
     XPlaneWireScan(img_v);
