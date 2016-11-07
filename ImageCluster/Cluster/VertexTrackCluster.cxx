@@ -233,22 +233,21 @@ namespace larocv {
       float rows = rot_polarimg.rows;
       float cols = rot_polarimg.cols;
       
-      cv::Mat polar_ctor_mat = cv::Mat(img_padded.rows,img_padded.cols,CV_8UC1,cvScalar(0.));
-      cv::Mat cart_ctor_mat = cv::Mat(img_padded.rows,img_padded.cols,CV_8UC1,cvScalar(0.));
-      
+      //cv::Mat polar_ctor_mat = cv::Mat(img_padded.rows,img_padded.cols,CV_8UC1,cvScalar(0.));
+            
       //Cluster2D res_contour;
       //res_contour._contour.resize(polar_contour.size());
       larocv::data::ParticleCluster part;
       auto& contour = part._ctor;
       contour.resize(polar_contour.size());
 
-      std::stringstream ss5;
+      //std::stringstream ss5;
       //ss3 << "Inserting into contour : ";
       for (size_t pt_idx=0; pt_idx<polar_contour.size(); ++pt_idx) {
       	auto const& polar_pt = polar_contour[pt_idx];
       	auto& pt = contour[pt_idx];
 	
-	polar_ctor_mat.at<unsigned char>(polar_pt.y,polar_pt.x) = (unsigned char) 255;
+	//polar_ctor_mat.at<unsigned char>(polar_pt.y,polar_pt.x) = (unsigned char) 255;
 	
       	//up case to floating point
       	float r = polar_pt.x;
@@ -270,6 +269,7 @@ namespace larocv {
       }
       //ss5<<std::endl;
       //LAROCV_DEBUG() << ss5.str();
+      // cv::Mat cart_ctor_mat  = cv::Mat(img_padded.rows,img_padded.cols,CV_8UC1,cvScalar(0.));
       // for(auto& cpt : res_contour._contour)
       // 	cart_ctor_mat.at<unsigned char>(cpt.y,cpt.x) = (unsigned char) 255;
 
