@@ -12,11 +12,9 @@ namespace larocv {
   void VertexTrackCluster::_Configure_(const ::fcllite::PSet &pset)
   {
 
-    _dilation_size = pset.get<int>("DilationSize");
-    _dilation_iter = pset.get<int>("DilationIterations");
-    
-    _blur_size_r = pset.get<int>("BlurSizeR");
-    _blur_size_t = pset.get<int>("BlurSizeT");
+    _dilation_size = pset.get<int>("DilationSize",2);
+    _dilation_iter = pset.get<int>("DilationIter",1);
+    _blur_size     = pset.get<int>("BlurSize",2);
     
     _thresh        = pset.get<float>("Thresh");
     _thresh_maxval = pset.get<float>("ThreshMaxVal");
@@ -25,6 +23,8 @@ namespace larocv {
 
     _theta_hi = 10;
     _theta_lo = 10;
+
+    _pi_threshold = 10;
     
     auto const vtx_algo_name = pset.get<std::string>("Refine2DVertexAlgo");
     _refine2d_algo_id = this->ID(vtx_algo_name);
@@ -135,7 +135,7 @@ namespace larocv {
 
       int max_radius=1000;
 
-      ::cv::threshold(rot_img,rot_img,10,255,CV_THRESH_BINARY);
+      ::cv::threshold(rot_img,rot_img,_pi_threshold,255,CV_THRESH_BINARY);
       
       cv::linearPolar(rot_img,        //input
 		      rot_polarimg,   //output
@@ -312,18 +312,76 @@ namespace larocv {
       }
     }
 
+    // Prepare image for analysis per vertex
+    ::cv::Mat thresh_img;
+    auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,::cv::Size(_dilation_size,_dilation_size));
+    ::cv::dilate(img,thresh_img,kernel,::cv::Point(-1,-1),_dilation_iter);
+    ::cv::blur(thresh_img,thresh_img,::cv::Size(_blur_size,_blur_size));
+    ::cv::threshold(thresh_img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
+
     // Run clustering for this plane & store
     auto const plane = meta.plane();
     for(size_t vtx_id = 0; vtx_id < data._vtx_cluster_v.size(); ++vtx_id) {
+
       auto& vtx_cluster = data._vtx_cluster_v[vtx_id];
       auto const& circle_vtx = vtx_cluster.get_circle_vertex(plane);
-      LAROCV_DEBUG() << "circle_vtx center, radius " << circle_vtx.center << "... " << circle_vtx.radius << std::endl;
+      LAROCV_INFO() << "Vertex ID " << vtx_id << " plane " << plane
+		    << " CircleVertex @ " << circle_vtx.center << " w/ R = " << circle_vtx.radius << std::endl;
+      
+      // Create track cluster hypothesis from the vertex point
       auto cluster_v = TrackHypothesis(img,circle_vtx);
+
+      //
+      // Analyze fraction of pixels clustered
+      // 0) find a contour that contains the subject 2D vertex, and find allcontained non-zero pixels inside
+      // 1) per track cluster count # of pixels from 0) that is contained inside
+      GEO2D_ContourArray_t parent_ctor_v;
+      std::vector<::cv::Vec4i> cv_hierarchy_v;
+      ::cv::findContours(thresh_img, parent_ctor_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+      size_t parent_ctor_id   = kINVALID_SIZE;
+      size_t parent_ctor_size = 0;
+      for(size_t ctor_id=0; ctor_id < parent_ctor_v.size(); ++ctor_id){
+	auto const& ctor = parent_ctor_v[ctor_id];
+	auto dist = ::cv::pointPolygonTest(ctor, circle_vtx.center, false);
+	if(dist < 0) continue;
+	if(parent_ctor_size > ctor.size()) continue;
+	parent_ctor_id = ctor_id;
+	parent_ctor_size = ctor.size();
+      }
+      geo2d::VectorArray<int> parent_points;
+      if(parent_ctor_id != kINVALID_SIZE) {
+	auto const& parent_ctor = parent_ctor_v[parent_ctor_id];
+	geo2d::VectorArray<int> points;
+	findNonZero(thresh_img, points);
+	parent_points.reserve(points.size());
+	for(auto const& pt : points) {
+	  auto dist = ::cv::pointPolygonTest(parent_ctor,pt,false);
+	  if(dist <0) continue;
+	  parent_points.push_back(pt);
+	}
+      }
+      vtx_cluster.set_num_pixel(plane,parent_points.size());
+
+      LAROCV_INFO() << "# non-zero pixels " << parent_points.size()
+		    << " ... # track clusters " << cluster_v.size()
+		    << std::endl;
+      
       for(size_t cidx=0; cidx<cluster_v.size(); ++cidx) {
 	auto& cluster = cluster_v[cidx];
+	// Find # pixels in this cluster from the parent
+	size_t num_pixel = 0;
+	for(auto const& pt : parent_points) {
+	  auto dist = ::cv::pointPolygonTest(cluster._ctor,pt,false);
+	  if(dist<0) continue;
+	  num_pixel +=1;
+	}
+	cluster._num_pixel = num_pixel;
 	vtx_cluster.emplace_back(plane,std::move(cluster));
       }
     }
+
+
+    
 
     // If only 1 cluster, return that cluster
     // NOT IMPLEMENTED YET
