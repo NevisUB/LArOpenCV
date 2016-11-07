@@ -93,7 +93,9 @@ namespace larocv {
       ~Refine2DVertexData(){}
       /// attribute clear
       void Clear();
-      
+
+      /// access # of vertex
+      size_t num_vertex() const;
       /// access plane-wise data
       const std::vector<larocv::data::Refine2DVertexPlaneData>& get_plane_data() const;
       /// access plane-wise data via plane id

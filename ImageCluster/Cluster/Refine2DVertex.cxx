@@ -480,7 +480,7 @@ namespace larocv{
     auto dir = geo2d::Vector<float>(pcaobj.eigenvectors.at<float>(0,0),
 				    pcaobj.eigenvectors.at<float>(0,1));
 
-    //LAROCV_DEBUG() << "Mean @ (" << pt.x << "," << pt.y << ") ... dir (" << dir.x << "," << dir.y << std::endl;
+    //std::cout << "Mean @ (" << pt.x << "," << pt.y << ") ... dir (" << dir.x << "," << dir.y << std::endl;
 
     return geo2d::Line<float>(pt,dir);
   }
@@ -490,7 +490,7 @@ namespace larocv{
     geo2d::VectorArray<float> res;
     // Find crossing point
     ::cv::Mat polarimg;
-    ::cv::linearPolar(img, polarimg, circle.center, _radius*2, ::cv::WARP_FILL_OUTLIERS);
+    ::cv::linearPolar(img, polarimg, circle.center, circle.radius*2, ::cv::WARP_FILL_OUTLIERS);
 
     size_t col = (size_t)(polarimg.cols / 2);
 			  
@@ -528,8 +528,8 @@ namespace larocv{
       angle = angle * M_PI * 2. / ((float)(polarimg.rows));
 
       geo2d::Vector<float> pt;
-      pt.x = circle.center.x + _radius * cos(angle);
-      pt.y = circle.center.y + _radius * sin(angle);
+      pt.x = circle.center.x + circle.radius * cos(angle);
+      pt.y = circle.center.y + circle.radius * sin(angle);
 
       res.push_back(pt);      
     }
@@ -772,7 +772,7 @@ namespace larocv{
 	  init_vtx.xs_v.push_back(data::PointPCA(temp1_xs_v[xs_idx],temp1_pca_v[xs_idx]));
       }else{
 	for(size_t xs_idx=0; xs_idx<temp2_xs_v.size(); ++xs_idx)
-	  init_vtx.xs_v.push_back(data::PointPCA(temp1_xs_v[xs_idx],temp1_pca_v[xs_idx]));
+	  init_vtx.xs_v.push_back(data::PointPCA(temp2_xs_v[xs_idx],temp2_pca_v[xs_idx]));
       }
     }
 
@@ -816,6 +816,7 @@ namespace larocv{
       // Make sure start/end is on the box sides
       auto& upper_pt = (start.y > end.y ? start : end);
       auto& lower_pt = (start.y < end.y ? start : end);
+
       if(upper_pt.y > top_left.y) {
 	upper_pt.y = top_left.y;
 	upper_pt.x = pca.x(upper_pt.y);
@@ -919,7 +920,7 @@ namespace larocv{
       for(auto const& compound : defect_pts._raw_cluster_vv[meta.plane()].get_cluster()) {
 	for(auto const& defect_pt : compound.get_defects()) {
 	  const auto pt = defect_pt._pt_defect;
-	  LAROCV_INFO() << "Scanning Defect point: " << pt << std::endl;
+	  LAROCV_DEBUG() << "Scanning Defect point: " << pt << std::endl;
 	  circle.center = pt;
 	  found = PlaneScan(img,meta.plane(),circle,pt_err) || found;
 	}
@@ -929,7 +930,7 @@ namespace larocv{
     if(_pca_algo_id != kINVALID_ID) {
       auto const& pca_pts    = AlgoData<data::PCACandidatesData>(_pca_algo_id);    
       for(auto const& pt : pca_pts.points(meta.plane())) {
-	LAROCV_INFO() << "Scanning PCACandidate point: " << pt << std::endl;
+	LAROCV_DEBUG() << "Scanning PCACandidate point: " << pt << std::endl;
 	circle.center = pt;
 	found = PlaneScan(img,meta.plane(),circle,pt_err) || found;
       }
@@ -1117,7 +1118,7 @@ namespace larocv{
     }
 
     for(size_t i=0; i<minidx_v.size(); ++i)
-      LAROCV_INFO() << "Found valid 3-plane @ " << minidx_v[i] << " score " << minscore_v[i] << std::endl;
+      LAROCV_INFO() << "Found valid 3-plane binned tick @ " << minidx_v[i] << " score " << minscore_v[i] << std::endl;
 
     for(size_t i=0; i<minidx_score0_v.size(); ++i) {
 
@@ -1151,7 +1152,7 @@ namespace larocv{
 
     for(size_t i=0; i<minidx_v.size(); ++i) {
       if(!threeplane_v[i]) {
-	LAROCV_INFO() << "Found valid 2-plane @ " << minidx_v[i] << " score " << minscore_v[i] << std::endl;
+	LAROCV_INFO() << "Found valid 2-plane binned tick @ " << minidx_v[i] << " score " << minscore_v[i] << std::endl;
       }
     }
   }
@@ -1264,20 +1265,20 @@ namespace larocv{
 	    std::vector<size_t> mapval(3);
 	    mapval[0] = circle0_idx; mapval[1] = circle1_idx; mapval[2] = 3;
 	    scoremap_3plane.emplace(ave_dtheta,mapval);
-	    LAROCV_INFO() << "Found a 3-plane vertex candiate @ (y,z) = (" << y << "," << z << ") ... "
-			  << "plane " << seed0_plane << " @ " << circle0.center << " ... "
-			  << "plane " << seed1_plane << " @ " << circle1.center << " ... "
-			  << "dtheta = " << ave_dtheta << std::endl;
+	    LAROCV_DEBUG() << "Found a 3-plane vertex candiate @ (y,z) = (" << y << "," << z << ") ... "
+			   << "plane " << seed0_plane << " @ " << circle0.center << " ... "
+			   << "plane " << seed1_plane << " @ " << circle1.center << " ... "
+			   << "dtheta = " << ave_dtheta << std::endl;
 	  }
 	  else {
 	    ave_dtheta /= 2.;
 	    std::vector<size_t> mapval(3);
 	    mapval[0] = circle0_idx; mapval[1] = circle1_idx; mapval[2] = 2;
 	    scoremap_2plane.emplace(ave_dtheta,mapval);
-	    LAROCV_INFO() << "Found a 2-plane vertex candiate @ (y,z) = (" << y << "," << z << ") ... "
-			  << "plane " << seed0_plane << " @ " << circle0.center << " ... "
-			  << "plane " << seed1_plane << " @ " << circle1.center << " ... "
-			  << "dtheta = " << ave_dtheta << std::endl;
+	    LAROCV_DEBUG() << "Found a 2-plane vertex candiate @ (y,z) = (" << y << "," << z << ") ... "
+			   << "plane " << seed0_plane << " @ " << circle0.center << " ... "
+			   << "plane " << seed1_plane << " @ " << circle1.center << " ... "
+			   << "dtheta = " << ave_dtheta << std::endl;
 	  }
 	}
       }
@@ -1316,8 +1317,8 @@ namespace larocv{
 
 	// Concrete vertex found
 	LAROCV_INFO() << "Claiming candiate @ (y,z) = (" << y << "," << z << ") ... "
-		      << "plane " << seed0_plane << " @ " << circle0.center << " ... "
-		      << "plane " << seed1_plane << " @ " << circle1.center << std::endl;
+		      << "plane " << seed0_plane << " @ " << circle0.center << " # crossing = " << circle0.xs_v.size() << " ... "
+		      << "plane " << seed1_plane << " @ " << circle1.center << " # crossing = " << circle1.xs_v.size() << std::endl;
 	
 	vtx_yz_v.emplace_back(yz_pt);
 	seed0_used_idx_s.insert(circle0_idx);
@@ -1379,6 +1380,9 @@ namespace larocv{
 	  vtx3d.vtx2d_v[plane].pt.y  = approx_y;
 	  vtx3d.vtx2d_v[plane].score = circle_vtx_v[plane].sum_dtheta();
 	  if(!vtx3d.vtx2d_v[plane].score) vtx3d.vtx2d_v[plane].score = -1;
+	  
+	  LAROCV_INFO() << "Non-seed plane " << plane << " @ " << circle_vtx_v[plane].center
+			<< " # crossing = " << circle_vtx_v[plane].xs_v.size() << std::endl;
 	}
 	data.emplace_back(std::move(vtx3d),std::move(circle_vtx_v));
       }

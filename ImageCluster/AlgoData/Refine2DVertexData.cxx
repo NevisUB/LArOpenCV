@@ -49,6 +49,9 @@ namespace larocv {
       _cand_xs_vv.resize(3);
       for(auto& d : _cand_xs_vv)      d.clear();    
     }
+
+    size_t Refine2DVertexData::num_vertex() const
+    { return _vtx3d_v.size(); }
     
     const std::vector<larocv::data::Refine2DVertexPlaneData>& Refine2DVertexData::get_plane_data() const
     { return _plane_data; }

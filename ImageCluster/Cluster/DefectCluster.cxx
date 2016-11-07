@@ -982,7 +982,7 @@ namespace larocv {
       LAROCV_NORMAL() << "Max break condition found, not all contours atomic" << std::endl;
       for (auto& break_ctor : break_ctor_v) {
 	if (break_ctor._ctor.size() <= 2) continue;
-	LAROCV_CRITICAL() << "Putting defect ctor of size : " << break_ctor._ctor.size() << " into atomic_atomic_ctor_v "<< std::endl;
+	LAROCV_NORMAL() << "Putting defect ctor of size : " << break_ctor._ctor.size() << " into atomic_atomic_ctor_v "<< std::endl;
 	auto& atomic = cluscomp.make_atom();
 	for(auto const& defect_id : break_ctor.associated_defects())
 	  atomic.associate(defect_id);
