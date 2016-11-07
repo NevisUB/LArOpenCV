@@ -615,7 +615,10 @@ namespace larocv{
     geo2d::Vector<float> bottom_right(init_vtx.center.x + _global_bound_size,
 				      init_vtx.center.y - _global_bound_size);
     
+    
     geo2d::Rect bbox(top_left, bottom_right);
+
+	      
     scan_rect_v.push_back(bbox);
 
     LAROCV_DEBUG() << "Plane " << plane << " scanning bbox:" << bbox << std::endl;
@@ -667,11 +670,12 @@ namespace larocv{
 	col = (size_t)(step_pt.x);
 	row = (size_t)(step_pt.y);
 
+	//we are stepping outside the image, move on
+	if ( row >= img.rows or col >= img.cols) { step_pt += dir; continue; }
+	
 	size_t marker_index = row + col * img.rows;
-	if(scan_marker[marker_index]) {
-	  step_pt += dir;
-	  continue;
-	}
+	if(scan_marker[marker_index]) { step_pt += dir; continue; }
+
 	
 	scan_marker[marker_index] = true;
 	
