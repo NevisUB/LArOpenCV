@@ -345,13 +345,15 @@ namespace larocv {
       ::cv::findContours(thresh_img, parent_ctor_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
       size_t parent_ctor_id   = kINVALID_SIZE;
       size_t parent_ctor_size = 0;
+      double dist2vtx = -1e9;
       for(size_t ctor_id=0; ctor_id < parent_ctor_v.size(); ++ctor_id){
 	auto const& ctor = parent_ctor_v[ctor_id];
 	auto dist = ::cv::pointPolygonTest(ctor, circle_vtx.center, false);
-	if(dist < 0) continue;
-	if(parent_ctor_size > ctor.size()) continue;
+	if(dist < dist2vtx) continue;
+	if(dist2vtx >=0 && parent_ctor_size > ctor.size()) continue;
 	parent_ctor_id = ctor_id;
 	parent_ctor_size = ctor.size();
+	dist2vtx = dist;
       }
       geo2d::VectorArray<int> parent_points;
       if(parent_ctor_id != kINVALID_SIZE) {
