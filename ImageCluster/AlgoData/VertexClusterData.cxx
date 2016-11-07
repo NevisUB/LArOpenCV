@@ -9,7 +9,7 @@ namespace larocv {
   namespace data {
 
     void ParticleCluster::clear()
-    { _ctor.clear(); }
+    { _ctor.clear(); _num_pixel = 0;}
     
     size_t ParticleCluster::id() const
     { return _cluster_id; }
@@ -26,6 +26,34 @@ namespace larocv {
     {
       if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
       return _cluster_vv[plane].size();
+    }
+
+    size_t ParticleClusterArray::num_pixels(size_t plane) const
+    {
+      if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
+      return _num_pixel_v[plane];
+    }
+
+    float ParticleClusterArray::num_pixel_fraction(size_t plane) const
+    {
+      float res = 0.;
+      for(auto const& c : get_clusters(plane))
+	res += c._num_pixel;
+
+      if(_num_pixel_v[plane]<1) return 0.;
+      else return res / ((float)(_num_pixel_v[plane]));
+    }
+    
+    float ParticleClusterArray::num_pixel_fraction(size_t plane, size_t cluster_id) const
+    {
+      auto const& clusters = get_clusters(plane);
+
+      if(_num_pixel_v[plane]<1) return 0.;
+      
+      if(cluster_id >= clusters.size()) throw larbys("Invalid cluster id requested!");
+      auto const& c = clusters[cluster_id];
+
+      return (float)(c._num_pixel) / (float)(_num_pixel_v[plane]);
     }
     
     const larocv::data::Vertex3D& ParticleClusterArray::get_vertex() const
@@ -49,6 +77,8 @@ namespace larocv {
       _circle_vtx_v.resize(3);
       _vtx.vtx2d_v.resize(3);
       _cluster_vv.resize(3);
+      _num_pixel_v.resize(3);
+      for( auto& v : _num_pixel_v  ) v = 0;
       for( auto& v : _circle_vtx_v ) v = CircleVertex();
       for( auto& v : _cluster_vv   ) v.clear();
     }
@@ -67,6 +97,12 @@ namespace larocv {
       if(_circle_vtx_v.size() != vtx.vtx2d_v.size()) throw larbys("Invalid # planes!");
       _vtx = vtx;
       _circle_vtx_v = circle_vtx_v;
+    }
+
+    void ParticleClusterArray::set_num_pixel(size_t plane, size_t count)
+    {
+      if(plane >= _cluster_vv.size()) throw larbys("Invalid plane reuqested!");
+      _num_pixel_v[plane] = count;
     }
 
     ParticleCluster& ParticleClusterArray::make_cluster(size_t plane)

@@ -34,7 +34,7 @@ namespace larocv {
     class ParticleCluster {
       friend class ParticleClusterArray;
     public:
-      ParticleCluster(size_t id=kINVALID_SIZE) : _cluster_id(id) {}
+      ParticleCluster(size_t id=kINVALID_SIZE) : _cluster_id(id) {clear();}
       ~ParticleCluster() {}
       /// attribute clear method
       void clear();
@@ -42,6 +42,7 @@ namespace larocv {
       size_t id() const;
       
       GEO2D_Contour_t _ctor; ///< contour to define a cluster
+      size_t _num_pixel;     ///< # of non-zero pixel from parent contour, contained in this contour
       
     private:
       size_t _cluster_id; ///< unique cluster id
@@ -64,6 +65,12 @@ namespace larocv {
       size_t num_planes() const;
       /// get # clusters
       size_t num_clusters(size_t plane) const;
+      /// get # non-zero pixels inside a contour that contains 2D vtx
+      size_t num_pixels(size_t plane) const;
+      /// get a fraction of non-zero pixels found in all particle cluster
+      float  num_pixel_fraction(size_t plane) const;
+      /// get a fraction of non-zero pixels found in a particular particle cluster
+      float  num_pixel_fraction(size_t plane, size_t cluster_id) const;
       /// Vertex3D getter
       const larocv::data::Vertex3D& get_vertex() const;
       /// CircleVertex (plane-wise) getter
@@ -80,6 +87,8 @@ namespace larocv {
       /// Vertex3D + CircleVertex cetter
       void set_vertex(const larocv::data::Vertex3D& vtx,
 		      const std::vector<larocv::data::CircleVertex>& circle_vtx_v);
+      /// sets # non-zero pixels per plane inside a contour that contains this vertex
+      void set_num_pixel(size_t plane, size_t count);
       /// generate a new cluster
       ParticleCluster& make_cluster(size_t plane);
       /// Cluster (per plane) appender
@@ -90,8 +99,10 @@ namespace larocv {
     private:
       /// 3D vertex + 2D projection 
       larocv::data::Vertex3D _vtx;
-      ///< an array of 2D clusters (per plane)
+      /// An array of 2D clusters (per plane)
       std::vector<std::vector< larocv::data::ParticleCluster > > _cluster_vv;
+      /// An array of # non-zero pixels per plane inside a contour that contains this vertex
+      std::vector<size_t> _num_pixel_v;
       /// CircleVertex (per plane) ... optional
       std::vector<larocv::data::CircleVertex> _circle_vtx_v;
     };

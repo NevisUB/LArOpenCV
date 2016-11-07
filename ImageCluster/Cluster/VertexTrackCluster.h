@@ -19,8 +19,7 @@ namespace larocv {
       ClusterAlgoBase(name),
       _dilation_size ( 5 ),
       _dilation_iter ( 2 ),
-      _blur_size_r   ( 5 ),
-      _blur_size_t   ( 5 ),
+      _blur_size     ( 5 ),
       _thresh        ( 1 ),
       _thresh_maxval (255)
     {}
@@ -51,8 +50,7 @@ namespace larocv {
     int _dilation_size;
     int _dilation_iter;
     
-    int _blur_size_r;
-    int _blur_size_t;
+    int _blur_size;
     
     float _thresh;
     float _thresh_maxval;
@@ -61,6 +59,8 @@ namespace larocv {
     
     float _theta_hi;
     float _theta_lo;
+
+    unsigned short _pi_threshold;
 
     bool _use_theta_half_angle;
   };
