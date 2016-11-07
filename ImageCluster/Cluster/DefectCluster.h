@@ -10,7 +10,7 @@
 #include "AlgoData/DefectClusterData.h"
 
 namespace larocv {
- 
+
   class DefectCluster : public larocv::ClusterAlgoBase {
     
   public:
@@ -57,6 +57,12 @@ namespace larocv {
     geo2d::Line<float> scan_breaker(const Contour_t& ctor, cv::Vec4i defect);
 
     data::ClusterCompound BreakContour(const larocv::GEO2D_Contour_t& ctor);
+
+    void AssociateDefects(const data::ClusterCompound& cluscomp,
+			  const data::AtomicContour& parent,
+			  const data::ContourDefect& defect,
+			  data::AtomicContour& child1,
+			  data::AtomicContour& child2);
     
   private:
     int _min_defect_size;

@@ -70,18 +70,33 @@ namespace larocv {
     result_v.resize(1);
     
     // Loop over atoms to find the closest to the 2D vertex on this plane
-    double first_atom_dist2vtx = 1e9;
+    double closest_atom_dist2vtx = 1e9;
+    double start_atom_dist2vtx = 1e9;
+    size_t closest_atom_id = kINVALID_SIZE;
+    size_t start_atom_id = kINVALID_SIZE;
     double atom_dist2vtx = 0;
     LAROCV_DEBUG() << "Looping over " << atoms.size() << " atoms to find the closest one to the vtx" << std::endl;
     for(auto const& atom : atoms) {
       atom_dist2vtx = DistanceAtom2Vertex(atom, vtx2d);
-      LAROCV_DEBUG() << "Atom " << atom.id() << " distance = " << atom_dist2vtx << std::endl;
-      if(atom_dist2vtx < first_atom_dist2vtx) {
-	first_atom_dist2vtx = atom_dist2vtx;
-	result_v[0] = atom.id();
+      LAROCV_DEBUG() << "Atom " << atom.id()
+		     << " distance = " << atom_dist2vtx
+		     << " # defect = " << atom.associated_defects().size()
+		     << std::endl;
+      if(atom_dist2vtx < closest_atom_dist2vtx) {
+	closest_atom_dist2vtx = atom_dist2vtx;
+	closest_atom_id = atom.id();
+      }
+      if(atom.associated_defects().size() < 2) {
+	if(atom_dist2vtx < start_atom_dist2vtx) {
+	  start_atom_dist2vtx = atom_dist2vtx;
+	  start_atom_id = atom.id();
+	}
       }
     }
-    LAROCV_DEBUG() << "Closest atom ID " << result_v[0] << " distance " << first_atom_dist2vtx << std::endl;
+    LAROCV_DEBUG() << "Closest atom ID " << closest_atom_id << " distance " << closest_atom_dist2vtx << std::endl;
+    LAROCV_DEBUG() << "Start   atom ID " << start_atom_id << " distance " << start_atom_dist2vtx << std::endl;
+
+    result_v[0] = start_atom_id;
     
     // Do book keeping of used atom IDs
     size_t last_atom_id = result_v[0];
@@ -107,7 +122,7 @@ namespace larocv {
 	auto const& defect = cluster.get_defect(defect_id);
 	// loop over associated atoms' id array
 	for(auto const& ass_atom_id : defect.associated_atoms()) {
-	  LAROCV_DEBUG() << "  association defect " << defect_id << " => atom " << ass_atom_id << std::endl;
+	  LAROCV_DEBUG() << "    association defect " << defect_id << " => atom " << ass_atom_id << std::endl;
 	  // if found in "used atom id list", ignore
 	  if(used_atom_id_v[ass_atom_id]) continue;
 	  // else this atom is our target. make sure there's no duplication
@@ -116,10 +131,12 @@ namespace larocv {
 	    throw larbys();
 	  }
 	  next_atom_id = ass_atom_id;
-	  LAROCV_DEBUG() << "  ... found next atom ID " << next_atom_id << std::endl;
+	  LAROCV_DEBUG() << "    ... found next atom ID " << next_atom_id << std::endl;
+
 	  // Note one can just "break" the loop here to save time.
 	  // In this attempt we won't break to explicitly check the association's validity.
 	}
+
       } // end looping over defects for this atom
 
       // make sure next atom is found
@@ -156,7 +173,7 @@ namespace larocv {
     geo2d::Vector<float> pt, start, end, last_end;
     last_end = vtx2d.center;
     for(auto const& atom_index : atom_order_v) {
-      auto const& atom = atoms[atom_index];
+      auto const& atom = atoms.at(atom_index);
       // loop over points to find the end
       double max_dist = 0;
       for(auto const& ctor_pt : atom._ctor) {
@@ -253,7 +270,7 @@ namespace larocv {
 	    // construct dq/dx
 	    auto atom_dqdx = AtomdQdX(img, atom, pca, start_end.first, start_end.second);
 	    // append
-	    part_dqdx.push_back(atom_id, start_end.first, atom_dqdx);
+	    part_dqdx.push_back(atom_id, start_end.first, start_end.second, atom_dqdx);
 	  }// end loop over atoms to create dq/dx
 
 	  // register to vtx-wise dqdx collection

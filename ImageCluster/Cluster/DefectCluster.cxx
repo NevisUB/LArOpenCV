@@ -656,6 +656,120 @@ namespace larocv {
     return defects.at(max_idx);
       
   }
+
+  void DefectCluster::AssociateDefects(const data::ClusterCompound& cluscomp,
+				       const data::AtomicContour& parent,
+				       const data::ContourDefect& defect,
+				       data::AtomicContour& child1,
+				       data::AtomicContour& child2)
+  {
+
+    if(this->logger().level() <= ::larocv::msg::kDEBUG) {
+      std::stringstream ss;
+      ss << "Parent defect points:";
+      for(auto const& defect_id : parent.associated_defects())
+	ss << " ID " << defect_id << " @ " << cluscomp.get_defect(defect_id)._pt_defect;
+      ss << " ... new defect ID " << defect.id() << " @ " << defect._pt_defect;
+      LAROCV_DEBUG() << std::string(ss.str()) << std::endl;
+    }
+    // Three cases to handle
+    // case 0) parent is the "original" (i.e. no associated defect)
+    // case 1) parent is an "edge" (i.e. 1 associated defect)
+    // case 2) parent is "non-edge" (i.e. 2 associated defects)
+    
+    // case 0) simply associate both children to the defect
+    if(parent.associated_defects().empty()) {
+      LAROCV_DEBUG() << "Case 0: defect " << defect.id() << " is associated with both children" << std::endl;
+      child1.associate(defect.id());
+      child2.associate(defect.id());
+      return;
+    }
+
+    // case 1 and 2 both require to compute the "closest defects from history" to each child
+    
+    // Look for the closest defect in the parent (parent) for child 1
+    double distmin1 = 1e20;
+    double distmin2 = 1e20;
+    size_t closest_defect1_id1 = kINVALID_SIZE;
+    size_t closest_defect1_id2 = kINVALID_SIZE;
+    for(auto const& defect_id : parent.associated_defects()) {
+      auto const& defect_pt = cluscomp.get_defect(defect_id)._pt_defect;
+      double dist = pointPolygonTest(child1._ctor,defect_pt,true);
+      dist = (dist >=0 ? 0. : dist * -1.);
+      if(dist < distmin1) {
+	// update 2nd closest defect
+	distmin2 = distmin1;
+	closest_defect1_id2 = closest_defect1_id1;
+	distmin1 = dist;
+	closest_defect1_id1 = defect_id;
+      }else if(dist < distmin2) {
+	distmin2 = dist;
+	closest_defect1_id2 = defect_id;
+      }
+    }
+
+    // Look for the closest defect in the parent (parent) for child 2
+    distmin1 = 1e20;
+    distmin2 = 1e20;
+    size_t closest_defect2_id1 = kINVALID_SIZE;
+    size_t closest_defect2_id2 = kINVALID_SIZE;
+    for(auto const& defect_id : parent.associated_defects()) {
+      auto const& defect_pt = cluscomp.get_defect(defect_id)._pt_defect;
+      double dist = pointPolygonTest(child1._ctor,defect_pt,true);
+      dist = (dist >=0 ? 0. : dist * -1.);
+      if(dist < distmin1) {
+	// update 2nd closest defect
+	distmin2 = distmin1;
+	closest_defect2_id2 = closest_defect2_id1;
+	distmin1 = dist;
+	closest_defect2_id1 = defect_id;
+      }else if(dist < distmin2) {
+	distmin2 = dist;
+	closest_defect2_id2 = defect_id;
+      }
+    }
+
+    // case 1) parent is an "edge"
+    // In this case one of children must inherit "edge" feature.
+    // The edge child should have a larger distance to the "closest" defect in the history (history = 1 defect anyway...)
+    if(parent.associated_defects().size() == 1) {
+      if(distmin1 > distmin2) {
+	child1.associate(defect.id());
+	child2.associate(defect.id());
+	child2.associate(closest_defect2_id1);
+	LAROCV_DEBUG() << "Case 1: new edge @ defect " << defect.id()
+		       << " and non-edge defect " << closest_defect2_id1
+		       << std::endl;
+      }else{
+	child1.associate(defect.id());
+	child1.associate(closest_defect1_id1);
+	child2.associate(defect.id());
+	LAROCV_DEBUG() << "Case 1: new edge @ defect " << defect.id()
+		       << " and non-edge defect " << closest_defect1_id1
+		       << std::endl;
+      }
+      return;
+    }
+
+    // case 2) parent is "non-edge"
+    child1.associate(defect.id());
+    child1.associate(closest_defect1_id1);
+
+    child2.associate(defect.id());
+    if(closest_defect1_id1 == closest_defect2_id1) {
+      child2.associate(closest_defect2_id2);
+      LAROCV_DEBUG() << "Case 2: defect pairs (" << defect.id() << "," << closest_defect1_id1 << ")"
+		     << " and (" << defect.id() << "," << closest_defect2_id2 << ")" << std::endl;
+    }
+    else {
+      child2.associate(closest_defect2_id1);
+      LAROCV_DEBUG() << "Case 2: defect pairs (" << defect.id() << "," << closest_defect1_id1 << ")"
+		     << " and (" << defect.id() << "," << closest_defect2_id1 << ")" << std::endl;
+    }    
+    return;
+  }
+
+  
   data::ClusterCompound DefectCluster::BreakContour(const larocv::GEO2D_Contour_t& ctor) {
     
     ////////////////////////////////////////////
@@ -666,8 +780,8 @@ namespace larocv {
     data::ClusterCompound cluscomp;
     
     //contours which may be broken up are put in this queue
-    GEO2D_ContourArray_t break_ctor_v;
-    //std::vector<larocv::data::AtomicContour> break_ctor_v;
+    //GEO2D_ContourArray_t break_ctor_v;
+    std::vector<larocv::data::AtomicContour> break_ctor_v;
     break_ctor_v.reserve(10);
     
     int nbreaks=0;
@@ -678,15 +792,18 @@ namespace larocv {
 
     LAROCV_DEBUG() << "Original contour size: " << ctor.size() << std::endl;
 
-    break_ctor_v.emplace_back(ctor);
+    data::AtomicContour a_ctor;
+    a_ctor._ctor = ctor;
+    break_ctor_v.emplace_back(a_ctor);
     
     while( break_ctor_v.size() != 0 and nbreaks<=10) {
 
       // get a contour out off the front
-      auto  ctor_itr = break_ctor_v.begin();
-      auto& ctor     = *ctor_itr;
-	
-      LAROCV_DEBUG() << "Break vector size " << break_ctor_v.size() << "... this contour size " << ctor.size() << "\n";
+      auto  a_ctor_itr = break_ctor_v.begin();
+      auto& a_ctor     = *a_ctor_itr;
+      auto& ctor       = a_ctor._ctor;
+      
+      LAROCV_INFO() << "Break vector size " << break_ctor_v.size() << "... this contour size " << ctor.size() << "\n";
 
       //this contour contains only two points. it's a line. should not exist.
       if (ctor.size() <= 2) {
@@ -700,11 +817,13 @@ namespace larocv {
       if (ctor.size() == 3) {
 	LAROCV_DEBUG() << "Contour too small to look for a defect (size=3)" << std::endl;
 	auto& atomic = cluscomp.make_atom();
-	atomic._ctor = *ctor_itr;
-	LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
-		       << " ... # defects = " << cluscomp.get_defects().size()
-		       << std::endl;
-	break_ctor_v.erase(ctor_itr);
+	for(auto const& defect_id : a_ctor.associated_defects())
+	  atomic.associate(defect_id);
+	atomic._ctor = ctor;
+	LAROCV_INFO() << "Found atomic. Currently # atoms = "<< cluscomp.get_atoms().size()
+		      << " ... # defects = " << cluscomp.get_defects().size()
+		      << std::endl;
+	break_ctor_v.erase(a_ctor_itr);
 	continue;
       }
 		 
@@ -721,7 +840,7 @@ namespace larocv {
 			<< "Size of hullpts: " << hullpts.size() << std::endl
 			<< "Size of defects: " << defects.size() << std::endl
 			<< "Size of contour: " << ctor.size() << std::endl;
-	break_ctor_v.erase(ctor_itr);
+	break_ctor_v.erase(a_ctor_itr);
 	continue;
       }
 	 
@@ -730,13 +849,14 @@ namespace larocv {
 	 
       // no defects of minimum size found! the contour is atomic
       if ( ! defects_d.size() ) {
-	LAROCV_DEBUG() << "No defects found for this ctor" << std::endl;
 	auto& atomic = cluscomp.make_atom();
-	atomic._ctor = *ctor_itr;
-	LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
-		       << " ... # defects = " << cluscomp.get_defects().size()
-		       << std::endl;
-	break_ctor_v.erase(ctor_itr);
+	for(auto const& defect_id : a_ctor.associated_defects())
+	  atomic.associate(defect_id);
+	atomic._ctor = ctor;
+	LAROCV_INFO() << "Found atomic. Currently # atoms = "<< cluscomp.get_atoms().size()
+		      << " ... # defects = " << cluscomp.get_defects().size()
+		      << std::endl;
+	break_ctor_v.erase(a_ctor_itr);
 	continue;
       }
 
@@ -751,11 +871,13 @@ namespace larocv {
       if (std::abs(diff.x)<=3 and std::abs(diff.y)<=3) {
 	LAROCV_DEBUG() << "This hull suspect... start : " <<  start << " end : " << end << " diff : " << diff << std::endl;
 	auto& atomic = cluscomp.make_atom();
-	atomic._ctor = *ctor_itr;
-	LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
-		       << " ... # defects = " << cluscomp.get_defects().size()
-		       << std::endl;
-	break_ctor_v.erase(ctor_itr);
+	for(auto const& defect_id : a_ctor.associated_defects())
+	  atomic.associate(defect_id);
+	atomic._ctor = ctor;
+	LAROCV_INFO() << "Found atomic. Currently # atoms = "<< cluscomp.get_atoms().size()
+		      << " ... # defects = " << cluscomp.get_defects().size()
+		      << std::endl;
+	break_ctor_v.erase(a_ctor_itr);
 	continue;
       }
 
@@ -784,11 +906,13 @@ namespace larocv {
       if(!broken) {
 	LAROCV_NORMAL() << "Registering un-breakable contour into an atomic contour list..." << std::endl;
 	auto& atomic = cluscomp.make_atom();
-	atomic._ctor = *ctor_itr;
-	LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
-		       << " ... # defects = " << cluscomp.get_defects().size()
-		       << std::endl;
-	break_ctor_v.erase(ctor_itr);
+	for(auto const& defect_id : a_ctor.associated_defects())
+	  atomic.associate(defect_id);
+	atomic._ctor = ctor;
+	LAROCV_INFO() << "Found atomic. Currently # atoms = "<< cluscomp.get_atoms().size()
+		      << " ... # defects = " << cluscomp.get_defects().size()
+		      << std::endl;
+	break_ctor_v.erase(a_ctor_itr);
 	continue;	   
       }
 
@@ -799,18 +923,20 @@ namespace larocv {
       if(ctor1.size()<=2  && ctor2.size()<=2) {
 	LAROCV_DEBUG() << "Contour got split into 2 too small contours (size<=2) ... storing original as an atom" << std::endl;
 	auto& atomic = cluscomp.make_atom();
-	atomic._ctor = *ctor_itr;
-	LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
+	for(auto const& defect_id : a_ctor.associated_defects())
+	  atomic.associate(defect_id);
+	atomic._ctor = ctor;
+	LAROCV_INFO() << "Found atomic. Currently # atoms = "<< cluscomp.get_atoms().size()
 		       << " ... # defects = " << cluscomp.get_defects().size()
 		       << std::endl;
-	break_ctor_v.erase(ctor_itr);
+	break_ctor_v.erase(a_ctor_itr);
 	continue;
       }
 	 	 
       LAROCV_DEBUG() << "Split contour of size: " << ctor.size()
 		     << " into " << ctor1.size() << " + " << ctor2.size()
 		     << " = " << ctor1.size()+ctor2.size() << std::endl;
-      
+
       if(ctor1.size() >2 && ctor2.size() >2) {
 	auto& defect = cluscomp.make_defect();
 	defect._pt_start  = ctor[chosen_edge[0]];
@@ -819,30 +945,48 @@ namespace larocv {
 	defect._dist      = (float)chosen_edge[3] / 256.;
 	defect._split_line = min_line;
 
-	break_ctor_v.emplace_back(std::move(ctor1));
-	break_ctor_v.emplace_back(std::move(ctor2));
+	data::AtomicContour a_ctor1;
+	a_ctor1._ctor = ctor1;
+	data::AtomicContour a_ctor2;
+	a_ctor2._ctor = ctor2;
+	AssociateDefects(cluscomp,a_ctor,defect,a_ctor1,a_ctor2);
+	break_ctor_v.emplace_back(std::move(a_ctor1));
+	break_ctor_v.emplace_back(std::move(a_ctor2));
 
       }else {
 
-	if(ctor1.size()<=2) { LAROCV_INFO() << "Broken contour too small (size<=2)... ignoring..." << std::endl; }
-	else { break_ctor_v.emplace_back(std::move(ctor1)); }
+	if(ctor1.size()<=2) { LAROCV_DEBUG() << "Broken contour too small (size<=2)... ignoring..." << std::endl; }
+	else {
+	  data::AtomicContour a_ctor1;
+	  a_ctor1._ctor = ctor1;
+	  for(auto const& defect_id : a_ctor.associated_defects())
+	    a_ctor1.associate(defect_id);
+	  break_ctor_v.emplace_back(std::move(a_ctor1));
+	}
 
-	if(ctor2.size()<=2) { LAROCV_INFO() << "Broken contour too small (size<=2)... ignoring..." << std::endl; }
-	else { break_ctor_v.emplace_back(std::move(ctor2)); }
-	
+	if(ctor2.size()<=2) { LAROCV_DEBUG() << "Broken contour too small (size<=2)... ignoring..." << std::endl; }
+	else {
+	  data::AtomicContour a_ctor2;
+	  a_ctor2._ctor = ctor2;
+	  for(auto const& defect_id : a_ctor.associated_defects())
+	    a_ctor2.associate(defect_id);
+	  break_ctor_v.emplace_back(std::move(a_ctor2));
+	}
       }
       LAROCV_DEBUG() << "Break vector size " << break_ctor_v.size()-1 << " @ end of loop..." << std::endl;
-      break_ctor_v.erase(ctor_itr);
+      break_ctor_v.erase(a_ctor_itr);
     } //end of breaking
 
     //atomic_contour_v is filled, break_ctor_v should be clear, if its not, put what's inside into atomics
     if ( break_ctor_v.size() ) {
       LAROCV_NORMAL() << "Max break condition found, not all contours atomic" << std::endl;
       for (auto& break_ctor : break_ctor_v) {
-	if (break_ctor.size() == 0) continue;
-	LAROCV_CRITICAL() << "Putting defect ctor of size : " << break_ctor.size() << " into atomic_atomic_ctor_v "<< std::endl;
+	if (break_ctor._ctor.size() <= 2) continue;
+	LAROCV_CRITICAL() << "Putting defect ctor of size : " << break_ctor._ctor.size() << " into atomic_atomic_ctor_v "<< std::endl;
 	auto& atomic = cluscomp.make_atom();
-	atomic._ctor = break_ctor;
+	for(auto const& defect_id : break_ctor.associated_defects())
+	  atomic.associate(defect_id);
+	atomic._ctor = break_ctor._ctor;
 	LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
 		       << " ... # defects = " << cluscomp.get_defects().size()
 		       << std::endl;
@@ -862,10 +1006,15 @@ namespace larocv {
 			<< std::endl;
       throw larbys();
     }
+    /*
+    // Following block is for geometric approximation for defect <=> atom association
+    // If you want to use it, make sure you do not execute the algorithmic construction in the loop above.
     LAROCV_DEBUG() << "Constructing association:"
 		   << " # defects = " << ctor_defect_v.size()
 		   << " # atoms = " << atomic_ctor_v.size() << std::endl;
+
     // loop over defects, look for 2 closest atoms
+    std::vector<int> used_atom_v(cluscomp.get_atoms().size(),0);
     for(auto const& defect : ctor_defect_v) {
       double mindist1=1e10;
       double mindist2=1e10;
@@ -874,6 +1023,7 @@ namespace larocv {
       auto const& defect_pt = defect._pt_defect;
       LAROCV_DEBUG() << "Defect @ " << defect_pt << " (ID=" << defect.id() << ")" << std::endl;
       for(auto const& atom : atomic_ctor_v) {
+	if(used_atom_v[atom.id()] >=2) continue;
 	double mindist =1e10;
 	double dist=0;
 	for(auto const& pt : atom._ctor) {
@@ -901,7 +1051,36 @@ namespace larocv {
       }
       cluscomp.associate(atomid1,defect.id());
       cluscomp.associate(atomid2,defect.id());
+      used_atom_v[atomid1] += 1;
+      used_atom_v[atomid2] += 1;
     }
+    */
+
+    // Loop over atoms to complete association for defects=>atom
+    for(auto const& atom : cluscomp.get_atoms()) {
+
+      for(auto const& defect_id : atom.associated_defects())
+
+	cluscomp.associate(atom.id(),defect_id);
+
+    }
+
+    // INFO report
+    if(this->logger().level() <= ::larocv::msg::kINFO) {
+      std::stringstream ss;
+      ss << "Reporting the final set of atoms/defects" << std::endl;
+      for(auto const& atom : cluscomp.get_atoms()) {
+
+	ss << "    Atom ID " << atom.id() << " ... associated defects: ";
+	for(auto const& defect_id : atom.associated_defects())
+
+	  ss << defect_id << " ";
+
+	ss << std::endl;
+      }
+      LAROCV_INFO() << std::string(ss.str()) << std::endl;
+    }
+    
     return cluscomp;
   }
 

@@ -15,8 +15,10 @@ namespace larocv {
     
     void ParticledQdX::push_back(size_t atom_id,
 				 const geo2d::Vector<float>& start,
+				 const geo2d::Vector<float>& end,
 				 const std::vector<float>& dqdx)
     {
+      _end_pt = end;
       _atom_id_v.push_back(atom_id);
       _start_pt_v.push_back(start);
       _start_index_v.push_back(_dqdx_v.size());
@@ -56,6 +58,23 @@ namespace larocv {
       if(atom_index >= _start_pt_v.size()) throw larbys("Invalid atom index requested!");
       return _start_pt_v[atom_index];
     }
+
+    const geo2d::Vector<float>& ParticledQdX::start_pt() const
+    {
+      if(_start_pt_v.empty()) throw larbys("No atom found!");
+      return _start_pt_v.front();
+    }
+
+    const geo2d::Vector<float>& ParticledQdX::atom_end_pt(const size_t atom_index) const
+    {
+      if( (atom_index+1) == _start_pt_v.size() )
+	return end_pt();
+      if(atom_index >= _start_pt_v.size()) throw larbys("Invalid atom index requested!");
+      return _start_pt_v[atom_index+1];
+    }
+
+    const geo2d::Vector<float>& ParticledQdX::end_pt() const
+    { return _end_pt; }
 
     //////////////////////////////////////////////////////////////
 

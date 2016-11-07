@@ -36,6 +36,7 @@ namespace larocv {
       /// append dQ/dX from atomic contour
       void push_back(size_t atom_id,
 		     const geo2d::Vector<float>& start,
+		     const geo2d::Vector<float>& end,
 		     const std::vector<float>& dqdx);
       /// queries dqdx
       const std::vector<float>& dqdx() const;
@@ -51,9 +52,14 @@ namespace larocv {
       size_t atom_start_index(size_t atom_index) const;
       /// queries atomic contour's id
       size_t atom_id(size_t atom_index) const;
+      /// queries 2D coordinate point that corresponds to the start of the chain of atoms
+      const geo2d::Vector<float>& start_pt() const;
       /// queries 2D coordinate point that corresponds to an atom's start position
       const geo2d::Vector<float>& atom_start_pt(size_t atom_index) const;
-
+      /// queries the end point
+      const geo2d::Vector<float>& end_pt() const;
+      /// queries the end point
+      const geo2d::Vector<float>& atom_end_pt(const size_t atom_index) const;
     private:
       /// unique ID (should respect Particle cluster id)
       size_t _cluster_id;
@@ -65,6 +71,8 @@ namespace larocv {
       std::vector<size_t> _start_index_v;
       /// atomic cluster's boundary (start) location in 2D coordinate system
       std::vector<geo2d::Vector<float> > _start_pt_v;
+      /// end point of ALL atoms' chain
+      geo2d::Vector<float> _end_pt;
       /// atomic cluster's id array
       std::vector<size_t> _atom_id_v;
     };
