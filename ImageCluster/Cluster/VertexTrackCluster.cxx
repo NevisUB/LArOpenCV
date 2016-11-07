@@ -114,17 +114,21 @@ namespace larocv {
       }
       
       auto rot = ::cv::getRotationMatrix2D(ref_vtx_copy,angle,1.);
-      cv::Rect bbox = cv::RotatedRect(ref_vtx_copy,img_padded.size(),angle).boundingRect();
+      cv::Rect bbox = cv::RotatedRect(ref_vtx_copy,img_padded.size(),angle).boundingRect(); 
+      LAROCV_DEBUG() << "bbox : " << bbox << "... size " << bbox.size() << std::endl;
       
       cv::warpAffine(img_padded, rot_img, rot, bbox.size());
-      /*
-      std::stringstream ss1,ss2;
-      ss1 << "norm_plane" << "_xs" << xs_pt_idx << ".png";
-      ss2 << "rot_plane" << "_xs" << xs_pt_idx << ".png";
 
-      cv::imwrite(std::string(ss1.str()).c_str(), img_padded);
-      cv::imwrite(std::string(ss2.str()).c_str(), rot_img);
+      LAROCV_DEBUG() << "rot_img rows: " << rot_img.rows << "... cols: " << rot_img.cols << std::endl;
+      
+      /*
+	std::stringstream ss1,ss2;
+	ss1 << "norm_plane" << "_xs" << xs_pt_idx << ".png";
+	ss2 << "rot_plane" << "_xs" << xs_pt_idx << ".png";
+	cv::imwrite(std::string(ss1.str()).c_str(), img_padded);
+	cv::imwrite(std::string(ss2.str()).c_str(), rot_img);
       */
+
       cv::Mat rot_polarimg, sb_img;
       
       // Cluster per xs-point found in Refine2DVertex
@@ -174,7 +178,7 @@ namespace larocv {
 	}
       }
       
-      for(size_t row=row_max; row<=rot_polarimg.rows; ++row) {
+      for(size_t row=row_max; row<rot_polarimg.rows; ++row) {
 	for(size_t col=0; col<rot_polarimg.cols; col++) {
 	  rot_polarimg.at<unsigned char>(row,col) = (unsigned char)0;
 	}
@@ -271,11 +275,11 @@ namespace larocv {
 
       // std::stringstream pp0;
       // pp0 << "cart_ctor_mat_"<<meta.plane()<<".png";
-      // cv::imwrite(pp0.str().c_str(),cart_ctor_mat);
+      // //cv::imwrite(pp0.str().c_str(),cart_ctor_mat);
 
       // std::stringstream pp1;
       // pp1 << "polar_ctor_mat_"<<meta.plane()<<".png";
-      // cv::imwrite(pp1.str().c_str(),polar_ctor_mat);
+      // //cv::imwrite(pp1.str().c_str(),polar_ctor_mat);
 
       result_v.emplace_back(std::move(part));
     }
@@ -313,6 +317,7 @@ namespace larocv {
     for(size_t vtx_id = 0; vtx_id < data._vtx_cluster_v.size(); ++vtx_id) {
       auto& vtx_cluster = data._vtx_cluster_v[vtx_id];
       auto const& circle_vtx = vtx_cluster.get_circle_vertex(plane);
+      LAROCV_DEBUG() << "circle_vtx center, radius " << circle_vtx.center << "... " << circle_vtx.radius << std::endl;
       auto cluster_v = TrackHypothesis(img,circle_vtx);
       for(size_t cidx=0; cidx<cluster_v.size(); ++cidx) {
 	auto& cluster = cluster_v[cidx];

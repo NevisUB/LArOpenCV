@@ -829,7 +829,7 @@ namespace larocv{
      
     for(size_t plane=0; plane<img_v.size(); ++plane) {
       auto& plane_data = data.get_plane_data_writeable(plane);
-      std::cout<<"Plane " << plane << " ..."<<std::endl;
+      //std::cout<<"Plane " << plane << " ..."<<std::endl;
       if(!plane_data._valid_plane) continue;
       auto const& circle_scan_v  = plane_data._circle_scan_v;
       auto const& tick_offset    = tick_offset_v.at(plane);
