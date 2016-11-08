@@ -227,8 +227,9 @@ namespace larocv {
 	    }
 	  }
 	}
+
       }
-      if ( !n_defects ) {
+      if ( !n_defects && !_per_vertex) {
 	LAROCV_DEBUG() << "PostProcess found NO defect points in any plane" << std::endl;
 	return false;
       }

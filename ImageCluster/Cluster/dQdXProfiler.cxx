@@ -165,7 +165,7 @@ namespace larocv {
       LAROCV_CRITICAL() << "Atom's ordering index array length != # atoms!" << std::endl;
       throw larbys();
     }
-    std::cout<<atom_order_v.size()<<std::endl;
+
     // prepare result container
     std::vector<std::pair<geo2d::Vector<float>,geo2d::Vector<float> > > result_v;
     result_v.resize(atom_order_v.size());
