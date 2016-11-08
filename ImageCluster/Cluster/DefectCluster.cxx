@@ -45,6 +45,10 @@ namespace larocv {
 	for(size_t plane = 0 ; plane < vtx_cluster.num_planes(); ++plane) {
 	  // loop over clusters on this plane
 	  for(auto const& pcluster : vtx_cluster.get_clusters(plane)) {
+	    LAROCV_INFO() << "Inspecting defects for Vertex " << vtx_cluster.id()
+			  << " plane " << plane
+			  << " particle " << pcluster.id()
+			  << std::endl;
 	    auto pcompound = BreakContour(pcluster._ctor);
 	    pcompound_set.emplace_back(plane,std::move(pcompound));
 	  }
@@ -55,7 +59,12 @@ namespace larocv {
     }
 
     // Process input clusters on this plane
-    for(auto const& cluster : clusters) {
+    for(size_t cindex=0; cindex<clusters.size(); ++cindex) {
+      auto const& cluster = clusters[cindex];
+
+      LAROCV_INFO() << "Inspecting defects plane " << meta.plane()
+		    << " cluster " << cindex
+		    << std::endl;
 
       auto cluscomp = BreakContour(cluster._contour);
 
@@ -688,52 +697,59 @@ namespace larocv {
     // case 1 and 2 both require to compute the "closest defects from history" to each child
     
     // Look for the closest defect in the parent (parent) for child 1
-    double distmin1 = 1e20;
-    double distmin2 = 1e20;
+    double closest_defect1_dist1 = 1e20;
+    double closest_defect1_dist2 = 1e20;
     size_t closest_defect1_id1 = kINVALID_SIZE;
     size_t closest_defect1_id2 = kINVALID_SIZE;
     for(auto const& defect_id : parent.associated_defects()) {
       auto const& defect_pt = cluscomp.get_defect(defect_id)._pt_defect;
-      double dist = pointPolygonTest(child1._ctor,defect_pt,true);
-      dist = (dist >=0 ? 0. : dist * -1.);
-      if(dist < distmin1) {
+      double dist = pointPolygonTest(child1._ctor,defect_pt,true) * -1.;
+      if(dist <  closest_defect1_dist1) {
 	// update 2nd closest defect
-	distmin2 = distmin1;
-	closest_defect1_id2 = closest_defect1_id1;
-	distmin1 = dist;
+	closest_defect1_dist2 = closest_defect1_dist1;
+	closest_defect1_id2   = closest_defect1_id1;
+	closest_defect1_dist1 = dist;
 	closest_defect1_id1 = defect_id;
-      }else if(dist < distmin2) {
-	distmin2 = dist;
-	closest_defect1_id2 = defect_id;
+      }else if(dist < closest_defect1_dist2) {
+	closest_defect1_dist2 = dist;
+	closest_defect1_id2   = defect_id;
       }
     }
 
+    LAROCV_DEBUG() << "Child1 atom size " << child1._ctor.size()
+		   << " closest defect " << closest_defect1_id1
+		   << " @ " << cluscomp.get_defect(closest_defect1_id1)._pt_defect
+		   << " dist = " << closest_defect1_dist1 << std::endl;
+
     // Look for the closest defect in the parent (parent) for child 2
-    distmin1 = 1e20;
-    distmin2 = 1e20;
+    double closest_defect2_dist1 = 1e20;
+    double closest_defect2_dist2 = 1e20;
     size_t closest_defect2_id1 = kINVALID_SIZE;
     size_t closest_defect2_id2 = kINVALID_SIZE;
     for(auto const& defect_id : parent.associated_defects()) {
       auto const& defect_pt = cluscomp.get_defect(defect_id)._pt_defect;
-      double dist = pointPolygonTest(child1._ctor,defect_pt,true);
-      dist = (dist >=0 ? 0. : dist * -1.);
-      if(dist < distmin1) {
+      double dist = pointPolygonTest(child2._ctor,defect_pt,true) * -1.;
+      if(dist < closest_defect2_dist1) {
 	// update 2nd closest defect
-	distmin2 = distmin1;
-	closest_defect2_id2 = closest_defect2_id1;
-	distmin1 = dist;
-	closest_defect2_id1 = defect_id;
-      }else if(dist < distmin2) {
-	distmin2 = dist;
-	closest_defect2_id2 = defect_id;
+	closest_defect2_dist2 = closest_defect2_dist1;
+	closest_defect2_id2   = closest_defect2_id1;
+	closest_defect2_dist1 = dist;
+	closest_defect2_id1   = defect_id;
+      }else if(dist < closest_defect2_dist2) {
+	closest_defect2_dist2 = dist;
+	closest_defect2_id2   = defect_id;
       }
     }
+    LAROCV_DEBUG() << "Child2 atom size " << child2._ctor.size()
+		   << " closest defect " << closest_defect2_id1
+		   << " @ " << cluscomp.get_defect(closest_defect2_id1)._pt_defect
+		   << " dist = " << closest_defect2_dist1 << std::endl;
 
     // case 1) parent is an "edge"
     // In this case one of children must inherit "edge" feature.
     // The edge child should have a larger distance to the "closest" defect in the history (history = 1 defect anyway...)
     if(parent.associated_defects().size() == 1) {
-      if(distmin1 > distmin2) {
+      if(closest_defect1_dist1 > closest_defect2_dist1) {
 	child1.associate(defect.id());
 	child2.associate(defect.id());
 	child2.associate(closest_defect2_id1);
@@ -1071,10 +1087,10 @@ namespace larocv {
       ss << "Reporting the final set of atoms/defects" << std::endl;
       for(auto const& atom : cluscomp.get_atoms()) {
 
-	ss << "    Atom ID " << atom.id() << " ... associated defects: ";
+	ss << "    Atom ID " << atom.id() << " size = " << atom._ctor.size() << " ... associated defects: ";
 	for(auto const& defect_id : atom.associated_defects())
 
-	  ss << defect_id << " ";
+	  ss << defect_id << " @ " << cluscomp.get_defect(defect_id)._pt_defect << " ... ";
 
 	ss << std::endl;
       }

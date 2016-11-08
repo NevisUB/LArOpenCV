@@ -165,6 +165,7 @@ namespace larocv {
       LAROCV_CRITICAL() << "Atom's ordering index array length != # atoms!" << std::endl;
       throw larbys();
     }
+    std::cout<<atom_order_v.size()<<std::endl;
     // prepare result container
     std::vector<std::pair<geo2d::Vector<float>,geo2d::Vector<float> > > result_v;
     result_v.resize(atom_order_v.size());
@@ -172,8 +173,11 @@ namespace larocv {
     auto const& atoms = cluster.get_atoms();
     geo2d::Vector<float> pt, start, end, last_end;
     last_end = vtx2d.center;
-    for(auto const& atom_index : atom_order_v) {
+    for(size_t order_index=0; order_index < atom_order_v.size(); ++order_index) {
+      auto const& atom_index = atom_order_v[order_index];
       auto const& atom = atoms.at(atom_index);
+      LAROCV_DEBUG() << "Inspecting order " << order_index
+		     << " atom ID " << atom_index << std::endl;
       // loop over points to find the end
       double max_dist = 0;
       for(auto const& ctor_pt : atom._ctor) {
@@ -183,6 +187,7 @@ namespace larocv {
 	if(dist > max_dist) {
 	  max_dist = dist;
 	  end = pt;
+	  LAROCV_DEBUG() << "New end point candidate @ " << pt << " dist = " << max_dist << std::endl;
 	}
       }
       // loop over points to find the start
@@ -194,23 +199,24 @@ namespace larocv {
 	if(dist > max_dist) {
 	  max_dist = dist;
 	  start = pt;
+	  LAROCV_DEBUG() << "New start point candidate @ " << pt << " dist = " << max_dist << std::endl;
 	}
       }
       // record start/end + update last_end
       last_end = end;
       result_v[atom_index].first  = start;
       result_v[atom_index].second = end;
-    }
-    if(this->logger().level() <= larocv::msg::kINFO) {
-      std::stringstream ss;
-      ss << "Ordered " << atom_order_v.size() << " atoms from vertex @ " << vtx2d.center << std::endl;
-      for(size_t i=0; i<atom_order_v.size(); ++i) {
-	ss << "    Atom ID " << atom_order_v[i]
-	   << " start @ " << result_v[atom_order_v[i]].first
-	   << " end @ " << result_v[atom_order_v[i]].second
-	   << std::endl;
+
+      if(this->logger().level() <= larocv::msg::kINFO) {
+	std::stringstream ss;
+	ss << "Atom ID " << atom.id() << " order index " << order_index
+	   << " start @ " << start
+	   << " end @ " << end
+	   << " # defects " << atom.associated_defects().size();
+	for(auto const& defect_id : atom.associated_defects())
+	  ss << " ... defect " << defect_id << " @ " << cluster.get_defect(defect_id)._pt_defect;
+	LAROCV_INFO() << std::string(ss.str()) << std::endl;
       }
-      LAROCV_INFO() << std::string(ss.str());
     }
     return result_v;
   }
