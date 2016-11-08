@@ -3,6 +3,7 @@
 
 #include "VertexTrackCluster.h"
 #include "Refine2DVertex.h"
+#include "Core/Geo2D.h"
 
 namespace larocv {
 
@@ -239,13 +240,13 @@ namespace larocv {
       //res_contour._contour.resize(polar_contour.size());
       larocv::data::ParticleCluster part;
       auto& contour = part._ctor;
-      contour.resize(polar_contour.size());
+      contour.reserve(polar_contour.size());
 
       //std::stringstream ss5;
       //ss3 << "Inserting into contour : ";
+      ::geo2d::Vector<int> this_pt,last_pt;
       for (size_t pt_idx=0; pt_idx<polar_contour.size(); ++pt_idx) {
       	auto const& polar_pt = polar_contour[pt_idx];
-      	auto& pt = contour[pt_idx];
 	
 	//polar_ctor_mat.at<unsigned char>(polar_pt.y,polar_pt.x) = (unsigned char) 255;
 	
@@ -256,14 +257,17 @@ namespace larocv {
       	r = (r / cols) * max_radius;
       	t = ((t / rows) * 360.0 + angle) * M_PI / 180.0;
 	
-      	pt.x = (float) r * std::cos(t) + ref_vtx_copy.x;
-      	pt.y = (float) r * std::sin(t) + ref_vtx_copy.y;
+      	this_pt.x = (size_t)((float) r * std::cos(t) + ref_vtx_copy.x + 0.5);
+      	this_pt.y = (size_t)((float) r * std::sin(t) + ref_vtx_copy.y + 0.5);
 	
       	//res_contour._contour[pt_idx].x = (int)(pt.x + 0.5) - padding;
       	//res_contour._contour[pt_idx].y = (int)(pt.y + 0.5) - padding;
 
-	pt.x -= padding;
-	pt.y -= padding;
+	this_pt.x -= padding;
+	this_pt.y -= padding;
+	if(pt_idx == 0 || this_pt.x != last_pt.x || this_pt.y != last_pt.y)
+	  contour.push_back(this_pt);
+	last_pt = this_pt;
 	
 	//ss5<<"[" << res_contour._contour[pt_idx].x << "," << res_contour._contour[pt_idx].y << "],";
       }
@@ -281,6 +285,8 @@ namespace larocv {
       // pp1 << "polar_ctor_mat_"<<meta.plane()<<".png";
       // //cv::imwrite(pp1.str().c_str(),polar_ctor_mat);
 
+      //geo2d::UntanglePolygon(contour);
+      
       result_v.emplace_back(std::move(part));
     }
 

@@ -42,11 +42,13 @@ namespace larocv {
       /// check if the argument defect point is associated
       bool is_associated(const ContourDefect& ac) const;
       /// retrieve a list of defect points associated
-      const std::set<size_t> associated_defects() const;
+      const std::vector<size_t>& associated_defects() const;
       
     private:
-      size_t _atomic_id; ///< unique atomic cluster id
-      std::set<size_t> _defect_id_s;  ///< associated defect point(s) id
+      /// unique atomic cluster id
+      size_t _atomic_id;
+      /// associated defect point(s) id, use std::vector instead of std::set for Python-friendly support
+      std::vector<size_t> _defect_id_v;  
     };
     
     class ContourDefect {
@@ -79,11 +81,13 @@ namespace larocv {
       /// check if the argument atomic cluster is associated
       bool is_associated(const AtomicContour& ac) const;
       /// retrieve a list of atomic clusters associated
-      const std::set<size_t> associated_atoms() const;
+      const std::vector<size_t>& associated_atoms() const;
       
     private:
-      size_t _defect_id; ///< unique ID of a defect point
-      std::set<size_t> _atomic_id_s; ///< associated ID of atomic clusters
+      /// unique ID of a defect point
+      size_t _defect_id; 
+      /// associated ID of atomic clusters, use std::vector instead of std::set for Python-friendly support
+      std::vector<size_t> _atomic_id_v; 
     };
 
     class ClusterCompound {

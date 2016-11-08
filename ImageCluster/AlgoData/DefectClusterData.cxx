@@ -9,19 +9,24 @@ namespace larocv {
   namespace data {
 
     void AtomicContour::clear()
-    { _ctor.clear(); _parent_idx = -1; _defect_id_s.clear(); }
+    { _ctor.clear(); _parent_idx = -1; _defect_id_v.clear(); }
     
     size_t AtomicContour::id() const
     { return _atomic_id; }
     
     void AtomicContour::associate(const ContourDefect& def)
-    { _defect_id_s.insert(def.id()); }
+    { if(!is_associated(def)) _defect_id_v.push_back(def.id()); }
     
     bool AtomicContour::is_associated(const ContourDefect& def) const
-    { return (_defect_id_s.find(def.id()) != _defect_id_s.end()); }
+    {
+      for(auto const& did : _defect_id_v) {
+	if(did == def.id()) return true;
+      }
+      return false;
+    }
     
-    const std::set<size_t> AtomicContour::associated_defects() const
-    { return _defect_id_s; }
+    const std::vector<size_t>& AtomicContour::associated_defects() const
+    { return _defect_id_v; }
     
     ////////////////////////////////////////////////////////////////
     
@@ -47,20 +52,25 @@ namespace larocv {
       _dist = -1;
       _split_line.pt.x  = _split_line.pt.y  = -1;
       _split_line.dir.x = _split_line.dir.y = -1;
-      _atomic_id_s.clear();
+      _atomic_id_v.clear();
     }
     
     size_t ContourDefect::id() const
     { return _defect_id; }
     
     void ContourDefect::associate(const AtomicContour& ac)
-    { _atomic_id_s.insert(ac.id()); }
+    { if(!is_associated(ac)) _atomic_id_v.push_back(ac.id()); }
     
     bool ContourDefect::is_associated(const AtomicContour& ac) const
-    { return (_atomic_id_s.find(ac.id()) != _atomic_id_s.end()); }
+    {
+      for(auto const& aid : _atomic_id_v) {
+	if(aid == ac.id()) return true;
+      }
+      return false;
+    }
     
-    const std::set<size_t> ContourDefect::associated_atoms() const
-    { return _atomic_id_s; }
+    const std::vector<size_t>& ContourDefect::associated_atoms() const
+    { return _atomic_id_v; }
     
     ////////////////////////////////////////////////////////////////
     

@@ -148,7 +148,7 @@ namespace larocv {
       result_v.push_back(next_atom_id);
       last_atom_id = next_atom_id;
     } // end looping over to order atoms
-    
+
     return result_v;
   }
 
@@ -201,7 +201,17 @@ namespace larocv {
       result_v[atom_index].first  = start;
       result_v[atom_index].second = end;
     }
-
+    if(this->logger().level() <= larocv::msg::kINFO) {
+      std::stringstream ss;
+      ss << "Ordered " << atom_order_v.size() << " atoms from vertex @ " << vtx2d.center << std::endl;
+      for(size_t i=0; i<atom_order_v.size(); ++i) {
+	ss << "    Atom ID " << atom_order_v[i]
+	   << " start @ " << result_v[atom_order_v[i]].first
+	   << " end @ " << result_v[atom_order_v[i]].second
+	   << std::endl;
+      }
+      LAROCV_INFO() << std::string(ss.str());
+    }
     return result_v;
   }
 
@@ -230,6 +240,11 @@ namespace larocv {
       // Loop over planes
       for(size_t plane_id=0; plane_id<vtx_clusters.num_planes(); ++plane_id) {
 
+	LAROCV_INFO() << "Inspectin dQ/dX for vertex ID " << vtx3d.id()
+		      << " plane " << plane_id
+		      << " with " << vtx_compound_array.get_cluster(plane_id).size() << " particles..."
+		      << std::endl;
+
 	// Retrieve 2D vertex on this plane
 	auto const vtx2d = vtx_clusters.get_circle_vertex(plane_id);
 
@@ -254,7 +269,7 @@ namespace larocv {
 
 	  // order atoms
 	  auto const ordered_atom_id_v = OrderAtoms(particle,vtx2d);
-
+	  
 	  // get start/end
 	  auto const atom_edges_v = AtomsEdge(particle, vtx2d, ordered_atom_id_v);
 
