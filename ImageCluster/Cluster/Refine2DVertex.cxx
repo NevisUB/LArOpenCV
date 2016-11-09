@@ -35,7 +35,12 @@ namespace larocv{
 
     _trigger_tick = 2400;
 
+    _straight_line_angle_cut = 10;
+
     _radius = 10;
+    _cvtx_min_radius  = 6;
+    _cvtx_max_radius  = 20;
+    _cvtx_radius_step = 2;
     _pi_threshold = 10;
     _pca_box_size = 3;
     _global_bound_size = 20;
@@ -491,9 +496,9 @@ namespace larocv{
     // Find crossing point
     ::cv::Mat polarimg;
     ::cv::linearPolar(img, polarimg, circle.center, circle.radius*2, ::cv::WARP_FILL_OUTLIERS);
-
+    
     size_t col = (size_t)(polarimg.cols / 2);
-			  
+
     std::vector<std::pair<int,int> > range_v;
     std::pair<int,int> range(-1,-1);
     for(size_t row=0; row<polarimg.rows; ++row) {
@@ -531,9 +536,87 @@ namespace larocv{
       pt.x = circle.center.x + circle.radius * cos(angle);
       pt.y = circle.center.y + circle.radius * sin(angle);
 
-      res.push_back(pt);      
+      res.push_back(pt);
     }
     return res;
+  }
+
+  std::vector<geo2d::VectorArray<float> >
+  Refine2DVertex::QPointArrayOnCircleArray(const ::cv::Mat& img, const geo2d::Vector<float>& center,
+					   const std::vector<float>& radius_v) const
+  {
+    std::vector<geo2d::VectorArray<float> > res_v;
+    if(radius_v.empty()) return res_v;
+    float max_radi = 0;
+    float min_radi = -1;
+    for(auto const& r : radius_v) {
+      if(r<=0) throw larbys("non-positive radius cannot be processed!");
+      if(min_radi<0) { min_radi = max_radi = r; continue; }
+      if(max_radi < r) max_radi = r;
+      if(min_radi > r) min_radi = r;
+    }
+    if(max_radi == min_radi) max_radi *= 1.1;
+    else max_radi += (max_radi - min_radi);
+    
+    // Find crossing point
+    ::cv::Mat polarimg;
+    ::cv::linearPolar(img, polarimg, center, max_radi, ::cv::WARP_FILL_OUTLIERS);
+
+    std::vector<size_t> col_v(radius_v.size(),0);
+    for(size_t r_idx=0; r_idx<radius_v.size(); ++r_idx) {
+      auto const& radius = radius_v[r_idx];
+      col_v[r_idx] = (size_t)(radius / max_radi * (float)(polarimg.cols) + 0.5);
+    }
+
+    for(size_t col_idx=0; col_idx<col_v.size(); ++col_idx) {
+
+      auto const& col    = col_v[col_idx];
+      auto const& radius = radius_v[col_idx];
+
+      geo2d::VectorArray<float> res;
+      std::vector<std::pair<int,int> > range_v;
+      std::pair<int,int> range(-1,-1);
+      for(size_t row=0; row<polarimg.rows; ++row) {
+	
+	float q = (float)(polarimg.at<unsigned char>(row, col));
+	if(q < _pi_threshold) {
+	  if(range.first >= 0) {
+	    range_v.push_back(range);
+	    range.first = range.second = -1;
+	  }
+	  continue;
+	}
+	//std::cout << row << " / " << polarimg.rows << " ... " << q << std::endl;
+	if(range.first < 0) range.first = range.second = row;
+	
+	else range.second = row;
+	
+      }
+      // Check if end should be combined w/ start
+      if(range_v.size() >= 2) {
+	if(range_v[0].first == 0 && (range_v.back().second+1) == polarimg.rows) {
+	  range_v[0].first = range_v.back().first - (int)(polarimg.rows);
+	  range_v.pop_back();
+	}
+      }
+      // Compute xs points
+      for(auto const& r : range_v) {
+	
+	//std::cout << "XS @ " << r.first << " => " << r.second << " ... " << polarimg.rows << std::endl;
+	float angle = ((float)(r.first + r.second))/2.;
+	if(angle < 0) angle += (float)(polarimg.rows);
+	angle = angle * M_PI * 2. / ((float)(polarimg.rows));
+	
+	geo2d::Vector<float> pt;
+	pt.x = center.x + radius * cos(angle);
+	pt.y = center.y + radius * sin(angle);
+	
+	res.push_back(pt);      
+      }
+
+      res_v.emplace_back(std::move(res));
+    }
+    return res_v;
   }
 
   void Refine2DVertex::edge_rect(const ::cv::Mat& img, cv::Rect& rect,int w, int h) {
@@ -626,6 +709,81 @@ namespace larocv{
     return dtheta_sum;
   }
 
+  data::CircleVertex Refine2DVertex::RadialScan(const cv::Mat& img, const geo2d::Vector<float>& pt)
+  {
+    data::CircleVertex res;
+    res.center = pt;
+
+    std::vector<float> radius_v;
+    radius_v.reserve( (size_t)( (_cvtx_max_radius - _cvtx_min_radius) / _cvtx_radius_step ) );
+    for(float radius = _cvtx_min_radius; radius <= _cvtx_max_radius; radius += _cvtx_radius_step)
+      radius_v.push_back(radius);
+    
+    auto const temp_xs_vv = QPointArrayOnCircleArray(img,pt,radius_v);
+
+    for(size_t r_idx = 0; r_idx < radius_v.size(); ++r_idx) {
+
+      auto const& radius    = radius_v[r_idx];
+      auto const& temp_xs_v = temp_xs_vv[r_idx];
+
+      if(temp_xs_v.empty()) continue;
+      
+      std::vector<data::PointPCA> xs_v;
+      std::vector<float> dtheta_v;
+      xs_v.reserve(temp_xs_v.size());
+      dtheta_v.reserve(temp_xs_v.size());
+
+      // Estimate a local PCA and center-to-xs line's angle diff
+      for(size_t xs_idx=0; xs_idx < temp_xs_v.size(); ++xs_idx) {
+	auto const& xs_pt = temp_xs_v[xs_idx];
+	// Line that connects center to xs
+	try{
+	  auto local_pca   = SquarePCA(img,xs_pt,_pca_box_size,_pca_box_size);
+	  auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
+	  // Alternative (and probably better/faster): compute y spread in polar coordinate
+	  //LAROCV_DEBUG() << "Radius " << radius << " Line ID " << xs_idx << " found xs " << xs_pt
+	  //<< " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
+	  xs_v.push_back(data::PointPCA(xs_pt,local_pca));
+	  dtheta_v.push_back(fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)));
+	}catch(const larbys& err){
+	  continue;
+	}
+      }
+
+      // if this is the 1st loop, set the result
+      if(res.xs_v.empty()) {
+	res.radius   = radius;
+	res.xs_v     = xs_v;
+	res.dtheta_v = dtheta_v;
+	continue;
+      }
+
+      // if this (new) radius has more crossing point, that means we started to
+      // cross something else other than particle trajectory from the circle's center
+      // then we break
+      if(res.xs_v.size() < xs_v.size()) {
+	LAROCV_DEBUG() << "Breaking @ radius = " << radius << " (not included) since # crossing point increased!" << std::endl;
+	break;
+      }
+
+      // else we prefer the larger radius to have a better direction estimate for trajectories
+      res.radius   = radius;
+      res.xs_v     = xs_v;
+      res.dtheta_v = dtheta_v;
+
+    }
+
+    for(size_t xs_idx=0; xs_idx<res.xs_v.size(); ++xs_idx) {
+      auto const& xs_pt     = res.xs_v[xs_idx].pt;
+      auto const& dtheta    = res.dtheta_v[xs_idx];
+      auto center_line      = geo2d::Line<float>(xs_pt, xs_pt - res.center);
+      LAROCV_DEBUG() << "Radius " << res.radius << " Line ID " << xs_idx << " found xs " << xs_pt
+		     << " dtheta " << dtheta << std::endl;
+    }
+
+    return res;
+  }
+
   data::CircleVertex Refine2DVertex::TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt)
   {
     data::CircleVertex invalid_circle, inner_circle, outer_circle;
@@ -635,16 +793,7 @@ namespace larocv{
     inner_circle.center = outer_circle.center = pt;
     inner_circle.radius = _radius;
     outer_circle.radius = _radius * 2.;
-    // Get xs points for this step. if < 2 continue
-    auto const inner_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius));
-    if(inner_xs_pts.size()<2) { return invalid_circle; }    
-    if(inner_xs_pts.size()==2) {
-      auto center_line0 = geo2d::Line<float>(inner_xs_pts[0], inner_xs_pts[0] - pt);
-      auto center_line1 = geo2d::Line<float>(inner_xs_pts[1], inner_xs_pts[1] - pt);
-      auto dtheta = fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
-      if(dtheta < 10) { return invalid_circle; }
-    }
-
+    auto const inner_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius  ));
     auto const outer_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius*2));
     double inner_dtheta_sum = 0;
     double outer_dtheta_sum = 0;
@@ -857,9 +1006,20 @@ namespace larocv{
 	auto trial_pt = this->MeanPixel(img,step_pt);
 
 	auto circle = this->TwoPointInspection(img,trial_pt);
-	if(circle.xs_v.empty()) {
+	//auto circle = this->RadialScan(img,trial_pt);
+	if(circle.xs_v.size() < 2) {
 	  step_pt+= dir;
 	  continue;
+	}
+	// Check if xs points are lined up "too straight"
+	if(circle.xs_v.size() == 2) {
+	  auto center_line0 = geo2d::Line<float>(circle.xs_v[0].pt, circle.xs_v[0].pt - circle.center);
+	  auto center_line1 = geo2d::Line<float>(circle.xs_v[1].pt, circle.xs_v[1].pt - circle.center);
+	  auto dtheta = fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
+	  if(dtheta < _straight_line_angle_cut){
+	    step_pt += dir;
+	    continue;
+	  }
 	}
 	
 	LAROCV_DEBUG() << "    ... dtheta_sum = " << circle.sum_dtheta() << std::endl;
@@ -913,16 +1073,32 @@ namespace larocv{
 
     bool found=false;
     geo2d::Circle<float> circle;
-    circle.radius = _radius;
+
+    // logic to avoid too-close neighbor search
+    std::vector<geo2d::Circle<float> > used_circle_v;
 
     if(_defect_algo_id != kINVALID_ID) {
       auto const& defect_pts = AlgoData<data::DefectClusterData>(_defect_algo_id);
       for(auto const& compound : defect_pts._raw_cluster_vv[meta.plane()].get_cluster()) {
 	for(auto const& defect_pt : compound.get_defects()) {
 	  const auto pt = defect_pt._pt_defect;
+	  // check if this point is close to what is scanned before, if so then skip
+	  // "close" is defined by checking if this point is included within the radius of previous circle
+	  bool used = false;
+	  double dist = 0;
+	  for(auto const& used_circle : used_circle_v) {
+	    if(geo2d::contains(used_circle,pt,dist)) {
+	      used = true;
+	      break;
+	    }
+	  }
+	  if(used) continue;
 	  LAROCV_DEBUG() << "Scanning Defect point: " << pt << std::endl;
 	  circle.center = pt;
+	  circle.radius = _radius;
 	  found = PlaneScan(img,meta.plane(),circle,pt_err) || found;
+	  circle.radius = _radius / 2.;
+	  used_circle_v.push_back(circle);
 	}
       }
     }
@@ -930,9 +1106,23 @@ namespace larocv{
     if(_pca_algo_id != kINVALID_ID) {
       auto const& pca_pts    = AlgoData<data::PCACandidatesData>(_pca_algo_id);    
       for(auto const& pt : pca_pts.points(meta.plane())) {
+	// check if this point is close to what is scanned before, if so then skip
+	// "close" is defined by checking if this point is included within the radius of previous circle
+	bool used = false;
+	double dist = 0;
+	for(auto const& used_circle : used_circle_v) {
+	  if(geo2d::contains(used_circle,pt,dist)) {
+	    used = true;
+	    break;
+	  }
+	}
+	if(used) continue;
 	LAROCV_DEBUG() << "Scanning PCACandidate point: " << pt << std::endl;
 	circle.center = pt;
+	circle.radius = _radius;
 	found = PlaneScan(img,meta.plane(),circle,pt_err) || found;
+	circle.radius = _radius / 2.;
+	used_circle_v.push_back(circle);
       }
     }
     
@@ -1369,7 +1559,8 @@ namespace larocv{
 	    geo2d::Vector<float> guess_pt;
 	    guess_pt.x = approx_x;
 	    guess_pt.y = approx_y;
-	    auto guess_circle = TwoPointInspection(img_v[plane],guess_pt);
+	    //auto guess_circle = TwoPointInspection(img_v[plane],guess_pt);
+	    auto guess_circle = RadialScan(img_v[plane],guess_pt);
 	    if(guess_circle.xs_v.empty()) {
 	      guess_circle.center = guess_pt;
 	      guess_circle.radius = _radius;

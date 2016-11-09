@@ -76,7 +76,12 @@ namespace larocv {
 				 geo2d::Vector<float> pt,
 				 float width, float height);
       
-    geo2d::VectorArray<float> QPointOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle);
+    geo2d::VectorArray<float> QPointOnCircle(const ::cv::Mat& img,
+					     const geo2d::Circle<float>& circle);
+
+    std::vector<geo2d::VectorArray<float> > QPointArrayOnCircleArray(const ::cv::Mat& img,
+								     const geo2d::Vector<float>& pt,
+								     const std::vector<float>& radius_v) const;
 
     float AngularSpread(const ::cv::Mat& polarimg,
 			float radius_frac_min,
@@ -102,6 +107,8 @@ namespace larocv {
 
     data::CircleVertex TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
 
+    data::CircleVertex RadialScan(const cv::Mat& img, const geo2d::Vector<float>& pt);
+
     std::vector<float> RollingMean(const std::vector<float>& array,
 				   size_t pre, size_t post,
 				   float invalid_value=kINVALID_FLOAT);
@@ -123,11 +130,15 @@ namespace larocv {
     std::vector<float> _wire_comp_factor_v;
     std::vector<float> _time_comp_factor_v;
     geo2d::VectorArray<float> _origin_v;
+    float _straight_line_angle_cut;
     float _xplane_tick_resolution;
     float _xplane_wire_resolution;
     float _xplane_guess_max_dist;
     float _vtx_3d_resolution;
     double _radius;
+    double _cvtx_max_radius;
+    double _cvtx_min_radius;
+    double _cvtx_radius_step;
     float _pi_threshold;
     float _pca_box_size;
     float _global_bound_size;
