@@ -327,17 +327,19 @@ namespace larocv {
        ::cv::blur(thresh_img,thresh_img,::cv::Size(_blur_size,_blur_size));
        ::cv::threshold(thresh_img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
     */
+    
     // OR using just threshold
     ::cv::threshold(img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
     
     // Run clustering for this plane & store
     auto const plane = meta.plane();
-    for(size_t vtx_id = 0; vtx_id < data._vtx_cluster_v.size(); ++vtx_id) {
 
+    for(size_t vtx_id = 0; vtx_id < data._vtx_cluster_v.size(); ++vtx_id) {
+      
       auto& vtx_cluster = data._vtx_cluster_v[vtx_id];
       auto const& circle_vtx = vtx_cluster.get_circle_vertex(plane);
-      LAROCV_INFO() << "Vertex ID " << vtx_id << " plane " << plane
-		    << " CircleVertex @ " << circle_vtx.center << " w/ R = " << circle_vtx.radius << std::endl;
+      LAROCV_DEBUG() << "Vertex ID " << vtx_id << " plane " << plane
+		     << " CircleVertex @ " << circle_vtx.center << " w/ R = " << circle_vtx.radius << std::endl;
       
       // Create track cluster hypothesis from the vertex point
       auto cluster_v = TrackHypothesis(img,circle_vtx);
@@ -354,13 +356,18 @@ namespace larocv {
       double dist2vtx = -1e9;
       for(size_t ctor_id=0; ctor_id < parent_ctor_v.size(); ++ctor_id){
 	auto const& ctor = parent_ctor_v[ctor_id];
-	auto dist = ::cv::pointPolygonTest(ctor, circle_vtx.center, false);
+	LAROCV_DEBUG() << "ctor id: " << ctor_id << std::endl;
+	auto dist = ::cv::pointPolygonTest(ctor, circle_vtx.center, true);
+	LAROCV_DEBUG() << "\tgot dist: " << dist << std::endl;
 	if(dist < dist2vtx) continue;
+	LAROCV_DEBUG() << "\tdist > dist2vtx " << std::endl;
 	if(dist2vtx >=0 && parent_ctor_size > ctor.size()) continue;
 	parent_ctor_id = ctor_id;
 	parent_ctor_size = ctor.size();
 	dist2vtx = dist;
+	LAROCV_DEBUG() << "\t ctor chosen of size: " << ctor.size() << std::endl;
       }
+
       geo2d::VectorArray<int> parent_points;
       if(parent_ctor_id != kINVALID_SIZE) {
 	auto const& parent_ctor = parent_ctor_v[parent_ctor_id];
@@ -374,7 +381,7 @@ namespace larocv {
 	}
       }
       vtx_cluster.set_num_pixel(plane,parent_points.size());
-
+      
       LAROCV_INFO() << "# non-zero pixels " << parent_points.size()
 		    << " ... # track clusters " << cluster_v.size()
 		    << std::endl;
