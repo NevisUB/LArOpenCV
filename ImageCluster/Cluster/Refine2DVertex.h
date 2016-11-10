@@ -91,7 +91,7 @@ namespace larocv {
 
   private:
 
-    void edge_rect(const ::cv::Mat& img, cv::Rect& rect,int w, int h);
+    void edge_rect(const ::cv::Mat& img, cv::Rect& rect,int w, int h) const;
     
     
     bool PlaneScan(const ::cv::Mat& img, const size_t plane,
@@ -101,7 +101,8 @@ namespace larocv {
     void XPlaneTimeScan(const std::vector<const cv::Mat>& img_v);
     void XPlaneWireScan(const std::vector<const cv::Mat>& img_v);
 
-    geo2d::Vector<float> MeanPixel(const cv::Mat& img, const geo2d::Vector<float>& center);
+    geo2d::Vector<float> MeanPixel(const cv::Mat& img, const geo2d::Vector<float>& center,
+				   size_t range_x=2, size_t range_y=2) const;
 
     double PointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
 

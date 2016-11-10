@@ -38,8 +38,8 @@ namespace larocv{
     _straight_line_angle_cut = 10;
 
     _radius = 10;
-    _cvtx_min_radius  = 6;
-    _cvtx_max_radius  = 20;
+    _cvtx_min_radius  = 4;
+    _cvtx_max_radius  = 21;
     _cvtx_radius_step = 2;
     _pi_threshold = 10;
     _pca_box_size = 3;
@@ -55,7 +55,7 @@ namespace larocv{
     _wire_comp_factor_v.resize(3);
     _time_comp_factor_v.resize(3);
     _xplane_tick_resolution = 1.;
-    _xplane_wire_resolution = 2.;
+    _xplane_wire_resolution = 2.5;
     _xplane_guess_max_dist  = 3.;
     _time_exclusion_radius = 10;
     _wire_exclusion_radius = 10;
@@ -619,7 +619,8 @@ namespace larocv{
     return res_v;
   }
 
-  void Refine2DVertex::edge_rect(const ::cv::Mat& img, cv::Rect& rect,int w, int h) {
+  void Refine2DVertex::edge_rect(const ::cv::Mat& img, cv::Rect& rect,int w, int h) const
+  {
 
     //make it edge aware
     if ( rect.x < 0 ) rect.x = 0;
@@ -630,11 +631,13 @@ namespace larocv{
     
   }
   
-  geo2d::Vector<float> Refine2DVertex::MeanPixel(const cv::Mat& img, const geo2d::Vector<float>& center)
+  geo2d::Vector<float> Refine2DVertex::MeanPixel(const cv::Mat& img,
+						 const geo2d::Vector<float>& center,
+						 size_t range_x, size_t range_y) const
   {
     // Make a better guess
-    ::cv::Rect rect(center.x - 2, center.y - 2, 5, 5);
-    edge_rect(img,rect,5,5);
+    ::cv::Rect rect(center.x - range_x, center.y - range_y, range_x*2+1,range_y*2+1);
+    edge_rect(img,rect,range_x*2+1,range_y*2+1);
     
     LAROCV_DEBUG() << "rows cols " << img.rows << "," << img.cols << " and rect " << rect << std::endl;
     auto small_img = ::cv::Mat(img,rect);
@@ -656,8 +659,8 @@ namespace larocv{
     trial_pt.x /= (float)(points.size());
     trial_pt.y /= (float)(points.size());
     
-    trial_pt.x = center.x + trial_pt.x - 2;
-    trial_pt.y = center.y + trial_pt.y - 2;
+    trial_pt.x = center.x + trial_pt.x - range_x;
+    trial_pt.y = center.y + trial_pt.y - range_y;
 
     return trial_pt;
   }
@@ -741,8 +744,8 @@ namespace larocv{
 	  auto local_pca   = SquarePCA(img,xs_pt,_pca_box_size,_pca_box_size);
 	  auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
 	  // Alternative (and probably better/faster): compute y spread in polar coordinate
-	  //LAROCV_DEBUG() << "Radius " << radius << " Line ID " << xs_idx << " found xs " << xs_pt
-	  //<< " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
+	  LAROCV_DEBUG() << "Radius " << radius << " Line ID " << xs_idx << " found xs " << xs_pt
+			 << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
 	  xs_v.push_back(data::PointPCA(xs_pt,local_pca));
 	  dtheta_v.push_back(fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)));
 	}catch(const larbys& err){
@@ -761,7 +764,7 @@ namespace larocv{
       // if this (new) radius has more crossing point, that means we started to
       // cross something else other than particle trajectory from the circle's center
       // then we break
-      if(res.xs_v.size() < xs_v.size()) {
+      if(res.xs_v.size() != xs_v.size()) {
 	LAROCV_DEBUG() << "Breaking @ radius = " << radius << " (not included) since # crossing point increased!" << std::endl;
 	break;
       }
@@ -773,12 +776,13 @@ namespace larocv{
 
     }
 
+
     for(size_t xs_idx=0; xs_idx<res.xs_v.size(); ++xs_idx) {
       auto const& xs_pt     = res.xs_v[xs_idx].pt;
       auto const& dtheta    = res.dtheta_v[xs_idx];
       auto center_line      = geo2d::Line<float>(xs_pt, xs_pt - res.center);
-      LAROCV_DEBUG() << "Radius " << res.radius << " Line ID " << xs_idx << " found xs " << xs_pt
-		     << " dtheta " << dtheta << std::endl;
+      LAROCV_INFO() << "Radius " << res.radius << " Line ID " << xs_idx << " found xs " << xs_pt
+		    << " dtheta " << dtheta << std::endl;
     }
 
     return res;
@@ -1097,7 +1101,7 @@ namespace larocv{
 	  circle.center = pt;
 	  circle.radius = _radius;
 	  found = PlaneScan(img,meta.plane(),circle,pt_err) || found;
-	  circle.radius = _radius / 2.;
+	  circle.radius = 1;
 	  used_circle_v.push_back(circle);
 	}
       }
@@ -1121,7 +1125,7 @@ namespace larocv{
 	circle.center = pt;
 	circle.radius = _radius;
 	found = PlaneScan(img,meta.plane(),circle,pt_err) || found;
-	circle.radius = _radius / 2.;
+	circle.radius = 1;
 	used_circle_v.push_back(circle);
       }
     }
@@ -1556,9 +1560,17 @@ namespace larocv{
 	  if(closest_idx != kINVALID_SIZE)
 	    circle_vtx_v[plane] = plane_data._circle_scan_v[closest_idx];
 	  else {
+	    // If no candidate found among those searched, make a new search aattempt here
 	    geo2d::Vector<float> guess_pt;
 	    guess_pt.x = approx_x;
 	    guess_pt.y = approx_y;
+	    guess_pt = MeanPixel(img_v[plane],guess_pt,
+				 (size_t)(_xplane_tick_resolution+0.5),
+				 (size_t)(_xplane_wire_resolution+0.5));
+	    if(guess_pt.x<0) {
+	      guess_pt.x = approx_x;
+	      guess_pt.y = approx_y;
+	    }
 	    //auto guess_circle = TwoPointInspection(img_v[plane],guess_pt);
 	    auto guess_circle = RadialScan(img_v[plane],guess_pt);
 	    if(guess_circle.xs_v.empty()) {
