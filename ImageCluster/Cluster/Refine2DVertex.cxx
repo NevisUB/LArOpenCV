@@ -33,7 +33,7 @@ namespace larocv{
       throw larbys();
     }
 
-    _trigger_tick = 2400;
+    _trigger_tick = 3200; // neutrino triggers @ 3200 tick
 
     _straight_line_angle_cut = 10;
 
