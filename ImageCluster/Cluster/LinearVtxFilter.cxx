@@ -3,7 +3,6 @@
 
 #include "LinearVtxFilter.h"
 
-
 namespace larocv {
 
   /// Global larocv::LinearVtxFilterFactory to register AlgoFactory
@@ -28,7 +27,8 @@ namespace larocv {
   }
   
   
-  geo2d::VectorArray<float> LinearVtxFilter::QPtOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle)
+  geo2d::VectorArray<float>
+  LinearVtxFilter::QPtOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle)
   {
     geo2d::VectorArray<float> res;
 
@@ -90,8 +90,11 @@ namespace larocv {
     _r_cut     = pset.get<float>("RCut",0.5);
     _angle_cut = pset.get<float>("AngleCut",165); // 15 degree angle...
     
+    _r_width  = pset.get<int>("CovWidth");
+    _r_height = pset.get<int>("CovHeight");
+    
     _thresh = pset.get<int>("Threshold",10);
-
+    
     auto const refine2d_algo_name = pset.get<std::string>("Refine2DVertexAlgo","refine_vtx");
     _refine2d_algo_id = this->ID(refine2d_algo_name);
 
@@ -108,12 +111,13 @@ namespace larocv {
   }
 
   
-  bool LinearVtxFilter::ScanRadii(const cv::Mat& img,const cv::Point_<float>& pt) {
+  std::vector<std::vector<geo2d::Vector<float> > >
+  LinearVtxFilter::ScanRadiiQpts(const cv::Mat& img, const cv::Point_<float>& pt) {
     
     std::vector<float> xs_dist;
     LAROCV_DEBUG() << "Observing defect point : " << pt << std::endl;
-
-    std::vector<std::vector<cv::Point_<float> > > qpt_vv;
+    
+    std::vector<std::vector<geo2d::Vector<float> > > qpt_vv;
 
     int start=-1;
     
@@ -156,7 +160,7 @@ namespace larocv {
 	
 	if ( min_d > _r_cut * radii  ) {
 	  LAROCV_DEBUG() << "Far away from all others with cut: " << _r_cut*radii << "... inserting pt: " << xs << std::endl;
-	  std::vector<cv::Point_<float> > tmp = { xs };
+	  std::vector<geo2d::Vector<float> > tmp = { xs };
 	  qpt_vv.emplace_back(std::move(tmp));
 	  continue;
 	}
@@ -166,20 +170,27 @@ namespace larocv {
       } //end loop over xs_v
       
     } //end loop over radii
-    
 
+    return qpt_vv;
+  }
+
+  void LinearVtxFilter::DetermineQPointAngle(data::CircleSetting& circ_set) {
+
+    const auto& qpt_vv = circ_set._xs_vv;
+    
     //no qpoint associations found
-    if (qpt_vv.size() == 0) return false;
+    if (qpt_vv.size() == 0) return;
     
     std::vector<geo2d::Line<float> > qpt_dir_v;
+    
     qpt_dir_v.resize(qpt_vv.size());
     for(uint qidx=0;qidx<qpt_vv.size();++qidx) {
       auto& qpt_v = qpt_vv[qidx];
-
+      
       if (qpt_v.size() <= 1) continue;
       
       qpt_dir_v[qidx] = calculate_pca(qpt_v);
-
+      
       auto direction = qpt_v.back() - qpt_v.front();
       if (direction.x < 0) qpt_dir_v[qidx].dir *= -1.0;
       
@@ -210,27 +221,27 @@ namespace larocv {
     
     if (qidx1<0) throw larbys("qidx1 NOT FOUND");
 
-    if (qidx2<0) return true; // there was only 1 "leg" found, OK candidate...
+    if (qidx2<0) return;
 
-    auto& d1=qpt_dir_v[qidx1].dir;
-    auto& d2=qpt_dir_v[qidx2].dir;
+    const auto& d1=qpt_dir_v[qidx1].dir;
+    const auto& d2=qpt_dir_v[qidx2].dir;
 	
-    if (d1.x==0 and d1.y==0) return false;
-    if (d2.x==0 and d2.y==0) return false;
+    if (d1.x==0 and d1.y==0) return;
+    if (d2.x==0 and d2.y==0) return;
     
     float angle = acos(d1.dot(d2))*180/3.14159;
     LAROCV_DEBUG() << "qidx1, qidx2, d1, d2, angle... " << qidx1 << ", " << qidx2 << ", " << d1 << ", " << d2 << ", " << angle << std::endl;
-    
-    if (angle < _angle_cut) {
-      LAROCV_DEBUG() << "angle < angle_cut return true" << std::endl;
-      return true;
-    }
-    
-    LAROCV_DEBUG() << "linearity detected, returning false" << std::endl;
-    
-    return false;
+
+    circ_set._idx1=qidx1;
+    circ_set._idx2=qidx2;
+    circ_set._angle = angle;
   }
 
+
+  void LinearVtxFilter::DetermineQPointR(data::CircleSetting& circ_set) {
+
+  }
+  
   void LinearVtxFilter::_Process_(const larocv::Cluster2DArray_t& clusters,
 				  const ::cv::Mat& img,
 				  larocv::ImageMeta& meta,
@@ -241,42 +252,52 @@ namespace larocv {
   {
     
     auto& data = AlgoData<data::LinearVtxFilterData>();
-
-    auto& vtx3d_kink_ass_v = data._vtx3d_kink_ass_v;
-    auto& vtx3d_curve_ass_v = data._vtx3d_curve_ass_v;
     
     const auto& refine2d_data = AlgoData<data::Refine2DVertexData>(_refine2d_algo_id);
-    const auto& vtx3d_v = refine2d_data.get_vertex();
+    const auto& vtx3d_v = refine2d_data.get_vertex(); //indices: 3d vtx id
 
+    size_t n_vtx = vtx3d_v.size();
+
+    auto& circle_setting_array_v = data._circle_setting_array_v;
+    circle_setting_array_v.resize(n_vtx);
+
+    data._r_height= _r_height;
+    data._r_width = _r_width;
+    data._radii_v = _radii_v;
+    
     std::vector<cv::Mat> thresh_img_v;
     thresh_img_v.resize(img_v.size());
     
     for(uint img_id=0;img_id<img_v.size();++img_id)
       cv::threshold(img_v[img_id],thresh_img_v[img_id],_thresh,255,0);
+    
+    for(size_t vtx3d_id=0; vtx3d_id < n_vtx; ++vtx3d_id){
 
-    //for each vtx3d point
-    for(size_t vtx3d_id=0; vtx3d_id < vtx3d_v.size(); ++vtx3d_id){
-      auto& vtx3d = vtx3d_v[vtx3d_id];
+      //get this circle setting array
+      auto& circle_setting_array = circle_setting_array_v[vtx3d_id];
       
-      int n_kink(0),n_curve(0);
-      
+      //this 3d vertex
+      const auto& vtx3d = vtx3d_v[vtx3d_id];
+
       for(short plane_id = 0; plane_id < 3; ++plane_id) {
+       
+	//get this circle vertex
+	const auto& circle_vtx = refine2d_data.get_circle_vertex(vtx3d_id,plane_id);
 
-	//get this plane vertex
-	auto& plane_vtx = vtx3d.vtx2d_v.at(plane_id);
+	//get this circle setting
+	auto& circle_setting = circle_setting_array.get_circle_setting(plane_id);
 	
 	//get the associated 2D thresholded image
 	auto& img = thresh_img_v.at(plane_id);
-	  
-	//determine this linearity
-	ScanRadii(img,plane_vtx.pt) ? n_kink++ : n_curve++;
+	
+	//determine these crossing point-paths
+	circle_setting._xs_vv = ScanRadiiQpts(img,circle_vtx.center);
+
+	DetermineQPointAngle(circle_setting);
+	DetermineQPointR    (circle_setting);
+	
 	
       }
-
-      if ( n_kink >= _kink_threshold )
-	vtx3d_kink_ass_v.push_back(vtx3d_id);
-      else
-	vtx3d_curve_ass_v.push_back(vtx3d_id);
 
     }
 

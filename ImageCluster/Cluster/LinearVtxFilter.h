@@ -7,6 +7,9 @@
 #include "AlgoFactory.h"
 
 #include "AlgoData/LinearVtxFilterData.h"
+#include "AlgoData/Refine2DVertexData.h"
+
+#include "Core/Geo2D.h"
 
 namespace larocv {
  
@@ -43,12 +46,14 @@ namespace larocv {
   private:
 
     geo2d::Line<float> calculate_pca(const std::vector<cv::Point_<float> > & ctor);
-    geo2d::VectorArray<float> QPtOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle);
+    geo2d::VectorArray<float> QPtOnCircle(const ::cv::Mat& img,
+					  const geo2d::Circle<float>& circle);
     
     float _r_min;
     float _r_max;
     float _r_div;
     float _r_cut;
+    
     float _angle_cut;
     int _kink_threshold;
     int _thresh;
@@ -56,11 +61,18 @@ namespace larocv {
     std::vector<float> _radii_v;
 
     int _refine2d_algo_id;
+
+    int _r_width;
+    int _r_height;
     
   public:
-
-    bool ScanRadii(const cv::Mat& img,const cv::Point_<float>& pt);
-
+    std::vector<std::vector<geo2d::Vector<float> > >
+    ScanRadiiQpts(const cv::Mat& img, const cv::Point_<float>& pt);
+    
+    void DetermineQPointAngle(data::CircleSetting& circ_set);
+    void DetermineQPointR(data::CircleSetting& circ_set);
+    
+    
   };
 
   /**
