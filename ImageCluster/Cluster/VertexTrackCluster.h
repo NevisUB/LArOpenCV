@@ -42,8 +42,8 @@ namespace larocv {
     
   private:
     
-    std::vector<larocv::data::ParticleCluster>  TrackHypothesis(const ::cv::Mat& img,
-								       const data::CircleVertex& vtx);
+    std::vector<larocv::data::ParticleCluster>
+    TrackHypothesis(const ::cv::Mat& img,const ImageMeta& meta, const data::CircleVertex& vtx);
 
     AlgorithmID_t _refine2d_algo_id;
 

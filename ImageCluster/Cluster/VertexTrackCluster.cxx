@@ -22,8 +22,8 @@ namespace larocv {
     
     _mask_radius = 5.;
 
-    _theta_hi = 10;
-    _theta_lo = 10;
+    _theta_hi = pset.get<int>("ThetaHi",20);
+    _theta_lo = pset.get<int>("ThetaLo",20);
 
     _pi_threshold = 10;
     
@@ -35,6 +35,7 @@ namespace larocv {
 
   std::vector<larocv::data::ParticleCluster >
   VertexTrackCluster::TrackHypothesis(const ::cv::Mat& img,
+				      const ImageMeta& meta,
 				      const data::CircleVertex& vtx)
   {
 
@@ -121,14 +122,14 @@ namespace larocv {
       cv::warpAffine(img_padded, rot_img, rot, bbox.size());
 
       LAROCV_DEBUG() << "rot_img rows: " << rot_img.rows << "... cols: " << rot_img.cols << std::endl;
-      
-      /*
+
+      if(this->logger().level() == ::larocv::msg::kDEBUG) {
 	std::stringstream ss1,ss2;
-	ss1 << "norm_plane" << "_xs" << xs_pt_idx << ".png";
-	ss2 << "rot_plane" << "_xs" << xs_pt_idx << ".png";
+	ss1 << "norm_plane_"<<meta.plane()<< "_xs" << xs_pt_idx << ".png";
+	ss2 << "rot_plane_"<<meta.plane() << "_xs" << xs_pt_idx << ".png";
 	cv::imwrite(std::string(ss1.str()).c_str(), img_padded);
 	cv::imwrite(std::string(ss2.str()).c_str(), rot_img);
-      */
+      }
 
       cv::Mat rot_polarimg, sb_img;
       
@@ -147,11 +148,13 @@ namespace larocv {
       auto kernel = ::cv::getStructuringElement(cv::MORPH_RECT,
       						cv::Size(20,2));
       ::cv::dilate(rot_polarimg,rot_polarimg,kernel,::cv::Point(-1,-1),1);     
-      /*
-      std::stringstream ss3;
-      ss3 << "polar_plane" << "_xs" << xs_pt_idx << ".png";
-      cv::imwrite(std::string(ss3.str()).c_str(), rot_polarimg);
-      */
+
+      if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	std::stringstream ss3;
+	ss3 << "polar_plane_"<<meta.plane()<<"_xs" << xs_pt_idx << ".png";
+	cv::imwrite(std::string(ss3.str()).c_str(), rot_polarimg);
+      }
+
       /*
       // mask-out very-near vtx pixels
       size_t mask_col_max = _mask_radius/1000. * rot_polarimg.cols + 1;
@@ -184,22 +187,16 @@ namespace larocv {
 	  rot_polarimg.at<unsigned char>(row,col) = (unsigned char)0;
 	}
       }
-      /*
-      std::stringstream ss4;
-      ss4 << "mask_plane" << "_xs" << xs_pt_idx << ".png";
-      cv::imwrite(std::string(ss4.str()).c_str(), rot_polarimg);
-      */     
-
+      if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	std::stringstream ss4;
+	ss4 << "mask_plane_"<<meta.plane() << "_xs" << xs_pt_idx << ".png";
+	cv::imwrite(std::string(ss4.str()).c_str(), rot_polarimg);     
+      }
       //Contour finding
       ContourArray_t polar_ctor_v;    
       std::vector<::cv::Vec4i> cv_hierarchy_v;
       polar_ctor_v.clear(); cv_hierarchy_v.clear();
 
-      /*
-      ::cv::findContours(sb_img,polar_ctor_v,cv_hierarchy_v,
-			 CV_RETR_EXTERNAL,
-			 CV_CHAIN_APPROX_SIMPLE);
-      */
 
       ::cv::findContours(rot_polarimg,
 			 polar_ctor_v,
@@ -342,7 +339,7 @@ namespace larocv {
 		     << " CircleVertex @ " << circle_vtx.center << " w/ R = " << circle_vtx.radius << std::endl;
       
       // Create track cluster hypothesis from the vertex point
-      auto cluster_v = TrackHypothesis(img,circle_vtx);
+      auto cluster_v = TrackHypothesis(img,meta,circle_vtx);
 
       //
       // Analyze fraction of pixels clustered

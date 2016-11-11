@@ -2,24 +2,15 @@
 #define __ALGODATA_LINEARVTXFILTERDATA_CXX__
 
 #include "LinearVtxFilterData.h"
+#include "Core/larbys.h"
 
 namespace larocv {
 
   namespace data {
     
-    void LinearVtxFilterPlaneData::Clear()
-    {
-      
-    }
-    
-    void LinearVtxFilterData::Clear()
-    {
-      _plane_data.clear();
-      
-      _vtx3d_kink_ass_v.clear();
-      _vtx3d_curve_ass_v.clear();
-      
-      _plane_data.resize(3);
+    CircleSetting& CircleSettingArray::get_circle_setting(short plane_id) {
+      if (plane_id > _circle_setting_v.size()) throw larbys("Requested plane id not valid");
+      return _circle_setting_v[plane_id];
     }
   }
 }
