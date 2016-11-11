@@ -41,6 +41,9 @@ namespace larocv {
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
     void Finalize(TFile*) {}
 
+    float VertexTimeResolution() const { return _xplane_tick_resolution; }
+    float VertexWireResolution() const { return _xplane_wire_resolution; }
+
     const float TimeBinMin() const { return _xplane_tick_min; }
     const float TimeBinMax() const { return _xplane_tick_max; }
 
@@ -57,6 +60,15 @@ namespace larocv {
     const std::vector<float>&  TimeBinnedScore()         const { return _time_binned_score_v;   }
     const std::vector<size_t>& TimeBinnedScoreMinIndex() const { return _time_binned_minidx_v;  }
     const std::vector<std::pair<size_t,size_t> >& TimeBinnedScoreMinRange() const { return _time_binned_minrange_v;  }
+
+    const float WireBinMin(size_t plane) const { return _xplane_wire_min_v.at(plane); }
+    const float WireBinMax(size_t plane) const { return _xplane_wire_max_v.at(plane); }
+    
+    const std::vector<float>& WireBinnedScore         (size_t plane) const { return _wire_binned_score_vv.at(plane); }
+    const std::vector<float>& WireBinnedScoreMean     (size_t plane) const { return _wire_binned_score_mean_vv.at(plane); }
+    const std::vector<size_t>& WireBinnedScoreMinIndex (size_t plane) const { return _wire_binned_score_minidx_vv.at(plane); }
+    const std::vector<std::pair<size_t,size_t> >&
+    WireBinnedScoreMinRange (size_t plane) const { return _wire_binned_score_minrange_vv.at(plane); }
     
   protected:
 
@@ -99,7 +111,11 @@ namespace larocv {
 		   const geo2d::Vector<float> pt_err);
 
     void XPlaneTimeScan(const std::vector<const cv::Mat>& img_v);
+    void XPlaneTimeProposal();
+    void TimeVertex3D(const std::vector<const cv::Mat>& img_v);
+    
     void XPlaneWireScan(const std::vector<const cv::Mat>& img_v);
+    void XPlaneWireProposal();
 
     geo2d::Vector<float> MeanPixel(const cv::Mat& img, const geo2d::Vector<float>& center,
 				   size_t range_x=2, size_t range_y=2) const;
@@ -124,7 +140,6 @@ namespace larocv {
 		       std::vector<std::pair<size_t,size_t> >& local_extreme_range_v,
 		       float invalid_value=kINVALID_FLOAT);
     
-    void XPlaneTickProposal();
     AlgorithmID_t _pca_algo_id;
     AlgorithmID_t _defect_algo_id;
     std::vector<float> _tick_offset_v;
@@ -172,6 +187,14 @@ namespace larocv {
     /// overall local minimum index in sampled time bins
     std::vector<size_t> _time_binned_minidx_v;
     std::vector<std::pair<size_t,size_t> > _time_binned_minrange_v;
+
+    std::vector<float> _xplane_wire_min_v;
+    std::vector<float> _xplane_wire_max_v;
+    std::vector<std::vector<float> > _wire_binned_score_vv;
+    std::vector<std::vector<float> > _wire_binned_score_mean_vv;
+    std::vector<std::vector<size_t> > _wire_binned_score_minidx_vv;
+    std::vector<std::vector<std::pair<size_t,size_t> > > _wire_binned_score_minrange_vv;
+
   };
   /**
      \class larocv::Refine2DVertexFactory

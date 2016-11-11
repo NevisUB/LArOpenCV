@@ -1256,7 +1256,7 @@ namespace larocv{
     return;
   }
 
-  void Refine2DVertex::XPlaneTickProposal()
+  void Refine2DVertex::XPlaneTimeProposal()
   {
     //auto& data = AlgoData<larocv::Refine2DVertexData>();
     // Find local minimum for >2 plane score array
@@ -1351,7 +1351,7 @@ namespace larocv{
     }
   }
 
-  void Refine2DVertex::XPlaneWireScan(const std::vector<const cv::Mat>& img_v)
+  void Refine2DVertex::TimeVertex3D(const std::vector<const cv::Mat>& img_v)
   {
     auto& data = AlgoData<data::Refine2DVertexData>();
     // Find candidate circles nearby proposed ticks
@@ -1592,6 +1592,58 @@ namespace larocv{
     }
   }
 
+  void Refine2DVertex::XPlaneWireScan(const std::vector<const cv::Mat>& img_v)
+  {
+    // Compute 1D projection score array per plane
+    auto& data = AlgoData<data::Refine2DVertexData>();
+    for(size_t plane=0; plane<img_v.size(); ++plane)
+      _wire_binned_score_vv.at(plane).clear();
+
+    for(size_t plane_id=0; plane_id<img_v.size(); ++plane_id) {
+      auto& wire_binned_score_v = _wire_binned_score_vv.at(plane_id);
+      auto& xplane_wire_min = _xplane_wire_min_v.at(plane_id);
+      auto& xplane_wire_max = _xplane_wire_max_v.at(plane_id);
+
+      // Figure out min/max
+      auto& plane_data = data.get_plane_data_writeable(plane_id);
+      if(!plane_data._valid_plane) continue;
+
+      xplane_wire_min = 1e9;
+      xplane_wire_max = 0;
+      auto const& circle_scan_v  = plane_data._circle_scan_v;
+      for(auto const& circle : circle_scan_v) {
+	if(circle.center.y < xplane_wire_min) xplane_wire_min = circle.center.y;
+	if(circle.center.y > xplane_wire_max) xplane_wire_max = circle.center.y;
+      }
+      //size_t num_wires = (size_t)( (xplane_wire_max - xplane_wire_min + 0.5) / _xplane_wire_resolution ) + 1;
+      size_t num_wires = (size_t)( (xplane_wire_max - xplane_wire_min + 0.5) ) + 1;
+      wire_binned_score_v.resize(num_wires,-1);
+      for(auto const& circle : circle_scan_v) {
+	size_t idx = (size_t)((circle.center.y - xplane_wire_min) + 0.5);
+	auto const dtheta = circle.sum_dtheta();
+	if(wire_binned_score_v[idx]<0 || wire_binned_score_v[idx] > dtheta)
+	  wire_binned_score_v[idx] = dtheta;
+      }
+    }
+
+    return;
+  }
+
+  void Refine2DVertex::XPlaneWireProposal() 
+  {
+    for(size_t plane_id=0; plane_id<_wire_binned_score_vv.size(); ++plane_id) {
+      auto const& score_v    = _wire_binned_score_vv.at(plane_id);
+      auto& mean_score_v     = _wire_binned_score_mean_vv.at(plane_id);
+      auto& minidx_score_v   = _wire_binned_score_minidx_vv.at(plane_id);
+      auto& minrange_score_v = _wire_binned_score_minrange_vv.at(plane_id);
+      mean_score_v = RollingMean(score_v,3,3,-1);
+      ExtremePoints(mean_score_v,3,3,true,false,minidx_score_v,minrange_score_v,-1);
+    }
+
+    // Find possible combination of wires across planes
+    
+  }
+  
   bool Refine2DVertex::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
     if(img_v.size() != _seed_plane_v.size()) {
@@ -1610,9 +1662,27 @@ namespace larocv{
     _time_binned_score1_minrange_v.clear();
     _time_binned_minidx_v.clear();
     _time_binned_minrange_v.clear();
+
     XPlaneTimeScan(img_v);
-    XPlaneTickProposal();
+    XPlaneTimeProposal();
+    TimeVertex3D(img_v);
+    
+    _xplane_wire_min_v.clear();
+    _xplane_wire_max_v.clear();
+    _wire_binned_score_vv.clear();
+    _wire_binned_score_mean_vv.clear();
+    _wire_binned_score_minidx_vv.clear();
+    _wire_binned_score_minrange_vv.clear();
+
+    _xplane_wire_min_v.resize(img_v.size());
+    _xplane_wire_max_v.resize(img_v.size());
+    _wire_binned_score_vv.resize(img_v.size());
+    _wire_binned_score_mean_vv.resize(img_v.size());
+    _wire_binned_score_minidx_vv.resize(img_v.size());
+    _wire_binned_score_minrange_vv.resize(img_v.size());
+
     XPlaneWireScan(img_v);
+    XPlaneWireProposal();
     return true;
   }
 
