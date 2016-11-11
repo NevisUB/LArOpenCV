@@ -38,8 +38,7 @@ namespace larocv {
       CircleSettingArray(){}
 
       ~CircleSettingArray(){}
-
-
+      
       void Clear() {
 	_circle_setting_v.clear();
 	_circle_setting_v.resize(3);

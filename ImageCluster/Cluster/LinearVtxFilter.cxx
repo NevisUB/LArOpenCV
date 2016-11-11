@@ -31,30 +31,25 @@ namespace larocv {
   LinearVtxFilter::QPtOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle)
   {
     geo2d::VectorArray<float> res;
-
     // Find crossing point
     ::cv::Mat polarimg;
     ::cv::linearPolar(img, polarimg, circle.center, circle.radius*2, ::cv::WARP_FILL_OUTLIERS);
-
+    
     size_t col = (size_t)(polarimg.cols / 2);
-			  
+
     std::vector<std::pair<int,int> > range_v;
     std::pair<int,int> range(-1,-1);
-
     for(size_t row=0; row<polarimg.rows; ++row) {
 
-      float q = img.at<uchar>(row,col);
-      
-      //vic: unsure about this
-      float pi_threshold=10.0;
-      if(q < pi_threshold) {
-      	if(range.first >= 0) {
-      	  range_v.push_back(range);
-      	  range.first = range.second = -1;
-      	}
-      	continue;
+      float q = (float)(polarimg.at<unsigned char>(row, col));
+      if(q < _thresh) {
+	if(range.first >= 0) {
+	  range_v.push_back(range);
+	  range.first = range.second = -1;
+	}
+	continue;
       }
-      
+      //std::cout << row << " / " << polarimg.rows << " ... " << q << std::endl;
       if(range.first < 0) range.first = range.second = row;
 
       else range.second = row;
@@ -70,6 +65,7 @@ namespace larocv {
     // Compute xs points
     for(auto const& r : range_v) {
 
+      //std::cout << "XS @ " << r.first << " => " << r.second << " ... " << polarimg.rows << std::endl;
       float angle = ((float)(r.first + r.second))/2.;
       if(angle < 0) angle += (float)(polarimg.rows);
       angle = angle * M_PI * 2. / ((float)(polarimg.rows));
@@ -77,8 +73,8 @@ namespace larocv {
       geo2d::Vector<float> pt;
       pt.x = circle.center.x + circle.radius * cos(angle);
       pt.y = circle.center.y + circle.radius * sin(angle);
-      
-      res.push_back(pt);      
+
+      res.push_back(pt);
     }
     return res;
   }
@@ -184,6 +180,13 @@ namespace larocv {
     
     //no qpoint associations found
     if (qpt_vv.size() == 0) return;
+
+    std::stringstream ss;
+    ss << "{";
+    for(const auto& qpt_v : qpt_vv)
+      ss << qpt_v.size() << ",";
+    ss << "}";
+    LAROCV_DEBUG() << "Inner sizes : " << ss.str() << std::endl;
     
     std::vector<geo2d::Line<float> > qpt_dir_v;
     
@@ -206,8 +209,6 @@ namespace larocv {
     int qidx1_size=-1;
     int qidx2_size=-1;
 
-    LAROCV_DEBUG() << "qpt_vv.size(): " << qpt_vv.size() << std::endl;
-    
     //get the index of largest
     for(uint qidx=0;qidx<qpt_vv.size();++qidx) {
       int s=qpt_vv[qidx].size();
@@ -229,12 +230,15 @@ namespace larocv {
 
     const auto& d1=qpt_dir_v[qidx1].dir;
     const auto& d2=qpt_dir_v[qidx2].dir;
-	
+    
+    LAROCV_DEBUG() << "(d1, d2): (" << d1 << ", " << d2 << ")" << std::endl;
+    
     if (d1.x==0 and d1.y==0) return;
     if (d2.x==0 and d2.y==0) return;
     
     float angle = acos(d1.dot(d2))*180/3.14159;
-    LAROCV_DEBUG() << "qidx1, qidx2, d1, d2, angle... " << qidx1 << ", " << qidx2 << ", " << d1 << ", " << d2 << ", " << angle << std::endl;
+    
+    LAROCV_DEBUG() << "...angle: " << angle << std::endl;
 
     circ_set._idx1=qidx1;
     circ_set._idx2=qidx2;
@@ -349,8 +353,9 @@ namespace larocv {
 	data::CircleVertex circle_vtx;
 	
 	try{ circle_vtx = refine2d_data.get_circle_vertex(vtx3d_id,plane_id); }
+	//catch invalid plane (no circle vtx on this plane)
 	catch(...){ continue; }
-
+	
 	//get this circle setting
 	auto& circle_setting = circle_setting_array.get_circle_setting(plane_id);
 	
@@ -365,9 +370,10 @@ namespace larocv {
 	
 	circle_setting._xs_vv = ScanRadiiQpts(img,circle_vtx.center);
 	
-	// circle_setting
-	
+	//get the two longest paths, compute PCA, angle between them
 	DetermineQPointAngle(circle_setting);
+
+	//in the local area, compute the R value
 	DetermineQPointR    (img,circle_setting,circle_vtx.center);
 	
       }

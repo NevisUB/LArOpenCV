@@ -18,24 +18,6 @@ namespace larocv {
     _defect_cluster_algo_id = this->ID(defect_cluster_algo_name);
   }
 
-  cv::Rect DefectVertex::edge_aware_box(const cv::Mat& img,geo2d::Vector<float> center,int hwidth,int hheight)
-  {
-    geo2d::Vector<int> tl(center.x-hwidth,center.y-hheight);
-
-    int width  = 2*hwidth;
-    int height = 2*hheight;
-    
-    if (tl.x < 0) tl.x = 0;
-    if (tl.y < 0) tl.y = 0;
-
-    if (tl.x > img.cols-1) tl.x = img.cols-1;
-    if (tl.y > img.rows-1) tl.y = img.rows-1;
-
-    if ((tl.x+width ) > (img.cols-1)) tl.x=(img.cols-1 - width);
-    if ((tl.y+height) > (img.rows-1)) tl.y=(img.rows-1 - height);
-    
-    return cv::Rect(tl.x,tl.y,width,height);
-  }
   
   void DefectVertex::_Process_(const larocv::Cluster2DArray_t& clusters,
 			       const ::cv::Mat& img,
@@ -119,12 +101,15 @@ namespace larocv {
 	if (std_y < 1) r=1.0;
 	
 	r=std::abs(r);
-	LAROCV_DEBUG() << "Calculated correlation: " << r << " from " << points.size() << " points inside rectangle\n";
+	LAROCV_DEBUG() << "Calculated correlation: " << r << " from "
+		       << points.size() << " points inside rectangle\n";
+	
 	LAROCV_DEBUG() << "mean x: " << mean_x << std::endl;
 	LAROCV_DEBUG() << "mean y: " << mean_y << std::endl;
 	LAROCV_DEBUG() << "cov(xy): " << r / points.size() << std::endl;
 	LAROCV_DEBUG() << "std_x :  " << std_x << std::endl;
 	LAROCV_DEBUG() << "std_y :  " << std_y << std::endl;
+
 	circle_score_p_v[n].first=defect_circle;
 	circle_score_p_v[n].second=r;
 
