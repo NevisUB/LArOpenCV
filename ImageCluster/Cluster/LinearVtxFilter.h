@@ -68,10 +68,14 @@ namespace larocv {
   public:
     std::vector<std::vector<geo2d::Vector<float> > >
     ScanRadiiQpts(const cv::Mat& img, const cv::Point_<float>& pt);
+    cv::Rect edge_aware_box(const cv::Mat& img,geo2d::Vector<float> center,
+			    int hwidth,int hheight);
     
     void DetermineQPointAngle(data::CircleSetting& circ_set);
-    void DetermineQPointR(data::CircleSetting& circ_set);
-    
+    void DetermineQPointR(const cv::Mat& mat,
+			  data::CircleSetting& circ_set,
+			  const geo2d::Vector<float>& circ);
+ 
     
   };
 

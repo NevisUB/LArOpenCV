@@ -13,8 +13,8 @@ namespace larocv {
     public:
 
       CircleSetting() :
-	_local_r(-1),
-	_angle(-1)
+	_local_r (-1),
+	_angle   (-1)
       {}
       
       ~CircleSetting(){}
@@ -49,7 +49,7 @@ namespace larocv {
       
     private:
       
-      std::vector<CircleSetting> _circle_setting_v;
+      std::vector< CircleSetting > _circle_setting_v;
       
     };
       
@@ -68,11 +68,14 @@ namespace larocv {
       ~LinearVtxFilterData(){}
       
       void Clear() {
-	for(auto& v : _circle_setting_array_v) v.Clear();
-	_radii_v.clear();
 	_circle_setting_array_v.clear();
+	_radii_v.clear();
       }
-      
+
+      void Resize(int n) {
+	_circle_setting_array_v.resize(n);
+	for(auto& v : _circle_setting_array_v) v.Clear();	
+      }
       std::vector<CircleSettingArray> _circle_setting_array_v;
       
       uint _r_height;

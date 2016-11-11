@@ -43,15 +43,17 @@ namespace larocv {
 
     for(size_t row=0; row<polarimg.rows; ++row) {
 
+      float q = img.at<uchar>(row,col);
+      
       //vic: unsure about this
-      //float pi_threshold=10.0;
-      // if(q < pi_threshold) {
-      // 	if(range.first >= 0) {
-      // 	  range_v.push_back(range);
-      // 	  range.first = range.second = -1;
-      // 	}
-      // 	continue;
-      // }
+      float pi_threshold=10.0;
+      if(q < pi_threshold) {
+      	if(range.first >= 0) {
+      	  range_v.push_back(range);
+      	  range.first = range.second = -1;
+      	}
+      	continue;
+      }
       
       if(range.first < 0) range.first = range.second = row;
 
@@ -90,8 +92,8 @@ namespace larocv {
     _r_cut     = pset.get<float>("RCut",0.5);
     _angle_cut = pset.get<float>("AngleCut",165); // 15 degree angle...
     
-    _r_width  = pset.get<int>("CovWidth");
-    _r_height = pset.get<int>("CovHeight");
+    _r_width  = pset.get<int>("CovWidth" ,4);
+    _r_height = pset.get<int>("CovHeight",4);
     
     _thresh = pset.get<int>("Threshold",10);
     
@@ -115,7 +117,7 @@ namespace larocv {
   LinearVtxFilter::ScanRadiiQpts(const cv::Mat& img, const cv::Point_<float>& pt) {
     
     std::vector<float> xs_dist;
-    LAROCV_DEBUG() << "Observing defect point : " << pt << std::endl;
+    LAROCV_DEBUG() << "Observing point : " << pt << std::endl;
     
     std::vector<std::vector<geo2d::Vector<float> > > qpt_vv;
 
@@ -171,12 +173,14 @@ namespace larocv {
       
     } //end loop over radii
 
+    LAROCV_DEBUG() << "Returning qpt_vv.size(): " << qpt_vv.size() << std::endl;
     return qpt_vv;
   }
 
   void LinearVtxFilter::DetermineQPointAngle(data::CircleSetting& circ_set) {
-
+    
     const auto& qpt_vv = circ_set._xs_vv;
+    LAROCV_DEBUG() << "Got qptvv xs_vv size: " << qpt_vv.size() << std::endl;
     
     //no qpoint associations found
     if (qpt_vv.size() == 0) return;
@@ -238,8 +242,68 @@ namespace larocv {
   }
 
 
-  void LinearVtxFilter::DetermineQPointR(data::CircleSetting& circ_set) {
+  cv::Rect
+  LinearVtxFilter::edge_aware_box(const cv::Mat& img,geo2d::Vector<float> center,int hwidth,int hheight)
+  {
+    geo2d::Vector<int> tl(center.x-hwidth,center.y-hheight);
 
+    int width  = 2*hwidth+1;
+    int height = 2*hheight+1;
+    
+    if (tl.x < 0) tl.x = 0;
+    if (tl.y < 0) tl.y = 0;
+
+    if (tl.x > img.cols - height -1) tl.x = img.cols - height - 1;
+    if (tl.y > img.rows - width  -1) tl.y = img.rows - width  - 1;
+    
+    return cv::Rect(tl.x,tl.y,width,height);
+  }
+  
+  
+  void LinearVtxFilter::DetermineQPointR(const cv::Mat& img,
+					 data::CircleSetting& circ_set,
+					 const geo2d::Vector<float>& center) {
+
+    auto small_bbox = edge_aware_box(img,center,_r_width,_r_height);
+	  
+    LAROCV_DEBUG() << "Small bbox calculated: " << small_bbox << std::endl;
+    LAROCV_DEBUG() << "Image dimensions : [" << img.rows << "," << img.cols << "]" << std::endl;
+	
+    auto small_img  = cv::Mat(img,small_bbox);
+    cv::Mat thresh_small_img;
+    cv::threshold(small_img,thresh_small_img,10,1,CV_THRESH_BINARY);
+	
+    geo2d::VectorArray<int> points;
+    findNonZero(thresh_small_img, points);
+
+    float mean_x(0),mean_y(0);
+
+    for(auto& pt : points) { mean_x += pt.x; mean_y += pt.y; }
+
+    mean_x/=(float)points.size();
+    mean_y/=(float)points.size();
+    
+    float std_x(0.0),std_y(0.0),std_xy(0.0);	
+
+    for(auto& pt : points) {
+      std_x  += (pt.x - mean_x)*(pt.x - mean_x);
+      std_y  += (pt.y - mean_y)*(pt.y - mean_y);
+      std_xy += (pt.y - mean_y)*(pt.x - mean_x);
+    }
+
+    std_x=sqrt(std_x);
+    std_y=sqrt(std_y);
+
+    float r = 0.;
+
+    if ( std_x > 0 and std_y > 0 )
+      r = std_xy / ( std_x * std_y );
+	
+    r = std::abs(r);
+
+    LAROCV_DEBUG() << "Set local r " << r << std::endl;
+    circ_set._local_r = r;
+    
   }
   
   void LinearVtxFilter::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -258,9 +322,9 @@ namespace larocv {
 
     size_t n_vtx = vtx3d_v.size();
 
+    data.Resize(n_vtx);
     auto& circle_setting_array_v = data._circle_setting_array_v;
-    circle_setting_array_v.resize(n_vtx);
-
+    
     data._r_height= _r_height;
     data._r_width = _r_width;
     data._radii_v = _radii_v;
@@ -282,25 +346,34 @@ namespace larocv {
       for(short plane_id = 0; plane_id < 3; ++plane_id) {
        
 	//get this circle vertex
-	const auto& circle_vtx = refine2d_data.get_circle_vertex(vtx3d_id,plane_id);
+	data::CircleVertex circle_vtx;
+	
+	try{ circle_vtx = refine2d_data.get_circle_vertex(vtx3d_id,plane_id); }
+	catch(...){ continue; }
 
 	//get this circle setting
 	auto& circle_setting = circle_setting_array.get_circle_setting(plane_id);
 	
 	//get the associated 2D thresholded image
-	auto& img = thresh_img_v.at(plane_id);
-	
-	//determine these crossing point-paths
-	circle_setting._xs_vv = ScanRadiiQpts(img,circle_vtx.center);
+	const auto& img = thresh_img_v.at(plane_id);
 
-	DetermineQPointAngle(circle_setting);
-	DetermineQPointR    (circle_setting);
+	// std::stringstream ss;
+	// ss << plane_id << ".png";
+	// cv::imwrite(ss.str().c_str(),img);
 	
+	// determine these crossing point-paths
+	
+	circle_setting._xs_vv = ScanRadiiQpts(img,circle_vtx.center);
+	
+	// circle_setting
+	
+	DetermineQPointAngle(circle_setting);
+	DetermineQPointR    (img,circle_setting,circle_vtx.center);
 	
       }
 
     }
-
+    
     return true;
   }
   
