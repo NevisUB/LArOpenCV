@@ -63,6 +63,8 @@ namespace larocv {
     unsigned short _pi_threshold;
 
     bool _use_theta_half_angle;
+    float _contour_pad;
+    
   };
   
   /**

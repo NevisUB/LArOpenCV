@@ -43,6 +43,7 @@ namespace larocv {
       
       GEO2D_Contour_t _ctor; ///< contour to define a cluster
       size_t _num_pixel;     ///< # of non-zero pixel from parent contour, contained in this contour
+      double _qsum;          ///< charge sum
       
     private:
       size_t _cluster_id; ///< unique cluster id

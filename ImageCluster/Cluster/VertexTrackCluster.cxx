@@ -31,6 +31,8 @@ namespace larocv {
     _refine2d_algo_id = this->ID(vtx_algo_name);
     
     _use_theta_half_angle = true;
+
+    _contour_pad = pset.get<float>("ContourPad",0.);
   }
 
   std::vector<larocv::data::ParticleCluster >
@@ -372,8 +374,8 @@ namespace larocv {
 	findNonZero(thresh_img, points);
 	parent_points.reserve(points.size());
 	for(auto const& pt : points) {
-	  auto dist = ::cv::pointPolygonTest(parent_ctor,pt,false);
-	  if(dist <0) continue;
+	  auto dist = ::cv::pointPolygonTest(parent_ctor,pt,true);
+	  if(dist<-1.0*_contour_pad) continue;
 	  parent_points.push_back(pt);
 	}
       }
@@ -387,16 +389,20 @@ namespace larocv {
 	auto& cluster = cluster_v[cidx];
 	// Find # pixels in this cluster from the parent
 	size_t num_pixel = 0;
+	float qsum = 0;
 	for(auto const& pt : parent_points) {
-	  auto dist = ::cv::pointPolygonTest(cluster._ctor,pt,false);
-	  if(dist<0) continue;
-	  num_pixel +=1;
+	  auto dist = ::cv::pointPolygonTest(cluster._ctor,pt,true);
+	  //LAROCV_DEBUG() << "pt : " << pt << "... @ dist: " << dist << std::endl;
+	  if(dist<-1.0*_contour_pad) continue;
+	  num_pixel += 1;
+	  qsum      += (float)img.at<uchar>(pt.y,pt.x);
 	}
+	LAROCV_DEBUG() << "Inserting num_pixel: " << num_pixel << "... qsum: " << qsum << std::endl;
 	cluster._num_pixel = num_pixel;
+	cluster._qsum = qsum;
 	vtx_cluster.emplace_back(plane,std::move(cluster));
       }
     }
-
 
     
 

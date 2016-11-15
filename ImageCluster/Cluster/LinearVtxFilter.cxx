@@ -302,7 +302,9 @@ namespace larocv {
 
     if ( std_x > 0 and std_y > 0 )
       r = std_xy / ( std_x * std_y );
-	
+    else
+      r=1.0; // no variation, it's a straight line
+    
     r = std::abs(r);
 
     LAROCV_DEBUG() << "Set local r " << r << std::endl;
