@@ -11,7 +11,8 @@ namespace larocv {
     //////////////////////////////////////////////////////////////
     
     void CircleVertex::Clear()
-    { center.x = center.y = -1;
+    {
+      center.x = center.y = -1;
       error.x  = error.y  = -1;
       radius   = -1;
       xs_v.clear();
@@ -34,7 +35,8 @@ namespace larocv {
       
       _plane_data.resize(3);
       for(auto& d : _plane_data) d.Clear();
-      
+
+      _type_v.clear();
       _vtx3d_v.clear();
       _circle_vtx_vv.clear();
       
