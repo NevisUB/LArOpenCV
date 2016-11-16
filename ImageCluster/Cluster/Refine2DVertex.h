@@ -116,6 +116,7 @@ namespace larocv {
     
     void XPlaneWireScan(const std::vector<const cv::Mat>& img_v);
     void XPlaneWireProposal();
+    void WireVertex3D(const std::vector<const cv::Mat>& img_v);
 
     geo2d::Vector<float> MeanPixel(const cv::Mat& img, const geo2d::Vector<float>& center,
 				   size_t range_x=2, size_t range_y=2) const;

@@ -70,6 +70,15 @@ namespace larocv {
       if(vtx_id >= _vtx3d_v.size()) throw larbys("Invalid vertex id requested!");
       return _vtx3d_v[vtx_id];
     }
+
+    const std::vector<unsigned short>& Refine2DVertexData::get_type() const
+    { return _type_v; }
+    
+    unsigned short Refine2DVertexData::get_type(size_t vtx_id) const
+    {
+      if(vtx_id >= _vtx3d_v.size()) throw larbys("Invalid vertex id requested!");
+      return _type_v[vtx_id];
+    }
     
     const std::vector<std::vector<larocv::data::CircleVertex> >& Refine2DVertexData::get_circle_vertex() const
     { return _circle_vtx_vv; }
@@ -93,17 +102,23 @@ namespace larocv {
       return _plane_data[plane];
     }
     
-    void Refine2DVertexData::push_back(const larocv::data::Vertex3D& vtx, const std::vector<larocv::data::CircleVertex>& circle_v)
+    void Refine2DVertexData::push_back(unsigned short type,
+				       const larocv::data::Vertex3D& vtx,
+				       const std::vector<larocv::data::CircleVertex>& circle_v)
     {
       if(circle_v.size() != _plane_data.size()) throw larbys("# CircleVertex != # planes!");
+      _type_v.push_back(type);
       _circle_vtx_vv.push_back(circle_v);
       _vtx3d_v.push_back(vtx);
       _vtx3d_v.back()._id = _vtx3d_v.size() - 1;
     }
     
-    void Refine2DVertexData::emplace_back(larocv::data::Vertex3D&& vtx, std::vector<larocv::data::CircleVertex>&& circle_v)
+    void Refine2DVertexData::emplace_back(unsigned short type,
+					  larocv::data::Vertex3D&& vtx,
+					  std::vector<larocv::data::CircleVertex>&& circle_v)
     {
       if(circle_v.size() != _plane_data.size()) throw larbys("# CircleVertex != # planes!");
+      _type_v.push_back(type);
       _circle_vtx_vv.emplace_back(std::move(circle_v));
       _vtx3d_v.emplace_back(std::move(vtx));
       _vtx3d_v.back()._id = _vtx3d_v.size() - 1;

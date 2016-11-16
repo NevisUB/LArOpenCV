@@ -1510,7 +1510,7 @@ namespace larocv{
 	if(neighbor) continue;
 
 	// Concrete vertex found
-	LAROCV_INFO() << "Claiming candiate @ (y,z) = (" << y << "," << z << ") ... "
+	LAROCV_INFO() << "Claiming time-vertex candiate @ (y,z) = (" << y << "," << z << ") ... "
 		      << "plane " << seed0_plane << " @ " << circle0.center << " # crossing = " << circle0.xs_v.size() << " ... "
 		      << "plane " << seed1_plane << " @ " << circle1.center << " # crossing = " << circle1.xs_v.size() << std::endl;
 	
@@ -1587,7 +1587,7 @@ namespace larocv{
 	  LAROCV_INFO() << "Non-seed plane " << plane << " @ " << circle_vtx_v[plane].center
 			<< " # crossing = " << circle_vtx_v[plane].xs_v.size() << std::endl;
 	}
-	data.emplace_back(std::move(vtx3d),std::move(circle_vtx_v));
+	data.emplace_back(0,std::move(vtx3d),std::move(circle_vtx_v));
       }
     }
   }
@@ -1639,9 +1639,262 @@ namespace larocv{
       mean_score_v = RollingMean(score_v,3,3,-1);
       ExtremePoints(mean_score_v,3,3,true,false,minidx_score_v,minrange_score_v,-1);
     }
+  }
 
-    // Find possible combination of wires across planes
+  void Refine2DVertex::WireVertex3D(const std::vector<const cv::Mat>& img_v)
+  {
+    auto& data = AlgoData<data::Refine2DVertexData>();
+
+    // List of already existing vertex (later used to avoid duplicate vertex)
+    std::vector<geo2d::Vector<float> > vtx_yz_v;
+    /*
+    for(auto const& vtx3d : data.get_vertex())
+      vtx_yz_v.push_back(geo2d::Vector<float>(vtx3d.y,vtx3d.z));
+    */
     
+    // Find possible combination of wires across planes
+    // Loop over combination of 2 planes and find possible vertex w/ 2 or 3-plane match distinction
+    std::map<float,std::vector<std::pair<size_t,float> > > cand_vtx_m;
+    for(size_t plane_idx1=0; plane_idx1<_seed_plane_v.size(); ++plane_idx1) {
+      // Retrieve plane A's ID, circle vertex array, and local minima index & score
+      auto const& seed_plane1 = _seed_plane_v[plane_idx1];
+      auto const& seed_data1  = data.get_plane_data(seed_plane1);
+      if(!seed_data1._valid_plane) continue;
+      auto const& circle1_v   = seed_data1._circle_scan_v;      
+      auto const& wire_binned_score1_v  = _wire_binned_score_mean_vv.at(seed_plane1);
+      auto const& wire_binned_minidx1_v = _wire_binned_score_minidx_vv.at(seed_plane1);
+      auto const& img1 = img_v[seed_plane1];
+      
+      // loop over paired plane B(s)
+      for(size_t plane_idx2=plane_idx1+1; plane_idx2<_seed_plane_v.size(); ++plane_idx2) {
+	// Retrieve plane B's ID, circle vertex array, and local minima index & score
+	auto const& seed_plane2 = _seed_plane_v[plane_idx2];
+	auto const& seed_data2  = data.get_plane_data(seed_plane2);
+	if(!seed_data2._valid_plane) continue;
+	auto const& circle2_v   = seed_data2._circle_scan_v;
+	auto const& wire_binned_score2_v  = _wire_binned_score_mean_vv.at(seed_plane2);
+	auto const& wire_binned_minidx2_v = _wire_binned_score_minidx_vv.at(seed_plane2);
+	auto const& img2 = img_v[seed_plane2];
+
+	LAROCV_DEBUG() << "Scanning seed plane A=" << seed_plane1 << " B=" << seed_plane2 << std::endl;
+
+	// Now loop over un-ordered local minima for plane A
+	for(size_t minidx1_idx=0; minidx1_idx<wire_binned_minidx1_v.size(); ++minidx1_idx) {
+	  auto const& score_idx1 = wire_binned_minidx1_v[minidx1_idx];
+	  auto const& score1  = wire_binned_score1_v[score_idx1];
+	  float  min_wire1    = this->WireBinMin(seed_plane1);
+	  float  wire1        = min_wire1 + score_idx1;
+	  size_t raw_wire1    = (size_t)(wire1 * _wire_comp_factor_v.at(seed_plane1) + _origin_v[seed_plane1].y + 0.5);
+	  auto const wire2_range = larocv::OverlapWireRange(raw_wire1, seed_plane1, seed_plane2);
+
+	  LAROCV_DEBUG() << "Inspecting plane A=" << seed_plane1
+			 << " minimum @ " << wire1 << " (wire=" << raw_wire1
+			 << " ... range in B=" << seed_plane2
+			 << " is " << wire2_range.first << " => " << wire2_range.second << ")"
+			 << std::endl;
+
+	  for(size_t minidx2_idx=0; minidx2_idx<wire_binned_minidx2_v.size(); ++minidx2_idx) {
+	    auto const& score_idx2 = wire_binned_minidx2_v[minidx2_idx];
+	    auto const& score2 = wire_binned_score2_v[score_idx2];
+	    float  min_wire2   = this->WireBinMin(seed_plane2);
+	    float  wire2       = min_wire2 + score_idx2;
+	    size_t raw_wire2   = (size_t)(wire2 * _wire_comp_factor_v.at(seed_plane2) + _origin_v[seed_plane2].y + 0.5);
+	    
+	    // check if two wires could overlap
+	    if( raw_wire2 < (wire2_range.first  - _xplane_wire_resolution) ||
+	        raw_wire2 > (wire2_range.second + _xplane_wire_resolution) ) {
+	      LAROCV_DEBUG() << "Skipping B=" << seed_plane2 << " minimum @ " << wire2
+			     << "(wire=" << raw_wire2 << ")" << std::endl;
+	      continue;
+	    }
+	    // Get the actual range limit
+	    // within some resolution and combination of these two wires,
+	    // find all possible combinations that also agree within the
+	    // configured tick resolution
+	    // 0) search a list of circles near wire1 and wire2
+	    // 1) search a possible combination between a pair of Circles (within tick/wire resolution)
+	    // 2) see if there's a compatible plane
+
+	    std::multimap<float,size_t> circle1_idx_m;
+	    std::multimap<float,size_t> circle2_idx_m;
+	    for(size_t circle1_idx=0; circle1_idx<circle1_v.size(); ++circle1_idx) {
+	      auto const& circle1 = circle1_v[circle1_idx];
+	      if(std::fabs(circle1.center.y - wire1) > _xplane_wire_resolution) continue;
+	      circle1_idx_m.insert(std::make_pair(circle1.sum_dtheta(),circle1_idx));
+	    }
+	    for(size_t circle2_idx=0; circle2_idx<circle2_v.size(); ++circle2_idx) {
+	      auto const& circle2 = circle2_v[circle2_idx];
+	      if(std::fabs(circle2.center.y - wire2) > _xplane_wire_resolution) continue;
+	      circle2_idx_m.insert(std::make_pair(circle2.sum_dtheta(),circle2_idx));
+	    }
+
+	    LAROCV_INFO() << "Wire vertex candidate: Plane A=" << seed_plane1
+			  << " minimum @ " << wire1 << " (wire=" << raw_wire1 << ") # circles " << circle1_idx_m.size()
+			  << std::endl;
+	    LAROCV_INFO() << "Wire vertex candidate: Plane B=" << seed_plane2
+			  << " minimum @ " << wire2 << " (wire=" << raw_wire2 << ") # circles " << circle2_idx_m.size()
+			  << std::endl;
+	    
+	    // Loop over to make all possible pairs
+	    std::set<size_t> seed1_used_idx_s;
+	    std::set<size_t> seed2_used_idx_s;
+	    for(auto const& score_idx_pair1 : circle1_idx_m) {
+	      auto const& score1      = score_idx_pair1.first;
+	      auto const& circle1_idx = score_idx_pair1.second;
+	      auto const& circle1     = circle1_v[circle1_idx];
+	      for(auto const& score_idx_pair2 : circle2_idx_m) {
+		auto const& score2      = score_idx_pair2.first;
+		auto const& circle2_idx = score_idx_pair2.second;
+		auto const& circle2     = circle2_v[circle2_idx];
+
+		float tick_dist = std::fabs( (circle1.center.x - _tick_offset_v[seed_plane1] / _time_comp_factor_v[seed_plane1])
+					     -
+					     (circle2.center.x - _tick_offset_v[seed_plane2] / _time_comp_factor_v[seed_plane2])
+					     );
+		if(tick_dist > (float)(_xplane_tick_resolution + 1.0)) {
+		  LAROCV_DEBUG() << "Pair ... " << circle1.center << " on A ... " << circle2.center << " on B ... "
+				 << "Skipping: too big tick range difference" << std::endl;
+		  continue;
+		}
+		
+		if(seed1_used_idx_s.find(circle1_idx) != seed1_used_idx_s.end()) {
+		  LAROCV_DEBUG() << "Pair ... " << circle1.center << " on A ... " << circle2.center << " on B ... "
+				 << "Skipping: already claimed circle on plane A" << std::endl;
+		  continue;
+		}
+		if(seed2_used_idx_s.find(circle2_idx) != seed2_used_idx_s.end()) {
+		  LAROCV_DEBUG() << "Pair ... " << circle1.center << " on A ... " << circle2.center << " on B ... "
+				 << "Skipping: already claimed circle on plane B" << std::endl;
+		  continue;
+		}
+		// At this point we claim a solid candidate for >= 2 planes
+		// Construct solid wire range respecting circle1
+		size_t circle1_wire    = (size_t)(circle1.center.y * _wire_comp_factor_v.at(seed_plane1) + _origin_v[seed_plane1].y + 0.5);
+		size_t circle2_wire    = (size_t)(circle2.center.y * _wire_comp_factor_v.at(seed_plane2) + _origin_v[seed_plane2].y + 0.5);
+		auto const wire2_range = larocv::OverlapWireRange(circle1_wire, seed_plane1, seed_plane2);
+		if(circle2_wire < wire2_range.first ) circle2_wire = wire2_range.first;
+		if(circle2_wire > wire2_range.second) circle2_wire = wire2_range.second;
+		// Get 3D vertex
+		double y,z;
+		larocv::IntersectionPoint(circle1_wire,seed_plane1,circle2_wire,seed_plane2,y,z);
+		// Check if this vertex can be taken as a unique one w/o neighbors
+		bool neighbor=false;
+		geo2d::Vector<float> yz_pt(y,z);
+		for(auto const& pt : vtx_yz_v) {
+		  if(geo2d::dist(pt,yz_pt) < _vtx_3d_resolution) {
+		    neighbor = true;
+		    break;
+		  }
+		}
+		if(neighbor) {
+
+		  LAROCV_INFO() << "Ignoring a too-close-neighbor pair: plane " << seed_plane1
+				<< " @ " << circle1.center << " dtheta=" << circle1.sum_dtheta()
+				<< " ... plane " << seed_plane2
+				<< " @ " << circle2.center << " dtheta=" << circle2.sum_dtheta()
+				<< std::endl;
+		  continue;
+		}
+
+		// Concrete vertex found
+		LAROCV_INFO() << "Claiming wire-vertex candiate @ (y,z) = (" << y << "," << z << ") ... "
+			      << "seed plane " << seed_plane1 << " @ " << circle1.center << " # crossing = " << circle1.xs_v.size() << " ... "
+			      << "seed plane " << seed_plane2 << " @ " << circle2.center << " # crossing = " << circle2.xs_v.size() << std::endl;
+
+		vtx_yz_v.emplace_back(yz_pt);
+		seed1_used_idx_s.insert(circle1_idx);
+		seed2_used_idx_s.insert(circle2_idx);
+
+		// Construct & fill 3D vertex container
+		data::Vertex3D vtx3d;
+		vtx3d.y = y;
+		vtx3d.z = z;
+		vtx3d.x = larocv::TriggerTick2Cm(circle1.center.x * _time_comp_factor_v[seed_plane1] +
+						 _origin_v[seed_plane1].x - _trigger_tick);
+		vtx3d.num_planes = 2;
+		vtx3d.vtx2d_v.resize(img_v.size());
+		vtx3d.vtx2d_v[seed_plane1].pt    = circle1.center;
+		vtx3d.vtx2d_v[seed_plane1].score = circle1.sum_dtheta();
+		vtx3d.vtx2d_v[seed_plane2].pt    = circle2.center;
+		vtx3d.vtx2d_v[seed_plane2].score = circle2.sum_dtheta();
+
+		std::vector<larocv::data::CircleVertex> circle_vtx_v(img_v.size());
+		circle_vtx_v[seed_plane1] = circle1;
+		circle_vtx_v[seed_plane2] = circle2;
+
+		float approx_x = (circle1.center.x + circle2.center.x)/2.;
+		// record other planes'
+		for(size_t plane=0; plane<img_v.size(); ++plane) {
+		  size_t closest_idx = kINVALID_SIZE;
+		  float  approx_wire = larocv::WireCoordinate(y,z,plane);
+		  float  approx_y = (approx_wire - _origin_v[plane].y) / _wire_comp_factor_v[plane];
+		  float  dist_min = 1e9;
+		  auto const& plane_data = data.get_plane_data(plane);
+		  auto const& circle_v   = plane_data._circle_scan_v;
+		  float  closest_dtheta = -1;
+		  // from here
+		  for(size_t circle_idx=0; circle_idx < circle_v.size(); ++circle_idx) {
+		    auto const& circle = circle_v[circle_idx];
+		    auto const  dtheta = circle.sum_dtheta();
+		    if(fabs(approx_y - circle.center.y) > _xplane_wire_resolution) continue;
+		    if(fabs(approx_x - circle.center.x) > _xplane_tick_resolution) continue;
+		    
+		    float dist = std::fabs(approx_y - circle.center.y);
+		    if(dist < dist_min) {
+		      dist_min = dist;
+		      closest_idx = circle_idx;
+		      closest_dtheta = dtheta;
+		    }
+		  }
+
+		  // Fill candidate 2D CircleVertex for non-seed planes
+		  if(closest_idx != kINVALID_SIZE) {
+		    circle_vtx_v[plane] = circle_v[closest_idx];
+		    vtx3d.vtx2d_v[plane].score = circle_vtx_v[plane].sum_dtheta();
+		    vtx3d.num_planes += 1;
+		  }
+		  else {
+		    // If no candidate found among those searched, make a new search aattempt here
+		    geo2d::Vector<float> guess_pt;
+		    guess_pt.x = approx_x;
+		    guess_pt.y = approx_y;
+		    guess_pt = MeanPixel(img_v[plane],guess_pt,
+					 (size_t)(_xplane_tick_resolution+0.5),
+					 (size_t)(_xplane_wire_resolution+0.5));
+		    if(guess_pt.x<0) {
+		      guess_pt.x = approx_x;
+		      guess_pt.y = approx_y;
+		    }
+		    //auto guess_circle = TwoPointInspection(img_v[plane],guess_pt);
+		    auto guess_circle = RadialScan(img_v[plane],guess_pt);
+		    if(guess_circle.xs_v.empty()) {
+		      guess_circle.center = guess_pt;
+		      guess_circle.radius = _radius;
+		    }
+		    circle_vtx_v[plane] = guess_circle;
+		  }
+
+		  LAROCV_INFO() << "Claiming non-seed 2D vertex for plane " << plane
+				<< " @ " << circle_vtx_v[plane].center
+				<< " # crossing = " << circle_vtx_v[plane].xs_v.size() << std::endl;
+		  
+		  vtx3d.vtx2d_v[plane].pt.x  = approx_x;
+		  vtx3d.vtx2d_v[plane].pt.y  = approx_y;
+
+		  if(!vtx3d.vtx2d_v[plane].score) vtx3d.vtx2d_v[plane].score = -1;
+		  
+		  LAROCV_INFO() << "Non-seed plane " << plane << " @ " << circle_vtx_v[plane].center
+				<< " # crossing = " << circle_vtx_v[plane].xs_v.size() << std::endl;
+		} // finish looping over non-seed planes
+
+		data.emplace_back(1,std::move(vtx3d),std::move(circle_vtx_v));
+	      }
+	    }
+	    LAROCV_INFO() << "Found pairs for this combo: " << seed1_used_idx_s.size() << std::endl;
+	  }
+	}
+      }
+    }
   }
   
   bool Refine2DVertex::_PostProcess_(const std::vector<const cv::Mat>& img_v)
@@ -1683,6 +1936,7 @@ namespace larocv{
 
     XPlaneWireScan(img_v);
     XPlaneWireProposal();
+    WireVertex3D(img_v);
     return true;
   }
 
