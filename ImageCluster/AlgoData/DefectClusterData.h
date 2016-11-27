@@ -27,6 +27,14 @@ namespace larocv {
 	, _parent_idx(parent_idx)
 	, _atomic_id(atomic_id)
       {clear();}
+      /*
+      AtomicContour(AtomicContour&& rhs)
+	: _ctor(std::move(rhs._ctor))
+	, _parent_idx(rhs._parent_idx)
+	, _atomic_id(rhs._atomic_id)
+	, _defect_id_v(std::move(rhs._defect_id_v))
+      {}
+      */      
       ~AtomicContour(){}
       
       /// clears data

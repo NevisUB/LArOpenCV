@@ -15,8 +15,10 @@ namespace larocv {
     _min_defect_size      = pset.get<int>("MinDefectSize",5);
     _hull_edge_pts_split  = pset.get<int>("NHullEdgePoints",50);
 
-    auto const vertextrack_algo_name = pset.get<std::string>("VertexTrackClusterAlgo","vtxctor");
-    _vertextrack_algo_id = this->ID(vertextrack_algo_name);
+    auto const vertextrack_algo_name = pset.get<std::string>("VertexTrackClusterAlgo","");
+    _vertextrack_algo_id = kINVALID_ALGO_ID;
+    if(!vertextrack_algo_name.empty())
+      this->ID(vertextrack_algo_name);
   }
 
   larocv::Cluster2DArray_t DefectCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -809,7 +811,7 @@ namespace larocv {
     
     data::AtomicContour first_a_ctor;
     first_a_ctor._ctor = in_ctor;
-    candidate_ctor_v.emplace_back(std::move(first_a_ctor));
+    candidate_ctor_v.push_back(first_a_ctor);
     deprecate_ctor_v.push_back(false);
 
     while(nbreaks<=10) {
@@ -821,13 +823,18 @@ namespace larocv {
 	target_ctor_idx = candidate_idx;
 	break;
       }
-      if(target_ctor_idx == kINVALID_SIZE) break;
-      
-      auto& a_ctor     = candidate_ctor_v[target_ctor_idx];
-      auto& ctor       = a_ctor._ctor;
-      
-      LAROCV_INFO() << "Break vector size " << candidate_ctor_v.size() << "... this contour size " << ctor.size() << "\n";
 
+      if(target_ctor_idx == kINVALID_SIZE) {
+	LAROCV_DEBUG() << "No more cluster to break..." << std::endl;
+	break;
+      }
+      
+      auto& a_ctor = candidate_ctor_v[target_ctor_idx];
+      auto& ctor   = a_ctor._ctor;
+
+      LAROCV_INFO() << "Next target cluster for breaking: candidate index = " << target_ctor_idx
+		    << " out of " << candidate_ctor_v.size() << " candidates ... size = " << ctor.size() << std::endl;
+      
       //this contour contains only two points. it's a line. should not exist.
       if (ctor.size() <= 2) {
 	LAROCV_CRITICAL() << "Contour too small (size<=2)... should not appear!" << std::endl;
@@ -848,7 +855,7 @@ namespace larocv {
 		      << " ... # defects = " << cluscomp.get_defects().size()
 		      << std::endl;
 	deprecate_ctor_v[target_ctor_idx] = true;
-	ctor.clear();
+	//ctor.clear();
 	continue;
       }
 		 
@@ -866,7 +873,7 @@ namespace larocv {
 			<< "Size of defects: " << defects.size() << std::endl
 			<< "Size of contour: " << ctor.size() << std::endl;
 	deprecate_ctor_v[target_ctor_idx] = true;
-	ctor.clear();
+	//ctor.clear();
 	continue;
       }
 	 
@@ -883,13 +890,16 @@ namespace larocv {
 		      << " ... # defects = " << cluscomp.get_defects().size()
 		      << std::endl;
 	deprecate_ctor_v[target_ctor_idx] = true;
-	ctor.clear();
+	//ctor.clear();
 	continue;
       }
 
       //get the chosen edge, currently take the defect facing the longest hull edge
+      std::cout<<"Choosing edge for ctor..."<<std::endl;
       auto chosen_edge = max_hull_edge(ctor,defects);
       LAROCV_DEBUG() << "This chosen hull edge: " << chosen_edge << std::endl;
+
+      std::cout<<ctor.size()<<" : "<<chosen_edge[0]<<" and "<<chosen_edge[1]<<std::endl;
 
       auto start = ctor[chosen_edge[0]];
       auto end   = ctor[chosen_edge[1]];
@@ -905,7 +915,7 @@ namespace larocv {
 		      << " ... # defects = " << cluscomp.get_defects().size()
 		      << std::endl;
 	deprecate_ctor_v[target_ctor_idx] = true;
-	ctor.clear();
+	//ctor.clear();
 	continue;
       }
 
@@ -941,7 +951,7 @@ namespace larocv {
 		      << " ... # defects = " << cluscomp.get_defects().size()
 		      << std::endl;
 	deprecate_ctor_v[target_ctor_idx] = true;
-	ctor.clear();
+	//ctor.clear();
 	continue;	   
       }
 
@@ -959,7 +969,7 @@ namespace larocv {
 		       << " ... # defects = " << cluscomp.get_defects().size()
 		       << std::endl;
 	deprecate_ctor_v[target_ctor_idx] = true;
-	ctor.clear();
+	//ctor.clear();
 	continue;
       }
 	 	 
@@ -981,8 +991,10 @@ namespace larocv {
 	a_ctor2._ctor = ctor2;
 	AssociateDefects(cluscomp,a_ctor,defect,a_ctor1,a_ctor2);
 
-	candidate_ctor_v.emplace_back(std::move(a_ctor1));
-	candidate_ctor_v.emplace_back(std::move(a_ctor2));
+	//candidate_ctor_v.emplace_back(std::move(a_ctor1));
+	//candidate_ctor_v.emplace_back(std::move(a_ctor2));
+	candidate_ctor_v.push_back(a_ctor1);
+	candidate_ctor_v.push_back(a_ctor2);
 	deprecate_ctor_v.push_back(false);
 	deprecate_ctor_v.push_back(false);
 
@@ -994,7 +1006,8 @@ namespace larocv {
 	  a_ctor1._ctor = ctor1;
 	  for(auto const& defect_id : a_ctor.associated_defects())
 	    a_ctor1.associate(defect_id);
-	  candidate_ctor_v.emplace_back(std::move(a_ctor1));
+	  //candidate_ctor_v.emplace_back(std::move(a_ctor1));
+	  candidate_ctor_v.push_back(a_ctor1);
 	  deprecate_ctor_v.push_back(false);
 	}
 
@@ -1004,18 +1017,21 @@ namespace larocv {
 	  a_ctor2._ctor = ctor2;
 	  for(auto const& defect_id : a_ctor.associated_defects())
 	    a_ctor2.associate(defect_id);
-	  candidate_ctor_v.emplace_back(std::move(a_ctor2));
+	  //candidate_ctor_v.emplace_back(std::move(a_ctor2));
+	  candidate_ctor_v.push_back(a_ctor2);
 	  deprecate_ctor_v.push_back(false);
 	}
       }
+      
+      deprecate_ctor_v[target_ctor_idx] = true;
+      //ctor.clear();
+      
       size_t num_remaining_candidates = 0;
       for(auto const& deprecate : deprecate_ctor_v) {
 	if(!deprecate) ++num_remaining_candidates;
       }
       LAROCV_DEBUG() << "Valid candidate size " << num_remaining_candidates << " @ end of loop..." << std::endl;
 
-      deprecate_ctor_v[target_ctor_idx] = true;
-      ctor.clear();
     } //end of breaking
 
     //atomic_contour_v is filled, candidate_ctor_v should be all deprecated, if its not, put what's inside into atomics
