@@ -37,7 +37,7 @@ namespace larocv{
 
     _straight_line_angle_cut = 10;
 
-    _radius = 10;
+    _radius = 6;
     _cvtx_min_radius  = 4;
     _cvtx_max_radius  = 21;
     _cvtx_radius_step = 2;
