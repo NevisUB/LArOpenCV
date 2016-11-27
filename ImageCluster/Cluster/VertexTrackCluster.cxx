@@ -285,6 +285,9 @@ namespace larocv {
       // //cv::imwrite(pp1.str().c_str(),polar_ctor_mat);
 
       //geo2d::UntanglePolygon(contour);
+
+      // Make sure this contour is valid (= particle is valid cluster)
+      if(part._ctor.size()<=2) continue;
       
       result_v.emplace_back(std::move(part));
     }

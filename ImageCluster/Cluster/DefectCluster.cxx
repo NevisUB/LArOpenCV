@@ -786,7 +786,7 @@ namespace larocv {
   }
 
   
-  data::ClusterCompound DefectCluster::BreakContour(const larocv::GEO2D_Contour_t& ctor) {
+  data::ClusterCompound DefectCluster::BreakContour(const larocv::GEO2D_Contour_t& in_ctor) {
     
     ////////////////////////////////////////////
     // Take a single contour, find the defect on the side with 
@@ -806,10 +806,10 @@ namespace larocv {
     std::vector<::cv::Vec4i> defects;
     std::vector<float> defects_d;
 
-    LAROCV_DEBUG() << "Original contour size: " << ctor.size() << std::endl;
+    LAROCV_DEBUG() << "Original contour size: " << in_ctor.size() << std::endl;
 
     data::AtomicContour a_ctor;
-    a_ctor._ctor = ctor;
+    a_ctor._ctor = in_ctor;
     break_ctor_v.emplace_back(a_ctor);
     
     while( break_ctor_v.size() != 0 and nbreaks<=10) {
