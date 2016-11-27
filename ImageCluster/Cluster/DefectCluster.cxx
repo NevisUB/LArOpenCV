@@ -1021,7 +1021,8 @@ namespace larocv {
     //atomic_contour_v is filled, candidate_ctor_v should be all deprecated, if its not, put what's inside into atomics
     for (size_t target_ctor_idx=0; target_ctor_idx<candidate_ctor_v.size(); ++target_ctor_idx) {
 
-      candidate_ctor = candidate_ctor_v[target_ctor_idx];
+      auto& candidate_ctor = candidate_ctor_v[target_ctor_idx];
+      
       if(deprecate_ctor_v[target_ctor_idx]) continue;
       if (candidate_ctor._ctor.size() <= 2) continue;
       
