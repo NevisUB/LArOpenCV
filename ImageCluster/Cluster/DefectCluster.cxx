@@ -807,9 +807,9 @@ namespace larocv {
     
     LAROCV_DEBUG() << "Original contour size: " << in_ctor.size() << std::endl;
     
-    data::AtomicContour a_ctor;
-    a_ctor._ctor = in_ctor;
-    candidate_ctor_v.emplace_back(a_ctor);
+    data::AtomicContour first_a_ctor;
+    first_a_ctor._ctor = in_ctor;
+    candidate_ctor_v.emplace_back(std::move(first_a_ctor));
     deprecate_ctor_v.push_back(false);
 
     while(nbreaks<=10) {
@@ -1024,7 +1024,7 @@ namespace larocv {
       auto& candidate_ctor = candidate_ctor_v[target_ctor_idx];
       
       if(deprecate_ctor_v[target_ctor_idx]) continue;
-      if (candidate_ctor._ctor.size() <= 2) continue;
+      if(candidate_ctor._ctor.size() <= 2) continue;
       
       LAROCV_NORMAL() << "Putting defect ctor of size : " << candidate_ctor._ctor.size() << " into atomic_atomic_ctor_v "<< std::endl;
       auto& atomic = cluscomp.make_atom();
