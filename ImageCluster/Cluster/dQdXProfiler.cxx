@@ -363,6 +363,8 @@ namespace larocv {
       pts.emplace_back(std::move(pt_float));
     }
     LAROCV_DEBUG() << "Found " << pts.size() << " non zero points including neighbors" << std::endl;
+    if(pts.empty())
+      return std::vector<float>();
     
     // compute a point projection on pca line
     // 0) loop over points, for each point find the closest point of appraoch, A, on the PCA line
