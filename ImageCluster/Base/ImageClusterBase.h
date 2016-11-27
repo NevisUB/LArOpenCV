@@ -68,6 +68,9 @@ namespace larocv {
     /// Algorithm ID accessor
     AlgorithmID_t ID(const std::string& name="") const;
 
+    /// ImageSet ID accessor
+    ImageSetID_t ImageSetID() const;
+
     /// Profile flag setter
     void Profile(bool doit) { _profile = doit; }
 
@@ -118,6 +121,8 @@ namespace larocv {
   private:
 
     size_t _num_images; /// # images to be processed
+
+    larocv::ImageSetID_t _image_set_id; ///< unique identifier for a collection of an image
 
     larocv::AlgorithmID_t _id; ///< unique algorithm identifier 
 

@@ -30,16 +30,17 @@ namespace larocv {
     LAROCV_DEBUG() << "start" << std::endl;
     _configured = false;
     _cluster_alg_v.clear();
-    _clusters_v_v.clear();
+    _clusters_vv.clear();
     _process_count=0;
     _process_time=0;
 
-    _raw_img_v.clear();
-    _raw_meta_v.clear();
-    _raw_roi_v.clear();
+    _raw_img_vv.clear();
+    _raw_meta_vv.clear();
+    _raw_roi_vv.clear();
+    
     _cluster_alg_m.clear();
-    _meta_v_v.clear();
-    _roi_v_v.clear();
+    _meta_vv.clear();
+    _roi_vv.clear();
     _book_keeper.Reset();
     
     LAROCV_DEBUG() << "end" << std::endl;
@@ -55,13 +56,55 @@ namespace larocv {
 
   void ImageClusterManager::ClearData()
   {
-    _raw_img_v.clear();
-    _raw_meta_v.clear();
-    _raw_roi_v.clear();
-    _clusters_v_v.clear();
-    _meta_v_v.clear();
-    _roi_v_v.clear();
+    _raw_img_vv.clear();
+    _raw_meta_vv.clear();
+    _raw_roi_vv.clear();
+    _clusters_vv.clear();
+    _meta_vv.clear();
+    _roi_vv.clear();
     _book_keeper.Reset();
+  }
+
+  const std::vector<cv::Mat>& ImageClusterManager::InputImages(ImageSetID_t set_id) const
+  {
+    if(_raw_img_vv.empty()) 
+      throw larbys("No image available!");
+
+    if(set_id == kINVALID_SIZE) return _raw_img_vv.front();
+    if(set_id >= _raw_img_vv.size()) {
+      LAROCV_CRITICAL() << "Invalid image set id: " << set_id << std::endl;
+      throw larbys();
+    }
+
+    return _raw_img_vv[set_id];
+  }
+
+  const std::vector<larocv::ImageMeta>& ImageClusterManager::InputImageMetas(ImageSetID_t set_id) const
+  {
+    if(_raw_meta_vv.empty()) 
+      throw larbys("No image available!");
+
+    if(set_id == kINVALID_SIZE) return _raw_meta_vv.front();
+    if(set_id >= _raw_meta_vv.size()) {
+      LAROCV_CRITICAL() << "Invalid image set id: " << set_id << std::endl;
+      throw larbys();
+    }
+
+    return _raw_meta_vv[set_id];
+  }
+
+  const std::vector<larocv::ROI>& ImageClusterManager::InputROIs(ImageSetID_t set_id) const
+  {
+    if(_raw_roi_vv.empty()) 
+      throw larbys("No image available!");
+
+    if(set_id == kINVALID_SIZE) return _raw_roi_vv.front();
+    if(set_id >= _raw_roi_vv.size()) {
+      LAROCV_CRITICAL() << "Invalid image set id: " << set_id << std::endl;
+      throw larbys();
+    }
+
+    return _raw_roi_vv[set_id];
   }
 
   const ImageClusterBase* ImageClusterManager::GetClusterAlg(const AlgorithmID_t id) const
@@ -108,6 +151,7 @@ namespace larocv {
     _show_image = main_cfg.get<bool>("ShowImage",false);
 
     if(_show_image) {
+      throw larbys("Display option is currently not supported after implementation of multi image-set processing... contact authors if needed!");
       LAROCV_DEBUG() << "Configuring Viewer" << std::endl;
       _viewer.Configure(main_cfg.get_pset(_viewer.Name()));
     }
@@ -223,17 +267,17 @@ namespace larocv {
     
   }
 
-  // void ImageClusterManager::Add(const ::cv::Mat& img, const ImageMeta& meta)
-  // {
-  //   _raw_img_v.push_back(img);
-  //   _raw_meta_v.push_back(meta);
-  // }
-
-  void ImageClusterManager::Add(const ::cv::Mat& img, const ImageMeta& meta, const ROI& roi)
+  void ImageClusterManager::Add(const ::cv::Mat& img, const ImageMeta& meta, const ROI& roi, size_t set_id)
   {
-    _raw_img_v.push_back(img);
-    _raw_meta_v.push_back(meta);
-    _raw_roi_v.push_back(roi);
+    if(set_id == kINVALID_SIZE) set_id = 0;
+    LAROCV_INFO() << "Adding an image @ set id " << set_id << std::endl;
+    _raw_img_vv.resize(set_id+1);
+    _raw_meta_vv.resize(set_id+1);
+    _raw_roi_vv.resize(set_id+1);
+    
+    _raw_img_vv[set_id].push_back(img);
+    _raw_meta_vv[set_id].push_back(meta);
+    _raw_roi_vv[set_id].push_back(roi);
   }
   
   bool ImageClusterManager::Process()
@@ -246,65 +290,98 @@ namespace larocv {
 
     _algo_dataman.ClearData();
     _book_keeper.Reset();
-    _meta_v_v.clear();
-    _meta_v_v.resize(_cluster_alg_v.size());
     
-    _clusters_v_v.clear();
-    _clusters_v_v.resize(_cluster_alg_v.size());
-
-    _roi_v_v.clear();
-    _roi_v_v.resize(_cluster_alg_v.size());
+    _meta_vv.clear();
+    _meta_vv.resize(_cluster_alg_v.size());
     
-    for(size_t img_index=0; img_index<_raw_img_v.size(); ++img_index) {
+    _clusters_vv.clear();
+    _clusters_vv.resize(_cluster_alg_v.size());
 
-      LAROCV_DEBUG() << "Pre-Check img_index: " << img_index << "\n";
-      LAROCV_DEBUG() << "_raw_meta_v.size() " << _raw_meta_v.size() << "\n";
-      LAROCV_DEBUG() << "_raw_img_v.size() " << _raw_img_v.size() << "\n";
-      LAROCV_DEBUG() << "_raw_roi_v.size() " << _raw_roi_v.size() << "\n";
-      
-      auto const& meta = _raw_meta_v[img_index];
-      auto const& img  = _raw_img_v[img_index];
-      auto      & roi  = _raw_roi_v[img_index];
+    _roi_vv.clear();
+    _roi_vv.resize(_cluster_alg_v.size());
 
-      if(meta.num_pixel_row()!=img.rows)
-	throw larbys("Provided metadata has incorrect # horizontal pixels w.r.t. image!");
+    // Sanity check of image dimensions
+    for(ImageSetID_t set_index=0; set_index < _raw_img_vv.size(); ++set_index) {
+      auto const& raw_img_v  = _raw_img_vv.at(set_index);
+      auto const& raw_roi_v  = _raw_roi_vv.at(set_index);
+      auto const& raw_meta_v = _raw_meta_vv.at(set_index);
       
-      if(meta.num_pixel_column()!=img.cols)
-	throw larbys("Provided metadata has incorrect # vertical pixels w.r.t. image!");
+      LAROCV_DEBUG() << "Pre-Check image set: " << set_index << "\n";
+      
+      for(size_t img_index=0; img_index<raw_img_v.size(); ++img_index) {
+
+	LAROCV_DEBUG() << "  Pre-Check image index: " << img_index << "\n";
+	LAROCV_DEBUG() << "    # meta .... " << raw_meta_v.size() << "\n";
+	LAROCV_DEBUG() << "    # image ... " << raw_img_v.size() << "\n";
+	LAROCV_DEBUG() << "    # roi ....  " << raw_roi_v.size() << "\n";
+      
+	auto const& meta = raw_meta_v.at(img_index);
+	auto const& img  = raw_img_v.at(img_index);
+	//auto      & roi  = raw_roi_v.at(img_index);
+
+	if(meta.num_pixel_row()!=img.rows)
+	  throw larbys("Provided metadata has incorrect # horizontal pixels w.r.t. image!");
+	
+	if(meta.num_pixel_column()!=img.cols)
+	  throw larbys("Provided metadata has incorrect # vertical pixels w.r.t. image!");
+      }
     }
-    
+
     //
     // First-pass clustering
     //
-    size_t last_cluster_algo = kINVALID_SIZE;
     bool good_state = true;
     for(size_t alg_index=0; alg_index<_cluster_alg_v.size(); ++alg_index) {
       
       LAROCV_DEBUG() << "On alg_index: " << alg_index << "\n";
       
       auto& alg_ptr    = _cluster_alg_v[alg_index];
-      auto& meta_v     = _meta_v_v[alg_index];
-      auto& clusters_v = _clusters_v_v[alg_index];
-      auto& roi_v      = _roi_v_v[alg_index];
-      
+      auto& meta_v     = _meta_vv[alg_index];
+      auto& clusters_v = _clusters_vv[alg_index];
+      auto& roi_v      = _roi_vv[alg_index];
+
+      // verify input image exists
+      auto const image_set_id = alg_ptr->ImageSetID();
+      if(image_set_id >= _raw_img_vv.size()) {
+	LAROCV_CRITICAL() << "Algorithm ID " << alg_ptr->ID()
+			  << " (" << alg_ptr->Name() << ")"
+			  << " requires image set id " << image_set_id
+			  << " but only " << _raw_img_vv.size() << " set of images provided!"
+			  << std::endl;
+	throw larbys();
+      }
+      auto const& raw_img_v  = _raw_img_vv[image_set_id];
+      auto const& raw_roi_v  = _raw_roi_vv[image_set_id];
+      auto const& raw_meta_v = _raw_meta_vv[image_set_id];
+
       if(!alg_ptr) throw larbys("Invalid algorithm pointer!");
 
-      for(size_t img_index=0; img_index<_raw_img_v.size(); ++img_index) {
+      for(size_t img_index=0; img_index<raw_img_v.size(); ++img_index) {
 
-	LAROCV_DEBUG() << "Processing img_index: " << img_index << "\n";
-	LAROCV_DEBUG() << "_raw_meta_v.size() " << _raw_meta_v.size() << "\n";
-	LAROCV_DEBUG() << "_raw_img_v.size() " << _raw_img_v.size() << "\n";
-	LAROCV_DEBUG() << "_raw_roi_v.size() " << _raw_roi_v.size() << "\n";
+	LAROCV_DEBUG() << "Processing image index " << img_index << " @ image set " << image_set_id << std::endl;
+	LAROCV_DEBUG() << "  # meta .... " << raw_meta_v.size() << std::endl;
+	LAROCV_DEBUG() << "  # image ... " << raw_img_v.size() << std::endl;
+	LAROCV_DEBUG() << "  # roi ..... " << raw_roi_v.size() << std::endl;
 	
-	auto const& meta = _raw_meta_v[img_index];
-	auto const& img  = _raw_img_v[img_index];
-	auto      & roi  = _raw_roi_v[img_index];
+	auto const& meta = raw_meta_v[img_index];
+	auto const& img  = raw_img_v[img_index];
+	auto      & roi  = raw_roi_v[img_index];
+
+	// search for the last cluster that processed the same image set
+	AlgorithmID_t last_cluster_algo = kINVALID_SIZE;
+	for(int last_alg_index = (alg_index-1); last_alg_index>=0; --last_alg_index) {
+	  auto const& last_alg_ptr = _cluster_alg_v[last_alg_index];
+	  if(last_alg_ptr->Type() == kAlgoImageAna) continue;
+	  if(image_set_id != last_alg_ptr->ImageSetID()) continue;
+	  last_cluster_algo = last_alg_index;
+	  break;
+	}
 	
 	if(last_cluster_algo == kINVALID_SIZE) {
+
+	  LAROCV_DEBUG() << "  Algorithm " << alg_ptr->ID() << " (" << alg_ptr->Name() << ")"
+			 << " is the 1st algorithm for ImageSetID " << image_set_id << std::endl;
 	
-	  LAROCV_DEBUG() << "alg_ptr is _cluster_alg_v.front()\n" << std::endl;
-	  LAROCV_DEBUG() << "meta_v.size(): "<< meta_v.size() << " roi_v.size(): " << roi_v.size() << "\n";
-	  
 	  Cluster2DArray_t clusters;
 	  meta_v.push_back(meta);
 	  roi_v.push_back(roi);
@@ -318,9 +395,9 @@ namespace larocv {
 	  
 	}else{
 	
-	  auto const& prev_clusters = _clusters_v_v[last_cluster_algo][img_index];
-	  auto const& prev_meta = _meta_v_v[alg_index-1][img_index];
-	  auto const& prev_roi  = _roi_v_v[alg_index-1][img_index];
+	  auto const& prev_clusters = _clusters_vv[last_cluster_algo][img_index];
+	  auto const& prev_meta     = _meta_vv[last_cluster_algo][img_index];
+	  auto const& prev_roi      = _roi_vv[last_cluster_algo][img_index];
 	  meta_v.push_back(prev_meta);
 	  roi_v.push_back(prev_roi);
 
@@ -330,7 +407,6 @@ namespace larocv {
 	  }
 	  else
 	    clusters_v.emplace_back(((ClusterAlgoBase*)(alg_ptr))->Process(prev_clusters,img,meta_v.back(),roi_v.back()));
-
 	}
 	
 	// Assign cluster IDs
@@ -362,12 +438,10 @@ namespace larocv {
 	  throw larbys();
 	}
       }
-      if(alg_ptr->Type() == kAlgoCluster)
-	last_cluster_algo = alg_index;
-      else {
+      if(alg_ptr->Type() != kAlgoCluster) {
 	std::vector<const cv::Mat> img_v;
-	for(size_t img_index=0; img_index<_raw_img_v.size(); ++img_index)
-	  img_v.push_back(_raw_img_v[img_index]);
+	for(size_t img_index=0; img_index<raw_img_v.size(); ++img_index)
+	  img_v.push_back(raw_img_v[img_index]);
 	good_state = ((ImageAnaBase*)(alg_ptr))->PostProcess(img_v);
       }
       if(!good_state) {
@@ -381,7 +455,24 @@ namespace larocv {
     //
     if(_match_alg && good_state) {
 
-      auto const& clusters_v = _clusters_v_v.back();
+      // identify the final cluster set from the same image set id
+      size_t last_cluster_algo_index=kINVALID_SIZE;
+      auto const image_set_id = _match_alg->ImageSetID();
+      for(int cluster_algo_id=_clusters_vv.size()-1; cluster_algo_id>=0; --cluster_algo_id) {
+	auto const& cluster_alg_ptr = _cluster_alg_v[cluster_algo_id];
+	if(cluster_alg_ptr->Type() == kAlgoImageAna) continue;
+	if(cluster_alg_ptr->ImageSetID() != image_set_id) continue;
+	last_cluster_algo_index = cluster_algo_id;
+	break;
+      }
+      if(last_cluster_algo_index==kINVALID_SIZE) {
+	LAROCV_CRITICAL() << "No clusters found to be matched for ImageSetID " << image_set_id << std::endl;
+	throw larbys();
+      }
+
+      auto const& clusters_v = _clusters_vv[last_cluster_algo_index];
+      auto const& meta_v = _meta_vv[last_cluster_algo_index];
+      auto const& roi_v  = _roi_vv[last_cluster_algo_index];
 
       std::vector< std::vector< const larocv::Cluster2D* > > c_per_plane;
 
@@ -389,7 +480,7 @@ namespace larocv {
 
       for(size_t img_id=0; img_id<clusters_v.size(); ++img_id) {
 
-    	auto const& meta = _meta_v_v.back()[img_id];
+    	auto const& meta = meta_v[img_id];
     	auto const plane = meta.plane();
 
     	if(c_per_plane.size() <= plane) {
@@ -464,7 +555,7 @@ namespace larocv {
 
 	  if( input_clusters.size() > 2 && _use_two_plane) continue;
 	  
-	  const std::vector<double> roi_vtx = _roi_v_v[0][comb[0].first].roi3Dvtx();
+	  const std::vector<double> roi_vtx = roi_v[comb[0].first].roi3Dvtx();
 	  
     	  auto score = _match_alg->Process(input_clusters,roi_vtx);
 
@@ -480,24 +571,31 @@ namespace larocv {
     
     _process_time += _watch.WallTime();
     ++_process_count;
-    
-    LAROCV_DEBUG() << "clusters_v_v.size() : " << _clusters_v_v.size() << "\n";
-    for (const auto& clusters_v : _clusters_v_v) {
-      LAROCV_DEBUG() << "clusters_v_v.size() " << clusters_v.size() << "\n";
+
+    /*
+    LAROCV_DEBUG() << "clusters_vv.size() : " << _clusters_vv.size() << "\n";
+    for (const auto& clusters_v : _clusters_vv) {
+      LAROCV_DEBUG() << "clusters_vv.size() " << clusters_v.size() << "\n";
       for (const auto& clusters : clusters_v) {
 	LAROCV_DEBUG() << "clusters.size() " << clusters.size() << "\n";
       }
     }
+    */
 
+    /*
+      ImageSetID_t implementation destroy display support
     if(_show_image) {
       std::vector<std::string> window_name_v(_cluster_alg_v.size());
-      for(size_t i=0; i<_cluster_alg_v.size(); ++i) window_name_v[i] = _cluster_alg_v[i]->Name();
+      for(size_t i=0; i<_cluster_alg_v.size(); ++i)
+	window_name_v[i] = _cluster_alg_v[i]->Name();
       ContourArray_t contours_v;
-      contours_v.reserve(_clusters_v_v.back().back().size());
-      for(auto const& c :  _clusters_v_v.back().back()) contours_v.push_back(c._contour);
+      contours_v.reserve(_clusters_vv.back().back().size());
+      for(auto const& c :  _clusters_vv.back().back())
+	contours_v.push_back(c._contour);
       _viewer.Display(_raw_img_v.back(),contours_v,window_name_v);
-      }
-
+    }
+    */
+    
     if(_tree) _tree->Fill();
     
     LAROCV_DEBUG() << "end" << std::endl;
@@ -506,10 +604,10 @@ namespace larocv {
 
   size_t ImageClusterManager::NumClusters(const AlgorithmID_t alg_id) const
   {
-    AlgorithmID_t target_alg_id = (alg_id != kINVALID_ALGO_ID ? alg_id : _clusters_v_v.size()-1);
-    if(target_alg_id >= _clusters_v_v.size()) throw larbys("Invalid algorithm ID requested");
+    AlgorithmID_t target_alg_id = (alg_id != kINVALID_ALGO_ID ? alg_id : _clusters_vv.size()-1);
+    if(target_alg_id >= _clusters_vv.size()) throw larbys("Invalid algorithm ID requested");
 
-    auto& clusters_v = _clusters_v_v[target_alg_id];
+    auto& clusters_v = _clusters_vv[target_alg_id];
 
     if(clusters_v.empty()) return 0; // No image is registered
 
@@ -526,27 +624,27 @@ namespace larocv {
   
   const ImageMeta& ImageClusterManager::MetaData(const ImageID_t img_id, const AlgorithmID_t alg_id) const
   {
-    if(alg_id >= _meta_v_v.size()) throw larbys("Invalid algorithm ID requested");
-    if(img_id >= _meta_v_v[alg_id].size()) throw larbys("Invalid image ID requested");
+    if(alg_id >= _meta_vv.size()) throw larbys("Invalid algorithm ID requested");
+    if(img_id >= _meta_vv[alg_id].size()) throw larbys("Invalid image ID requested");
 
-    return _meta_v_v[alg_id][img_id];
+    return _meta_vv[alg_id][img_id];
   }
 
   const ROI& ImageClusterManager::ROIData(const ImageID_t img_id, const AlgorithmID_t alg_id) const
   {
-    if(alg_id >= _roi_v_v.size()) throw larbys("Invalid algorithm ID requested");
-    if(img_id >= _roi_v_v[alg_id].size()) throw larbys("Invalid image ID requested");
+    if(alg_id >= _roi_vv.size()) throw larbys("Invalid algorithm ID requested");
+    if(img_id >= _roi_vv[alg_id].size()) throw larbys("Invalid image ID requested");
 
-    return _roi_v_v[alg_id][img_id];
+    return _roi_vv[alg_id][img_id];
     }
   
   const Cluster2D& ImageClusterManager::Cluster(const ClusterID_t cluster_id, const AlgorithmID_t alg_id) const
   {
-    AlgorithmID_t target_alg_id = (alg_id != kINVALID_ALGO_ID ? alg_id : _clusters_v_v.size()-1);
+    AlgorithmID_t target_alg_id = (alg_id != kINVALID_ALGO_ID ? alg_id : _clusters_vv.size()-1);
 
-    if(target_alg_id >= _meta_v_v.size()) throw larbys("Invalid algorithm ID requested");
+    if(target_alg_id >= _meta_vv.size()) throw larbys("Invalid algorithm ID requested");
 
-    auto const& clusters_v = _clusters_v_v[target_alg_id];
+    auto const& clusters_v = _clusters_vv[target_alg_id];
 
     ClusterID_t offset_id = 0;
     for(size_t cluster_index=0; cluster_index < clusters_v.size(); ++cluster_index) {
@@ -566,11 +664,11 @@ namespace larocv {
   
   const Cluster2DArray_t& ImageClusterManager::Clusters(const ImageID_t img_id,const AlgorithmID_t alg_id) const
   {
-    AlgorithmID_t target_alg_id = (alg_id != kINVALID_ALGO_ID ? alg_id : _clusters_v_v.size()-1);
+    AlgorithmID_t target_alg_id = (alg_id != kINVALID_ALGO_ID ? alg_id : _clusters_vv.size()-1);
         
-    if(target_alg_id >= _meta_v_v.size()) throw larbys("Invalid algorithm ID requested");
+    if(target_alg_id >= _meta_vv.size()) throw larbys("Invalid algorithm ID requested");
 
-    auto const& clusters_v = _clusters_v_v[target_alg_id];
+    auto const& clusters_v = _clusters_vv[target_alg_id];
 
     if(img_id >= clusters_v.size()) throw larbys("Invalid image ID requested");
     
@@ -582,13 +680,13 @@ namespace larocv {
 
     ClusterID_t result = kINVALID_CLUSTER_ID;
 
-    if(_clusters_v_v.empty()) return result;
+    if(_clusters_vv.empty()) return result;
 
-    if(alg_id == kINVALID_ALGO_ID) alg_id = _clusters_v_v.size() - 1;
+    if(alg_id == kINVALID_ALGO_ID) alg_id = _clusters_vv.size() - 1;
 
-    auto const& clusters_v = _clusters_v_v[alg_id];
+    auto const& clusters_v = _clusters_vv[alg_id];
     
-    auto const& meta_v = _meta_v_v[alg_id];
+    auto const& meta_v = _meta_vv[alg_id];
 
     ClusterID_t offset=0;
 

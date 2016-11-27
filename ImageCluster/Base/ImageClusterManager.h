@@ -71,7 +71,8 @@ namespace larocv {
     /// Execute algorithms to construct clusters + corresponding meta data
     // void Add(const ::cv::Mat& img, const larocv::ImageMeta& meta);
     /// Execute algorithms to construct clusters + corresponding meta data + roi data
-    void Add(const ::cv::Mat& img, const larocv::ImageMeta& meta, const larocv::ROI& roi);
+    void Add(const ::cv::Mat& img, const larocv::ImageMeta& meta, const larocv::ROI& roi,
+	     ImageSetID_t set_id = kINVALID_IMAGE_SET_ID);
     /// Execute algorithms to construct clusters + corresponding meta data
     bool Process();
     /// Finalize after multiple Process call
@@ -93,11 +94,11 @@ namespace larocv {
     /// Match result getter
     const MatchBookKeeper& BookKeeper() const { return _book_keeper; }
     /// Original input image getter
-    const std::vector<cv::Mat> InputImages() const { return _raw_img_v; }
+    const std::vector<cv::Mat>& InputImages(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID) const;
     /// Original image metadata getter
-    const std::vector<larocv::ImageMeta> InputImageMetas() const { return _raw_meta_v; }
+    const std::vector<larocv::ImageMeta>& InputImageMetas(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID) const;
     /// Original image roi getter
-    const std::vector<larocv::ROI> InputROIs() const { return _raw_roi_v; }
+    const std::vector<larocv::ROI>& InputROIs(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID) const;
     /// Plane weights getter and setter
     std::vector<float>& MatchPlaneWeights() { return _match_plane_weights; }
     /// Algorithm data manager accessor
@@ -116,17 +117,17 @@ namespace larocv {
     /// Map of clustering algorithm instance name to ID
     std::map<std::string,larocv::AlgorithmID_t> _cluster_alg_m;
     /// Array of images
-    std::vector<cv::Mat> _raw_img_v;
+    std::vector<std::vector<cv::Mat> > _raw_img_vv;
     /// Array of metadata
-    std::vector<larocv::ImageMeta> _raw_meta_v;
+    std::vector<std::vector<larocv::ImageMeta> > _raw_meta_vv;
     /// Array of roidata 
-    std::vector<larocv::ROI> _raw_roi_v;
+    std::vector<std::vector<larocv::ROI> > _raw_roi_vv;
     /// Array of resulting clusters per algorithm per image (outer index = algorithm, inner index = image)
-    std::vector<std::vector<larocv::Cluster2DArray_t> > _clusters_v_v;
+    std::vector<std::vector<larocv::Cluster2DArray_t> > _clusters_vv;
     /// Array of meta data: one per algorithm per image (outer index = algorithm, inner index = image)
-    std::vector<std::vector<larocv::ImageMeta> > _meta_v_v;
+    std::vector<std::vector<larocv::ImageMeta> > _meta_vv;
     /// Array of roi data: one per algorithm per image (outer index = algorithm, inner index = image)
-    std::vector<std::vector<larocv::ROI> > _roi_v_v;
+    std::vector<std::vector<larocv::ROI> > _roi_vv;
     /// Boolean flag to measure process time + report
     bool _profile;
     /// Stopwatch

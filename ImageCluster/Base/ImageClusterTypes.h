@@ -23,6 +23,8 @@ namespace larocv {
 
   /// larocv::ImageClusterBase inherit algorithm's unique identifier within larocv::ClusterImageManager
   typedef size_t AlgorithmID_t;
+  /// A unique identifier for a set of images
+  typedef size_t ImageSetID_t;
   /// A image's unique identifier within larocv::ImageClusterManager
   typedef size_t ImageID_t;
   /// A cluster's unique identifier within larocv::ImageClusterManager
@@ -35,6 +37,8 @@ namespace larocv {
   static const size_t kINVALID_ID = larocv::kINVALID_SIZE;
   /// A constant to signify, in particular, an invalid larocv::AlgorithmID_t
   static const AlgorithmID_t kINVALID_ALGO_ID = kINVALID_ID;
+  /// A constant to signify, in particular, an invalid larocv::ImageSetID_t
+  static const ImageSetID_t kINVALID_IMAGE_SET_ID = kINVALID_ID;
   /// A constant to signify, in particular, an invalid larocv::ClusterID_t
   static const ClusterID_t kINVALID_CLUSTER_ID = kINVALID_ID;
 
