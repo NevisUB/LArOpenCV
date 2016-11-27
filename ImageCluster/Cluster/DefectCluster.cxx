@@ -1017,21 +1017,22 @@ namespace larocv {
       deprecate_ctor_v[target_ctor_idx] = true;
       ctor.clear();
     } //end of breaking
-    
-    //atomic_contour_v is filled, candidate_ctor_v should be clear, if its not, put what's inside into atomics
-    if ( candidate_ctor_v.size() ) {
-      LAROCV_NORMAL() << "Max break condition found, not all contours atomic" << std::endl;
-      for (auto& candidate_ctor : candidate_ctor_v) {
-	if (candidate_ctor._ctor.size() <= 2) continue;
-	LAROCV_NORMAL() << "Putting defect ctor of size : " << candidate_ctor._ctor.size() << " into atomic_atomic_ctor_v "<< std::endl;
-	auto& atomic = cluscomp.make_atom();
-	for(auto const& defect_id : candidate_ctor.associated_defects())
-	  atomic.associate(defect_id);
-	atomic._ctor = candidate_ctor._ctor;
-	LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
-		       << " ... # defects = " << cluscomp.get_defects().size()
-		       << std::endl;
-      }
+
+    //atomic_contour_v is filled, candidate_ctor_v should be all deprecated, if its not, put what's inside into atomics
+    for (size_t target_ctor_idx=0; target_ctor_idx<candidate_ctor_v.size(); ++target_ctor_idx) {
+
+      candidate_ctor = candidate_ctor_v[target_ctor_idx];
+      if(deprecate_ctor_v[target_ctor_idx]) continue;
+      if (candidate_ctor._ctor.size() <= 2) continue;
+      
+      LAROCV_NORMAL() << "Putting defect ctor of size : " << candidate_ctor._ctor.size() << " into atomic_atomic_ctor_v "<< std::endl;
+      auto& atomic = cluscomp.make_atom();
+      for(auto const& defect_id : candidate_ctor.associated_defects())
+	atomic.associate(defect_id);
+      atomic._ctor = candidate_ctor._ctor;
+      LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
+		     << " ... # defects = " << cluscomp.get_defects().size()
+		     << std::endl;
     }
 
     // now perform correlation between defects and atomic contours.
