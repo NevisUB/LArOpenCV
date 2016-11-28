@@ -67,7 +67,7 @@ namespace larocv {
   private:
     int _min_defect_size;
     int _hull_edge_pts_split;
-    int _vertextrack_algo_id;
+    AlgorithmID_t _vertextrack_algo_id;
   };
 
   

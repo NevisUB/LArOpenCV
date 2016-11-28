@@ -35,15 +35,16 @@ namespace larocv{
 
     _trigger_tick = 3200; // neutrino triggers @ 3200 tick
 
-    _straight_line_angle_cut = 10;
+    _straight_line_angle_cut = pset.get<float>("StraightLineAngleCut",10);
 
-    _radius = 6;
-    _cvtx_min_radius  = 4;
-    _cvtx_max_radius  = 21;
-    _cvtx_radius_step = 2;
-    _pi_threshold = 10;
-    _pca_box_size = 3;
-    _global_bound_size = 20;
+    _radius = pset.get<float>("CircleVScanRadius",6);
+
+    _cvtx_min_radius  = pset.get<double>("CircleVMinRadius",4);
+    _cvtx_max_radius  = pset.get<double>("CircleVMaxRadius",21);
+    _cvtx_radius_step = pset.get<double>("CircleVMinRadius",2);
+    _pi_threshold = pset.get<float>("PIThreshold",10);
+    _pca_box_size = pset.get<float>("PCABoxSize",3);
+    _global_bound_size = pset.get<float>("GlobalBoundSize",20);
 
     _tick_offset_v.resize(3);
     _tick_offset_v[0] = 0.;
@@ -51,17 +52,17 @@ namespace larocv{
     _tick_offset_v[2] = 7.78;
     //_tick_offset_v[1] = 0.;
     //_tick_offset_v[2] = 0.;
-    _use_polar_spread = false;
+    _use_polar_spread = pset.get<bool>("UsePolarSpread",false);
     _wire_comp_factor_v.resize(3);
     _time_comp_factor_v.resize(3);
-    _xplane_tick_resolution = 1.;
-    _xplane_wire_resolution = 2.5;
-    _xplane_guess_max_dist  = 3.;
-    _time_exclusion_radius = 10;
-    _wire_exclusion_radius = 10;
+    _xplane_tick_resolution = pset.get<float>("TickResolution",1);
+    _xplane_wire_resolution = pset.get<float>("WireResolution",2.5);
+    _xplane_guess_max_dist  = pset.get<float>("GuessMaxDist",3);
+    _time_exclusion_radius  = pset.get<float>("TimeExclusionRadius",10);
+    _wire_exclusion_radius  = pset.get<float>("WireExclusionRadius",10);
 
-    _require_3planes = false;
-    _vtx_3d_resolution = 10.;
+    _require_3planes = pset.get<bool>("Require3Planes",false);
+    _vtx_3d_resolution = pset.get<float>("Vtx3DResolution",10);
 
     _seed_plane_v.resize(3);
     _seed_plane_v[0] = 2;

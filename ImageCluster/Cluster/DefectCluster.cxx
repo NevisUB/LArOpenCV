@@ -17,8 +17,12 @@ namespace larocv {
 
     auto const vertextrack_algo_name = pset.get<std::string>("VertexTrackClusterAlgo","");
     _vertextrack_algo_id = kINVALID_ALGO_ID;
-    if(!vertextrack_algo_name.empty())
-      this->ID(vertextrack_algo_name);
+    if(!vertextrack_algo_name.empty()) {
+      LAROCV_INFO() << "Using vertex track cluster algo: " << vertextrack_algo_name << std::endl;
+      _vertextrack_algo_id = this->ID(vertextrack_algo_name);
+    }else{
+      LAROCV_INFO() << "Not using vertex track cluster algo..." << std::endl;
+    }
   }
 
   larocv::Cluster2DArray_t DefectCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -30,10 +34,8 @@ namespace larocv {
     auto& data          = AlgoData<data::DefectClusterData>();
     auto& plane_data    = data._raw_cluster_vv[meta.plane()];
 
-    std::vector<const GEO2D_Contour_t*> ctor_ptr_v;
-
     // process vertex associated particle clusters if provided, and if not yet processed
-    if( _vertextrack_algo_id!=kINVALID_ID && data.get_vertex_clusters().empty()) {
+    if( _vertextrack_algo_id!=kINVALID_ALGO_ID && data.get_vertex_clusters().empty()) {
 
       auto const& vtxtrack_data = AlgoData<data::VertexClusterArray>(_vertextrack_algo_id);
 
@@ -58,22 +60,26 @@ namespace larocv {
 	// record
 	data.move(vtx_cluster.id(),std::move(pcompound_set));
       }
+      LAROCV_INFO() << "Finished processing all vertex (result size = "
+		    << data.num_vertex_clusters() << " vertex clusters)" << std::endl;
+      
+    }else{
+
+      // Process input clusters on this plane
+      for(size_t cindex=0; cindex<clusters.size(); ++cindex) {
+	auto const& cluster = clusters[cindex];
+	
+	LAROCV_INFO() << "Inspecting defects plane " << meta.plane()
+		      << " cluster " << cindex
+		      << std::endl;
+	
+	auto cluscomp = BreakContour(cluster._contour);
+	
+	plane_data.emplace_back(std::move(cluscomp));
+	
+      }
     }
-
-    // Process input clusters on this plane
-    for(size_t cindex=0; cindex<clusters.size(); ++cindex) {
-      auto const& cluster = clusters[cindex];
-
-      LAROCV_INFO() << "Inspecting defects plane " << meta.plane()
-		    << " cluster " << cindex
-		    << std::endl;
-
-      auto cluscomp = BreakContour(cluster._contour);
-
-      plane_data.emplace_back(std::move(cluscomp));
-
-    }
-
+    
     // Construct output
     Cluster2DArray_t oclusters_v;
     for(auto& cluscomp : plane_data.get_cluster()) {
@@ -895,11 +901,11 @@ namespace larocv {
       }
 
       //get the chosen edge, currently take the defect facing the longest hull edge
-      std::cout<<"Choosing edge for ctor..."<<std::endl;
+      LAROCV_DEBUG() <<"Choosing edge for ctor..."<<std::endl;
       auto chosen_edge = max_hull_edge(ctor,defects);
       LAROCV_DEBUG() << "This chosen hull edge: " << chosen_edge << std::endl;
 
-      std::cout<<ctor.size()<<" : "<<chosen_edge[0]<<" and "<<chosen_edge[1]<<std::endl;
+      LAROCV_DEBUG() <<ctor.size()<<" : "<<chosen_edge[0]<<" and "<<chosen_edge[1]<<std::endl;
 
       auto start = ctor[chosen_edge[0]];
       auto end   = ctor[chosen_edge[1]];

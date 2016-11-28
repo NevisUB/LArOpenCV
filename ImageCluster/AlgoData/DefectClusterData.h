@@ -229,13 +229,15 @@ namespace larocv {
       void Clear();
       
       std::vector<larocv::data::ClusterCompoundArray> _raw_cluster_vv;
-
+      
       /*
       /// copy-add vertex-wise ParticleClusterArray compound information
       void push_back(const Vertex3D& vtx, const larocv::data::ParticleCompoundArray& col);
       /// move-add vertex-wise ParticleClusterArray compound information
       void emplace_back(const Vertex3D& vtx, larocv::data::ParticleCompoundArray&& col);
       */
+      /// query # of vertex clusters (ParticleCompoundArray vector size)
+      size_t num_vertex_clusters() const { return _vtx_cluster_v.size();}
       /// register with Vertex3D ID using copy
       void insert(size_t vtx_id, const larocv::data::ParticleCompoundArray& col);
       /// register with Vertex3D ID using move
