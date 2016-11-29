@@ -1180,6 +1180,8 @@ namespace larocv{
     dtheta_sigma = sqrt(pow(dtheta_sigma,2)*cvtx.xs_v.size());
     if(dtheta_sum>dtheta_sigma) return dtheta_sum;
 
+    if(cvtx.xs_v.size()<2) return dtheta_sigma;
+
     // if dtheta better than resolution, then compute weight differently
     std::set<double> theta_loc_s;
     geo2d::Vector<float> rel_pt;
@@ -1191,11 +1193,12 @@ namespace larocv{
 	if(xs.pt.y>0) theta_loc = 90.;
 	else theta_loc = 270.;
       }else{
-	theta_loc = acos(std::fabs(rel_pt.y)/std::fabs(rel_pt.x)) * 180/M_PI;
+	theta_loc = acos(std::fabs(rel_pt.x)/cvtx.radius) * 180/M_PI;
 	if(rel_pt.x<0 && rel_pt.y> 0) theta_loc = 180 - theta_loc;
 	if(rel_pt.x<0 && rel_pt.y<=0) theta_loc += 180;
 	if(rel_pt.x>0 && rel_pt.y<=0) theta_loc = 360 - theta_loc;
       }
+      //std::cout<<"("<<xs.pt.x<<","<<xs.pt.y<<") = ("<<rel_pt.x<<","<<rel_pt.y<<") ... @ " << theta_loc<<std::endl;
       theta_loc_s.insert(theta_loc);
     }
 
@@ -1210,6 +1213,8 @@ namespace larocv{
     }
     weight /= (double)(theta_loc_v.size()-1);
     weight *= dtheta_sigma;
+    //std::cout<<cvtx.radius<<" ... "<<dtheta_sigma << " ... " << cvtx.xs_v.size() << " ... " << theta_loc_s.size() << " ... " << theta_loc_v.size() << " ... " << weight << std::endl;
+    
     return weight;
   }
 
@@ -1868,7 +1873,7 @@ namespace larocv{
 	// Now loop over un-ordered local minima for plane A
 	for(size_t minidx1_idx=0; minidx1_idx<wire_binned_minidx1_v.size(); ++minidx1_idx) {
 	  auto const& score_idx1 = wire_binned_minidx1_v[minidx1_idx];
-	  auto const& score1  = wire_binned_score1_v[score_idx1];
+	  //auto const& score1  = wire_binned_score1_v[score_idx1];
 	  float  min_wire1    = this->WireBinMin(seed_plane1);
 	  float  wire1        = min_wire1 + score_idx1;
 	  size_t raw_wire1    = (size_t)(wire1 * _wire_comp_factor_v.at(seed_plane1) + _origin_v[seed_plane1].y + 0.5);
@@ -1882,7 +1887,7 @@ namespace larocv{
 
 	  for(size_t minidx2_idx=0; minidx2_idx<wire_binned_minidx2_v.size(); ++minidx2_idx) {
 	    auto const& score_idx2 = wire_binned_minidx2_v[minidx2_idx];
-	    auto const& score2 = wire_binned_score2_v[score_idx2];
+	    //auto const& score2 = wire_binned_score2_v[score_idx2];
 	    float  min_wire2   = this->WireBinMin(seed_plane2);
 	    float  wire2       = min_wire2 + score_idx2;
 	    size_t raw_wire2   = (size_t)(wire2 * _wire_comp_factor_v.at(seed_plane2) + _origin_v[seed_plane2].y + 0.5);
@@ -1907,12 +1912,14 @@ namespace larocv{
 	    for(size_t circle1_idx=0; circle1_idx<circle1_v.size(); ++circle1_idx) {
 	      auto const& circle1 = circle1_v[circle1_idx];
 	      if(std::fabs(circle1.center.y - wire1) > _xplane_wire_resolution) continue;
-	      circle1_idx_m.insert(std::make_pair(circle1.sum_dtheta(),circle1_idx));
+	      //circle1_idx_m.insert(std::make_pair(circle1.sum_dtheta(),circle1_idx));
+	      circle1_idx_m.insert(std::make_pair(CircleWeight(circle1),circle1_idx));
 	    }
 	    for(size_t circle2_idx=0; circle2_idx<circle2_v.size(); ++circle2_idx) {
 	      auto const& circle2 = circle2_v[circle2_idx];
 	      if(std::fabs(circle2.center.y - wire2) > _xplane_wire_resolution) continue;
-	      circle2_idx_m.insert(std::make_pair(circle2.sum_dtheta(),circle2_idx));
+	      //circle2_idx_m.insert(std::make_pair(circle2.sum_dtheta(),circle2_idx));
+	      circle2_idx_m.insert(std::make_pair(CircleWeight(circle2),circle2_idx));
 	    }
 
 	    LAROCV_INFO() << "Wire vertex candidate: Plane A=" << seed_plane1
