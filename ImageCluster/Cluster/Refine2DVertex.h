@@ -69,6 +69,9 @@ namespace larocv {
     const std::vector<size_t>& WireBinnedScoreMinIndex (size_t plane) const { return _wire_binned_score_minidx_vv.at(plane); }
     const std::vector<std::pair<size_t,size_t> >&
     WireBinnedScoreMinRange (size_t plane) const { return _wire_binned_score_minrange_vv.at(plane); }
+
+    const std::vector<std::vector<geo2d::Vector<int> > >& VetoContour(size_t plane)
+    { return _veto_ctor_vv.at(plane); }
     
   protected:
 
@@ -118,6 +121,9 @@ namespace larocv {
     void XPlaneWireProposal();
     void WireVertex3D(const std::vector<const cv::Mat>& img_v);
 
+    cv::Mat CleanImage(const cv::Mat& img,
+		       const GEO2D_ContourArray_t& veto_ctor_v) const;
+
     geo2d::Vector<float> MeanPixel(const cv::Mat& img, const geo2d::Vector<float>& center,
 				   size_t range_x=2, size_t range_y=2) const;
 
@@ -140,13 +146,22 @@ namespace larocv {
 		       std::vector<size_t>& local_extreme_idx_v,
 		       std::vector<std::pair<size_t,size_t> >& local_extreme_range_v,
 		       float invalid_value=kINVALID_FLOAT);
-    
+
+    void FindEdges(const GEO2D_Contour_t& ctor,
+		   geo2d::Vector<float>& edge1,
+		   geo2d::Vector<float>& edge2) const;
+
+    double CircleWeight(const larocv::data::CircleVertex& cvtx);
+
+    std::vector<std::vector<geo2d::Vector<int> > > VertexVetoRegion(const ::cv::Mat& img);
+      
     AlgorithmID_t _pca_algo_id;
     AlgorithmID_t _defect_algo_id;
     std::vector<float> _tick_offset_v;
     std::vector<float> _wire_comp_factor_v;
     std::vector<float> _time_comp_factor_v;
     geo2d::VectorArray<float> _origin_v;
+    std::vector<std::vector<std::vector<geo2d::Vector<int> > > > _veto_ctor_vv;
     float _straight_line_angle_cut;
     float _xplane_tick_resolution;
     float _xplane_wire_resolution;
@@ -167,6 +182,9 @@ namespace larocv {
     std::vector< size_t > _seed_plane_v;
     bool _require_3planes;
 
+    float _min_contour_length;
+    float _min_contour_rect_area;
+    bool  _clean_image;
 
     // temporary data
     /// tick range scanned for cross-plane consistency check

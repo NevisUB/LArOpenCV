@@ -46,6 +46,8 @@ namespace larocv{
     _pca_box_size = pset.get<float>("PCABoxSize",3);
     _global_bound_size = pset.get<float>("GlobalBoundSize",20);
 
+    _clean_image = pset.get<bool>("CleanImage",false);
+
     _tick_offset_v.resize(3);
     _tick_offset_v[0] = 0.;
     _tick_offset_v[1] = 4.54;
@@ -68,6 +70,9 @@ namespace larocv{
     _seed_plane_v[0] = 2;
     _seed_plane_v[1] = 0;
     _seed_plane_v[2] = 1;
+
+    _min_contour_length = 5;
+    _min_contour_rect_area = 20;
   }
 
   std::vector<float> Refine2DVertex::RollingMean(const std::vector<float>& array,
@@ -105,29 +110,41 @@ namespace larocv{
     float  pre_mean  = 0;
     for(size_t idx=0; idx<array.size(); ++idx) {
       if(array[idx] == ignore_value) continue;
-      if(idx < pre) continue;
-      if(idx+post >= array.size()) continue;
+      //if(idx < pre) continue;
+      //if(idx+post >= array.size()) continue;
+
       // Compute average in pre sample
       local_sum = 0;
       valid_ctr = 0;
-      for(size_t subidx=(idx-pre); subidx < idx; ++subidx){
-	if(array[subidx] == ignore_value) continue;
-	local_sum += array[subidx];
-	++valid_ctr;
-      }
-      if(valid_ctr < 2) continue;
-      pre_mean = local_sum / (float)(valid_ctr);
+      if(idx >= pre) {
+	for(size_t subidx=(idx-pre); subidx < idx; ++subidx){
+	  if(array[subidx] == ignore_value) continue;
+	  local_sum += array[subidx];
+	  ++valid_ctr;
+	}
+	if(valid_ctr < 2) continue;
+	pre_mean = local_sum / (float)(valid_ctr);
+      }else if(array[idx] != ignore_value) {
+	pre_mean = array[idx];
+      }else
+	continue;
+      
       // Compute average in post sample
       local_sum = 0;
       valid_ctr = 0;
-      for(size_t subidx=idx+1; subidx <= idx+post; ++subidx){
-	if(array[subidx] == ignore_value) continue;
-	local_sum += array[subidx];
-	++valid_ctr;
-      }
-      if(valid_ctr < 2) continue;
-      post_mean = local_sum / (float)(valid_ctr);
-
+      if(idx+post < array.size()) {
+	for(size_t subidx=idx+1; subidx <= idx+post; ++subidx){
+	  if(array[subidx] == ignore_value) continue;
+	  local_sum += array[subidx];
+	  ++valid_ctr;
+	}
+	if(valid_ctr < 2) continue;
+	post_mean = local_sum / (float)(valid_ctr);
+      }else if(array.back() != ignore_value) {
+	post_mean = array.back();
+      }else
+	continue;
+      
       slope[idx] = (post_mean - pre_mean) / (((float)pre)/2. + ((float)post)/2. + 1.);
     }
     return slope;
@@ -262,7 +279,11 @@ namespace larocv{
 	  if(array[first_valid_index + num_index] == invalid_value) {
 	    include_start = false;
 	    break;
-	  }	  
+	  }
+	  if( slope[first_valid_index + num_index] == invalid_value ) {
+	    ++num_index;
+	    continue;
+	  }
 	  if(  minimum && slope[first_valid_index + num_index] <= 0 ) {
 	    include_start = false;
 	    break;
@@ -273,8 +294,9 @@ namespace larocv{
 	  }
 	  ++num_index;
 	}
-	if(include_start)
+	if(include_start) {
 	  temp_extreme_range_v.push_back(std::make_pair((size_t)(first_valid_index),(size_t)(first_valid_index + pre*2)));
+	}
       }
       // check the end: use 2*post range to check if the ending has a slope w/ same sign.
       // if that's the case it is possible that the edge is a true extreme
@@ -292,7 +314,11 @@ namespace larocv{
 	  if(array[last_valid_index - num_index] == invalid_value) {
 	    include_end = false;
 	    break;
-	  }	  
+	  }
+	  if( slope[last_valid_index - num_index] == invalid_value ) {
+	    ++num_index;
+	    continue;
+	  }
 	  if(  minimum && slope[last_valid_index - num_index] >= 0 ) {
 	    include_end = false;
 	    break;
@@ -450,6 +476,88 @@ namespace larocv{
     }
 
     return res_spread;
+  }
+
+  void Refine2DVertex::FindEdges(const GEO2D_Contour_t& ctor,
+				 geo2d::Vector<float>& edge1,
+				 geo2d::Vector<float>& edge2) const
+  {
+    // cheap trick assuming this is a linear, linear track cluster
+    geo2d::Vector<float> mean_pt, ctor_pt;
+    mean_pt.x = mean_pt.y = 0.;
+    for(auto const& pt : ctor) { mean_pt.x += pt.x; mean_pt.y += pt.y; }
+    mean_pt.x /= (double)(ctor.size());
+    mean_pt.y /= (double)(ctor.size());
+    // find the furthest point from the mean (x,y)
+    double dist_max=0;
+    double dist;
+    for(auto const& pt : ctor) {
+      ctor_pt.x = pt.x;
+      ctor_pt.y = pt.y;
+      dist = geo2d::dist(mean_pt,ctor_pt);
+      if(dist > dist_max) {
+	edge1 = pt;
+	dist_max = dist;
+      }
+    }
+    // find the furthest point from edge1
+    dist_max=0;
+    for(auto const& pt : ctor) {
+      ctor_pt.x = pt.x;
+      ctor_pt.y = pt.y;
+      dist = geo2d::dist(edge1,ctor_pt);
+      if(dist > dist_max) {
+	edge2 = pt;
+	dist_max = dist;
+      }
+    }
+  }
+
+  cv::Mat Refine2DVertex::CleanImage(const cv::Mat& img,
+				     const GEO2D_ContourArray_t& veto_ctor_v) const
+  {
+    cv::Mat thresh_img;
+    ::cv::threshold(img,thresh_img,_pi_threshold,1000,3);
+    geo2d::VectorArray<int> points;
+    findNonZero(thresh_img, points);
+    for(auto const& pt : points) {
+      for(auto const& veto_ctor : veto_ctor_v) {
+	auto dist = ::cv::pointPolygonTest(veto_ctor,pt,false);
+	if(dist<0) continue;
+	thresh_img.at<unsigned char>(pt.y,pt.x) = 0;
+	break;
+      }
+    }
+    return thresh_img;
+  }
+  
+  std::vector<std::vector<geo2d::Vector<int> > >
+  Refine2DVertex::VertexVetoRegion(const ::cv::Mat& img)
+  {
+    // threshold
+    cv::Mat thresh_img;
+    ::cv::threshold(img,thresh_img,_pi_threshold,1,CV_THRESH_BINARY);
+    // find contours
+    GEO2D_ContourArray_t ctor_v;
+    std::vector<::cv::Vec4i> cv_hierarchy_v;
+    ::cv::findContours(thresh_img, ctor_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    // select too-small contours
+    GEO2D_ContourArray_t res_v;
+    res_v.reserve(ctor_v.size());
+    geo2d::Vector<float> edge1, edge2;
+    for(auto const& ctor : ctor_v) {
+      //rectangle area
+      auto rrect = cv::minAreaRect(ctor);
+      auto rrect_area = rrect.size.area();
+      //contour length
+      FindEdges(ctor,edge1,edge2);
+      auto length = geo2d::dist(edge1,edge2);
+      if(length < _min_contour_length ||
+	 rrect_area < _min_contour_rect_area) {
+	res_v.push_back(ctor);
+      }
+    }
+    return res_v;
   }
 
   geo2d::Line<float> Refine2DVertex::SquarePCA(const ::cv::Mat& img,
@@ -986,7 +1094,27 @@ namespace larocv{
       //double min_dtheta_sum = 1e4;
       //geo2d::Vector<float> candidate_vtx = start;
 
+      // Get a step-veto regions
+      //auto veto_ctor_v = VertexVetoRegion(img);
+      auto const& veto_ctor_v = _veto_ctor_vv[plane];
+      geo2d::Vector<int> int_pt;
       while(bbox.contains(step_pt)) {
+
+	int_pt.x = (size_t)(step_pt.x+0.5);
+	int_pt.y = (size_t)(step_pt.y+0.5);
+	
+	// Check if this step is within a veto region
+	bool in_veto=false;
+	for(auto const& veto_ctor : veto_ctor_v) {
+	  if(cv::pointPolygonTest(veto_ctor,step_pt,false)<0)
+	    continue;
+	  in_veto = true;
+	  break;
+	}
+	if(in_veto) {
+	  step_pt += dir;
+	  continue;
+	}
 
 	// Check if this point has any charge. if not continue
 	col = (size_t)(step_pt.x);
@@ -1044,12 +1172,55 @@ namespace larocv{
     return res;
   }
 
+  double Refine2DVertex::CircleWeight(const larocv::data::CircleVertex& cvtx)
+  {
+    double dtheta_sum = cvtx.sum_dtheta();
+    // check angular resolution
+    double dtheta_sigma = 1./cvtx.radius * 180 / M_PI;
+    dtheta_sigma = sqrt(pow(dtheta_sigma,2)*cvtx.xs_v.size());
+    if(dtheta_sum>dtheta_sigma) return dtheta_sum;
+
+    // if dtheta better than resolution, then compute weight differently
+    std::set<double> theta_loc_s;
+    geo2d::Vector<float> rel_pt;
+    for(auto const& xs : cvtx.xs_v) {
+      rel_pt.x = xs.pt.x - cvtx.center.x;
+      rel_pt.y = xs.pt.y - cvtx.center.y;
+      double theta_loc=0;
+      if(xs.pt.x==0.) {
+	if(xs.pt.y>0) theta_loc = 90.;
+	else theta_loc = 270.;
+      }else{
+	theta_loc = acos(std::fabs(rel_pt.y)/std::fabs(rel_pt.x)) * 180/M_PI;
+	if(rel_pt.x<0 && rel_pt.y> 0) theta_loc = 180 - theta_loc;
+	if(rel_pt.x<0 && rel_pt.y<=0) theta_loc += 180;
+	if(rel_pt.x>0 && rel_pt.y<=0) theta_loc = 360 - theta_loc;
+      }
+      theta_loc_s.insert(theta_loc);
+    }
+
+    std::vector<double> theta_loc_v;
+    for(auto const& theta_loc : theta_loc_s)
+      theta_loc_v.push_back(theta_loc);
+
+    double weight=0;
+    for(size_t i=0; (i+1)<theta_loc_v.size(); ++i) {
+      double dtheta = theta_loc_v[i+1] - theta_loc_v[i];
+      weight += std::fabs(cos(M_PI * dtheta/180.));
+    }
+    weight /= (double)(theta_loc_v.size()-1);
+    weight *= dtheta_sigma;
+    return weight;
+  }
+
   void Refine2DVertex::_Process_(const larocv::Cluster2DArray_t& clusters,
 				 const ::cv::Mat& img,
 				 larocv::ImageMeta& meta,
 				 larocv::ROI& roi)
   {
     auto& data = AlgoData<data::Refine2DVertexData>();
+
+    _veto_ctor_vv.resize(meta.plane()+1);
 
     if(_scan_marker_v.size() <= meta.plane())
       _scan_marker_v.resize(meta.plane()+1);
@@ -1101,7 +1272,13 @@ namespace larocv{
 	  LAROCV_DEBUG() << "Scanning Defect point: " << pt << std::endl;
 	  circle.center = pt;
 	  circle.radius = _radius;
-	  found = PlaneScan(img,meta.plane(),circle,pt_err) || found;
+	  cv::Mat src_img;
+	  if(_clean_image) {
+	    _veto_ctor_vv[meta.plane()] = VertexVetoRegion(img);
+	    src_img = CleanImage(img,_veto_ctor_vv[meta.plane()]);
+	  }
+	  else src_img = img;
+	  found = PlaneScan(src_img,meta.plane(),circle,pt_err) || found;
 	  circle.radius = 1;
 	  used_circle_v.push_back(circle);
 	}
@@ -1125,7 +1302,13 @@ namespace larocv{
 	LAROCV_DEBUG() << "Scanning PCACandidate point: " << pt << std::endl;
 	circle.center = pt;
 	circle.radius = _radius;
-	found = PlaneScan(img,meta.plane(),circle,pt_err) || found;
+	cv::Mat src_img;
+	if(_clean_image) {
+	  _veto_ctor_vv[meta.plane()] = VertexVetoRegion(img);
+	  src_img = CleanImage(img,_veto_ctor_vv[meta.plane()]);
+	}
+	else src_img = img;
+	found = PlaneScan(src_img,meta.plane(),circle,pt_err) || found;
 	circle.radius = 1;
 	used_circle_v.push_back(circle);
       }
@@ -1407,10 +1590,12 @@ namespace larocv{
       // Construct all possible candidate vertexes
       for(auto const& circle0_idx : seed_circle_idx_v[seed0_plane]) {
 	auto const& circle0 = seed0_data._circle_scan_v[circle0_idx];
-	auto const  dtheta0 = circle0.sum_dtheta();
+	//auto const  weight0 = circle0.sum_dtheta();
+	auto const  weight0 = CircleWeight(circle0);
 	for(auto const& circle1_idx : seed_circle_idx_v[seed1_plane]) {
 	  auto const& circle1 = seed1_data._circle_scan_v[circle1_idx];
-	  auto const  dtheta1 = circle1.sum_dtheta();
+	  //auto const  weight1 = circle1.sum_dtheta();
+	  auto const  weight1 = CircleWeight(circle1);
 	  double y, z;
 	  size_t wire0 = (size_t)(_origin_v[seed0_plane].y + circle0.center.y * _wire_comp_factor_v[seed0_plane] + 0.5);
 	  size_t wire1 = (size_t)(_origin_v[seed1_plane].y + circle1.center.y * _wire_comp_factor_v[seed1_plane] + 0.5);
@@ -1430,7 +1615,7 @@ namespace larocv{
 	    larocv::IntersectionPoint(wire0,seed0_plane,wire1,seed1_plane,y,z);
 	  }catch(...){ continue; }
 
-	  float ave_dtheta = dtheta0 + dtheta1;
+	  float ave_dtheta = weight0 + weight1;
 	  /*
 	  LAROCV_DEBUG() << "Vertex candidate (y,z) @ (" << y << "," << z << ") ... "
 			 << "plane " << seed0_plane << " @ " << circle0.center << " ... "
@@ -1441,19 +1626,20 @@ namespace larocv{
 	    float  approx_wire2 = larocv::WireCoordinate(y,z,check_plane);
 	    float  dist_min = 1e9;
 	    auto const& check_data = data.get_plane_data(check_plane);
-	    float  check_dtheta  = -1;
+	    float  check_weight  = 0;
 	    for(auto const& circle2_idx : seed_circle_idx_v[check_plane]) {
 	      auto const& circle2 = check_data._circle_scan_v[circle2_idx];
-	      auto const  dtheta2 = circle2.sum_dtheta();
+	      //auto const  weight2 = circle2.sum_dtheta();
+	      auto const  weight2 = CircleWeight(circle2);
 	      float dist = std::fabs(_origin_v[check_plane].y + circle2.center.y * _wire_comp_factor_v[check_plane] - approx_wire2 );
 	      if(dist < dist_min) {
 		dist_min = dist;
 		closest_circle2_idx = circle2_idx;
-		check_dtheta = dtheta2;
+		check_weight = weight2;
 	      }
 	    }
 	    if(dist_min > _xplane_wire_resolution) closest_circle2_idx = kINVALID_SIZE;
-	    ave_dtheta += check_dtheta;
+	    ave_dtheta += check_weight;
 	  }
 	  if(closest_circle2_idx != kINVALID_SIZE) {
 	    ave_dtheta /= 3.;
