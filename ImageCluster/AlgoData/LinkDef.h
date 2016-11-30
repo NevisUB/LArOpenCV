@@ -35,6 +35,14 @@
 #pragma link C++ class larocv::data::ParticleClusterArray+;
 #pragma link C++ class larocv::data::VertexClusterArray+;
 
+#pragma link C++ class larocv::data::LinearTrack2D+;
+#pragma link C++ class larocv::data::LinearTrack+;
+#pragma link C++ class larocv::data::LinearTrackArray+;
+
+#pragma link C++ class larocv::data::ShowerCluster+;
+#pragma link C++ class larocv::data::SingleShower+;
+#pragma link C++ class larocv::data::SingleShowerArray+;
+
 //ADD_NEW_CLASS ... do not change this line
 #endif
 

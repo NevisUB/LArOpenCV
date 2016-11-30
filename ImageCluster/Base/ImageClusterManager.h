@@ -130,6 +130,8 @@ namespace larocv {
     std::vector<std::vector<larocv::ROI> > _roi_vv;
     /// Boolean flag to measure process time + report
     bool _profile;
+    /// Boolean flag to enable filter mode
+    bool _filter;
     /// Stopwatch
     Watch _watch;
     /// Process counter (cumulative)

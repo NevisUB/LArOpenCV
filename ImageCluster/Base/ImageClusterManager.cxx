@@ -155,6 +155,8 @@ namespace larocv {
       LAROCV_DEBUG() << "Configuring Viewer" << std::endl;
       _viewer.Configure(main_cfg.get_pset(_viewer.Name()));
     }
+
+    _filter = main_cfg.get<bool>("EnableFilter",false);
     
     auto cluster_instance_type_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoType");
     auto cluster_instance_name_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoName");
@@ -444,7 +446,7 @@ namespace larocv {
 	  img_v.push_back(raw_img_v[img_index]);
 	good_state = ((ImageAnaBase*)(alg_ptr))->PostProcess(img_v);
       }
-      if(!good_state) {
+      if(!good_state && _filter) {
 	LAROCV_WARNING() << "Break state assigned by algorithm " << alg_ptr->Name() << " (ID=" << alg_ptr->ID() << ")" << std::endl;
 	break;
       }
