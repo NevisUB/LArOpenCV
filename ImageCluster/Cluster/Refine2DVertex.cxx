@@ -57,7 +57,7 @@ namespace larocv{
     _use_polar_spread = pset.get<bool>("UsePolarSpread",false);
     _wire_comp_factor_v.resize(3);
     _time_comp_factor_v.resize(3);
-    _xplane_tick_resolution = pset.get<float>("TickResolution",1);
+    _xplane_tick_resolution = pset.get<float>("TickResolution",1.0);
     _xplane_wire_resolution = pset.get<float>("WireResolution",2.5);
     _xplane_guess_max_dist  = pset.get<float>("GuessMaxDist",3);
     _time_exclusion_radius  = pset.get<float>("TimeExclusionRadius",10);
@@ -910,6 +910,7 @@ namespace larocv{
     auto const outer_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius*2));
     double inner_dtheta_sum = 0;
     double outer_dtheta_sum = 0;
+    
     /*
     if(_use_polar_spread) {
       // Estimate a polar y-spread as am easure of "dtheta"
@@ -1112,7 +1113,7 @@ namespace larocv{
 	  break;
 	}
 	if(in_veto) {
-	  step_pt += dir;
+	  step_pt += dir/2.;
 	  continue;
 	}
 
@@ -1121,10 +1122,10 @@ namespace larocv{
 	row = (size_t)(step_pt.y);
 
 	//we are stepping outside the image, move on
-	if ( row >= img.rows or col >= img.cols) { step_pt += dir; continue; }
+	if ( row >= img.rows or col >= img.cols) { step_pt += dir/2.; continue; }
 	
 	size_t marker_index = row + col * img.rows;
-	if(scan_marker[marker_index]) { step_pt += dir; continue; }
+	if(scan_marker[marker_index]) { step_pt += dir/2.; continue; }
 
 	
 	scan_marker[marker_index] = true;
@@ -1132,7 +1133,7 @@ namespace larocv{
 	q = (float)(img.at<unsigned char>(row,col));
 	
 	if(q < _pi_threshold) {
-	  step_pt += dir;
+	  step_pt += dir/2.;
 	  continue;
 	}
 
@@ -1140,8 +1141,9 @@ namespace larocv{
 
 	auto circle = this->TwoPointInspection(img,trial_pt);
 	//auto circle = this->RadialScan(img,trial_pt);
+	
 	if(circle.xs_v.size() < 2) {
-	  step_pt+= dir;
+	  step_pt+= dir/2.;
 	  continue;
 	}
 	// Check if xs points are lined up "too straight"
@@ -1150,7 +1152,7 @@ namespace larocv{
 	  auto center_line1 = geo2d::Line<float>(circle.xs_v[1].pt, circle.xs_v[1].pt - circle.center);
 	  auto dtheta = fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
 	  if(dtheta < _straight_line_angle_cut){
-	    step_pt += dir;
+	    step_pt += dir/2.;
 	    continue;
 	  }
 	}
@@ -1166,7 +1168,7 @@ namespace larocv{
 	}
 	*/	
 	// Increment the step and continue or break
-	step_pt += dir;	
+	step_pt += dir/2.;	
       }
     }
     return res;
@@ -1178,6 +1180,16 @@ namespace larocv{
     // check angular resolution
     double dtheta_sigma = 1./cvtx.radius * 180 / M_PI;
     dtheta_sigma = sqrt(pow(dtheta_sigma,2)*cvtx.xs_v.size());
+
+    // special handling for 2-crossing 180 degree guy
+    if(cvtx.xs_v.size()==2) {
+      auto center_line0 = geo2d::Line<float>(cvtx.xs_v[0].pt, cvtx.xs_v[0].pt - cvtx.center);
+      auto center_line1 = geo2d::Line<float>(cvtx.xs_v[1].pt, cvtx.xs_v[1].pt - cvtx.center);
+      auto dtheta = fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
+      //if(dtheta < dtheta_sigma) { return -1; }
+      if(dtheta < 10) return -1;
+    }
+    
     if(dtheta_sum>dtheta_sigma) return dtheta_sum;
 
     if(cvtx.xs_v.size()<2) return dtheta_sigma;
@@ -1391,7 +1403,8 @@ namespace larocv{
       
       for(size_t step=0; step<circle_scan_v.size(); ++step) {
 	auto const& circle = circle_scan_v[step];
-	auto const  dtheta = circle.sum_dtheta();
+	//auto const  dtheta = circle.sum_dtheta();
+	auto const  dtheta = CircleWeight(circle);
 	float tick = circle.center.x - tick_offset;
 	size_t tick_idx = (size_t)((tick - _xplane_tick_min)/_xplane_tick_resolution + 0.5);
 	if(tick < _xplane_tick_min || tick > _xplane_tick_max) {
@@ -1829,7 +1842,7 @@ namespace larocv{
       auto& minidx_score_v   = _wire_binned_score_minidx_vv.at(plane_id);
       auto& minrange_score_v = _wire_binned_score_minrange_vv.at(plane_id);
       mean_score_v = RollingMean(score_v,3,3,-1);
-      ExtremePoints(mean_score_v,3,3,true,false,minidx_score_v,minrange_score_v,-1);
+      ExtremePoints(mean_score_v,3,3,true,true,minidx_score_v,minrange_score_v,-1);
     }
   }
 
