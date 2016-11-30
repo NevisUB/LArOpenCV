@@ -54,7 +54,7 @@ namespace larocv {
     
     AlgorithmID_t _pca_algo_id;
     AlgorithmID_t _vtx_algo_id;
-
+    
     float _pi_threshold;
     float _dx_resolution;
     float _atomic_region_pad;

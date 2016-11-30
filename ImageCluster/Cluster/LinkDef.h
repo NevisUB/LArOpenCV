@@ -39,6 +39,7 @@
 #pragma link C++ class larocv::HIPMIPTouch+;
 #pragma link C++ class larocv::HIPMIPTouchData+;
 #pragma link C++ class larocv::LinearVtxFilter+;
+#pragma link C++ class larocv::VertexSingleShower+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

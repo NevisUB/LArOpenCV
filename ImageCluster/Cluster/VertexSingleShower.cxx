@@ -252,9 +252,12 @@ namespace larocv {
       for(auto const& vtx : res_v) {
 	float dist = sqrt(pow(vtx.x-pt.x,2)+pow(vtx.y-pt.y,2)+pow(vtx.z-pt.z,2));
 	if(dist < min_dist) min_dist = dist;
-	if(dist < _vertex_min_separation) break;
+	if(min_dist < _vertex_min_separation) break;
       }
-      if(min_dist < _vertex_min_separation) continue;
+      if(min_dist < _vertex_min_separation) {
+	LAROCV_INFO() << "Skipping LinearTrack vertex @ ("<<pt.x<<","<<pt.y<<","<<pt.z<<")"<<std::endl;
+	continue;
+      }
       res_v.push_back(pt);
     }
     for(auto const& pt : vtrack_vertex_v) {
@@ -262,9 +265,12 @@ namespace larocv {
       for(auto const& vtx : res_v) {
 	float dist = sqrt(pow(vtx.x-pt.x,2)+pow(vtx.y-pt.y,2)+pow(vtx.z-pt.z,2));
 	if(dist < min_dist) min_dist = dist;
-	if(dist < _vertex_min_separation) break;
+	if(min_dist < _vertex_min_separation) break;
       }
-      if(min_dist < _vertex_min_separation) continue;
+      if(min_dist < _vertex_min_separation) {
+	LAROCV_INFO() << "Skipping VertexTrackCluster vertex @ ("<<pt.x<<","<<pt.y<<","<<pt.z<<")"<<std::endl;
+	continue;
+      }
       res_v.push_back(pt);
     }
     for(auto const& pt : vedge_vertex_v) {
@@ -272,9 +278,12 @@ namespace larocv {
       for(auto const& vtx : res_v) {
 	float dist = sqrt(pow(vtx.x-pt.x,2)+pow(vtx.y-pt.y,2)+pow(vtx.z-pt.z,2));
 	if(dist < min_dist) min_dist = dist;
-	if(dist < _vertex_min_separation) break;
+	if(min_dist < _vertex_min_separation) break;
       }
-      if(min_dist < _vertex_min_separation) continue;
+      if(min_dist < _vertex_min_separation) {
+	LAROCV_INFO() << "Skipping ParticleEnd vertex @ ("<<pt.x<<","<<pt.y<<","<<pt.z<<")"<<std::endl;
+	continue;
+      }
       res_v.push_back(pt);
     }
     return res_v;
@@ -618,16 +627,10 @@ namespace larocv {
     circle.radius = _circle_default_radius;
     
     for(auto const& cand_vtx : cand_v) {
-      size_t num_good_plane=0;
       std::vector<larocv::data::CircleVertex> cvtx_v;
       cvtx_v.resize(_num_planes);
-      LAROCV_DEBUG() << "Inspecting 3D vertex ("
-		     << cand_vtx.x << ","
-		     << cand_vtx.y << ","
-		     << cand_vtx.z << ")" << std::endl;
       for(size_t plane=0; plane<img_v.size(); ++plane) {
 	larocv::data::ShowerCluster scluster;
-	LAROCV_DEBUG() << " ... Plane " << plane << " vtx @ " << cand_vtx.vtx2d_v.at(plane).pt << std::endl;
 	auto& cvtx = cvtx_v[plane];
 	cvtx.radius = _circle_default_radius;
 	circle.center.x = cand_vtx.vtx2d_v.at(plane).pt.x;
@@ -636,25 +639,25 @@ namespace larocv {
 	cvtx.center.y = circle.center.y;
 	auto const& img = img_v[plane];
 	auto xs_pt_v = this->QPointOnCircle(img,circle);
+	/*
 	if(xs_pt_v.size()>1) {
-	  LAROCV_DEBUG() << "     # crossing points = " << xs_pt_v.size() << " (skipping)" << std::endl;
+	  LAROCV_DEBUG() << "     # crossing points = " << xs_pt_v.size() << std::endl;
 	  num_good_plane = 0;
 	  break;
 	}
 	if(xs_pt_v.empty()) {
-	  LAROCV_DEBUG() << "     # crossing points = " << xs_pt_v.size() << " (skipping)" << std::endl;
+	  LAROCV_DEBUG() << "     # crossing points = " << xs_pt_v.size() << std::endl;
 	  continue;
 	}
 	LAROCV_DEBUG() << "     # crossing points = " << xs_pt_v.size() << std::endl;
+	*/
 	for(auto const& xs_pt : xs_pt_v) {
 	  larocv::data::PointPCA pca_pt;
 	  pca_pt.pt = xs_pt;
 	  pca_pt.line = this->SquarePCA(img, pca_pt.pt, 5, 5);
 	  cvtx.xs_v.push_back(pca_pt);
 	}
-	++num_good_plane;
       }
-      if(num_good_plane<2) continue;
 
       res_vtx_v.push_back(cand_vtx);
       res_cvtx_v.push_back(cvtx_v);
@@ -669,33 +672,53 @@ namespace larocv {
     auto const& ltrack_data = AlgoData<data::LinearTrackArray>   ( _algo_id_linear_track );
 
     RetrieveVertex(ltrack_data);
-    LAROCV_DEBUG() << "# Vertex3D from LinearCluster: " << _ltrack_vertex_v.size() << std::endl;
+    LAROCV_INFO() << "# Vertex3D from LinearCluster: " << _ltrack_vertex_v.size() << std::endl;
 
     RetrieveVertex(img_v, vtrack_data, dqdx_data);
-    LAROCV_DEBUG() << "# Vertex3D from VertexTrackCluster: " << _vtrack_vertex_v.size() << std::endl;
-    LAROCV_DEBUG() << "# Vertex3D from dQdXProfiler: " << _vedge_vertex_v.size() << std::endl;
+    LAROCV_INFO() << "# Vertex3D from VertexTrackCluster: " << _vtrack_vertex_v.size() << std::endl;
+    LAROCV_INFO() << "# Vertex3D from dQdXProfiler: " << _vedge_vertex_v.size() << std::endl;
 
     // Construct a single list of vertex candidates (ltrack=>vtrack=>vedge)
     _cand_vertex_v = ListCandidateVertex(_ltrack_vertex_v, _vtrack_vertex_v, _vedge_vertex_v);
-    LAROCV_DEBUG() << "# Vertex3D after combining all: " << _cand_vertex_v.size() << std::endl;
+    LAROCV_INFO() << "# Vertex3D after combining all: " << _cand_vertex_v.size() << std::endl;
     
     // Now search for a single shower
-    std::vector<larocv::data::Vertex3D> shower_vtx3d_v;
-    std::vector<std::vector<larocv::data::CircleVertex> > shower_vtx2d_vv;
-    ListShowerVertex(img_v,_cand_vertex_v, shower_vtx3d_v, shower_vtx2d_vv);
-    LAROCV_DEBUG() << "# Vertex3D candidate for single shower: " <<shower_vtx3d_v.size() << std::endl;
+    _shower_vtx3d_v.clear();
+    _shower_vtx2d_vv.clear();
+    
+    ListShowerVertex(img_v,_cand_vertex_v, _shower_vtx3d_v, _shower_vtx2d_vv);
+    LAROCV_INFO() << "# Vertex3D candidate for single shower: " << _shower_vtx3d_v.size() << std::endl;
     
     auto& data = AlgoData<data::SingleShowerArray>();
 
-    for(size_t i=0; i<shower_vtx3d_v.size(); ++i) {
+    for(size_t i=0; i<_shower_vtx3d_v.size(); ++i) {
 
-      auto const& vtx3d = shower_vtx3d_v[i];
-      auto const& vtx2d_v = shower_vtx2d_vv[i];
+      auto const& vtx3d = _shower_vtx3d_v[i];
+      auto const& vtx2d_v = _shower_vtx2d_vv[i];
+      
+      LAROCV_INFO() << "Inspecting 3D vertex ("
+		    << vtx3d.x << ","
+		    << vtx3d.y << ","
+		    << vtx3d.z << ")" << std::endl;
+      // ignore if any 2D Circle has >1 crossing
+      bool skip=false;
+      for(size_t plane=0; plane<vtx2d_v.size(); ++plane) {
+	auto const& vtx2d = vtx2d_v[plane];
+	LAROCV_DEBUG() << "  2D vertex @ " << vtx2d.center
+		       << " ... # crossing points = " << vtx2d.xs_v.size() << std::endl;	
+	if(vtx2d.xs_v.size()<2) continue;
+	skip=true;
+      }
+      if(skip) {
+	LAROCV_DEBUG() << "Skipping this candidate..." << std::endl;
+	continue;
+      }
 
       larocv::data::SingleShower shower;
       for(size_t plane=0; plane<img_v.size(); ++plane) {
 	auto const& img  = img_v[plane];
 	auto const& cvtx = vtx2d_v[plane];
+	if(cvtx.xs_v.size()!=1) continue;
 	shower.insert(plane,SingleShowerHypothesis(img, plane, cvtx));
       }
       size_t num_good_plane=0;

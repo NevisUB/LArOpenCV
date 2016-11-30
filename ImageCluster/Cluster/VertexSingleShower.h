@@ -24,6 +24,12 @@ namespace larocv {
     /// Finalize after process
     void Finalize(TFile*) {}
 
+    const std::vector<larocv::data::Vertex3D>& ScannedVertex3D() const
+    { return _shower_vtx3d_v; }
+    
+    const std::vector<std::vector<larocv::data::CircleVertex> >& ScannedVertex2D() const
+    { return _shower_vtx2d_vv; }
+
   protected:
 
     /// Inherited class configuration method
@@ -35,7 +41,7 @@ namespace larocv {
 		   larocv::ROI& roi);
 
     bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
-
+    
   private:
 
     void RetrieveVertex(const std::vector<const cv::Mat>& img_v,
@@ -96,6 +102,9 @@ namespace larocv {
     std::vector<larocv::data::Vertex3D> _ltrack_vertex_v;
     std::vector<larocv::data::Vertex3D> _vtrack_vertex_v;
     std::vector<larocv::data::Vertex3D> _vedge_vertex_v;
+
+    std::vector<larocv::data::Vertex3D> _shower_vtx3d_v;
+    std::vector<std::vector<larocv::data::CircleVertex> > _shower_vtx2d_vv;
     
   };
 

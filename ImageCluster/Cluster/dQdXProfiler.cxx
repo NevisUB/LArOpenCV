@@ -277,7 +277,7 @@ namespace larocv {
 	  auto const ordered_atom_id_v = OrderAtoms(particle,vtx2d);
 	  
 	  // get start/end
-	  auto const atom_edges_v = AtomsEdge(particle, vtx2d, ordered_atom_id_v);
+	  auto atom_edges_v = AtomsEdge(particle, vtx2d, ordered_atom_id_v);
 
 	  // loop atoms (from last one)
 	  for(auto const& atom_id : ordered_atom_id_v) {
@@ -287,9 +287,30 @@ namespace larocv {
 	    auto const  pca_id = pca_data.index_atom(atom_id, particle.id(), plane_id, vtx_id);
 	    auto const& pca = pca_data.line(pca_id);
 	    // retrieve start/end
-	    auto const& start_end = atom_edges_v[atom_id];
+	    auto& start_end = atom_edges_v[atom_id];
 	    // construct dq/dx
 	    auto atom_dqdx = AtomdQdX(img, atom, pca, start_end.first, start_end.second);
+	    // last atom's end point can be improved by the nearest non-zero pixel search
+	    if(atom_id == ordered_atom_id_v.back()) {
+	      cv::Mat thresh_img;
+	      ::cv::threshold(img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
+	      std::vector<geo2d::Vector<int> > nonzero_pts;
+	      cv::findNonZero(thresh_img, nonzero_pts);
+	      double min_dist=1e20;
+	      double dist;
+	      geo2d::Vector<float> particle_end_pt = start_end.second;
+	      for(auto const& pt : nonzero_pts) {
+		if(cv::pointPolygonTest(atom._ctor,pt,false)<0)
+		  continue;
+		dist = pow((pt.x - start_end.second.x),2) + pow((pt.y - start_end.second.y),2);
+		if(dist < min_dist) {
+		  particle_end_pt.x = pt.x;
+		  particle_end_pt.y = pt.y;
+		  min_dist = dist;
+		}
+	      }
+	      start_end.second = particle_end_pt;
+	    }
 	    // append
 	    part_dqdx.push_back(atom_id, start_end.first, start_end.second, atom_dqdx);
 	  }// end loop over atoms to create dq/dx
