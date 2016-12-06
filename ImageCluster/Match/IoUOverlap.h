@@ -27,7 +27,7 @@ namespace larocv {
   public:
     
     /// Default constructor
-    IoUOverlap(const std::string name="IoUOverlap") : MatchAlgoBase(name)
+    IoUOverlap(const std::string name="IoUOverlap") : MatchAlgoBase(name), _iou_score(0.)
     {}
     
     /// Default destructor
@@ -49,6 +49,7 @@ namespace larocv {
 
     double _pixel_y(const Cluster2D* cluster,size_t pix);
     void getMinMaxTime(const Cluster2D* cluster, double& min, double& max);
+    float _iou_score ;
   };
   
   /**

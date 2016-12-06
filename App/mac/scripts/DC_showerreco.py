@@ -47,7 +47,7 @@ def getShowerRecoAlgModular():
     energy.SetUseModBox(False)
     energy.SetCalibrationConst(1.925/36.1)
     energy.SetRecombFactor(0.62)
-    energy.SetElectronLifetime(100000.)  # very large lifetime
+    energy.SetElectronLifetime(8000.) #100000.)  # very large lifetime
     energy.SetUseArea(True)
     energy.setVerbosity(False)
     energy.SetFillTree(True)
@@ -109,7 +109,7 @@ my_proc.set_io_mode(fmwk.storage_manager.kBOTH)
 
 # Specify analysis output root file name
 # Specify data output root file name
-my_proc.set_output_file("opencv_showerreco.root")
+my_proc.set_output_file("test_shower.root") #opencv_showerreco1.root")
 
 
 ana_unit=DefaultShowerReco3D()

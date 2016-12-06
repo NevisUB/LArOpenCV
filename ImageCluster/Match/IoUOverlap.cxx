@@ -7,7 +7,7 @@ namespace larocv{
 
   void IoUOverlap::_Configure_(const ::fcllite::PSet &pset)
   {
-    
+  _iou_score = pset.get<float> ("IOUScore");
   }
   
   double IoUOverlap::_Process_(const larocv::Cluster2DPtrArray_t& clusters, const std::vector<double>& vtx)
@@ -79,6 +79,13 @@ namespace larocv{
     // calculate overlap
 
     double iou = (t_max_common - t_min_common) / (t_max_abs - t_min_abs);
+
+    //std::cout<<"Overlap is: "<<iou <<std::endl ;
+    //for (size_t i=0; i < clusters.size(); i++)
+    //  std::cout<<"Plane: "<<clusters[i]->PlaneID()<<", Hits: "<<clusters[i]->_numHits() <<std::endl ;
+
+    if ( iou < _iou_score ) return -1;
+
 
     return iou;
   }

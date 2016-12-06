@@ -345,7 +345,17 @@ namespace larocv {
       int lowest_plane = -1;
 
       for( auto const & img : meta_per_plane ){
+
+	// If there are no clusters in a plane, don't do this part.
+	if( img.size() == 0 ){
+	  lowest_plane = -1;
+	  break;
+	  }
+
         for(auto const & m : img ){
+	   
+	   //std::cout<<"Score and plane: "<<m->score()<<", "<<m->plane()<<std::endl ;
+	   if( m->plane() == 2 ) continue;
 
 	  //if (m->score() <= lowest_plane_score && lowest_plane_score > 0.93){
 	  if (m->score() <= lowest_plane_score){
@@ -367,7 +377,7 @@ namespace larocv {
       if(nvalid_planes>1) {
 
     	auto comb_v = PlaneClusterCombinations(seed);
-	
+
     	for(auto const& comb : comb_v) {
 	  
     	  //Assemble a vector of clusters
@@ -381,6 +391,7 @@ namespace larocv {
 	  // First index is plane, to be sure we're taking from a filled ROI
 	  // Second in alg id; 0 is definitely filled, else we're not here
 	  bool required_plane_found=false;
+
 	  for(auto const& cinfo : comb) {
 
     	    auto const& plane = cinfo.first;
@@ -395,8 +406,9 @@ namespace larocv {
     	    tmp_index_v.push_back(c_per_plane[plane][index]->ClusterID());
 	    
     	  }
+
 	  if ( !required_plane_found ) continue;
-	  
+
  	  if( input_clusters.size() == 1 ) continue;
 
 	  if( input_clusters.size() > 2 && _use_two_plane) continue;

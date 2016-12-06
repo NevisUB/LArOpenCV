@@ -15,8 +15,8 @@ LArImageHit: {
   MakeROI: true
   CropROI: false
   
-  ROIBufferW : 1000
-  ROIBufferT : 1000
+  ROIBufferW : 100
+  ROIBufferT : 100
   
   Q2Gray: 10
   QMin: 5
@@ -42,8 +42,8 @@ ImageClusterManager: {
 
   ShowImage: false
 
-  MatchAlgoType: "MatchTimeOverlap"
-  MatchAlgoName: "mto"
+  MatchAlgoType: "IoUOverlap"
+  MatchAlgoName: "iouo"
 
   ReClusterAlgoType: ""
   ReClusterAlgoName: ""
@@ -59,6 +59,11 @@ ImageClusterManager: {
    MinContourArea: 0
    
  }
+
+ iouo : {
+   IOUScore: 0.15
+ }
+
  ca : {
    RatioCut : 0.7
    MinDist  : 12.
