@@ -793,16 +793,17 @@ namespace larocv {
 		    << vtx3d.y << ","
 		    << vtx3d.z << ")" << std::endl;
       // accept if 2 planes have 2D circle w/ only 1 crossing
-      bool skip=false;
+      std::vector<size_t> num_xs_v(_num_planes+1,0);
+      size_t num_plane_unique_xs = 0;
       for(size_t plane=0; plane<vtx2d_v.size(); ++plane) {
 	auto const& vtx2d = vtx2d_v[plane];
 	LAROCV_DEBUG() << "  2D vertex @ " << vtx2d.center
-		       << " ... # crossing points = " << vtx2d.xs_v.size() << std::endl;	
-	if(vtx2d.xs_v.size()<2) continue;
-	skip=true;
+		       << " ... # crossing points = " << vtx2d.xs_v.size() << std::endl;
+	num_xs_v[plane] = vtx2d.xs_v.size();
+	if(vtx2d.xs_v.size() == 1) ++num_plane_unique_xs;
       }
-      if(skip) {
-	LAROCV_DEBUG() << "Skipping this candidate..." << std::endl;
+      if(num_plane_unique_xs<2) {
+	LAROCV_DEBUG() << "Skipping this candidate... (# of planes w/ unique-circle-xs-pt is <2)" << std::endl;
 	continue;
       }
 

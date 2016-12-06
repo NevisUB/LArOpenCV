@@ -3,6 +3,7 @@
 
 #include "ImageClusterFMWKInterface.h"
 #include "LArUtil/Geometry.h"
+#include "LArUtil/GeometryHelper.h"
 #include "LArUtil/LArProperties.h"
 #include "LArUtil/TimeService.h"
 #include "Core/larbys.h"
@@ -24,6 +25,12 @@ namespace larocv {
     xyz[2]=z;
     auto g = ::larutil::Geometry::GetME();
     return g->WireCoordinate(xyz,plane);
+  }
+
+  int Get3DAxisN(const int& iplane0, const int& iplane1, const double& omega0, const double& omega1,
+		 double& phi, double& theta)
+  {
+    return ::larutil::GeometryHelper::GetME()->Get3DAxisN(iplane0,iplane1, omega0, omega1, phi, theta);
   }
 
   std::pair<double,double> OverlapWireRange(const size_t wire, const size_t plane, const size_t target_plane)
