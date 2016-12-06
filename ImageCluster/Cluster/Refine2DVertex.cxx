@@ -626,6 +626,7 @@ namespace larocv{
       else range.second = row;
 
     }
+    if(range.first>=0 && range.second>=0) range_v.push_back(range);
     // Check if end should be combined w/ start
     if(range_v.size() >= 2) {
       if(range_v[0].first == 0 && (range_v.back().second+1) == polarimg.rows) {
