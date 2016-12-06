@@ -43,7 +43,7 @@ namespace larocv {
     _trigger_tick = 3200;
     _num_planes = 3;
 
-    _valid_xs_npx = 4;
+    _valid_xs_npx = pset.get<size_t>("ValidXsNpx",1);
 
     _tick_offset_v.clear();
     _tick_offset_v.resize(_num_planes);
@@ -378,10 +378,15 @@ namespace larocv {
       }else{
 	size_t dx = (size_t)(std::fabs(xs_pt.x - circle.center.x))+1;
 	size_t dy = (size_t)(std::fabs(xs_pt.y - circle.center.y))+1;
+
+	float dxd = xs_pt.x - circle.center.x < 0 ? -1 : 1;
+	float dyd = xs_pt.y - circle.center.y < 0 ? -1 : 1;
+
 	geo2d::Line<float> l(circle.center,dir);
 	for(size_t i=0; i<dy; ++i) {
-	  pt.y = (size_t)(circle.center.y + i + 0.5);
-	  pt.x = (size_t)(l.x(circle.center.y + i)+0.5);
+	  float step = i*dyd;
+	  pt.y = (size_t)(circle.center.y + step + 0.5);
+	  pt.x = (size_t)(l.x(circle.center.y + step)+0.5);
 	  bool included=false;
 	  for(auto const check_pt : check_pts) {
 	    if(check_pt.x != pt.x || check_pt.y != pt.y) continue;
@@ -394,8 +399,9 @@ namespace larocv {
 	  }
 	}
 	for(size_t i=0; i<dx; ++i) {
-	  pt.y = (size_t)(l.y(circle.center.x + i)+0.5);
-	  pt.x = (size_t)(circle.center.x + i + 0.5);
+	  float step = i*dyd;
+	  pt.y = (size_t)(l.y(circle.center.x + step)+0.5);
+	  pt.x = (size_t)(circle.center.x + step + 0.5);
 	  bool included=false;
 	  for(auto const check_pt : check_pts) {
 	    if(check_pt.x != pt.x || check_pt.y != pt.y) continue;
