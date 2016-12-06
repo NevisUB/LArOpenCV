@@ -62,6 +62,7 @@ ImageClusterManager: {
 
  iouo : {
    IOUScore: 0.15
+   HitRatio: 0.15
  }
 
  ca : {

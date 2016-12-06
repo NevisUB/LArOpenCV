@@ -8,6 +8,7 @@ namespace larocv{
   void IoUOverlap::_Configure_(const ::fcllite::PSet &pset)
   {
   _iou_score = pset.get<float> ("IOUScore");
+  _hit_ratio = pset.get<float> ("HitRatio");
   }
   
   double IoUOverlap::_Process_(const larocv::Cluster2DPtrArray_t& clusters, const std::vector<double>& vtx)
@@ -74,7 +75,7 @@ namespace larocv{
     // If one cluster has < 10% of the hits of the other cluster, ignore this pair
     double hit_frac = min_hits / max_hits;
 
-    if (overlap == false || hit_frac < 0.1 ) return -1;
+    if (overlap == false || hit_frac < _hit_ratio ) return -1;
 
     // calculate overlap
 
