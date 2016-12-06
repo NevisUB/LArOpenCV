@@ -399,7 +399,7 @@ namespace larocv {
 	  }
 	}
 	for(size_t i=0; i<dx; ++i) {
-	  float step = i*dyd;
+	  float step = i*dxd;
 	  pt.y = (size_t)(l.y(circle.center.x + step)+0.5);
 	  pt.x = (size_t)(circle.center.x + step + 0.5);
 	  bool included=false;
@@ -452,6 +452,7 @@ namespace larocv {
     for(size_t row=0; row<polarimg.rows; ++row) {
 
       float q = (float)(polarimg.at<unsigned char>(row, col));
+
       if(q < _pi_threshold) {
 	if(range.first >= 0) {
 	  range_v.push_back(range);
@@ -465,6 +466,7 @@ namespace larocv {
       else range.second = row;
 
     }
+      
     // Check if end should be combined w/ start
     if(range_v.size()>=2) {
       if(range_v[0].first == 0 && (range_v.back().second+1) == polarimg.rows) {
@@ -475,7 +477,7 @@ namespace larocv {
     // Compute xs points
     for(auto const& r : range_v) {
 
-      //std::cout << "XS @ " << r.first << " => " << r.second << " ... " << polarimg.rows << std::endl;
+      //LAROCV_DEBUG() << "XS @ " << r.first << " => " << r.second << " ... " << polarimg.rows << std::endl;
       float angle = ((float)(r.first + r.second))/2.;
       if(angle < 0) angle += (float)(polarimg.rows);
       angle = angle * M_PI * 2. / ((float)(polarimg.rows));
