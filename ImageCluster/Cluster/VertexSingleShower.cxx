@@ -33,7 +33,7 @@ namespace larocv {
 
     _part_pxfrac_threshold = pset.get<float>("PixelFracThreshold");
 
-    _pi_threshold = 10;
+    _pi_threshold = 5;
     _circle_min_separation = 3;
     _vertex_min_separation = 3;
     _circle_default_radius = 10;
@@ -452,6 +452,7 @@ namespace larocv {
     for(size_t row=0; row<polarimg.rows; ++row) {
 
       float q = (float)(polarimg.at<unsigned char>(row, col));
+      //std::cout<<row << "," << col << " @ " << q << std::endl;
 
       if(q < _pi_threshold) {
 	if(range.first >= 0) {
@@ -466,7 +467,9 @@ namespace larocv {
       else range.second = row;
 
     }
-      
+
+    if(range.first>=0 && range.second>=0) range_v.push_back(range);
+
     // Check if end should be combined w/ start
     if(range_v.size()>=2) {
       if(range_v[0].first == 0 && (range_v.back().second+1) == polarimg.rows) {
