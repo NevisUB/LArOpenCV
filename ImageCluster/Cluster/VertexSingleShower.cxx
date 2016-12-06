@@ -3,6 +3,7 @@
 
 #include "Core/VectorArray.h"
 #include "Core/Geo2D.h"
+#include "Core/Line.h"
 #include "VertexSingleShower.h"
 #include "Base/ImageClusterFMWKInterface.h"
 
@@ -41,6 +42,8 @@ namespace larocv {
     _xplane_tick_resolution = 3;
     _trigger_tick = 3200;
     _num_planes = 3;
+
+    _valid_xs_npx = 4;
 
     _tick_offset_v.clear();
     _tick_offset_v.resize(_num_planes);
@@ -337,6 +340,94 @@ namespace larocv {
 				    pcaobj.eigenvectors.at<float>(0,1));
 
     return geo2d::Line<float>(pt,dir);
+  }
+
+  geo2d::VectorArray<float>
+  VertexSingleShower::ValidShowerPointOnCircle(const ::cv::Mat& img,
+					       const geo2d::Circle<float>& circle,
+					       const std::vector<geo2d::Vector<float> >& xs_pts) const
+  {
+    // require significant # pixels to have a charge when drawing a line from the center to the xs point
+    LAROCV_INFO() << "Inspecting " << xs_pts.size() << " crossing points on circle @ " << circle.center << std::endl;
+    geo2d::VectorArray<float> res_v;
+    std::vector<geo2d::Vector<int> > check_pts;
+    geo2d::Vector<int> pt;
+    for(auto const& xs_pt : xs_pts) {
+      auto const dir = geo2d::dir(circle.center,xs_pt);
+      if(dir.x == 0 && dir.y ==0) throw larbys("No direction found!");
+      check_pts.clear();
+      // fill point coordinates to be checked
+      if(dir.x==0) {
+	for(size_t i=0; i<check_pts.size(); ++i) {
+	  if(circle.center.y>0)
+	    { pt.x = circle.center.x; pt.y = circle.center.y+i; }
+	  else
+	    { pt.x = circle.center.x; pt.y = circle.center.y-i; }
+	  LAROCV_DEBUG() << " ... check point " << check_pts.size() << " @ " << pt << std::endl;
+	  check_pts.push_back(pt);
+	}
+      }else if(dir.y==0) {
+	for(size_t i=0; i<check_pts.size(); ++i) {
+	  if(circle.center.x>0)
+	    { pt.x = circle.center.x+i; pt.y = circle.center.y; }
+	  else
+	    { pt.x = circle.center.x-i; pt.y = circle.center.y; }
+	  LAROCV_DEBUG() << " ... check point " << check_pts.size() << " @ " << pt << std::endl;
+	  check_pts.push_back(pt);
+	}
+      }else{
+	size_t dx = (size_t)(std::fabs(xs_pt.x - circle.center.x))+1;
+	size_t dy = (size_t)(std::fabs(xs_pt.y - circle.center.y))+1;
+	geo2d::Line<float> l(circle.center,dir);
+	for(size_t i=0; i<dy; ++i) {
+	  pt.y = (size_t)(circle.center.y + i + 0.5);
+	  pt.x = (size_t)(l.x(circle.center.y + i)+0.5);
+	  bool included=false;
+	  for(auto const check_pt : check_pts) {
+	    if(check_pt.x != pt.x || check_pt.y != pt.y) continue;
+	    included = true;
+	    break;
+	  }
+	  if(!included) {
+	    check_pts.push_back(pt);
+	    LAROCV_DEBUG() << " ... check point " << check_pts.size() << " @ " << pt << std::endl;
+	  }
+	}
+	for(size_t i=0; i<dx; ++i) {
+	  pt.y = (size_t)(l.y(circle.center.x + i)+0.5);
+	  pt.x = (size_t)(circle.center.x + i + 0.5);
+	  bool included=false;
+	  for(auto const check_pt : check_pts) {
+	    if(check_pt.x != pt.x || check_pt.y != pt.y) continue;
+	    included = true;
+	    break;
+	  }
+	  if(!included) {
+	    check_pts.push_back(pt);
+	    LAROCV_DEBUG() << " ... check point " << check_pts.size() << " @ " << pt << std::endl;
+	  }
+	}
+      }
+
+      // now check coordinates registered
+      size_t valid_px_count=0;
+      for(auto const& pt : check_pts) {
+	if( ((float)(img.at<unsigned char>(pt.y,pt.x))) > _pi_threshold )
+	  ++valid_px_count;
+      }
+
+      bool skip_xs_pt = (valid_px_count < _valid_xs_npx);
+
+      LAROCV_INFO() << "For xs @ " << xs_pt
+		    << " found " << valid_px_count << "/" << check_pts.size()
+		    << " pixels above threshold ("
+		    << (skip_xs_pt ? "skipping)" : "keeping)")
+		    << std::endl;
+
+      if(!skip_xs_pt)
+	res_v.push_back(xs_pt);
+    }
+    return res_v;
   }
   
 
@@ -639,6 +730,7 @@ namespace larocv {
 	cvtx.center.y = circle.center.y;
 	auto const& img = img_v[plane];
 	auto xs_pt_v = this->QPointOnCircle(img,circle);
+	xs_pt_v = this->ValidShowerPointOnCircle(img, circle, xs_pt_v);
 	/*
 	if(xs_pt_v.size()>1) {
 	  LAROCV_DEBUG() << "     # crossing points = " << xs_pt_v.size() << std::endl;
@@ -700,7 +792,7 @@ namespace larocv {
 		    << vtx3d.x << ","
 		    << vtx3d.y << ","
 		    << vtx3d.z << ")" << std::endl;
-      // ignore if any 2D Circle has >1 crossing
+      // accept if 2 planes have 2D circle w/ only 1 crossing
       bool skip=false;
       for(size_t plane=0; plane<vtx2d_v.size(); ++plane) {
 	auto const& vtx2d = vtx2d_v[plane];

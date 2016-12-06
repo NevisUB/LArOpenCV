@@ -66,6 +66,11 @@ namespace larocv {
 
     geo2d::VectorArray<float> QPointOnCircle(const ::cv::Mat& img,
 					     const geo2d::Circle<float>& circle) const;
+
+    geo2d::VectorArray<float>
+    ValidShowerPointOnCircle(const ::cv::Mat& img,
+			     const geo2d::Circle<float>& circle,
+			     const std::vector<geo2d::Vector<float> >& xs_pts) const;
     
     geo2d::Line<float> SquarePCA(const ::cv::Mat& img,
 				 geo2d::Vector<float> pt,
@@ -87,7 +92,7 @@ namespace larocv {
     float _vertex_min_separation;
     float _circle_default_radius;
     float _circle_min_separation;
-
+    size_t _valid_xs_npx;
     size_t _num_planes;
     float  _pi_threshold;
     float  _min_compat_dist;
