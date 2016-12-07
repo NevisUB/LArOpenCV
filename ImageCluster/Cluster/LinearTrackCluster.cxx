@@ -5,17 +5,53 @@
 #include "Core/Geo2D.h"
 #include "LinearTrackCluster.h"
 #include "Core/Geo2D.h"
+#include "Core/spoon.h"
+
 #include "AlgoData/VertexClusterData.h"
 #include "Base/ImageClusterFMWKInterface.h"
 #include <map>
 #include <array>
 //#include <typeinfo>
 
+
 namespace larocv {
 
   /// Global larocv::LinearTrackClusterFactory to register AlgoFactory
   static LinearTrackClusterFactory __global_LinearTrackClusterFactory__;
 
+
+  geo2d::Line<float> LinearTrackCluster::calc_pca(const GEO2D_Contour_t & ctor) const{
+    //LAROCV_DEBUG() << "Calculating PCA for: " << ctor.size() << " points" << std::endl;
+    
+    cv::Mat ctor_pts(ctor.size(), 2, CV_32FC1); //32 bit precision is fine
+
+    //std::cout << "{\n";
+    for (unsigned i = 0; i < ctor_pts.rows; ++i) {
+      //std::cout << ctor[i] << std::endl;
+      ctor_pts.at<float>(i, 0) = ctor[i].x;
+      ctor_pts.at<float>(i, 1) = ctor[i].y;
+    }
+    //std::cout << "}\n";
+    
+    cv::PCA pca_ana(ctor_pts, cv::Mat(), CV_PCA_DATA_AS_ROW,0);
+
+    auto& meanx=pca_ana.mean.at<float>(0,0);
+    auto& meany=pca_ana.mean.at<float>(0,1);
+
+    auto& eigenPx=pca_ana.eigenvectors.at<float>(0,0);
+
+    if (eigenPx==0) throw geo2d::spoon("Invalid Px");
+
+    auto& eigenPy=pca_ana.eigenvectors.at<float>(0,1);
+
+    //LAROCV_DEBUG() << "meanx : " << meanx << "... meany: " << meany << "... ePx: " << eigenPx << "... ePy: " << eigenPy << std::endl;
+    
+    geo2d::Line<float> pca_principle(geo2d::Vector<float>(meanx,meany),
+				     geo2d::Vector<float>(eigenPx,eigenPy));
+    return pca_principle;
+  }
+
+  
   void LinearTrackCluster::_Configure_(const ::fcllite::PSet &pset)
   {
     auto algo_name_part = pset.get<std::string>("VertexTrackClusterName");
@@ -27,7 +63,9 @@ namespace larocv {
     
     _pi_threshold = 10;
     _seed_plane_v = pset.get<std::vector<size_t> >("SeedPlane");
-
+    
+    _edges_from_mean = pset.get<bool>("EdgesFromMean",true);
+    
     for(auto const& plane : _seed_plane_v) {
       if(plane >= _seed_plane_v.size()) {
 	LAROCV_CRITICAL() << "Seed plane " << plane << " exceeds # planes " << _seed_plane_v.size() << std::endl;
@@ -73,9 +111,10 @@ namespace larocv {
     return;
   }
 
-  void LinearTrackCluster::FindEdges(const GEO2D_Contour_t& ctor,
-				     geo2d::Vector<float>& edge1,
-				     geo2d::Vector<float>& edge2) const
+
+  void LinearTrackCluster::EdgesFromMeanValue(const GEO2D_Contour_t& ctor,
+					      geo2d::Vector<float>& edge1,
+					      geo2d::Vector<float>& edge2) const
   {
     // cheap trick assuming this is a linear, linear track cluster
     geo2d::Vector<float> mean_pt, ctor_pt;
@@ -106,6 +145,113 @@ namespace larocv {
 	dist_max = dist;
       }
     }
+    
+  }
+
+  
+  void LinearTrackCluster::EdgesFromPCAProjection(const cv::Mat& img,
+						  const GEO2D_Contour_t& ctor,
+						  geo2d::Vector<float>& edge1,
+						  geo2d::Vector<float>& edge2) const
+  {
+    //but instead I could fit PCA, project all points on this line, then find edges
+    
+    // make a contour from points inside contour
+    GEO2D_Contour_t nonzero_pts, inside_pts;
+    // crop image so we don't have to loop over all points
+    cv::Rect brect = cv::boundingRect( cv::Mat(ctor) );
+    cv::Mat crop_img = img(brect);
+
+    // get nonzero pixels
+    findNonZero(crop_img, nonzero_pts);
+    inside_pts.reserve(nonzero_pts.size());
+
+    // check nonzero pixels inside contour or on edge with 1 pixel tolerance;
+    for(auto& nz_pt : nonzero_pts) {
+      nz_pt += brect.tl();
+      auto dist = cv::pointPolygonTest(ctor, nz_pt, true);
+      if(dist>=0) inside_pts.emplace_back(std::move(nz_pt)); //1px tolerance
+    }
+    
+    if (inside_pts.size() < 2) {
+      edge1 = inside_pts[0];
+      edge2 = inside_pts[1];
+      return;
+    }
+    
+    //calc PCA line
+    geo2d::Line<float> pca_line;
+    bool valid_pca = true;
+    try {
+      pca_line = calc_pca(inside_pts);
+    } catch(geo2d::spoon) {
+      //pca line gave infinite slope
+      valid_pca=false;
+    }
+
+    std::vector<geo2d::Vector<float> > proj_pts;
+    proj_pts.reserve(inside_pts.size());
+    
+    //for each X point, find corresponding projected Y point
+    for(const auto& pt : inside_pts) {
+      geo2d::Vector<float> proj_pt = pt;
+      
+      if (valid_pca)
+	{ proj_pt.x = pt.x; proj_pt.y = pca_line.y(pt.x); }
+    
+      proj_pts.emplace_back(std::move(proj_pt));
+    }
+
+    geo2d::Vector<float> edge1_p,edge2_p;
+
+    //find the two points farthest away from each other
+    float max_dist=-1.0;
+    for(uint pt_id1 = 0; pt_id1 < proj_pts.size(); ++pt_id1) {
+      for(uint pt_id2 = pt_id1+1; pt_id2 < proj_pts.size(); ++pt_id2) {
+	auto dist = geo2d::dist(proj_pts[pt_id1],proj_pts[pt_id2]);
+	if (dist > max_dist) {
+	  max_dist = dist;
+	  edge1_p = proj_pts[pt_id1];
+	  edge2_p = proj_pts[pt_id2];
+	}
+      }
+    }
+    
+    //find the closest non zero point from contour to the projected point
+    //this is so the edge point is an non-zero pixel point
+    
+    float min_dist_e1(9e6),min_dist_e2(9e6);
+    
+    for(auto const& pt : inside_pts) {
+
+      auto dist_e1 = geo2d::dist(edge1_p,geo2d::Vector<float>(pt));
+      auto dist_e2 = geo2d::dist(edge2_p,geo2d::Vector<float>(pt));
+      
+      if(dist_e1 < min_dist_e1) {
+	min_dist_e1=dist_e1;
+	edge1=pt;
+      }
+
+      if(dist_e2 < min_dist_e2) {
+	min_dist_e2=dist_e2;
+	edge2=pt;
+      }
+      
+    }
+       
+
+  }
+  
+  
+  void LinearTrackCluster::FindEdges(const cv::Mat& img,
+				     const GEO2D_Contour_t& ctor,
+				     geo2d::Vector<float>& edge1,
+				     geo2d::Vector<float>& edge2) const
+  {
+    if (_edges_from_mean)
+      EdgesFromMeanValue(ctor,edge1,edge2);
+    else
+      EdgesFromPCAProjection(img,ctor,edge1,edge2);      
   }
   
   std::vector<larocv::data::LinearTrack2D> LinearTrackCluster::FindLinearTrack2D(size_t plane, const cv::Mat& img) const
@@ -124,7 +270,7 @@ namespace larocv {
     for(auto const& ctor : parent_ctor_v) {
       bool used=false;
       geo2d::Vector<float> edge1, edge2;
-      FindEdges(ctor,edge1,edge2);
+      FindEdges(thresh_img,ctor,edge1,edge2);
       if(ctor.size() < _min_size_track_ctor && geo2d::dist(edge1,edge2) < _min_length_track_ctor) {
 	LAROCV_DEBUG() << "Ignoring too-small contour @ size = " << ctor.size()
 		       << " and length " << geo2d::dist(edge1,edge2) << std::endl;
