@@ -44,6 +44,7 @@ namespace larocv {
     int _dilation_size;
     int _dilation_iter;
     int _blur_size;
+    bool _mask_hip;
     
   };
 

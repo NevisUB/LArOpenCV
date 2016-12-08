@@ -23,6 +23,7 @@ namespace larocv {
     _dilation_iter = pset.get<int>("DilationIter",1);
     _blur_size     = pset.get<int>("BlurSize",2);
 
+    _mask_hip = pset.get<bool>("MaskHIP",false);
   }
 
   larocv::Cluster2DArray_t HIPCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -52,7 +53,11 @@ namespace larocv {
     
     //Threshold the input image to certain ADC value, this is our MIP
     ::cv::Mat mip_thresh_m;
-    inRange(sb_img, MIP_LEVEL, HIP_LEVEL, mip_thresh_m);
+
+    //inRange(sb_img, MIP_LEVEL, HIP_LEVEL, mip_thresh_m);
+    auto HIP_LEVEL_TMP = _mask_hip ? HIP_LEVEL : 255;
+    
+    inRange(sb_img, MIP_LEVEL, HIP_LEVEL_TMP, mip_thresh_m);
     //std::stringstream ss0;
     //ss0 << "mip_thresh_m_"<<meta.plane()<<".png";
     //cv::imwrite(ss0.str().c_str(),mip_thresh_m);
