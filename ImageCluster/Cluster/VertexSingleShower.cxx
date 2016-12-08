@@ -348,7 +348,6 @@ namespace larocv {
 					       const std::vector<geo2d::Vector<float> >& xs_pts) const
   {
     // require significant # pixels to have a charge when drawing a line from the center to the xs point
-    LAROCV_INFO() << "Inspecting " << xs_pts.size() << " crossing points on circle @ " << circle.center << std::endl;
     geo2d::VectorArray<float> res_v;
     std::vector<geo2d::Vector<int> > check_pts;
     geo2d::Vector<int> pt;
@@ -633,9 +632,10 @@ namespace larocv {
     int   target_idx=-1;
     for(size_t polar_ctor_idx = 0; polar_ctor_idx < polar_ctor_v.size(); ++polar_ctor_idx) {
       auto const& polar_ctor = polar_ctor_v[polar_ctor_idx];
-      //LAROCV_DEBUG() << "Polar contour idx : " << polar_ctor_idx << " of size " << polar_ctor.size() << std::endl;
+      LAROCV_DEBUG() << "Polar contour idx : " << polar_ctor_idx << " of size " << polar_ctor.size() << std::endl;
       for(auto const& pt : polar_ctor) {
 	float angle = pt.y / (float)(rot_polarimg.rows) * 360. - 180;
+	//std::cout<<"pt " << pt << " ... angle " << angle << std::endl;
 	if(angle < -5 || angle > 5) continue;
 	if(pt.x > min_radius) continue;
 	min_radius = pt.x;
@@ -727,8 +727,11 @@ namespace larocv {
     
     geo2d::Circle<float> circle;
     circle.radius = _circle_default_radius;
-    
-    for(auto const& cand_vtx : cand_v) {
+
+    for(size_t vtx_idx=0; vtx_idx<cand_v.size(); ++vtx_idx) {
+      auto const& cand_vtx = cand_v[vtx_idx];
+      LAROCV_INFO() << "Inspecting vertex " << vtx_idx
+		    << " @ (" << cand_vtx.x << "," << cand_vtx.y << "," << cand_vtx.z << ")" << std::endl;
       std::vector<larocv::data::CircleVertex> cvtx_v;
       cvtx_v.resize(_num_planes);
       for(size_t plane=0; plane<img_v.size(); ++plane) {
@@ -741,6 +744,9 @@ namespace larocv {
 	cvtx.center.y = circle.center.y;
 	auto const& img = img_v[plane];
 	auto xs_pt_v = this->QPointOnCircle(img,circle);
+	LAROCV_INFO() << "Inspecting plane " << plane
+		      << " ... " << xs_pt_v.size()
+		      << " crossing points on circle @ " << circle.center << std::endl;
 	xs_pt_v = this->ValidShowerPointOnCircle(img, circle, xs_pt_v);
 	/*
 	if(xs_pt_v.size()>1) {
@@ -823,6 +829,7 @@ namespace larocv {
 	auto const& img  = img_v[plane];
 	auto const& cvtx = vtx2d_v[plane];
 	if(cvtx.xs_v.size()!=1) continue;
+	LAROCV_INFO() << "Clustering attempt on plane " << plane << " with circle @ " << cvtx.center << std::endl;
 	shower.insert(plane,SingleShowerHypothesis(img, plane, cvtx));
       }
       size_t num_good_plane=0;
