@@ -106,6 +106,8 @@ namespace larocv {
 	dist_max = dist;
       }
     }
+    // set edge1 time < edge2 time
+    if(edge2.x < edge1.x) std::swap(edge1,edge2);
   }
   
   std::vector<larocv::data::LinearTrack2D> LinearTrackCluster::FindLinearTrack2D(size_t plane, const cv::Mat& img) const
@@ -308,12 +310,13 @@ namespace larocv {
 	    val[1] = strack2_idx;
 	    val[2] = best_cand_idx;
 	    if(best_cand_idx == kINVALID_SIZE) {
-	      if(cand11_ok && cand22_ok) best_cand_idx = 0;
-	      else if(cand12_ok && cand21_ok) best_cand_idx = 1;
-	      else if(cand11_ok) best_cand_idx = 0;
+	      //if(cand11_ok && cand22_ok) best_cand_idx = 0;
+	      //else if(cand12_ok && cand21_ok) best_cand_idx = 1;
+	      //else if(cand11_ok) best_cand_idx = 0;
+	      if(cand11_ok) best_cand_idx = 0;
+	      else if(cand22_ok) best_cand_idx = 3;
 	      else if(cand12_ok) best_cand_idx = 1;
 	      else if(cand21_ok) best_cand_idx = 2;
-	      else if(cand22_ok) best_cand_idx = 3;
 	      val[2] = best_cand_idx;
 	      LAROCV_DEBUG() << "Possible 2-plane match ... chosen candidate: " << best_cand_idx
 			     << std::endl;
