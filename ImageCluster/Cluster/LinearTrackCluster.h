@@ -36,13 +36,25 @@ namespace larocv {
 
   private:
 
-    void FindEdges(const GEO2D_Contour_t& ctor,
+    void FindEdges(const cv::Mat& img,
+		   const GEO2D_Contour_t& ctor,
 		   geo2d::Vector<float>& edge1,
 		   geo2d::Vector<float>& edge2) const;
 
+    void EdgesFromMeanValue(const GEO2D_Contour_t& ctor,
+			    geo2d::Vector<float>& edge1,
+			    geo2d::Vector<float>& edge2) const;
+    
+    void EdgesFromPCAProjection(const cv::Mat& img,
+				const GEO2D_Contour_t& ctor,
+				geo2d::Vector<float>& edge1,
+				geo2d::Vector<float>& edge2) const;
+    
     std::vector<larocv::data::LinearTrack2D> FindLinearTrack2D(size_t plane, const cv::Mat& img) const;
 
     void FindLinearTrack(const std::vector<std::vector<larocv::data::LinearTrack2D> >& strack_vv);
+
+    geo2d::Line<float> calc_pca(const GEO2D_Contour_t & ctor) const;
     
     float y2wire(float y, const size_t plane) const;
     float x2tick(float x, const size_t plane) const;
@@ -52,6 +64,7 @@ namespace larocv {
 		  const geo2d::Vector<float>& pt1, const size_t plane1,
 		  larocv::data::Vertex3D& result) const;
 
+    bool _edges_from_mean;
     float _minimum_neighbor_distance;
     size_t _num_planes;
     AlgorithmID_t _algo_id_part;
