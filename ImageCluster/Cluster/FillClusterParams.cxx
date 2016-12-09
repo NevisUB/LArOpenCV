@@ -14,7 +14,6 @@ namespace larocv {
 							larocv::ImageMeta& meta,
 							larocv::ROI& roi)
   {
-
     auto oclusters = clusters;
 
     for (auto& ocluster : oclusters) {
@@ -46,23 +45,42 @@ namespace larocv {
       ocluster._centerPt  = Point2D(min_rect.center.x,min_rect.center.y);
     }
     
-    Contour_t all_locations;
-    ::cv::findNonZero(img, all_locations); // get the non zero points
+    std::vector<::cv::Point> all_locations;
+    bool first_fill = false ;
+
+    // The point of this check is to prevent very small clusters
+    // which have been removed by the first SimpleCuts from entering 
+    // the potential merging pool.  Without this check, we sometimes see clusters
+    // which are decently clustered, but merged with a distant small clump of
+    // 2/3 hits during merge stage. This in turn screws up matching.
+    if ( !meta.get_locations().size() ){
+      ::cv::findNonZero(img, all_locations); 
+      first_fill = true; 
+      }
+    else{ 
+      all_locations = meta.get_locations(); 
+      for( size_t i = 0; i < oclusters.size(); i++ ) oclusters[i]._insideHits.clear() ;
+      }
 
     for( const auto& loc: all_locations ) {
-      for( size_t i = 0; i < oclusters.size(); i++ ) {
-	
-	if ( ::cv::pointPolygonTest(oclusters[i]._contour,loc,false) < 0 ) 
-	  continue;
 
-	oclusters[i]._insideHits.emplace_back(loc.x, loc.y);
-	oclusters[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);
-	// When point is found in contour, no others are checked; avoids double counting
-	// Requires SimpleCuts to the alg chain after this; may have clusters with 0 hits
-	break;
-      }   
-    }
-    
+      for( size_t i = 0; i < oclusters.size(); i++ ) {
+          
+          if ( ::cv::pointPolygonTest(oclusters[i]._contour,loc,false) < 0 ) 
+            continue;
+	
+	  if( first_fill )
+	    meta.add_location(loc) ;
+
+          oclusters[i]._insideHits.emplace_back(loc.x, loc.y);
+          oclusters[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);
+
+          // When point is found in contour, no others are checked; avoids double counting
+          // Requires SimpleCuts to the alg chain after this; may have clusters with 0 hits
+          break;
+        }   
+      }
+
     return oclusters;
   }
 }

@@ -57,6 +57,7 @@ namespace larocv {
       if( width  < 0. ) throw larbys("Width must be a positive floating point!");
       if( height < 0. ) throw larbys("Height must be a positive floating point!");
       update(width_npixel,height_npixel);
+      _all_locations.reserve(_height * _width);
     }
     
     /// Default destructor
@@ -107,6 +108,10 @@ namespace larocv {
     const bool roi_cropped() const { return _roi_cropped; }
 
     void set_score(float the_score) { _score = the_score ; }
+
+    void add_location( ::cv::Point loc ) { _all_locations.emplace_back(loc) ; } 
+
+    std::vector<::cv::Point> get_locations() { return _all_locations ; }
     
    protected:
 
@@ -125,6 +130,8 @@ namespace larocv {
 
     // Score per plane that represents ROI overlap with dead wires
     float _score ;
+
+    std::vector<::cv::Point> _all_locations ;
     
   };
 

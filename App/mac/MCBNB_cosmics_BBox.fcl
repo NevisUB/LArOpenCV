@@ -33,12 +33,12 @@ ImageClusterManager: {
   Verbosity: 2
   Profile:   true
 
-  #ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleEndPoint,CheckAlignment,ClusterWriteOut]
-  #ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,fm,fcp2,sep,ca,cwo]
+  # Old chain
+  #ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleCuts,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
+  #ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,fm,fcp2,sc2,sep,ca,cwires,cwo]
 
-  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleCuts,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
-
-  ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,fm,fcp2,sc2,sep,ca,cwires,cwo]
+  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,UpdateMeta,FlashlightMerge,FillClusterParams,SimpleCuts,VertexInHull,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
+  ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,um,fm,fcp2,sc2,vih2,sep,ca,cwires,cwo]
 
   ShowImage: false
 
@@ -59,14 +59,16 @@ ImageClusterManager: {
    MinContourArea: 0
    
  }
+ 
+ um : {}
 
  iouo : {
-   IOUScore: 0.15
-   HitRatio: 0.15
+   IOUScore: 0.25
+   HitRatio: 0.2
  }
 
  ca : {
-   RatioCut : 0.7
+   RatioCut : 0.71
    MinDist  : 12.
    UseStartEnd: 1 #else use direction of first flashlight
   }
@@ -99,6 +101,7 @@ ImageClusterManager: {
   fcp2: {}
 
  vih : {}
+ vih2 : {}
 
  ac : {
   MaxDefectSize : 9999

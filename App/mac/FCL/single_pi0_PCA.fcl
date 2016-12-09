@@ -4,12 +4,12 @@ LArImageHit: {
 
   Profile: true
   StoreOriginalImage: false
-  Producer: gaushit
+  Producer: hit02 
 
   # LArImageHit config
   PoolTimeTick: 6 
   
-  VertexProducer: mcvertex
+  VertexProducer: numuCC_vertex #mcvertex #numuCC_vertex 
   Debug: true
 
   MakeROI: true
@@ -22,10 +22,10 @@ LArImageHit: {
   QMin: 5
 
   TimeOffset : 800
-  WindowTMax : 9599#6399
+  WindowTMax : 9599# 6399
   WindowTMin : 0
 
-  MatchPlaneWeights : [1,1,10] #plane 0,1,2
+  MatchPlaneWeights : [1,1,1] #plane 0,1,2
 
 }
 ImageClusterManager: {
@@ -33,9 +33,13 @@ ImageClusterManager: {
   Verbosity: 2
   Profile:   true
 
-  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,PCAOverall,BoundRectStart,ROIParameters,AttachedClusters,FlashlightMerge,FillClusterParams,SimpleEndPoint,ClusterWriteOut]
-  ClusterAlgoName: [pc,fcp1,sc,fr,pcao,brs,rp,ac,fm,fcp2,sep,cwo]
-  
+  #ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleEndPoint,CheckAlignment,ClusterWriteOut]
+  #ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,fm,fcp2,sep,ca,cwo]
+
+  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleCuts,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
+
+  ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,fm,fcp2,sc2,sep,ca,cwires,cwo]
+
   ShowImage: false
 
   MatchAlgoType: "MatchTimeOverlap"
@@ -43,6 +47,9 @@ ImageClusterManager: {
 
   ReClusterAlgoType: ""
   ReClusterAlgoName: ""
+  EnableWireCheck : true
+  UseOnlyTwoPlanes : 1
+  RequirePlane : 2
 
  ImageClusterViewer: {
 
@@ -52,6 +59,27 @@ ImageClusterManager: {
    MinContourArea: 0
    
  }
+ ca : {
+   RatioCut : 0.7
+   MinDist  : 12.
+   UseStartEnd: 1 #else use direction of first flashlight
+  }
+  sc2 : {
+
+   MinHits : 10
+   MinArea : -1
+   MinPerimieter : -1
+   MinCharge :-1
+   MinLength : -1
+   MinWidth : -1
+
+  }
+
+  cwires : {
+   DeadWirePath : "dead_wires.fcl"
+  }
+
+ brd : {}
 
  sep : {}
 

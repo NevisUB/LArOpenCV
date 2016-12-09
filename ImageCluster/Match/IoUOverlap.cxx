@@ -20,7 +20,7 @@ namespace larocv{
 
     float max_hits = 0;
     float min_hits = 1e9;
-        
+
     for(auto const& c : clusters){
       
       double min(0.0), max(0.0);
@@ -81,7 +81,7 @@ namespace larocv{
 
     double iou = (t_max_common - t_min_common) / (t_max_abs - t_min_abs);
 
-    //std::cout<<"Overlap is: "<<iou <<std::endl ;
+    //std::cout<<"Overlap is: "<<iou<<", "<<min_hits<<", "<<max_hits<<std::endl ;
     //for (size_t i=0; i < clusters.size(); i++)
     //  std::cout<<"Plane: "<<clusters[i]->PlaneID()<<", Hits: "<<clusters[i]->_numHits() <<std::endl ;
 
