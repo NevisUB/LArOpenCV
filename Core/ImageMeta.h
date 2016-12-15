@@ -112,6 +112,8 @@ namespace larocv {
     void add_location( ::cv::Point loc ) { _all_locations.emplace_back(loc) ; } 
 
     std::vector<::cv::Point> get_locations() { return _all_locations ; }
+
+    void clear_locations() { _all_locations.clear() ; }
     
    protected:
 

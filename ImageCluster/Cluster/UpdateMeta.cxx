@@ -17,9 +17,10 @@ namespace larocv{
     // This algorithm resets the hit locations considered for merging to those hits 
     // left in current clusters (eg, clusters with only 2/3 hits will have been removed 
     // by SimpleCuts; their hits will no longer make it into the merging pool)
-    meta.get_locations().clear();
+    meta.clear_locations();
 
     for(auto& cluster : clusters) {
+      //std::cout<<"*******hits + locs : "<<cluster._insideHits.size()<<", "<<meta.get_locations().size()<<std::endl ;
       for(auto const & i : cluster._insideHits )
         meta.add_location(i);
     }    

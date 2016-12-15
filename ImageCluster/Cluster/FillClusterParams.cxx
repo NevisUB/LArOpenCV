@@ -59,8 +59,15 @@ namespace larocv {
       }
     else{ 
       all_locations = meta.get_locations(); 
-      for( size_t i = 0; i < oclusters.size(); i++ ) oclusters[i]._insideHits.clear() ;
+      
+      for( size_t i = 0; i < oclusters.size(); i++ ){
+        oclusters[i]._insideHits.clear() ;
+        oclusters[i]._sumCharge = 0;
+	 }
+       
       }
+
+    //std::cout<<"Number of locations! "<<all_locations.size()<<std::endl; 
 
     for( const auto& loc: all_locations ) {
 
@@ -80,6 +87,9 @@ namespace larocv {
           break;
         }   
       }
+
+     // for( size_t i = 0; i < oclusters.size(); i++ ) 
+     //   std::cout<<"Number of hits "<<oclusters[i]._insideHits.size()<<std::endl ;
 
     return oclusters;
   }
