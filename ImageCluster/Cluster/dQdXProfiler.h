@@ -40,10 +40,15 @@ namespace larocv {
 
   private:
 
-    double DistanceAtom2Vertex(const data::AtomicContour& atom, const data::CircleVertex& vtx2d) const;
+    double DistanceAtom2Vertex(const data::AtomicContour& atom, const geo2d::Vector<float>& vtx2d) const;
+    double DistanceAtom2Vertex(const data::AtomicContour& atom, const data::CircleVertex&   vtx2d) const;
+      
+    std::vector<size_t> OrderAtoms(const data::ClusterCompound& cluster, const geo2d::Vector<float>& vtx2d) const;
+    std::vector<size_t> OrderAtoms(const data::ClusterCompound& cluster, const data::CircleVertex&   vtx2d) const;
 
-    std::vector<size_t> OrderAtoms(const data::ClusterCompound& cluster, const data::CircleVertex& vtx2d) const;
-
+    std::vector<std::pair<geo2d::Vector<float>,geo2d::Vector<float> > >
+    AtomsEdge(const data::ClusterCompound& cluster, const geo2d::Vector<float>& vtx2d, const std::vector<size_t> atom_order_v) const;
+    
     std::vector<std::pair<geo2d::Vector<float>,geo2d::Vector<float> > >
     AtomsEdge(const data::ClusterCompound& cluster, const data::CircleVertex& vtx2d, const std::vector<size_t> atom_order_v) const;
 
@@ -53,7 +58,8 @@ namespace larocv {
 				const geo2d::Vector<float>& end) const;
     
     AlgorithmID_t _pca_algo_id;
-    AlgorithmID_t _vtx_algo_id;
+    AlgorithmID_t _vtxtrack_algo_id;
+    AlgorithmID_t _lintrack_algo_id;
     
     float _pi_threshold;
     float _dx_resolution;

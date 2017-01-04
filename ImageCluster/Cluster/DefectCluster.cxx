@@ -4,6 +4,7 @@
 #include "DefectCluster.h"
 #include "Core/Geo2D.h"
 #include "VertexTrackCluster.h"
+#include "LinearTrackCluster.h"
 
 namespace larocv {
 
@@ -22,6 +23,15 @@ namespace larocv {
       _vertextrack_algo_id = this->ID(vertextrack_algo_name);
     }else{
       LAROCV_INFO() << "Not using vertex track cluster algo..." << std::endl;
+    }
+
+    auto const lineartrack_algo_name = pset.get<std::string>("LinearTrackClusterAlgo","");
+    _lineartrack_algo_id = kINVALID_ALGO_ID;
+    if(!lineartrack_algo_name.empty()) {
+      LAROCV_INFO() << "Using linear track cluster algo: " << lineartrack_algo_name << std::endl;
+      _lineartrack_algo_id = this->ID(lineartrack_algo_name);
+    }else{
+      LAROCV_INFO() << "Not using linear track cluster algo..." << std::endl;
     }
   }
 
@@ -62,7 +72,35 @@ namespace larocv {
       }
       LAROCV_INFO() << "Finished processing all vertex (result size = "
 		    << data.num_vertex_clusters() << " vertex clusters)" << std::endl;
+    }
+    else if( _lineartrack_algo_id!=kINVALID_ALGO_ID && data.get_vertex_clusters().empty()) {
       
+      auto const& lintrack_data = AlgoData<data::LinearTrackArray>(_lineartrack_algo_id);
+
+      // particle vertex cluster array
+      const auto& lin_cluster_v = lintrack_data.get_clusters();
+      
+      // loop over vtx
+      for(auto const& lin_cluster : lin_cluster_v) {
+	data::ParticleCompoundArray pcompound_set;
+	// loop over plane
+	for(size_t plane = 0 ; plane < 3; ++plane) {
+	  // loop over clusters on this plane
+	  auto& lcluster = lin_cluster.get_cluster(plane);
+	  if ( lcluster.ctor.empty() ) continue;		   
+	  LAROCV_INFO() << "Inspecting defects for LinearTrack " << lin_cluster.id()
+			<< " plane " << plane
+			<< std::endl;
+	  auto pcompound = BreakContour(lcluster.ctor);
+	  pcompound_set.emplace_back(plane,std::move(pcompound));
+	}
+	// record
+	data.move(lin_cluster.id(),std::move(pcompound_set));
+      }
+      LAROCV_INFO() << "Finished processing all vertex (result size = "
+		    << data.num_vertex_clusters() << " vertex clusters)" << std::endl;
+      
+    
     }else{
 
       // Process input clusters on this plane

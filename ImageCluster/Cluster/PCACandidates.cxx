@@ -24,6 +24,10 @@ namespace larocv {
 			  << std::endl;
 	throw larbys();
       }
+      LAROCV_NORMAL() << "PCACandidates " << this->Name()
+		      << " will compute PCA for input atomics "
+		      << std::endl;
+
     }
     if(_defect_cluster_algo_id == kINVALID_ALGO_ID)
       LAROCV_NORMAL() << "PCACandidates " << this->Name()
@@ -61,6 +65,7 @@ namespace larocv {
 				larocv::ROI& roi)
   {
     if(this->ID() == 0) throw larbys("PCACandidates should not be run first!");
+    LAROCV_DEBUG() << "processing plane " << meta.plane() << std::endl;
 
     // this data
     auto& data = AlgoData<data::PCACandidatesData>();

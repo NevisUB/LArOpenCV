@@ -68,6 +68,8 @@ namespace larocv {
     int _min_defect_size;
     int _hull_edge_pts_split;
     AlgorithmID_t _vertextrack_algo_id;
+    AlgorithmID_t _lineartrack_algo_id;
+    
   };
 
   

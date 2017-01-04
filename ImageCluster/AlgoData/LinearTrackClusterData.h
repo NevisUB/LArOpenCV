@@ -83,6 +83,8 @@ namespace larocv {
 	_strack_v[plane] = std::move(strack);
       }
 
+      const size_t id() const { return _id; }
+      
     private:
       unsigned short _start_edge;
       size_t _id;

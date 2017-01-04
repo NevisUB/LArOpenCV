@@ -259,10 +259,22 @@ namespace larocv {
   {
     auto const& part_data = AlgoData<data::VertexClusterArray> ( _algo_id_part );
 
+    // NOTE: this is just MIP contour finding from HIPCluster.cxx
+    // NOTE: replace this with getting HIPCluster algo data
+    
     // Prepare image for analysis per vertex
     ::cv::Mat thresh_img;
-    ::cv::threshold(img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
+    //::cv::threshold(thresh_img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
+    
+    //Dilate
+    auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,::cv::Size(2,2));
+    ::cv::dilate(img,thresh_img,kernel,::cv::Point(-1,-1),1);
+    
+    //Blur
+    ::cv::blur(thresh_img,thresh_img,::cv::Size(2,2));
 
+    ::cv::threshold(thresh_img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
+    
     GEO2D_ContourArray_t parent_ctor_v;
     std::vector<::cv::Vec4i> cv_hierarchy_v;
     ::cv::findContours(thresh_img, parent_ctor_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
@@ -285,10 +297,10 @@ namespace larocv {
 	dist *= -1.;
 	if(dist < _minimum_neighbor_distance) { used = true; break; }
       }
-      if(used) {
-	LAROCV_DEBUG() << "Ignoring contour too-close to an alredy-found vertex" << std::endl;
-	continue;
-      }
+      // if(used) {
+      // 	LAROCV_DEBUG() << "Ignoring contour too-close to an alredy-found vertex" << std::endl;
+      // 	continue;
+      // }
 
       // Found a linear track candidate ... compute edge points
       larocv::data::LinearTrack2D strack;
