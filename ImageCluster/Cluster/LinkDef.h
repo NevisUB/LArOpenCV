@@ -40,6 +40,7 @@
 #pragma link C++ class larocv::HIPMIPTouchData+;
 #pragma link C++ class larocv::LinearVtxFilter+;
 #pragma link C++ class larocv::VertexSingleShower+;
+#pragma link C++ class larocv::EdgeVertexCandidates+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
