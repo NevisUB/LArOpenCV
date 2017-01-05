@@ -38,7 +38,9 @@ namespace larocv {
     bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
 
   private:
-
+    AlgorithmID_t _dqdx_algo_id;
+    AlgorithmID_t _lintrack_algo_id;
+    
   };
 
   /**

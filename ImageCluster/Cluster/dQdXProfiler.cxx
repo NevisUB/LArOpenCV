@@ -391,7 +391,6 @@ namespace larocv {
 	// Construct result container that stores clusters' dqdx per vertex candidate
 	data::ParticledQdXArray vtx_dqdx;
 
-
 	// Loop over planes
 	for(size_t plane_id=0; plane_id < 3; ++plane_id) {
 

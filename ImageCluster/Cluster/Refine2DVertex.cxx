@@ -8,6 +8,7 @@
 #include "Core/Line.h"
 #include "Core/BoundingBox.h"
 #include "ImageClusterFMWKInterface.h"
+#include "GenUtils.h"
 #include <array>
 #include <map>
 
@@ -75,80 +76,7 @@ namespace larocv{
     _min_contour_rect_area = 20;
   }
 
-  std::vector<float> Refine2DVertex::RollingMean(const std::vector<float>& array,
-						 size_t pre, size_t post,
-						 float ignore_value)
-  {
-    std::vector<float> res(array.size(),ignore_value);
-    float  local_sum = 0;
-    size_t valid_ctr = 0;
-    for(size_t idx=0; idx<array.size(); ++idx) {
-      if(array[idx] == ignore_value) continue;
-      if(idx < pre) continue;
-      if((idx+post) >= array.size()) continue;
-      local_sum = 0;
-      valid_ctr = 0;
-      for(size_t subidx=(idx-pre); subidx <= idx+post; ++subidx) {
-	if(array[subidx] == ignore_value) continue;
-	local_sum += array[subidx];
-	++valid_ctr;
-      }
-      if(valid_ctr < 2) continue;
-      res[idx] = local_sum / (float)(valid_ctr);
-    }
-    return res;
-  }
 
-  std::vector<float> Refine2DVertex::RollingGradient(const std::vector<float>& array,
-						     size_t pre, size_t post,
-						     float ignore_value)
-  {
-    std::vector<float> slope(array.size(),ignore_value);
-    float  local_sum = 0;
-    size_t valid_ctr = 0;
-    float  post_mean = 0;
-    float  pre_mean  = 0;
-    for(size_t idx=0; idx<array.size(); ++idx) {
-      if(array[idx] == ignore_value) continue;
-      //if(idx < pre) continue;
-      //if(idx+post >= array.size()) continue;
-
-      // Compute average in pre sample
-      local_sum = 0;
-      valid_ctr = 0;
-      if(idx >= pre) {
-	for(size_t subidx=(idx-pre); subidx < idx; ++subidx){
-	  if(array[subidx] == ignore_value) continue;
-	  local_sum += array[subidx];
-	  ++valid_ctr;
-	}
-	if(valid_ctr < 2) continue;
-	pre_mean = local_sum / (float)(valid_ctr);
-      }else if(array[idx] != ignore_value) {
-	pre_mean = array[idx];
-      }else
-	continue;
-      
-      // Compute average in post sample
-      local_sum = 0;
-      valid_ctr = 0;
-      if(idx+post < array.size()) {
-	for(size_t subidx=idx+1; subidx <= idx+post; ++subidx){
-	  if(array[subidx] == ignore_value) continue;
-	  local_sum += array[subidx];
-	  ++valid_ctr;
-	}
-	if(valid_ctr < 2) continue;
-	post_mean = local_sum / (float)(valid_ctr);
-      }else if(array.back() != ignore_value) {
-	post_mean = array.back();
-      }else
-	continue;
-      
-      slope[idx] = (post_mean - pre_mean) / (((float)pre)/2. + ((float)post)/2. + 1.);
-    }
-    return slope;
-  }
 
   void Refine2DVertex::ExtremePoints(const std::vector<float>& array,
 				     size_t pre, size_t post, bool minimum, bool inspect_edges,

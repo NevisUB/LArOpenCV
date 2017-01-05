@@ -22,6 +22,8 @@ namespace larocv {
 
   namespace data {
 
+
+    
     /**
        \class EdgeVertexCandidatesData
        @brief only for vic
@@ -36,10 +38,14 @@ namespace larocv {
       {   }    
       /// Default destructor
       ~EdgeVertexCandidatesData(){}
-
+      
       void Clear() { }
+      
+      
+      
+      
     private:
-
+      
     };
   }  
 }

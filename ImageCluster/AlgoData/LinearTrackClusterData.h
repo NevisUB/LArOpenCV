@@ -126,6 +126,7 @@ namespace larocv {
       
     protected:
       std::vector<larocv::data::LinearTrack> _strack_v;
+      
     };
     
   }

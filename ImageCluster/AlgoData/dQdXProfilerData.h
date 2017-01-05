@@ -91,7 +91,6 @@ namespace larocv {
       size_t num_clusters(size_t plane) const;
       /// plane-wise cluster list accessor
       const std::vector<larocv::data::ParticledQdX>& get_cluster(size_t plane_id) const;
-
       /// clear data attributes
       void clear();
       /// generate a new cluster

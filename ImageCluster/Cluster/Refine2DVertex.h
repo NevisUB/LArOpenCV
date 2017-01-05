@@ -22,6 +22,8 @@
 #include "Core/BoundingBox.h"
 #include "AlgoData/AlgoDataVertex.h"
 #include "AlgoData/Refine2DVertexData.h"
+
+
 namespace larocv {
   /**
      \class Refine2DVertex
@@ -132,14 +134,6 @@ namespace larocv {
     data::CircleVertex TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
 
     data::CircleVertex RadialScan(const cv::Mat& img, const geo2d::Vector<float>& pt);
-
-    std::vector<float> RollingMean(const std::vector<float>& array,
-				   size_t pre, size_t post,
-				   float invalid_value=kINVALID_FLOAT);
-
-    std::vector<float> RollingGradient(const std::vector<float>& array,
-				       size_t pre, size_t post,
-				       float invalid_value=kINVALID_FLOAT);
 
     void ExtremePoints(const std::vector<float>& array,
 		       size_t pre, size_t post, bool minimum, bool inspect_edges,
