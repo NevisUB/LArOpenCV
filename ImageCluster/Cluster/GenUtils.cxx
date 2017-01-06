@@ -181,7 +181,60 @@ BinnedMaxOccurrence(const std::vector<float>& array,const size_t nbins)
   return (mean_max_occurrence / num_occurrence);
 }
 
+geo2d::VectorArray<float>
+QPointOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle, const float pi_threshold)
+{
+  geo2d::VectorArray<float> res;
 
+  // Find crossing point
+  ::cv::Mat polarimg;
+  ::cv::linearPolar(img, polarimg, circle.center, circle.radius*2, ::cv::WARP_FILL_OUTLIERS);
+  
+  size_t col = (size_t)(polarimg.cols / 2);
+
+  std::vector<std::pair<int,int> > range_v;
+  std::pair<int,int> range(-1,-1);
+
+  for(size_t row=0; row<polarimg.rows; ++row) {
+
+    float q = (float)(polarimg.at<unsigned char>(row, col));
+    if(q < pi_threshold) {
+      if(range.first >= 0) {
+	range_v.push_back(range);
+	range.first = range.second = -1;
+      }
+      continue;
+    }
+    //std::cout << row << " / " << polarimg.rows << " ... " << q << std::endl;
+    if(range.first < 0) range.first = range.second = row;
+
+    else range.second = row;
+
+  }
+  if(range.first>=0 && range.second>=0) range_v.push_back(range);
+  // Check if end should be combined w/ start
+  if(range_v.size() >= 2) {
+    if(range_v[0].first == 0 && (range_v.back().second+1) == polarimg.rows) {
+      range_v[0].first = range_v.back().first - (int)(polarimg.rows);
+      range_v.pop_back();
+    }
+  }
+  // Compute xs points
+  for(auto const& r : range_v) {
+
+    //std::cout << "XS @ " << r.first << " => " << r.second << " ... " << polarimg.rows << std::endl;
+    float angle = ((float)(r.first + r.second))/2.;
+    if(angle < 0) angle += (float)(polarimg.rows);
+    angle = angle * M_PI * 2. / ((float)(polarimg.rows));
+
+    geo2d::Vector<float> pt;
+    pt.x = circle.center.x + circle.radius * cos(angle);
+    pt.y = circle.center.y + circle.radius * sin(angle);
+
+    res.push_back(pt);
+  }
+  return res;
+}
 
 
 #endif

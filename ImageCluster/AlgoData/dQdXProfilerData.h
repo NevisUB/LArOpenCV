@@ -9,7 +9,7 @@
  */
 
 /** \addtogroup AlgoData
-
+    
     @{*/
 
 #ifndef __ALGODATA_DQDXPROFILERDATA_H__
@@ -18,6 +18,7 @@
 #include "Core/Line.h"
 #include "Core/LArOCVTypes.h"
 #include "Base/AlgoDataBase.h"
+
 namespace larocv {
 
   namespace data {
@@ -60,6 +61,8 @@ namespace larocv {
       const geo2d::Vector<float>& end_pt() const;
       /// queries the end point
       const geo2d::Vector<float>& atom_end_pt(const size_t atom_index) const;
+      /// resolution of dx
+      const double dx_resolution() const { return _dx_resolution; }
     private:
       /// unique ID (should respect Particle cluster id)
       size_t _cluster_id;
@@ -82,7 +85,7 @@ namespace larocv {
     public:
       ParticledQdXArray() { clear(); }
       ~ParticledQdXArray() {}
-
+      
       /// get id
       size_t id() const;
       /// get # of planes
@@ -105,8 +108,9 @@ namespace larocv {
       size_t _id;
       /// A container of clusters w/ outer index = plane, inner index = cluster id
       std::vector<std::vector<larocv::data::ParticledQdX> > _cluster_vv;
+      
     };
-
+    
     /**
        \class dQdXProfilerData
        @brief only for vic
@@ -114,7 +118,6 @@ namespace larocv {
     class dQdXProfilerData : public AlgoDataBase {
       
     public:
-    
       /// Default constructor
       dQdXProfilerData(std::string name="NoName", AlgorithmID_t id=0)
 	: AlgoDataBase(name,id)

@@ -93,8 +93,6 @@ namespace larocv {
 				 geo2d::Vector<float> pt,
 				 float width, float height);
       
-    geo2d::VectorArray<float> QPointOnCircle(const ::cv::Mat& img,
-					     const geo2d::Circle<float>& circle);
 
     std::vector<geo2d::VectorArray<float> > QPointArrayOnCircleArray(const ::cv::Mat& img,
 								     const geo2d::Vector<float>& pt,
