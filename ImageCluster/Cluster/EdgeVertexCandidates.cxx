@@ -3,7 +3,7 @@
 
 #include "EdgeVertexCandidates.h"
 #include "Core/Line.h"
-#include "AlgoData/PCACandidatesData.h"
+//#include "AlgoData/PCACandidatesData.h"
 #include "AlgoData/dQdXProfilerData.h"
 #include "AlgoData/LinearTrackClusterData.h"
 #include "GenUtils.h"
@@ -71,9 +71,10 @@ namespace larocv {
   {
     LAROCV_DEBUG() << "processing" << std::endl;
 
-    const auto& pca_data    = AlgoData<data::PCACandidatesData>(_dqdx_algo_id-1);
+    //const auto& pca_data    = AlgoData<data::PCACandidatesData>(_dqdx_algo_id-1);
     const auto& dqdx_data   = AlgoData<data::dQdXProfilerData>(_dqdx_algo_id);
     const auto& lintrk_data = AlgoData<data::LinearTrackArray>(_lintrack_algo_id);
+    auto& edge_data   = AlgoData<data::EdgeVertexCandidatesData>();
 
     LAROCV_DEBUG() << "LinearTrackClusters: " << lintrk_data.get_clusters().size() << std::endl;
     LAROCV_DEBUG() << "VertexTrackClusters: " << dqdx_data.get_vertex_clusters().size() << std::endl;
@@ -88,9 +89,12 @@ namespace larocv {
 
       std::vector<geo2d::Vector<float> > edge_pt_v(3,geo2d::Vector<float>(kINVALID_FLOAT,kINVALID_FLOAT));
       std::vector<geo2d::Vector<float> > side_pt_v(3,geo2d::Vector<float>(kINVALID_FLOAT,kINVALID_FLOAT));
+
+
+      larocv::data::EdgeVertexCandidateArray edge_vtx_candidate_array;
       
       for(uint plane_id=0; plane_id < 3; ++plane_id) {
-
+	
 	const auto& img = img_v[plane_id];
 	
 	auto& edge_pt = edge_pt_v[plane_id];
@@ -180,7 +184,8 @@ namespace larocv {
 	// both edges found
 	if ( ledge && redge ) {
 	  LAROCV_CRITICAL() << "Left and right edges found in scan" << std::endl;
-	  throw larbys();
+	  continue;
+	  //throw larbys();
 	}
 
 	
@@ -198,7 +203,6 @@ namespace larocv {
 	  if ( !ledge && !redge ) throw larbys("Neither left or right edge could be determined, they are the same num?");
 	    
 	}
-
 	
 	LAROCV_DEBUG() << "ledge " << ledge << "... redge " << redge << std::endl;
 	LAROCV_DEBUG() << "lidx  " << lidx  << "... ridx  " << ridx << std::endl;
@@ -241,18 +245,43 @@ namespace larocv {
 
 	LAROCV_DEBUG() << "Got radius: " << radius << std::endl;
 	
-	geo2d::Circle<float> start_pt_c(atom_start_pt,radius);
+	geo2d::Circle<float> start_pt_c(edge_pt,radius);
 	
 	auto qpts_v = QPointOnCircle(img,start_pt_c,10);
 	
 	LAROCV_DEBUG() << "Got " << qpts_v.size() << " number of qpts" << std::endl;
+
+	larocv::data::EdgeVertexCandidate edge_vtx_c;
+
+	edge_vtx_c.rmean_dqdx_v = rmean_v;
+	edge_vtx_c.rsigma_dqdx_v = rsigma_v;
+
+	edge_vtx_c.max_index = max_index;
+	edge_vtx_c.max_value = max_value;
+
+	edge_vtx_c.ledge = ledge;
+	edge_vtx_c.redge = redge;
+	
+	edge_vtx_c.ridx = ridx;
+	edge_vtx_c.lidx = lidx;
+	edge_vtx_c.sidx = idx;
+
+	size_t eidx = ledge ? 0 : rmean_v.size();
+	edge_vtx_c.eidx = eidx;
+	
+	edge_vtx_c.edge_pt   = edge_pt;
+	edge_vtx_c.side_pt_v = qpts_v;
+	edge_vtx_c.circle    = start_pt_c;
+
+	edge_vtx_c.base_rmean  = base_rmean;
+	edge_vtx_c.base_rsigma = base_rsigma;
+	
+	edge_vtx_candidate_array.insert(plane_id,edge_vtx_c);
 	
       } // end 3 planes
-      
-      // decide whether edge vtx is consistent
-      // decide whether side vtx is consistent
-      
+
       // lintrk_data.move(..., ...)
+      edge_data.insert(trk_id,edge_vtx_candidate_array);
     }
     return true;
   }

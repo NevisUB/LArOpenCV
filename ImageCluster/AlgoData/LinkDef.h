@@ -44,6 +44,7 @@
 #pragma link C++ class larocv::data::SingleShowerArray+;
 
 #pragma link C++ class larocv::data::EdgeVertexCandidate+;
+#pragma link C++ class larocv::data::EdgeVertexCandidateArray+;
 #pragma link C++ class larocv::data::EdgeVertexCandidatesData+;
 
 //ADD_NEW_CLASS ... do not change this line
