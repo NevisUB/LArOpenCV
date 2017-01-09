@@ -491,8 +491,7 @@ namespace larocv {
 
       // done
       return true;
-      
-      
+       
     } else {
       LAROCV_CRITICAL() << "Impossible condition reached!" << std::endl;
       throw larbys();
@@ -515,7 +514,9 @@ namespace larocv {
     auto const rect_rotated = cv::boundingRect( cv::Mat(atom._ctor) );
     auto tl = rect_rotated.tl();
     auto br = rect_rotated.br();
+
     // inflate the region by user defined pixel inflation on each side
+
     tl.x -= _atomic_region_pad;
     tl.y -= _atomic_region_pad;
     br.x += _atomic_region_pad;
@@ -526,15 +527,21 @@ namespace larocv {
     if(tl.y < 0) tl.y = 0;
     if(br.x >= img.cols) br.x = img.cols-1;
     if(br.y >= img.rows) br.y = img.rows-1;
+
+    auto width  = br.x-tl.x;
+    auto height = br.y-tl.y;
+
+    if (width  < 0) throw larbys("width < 0");
+    if (height < 0) throw larbys("height < 0");
     
     // Crop the image
-    auto const bbox = cv::Rect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
-    
-    
-    auto const small_img = cv::Mat(img, bbox);
+    auto const bbox = cv::Rect(tl.x, tl.y, width, height);
+
     LAROCV_DEBUG() << "Calculating dQ/dX for atom " << atom.id()
 		   << " within the cropped image " << bbox << std::endl;
-
+    
+    auto const small_img = cv::Mat(img, bbox);
+    
     // List points that we care
     std::vector<geo2d::Vector<int> > pts_in_bbox;
     cv::findNonZero(small_img, pts_in_bbox);
