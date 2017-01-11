@@ -3,6 +3,7 @@
 
 #include "Base/AlgoDataBase.h"
 #include "Core/Line.h"
+#include "Core/Vector.h"
 
 namespace larocv {
 
@@ -14,7 +15,10 @@ namespace larocv {
       Cluster()  :
 	_npx(0),
 	_qsum(0),
-	_iship(false)
+	_iship(false),
+	_center_pt(kINVALID_FLOAT,kINVALID_FLOAT),
+	_length(kINVALID_FLOAT),
+	_width(kINVALID_FLOAT)
       { clear(); }
       
       ~Cluster() { }
@@ -27,21 +31,29 @@ namespace larocv {
       
       const uint npx () const { return _npx; }
       const uint qsum() const { return _qsum; }
+      const uint length() const { return _length; }
+      const uint width() const { return _width; }
 
       void set_npx  (uint a)  { _npx = a;   }
       void set_qsum (float a) { _qsum = a;  }
       void set_iship(bool b)  { _iship = b; }
-      
+      void set_center_pt(geo2d::Vector<float> pt) { _center_pt = pt; }
+      void set_length(float len) { _length = len; }
+      void set_width(float len)  { _width  = len; }
+	
       float qavg() const { return _qsum / (float) _npx; } 
       
       bool iship() const { return _iship ? true : false; }
       bool ismip() const { return _iship ? false : true; }
-      
+
     private:
       
       uint  _npx;
       float _qsum;
       bool  _iship;
+      geo2d::Vector<float> _center_pt;
+      float _length;
+      float _width;
       
     };
     
@@ -53,11 +65,16 @@ namespace larocv {
     public:
 
 
-      HIPClusterPlaneData() { Clear(); }
+      HIPClusterPlaneData() :
+	_long_mip_idx(kINVALID_SIZE),
+	_long_hip_idx(kINVALID_SIZE)
+      { Clear(); }
+      
       virtual ~HIPClusterPlaneData(){}
 
       /// Clear method override
       void Clear() {
+	_clusters_v.clear();
 	_mip_idx_v.clear();
 	_hip_idx_v.clear();
       }
@@ -74,12 +91,18 @@ namespace larocv {
       
       const std::vector<size_t>& get_mip_indicies() const { return _mip_idx_v;  }
       const std::vector<size_t>& get_hip_indicies() const { return _hip_idx_v;  }
+
+      void set_longest_mip_idx(size_t a) { _long_mip_idx = a; }
+      void set_longest_hip_idx(size_t a) { _long_hip_idx = a; }
       
     private:
 
       std::vector<Cluster> _clusters_v;
       std::vector<size_t> _mip_idx_v;
       std::vector<size_t> _hip_idx_v;
+
+      size_t _long_hip_idx;
+      size_t _long_mip_idx;
       
     };
     

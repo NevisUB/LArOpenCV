@@ -204,20 +204,39 @@ namespace larocv {
       //tolerance in pixels away from contour edge
       float mip_tolerance = 1.0;
       mip_tolerance*=-1;
-    
+
+      float avg_x = 0;
+      float avg_y = 0;
+      
       for(const auto& pt : points) { 
 	auto dist = cv::pointPolygonTest(mip_ctor,pt,true);
 	if ( dist < mip_tolerance) continue;
 	npts += 1;
 	qsum += (uchar) img.at<uchar>(pt.y,pt.x);
+	avg_x += (float) pt.x;
+	avg_y += (float) pt.y;
+	
       }
-
+      
+      avg_x /= (float) npts;
+      avg_y /= (float) npts;
+      geo2d::Vector<float> center_pt(avg_x,avg_y);
+      
       //std::cout << "\t\t npts " << npts << "... qsum " << qsum << "... iship " << false << std::endl;
+      auto rect = cv::minAreaRect(mip_ctor);
+      auto height = rect.size.height;
+      auto width  = rect.size.width;
+      
+      auto length_ = height > width ? height : width;
+      auto width_  = height > width ? width : height;
       
       larocv::data::Cluster cl;
       cl.set_npx(npts);
       cl.set_qsum(qsum);
       cl.set_iship(false);
+      cl.set_center_pt(center_pt);
+      cl.set_length(length_);
+      cl.set_width(width_);
       cluster_arr_v.emplace_back(std::move(cl));
     }
     
@@ -234,23 +253,40 @@ namespace larocv {
       //tolerance in pixels away from contour edge
       float hip_tolerance = 1.0;
       hip_tolerance*=-1;
-    
+
+      float avg_x = 0;
+      float avg_y = 0;
+      
       for(const auto& pt : points) { 
 	auto dist = cv::pointPolygonTest(hip_ctor,pt,true);
 	if ( dist < hip_tolerance) continue;
 	npts += 1;
 	qsum += (uchar) img.at<uchar>(pt.y,pt.x);
+	avg_x += (float) pt.x;
+	avg_y += (float) pt.y;
       }
 
-      //std::cout << "\t\t npts " << npts << "... qsum " << qsum << "... iship " << false << std::endl;
+      avg_x /= (float) npts;
+      avg_y /= (float) npts;
+      geo2d::Vector<float> center_pt(avg_x,avg_y);
+      
+      auto rect = cv::minAreaRect(hip_ctor);
+      auto height = rect.size.height;
+      auto width  = rect.size.width;
+      
+      auto length_ = height > width ? height : width;
+      auto width_  = height > width ? width : height;
       
       larocv::data::Cluster cl;
       cl.set_npx(npts);
       cl.set_qsum(qsum);
       cl.set_iship(true);
+      cl.set_center_pt(center_pt);
+      cl.set_length(length_);
+      cl.set_width(width_);
       cluster_arr_v.emplace_back(std::move(cl));
     }
-    
+
     hip_plane_data.move_mip_indicies(std::move(mip_idx_v));
     hip_plane_data.move_hip_indicies(std::move(hip_idx_v));
 
