@@ -36,21 +36,24 @@ namespace larocv {
       const std::vector<float> pixel_v()     const { return _pixel_v ;}
       const std::vector<float> mip_pixel_v() const { return _mip_pixel_v ;}  
       const std::vector<float> hip_pixel_v() const { return _hip_pixel_v ;}
+      const float angle() const { return _angle; }
+      
       void set_npx  (uint a)  { _npx = a;   }
       void set_qsum (float a) { _qsum = a;  }
       void set_iship(bool b)  { _iship = b; }
       void set_center_pt(geo2d::Vector<float> pt) { _center_pt = pt; }
       void set_length(float len) { _length = len; }
       void set_width(float len)  { _width  = len; }
+      void set_angle(float len)  { _angle  = len; }
       void set_pixel(std::vector<float> a)     {_pixel_v = a;}
       void set_mip_pixel(std::vector<float> a) {_mip_pixel_v = a;}
       void set_hip_pixel(std::vector<float> a) {_hip_pixel_v = a;}
-
+      
       float qavg() const { return _qsum / (float) _npx; } 
-
+      
       bool iship() const { return _iship ? true : false; }
       bool ismip() const { return _iship ? false : true; }
-
+      
     private:
       
       uint  _npx;
@@ -60,7 +63,8 @@ namespace larocv {
       geo2d::Vector<float> _center_pt;
       float _length;
       float _width;
-
+      float _angle;
+      
       std::vector<float> _pixel_v;
       std::vector<float> _mip_pixel_v;
       std::vector<float> _hip_pixel_v;

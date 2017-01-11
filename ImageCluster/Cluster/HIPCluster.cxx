@@ -233,8 +233,14 @@ namespace larocv {
       
       //std::cout << "\t\t npts " << npts << "... qsum " << qsum << "... iship " << false << std::endl;
       auto rect = cv::minAreaRect(mip_ctor);
+
+      float angle_ = rect.angle;
+      // angle_ += 90.0;
+      
       auto height = rect.size.height;
       auto width  = rect.size.width;
+
+      if (width < height) angle_+=90;
       
       auto length_ = height > width ? height : width;
       auto width_  = height > width ? width : height;
@@ -246,6 +252,7 @@ namespace larocv {
       cl.set_center_pt(center_pt);
       cl.set_length(length_);
       cl.set_width(width_);
+      cl.set_angle(angle_);
       // cl.set_pixel(pixel_v);
       // cl.set_mip_pixel(mip_pixel_v);
       cluster_arr_v.emplace_back(std::move(cl));
@@ -293,10 +300,16 @@ namespace larocv {
       avg_x /= (float) npts;
       avg_y /= (float) npts;
       geo2d::Vector<float> center_pt(avg_x,avg_y);
-      
+
       auto rect = cv::minAreaRect(hip_ctor);
+      float angle_ = rect.angle;
+      // angle_ += 90.0;
+			    
       auto height = rect.size.height;
       auto width  = rect.size.width;
+
+      if (width < height) angle_+=90;
+
       
       auto length_ = height > width ? height : width;
       auto width_  = height > width ? width : height;
@@ -308,6 +321,7 @@ namespace larocv {
       cl.set_center_pt(center_pt);
       cl.set_length(length_);
       cl.set_width(width_);
+      cl.set_angle(angle_);
       // cl.set_pixel(pixel_v);
       // cl.set_hip_pixel(hip_pixel_v);
       cluster_arr_v.emplace_back(std::move(cl));
