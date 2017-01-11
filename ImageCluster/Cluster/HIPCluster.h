@@ -39,11 +39,14 @@ namespace larocv {
 
     int _min_hip_cluster_size;
     int _min_mip_cluster_size;
+
     std::vector<int> _mip_thresh_v;
     std::vector<int> _hip_thresh_v;
+
     int _dilation_size;
     int _dilation_iter;
     int _blur_size;
+
     bool _mask_hip;
     
   };

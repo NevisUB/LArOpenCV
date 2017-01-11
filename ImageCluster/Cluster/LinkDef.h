@@ -41,6 +41,7 @@
 #pragma link C++ class larocv::LinearVtxFilter+;
 #pragma link C++ class larocv::VertexSingleShower+;
 #pragma link C++ class larocv::EdgeVertexCandidates+;
+#pragma link C++ class larocv::SimpleColinear+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

@@ -188,17 +188,19 @@ namespace larocv {
 	  //throw larbys();
 	}
 
-	
 	// both edges NOT found
 	if ( !ledge && !redge) {
 	  LAROCV_INFO() << "Neither left or right edges found in scan" << std::endl;
 
-	  size_t d_left  = lidx - pre;
-	  size_t d_right = rmean_v.size() - post - ridx;
-	  
+	  // size_t d_left  = lidx - pre;
+	  // size_t d_right = rmean_v.size() - post - ridx;
+
+	  size_t d_left  = max_index - pre;
+	  size_t d_right = rmean_v.size() - post - max_index;
+
 	  //Assigned the edge closest to ridx or lidx;
-	  if (d_left > d_right) ledge = true;
-	  if (d_left < d_right) redge = true;
+	  if (d_left > d_right) redge = true;
+	  if (d_left < d_right) ledge = true;
 
 	  if ( !ledge && !redge ) throw larbys("Neither left or right edge could be determined, they are the same num?");
 	    
@@ -212,14 +214,17 @@ namespace larocv {
 	edge_pt = ledge ? part_dqdx.start_pt() : part_dqdx.end_pt();
 
 	LAROCV_DEBUG() << "Setting edge point " << edge_pt << std::endl;
-
+	
 	// Determine where along PCA the candidate vertex location to set side_pt
-
+	size_t d_left  = rmean_v.size() - lidx;
+	size_t d_right = ridx;
+	size_t d_idx   = redge ? d_left : d_right; // take the shorter one
+	
+	//should be the index farthest from the chosen edge (lidx or ridx)
 	idx = ledge ? ridx : lidx;
-	size_t d_idx = ledge ? idx - pre : rmean_v.size() - post - idx;
 	
 	size_t atom_index;
-
+	
 	LAROCV_DEBUG() << "idx " << idx << std::endl;
 
 	size_t num_atoms = part_dqdx.atom_start_index_array().size();

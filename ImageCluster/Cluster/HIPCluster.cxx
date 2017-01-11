@@ -10,7 +10,7 @@ namespace larocv {
 
   void HIPCluster::_Configure_(const ::fcllite::PSet &pset)
   {
-    _min_hip_cluster_size = pset.get<int>("MinHIPClusterSize",4);
+    _min_hip_cluster_size = pset.get<int>("MinHIPClusterSize",5);
     _min_mip_cluster_size = pset.get<int>("MinMIPClusterSize",20);
 
     _mip_thresh_v    = pset.get<std::vector<int> >("MIPLevels",{10,10,10});
@@ -27,11 +27,10 @@ namespace larocv {
   }
 
   larocv::Cluster2DArray_t HIPCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
-						const ::cv::Mat& img,
-						larocv::ImageMeta& meta,
-						larocv::ROI& roi)
+						 const ::cv::Mat& img,
+						 larocv::ImageMeta& meta,
+						 larocv::ROI& roi) 
   {
-
     
     ::cv::Mat sb_img;
     
@@ -43,6 +42,7 @@ namespace larocv {
     ::cv::blur(sb_img,sb_img,::cv::Size(_blur_size,_blur_size));
 
     GEO2D_ContourArray_t mip_ctor_v;
+    GEO2D_ContourArray_t mip_ctor_mask_v;
     GEO2D_ContourArray_t hip_ctor_v;
     GEO2D_ContourArray_t all_ctor_v;
     
@@ -54,22 +54,24 @@ namespace larocv {
     //Threshold the input image to certain ADC value, this is our MIP
     ::cv::Mat mip_thresh_m;
 
-    //inRange(sb_img, MIP_LEVEL, HIP_LEVEL, mip_thresh_m);
-    auto HIP_LEVEL_TMP = _mask_hip ? HIP_LEVEL : 255;
+    // uint HIP_LEVEL_TMP = 255;
+    // inRange(sb_img, MIP_LEVEL, HIP_LEVELT_TMP, mip_thresh_m);
+    threshold(sb_img, mip_thresh_m, MIP_LEVEL,255,0);
     
-    inRange(sb_img, MIP_LEVEL, HIP_LEVEL_TMP, mip_thresh_m);
-    //std::stringstream ss0;
-    //ss0 << "mip_thresh_m_"<<meta.plane()<<".png";
-    //cv::imwrite(ss0.str().c_str(),mip_thresh_m);
+    // std::stringstream ss0;
+    // ss0 << "mip_thresh_m_"<<meta.plane()<<".png";
+    // cv::imwrite(ss0.str().c_str(),mip_thresh_m);
     
     //Threshold the input image to HIP ADC value, this is our HIP
     ::cv::Mat hip_thresh_m;
-    threshold(sb_img, hip_thresh_m,HIP_LEVEL,255,0);
-    //std::stringstream ss1;
-    //ss1 << "hip_thresh_m_"<<meta.plane()<<".png";
-    //cv::imwrite(ss1.str().c_str(),hip_thresh_m);
-    
-    //Contour finding on the HIP
+    threshold(sb_img, hip_thresh_m, HIP_LEVEL,255,0);
+
+    // std::stringstream ss1;
+    // ss1 << "hip_thresh_m_"<<meta.plane()<<".png";
+    // cv::imwrite(ss1.str().c_str(),hip_thresh_m);
+
+    ///////////////////////////////////////////////
+    //HIP contour finding
     std::vector<::cv::Vec4i> hip_cv_hierarchy_v;
     hip_cv_hierarchy_v.clear();
     
@@ -93,82 +95,171 @@ namespace larocv {
     //swap them out -- the thresholded hips and all hips
     std::swap(hip_ctor_v,hip_ctor_v_tmp);
     
-    //Masking away the hip in the original image
     //find the non zero pixels in the hip contours. Mask them out of the MIP image.
+    std::vector<cv::Point_<int> > all_locations;
+    ::cv::findNonZero(mip_thresh_m, all_locations); 
 
-    // // get the non zero points of the mip
-    // std::vector<geo2d::Vector<int> > all_locations;
-    // ::cv::findNonZero(mip_thresh_m, all_locations); 
+    cv::Mat mip_thresh_mask_m = mip_thresh_m.clone();
     
-    //  for( const auto& loc: all_locations ) {
-    //    for( size_t i = 0; i < hip_ctor_v.size(); i++ ) {
-    // 	 if ( ::cv::pointPolygonTest(hip_ctor_v[i],loc,false) < 0 )  // check if point in HIP contour
-    // 	   continue;
+    float hip_mask_tolerance = 3.0;
+    hip_mask_tolerance*=-1;
+    
+     for( const auto& loc: all_locations ) {
+       for( size_t i = 0; i < hip_ctor_v.size(); i++ ) {
+	 auto dist = cv::pointPolygonTest(hip_ctor_v[i],loc,true);
+	 if (dist < hip_mask_tolerance) continue;
 	 
-    // 	 //Something here. Zero out this pixel.
-    // 	 mip_thresh_m.at<uchar>(loc.y, loc.x) = 0;
-    //    }
-    //  }
-     
-     ///////////////////////////////////////////////
-     //run the contour finder on the MIPs
-     std::vector<::cv::Vec4i> mip_cv_hierarchy_v;
-     mip_cv_hierarchy_v.clear();
-     
-     ::cv::findContours(mip_thresh_m,
-			mip_ctor_v,
-			mip_cv_hierarchy_v,
-			CV_RETR_EXTERNAL,
-			CV_CHAIN_APPROX_SIMPLE);
-
-     ///////////////////////////////////////////////
-     //Filter the MIP contours to a minimum size, the ones that are
-     int min_mip_size = _min_mip_cluster_size;
-     GEO2D_ContourArray_t mip_ctor_v_tmp;
-     mip_ctor_v_tmp.reserve(mip_ctor_v.size());
-     
-     for (const auto& mip_ctor : mip_ctor_v)
-       if (mip_ctor.size() > min_mip_size)
-	 mip_ctor_v_tmp.emplace_back(mip_ctor);
-
-     //swap them out -- the thresholded mips and all mips
-     std::swap(mip_ctor_v,mip_ctor_v_tmp);
-     
-     uint idx=-1;
-
-     std::vector<size_t> mip_idx_v;
-     std::vector<size_t> hip_idx_v;
-       
-     for (auto& mip_ctor : mip_ctor_v) {
-       all_ctor_v.emplace_back(mip_ctor);
-       idx++;
-       mip_idx_v.push_back(idx);
+    	 //Something here. Zero out this pixel.
+    	 mip_thresh_mask_m.at<uchar>(loc.y, loc.x) = 0;
+       }
      }
-     for (auto& hip_ctor : hip_ctor_v) {
-       all_ctor_v.emplace_back(hip_ctor);
-       idx++;
-       hip_idx_v.push_back(idx);
-     }
+
+    // std::stringstream ss2;
+    // ss2 << "mip_thresh_mask_m_"<<meta.plane()<<".png";
+    // cv::imwrite(ss2.str().c_str(),mip_thresh_mask_m);
+     
+    ///////////////////////////////////////////////
+    //MIP contour finding
+    std::vector<::cv::Vec4i> mip_cv_hierarchy_v;
+    mip_cv_hierarchy_v.clear();
+    
+    ::cv::findContours(mip_thresh_m,
+		       mip_ctor_v,
+		       mip_cv_hierarchy_v,
+		       CV_RETR_EXTERNAL,
+		       CV_CHAIN_APPROX_SIMPLE);
+
+
+    ///////////////////////////////////////////////
+    //run the contour finder on the masked MIPs
+    std::vector<::cv::Vec4i> mip_cv_hierarchy_mask_v;
+    mip_cv_hierarchy_mask_v.clear();
+    
+    ::cv::findContours(mip_thresh_mask_m,
+		       mip_ctor_mask_v,
+		       mip_cv_hierarchy_mask_v,
+		       CV_RETR_EXTERNAL,
+		       CV_CHAIN_APPROX_SIMPLE);
+
+    ///////////////////////////////////////////////
+    //Filter the MIP contours to a minimum size, the ones that are
+    int min_mip_size = _min_mip_cluster_size;
+
+    GEO2D_ContourArray_t mip_ctor_v_tmp;
+    mip_ctor_v_tmp.reserve(mip_ctor_v.size());
+     
+    for (const auto& mip_ctor : mip_ctor_v)
+      if (mip_ctor.size() > min_mip_size)
+	mip_ctor_v_tmp.emplace_back(mip_ctor);
+
+    GEO2D_ContourArray_t mip_ctor_mask_v_tmp;
+    mip_ctor_mask_v_tmp.reserve(mip_ctor_mask_v.size());
+    
+    for (const auto& mip_ctor : mip_ctor_mask_v)
+      if (mip_ctor.size() > min_mip_size)
+	mip_ctor_mask_v_tmp.emplace_back(mip_ctor);
+
+    //swap them out -- the thresholded mips and all mips
+    std::swap(mip_ctor_mask_v,mip_ctor_mask_v_tmp);
+     
+    uint idx=-1;
+
+    std::vector<size_t> mip_idx_v;
+    std::vector<size_t> hip_idx_v;
+
+    //put the non-masked mip contours in all_ctor_v
+    for (auto& mip_ctor : mip_ctor_v) {
+      all_ctor_v.emplace_back(mip_ctor);
+      idx++;
+      mip_idx_v.push_back(idx);
+    }
+    //out the hip contours in all_ctor_v
+    for (auto& hip_ctor : hip_ctor_v) {
+      all_ctor_v.emplace_back(hip_ctor);
+      idx++;
+      hip_idx_v.push_back(idx);
+    }
           
-     LAROCV_DEBUG() << "Plane : " << meta.plane()
-		    << " Found MIPs : " << mip_ctor_v.size()
-		    << " HIPs : " << hip_ctor_v.size()
-		    << " Summed : " << all_ctor_v.size() << "\n";
+    LAROCV_DEBUG() << " Plane: " << meta.plane()
+		   << " Found MIPs: " << mip_ctor_v.size()
+		   << " HIPs: " << hip_ctor_v.size()
+		   << " Summed: " << all_ctor_v.size() << "\n";
 
-     auto& hip_data       = AlgoData<data::HIPClusterData>();
-     auto& hip_plane_data = hip_data._plane_data_v[meta.plane()];
-     
-     hip_plane_data._mip_idx_v = mip_idx_v;
-     hip_plane_data._hip_idx_v = hip_idx_v;
-     
-     Cluster2DArray_t oclusters;
-     oclusters.resize(all_ctor_v.size());
-     
-     for(unsigned ik=0;ik<oclusters.size();++ik)
+    auto& hip_data       = AlgoData<data::HIPClusterData>();
+    auto& hip_plane_data = hip_data._plane_data_v[meta.plane()];
+    auto& cluster_arr_v  = hip_plane_data.get_clusters();
+      
+    std::vector<cv::Point_<int> >  points;
+    cv::findNonZero(mip_thresh_mask_m, points);
+    
+    //for the __masked__ mip contours
+    //std::cout << "Looking at " << mip_ctor_mask_v.size() << " MIP contours" << std::endl;
+    for ( auto& mip_ctor : mip_ctor_mask_v ) { 
+      //std::cout << "\tThis contour size: " << mip_ctor.size() << std::endl;
+      uint npts = 0;
+      uint qsum = 0;
+      
+      //tolerance in pixels away from contour edge
+      float mip_tolerance = 1.0;
+      mip_tolerance*=-1;
+    
+      for(const auto& pt : points) { 
+	auto dist = cv::pointPolygonTest(mip_ctor,pt,true);
+	if ( dist < mip_tolerance) continue;
+	npts += 1;
+	qsum += (uchar) img.at<uchar>(pt.y,pt.x);
+      }
 
-       oclusters[ik]._contour = all_ctor_v[ik];
+      //std::cout << "\t\t npts " << npts << "... qsum " << qsum << "... iship " << false << std::endl;
+      
+      larocv::data::Cluster cl;
+      cl.set_npx(npts);
+      cl.set_qsum(qsum);
+      cl.set_iship(false);
+      cluster_arr_v.emplace_back(std::move(cl));
+    }
+    
+    //for hip contours
+    points.clear();
+    cv::findNonZero(hip_thresh_m, points);
+    //std::cout << "Looking at " << hip_ctor_v.size() << " masked HIP contours" << std::endl;
+    for ( auto& hip_ctor : hip_ctor_v ) { 
+
+      //std::cout << "\tThis contour size: " << hip_ctor.size() << std::endl;
+      uint npts = 0;
+      uint qsum = 0;
+
+      //tolerance in pixels away from contour edge
+      float hip_tolerance = 1.0;
+      hip_tolerance*=-1;
+    
+      for(const auto& pt : points) { 
+	auto dist = cv::pointPolygonTest(hip_ctor,pt,true);
+	if ( dist < hip_tolerance) continue;
+	npts += 1;
+	qsum += (uchar) img.at<uchar>(pt.y,pt.x);
+      }
+
+      //std::cout << "\t\t npts " << npts << "... qsum " << qsum << "... iship " << false << std::endl;
+      
+      larocv::data::Cluster cl;
+      cl.set_npx(npts);
+      cl.set_qsum(qsum);
+      cl.set_iship(true);
+      cluster_arr_v.emplace_back(std::move(cl));
+    }
+    
+    hip_plane_data.move_mip_indicies(std::move(mip_idx_v));
+    hip_plane_data.move_hip_indicies(std::move(hip_idx_v));
+
+    Cluster2DArray_t oclusters;
+    oclusters.resize(all_ctor_v.size());
      
-     return oclusters;
+    for(unsigned ik=0;ik<oclusters.size();++ik)
+
+      oclusters[ik]._contour = all_ctor_v[ik];
+     
+    return oclusters;
      
   }
 

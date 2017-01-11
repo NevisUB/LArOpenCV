@@ -27,8 +27,8 @@ namespace larocv {
     auto& hip_mip_touch_pts_v   = data._hip_mip_touch_pts_v_v[meta.plane()];
     
     //get the mip/hip indices
-    auto& mip_ass_v = hipcluster_data._mip_idx_v;
-    auto& hip_ass_v = hipcluster_data._hip_idx_v;
+    auto& mip_ass_v = hipcluster_data.get_mip_indicies();
+    auto& hip_ass_v = hipcluster_data.get_hip_indicies();
 
     if (mip_ass_v.size() + hip_ass_v.size() != clusters.size()) {
       LAROCV_ERROR() << "HIP/MIP touch algo called after contour breaking" << std::endl;
