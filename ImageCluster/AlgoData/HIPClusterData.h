@@ -31,8 +31,8 @@ namespace larocv {
       
       const uint npx () const { return _npx; }
       const uint qsum() const { return _qsum; }
-      const uint length() const { return _length; }
-      const uint width() const { return _width; }
+      const float length() const { return _length; }
+      const float width() const { return _width; }
       const std::vector<float> pixel_v()     const { return _pixel_v ;}
       const std::vector<float> mip_pixel_v() const { return _mip_pixel_v ;}  
       const std::vector<float> hip_pixel_v() const { return _hip_pixel_v ;}
@@ -47,7 +47,7 @@ namespace larocv {
       void set_hip_pixel(std::vector<float> a) {_hip_pixel_v = a;}
 
       float qavg() const { return _qsum / (float) _npx; } 
-      
+
       bool iship() const { return _iship ? true : false; }
       bool ismip() const { return _iship ? false : true; }
 
