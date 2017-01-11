@@ -84,7 +84,6 @@ namespace larocv {
     //Filter the HIP contours to a minimum size
     int min_hip_size = _min_hip_cluster_size;
     
-    //ContourArray_t hip_ctor_v_tmp;
     GEO2D_ContourArray_t hip_ctor_v_tmp;
     hip_ctor_v_tmp.reserve(hip_ctor_v.size());
     
@@ -147,19 +146,22 @@ namespace larocv {
 
     GEO2D_ContourArray_t mip_ctor_v_tmp;
     mip_ctor_v_tmp.reserve(mip_ctor_v.size());
-     
-    for (const auto& mip_ctor : mip_ctor_v)
-      if (mip_ctor.size() > min_mip_size)
-	mip_ctor_v_tmp.emplace_back(mip_ctor);
 
     GEO2D_ContourArray_t mip_ctor_mask_v_tmp;
     mip_ctor_mask_v_tmp.reserve(mip_ctor_mask_v.size());
     
+    for (const auto& mip_ctor : mip_ctor_v)
+      if (mip_ctor.size() > min_mip_size)
+	mip_ctor_v_tmp.emplace_back(mip_ctor);
+
     for (const auto& mip_ctor : mip_ctor_mask_v)
       if (mip_ctor.size() > min_mip_size)
 	mip_ctor_mask_v_tmp.emplace_back(mip_ctor);
 
     //swap them out -- the thresholded mips and all mips
+    std::swap(mip_ctor_v,mip_ctor_v_tmp);
+
+    //swap them out -- the thresholded masked mips and all masked mips
     std::swap(mip_ctor_mask_v,mip_ctor_mask_v_tmp);
      
     uint idx=-1;
