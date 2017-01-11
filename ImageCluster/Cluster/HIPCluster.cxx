@@ -196,11 +196,16 @@ namespace larocv {
     
     //for the __masked__ mip contours
     //std::cout << "Looking at " << mip_ctor_mask_v.size() << " MIP contours" << std::endl;
+
     for ( auto& mip_ctor : mip_ctor_mask_v ) { 
       //std::cout << "\tThis contour size: " << mip_ctor.size() << std::endl;
       uint npts = 0;
-      uint qsum = 0;
-      
+      uint qsum = 0;      
+      std::vector<float> pixel_v;
+      pixel_v.clear();
+      std::vector<float> mip_pixel_v;
+      mip_pixel_v.clear();
+
       //tolerance in pixels away from contour edge
       float mip_tolerance = 1.0;
       mip_tolerance*=-1;
@@ -211,11 +216,15 @@ namespace larocv {
       for(const auto& pt : points) { 
 	auto dist = cv::pointPolygonTest(mip_ctor,pt,true);
 	if ( dist < mip_tolerance) continue;
+	float space_px = (float) img.at<uchar>(pt.y,pt.x); 
+	if (space_px < MIP_LEVEL) continue;
 	npts += 1;
 	qsum += (uchar) img.at<uchar>(pt.y,pt.x);
 	avg_x += (float) pt.x;
 	avg_y += (float) pt.y;
-	
+	qsum += space_px;
+	pixel_v.push_back(space_px);
+	mip_pixel_v.push_back(space_px);
       }
       
       avg_x /= (float) npts;
@@ -237,19 +246,27 @@ namespace larocv {
       cl.set_center_pt(center_pt);
       cl.set_length(length_);
       cl.set_width(width_);
+      cl.set_pixel(pixel_v);
+      cl.set_mip_pixel(mip_pixel_v);
       cluster_arr_v.emplace_back(std::move(cl));
     }
+    
+    
     
     //for hip contours
     points.clear();
     cv::findNonZero(hip_thresh_m, points);
+
     //std::cout << "Looking at " << hip_ctor_v.size() << " masked HIP contours" << std::endl;
     for ( auto& hip_ctor : hip_ctor_v ) { 
 
       //std::cout << "\tThis contour size: " << hip_ctor.size() << std::endl;
       uint npts = 0;
       uint qsum = 0;
-
+      std::vector<float> pixel_v;
+      pixel_v.clear();
+      std::vector<float> hip_pixel_v;
+      hip_pixel_v.clear();
       //tolerance in pixels away from contour edge
       float hip_tolerance = 1.0;
       hip_tolerance*=-1;
@@ -260,10 +277,17 @@ namespace larocv {
       for(const auto& pt : points) { 
 	auto dist = cv::pointPolygonTest(hip_ctor,pt,true);
 	if ( dist < hip_tolerance) continue;
+	float space_px = (float) img.at<uchar>(pt.y,pt.x); 
+	if (space_px < HIP_LEVEL) continue;
 	npts += 1;
 	qsum += (uchar) img.at<uchar>(pt.y,pt.x);
 	avg_x += (float) pt.x;
 	avg_y += (float) pt.y;
+	//qsum += (uchar) img.at<uchar>(pt.y,pt.x);
+	//pixel_v.push_back((float) img.at<uchar>(pt.y,pt.x));
+	qsum += space_px;
+	pixel_v.push_back(space_px);
+	hip_pixel_v.push_back(space_px);
       }
 
       avg_x /= (float) npts;
@@ -284,6 +308,8 @@ namespace larocv {
       cl.set_center_pt(center_pt);
       cl.set_length(length_);
       cl.set_width(width_);
+      cl.set_pixel(pixel_v);
+      cl.set_hip_pixel(hip_pixel_v);
       cluster_arr_v.emplace_back(std::move(cl));
     }
 
