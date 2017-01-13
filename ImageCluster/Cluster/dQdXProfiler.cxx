@@ -315,13 +315,13 @@ namespace larocv {
 
 	    // result container
 	    data::ParticledQdX part_dqdx;
-
+	    
 	    // order atoms
 	    auto const ordered_atom_id_v = OrderAtoms(particle,vtx2d);
 	  
 	    // get start/end
 	    auto atom_edges_v = AtomsEdge(particle, vtx2d, ordered_atom_id_v);
-
+	    
 	    // loop atoms (from last one)
 	    for(auto const& atom_id : ordered_atom_id_v) {
 	      // retrieve atom
@@ -332,7 +332,13 @@ namespace larocv {
 	      // retrieve start/end
 	      auto& start_end = atom_edges_v[atom_id];
 	      // construct dq/dx
-	      auto atom_dqdx = AtomdQdX(img, atom, pca, start_end.first, start_end.second);
+	      std::vector<float> atom_dqdx;
+	      try { 
+		atom_dqdx = AtomdQdX(img, atom, pca, start_end.first, start_end.second);
+	      } catch (const larbys& err) {
+		LAROCV_NORMAL() << "AtomdQdX could not be discerned" << std::endl;
+		atom_dqdx = {};
+	      }
 	      // last atom's end point can be improved by the nearest non-zero pixel search
 	      if(atom_id == ordered_atom_id_v.back()) {
 		cv::Mat thresh_img;
@@ -451,7 +457,13 @@ namespace larocv {
 	      // retrieve start/end
 	      auto& start_end = atom_edges_v[atom_id];
 	      // construct dq/dx
-	      auto atom_dqdx = AtomdQdX(img, atom, pca, start_end.first, start_end.second);
+	      std::vector<float> atom_dqdx;
+	      try { 
+		atom_dqdx = AtomdQdX(img, atom, pca, start_end.first, start_end.second);
+	      } catch (const larbys& err) {
+		LAROCV_NORMAL() << "AtomdQdX could not be discerned" << std::endl;
+		atom_dqdx = {};
+	      }
 	      // last atom's end point can be improved by the nearest non-zero pixel search
 	      if(atom_id == ordered_atom_id_v.back()) {
 		cv::Mat thresh_img;
