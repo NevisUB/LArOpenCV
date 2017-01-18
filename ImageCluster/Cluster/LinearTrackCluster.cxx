@@ -284,7 +284,7 @@ namespace larocv {
       bool used=false;
       geo2d::Vector<float> edge1, edge2;
       FindEdges(thresh_img,ctor,edge1,edge2);
-      if(ctor.size() < _min_size_track_ctor || geo2d::dist(edge1,edge2) < _min_length_track_ctor) {
+      if(ctor.size() < _min_size_track_ctor && geo2d::dist(edge1,edge2) < _min_length_track_ctor) { // ||
 	LAROCV_DEBUG() << "Ignoring too-small contour @ size = " << ctor.size()
 		       << " and length " << geo2d::dist(edge1,edge2) << std::endl;
 	continue;

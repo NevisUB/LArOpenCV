@@ -36,7 +36,7 @@ namespace larocv {
     _pi_threshold = 5;
     _circle_min_separation = 3;
     _vertex_min_separation = 3;
-    _circle_default_radius = pset.get<float>("CircleDefaultRadius",10);
+    _circle_default_radius = pset.get<float>("CircleDefaultRadius",10);//10
 
     _min_compat_dist = 5;
     _xplane_tick_resolution = 3;
@@ -195,9 +195,20 @@ namespace larocv {
 		auto const& mat = img_v[check_plane];
 		size_t min_x = (size_t)(check_pt.x - _circle_default_radius/2. + 0.5);
 		size_t min_y = (size_t)(check_pt.y - _circle_default_radius/2. + 0.5);
+
+		// if ( (min_x + _circle_default_radius+0.5) > mat.cols ) throw larbys("scanning past image col boundary");
+		// if ( (min_y + _circle_default_radius+0.5) > mat.rows ) throw larbys("scanning past image row boundary");
+
+		size_t step_x,step_y;
 		for(size_t dx=0; dx<(size_t)(_circle_default_radius+0.5); ++dx) {
+		  step_x = min_x+dx;
+		  if ( step_x >= mat.cols )
+		    { LAROCV_INFO() << "Skipping step outside img col bound"<<std::endl; continue; }
 		  for(size_t dy=0; dy<(size_t)(_circle_default_radius+0.5); ++dy) {
-		    if(mat.at<unsigned char>(min_y+dy,min_x+dx) < _pi_threshold) continue;
+		    step_y = min_y+dy;
+		    if ( step_y >= mat.rows )
+		      { LAROCV_INFO() << "Skipping step outside img row bound"<<std::endl; continue; }
+		    if(mat.at<unsigned char>(step_y,step_x) < _pi_threshold) continue;
 		    float dist = sqrt(pow((min_x+dx)-check_pt.x,2) + pow((min_y+dy)-check_pt.y,2));
 		    if(dist < check_dist_min) check_dist_min = dist;
 		  }
@@ -809,6 +820,7 @@ namespace larocv {
 		    << vtx3d.x << ","
 		    << vtx3d.y << ","
 		    << vtx3d.z << ")" << std::endl;
+      
       // accept if 2 planes have 2D circle w/ only 1 crossing
       std::vector<size_t> num_xs_v(_num_planes+1,0);
       size_t num_plane_unique_xs = 0;
