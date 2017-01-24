@@ -53,7 +53,7 @@ namespace larocv {
 
       // particle vertex cluster array
       const auto& vtx_cluster_v = vtxtrack_data._vtx_cluster_v;
-      
+
       // loop over vtx
       for(auto const& vtx_cluster : vtx_cluster_v) {
 	data::ParticleCompoundArray pcompound_set;
@@ -76,12 +76,12 @@ namespace larocv {
 		    << data.num_vertex_clusters() << " vertex clusters)" << std::endl;
     }
     else if( _lineartrack_algo_id!=kINVALID_ALGO_ID && data.get_vertex_clusters().empty()) {
-      
+
       auto const& lintrack_data = AlgoData<data::LinearTrackArray>(_lineartrack_algo_id,0);
 
       // particle vertex cluster array
       const auto& lin_cluster_v = lintrack_data.get_clusters();
-      
+
       // loop over vtx
       for(auto const& lin_cluster : lin_cluster_v) {
 	data::ParticleCompoundArray pcompound_set;
@@ -89,7 +89,7 @@ namespace larocv {
 	for(size_t plane = 0 ; plane < 3; ++plane) {
 	  // loop over clusters on this plane
 	  auto& lcluster = lin_cluster.get_cluster(plane);
-	  if ( lcluster.ctor.empty() ) continue;		   
+	  if ( lcluster.ctor.empty() ) continue;
 	  LAROCV_INFO() << "Inspecting defects for LinearTrack " << lin_cluster.id()
 			<< " plane " << plane
 			<< std::endl;
@@ -101,31 +101,31 @@ namespace larocv {
       }
       LAROCV_INFO() << "Finished processing all vertex (result size = "
 		    << data.num_vertex_clusters() << " vertex clusters)" << std::endl;
-      
-    
+
+
     }else{
 
       // Process input clusters on this plane
       for(size_t cindex=0; cindex<clusters.size(); ++cindex) {
 	auto const& cluster = clusters[cindex];
-	
+
 	LAROCV_INFO() << "Inspecting defects plane " << meta.plane()
 		      << " cluster " << cindex
 		      << std::endl;
-	
+
 	auto cluscomp = BreakContour(cluster._contour);
-	
+
 	plane_data.emplace_back(std::move(cluscomp));
-	
+
       }
     }
-    
+
     // Construct output
     Cluster2DArray_t oclusters_v;
     for(auto& cluscomp : plane_data.get_cluster()) {
       for(auto& atomic : cluscomp.get_atoms()) {
 	Cluster2D ocluster;
-	ocluster._contour = atomic._ctor;
+	ocluster._contour = atomic;
 	oclusters_v.emplace_back(std::move(ocluster));
       }
     }
@@ -751,7 +751,7 @@ namespace larocv {
     size_t closest_defect1_id2 = kINVALID_SIZE;
     for(auto const& defect_id : parent.associated_defects()) {
       auto const& defect_pt = cluscomp.get_defect(defect_id)._pt_defect;
-      double dist = pointPolygonTest(child1._ctor,defect_pt,true) * -1.;
+      double dist = pointPolygonTest(child1,defect_pt,true) * -1.;
       if(dist <  closest_defect1_dist1) {
 	// update 2nd closest defect
 	closest_defect1_dist2 = closest_defect1_dist1;
@@ -764,7 +764,7 @@ namespace larocv {
       }
     }
 
-    LAROCV_DEBUG() << "Child1 atom size " << child1._ctor.size()
+    LAROCV_DEBUG() << "Child1 atom size " << child1.size()
 		   << " closest defect " << closest_defect1_id1
 		   << " @ " << cluscomp.get_defect(closest_defect1_id1)._pt_defect
 		   << " dist = " << closest_defect1_dist1 << std::endl;
@@ -776,7 +776,7 @@ namespace larocv {
     size_t closest_defect2_id2 = kINVALID_SIZE;
     for(auto const& defect_id : parent.associated_defects()) {
       auto const& defect_pt = cluscomp.get_defect(defect_id)._pt_defect;
-      double dist = pointPolygonTest(child2._ctor,defect_pt,true) * -1.;
+      double dist = pointPolygonTest(child2,defect_pt,true) * -1.;
       if(dist < closest_defect2_dist1) {
 	// update 2nd closest defect
 	closest_defect2_dist2 = closest_defect2_dist1;
@@ -788,7 +788,7 @@ namespace larocv {
 	closest_defect2_id2   = defect_id;
       }
     }
-    LAROCV_DEBUG() << "Child2 atom size " << child2._ctor.size()
+    LAROCV_DEBUG() << "Child2 atom size " << child2.size()
 		   << " closest defect " << closest_defect2_id1
 		   << " @ " << cluscomp.get_defect(closest_defect2_id1)._pt_defect
 		   << " dist = " << closest_defect2_dist1 << std::endl;
@@ -856,7 +856,7 @@ namespace larocv {
     LAROCV_DEBUG() << "Original contour size: " << in_ctor.size() << std::endl;
     
     data::AtomicContour first_a_ctor;
-    first_a_ctor._ctor = in_ctor;
+    first_a_ctor = in_ctor;
     candidate_ctor_v.push_back(first_a_ctor);
     deprecate_ctor_v.push_back(false);
 
@@ -876,7 +876,7 @@ namespace larocv {
       }
       
       auto& a_ctor = candidate_ctor_v[target_ctor_idx];
-      auto& ctor   = a_ctor._ctor;
+      auto& ctor   = a_ctor;
 
       LAROCV_INFO() << "Next target cluster for breaking: candidate index = " << target_ctor_idx
 		    << " out of " << candidate_ctor_v.size() << " candidates ... size = " << ctor.size() << std::endl;
@@ -896,7 +896,7 @@ namespace larocv {
 	auto& atomic = cluscomp.make_atom();
 	for(auto const& defect_id : a_ctor.associated_defects())
 	  atomic.associate(defect_id);
-	atomic._ctor = ctor;
+	atomic = ctor;
 	LAROCV_INFO() << "Found atomic. Currently # atoms = "<< cluscomp.get_atoms().size()
 		      << " ... # defects = " << cluscomp.get_defects().size()
 		      << std::endl;
@@ -931,7 +931,7 @@ namespace larocv {
 	auto& atomic = cluscomp.make_atom();
 	for(auto const& defect_id : a_ctor.associated_defects())
 	  atomic.associate(defect_id);
-	atomic._ctor = ctor;
+	atomic = ctor;
 	LAROCV_INFO() << "Found atomic. Currently # atoms = "<< cluscomp.get_atoms().size()
 		      << " ... # defects = " << cluscomp.get_defects().size()
 		      << std::endl;
@@ -956,7 +956,7 @@ namespace larocv {
 	auto& atomic = cluscomp.make_atom();
 	for(auto const& defect_id : a_ctor.associated_defects())
 	  atomic.associate(defect_id);
-	atomic._ctor = ctor;
+	atomic = ctor;
 	LAROCV_INFO() << "Found atomic. Currently # atoms = "<< cluscomp.get_atoms().size()
 		      << " ... # defects = " << cluscomp.get_defects().size()
 		      << std::endl;
@@ -992,7 +992,7 @@ namespace larocv {
 	auto& atomic = cluscomp.make_atom();
 	for(auto const& defect_id : a_ctor.associated_defects())
 	  atomic.associate(defect_id);
-	atomic._ctor = ctor;
+	atomic = ctor;
 	LAROCV_INFO() << "Found atomic. Currently # atoms = "<< cluscomp.get_atoms().size()
 		      << " ... # defects = " << cluscomp.get_defects().size()
 		      << std::endl;
@@ -1010,7 +1010,7 @@ namespace larocv {
 	auto& atomic = cluscomp.make_atom();
 	for(auto const& defect_id : a_ctor.associated_defects())
 	  atomic.associate(defect_id);
-	atomic._ctor = ctor;
+	atomic = ctor;
 	LAROCV_INFO() << "Found atomic. Currently # atoms = "<< cluscomp.get_atoms().size()
 		       << " ... # defects = " << cluscomp.get_defects().size()
 		       << std::endl;
@@ -1032,9 +1032,9 @@ namespace larocv {
 	defect._split_line = min_line;
 
 	data::AtomicContour a_ctor1;
-	a_ctor1._ctor = ctor1;
+	a_ctor1 = ctor1;
 	data::AtomicContour a_ctor2;
-	a_ctor2._ctor = ctor2;
+	a_ctor2 = ctor2;
 	AssociateDefects(cluscomp,a_ctor,defect,a_ctor1,a_ctor2);
 
 	//candidate_ctor_v.emplace_back(std::move(a_ctor1));
@@ -1049,7 +1049,7 @@ namespace larocv {
 	if(ctor1.size()<=2) { LAROCV_DEBUG() << "Broken contour too small (size<=2)... ignoring..." << std::endl; }
 	else {
 	  data::AtomicContour a_ctor1;
-	  a_ctor1._ctor = ctor1;
+	  a_ctor1 = ctor1;
 	  for(auto const& defect_id : a_ctor.associated_defects())
 	    a_ctor1.associate(defect_id);
 	  //candidate_ctor_v.emplace_back(std::move(a_ctor1));
@@ -1060,7 +1060,7 @@ namespace larocv {
 	if(ctor2.size()<=2) { LAROCV_DEBUG() << "Broken contour too small (size<=2)... ignoring..." << std::endl; }
 	else {
 	  data::AtomicContour a_ctor2;
-	  a_ctor2._ctor = ctor2;
+	  a_ctor2 = ctor2;
 	  for(auto const& defect_id : a_ctor.associated_defects())
 	    a_ctor2.associate(defect_id);
 	  //candidate_ctor_v.emplace_back(std::move(a_ctor2));
@@ -1086,13 +1086,13 @@ namespace larocv {
       auto& candidate_ctor = candidate_ctor_v[target_ctor_idx];
       
       if(deprecate_ctor_v[target_ctor_idx]) continue;
-      if(candidate_ctor._ctor.size() <= 2) continue;
+      if(candidate_ctor.size() <= 2) continue;
       
-      LAROCV_NORMAL() << "Putting defect ctor of size : " << candidate_ctor._ctor.size() << " into atomic_atomic_ctor_v "<< std::endl;
+      LAROCV_NORMAL() << "Putting defect ctor of size : " << candidate_ctor.size() << " into atomic_atomic_ctor_v "<< std::endl;
       auto& atomic = cluscomp.make_atom();
       for(auto const& defect_id : candidate_ctor.associated_defects())
 	atomic.associate(defect_id);
-      atomic._ctor = candidate_ctor._ctor;
+      atomic = candidate_ctor;
       LAROCV_DEBUG() << "Currently # atoms = "<< cluscomp.get_atoms().size()
 		     << " ... # defects = " << cluscomp.get_defects().size()
 		     << std::endl;
@@ -1131,7 +1131,7 @@ namespace larocv {
 	if(used_atom_v[atom.id()] >=2) continue;
 	double mindist =1e10;
 	double dist=0;
-	for(auto const& pt : atom._ctor) {
+	for(auto const& pt : atom) {
 	  dist = pow(pt.x - defect_pt.x,2) + pow(pt.y - defect_pt.y,2);
 	  if(dist < mindist) mindist = dist;
 	}
@@ -1176,7 +1176,7 @@ namespace larocv {
       ss << "Reporting the final set of atoms/defects" << std::endl;
       for(auto const& atom : cluscomp.get_atoms()) {
 
-	ss << "    Atom ID " << atom.id() << " size = " << atom._ctor.size() << " ... associated defects: ";
+	ss << "    Atom ID " << atom.id() << " size = " << atom.size() << " ... associated defects: ";
 	for(auto const& defect_id : atom.associated_defects())
 
 	  ss << defect_id << " @ " << cluscomp.get_defect(defect_id)._pt_defect << " ... ";

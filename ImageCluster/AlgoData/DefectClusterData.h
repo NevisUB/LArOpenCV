@@ -16,17 +16,17 @@ namespace larocv {
     class ParticleCompoundArray;
     class DefectClusterData;
     
-    class AtomicContour {
+    class AtomicContour : public GEO2D_Contour_t {
       friend class ClusterCompound;
     public:
       
       AtomicContour(size_t atomic_id = kINVALID_SIZE)
-	: _atomic_id(atomic_id) { clear(); }
+	: GEO2D_Contour_t(), _atomic_id(atomic_id) { clear(); }
       AtomicContour(const GEO2D_Contour_t& ctor,size_t parent_idx,size_t atomic_id)
-	: _ctor(ctor)
+	: GEO2D_Contour_t(ctor)
 	, _parent_idx(parent_idx)
 	, _atomic_id(atomic_id)
-      {clear();}
+      { clear(); }
       /*
       AtomicContour(AtomicContour&& rhs)
 	: _ctor(std::move(rhs._ctor))
@@ -36,27 +36,43 @@ namespace larocv {
       {}
       */      
       ~AtomicContour(){}
+
+      //Always protect existing class members upon assignment
+      AtomicContour& operator=(const GEO2D_Contour_t& ctor) {
+	GEO2D_Contour_t::operator=(ctor);
+	return *this;
+      }
+
+      AtomicContour& operator=(const AtomicContour& ctor) {
+	GEO2D_Contour_t::operator=(ctor);
+	return *this;
+      }
       
       /// clears data
       void clear();
       /// returns unique atomic cluster id
       size_t id() const;
       
-      GEO2D_Contour_t _ctor;
       size_t _parent_idx;
-      
       /// asociate argument defect point
       void associate(const ContourDefect& ac);
       /// check if the argument defect point is associated
       bool is_associated(const ContourDefect& ac) const;
       /// retrieve a list of defect points associated
       const std::vector<size_t>& associated_defects() const;
+      /// add an edge
+      void add_edge(geo2d::Vector<float>& edge);
+      /// get all edges
+      const std::vector<geo2d::Vector<float> >& edges();
       
     private:
       /// unique atomic cluster id
       size_t _atomic_id;
       /// associated defect point(s) id, use std::vector instead of std::set for Python-friendly support
-      std::vector<size_t> _defect_id_v;  
+      std::vector<size_t> _defect_id_v;
+      /// edges vector
+      std::vector<geo2d::Vector<float> > _edges_v;
+      
     };
     
     class ContourDefect {
@@ -98,7 +114,7 @@ namespace larocv {
       std::vector<size_t> _atomic_id_v; 
     };
 
-    class ClusterCompound {
+    class ClusterCompound : public std::vector<AtomicContour> {
       friend class ClusterCompoundArray;
       friend class ParticleCompoundArray;
     public:
@@ -136,7 +152,7 @@ namespace larocv {
       const larocv::data::ContourDefect& get_defect(size_t id) const;
       
     private:
-      std::vector< AtomicContour > _atomic_ctor_v; ///< a list of atomic cluster, ordered by their unique ID
+      //std::vector< AtomicContour > _atomic_ctor_v; ///< a list of atomic cluster, ordered by their unique ID
       std::vector< ContourDefect > _ctor_defect_v; ///< a list of contour defect, ordered by their unique ID
       size_t _cluster_id; ///< unique ID associated with original cluster
     };

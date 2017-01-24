@@ -120,7 +120,7 @@ namespace larocv {
 	  // loop over atoms
 	  for(auto const& atom : compound.get_atoms()) {
 	    // estimate pca
-	    auto pca_principle = calculate_pca(atom._ctor);
+	    auto pca_principle = calculate_pca(atom);
 	    // register this pca w/ id
 	    data.move(std::move(pca_principle),
 		      atom.id(), compound.id(), meta.plane());
@@ -138,7 +138,7 @@ namespace larocv {
 	    // loop over atoms
 	    for(auto const& atom : compound.get_atoms()) {
 	      // estimate pca
-	      auto pca_principle = calculate_pca(atom._ctor);
+	      auto pca_principle = calculate_pca(atom);
 	      // register this pca w/ id
 	      data.move(std::move(pca_principle),
 			atom.id(), compound.id(), meta.plane(), vtx_data.id());

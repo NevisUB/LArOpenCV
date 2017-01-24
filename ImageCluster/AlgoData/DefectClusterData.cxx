@@ -9,13 +9,13 @@ namespace larocv {
   namespace data {
 
     void AtomicContour::clear()
-    { _ctor.clear(); _parent_idx = -1; _defect_id_v.clear(); }
+    { GEO2D_Contour_t::clear(); _parent_idx = -1; _defect_id_v.clear(); _edges_v.clear(); }
     
     size_t AtomicContour::id() const
     { return _atomic_id; }
     
     void AtomicContour::associate(const ContourDefect& def)
-    { if(!is_associated(def)) _defect_id_v.push_back(def.id()); }
+    { if( ! is_associated(def) ) _defect_id_v.push_back( def.id() ); }
     
     bool AtomicContour::is_associated(const ContourDefect& def) const
     {
@@ -27,6 +27,12 @@ namespace larocv {
     
     const std::vector<size_t>& AtomicContour::associated_defects() const
     { return _defect_id_v; }
+
+    void AtomicContour::add_edge(geo2d::Vector<float>& edge)
+    { _edges_v.push_back(edge); }
+    
+    const std::vector<geo2d::Vector<float>>& AtomicContour::edges()
+    { return _edges_v; }
     
     ////////////////////////////////////////////////////////////////
     
@@ -75,16 +81,16 @@ namespace larocv {
     ////////////////////////////////////////////////////////////////
     
     void ClusterCompound::clear()
-    { _atomic_ctor_v.clear(); _ctor_defect_v.clear(); }
+    { std::vector<AtomicContour>::clear(); _ctor_defect_v.clear(); }
     
     size_t ClusterCompound::id() const
     { return _cluster_id; }
 
     AtomicContour& ClusterCompound::make_atom()
     {
-      _atomic_ctor_v.push_back(AtomicContour());
-      _atomic_ctor_v.back()._atomic_id = _atomic_ctor_v.size() - 1;
-      return _atomic_ctor_v.back();
+      this->push_back(AtomicContour());
+      this->back()._atomic_id = this->size() - 1;
+      return this->back();
     }
 
     ContourDefect& ClusterCompound::make_defect()
@@ -96,8 +102,8 @@ namespace larocv {
     
     void ClusterCompound::push_back(const AtomicContour& atom)
     {
-      _atomic_ctor_v.push_back(atom);
-      _atomic_ctor_v.back()._atomic_id = _atomic_ctor_v.size() - 1;
+      std::vector<AtomicContour>::push_back(atom);
+      this->back()._atomic_id = this->size() - 1;
     }
     
     void ClusterCompound::push_back(const ContourDefect& defect)
@@ -108,8 +114,8 @@ namespace larocv {
     
     void ClusterCompound::emplace_back(AtomicContour&& atom)
     {
-      _atomic_ctor_v.emplace_back(std::move(atom));
-      _atomic_ctor_v.back()._atomic_id = _atomic_ctor_v.size() - 1;
+      std::vector<AtomicContour>::emplace_back(std::move(atom));
+      this->back()._atomic_id = this->size() - 1;
     }
     
     void ClusterCompound::emplace_back(ContourDefect&& defect)
@@ -120,10 +126,10 @@ namespace larocv {
 
     void ClusterCompound::associate(size_t atom_id, size_t defect_id)
     {
-      if( atom_id   >= _atomic_ctor_v.size() ) throw larbys("Cannot associate invalid atomic id!");
+      if( atom_id   >= this->size() ) throw larbys("Cannot associate invalid atomic id!");
       if( defect_id >= _ctor_defect_v.size() ) throw larbys("Cannot associate invalid defect id!");
 
-      auto& atomic_ctor = _atomic_ctor_v[ atom_id   ];
+      auto& atomic_ctor = this->      at( atom_id   );
       auto& ctor_defect = _ctor_defect_v[ defect_id ];
 
       if( atomic_ctor.id() != atom_id   ) throw larbys("Found inconsistent atomic id and index location!");
@@ -134,15 +140,15 @@ namespace larocv {
     }
     
     const std::vector<larocv::data::AtomicContour>& ClusterCompound::get_atoms() const
-    { return _atomic_ctor_v; }
+    { return *this; }
     
     const std::vector<larocv::data::ContourDefect>& ClusterCompound::get_defects() const
     { return _ctor_defect_v; }
     
     const larocv::data::AtomicContour& ClusterCompound::get_atom(size_t id) const
     {
-      if(id >= _atomic_ctor_v.size()) throw larbys("Invalid atomic id requested");
-      return _atomic_ctor_v[id];
+      if(id >= this->size()) throw larbys("Invalid atomic id requested");
+      return this->at(id);
     }
     
     const larocv::data::ContourDefect& ClusterCompound::get_defect(size_t id) const
