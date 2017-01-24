@@ -8,7 +8,9 @@
 #include "Core/Line.h"
 #include "Core/BoundingBox.h"
 #include "ImageClusterFMWKInterface.h"
-#include "GenUtils.h"
+#include "AlgoFunction/ImagePatchAnalysis.h"
+#include "AlgoFunction/Contour2DAnalysis.h"
+#include "AlgoFunction/SpectrumAnalysis.h"
 #include <array>
 #include <map>
 
@@ -406,59 +408,6 @@ namespace larocv{
     return res_spread;
   }
 
-  void Refine2DVertex::FindEdges(const GEO2D_Contour_t& ctor,
-				 geo2d::Vector<float>& edge1,
-				 geo2d::Vector<float>& edge2) const
-  {
-    // cheap trick assuming this is a linear, linear track cluster
-    geo2d::Vector<float> mean_pt, ctor_pt;
-    mean_pt.x = mean_pt.y = 0.;
-    for(auto const& pt : ctor) { mean_pt.x += pt.x; mean_pt.y += pt.y; }
-    mean_pt.x /= (double)(ctor.size());
-    mean_pt.y /= (double)(ctor.size());
-    // find the furthest point from the mean (x,y)
-    double dist_max=0;
-    double dist;
-    for(auto const& pt : ctor) {
-      ctor_pt.x = pt.x;
-      ctor_pt.y = pt.y;
-      dist = geo2d::dist(mean_pt,ctor_pt);
-      if(dist > dist_max) {
-	edge1 = pt;
-	dist_max = dist;
-      }
-    }
-    // find the furthest point from edge1
-    dist_max=0;
-    for(auto const& pt : ctor) {
-      ctor_pt.x = pt.x;
-      ctor_pt.y = pt.y;
-      dist = geo2d::dist(edge1,ctor_pt);
-      if(dist > dist_max) {
-	edge2 = pt;
-	dist_max = dist;
-      }
-    }
-  }
-
-  cv::Mat Refine2DVertex::CleanImage(const cv::Mat& img,
-				     const GEO2D_ContourArray_t& veto_ctor_v) const
-  {
-    cv::Mat thresh_img;
-    ::cv::threshold(img,thresh_img,_pi_threshold,1000,3);
-    geo2d::VectorArray<int> points;
-    findNonZero(thresh_img, points);
-    for(auto const& pt : points) {
-      for(auto const& veto_ctor : veto_ctor_v) {
-	auto dist = ::cv::pointPolygonTest(veto_ctor,pt,false);
-	if(dist<0) continue;
-	thresh_img.at<unsigned char>(pt.y,pt.x) = 0;
-	break;
-      }
-    }
-    return thresh_img;
-  }
-  
   std::vector<std::vector<geo2d::Vector<int> > >
   Refine2DVertex::VertexVetoRegion(const ::cv::Mat& img)
   {
@@ -486,45 +435,6 @@ namespace larocv{
       }
     }
     return res_v;
-  }
-
-  geo2d::Line<float> Refine2DVertex::SquarePCA(const ::cv::Mat& img,
-					       geo2d::Vector<float> pt,
-					       float width, float height)
-  {
-
-    cv::Rect rect(pt.x-width, pt.y-height, 2*width+1, 2*height+1);
-    edge_rect(img,rect,2*width+1,2*height+1);
-    
-    auto small_img = ::cv::Mat(img,rect);
-    ::cv::Mat thresh_small_img;
-    //::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,CV_THRESH_BINARY);
-    ::cv::threshold(small_img,thresh_small_img,1,1000,3);
-    geo2d::VectorArray<int> points;
-    findNonZero(thresh_small_img, points);
-
-    if(points.size() < 2) {
-      LAROCV_DEBUG() << "SquarePCA approx cannot be made (# points " << points.size() << " < 2)" << std::endl;
-      throw larbys("SquarePCA found no point...");
-    }
-    
-    cv::Mat mat_points(points.size(), 2, CV_32FC1);
-    for (unsigned i = 0; i < mat_points.rows; ++i) {
-      mat_points.at<float>(i, 0) = points[i].x;
-      mat_points.at<float>(i, 1) = points[i].y;
-    }
-
-    ::cv::PCA pcaobj(mat_points,::cv::Mat(),::cv::PCA::DATA_AS_ROW,0);
-    
-    pt.x += pcaobj.mean.at<float>(0,0) - width;
-    pt.y += pcaobj.mean.at<float>(0,1) - height;
-    
-    auto dir = geo2d::Vector<float>(pcaobj.eigenvectors.at<float>(0,0),
-				    pcaobj.eigenvectors.at<float>(0,1));
-
-    //std::cout << "Mean @ (" << pt.x << "," << pt.y << ") ... dir (" << dir.x << "," << dir.y << std::endl;
-
-    return geo2d::Line<float>(pt,dir);
   }
 
   std::vector<geo2d::VectorArray<float> >
@@ -605,57 +515,11 @@ namespace larocv{
     return res_v;
   }
 
-  void Refine2DVertex::edge_rect(const ::cv::Mat& img, cv::Rect& rect,int w, int h) const
-  {
-
-    //make it edge aware
-    if ( rect.x < 0 ) rect.x = 0;
-    if ( rect.y < 0 ) rect.y = 0;
-    
-    if ( rect.x > img.cols - w ) rect.x = img.cols - w;
-    if ( rect.y > img.rows - h ) rect.y = img.rows - h;
-    
-  }
-  
-  geo2d::Vector<float> Refine2DVertex::MeanPixel(const cv::Mat& img,
-						 const geo2d::Vector<float>& center,
-						 size_t range_x, size_t range_y) const
-  {
-    // Make a better guess
-    ::cv::Rect rect(center.x - range_x, center.y - range_y, range_x*2+1,range_y*2+1);
-    edge_rect(img,rect,range_x*2+1,range_y*2+1);
-    
-    LAROCV_DEBUG() << "rows cols " << img.rows << "," << img.cols << " and rect " << rect << std::endl;
-    auto small_img = ::cv::Mat(img,rect);
-    ::cv::Mat thresh_small_img;
-    ::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,CV_THRESH_BINARY);
-    //::cv::threshold(small_img,thresh_small_img,_pi_threshold,1000,3);
-    
-    geo2d::VectorArray<int> points;
-    findNonZero(thresh_small_img, points);
-    
-    geo2d::Vector<float> trial_pt(-1,-1);
-    if(points.empty()) return trial_pt;
-    
-    for (unsigned i = 0; i < points.size(); ++i){
-      trial_pt.x += points[i].x;
-      trial_pt.y += points[i].y;
-    }
-    
-    trial_pt.x /= (float)(points.size());
-    trial_pt.y /= (float)(points.size());
-    
-    trial_pt.x = center.x + trial_pt.x - range_x;
-    trial_pt.y = center.y + trial_pt.y - range_y;
-
-    return trial_pt;
-  }
-
   double Refine2DVertex::PointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt)
   {
 
     // Get xs points for this step. if < 2 continue
-    auto const xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius));
+    auto const xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius),_pi_threshold);
     
     if(xs_pts.size()<2) { return -1; }
     
@@ -783,8 +647,8 @@ namespace larocv{
     inner_circle.center = outer_circle.center = pt;
     inner_circle.radius = _radius;
     outer_circle.radius = _radius * 2.;
-    auto const inner_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius  ));
-    auto const outer_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius*2));
+    auto const inner_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius  ),_pi_threshold);
+    auto const outer_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius*2),_pi_threshold);
     double inner_dtheta_sum = 0;
     double outer_dtheta_sum = 0;
     
@@ -878,7 +742,7 @@ namespace larocv{
     std::vector<geo2d::Line<float>   > temp1_pca_v, temp2_pca_v;
 
     // Find valid PCAs per xs point 
-    for(auto const& pt : QPointOnCircle(img,init_circle)) {
+    for(auto const& pt : QPointOnCircle(img,init_circle,_pi_threshold)) {
       try{
 	auto const line = SquarePCA(img,pt,_pca_box_size,_pca_box_size);
 	temp1_xs_v.push_back(pt);
@@ -889,7 +753,7 @@ namespace larocv{
     }
     
     // Find valid PCAs per xs point 
-    for(auto const& pt : QPointOnCircle(img,half_circle)) {
+    for(auto const& pt : QPointOnCircle(img,half_circle,_pi_threshold)) {
       try{
 	auto const line = SquarePCA(img,pt,_pca_box_size,_pca_box_size);
 	temp2_xs_v.push_back(pt);
@@ -1014,7 +878,7 @@ namespace larocv{
 	  continue;
 	}
 
-	auto trial_pt = this->MeanPixel(img,step_pt);
+	auto trial_pt = MeanPixel(img,step_pt,2,2,_pi_threshold);
 
 	auto circle = this->TwoPointInspection(img,trial_pt);
 	//auto circle = this->RadialScan(img,trial_pt);
@@ -1169,7 +1033,7 @@ namespace larocv{
 	  cv::Mat src_img;
 	  if(_clean_image) {
 	    _veto_ctor_vv[meta.plane()] = VertexVetoRegion(img);
-	    src_img = CleanImage(img,_veto_ctor_vv[meta.plane()]);
+	    src_img = CleanImage(img,_veto_ctor_vv[meta.plane()],_pi_threshold);
 	  }
 	  else src_img = img;
 	  found = PlaneScan(src_img,meta.plane(),circle,pt_err) || found;
@@ -1199,7 +1063,7 @@ namespace larocv{
 	cv::Mat src_img;
 	if(_clean_image) {
 	  _veto_ctor_vv[meta.plane()] = VertexVetoRegion(img);
-	  src_img = CleanImage(img,_veto_ctor_vv[meta.plane()]);
+	  src_img = CleanImage(img,_veto_ctor_vv[meta.plane()],_pi_threshold);
 	}
 	else src_img = img;
 	found = PlaneScan(src_img,meta.plane(),circle,pt_err) || found;
@@ -1648,7 +1512,8 @@ namespace larocv{
 	    guess_pt.y = approx_y;
 	    guess_pt = MeanPixel(img_v[plane],guess_pt,
 				 (size_t)(_xplane_tick_resolution+0.5),
-				 (size_t)(_xplane_wire_resolution+0.5));
+				 (size_t)(_xplane_wire_resolution+0.5),
+				 _pi_threshold);
 	    if(guess_pt.x<0) {
 	      guess_pt.x = approx_x;
 	      guess_pt.y = approx_y;
@@ -1944,7 +1809,8 @@ namespace larocv{
 		    guess_pt.y = approx_y;
 		    guess_pt = MeanPixel(img_v[plane],guess_pt,
 					 (size_t)(_xplane_tick_resolution+0.5),
-					 (size_t)(_xplane_wire_resolution+0.5));
+					 (size_t)(_xplane_wire_resolution+0.5),
+					 _pi_threshold);
 		    if(guess_pt.x<0) {
 		      guess_pt.x = approx_x;
 		      guess_pt.y = approx_y;

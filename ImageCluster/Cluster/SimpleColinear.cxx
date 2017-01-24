@@ -2,7 +2,9 @@
 #define __SIMPLECOLINEAR_CXX__
 
 #include "SimpleColinear.h"
-#include "GenUtils.h"
+#include "AlgoFunction/ImagePatchAnalysis.h"
+#include "AlgoFunction/Contour2DAnalysis.h"
+#include "AlgoFunction/SpectrumAnalysis.h"
 
 namespace larocv {
 

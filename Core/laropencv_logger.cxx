@@ -6,6 +6,8 @@
 namespace larocv {
 
   std::map<std::string,logger> *logger::_logger_m = nullptr;
+
+  logger* logger::_shared_logger = nullptr;
   
   std::ostream& logger::send(const msg::Level_t level) const
   {

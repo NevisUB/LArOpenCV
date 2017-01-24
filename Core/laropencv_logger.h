@@ -57,6 +57,9 @@ namespace larocv {
     
     /// Set of loggers
     static std::map<std::string,larocv::logger> *_logger_m;
+
+    /// Shared logger for functions
+    static larocv::logger* _shared_logger;
     
   public:
 
@@ -88,6 +91,12 @@ namespace larocv {
       }
       return iter->second;
     };
+    /// Getter for a shared logger
+    static logger& get_shared()
+    {
+      if(!_shared_logger) _shared_logger = new logger("GLOBAL");
+      return *_shared_logger;
+    }
     //
     // Verbosity level checker
     //
@@ -114,6 +123,7 @@ namespace larocv {
   
   /* typedef ::larocv::logger logger; */
 }
+
 //
 // Compiler macro for saving us from text typing
 //
@@ -123,6 +133,16 @@ namespace larocv {
 #define LAROCV_WARNING()  if(this->logger().warning())  this->logger().send(::larocv::msg::kWARNING,  __FUNCTION__                  )
 #define LAROCV_ERROR()    if(this->logger().error())    this->logger().send(::larocv::msg::kERROR,    __FUNCTION__,__LINE__         )
 #define LAROCV_CRITICAL() this->logger().send(::larocv::msg::kCRITICAL, __FUNCTION__,__LINE__,__FILE__)
+//
+// Compiler macro for static functions
+//
+#define LAROCV_SDEBUG()    if(larocv::logger::get_shared().debug())    larocv::logger::get_shared().send(::larocv::msg::kDEBUG,    __FUNCTION__,__LINE__,__FILE__)
+#define LAROCV_SINFO()     if(larocv::logger::get_shared().info())     larocv::logger::get_shared().send(::larocv::msg::kINFO,     __FUNCTION__,__LINE__         )
+#define LAROCV_SNORMAL()   if(larocv::logger::get_shared().normal())   larocv::logger::get_shared().send(::larocv::msg::kNORMAL,   __FUNCTION__                  )
+#define LAROCV_SWARNING()  if(larocv::logger::get_shared().warning())  larocv::logger::get_shared().send(::larocv::msg::kWARNING,  __FUNCTION__                  )
+#define LAROCV_SERROR()    if(larocv::logger::get_shared().error())    larocv::logger::get_shared().send(::larocv::msg::kERROR,    __FUNCTION__,__LINE__         )
+#define LAROCV_SCRITICAL() larocv::logger::get_shared().send(::larocv::msg::kCRITICAL, __FUNCTION__,__LINE__,__FILE__)
+
 #endif
 /** @} */ // end of doxygen group 
 

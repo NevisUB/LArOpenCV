@@ -64,23 +64,16 @@ namespace larocv {
 		  const geo2d::Vector<float>& pt1, const size_t plane1,
 		  larocv::data::Vertex3D& result) const;
 
-    geo2d::VectorArray<float> QPointOnCircle(const ::cv::Mat& img,
-					     const geo2d::Circle<float>& circle) const;
-
     geo2d::VectorArray<float>
     ValidShowerPointOnCircle(const ::cv::Mat& img,
 			     const geo2d::Circle<float>& circle,
 			     const std::vector<geo2d::Vector<float> >& xs_pts) const;
     
-    geo2d::Line<float> SquarePCA(const ::cv::Mat& img,
-				 geo2d::Vector<float> pt,
-				 float width, float height) const;
-    
     void ListShowerVertex(const std::vector<const cv::Mat>& img_v,
 			  const std::vector<larocv::data::Vertex3D>& cand_v,
 			  std::vector<larocv::data::Vertex3D>& res_vtx_v,
 			  std::vector<std::vector<larocv::data::CircleVertex> >& res_cvtx_v) const;
-    void edge_rect(const ::cv::Mat& img, cv::Rect& rect,int w, int h) const;
+
     std::vector<larocv::data::Vertex3D> _cand_vertex_v;
     AlgorithmID_t _algo_id_dqdx;
     AlgorithmID_t _algo_id_vertex_track;

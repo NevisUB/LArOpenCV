@@ -11,6 +11,10 @@
 #include "AlgoData/VertexClusterData.h"
 #include "AlgoData/LinearTrackClusterData.h"
 
+#include "AlgoFunction/ImagePatchAnalysis.h"
+#include "AlgoFunction/Contour2DAnalysis.h"
+#include "AlgoFunction/SpectrumAnalysis.h"
+
 //#include <typeinfo>
 
 namespace larocv {
@@ -303,56 +307,6 @@ namespace larocv {
     return res_v;
   }
 
-  void VertexSingleShower::edge_rect(const ::cv::Mat& img, cv::Rect& rect,int w, int h) const
-  {
-
-    //make it edge aware
-    if ( rect.x < 0 ) rect.x = 0;
-    if ( rect.y < 0 ) rect.y = 0;
-    
-    if ( rect.x > img.cols - w ) rect.x = img.cols - w;
-    if ( rect.y > img.rows - h ) rect.y = img.rows - h;
-    
-  }
-
-  
-  geo2d::Line<float> VertexSingleShower::SquarePCA(const ::cv::Mat& img,
-						   geo2d::Vector<float> pt,
-						   float width, float height) const
-  {
-
-    cv::Rect rect(pt.x-width, pt.y-height, 2*width+1, 2*height+1);
-    edge_rect(img,rect,2*width+1,2*height+1);
-    
-    auto small_img = ::cv::Mat(img,rect);
-    ::cv::Mat thresh_small_img;
-    //::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,CV_THRESH_BINARY);
-    ::cv::threshold(small_img,thresh_small_img,1,1000,3);
-    geo2d::VectorArray<int> points;
-    findNonZero(thresh_small_img, points);
-
-    if(points.size() < 2) {
-      LAROCV_DEBUG() << "SquarePCA approx cannot be made (# points " << points.size() << " < 2)" << std::endl;
-      throw larbys("SquarePCA found no point...");
-    }
-    
-    cv::Mat mat_points(points.size(), 2, CV_32FC1);
-    for (unsigned i = 0; i < mat_points.rows; ++i) {
-      mat_points.at<float>(i, 0) = points[i].x;
-      mat_points.at<float>(i, 1) = points[i].y;
-    }
-
-    ::cv::PCA pcaobj(mat_points,::cv::Mat(),::cv::PCA::DATA_AS_ROW,0);
-    
-    pt.x += pcaobj.mean.at<float>(0,0) - width;
-    pt.y += pcaobj.mean.at<float>(0,1) - height;
-    
-    auto dir = geo2d::Vector<float>(pcaobj.eigenvectors.at<float>(0,0),
-				    pcaobj.eigenvectors.at<float>(0,1));
-
-    return geo2d::Line<float>(pt,dir);
-  }
-
   geo2d::VectorArray<float>
   VertexSingleShower::ValidShowerPointOnCircle(const ::cv::Mat& img,
 					       const geo2d::Circle<float>& circle,
@@ -446,64 +400,6 @@ namespace larocv {
     return res_v;
   }
   
-
-  geo2d::VectorArray<float>
-  VertexSingleShower::QPointOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle) const
-  {
-    geo2d::VectorArray<float> res;
-    // Find crossing point
-    ::cv::Mat polarimg;
-    ::cv::linearPolar(img, polarimg, circle.center, circle.radius*2, ::cv::WARP_FILL_OUTLIERS);
-
-    size_t col = (size_t)(polarimg.cols / 2);
-
-    std::vector<std::pair<int,int> > range_v;
-    std::pair<int,int> range(-1,-1);
-    for(size_t row=0; row<polarimg.rows; ++row) {
-
-      float q = (float)(polarimg.at<unsigned char>(row, col));
-      //std::cout<<row << "," << col << " @ " << q << std::endl;
-
-      if(q < _pi_threshold) {
-	if(range.first >= 0) {
-	  range_v.push_back(range);
-	  range.first = range.second = -1;
-	}
-	continue;
-      }
-
-      if(range.first < 0) range.first = range.second = row;
-
-      else range.second = row;
-
-    }
-
-    if(range.first>=0 && range.second>=0) range_v.push_back(range);
-
-    // Check if end should be combined w/ start
-    if(range_v.size()>=2) {
-      if(range_v[0].first == 0 && (range_v.back().second+1) == polarimg.rows) {
-	range_v[0].first = range_v.back().first - (int)(polarimg.rows);
-	range_v.pop_back();
-      }
-    }
-    // Compute xs points
-    for(auto const& r : range_v) {
-
-      //LAROCV_DEBUG() << "XS @ " << r.first << " => " << r.second << " ... " << polarimg.rows << std::endl;
-      float angle = ((float)(r.first + r.second))/2.;
-      if(angle < 0) angle += (float)(polarimg.rows);
-      angle = angle * M_PI * 2. / ((float)(polarimg.rows));
-
-      geo2d::Vector<float> pt;
-      pt.x = circle.center.x + circle.radius * cos(angle);
-      pt.y = circle.center.y + circle.radius * sin(angle);
-
-      res.push_back(pt);
-    }
-    return res;
-  }
-
   larocv::data::ShowerCluster
   VertexSingleShower::SingleShowerHypothesis(const ::cv::Mat& img,
 					     const size_t plane,
@@ -754,7 +650,7 @@ namespace larocv {
 	cvtx.center.x = circle.center.x;
 	cvtx.center.y = circle.center.y;
 	auto const& img = img_v[plane];
-	auto xs_pt_v = this->QPointOnCircle(img,circle);
+	auto xs_pt_v = QPointOnCircle(img,circle,_pi_threshold);
 	LAROCV_INFO() << "Inspecting plane " << plane
 		      << " ... " << xs_pt_v.size()
 		      << " crossing points on circle @ " << circle.center << std::endl;
@@ -774,7 +670,7 @@ namespace larocv {
 	for(auto const& xs_pt : xs_pt_v) {
 	  larocv::data::PointPCA pca_pt;
 	  pca_pt.pt = xs_pt;
-	  pca_pt.line = this->SquarePCA(img, pca_pt.pt, 5, 5);
+	  pca_pt.line = SquarePCA(img, pca_pt.pt, 5, 5);
 	  cvtx.xs_v.push_back(pca_pt);
 	}
       }

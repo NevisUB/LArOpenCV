@@ -6,7 +6,9 @@
 //#include "AlgoData/PCACandidatesData.h"
 #include "AlgoData/dQdXProfilerData.h"
 #include "AlgoData/LinearTrackClusterData.h"
-#include "GenUtils.h"
+#include "AlgoFunction/ImagePatchAnalysis.h"
+#include "AlgoFunction/Contour2DAnalysis.h"
+#include "AlgoFunction/SpectrumAnalysis.h"
 
 namespace larocv {
 

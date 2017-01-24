@@ -89,11 +89,6 @@ namespace larocv {
     /// PostProcess method
     bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
 
-    geo2d::Line<float> SquarePCA(const ::cv::Mat& img,
-				 geo2d::Vector<float> pt,
-				 float width, float height);
-      
-
     std::vector<geo2d::VectorArray<float> > QPointArrayOnCircleArray(const ::cv::Mat& img,
 								     const geo2d::Vector<float>& pt,
 								     const std::vector<float>& radius_v) const;
@@ -106,9 +101,6 @@ namespace larocv {
 
   private:
 
-    void edge_rect(const ::cv::Mat& img, cv::Rect& rect,int w, int h) const;
-    
-    
     bool PlaneScan(const ::cv::Mat& img, const size_t plane,
 		   const geo2d::Circle<float> init_circle,
 		   const geo2d::Vector<float> pt_err);
@@ -121,12 +113,6 @@ namespace larocv {
     void XPlaneWireProposal();
     void WireVertex3D(const std::vector<const cv::Mat>& img_v);
 
-    cv::Mat CleanImage(const cv::Mat& img,
-		       const GEO2D_ContourArray_t& veto_ctor_v) const;
-
-    geo2d::Vector<float> MeanPixel(const cv::Mat& img, const geo2d::Vector<float>& center,
-				   size_t range_x=2, size_t range_y=2) const;
-
     double PointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
 
     data::CircleVertex TwoPointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt);
@@ -138,10 +124,6 @@ namespace larocv {
 		       std::vector<size_t>& local_extreme_idx_v,
 		       std::vector<std::pair<size_t,size_t> >& local_extreme_range_v,
 		       float invalid_value=kINVALID_FLOAT);
-
-    void FindEdges(const GEO2D_Contour_t& ctor,
-		   geo2d::Vector<float>& edge1,
-		   geo2d::Vector<float>& edge2) const;
 
     double CircleWeight(const larocv::data::CircleVertex& cvtx);
 
