@@ -198,7 +198,7 @@ namespace larocv {
       }
       ptr->_id = _cluster_alg_v.size();
       ptr->_dataman_ptr = &_algo_dataman;
-      _algo_dataman.Register(AlgoFactory::get().create_data(type,name,ptr->ID()));
+      _algo_dataman.Register(ptr->_id,name);
       _cluster_alg_v.push_back(ptr);
     }
 
@@ -220,7 +220,7 @@ namespace larocv {
       _match_alg = (MatchAlgoBase*)ptr;
       _match_alg->_id = _cluster_alg_v.size();
       _match_alg->_dataman_ptr = &_algo_dataman;
-      _algo_dataman.Register(AlgoFactory::get().create_data(match_alg_type,match_alg_name,_match_alg->ID()));
+      _algo_dataman.Register(_match_alg->_id, match_alg_name);
       _match_alg->Profile(_profile);
       _match_alg->set_verbosity(this->logger().level());
       _match_alg->Configure(main_cfg.get<fcllite::PSet>(_match_alg->Name()));
@@ -238,7 +238,7 @@ namespace larocv {
       _recluster_alg = (ReClusterAlgoBase*)(ptr);
       _recluster_alg->_id = _match_alg->ID()+1;
       _recluster_alg->_dataman_ptr = &_algo_dataman;
-      _algo_dataman.Register(AlgoFactory::get().create_data(recluster_alg_type,recluster_alg_name,_recluster_alg->ID()));
+      _algo_dataman.Register(_recluster_alg->_id, recluster_alg_name);
       _recluster_alg->Profile(_profile);
       _recluster_alg->set_verbosity(this->logger().level());
       _recluster_alg->Configure(main_cfg.get<fcllite::PSet>(_recluster_alg->Name()));

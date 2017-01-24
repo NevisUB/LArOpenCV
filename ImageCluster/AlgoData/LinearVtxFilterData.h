@@ -57,11 +57,9 @@ namespace larocv {
     */
     class LinearVtxFilterData : public larocv::data::AlgoDataBase {
     public:
-      LinearVtxFilterData(std::string name="NoName", AlgorithmID_t id=0)
-	:
-	AlgoDataBase(name,id),
-	_r_height(0),
-	_r_width(0)
+      LinearVtxFilterData()
+	: _r_height(0)
+	, _r_width(0)
       { Clear(); }
       
       ~LinearVtxFilterData(){}

@@ -24,6 +24,8 @@ namespace larocv {
     _blur_size     = pset.get<int>("BlurSize",2);
 
     _mask_hip = pset.get<bool>("MaskHIP",false);
+
+    Register(new data::HIPClusterData);
   }
 
   larocv::Cluster2DArray_t HIPCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -187,7 +189,7 @@ namespace larocv {
 		   << " HIPs: " << hip_ctor_v.size()
 		   << " Summed: " << all_ctor_v.size() << "\n";
 
-    auto& hip_data       = AlgoData<data::HIPClusterData>();
+    auto& hip_data       = AlgoData<data::HIPClusterData>(0);
     auto& hip_plane_data = hip_data._plane_data_v[meta.plane()];
     auto& cluster_arr_v  = hip_plane_data.get_clusters();
       

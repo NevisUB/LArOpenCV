@@ -76,6 +76,8 @@ namespace larocv{
 
     _min_contour_length = 5;
     _min_contour_rect_area = 20;
+
+    Register(new data::Refine2DVertexData);
   }
 
 
@@ -722,7 +724,7 @@ namespace larocv{
 		   << " @ point " << init_circle.center << std::endl;
 
     auto& scan_marker = _scan_marker_v[plane];
-    auto& plane_data  = AlgoData<data::Refine2DVertexData>().get_plane_data_writeable(plane);
+    auto& plane_data  = AlgoData<data::Refine2DVertexData>(0).get_plane_data_writeable(plane);
     auto& init_vtx_v  = plane_data._init_vtx_v;
     auto& scan_rect_v = plane_data._scan_rect_v;    
     auto& circle_scan_v = plane_data._circle_scan_v;
@@ -976,7 +978,7 @@ namespace larocv{
 				 larocv::ImageMeta& meta,
 				 larocv::ROI& roi)
   {
-    auto& data = AlgoData<data::Refine2DVertexData>();
+    auto& data = AlgoData<data::Refine2DVertexData>(0);
 
     _veto_ctor_vv.resize(meta.plane()+1);
 
@@ -1012,7 +1014,7 @@ namespace larocv{
     std::vector<geo2d::Circle<float> > used_circle_v;
 
     if(_defect_algo_id != kINVALID_ID) {
-      auto const& defect_pts = AlgoData<data::DefectClusterData>(_defect_algo_id);
+      auto const& defect_pts = AlgoData<data::DefectClusterData>(_defect_algo_id,0);
       for(auto const& compound : defect_pts._raw_cluster_vv[meta.plane()].get_cluster()) {
 	for(auto const& defect_pt : compound.get_defects()) {
 	  const auto pt = defect_pt._pt_defect;
@@ -1044,7 +1046,7 @@ namespace larocv{
     }
 
     if(_pca_algo_id != kINVALID_ID) {
-      auto const& pca_pts    = AlgoData<data::PCACandidatesData>(_pca_algo_id);    
+      auto const& pca_pts    = AlgoData<data::PCACandidatesData>(_pca_algo_id,0);    
       for(auto const& pt : pca_pts.points(meta.plane())) {
 	// check if this point is close to what is scanned before, if so then skip
 	// "close" is defined by checking if this point is included within the radius of previous circle
@@ -1085,7 +1087,7 @@ namespace larocv{
   {
     // Combine 3 plane information and make the best guesses as to which time tick may contain vertex(es)
     // To do this, we loop over time tick over all available planes first
-    auto& data = AlgoData<data::Refine2DVertexData>();
+    auto& data = AlgoData<data::Refine2DVertexData>(0);
     // Initialize results
     for(size_t plane=0; plane<img_v.size(); ++plane)
       _time_binned_score_v.clear();
@@ -1201,7 +1203,7 @@ namespace larocv{
 
   void Refine2DVertex::XPlaneTimeProposal()
   {
-    //auto& data = AlgoData<larocv::Refine2DVertexData>();
+    //auto& data = AlgoData<larocv::Refine2DVertexData>(0);
     // Find local minimum for >2 plane score array
     auto const& score0_v    = _time_binned_score0_v;
     auto& mean_score0_v     = _time_binned_score0_mean_v;
@@ -1296,7 +1298,7 @@ namespace larocv{
 
   void Refine2DVertex::TimeVertex3D(const std::vector<const cv::Mat>& img_v)
   {
-    auto& data = AlgoData<data::Refine2DVertexData>();
+    auto& data = AlgoData<data::Refine2DVertexData>(0);
     // Find candidate circles nearby proposed ticks
     for(auto const& binned_tick_idx : _time_binned_minidx_v) {
 
@@ -1542,7 +1544,7 @@ namespace larocv{
   void Refine2DVertex::XPlaneWireScan(const std::vector<const cv::Mat>& img_v)
   {
     // Compute 1D projection score array per plane
-    auto& data = AlgoData<data::Refine2DVertexData>();
+    auto& data = AlgoData<data::Refine2DVertexData>(0);
     for(size_t plane=0; plane<img_v.size(); ++plane)
       _wire_binned_score_vv.at(plane).clear();
 
@@ -1590,7 +1592,7 @@ namespace larocv{
 
   void Refine2DVertex::WireVertex3D(const std::vector<const cv::Mat>& img_v)
   {
-    auto& data = AlgoData<data::Refine2DVertexData>();
+    auto& data = AlgoData<data::Refine2DVertexData>(0);
 
     // List of already existing vertex (later used to avoid duplicate vertex)
     std::vector<geo2d::Vector<float> > vtx_yz_v;

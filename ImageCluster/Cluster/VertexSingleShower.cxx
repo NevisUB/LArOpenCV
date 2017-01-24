@@ -63,6 +63,8 @@ namespace larocv {
     _time_comp_factor_v.resize(_num_planes,1);
     _origin_v.resize(_num_planes);
 
+    Register(new data::SingleShowerArray);
+    
   }
   
   void VertexSingleShower::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -683,9 +685,9 @@ namespace larocv {
   bool VertexSingleShower::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
 
-    auto const& dqdx_data = AlgoData<data::dQdXProfilerData>     ( _algo_id_dqdx         );
-    auto const& vtrack_data = AlgoData<data::VertexClusterArray> ( _algo_id_vertex_track );
-    auto const& ltrack_data = AlgoData<data::LinearTrackArray>   ( _algo_id_linear_track );
+    auto const& dqdx_data = AlgoData<data::dQdXProfilerData>     ( _algo_id_dqdx,         0);
+    auto const& vtrack_data = AlgoData<data::VertexClusterArray> ( _algo_id_vertex_track, 0);
+    auto const& ltrack_data = AlgoData<data::LinearTrackArray>   ( _algo_id_linear_track, 0);
 
     RetrieveVertex(ltrack_data);
     LAROCV_INFO() << "# Vertex3D from LinearCluster: " << _ltrack_vertex_v.size() << std::endl;
@@ -705,7 +707,7 @@ namespace larocv {
     ListShowerVertex(img_v,_cand_vertex_v, _shower_vtx3d_v, _shower_vtx2d_vv);
     LAROCV_INFO() << "# Vertex3D candidate for single shower: " << _shower_vtx3d_v.size() << std::endl;
     
-    auto& data = AlgoData<data::SingleShowerArray>();
+    auto& data = AlgoData<data::SingleShowerArray>(0);
 
     for(size_t i=0; i<_shower_vtx3d_v.size(); ++i) {
 

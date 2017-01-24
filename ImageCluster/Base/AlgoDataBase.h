@@ -27,9 +27,7 @@ namespace larocv {
     public:
       
       /// Default constructor
-      AlgoDataBase(std::string name="NoName", AlgorithmID_t id=0)
-	: _name(name)
-	, _id(id)
+      AlgoDataBase()
       {}
       
       /// Default destructor
@@ -38,16 +36,7 @@ namespace larocv {
       /// Clear method to be implemented
       virtual void Clear() = 0;
       
-      /// Name to identify associated algorithm
-      const std::string& Name() const;
-      
-      /// AlgorithmID_t to identify associated algorithm
-      AlgorithmID_t ID() const;
-      
     private:
-      
-      std::string   _name; ///< Associated algorithm's name
-      AlgorithmID_t _id;   ///< Associated algorithm's id
       
     };
   }

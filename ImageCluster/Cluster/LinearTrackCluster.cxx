@@ -92,6 +92,8 @@ namespace larocv {
     _wire_comp_factor_v.resize(_num_planes,1);
     _time_comp_factor_v.resize(_num_planes,1);
     _origin_v.resize(_num_planes);
+
+    Register(new data::LinearTrackArray);
   }
   
   void LinearTrackCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -257,7 +259,7 @@ namespace larocv {
   
   std::vector<larocv::data::LinearTrack2D> LinearTrackCluster::FindLinearTrack2D(size_t plane, const cv::Mat& img) const
   {
-    auto const& part_data = AlgoData<data::VertexClusterArray> ( _algo_id_part );
+    auto const& part_data = AlgoData<data::VertexClusterArray> ( _algo_id_part, 0 );
 
     // NOTE: this is just MIP contour finding from HIPCluster.cxx
     // NOTE: replace this with getting HIPCluster algo data
@@ -508,7 +510,7 @@ namespace larocv {
       } // end looping over 2nd plane of two plane pairs
     } // end looping over 1st plane of two plane pairs
 
-    auto& data = AlgoData<larocv::data::LinearTrackArray>();
+    auto& data = AlgoData<larocv::data::LinearTrackArray>(0);
     
     // now we have two and many plane candidates ... register
     for(size_t plane1=0; plane1<_num_planes; ++plane1) {

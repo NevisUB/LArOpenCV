@@ -97,20 +97,23 @@ namespace larocv {
 
     /// Access to ANY algorithm's data (const reference)
     template <class T>
-    const T& AlgoData(AlgorithmID_t id) const
-    { if(!_dataman_ptr) throw larbys("AlgoDataManager not available");
-      return *( (const T*)(_dataman_ptr->Data(id)));
+    const T& AlgoData(AlgorithmID_t algo_id, AlgorithmDataID_t data_id) const
+    {
+      if(!_dataman_ptr) throw larbys("AlgoDataManager not available");
+      return *( (T*)(_dataman_ptr->Data(algo_id,data_id)));
     }
 
     /// Access to OWN algorithm's data (non-const reference)
     template <class T>
-    T& AlgoData()
+    T& AlgoData(AlgorithmDataID_t data_id)
     {
       if(!_dataman_ptr) throw larbys("AlgoDataManager not available");
-      return *( (T*)(_dataman_ptr->Data(_id)));
+      return *( (T*)(_dataman_ptr->Data(_id,data_id)));
     }
     
   protected:
+
+    void Register(data::AlgoDataBase* data);
 
     larocv::Watch _watch; ///< algorithm profile stopwatch
 
@@ -130,7 +133,7 @@ namespace larocv {
 
     bool _profile;       ///< measure process time if profile flag is on
 
-    data::AlgoDataManager* _dataman_ptr; ///< pointer to AlgoDataManager
+    data::AlgoDataManager* _dataman_ptr; ///< pointer collection to AlgoDataManager
 
   };
 

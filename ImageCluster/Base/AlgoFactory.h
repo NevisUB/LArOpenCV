@@ -35,9 +35,6 @@ namespace larocv {
     virtual ~AlgoFactoryBase(){}
     /// Abstract constructor method
     virtual ImageClusterBase* create(const std::string instance_name) = 0;
-    /// Algorithm data creation method (can be re-implemented)
-    virtual data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return (new data::AlgoDataEmpty(instance_name,id)); }
   };
 
   /**
@@ -70,16 +67,6 @@ namespace larocv {
 	return nullptr;
       }
       return (*iter).second->create(instance_name);
-    }
-    /// Factory creation method for algorithm data
-    larocv::data::AlgoDataBase* create_data(const std::string name, const std::string instance_name, const AlgorithmID_t id)
-    {
-      auto iter = _factory_map.find(name);
-      if(iter == _factory_map.end() || !((*iter).second)) {
-	LAROCV_ERROR() << "Found no registered class " << name << std::endl;
-	return nullptr;
-      }
-      return (*iter).second->create_data(instance_name,id);
     }
     
   private:

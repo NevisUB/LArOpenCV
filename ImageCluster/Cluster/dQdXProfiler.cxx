@@ -42,6 +42,8 @@ namespace larocv {
 
     _atomic_region_pad  = 5.;
     _atomic_contour_pad = 3.;
+
+    Register(new data::dQdXProfilerData);
   }
   
   void dQdXProfiler::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -258,8 +260,8 @@ namespace larocv {
   bool dQdXProfiler::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
     LAROCV_DEBUG() << "processing" << std::endl;
-    auto const& pca_data = AlgoData<data::PCACandidatesData>  (_pca_algo_id);
-    auto const& def_data = AlgoData<data::DefectClusterData>  (pca_data._input_id);
+    auto const& pca_data = AlgoData<data::PCACandidatesData>  (_pca_algo_id,0);
+    auto const& def_data = AlgoData<data::DefectClusterData>  (pca_data._input_id,0);
 
     if ( _lintrack_algo_id != kINVALID_ALGO_ID  && _vtxtrack_algo_id != kINVALID_ALGO_ID)
       { LAROCV_CRITICAL() << "Specify only vertextrack or lineartrack algo name" << std::endl; throw larbys(); }
@@ -267,11 +269,11 @@ namespace larocv {
     if ( _lintrack_algo_id == kINVALID_ALGO_ID  && _vtxtrack_algo_id == kINVALID_ALGO_ID)
       { LAROCV_CRITICAL() << "Specify only vertextrack or lineartrack algo name" << std::endl; throw larbys(); }
 
-    auto& data = AlgoData<data::dQdXProfilerData>();
+    auto& data = AlgoData<data::dQdXProfilerData>(0);
         
     if( _vtxtrack_algo_id != kINVALID_ALGO_ID ) {
       LAROCV_DEBUG() << "VertexTrackAlgoID: " << _vtxtrack_algo_id << std::endl;
-      auto const& vtx_data = AlgoData<data::VertexClusterArray> (_vtxtrack_algo_id);
+      auto const& vtx_data = AlgoData<data::VertexClusterArray> (_vtxtrack_algo_id,0);
 
       // Loop over vertex
       for(auto const& vtx_clusters : vtx_data._vtx_cluster_v) {
@@ -383,7 +385,7 @@ namespace larocv {
 
       LAROCV_DEBUG() << "LinearTrackAlgoID: " << _lintrack_algo_id << std::endl;
       
-      auto const& lintrack_data = AlgoData<data::LinearTrackArray> (_lintrack_algo_id);
+      auto const& lintrack_data = AlgoData<data::LinearTrackArray> (_lintrack_algo_id,0);
       
       // Loop over vertex
       for(auto const& trk_cluster : lintrack_data.get_clusters()) {

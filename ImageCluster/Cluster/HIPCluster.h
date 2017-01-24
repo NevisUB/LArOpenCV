@@ -51,24 +51,21 @@ namespace larocv {
     
   };
 
-
-
-  /**
-     \class larocv::HIPClusterFactory
-     \brief A concrete factory class for larocv::HIPCluster
-  */
-  class HIPClusterFactory : public AlgoFactoryBase {
-  public:
-    /// ctor
-    HIPClusterFactory() { AlgoFactory::get().add_factory("HIPCluster",this); }
-    /// dtor
-    ~HIPClusterFactory() {}
-    /// create method
-    ImageClusterBase* create(const std::string instance_name) { return new HIPCluster(instance_name); }
-    /// data create method
-    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new data::HIPClusterData(instance_name,id);}
-  };
+  
+  
+    /**
+       \class larocv::HIPClusterFactory
+       \brief A concrete factory class for larocv::HIPCluster
+    */
+    class HIPClusterFactory : public AlgoFactoryBase {
+    public:
+      /// ctor
+      HIPClusterFactory() { AlgoFactory::get().add_factory("HIPCluster",this); }
+      /// dtor
+      ~HIPClusterFactory() {}
+      /// create method
+      ImageClusterBase* create(const std::string instance_name) { return new HIPCluster(instance_name); }
+    };
   
 }
 #endif

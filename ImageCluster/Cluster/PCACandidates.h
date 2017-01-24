@@ -59,9 +59,6 @@ namespace larocv {
     ~PCACandidatesFactory() {}
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new PCACandidates(instance_name); }
-    /// data create method
-    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new data::PCACandidatesData(instance_name,id);}
   };
   
 }

@@ -118,9 +118,6 @@ namespace larocv {
     ~VertexSingleShowerFactory() {}
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new VertexSingleShower(instance_name); }
-    /// data create method
-    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new data::SingleShowerArray(instance_name,id);}
   };
   
 }

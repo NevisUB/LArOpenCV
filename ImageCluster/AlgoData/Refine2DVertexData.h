@@ -87,8 +87,7 @@ namespace larocv {
     */
     class Refine2DVertexData : public larocv::data::AlgoDataBase {
     public:
-      Refine2DVertexData(std::string name="NoName", AlgorithmID_t id=0)
-	: AlgoDataBase(name,id)
+      Refine2DVertexData()
       { Clear();}
       ~Refine2DVertexData(){}
       /// attribute clear

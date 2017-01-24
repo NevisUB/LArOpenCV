@@ -23,6 +23,8 @@ namespace larocv {
 
   /// larocv::ImageClusterBase inherit algorithm's unique identifier within larocv::ClusterImageManager
   typedef size_t AlgorithmID_t;
+  /// larocv::AlgoDataBase inherit data rep's identifier (unique when combined with AlgorithmID_t) per algorithm
+  typedef size_t AlgorithmDataID_t;
   /// A unique identifier for a set of images
   typedef size_t ImageSetID_t;
   /// A image's unique identifier within larocv::ImageClusterManager

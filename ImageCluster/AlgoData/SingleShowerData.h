@@ -88,8 +88,7 @@ namespace larocv {
     */
     class SingleShowerArray : public larocv::data::AlgoDataBase {
     public:
-      SingleShowerArray(std::string name="NoName", AlgorithmID_t id=0)
-	: AlgoDataBase(name,id)
+      SingleShowerArray()
       { Clear(); }
       ~SingleShowerArray(){}
       

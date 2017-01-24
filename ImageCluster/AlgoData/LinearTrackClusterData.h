@@ -96,8 +96,7 @@ namespace larocv {
     */
     class LinearTrackArray : public larocv::data::AlgoDataBase {
     public:
-      LinearTrackArray(std::string name="NoName", AlgorithmID_t id=0)
-	: AlgoDataBase(name,id)
+      LinearTrackArray()
       { Clear(); }
       ~LinearTrackArray(){}
       

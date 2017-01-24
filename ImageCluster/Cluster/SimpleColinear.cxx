@@ -14,6 +14,8 @@ namespace larocv {
   void SimpleColinear::_Configure_(const ::fcllite::PSet &pset)
   {
     LAROCV_DEBUG() << "processing" << std::endl;
+
+    Register(new data::SimpleColinearData);
   }
 
 

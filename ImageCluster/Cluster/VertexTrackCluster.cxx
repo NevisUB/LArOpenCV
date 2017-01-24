@@ -33,6 +33,8 @@ namespace larocv {
     _use_theta_half_angle = true;
 
     _contour_pad = pset.get<float>("ContourPad",0.);
+
+    Register(new data::VertexClusterArray);
   }
 
   std::vector<larocv::data::ParticleCluster >
@@ -301,12 +303,12 @@ namespace larocv {
 							 larocv::ROI& roi)
   {
     // Algorithm data
-    auto& data = AlgoData<data::VertexClusterArray>();
+    auto& data = AlgoData<data::VertexClusterArray>(0);
     
     // if given from Refine2DVertex, fill
     if(_refine2d_algo_id!=kINVALID_ID && data._vtx_cluster_v.empty()) {
 
-      auto const& ref_data = AlgoData<data::Refine2DVertexData>(_refine2d_algo_id);
+      auto const& ref_data = AlgoData<data::Refine2DVertexData>(_refine2d_algo_id,0);
 
       data._vtx_cluster_v.resize(ref_data.get_vertex().size());
       
