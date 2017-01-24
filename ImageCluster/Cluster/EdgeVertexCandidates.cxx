@@ -100,7 +100,7 @@ namespace larocv {
 	const auto& img = img_v[plane_id];
 	
 	auto& edge_pt = edge_pt_v[plane_id];
-	auto& side_pt = side_pt_v[plane_id];
+	//auto& side_pt = side_pt_v[plane_id];
 	
 	LAROCV_DEBUG() << "Plane id " << plane_id << std::endl;
 	auto npar_clusters = vtx_dqdx.get_cluster(plane_id).size();
@@ -241,7 +241,7 @@ namespace larocv {
 
 	LAROCV_DEBUG() << "Got atom start index: " << atom_index << std::endl;
 
-	const auto  atom_id       = part_dqdx.atom_id_array()[atom_index];
+	//const auto  atom_id       = part_dqdx.atom_id_array()[atom_index];
 	const auto& atom_start_pt = part_dqdx.atom_start_pt_array()[atom_index];
 	
 	LAROCV_DEBUG() << "Got dx resolution: " << part_dqdx.dx_resolution() << std::endl;

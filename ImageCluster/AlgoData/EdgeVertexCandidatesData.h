@@ -20,18 +20,18 @@ namespace larocv {
     class EdgeVertexCandidate {
     public:
       EdgeVertexCandidate() :
-	_id       (kINVALID_SIZE) ,
 	max_index (kINVALID_SIZE),
 	max_value (kINVALID_FLOAT),
 	ledge     (false),
 	redge     (false),
 	ridx      (kINVALID_SIZE),
 	lidx      (kINVALID_SIZE),
-	sidx      (kINVALID_SIZE),
 	eidx      (kINVALID_SIZE),
-	edge_pt   (kINVALID_FLOAT,kINVALID_FLOAT),
+	sidx      (kINVALID_SIZE),
 	base_rmean (kINVALID_FLOAT),
-	base_rsigma(kINVALID_FLOAT)
+	base_rsigma(kINVALID_FLOAT),
+	edge_pt   (kINVALID_FLOAT,kINVALID_FLOAT),
+	_id       (kINVALID_SIZE)
       { clear(); }
 	
       ~EdgeVertexCandidate() {}

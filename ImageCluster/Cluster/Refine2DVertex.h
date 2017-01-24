@@ -25,6 +25,37 @@
 
 
 namespace larocv {
+
+  
+  /*
+    \class 
+    @brief Plane-wise algorithm data created by Refine2DVertex, stores granular details of data
+  */
+  class Refine2DVertexPlaneScanInfo {
+  public:
+    Refine2DVertexPlaneScanInfo() { Clear(); }
+    ~Refine2DVertexPlaneScanInfo() {}
+
+    /// true = atleast one vertex guess given by preceeding algorithms
+    bool _valid_plane;
+    /// initial vertex guesses provided by preceeding algorithms
+    std::vector<larocv::data::CircleVertex> _init_vtx_v;
+    /// an array of suare box used to scan circles for vtx search
+    std::vector< geo2d::Rect >  _scan_rect_v;
+    /// an array of CircleVertex scanned for searching true vtx 
+    std::vector< larocv::data::CircleVertex > _circle_scan_v; 
+    /// Attribute clear method
+    void Clear()
+    {
+      _valid_plane = false;
+      _init_vtx_v.clear();
+      _scan_rect_v.clear();
+      _circle_scan_v.clear();
+    }
+
+  };
+
+  
   /**
      \class Refine2DVertex
      @brief A simple clustering algorithm meant to serve for testing/example by Kazu
@@ -39,6 +70,9 @@ namespace larocv {
     
     /// Default destructor
     ~Refine2DVertex(){}
+
+    void Reset()
+    { for(auto& i : _plane_scan_info_v) i.Clear(); }
 
     /// Finalize after (possily multiple) Process call. TFile may be used to write output.
     void Finalize(TFile*) {}
@@ -74,6 +108,9 @@ namespace larocv {
 
     const std::vector<std::vector<geo2d::Vector<int> > >& VetoContour(size_t plane)
     { return _veto_ctor_vv.at(plane); }
+
+    const Refine2DVertexPlaneScanInfo& PlaneScanInfo(size_t plane)
+    { return _plane_scan_info_v.at(plane); }
     
   protected:
 
@@ -187,6 +224,8 @@ namespace larocv {
     std::vector<std::vector<float> > _wire_binned_score_mean_vv;
     std::vector<std::vector<size_t> > _wire_binned_score_minidx_vv;
     std::vector<std::vector<std::pair<size_t,size_t> > > _wire_binned_score_minrange_vv;
+
+    std::vector<Refine2DVertexPlaneScanInfo> _plane_scan_info_v;
 
   };
   /**

@@ -35,6 +35,9 @@ namespace larocv {
     /// Configuration method
     void Configure(const ::fcllite::PSet &pset);
 
+    /// Reset method
+    virtual void Reset(){}
+
     /// Algorithm Type
     AlgorithmType_t Type() const { return kAlgoReCluster;}
 

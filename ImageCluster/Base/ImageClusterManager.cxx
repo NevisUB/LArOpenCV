@@ -292,6 +292,10 @@ namespace larocv {
 
     _algo_dataman.ClearData();
     _book_keeper.Reset();
+
+    for(auto& ptr : _cluster_alg_v) ptr->Reset();
+    if(_match_alg) _match_alg->Reset();
+    if(_recluster_alg) _recluster_alg->Reset();
     
     _meta_vv.clear();
     _meta_vv.resize(_cluster_alg_v.size());

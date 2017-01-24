@@ -77,6 +77,9 @@ namespace larocv{
     _min_contour_length = 5;
     _min_contour_rect_area = 20;
 
+    _plane_scan_info_v.resize(3);
+    for(auto& i : _plane_scan_info_v) i.Clear();
+
     Register(new data::Refine2DVertexData);
   }
 
@@ -724,7 +727,7 @@ namespace larocv{
 		   << " @ point " << init_circle.center << std::endl;
 
     auto& scan_marker = _scan_marker_v[plane];
-    auto& plane_data  = AlgoData<data::Refine2DVertexData>(0).get_plane_data_writeable(plane);
+    auto& plane_data  = _plane_scan_info_v[plane];
     auto& init_vtx_v  = plane_data._init_vtx_v;
     auto& scan_rect_v = plane_data._scan_rect_v;    
     auto& circle_scan_v = plane_data._circle_scan_v;
@@ -1075,11 +1078,11 @@ namespace larocv{
     }
     
     if(!found) {
-      data.get_plane_data_writeable(meta.plane())._valid_plane = false;
+      _plane_scan_info_v[meta.plane()]._valid_plane = false;
       return;
     }
-
-    data.get_plane_data_writeable(meta.plane())._valid_plane = true;
+    
+    _plane_scan_info_v[meta.plane()]._valid_plane = true;
 
   }
 
@@ -1106,7 +1109,7 @@ namespace larocv{
     _xplane_tick_min = -1;
     _xplane_tick_max = -1;
     for(size_t plane=0; plane<img_v.size(); ++plane){
-      auto const& plane_data = data.get_plane_data(plane);
+      auto const& plane_data = _plane_scan_info_v[plane];
       if(!plane_data._valid_plane) continue;
       for(auto const& bbox : plane_data._scan_rect_v) {
 
@@ -1138,7 +1141,7 @@ namespace larocv{
     }
      
     for(size_t plane=0; plane<img_v.size(); ++plane) {
-      auto& plane_data = data.get_plane_data_writeable(plane);
+      auto& plane_data = _plane_scan_info_v[plane];
       //std::cout<<"Plane " << plane << " ..."<<std::endl;
       if(!plane_data._valid_plane) continue;
       auto const& circle_scan_v  = plane_data._circle_scan_v;
@@ -1178,7 +1181,7 @@ namespace larocv{
       dtheta_sum = 0.;
       LAROCV_DEBUG() << "At tick " << tick << "/" << num_ticks << std::endl;
       for(size_t plane=0; plane < img_v.size(); ++plane) {
-	auto const& plane_data = data.get_plane_data(plane);
+	auto const& plane_data = _plane_scan_info_v[plane];
 	if(!plane_data._valid_plane) continue;
 
 	LAROCV_DEBUG() << "    Plane " << plane << " dtheta = " << _time_binned_score_v[tick] << std::endl;
@@ -1316,7 +1319,7 @@ namespace larocv{
 	  throw larbys();
 	}
 
-	auto const& plane_data = data.get_plane_data(plane);
+	auto const& plane_data = _plane_scan_info_v[plane];
 	float dist=0;
 	for(size_t circle_idx=0; circle_idx<plane_data._circle_scan_v.size(); ++circle_idx) {
 	  auto const& circle = plane_data._circle_scan_v[circle_idx];
@@ -1346,8 +1349,8 @@ namespace larocv{
       std::multimap<float,std::vector<size_t> > scoremap_2plane;
       std::multimap<float,std::vector<size_t> > scoremap_3plane;
       
-      auto const& seed0_data = data.get_plane_data(seed0_plane);
-      auto const& seed1_data = data.get_plane_data(seed1_plane);      
+      auto const& seed0_data = _plane_scan_info_v[seed0_plane];
+      auto const& seed1_data = _plane_scan_info_v[seed1_plane];
       // Construct all possible candidate vertexes
       for(auto const& circle0_idx : seed_circle_idx_v[seed0_plane]) {
 	auto const& circle0 = seed0_data._circle_scan_v[circle0_idx];
@@ -1386,7 +1389,7 @@ namespace larocv{
 	  if(check_plane != kINVALID_SIZE) {
 	    float  approx_wire2 = larocv::WireCoordinate(y,z,check_plane);
 	    float  dist_min = 1e9;
-	    auto const& check_data = data.get_plane_data(check_plane);
+	    auto const& check_data = _plane_scan_info_v[check_plane];
 	    float  check_weight  = 0;
 	    for(auto const& circle2_idx : seed_circle_idx_v[check_plane]) {
 	      auto const& circle2 = check_data._circle_scan_v[circle2_idx];
@@ -1490,7 +1493,7 @@ namespace larocv{
 	  float  approx_wire = larocv::WireCoordinate(y,z,plane);
 	  float  approx_y = (approx_wire - _origin_v[plane].y) / _wire_comp_factor_v[plane];
 	  float  dist_min = 1e9;
-	  auto const& plane_data = data.get_plane_data(plane);
+	  auto const& plane_data = _plane_scan_info_v[plane];
 	  float  closest_dtheta = -1;
 	  for(auto const& circle_idx : seed_circle_idx_v[plane]) {
 	    auto const& circle = plane_data._circle_scan_v[circle_idx];
@@ -1554,7 +1557,7 @@ namespace larocv{
       auto& xplane_wire_max = _xplane_wire_max_v.at(plane_id);
 
       // Figure out min/max
-      auto& plane_data = data.get_plane_data_writeable(plane_id);
+      auto& plane_data = _plane_scan_info_v[plane_id];
       if(!plane_data._valid_plane) continue;
 
       xplane_wire_min = 1e9;
@@ -1607,7 +1610,7 @@ namespace larocv{
     for(size_t plane_idx1=0; plane_idx1<_seed_plane_v.size(); ++plane_idx1) {
       // Retrieve plane A's ID, circle vertex array, and local minima index & score
       auto const& seed_plane1 = _seed_plane_v[plane_idx1];
-      auto const& seed_data1  = data.get_plane_data(seed_plane1);
+      auto const& seed_data1  = _plane_scan_info_v[seed_plane1];
       if(!seed_data1._valid_plane) continue;
       auto const& circle1_v   = seed_data1._circle_scan_v;      
       auto const& wire_binned_score1_v  = _wire_binned_score_mean_vv.at(seed_plane1);
@@ -1618,7 +1621,7 @@ namespace larocv{
       for(size_t plane_idx2=plane_idx1+1; plane_idx2<_seed_plane_v.size(); ++plane_idx2) {
 	// Retrieve plane B's ID, circle vertex array, and local minima index & score
 	auto const& seed_plane2 = _seed_plane_v[plane_idx2];
-	auto const& seed_data2  = data.get_plane_data(seed_plane2);
+	auto const& seed_data2  = _plane_scan_info_v[seed_plane2];
 	if(!seed_data2._valid_plane) continue;
 	auto const& circle2_v   = seed_data2._circle_scan_v;
 	auto const& wire_binned_score2_v  = _wire_binned_score_mean_vv.at(seed_plane2);
@@ -1780,7 +1783,7 @@ namespace larocv{
 		  float  approx_wire = larocv::WireCoordinate(y,z,plane);
 		  float  approx_y = (approx_wire - _origin_v[plane].y) / _wire_comp_factor_v[plane];
 		  float  dist_min = 1e9;
-		  auto const& plane_data = data.get_plane_data(plane);
+		  auto const& plane_data = _plane_scan_info_v[plane];
 		  auto const& circle_v   = plane_data._circle_scan_v;
 		  float  closest_dtheta = -1;
 		  // from here

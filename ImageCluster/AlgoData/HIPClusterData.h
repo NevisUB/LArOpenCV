@@ -82,10 +82,9 @@ namespace larocv {
     class HIPClusterPlaneData  {
     public:
 
-
       HIPClusterPlaneData() :
-	_long_mip_idx(kINVALID_SIZE),
-	_long_hip_idx(kINVALID_SIZE)
+	_long_hip_idx(kINVALID_SIZE),
+	_long_mip_idx(kINVALID_SIZE)
       { Clear(); }
       
       virtual ~HIPClusterPlaneData(){}

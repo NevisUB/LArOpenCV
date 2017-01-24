@@ -63,25 +63,6 @@ namespace larocv {
     };
 
     /*
-      \class Refine2DVertexPlaneData
-      @brief Plane-wise algorithm data created by Refine2DVertex, stores granular details of data
-    */
-    class Refine2DVertexPlaneData {
-    public:
-    Refine2DVertexPlaneData() { Clear(); }
-      ~Refine2DVertexPlaneData() {}
-      
-      // Attribute variables
-      bool _valid_plane;                             ///< true = atleast one vertex guess given by preceeding algorithms
-      std::vector<larocv::data::CircleVertex> _init_vtx_v; ///< initial vertex guesses provided by preceeding algorithms
-      std::vector< geo2d::Rect >  _scan_rect_v;      ///< an array of suare box used to scan circles for vtx search
-      std::vector< larocv::data::CircleVertex > _circle_scan_v; ///< an array of CircleVertex scanned for searching true vtx 
-      
-      /// Attribute clear method
-      void Clear();
-    };
-    
-    /*
       \class Refine2DVertexData
       @brief Algorithm data created by Refine2DVertex, stores essential attributes for analysis
     */
@@ -95,10 +76,6 @@ namespace larocv {
 
       /// access # of vertex
       size_t num_vertex() const;
-      /// access plane-wise data
-      const std::vector<larocv::data::Refine2DVertexPlaneData>& get_plane_data() const;
-      /// access plane-wise data via plane id
-      const larocv::data::Refine2DVertexPlaneData& get_plane_data(size_t plane) const;
       /// access Vertex3D array
       const std::vector<larocv::data::Vertex3D>& get_vertex() const;
       /// access Vertex3D via ID
@@ -113,8 +90,6 @@ namespace larocv {
       const std::vector<larocv::data::CircleVertex>& get_circle_vertex(size_t vtx_id) const;
       /// access CircleVertex via ID + plane
       const larocv::data::CircleVertex& get_circle_vertex(size_t vtx_id, size_t plane) const;
-      /// retrieve write-able plane data
-      larocv::data::Refine2DVertexPlaneData& get_plane_data_writeable(size_t plane);
       /// insert new vertex
       void push_back(const unsigned short type,
 		     const larocv::data::Vertex3D& vtx,
@@ -125,9 +100,9 @@ namespace larocv {
 			std::vector<larocv::data::CircleVertex>&& circle_v);
       
     private:
-      
-      /// Plane-wise, detailed algorithm data. Need knowledge to use for analysis
-      std::vector<larocv::data::Refine2DVertexPlaneData> _plane_data;
+
+      /// # of planes
+      size_t _num_planes;
       /// Reconstructed 3D vertex (+ attributes that contain 2D points)
       std::vector<larocv::data::Vertex3D> _vtx3d_v;
       /// Type of reconstructed 3D vertex
@@ -135,10 +110,12 @@ namespace larocv {
       /// CircleVertex for corresponding Vertex3D: outer index = vertex3d, inner index = plane
       std::vector<std::vector<larocv::data::CircleVertex> > _circle_vtx_vv;
 
+      /*
       geo2d::VectorArray<float>   _cand_vtx_v;   ///< deprecated
       std::vector< float >        _cand_score_v; ///< deprecated
       std::vector< bool  >        _cand_valid_v; ///< deprecated
       std::vector< geo2d::VectorArray<float> > _cand_xs_vv; ///< deprecated
+      */
     };
   }
 }

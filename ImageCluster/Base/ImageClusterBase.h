@@ -86,6 +86,9 @@ namespace larocv {
     /// Configuration method
     virtual void Configure(const ::fcllite::PSet &pset);
 
+    /// Reset method, not to re-configure but called per-event
+    virtual void Reset() = 0;
+
     /// Finalize after (possibly multiple) process call. Handed TFile may be used to store objects.
     virtual void Finalize(TFile*) = 0;
 

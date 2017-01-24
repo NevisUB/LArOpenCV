@@ -18,10 +18,10 @@
 #pragma link C++ class larocv::data::PointPCA+;
 #pragma link C++ class larocv::data::CircleVertex+;
 #pragma link C++ class larocv::data::Refine2DVertexData+;
-#pragma link C++ class larocv::data::Refine2DVertexPlaneData+;
+//#pragma link C++ class larocv::data::Refine2DVertexPlaneData+;
 
 #pragma link C++ class larocv::data::LinearVtxFilterData+;
-#pragma link C++ class larocv::data::LinearVtxFilterPlaneData+;
+//#pragma link C++ class larocv::data::LinearVtxFilterPlaneData+;
 
 #pragma link C++ class larocv::data::ContourDefect+;
 #pragma link C++ class larocv::data::AtomicContour+;
