@@ -43,8 +43,10 @@
 #pragma link C++ class larocv::EdgeVertexCandidates+;
 #pragma link C++ class larocv::SimpleColinear+;
 
+#pragma link C++ class DefectBreaker+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
 
 
 

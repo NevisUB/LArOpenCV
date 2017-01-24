@@ -58,7 +58,7 @@ namespace larocv {
     geo2d::Vector<float> pt;
     double point_dist = 0;
     double closest_dist = 1e10;
-    for(auto const& contour_pt : atom._ctor) {
+    for(auto const& contour_pt : atom) {
       pt.x = contour_pt.x;
       pt.y = contour_pt.y;
       point_dist = geo2d::dist2(pt,vtx2d);
@@ -206,7 +206,7 @@ namespace larocv {
 		     << " atom ID " << atom_index << std::endl;
       // loop over points to find the end
       double max_dist = 0;
-      for(auto const& ctor_pt : atom._ctor) {
+      for(auto const& ctor_pt : atom) {
 	pt.x = ctor_pt.x;
 	pt.y = ctor_pt.y;
 	auto dist = geo2d::dist(pt,last_end);
@@ -218,7 +218,7 @@ namespace larocv {
       }
       // loop over points to find the start
       max_dist = 0;
-      for(auto const& ctor_pt : atom._ctor) {
+      for(auto const& ctor_pt : atom) {
 	pt.x = ctor_pt.x;
 	pt.y = ctor_pt.y;
 	auto dist = geo2d::dist(pt,end);
@@ -349,7 +349,7 @@ namespace larocv {
 		double dist;
 		geo2d::Vector<float> particle_end_pt = start_end.second;
 		for(auto const& pt : nonzero_pts) {
-		  if(cv::pointPolygonTest(atom._ctor,pt,false)<0)
+		  if(cv::pointPolygonTest(atom,pt,false)<0)
 		    continue;
 		  dist = pow((pt.x - start_end.second.x),2) + pow((pt.y - start_end.second.y),2);
 		  if(dist < min_dist) {
@@ -474,7 +474,7 @@ namespace larocv {
 		double dist;
 		geo2d::Vector<float> particle_end_pt = start_end.second;
 		for(auto const& pt : nonzero_pts) {
-		  if(cv::pointPolygonTest(atom._ctor,pt,false)<0)
+		  if(cv::pointPolygonTest(atom,pt,false)<0)
 		    continue;
 		  dist = pow((pt.x - start_end.second.x),2) + pow((pt.y - start_end.second.y),2);
 		  if(dist < min_dist) {
@@ -523,7 +523,7 @@ namespace larocv {
     // 2) construct binned dq/dx spectrum
 
     // Define a bounding box in which we will work based on contour + user defined pixel inflation
-    auto const rect_rotated = cv::boundingRect( cv::Mat(atom._ctor) );
+    auto const rect_rotated = cv::boundingRect( cv::Mat(atom) );
     auto tl = rect_rotated.tl();
     auto br = rect_rotated.br();
 
@@ -565,7 +565,7 @@ namespace larocv {
     pts.reserve(pts_in_bbox.size());
     double dist_threshold = _atomic_contour_pad;
     for(auto const& pt : pts_in_bbox) {
-      double dist = cv::pointPolygonTest(atom._ctor, pt, true);
+      double dist = cv::pointPolygonTest(atom, pt, true);
       if(dist > dist_threshold) continue;
       geo2d::Vector<float> pt_float;
       pt_float.x = pt.x + tl.x;

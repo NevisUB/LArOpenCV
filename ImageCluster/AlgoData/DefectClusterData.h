@@ -16,17 +16,17 @@ namespace larocv {
     class ParticleCompoundArray;
     class DefectClusterData;
     
-    class AtomicContour {
+    class AtomicContour : public GEO2D_Contour_t {
       friend class ClusterCompound;
     public:
       
       AtomicContour(size_t atomic_id = kINVALID_SIZE)
-	: _atomic_id(atomic_id) { clear(); }
+	: GEO2D_Contour_t(), _atomic_id(atomic_id) { clear(); }
       AtomicContour(const GEO2D_Contour_t& ctor,size_t parent_idx,size_t atomic_id)
-	: _ctor(ctor)
+	: GEO2D_Contour_t(ctor)
 	, _parent_idx(parent_idx)
 	, _atomic_id(atomic_id)
-      {clear();}
+      { clear(); }
       /*
       AtomicContour(AtomicContour&& rhs)
 	: _ctor(std::move(rhs._ctor))
@@ -36,15 +36,24 @@ namespace larocv {
       {}
       */      
       ~AtomicContour(){}
+
+      //Always protect existing class members
+      AtomicContour& operator=(const GEO2D_Contour_t& ctor) {
+	GEO2D_Contour_t::operator=(ctor);
+	return *this;
+      }
+
+      AtomicContour& operator=(const AtomicContour& ctor) {
+	GEO2D_Contour_t::operator=(ctor);
+	return *this;
+      }
       
       /// clears data
       void clear();
       /// returns unique atomic cluster id
       size_t id() const;
       
-      GEO2D_Contour_t _ctor;
       size_t _parent_idx;
-      
       /// asociate argument defect point
       void associate(const ContourDefect& ac);
       /// check if the argument defect point is associated
@@ -98,7 +107,7 @@ namespace larocv {
       std::vector<size_t> _atomic_id_v; 
     };
 
-    class ClusterCompound {
+    class ClusterCompound : public std::vector<AtomicContour> {
       friend class ClusterCompoundArray;
       friend class ParticleCompoundArray;
     public:
@@ -136,7 +145,7 @@ namespace larocv {
       const larocv::data::ContourDefect& get_defect(size_t id) const;
       
     private:
-      std::vector< AtomicContour > _atomic_ctor_v; ///< a list of atomic cluster, ordered by their unique ID
+      //std::vector< AtomicContour > _atomic_ctor_v; ///< a list of atomic cluster, ordered by their unique ID
       std::vector< ContourDefect > _ctor_defect_v; ///< a list of contour defect, ordered by their unique ID
       size_t _cluster_id; ///< unique ID associated with original cluster
     };
