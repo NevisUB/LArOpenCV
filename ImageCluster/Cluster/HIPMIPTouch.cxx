@@ -13,6 +13,8 @@ namespace larocv {
   {
     auto const hip_cluster_algo_name = pset.get<std::string>("HIPClusterAlgo","hipctor");
     _hip_cluster_algo_id = this->ID(hip_cluster_algo_name);
+
+    Register(new data::HIPMIPTouchData);
   }
 
 
@@ -22,8 +24,8 @@ namespace larocv {
 			      larocv::ROI& roi)
   {
 
-    const auto& hipcluster_data = AlgoData<data::HIPClusterData>(_hip_cluster_algo_id)._plane_data_v[meta.plane()];
-    auto& data                  = AlgoData<data::HIPMIPTouchData>();
+    const auto& hipcluster_data = AlgoData<data::HIPClusterData>(_hip_cluster_algo_id,0)._plane_data_v[meta.plane()];
+    auto& data                  = AlgoData<data::HIPMIPTouchData>(0);
     auto& hip_mip_touch_pts_v   = data._hip_mip_touch_pts_v_v[meta.plane()];
     
     //get the mip/hip indices

@@ -38,8 +38,9 @@ namespace larocv {
     _nonzero_pixel_thresh = pset.get<int>  ("PixelThreshold",10);
 
     _per_vertex = pset.get<bool>("BreakPerVertex");
-  }
 
+    Register(new data::PCACandidatesData);
+  }
 
   geo2d::Line<float> PCACandidates::calculate_pca(const GEO2D_Contour_t& ctor) {
 
@@ -68,7 +69,7 @@ namespace larocv {
     LAROCV_DEBUG() << "processing plane " << meta.plane() << std::endl;
 
     // this data
-    auto& data = AlgoData<data::PCACandidatesData>();
+    auto& data = AlgoData<data::PCACandidatesData>(0);
 
     // boolean for algorithm logic
     bool point_analysis_done = false;
@@ -106,7 +107,7 @@ namespace larocv {
       
       data._input_id = _defect_cluster_algo_id;
 
-      auto const& defect_data = AlgoData<larocv::data::DefectClusterData>(_defect_cluster_algo_id);
+      auto const& defect_data = AlgoData<larocv::data::DefectClusterData>(_defect_cluster_algo_id,0);
       
       if(!_per_vertex && defect_data._raw_cluster_vv.size() > meta.plane()) {
 	// analyze atomic clusters that are not organized by vertex
@@ -209,7 +210,7 @@ namespace larocv {
 
     if(_defect_cluster_algo_id != kINVALID_ALGO_ID) {
       
-      const auto& def_data = AlgoData<data::DefectClusterData>(_defect_cluster_algo_id);
+      const auto& def_data = AlgoData<data::DefectClusterData>(_defect_cluster_algo_id,0);
 
       uint n_defects=0;
 

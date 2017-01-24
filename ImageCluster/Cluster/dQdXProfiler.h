@@ -79,9 +79,6 @@ namespace larocv {
     ~dQdXProfilerFactory() {}
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new dQdXProfiler(instance_name); }
-    /// data create method
-    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new data::dQdXProfilerData(instance_name,id);}
   };
   
 }

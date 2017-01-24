@@ -114,8 +114,7 @@ namespace larocv {
     */
     class VertexClusterArray : public larocv::data::AlgoDataBase {
     public:
-      VertexClusterArray(std::string name="NoName", AlgorithmID_t id=0)
-	: AlgoDataBase(name,id)
+      VertexClusterArray()
       {Clear();}
       ~VertexClusterArray() {}
       

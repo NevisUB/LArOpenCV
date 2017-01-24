@@ -130,8 +130,7 @@ namespace larocv {
     
     class HIPClusterData : public larocv::data::AlgoDataBase {
     public:
-      HIPClusterData(std::string name="NoName", AlgorithmID_t id=0)
-	: AlgoDataBase(name,id)
+      HIPClusterData()
       { Clear(); }
       ~HIPClusterData(){}
       

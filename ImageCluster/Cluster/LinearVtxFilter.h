@@ -91,9 +91,6 @@ namespace larocv {
     ~LinearVtxFilterFactory() {}
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new LinearVtxFilter(instance_name); }
-    /// data create method
-    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new data::LinearVtxFilterData(instance_name,id);}
   };
   
 }

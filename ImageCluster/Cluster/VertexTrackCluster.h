@@ -79,8 +79,6 @@ namespace larocv {
     ~VertexTrackClusterFactory() {}
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new VertexTrackCluster(instance_name); }
-    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new data::VertexClusterArray(instance_name,id);}
   };
   
 }

@@ -106,7 +106,8 @@ namespace larocv {
     
     for(int ctr=0; ctr <= _r_div; ++ctr)
       _radii_v[ctr] = _r_min + step*((float) ctr);
-    
+
+    Register(new data::LinearVtxFilterData);
   }
 
   
@@ -322,9 +323,9 @@ namespace larocv {
   bool LinearVtxFilter::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
     
-    auto& data = AlgoData<data::LinearVtxFilterData>();
+    auto& data = AlgoData<data::LinearVtxFilterData>(0);
     
-    const auto& refine2d_data = AlgoData<data::Refine2DVertexData>(_refine2d_algo_id);
+    const auto& refine2d_data = AlgoData<data::Refine2DVertexData>(_refine2d_algo_id,0);
     const auto& vtx3d_v = refine2d_data.get_vertex(); //indices: 3d vtx id
 
     size_t n_vtx = vtx3d_v.size();

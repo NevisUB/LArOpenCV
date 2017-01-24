@@ -221,8 +221,7 @@ namespace larocv {
     */
     class DefectClusterData : public larocv::data::AlgoDataBase {
     public:
-      DefectClusterData(std::string name="NoName", AlgorithmID_t id=0)
-	: AlgoDataBase(name,id)
+      DefectClusterData()
       { Clear();}
       ~DefectClusterData(){}
       

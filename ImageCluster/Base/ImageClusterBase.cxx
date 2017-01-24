@@ -38,6 +38,10 @@ namespace larocv {
     _image_set_id = (ImageSetID_t)(cfg.get<size_t>("ImageSetID",0));
     LAROCV_DEBUG() << "end" << std::endl;
   }
+
+  void ImageClusterBase::Register(data::AlgoDataBase* data) 
+  { _dataman_ptr->Register(_id,data); }
+  
 }
 
 #endif

@@ -19,8 +19,7 @@ namespace larocv {
     public:
     
       /// Default constructor
-      SimpleColinearData(std::string name="NoName", AlgorithmID_t id=0)
-	: AlgoDataBase(name,id)
+      SimpleColinearData()
       {  Clear(); }    
       /// Default destructor
       ~SimpleColinearData(){}

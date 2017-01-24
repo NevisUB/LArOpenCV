@@ -119,8 +119,7 @@ namespace larocv {
       
     public:
       /// Default constructor
-      dQdXProfilerData(std::string name="NoName", AlgorithmID_t id=0)
-	: AlgoDataBase(name,id)
+      dQdXProfilerData()
       {  Clear(); }    
       /// Default destructor
       ~dQdXProfilerData(){}

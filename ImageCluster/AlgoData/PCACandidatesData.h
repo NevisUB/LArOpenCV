@@ -46,8 +46,7 @@ namespace larocv {
     public:
     
       /// Default constructor
-      PCACandidatesData(std::string name="NoName", AlgorithmID_t id=0)
-	: AlgoDataBase(name,id)
+      PCACandidatesData()
       {  Clear(); }    
       /// Default destructor
       ~PCACandidatesData(){}

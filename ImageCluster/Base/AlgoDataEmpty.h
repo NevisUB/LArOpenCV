@@ -27,9 +27,7 @@ namespace larocv {
     public:
       
       /// Default constructor
-      AlgoDataEmpty(std::string name="NoName", AlgorithmID_t id=0)
-	: AlgoDataBase(name,id)
-      {}
+      AlgoDataEmpty(){}
       
       /// Default destructor
       ~AlgoDataEmpty(){}

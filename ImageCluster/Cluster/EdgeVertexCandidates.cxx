@@ -57,7 +57,7 @@ namespace larocv {
       
     }
     
-    
+    Register(new data::EdgeVertexCandidatesData);
   }
 
 
@@ -74,9 +74,9 @@ namespace larocv {
     LAROCV_DEBUG() << "processing" << std::endl;
 
     //const auto& pca_data    = AlgoData<data::PCACandidatesData>(_dqdx_algo_id-1);
-    const auto& dqdx_data   = AlgoData<data::dQdXProfilerData>(_dqdx_algo_id);
-    const auto& lintrk_data = AlgoData<data::LinearTrackArray>(_lintrack_algo_id);
-    auto& edge_data   = AlgoData<data::EdgeVertexCandidatesData>();
+    const auto& dqdx_data   = AlgoData<data::dQdXProfilerData>(_dqdx_algo_id,0);
+    const auto& lintrk_data = AlgoData<data::LinearTrackArray>(_lintrack_algo_id,0);
+    auto& edge_data   = AlgoData<data::EdgeVertexCandidatesData>(0);
 
     LAROCV_DEBUG() << "LinearTrackClusters: " << lintrk_data.get_clusters().size() << std::endl;
     LAROCV_DEBUG() << "VertexTrackClusters: " << dqdx_data.get_vertex_clusters().size() << std::endl;

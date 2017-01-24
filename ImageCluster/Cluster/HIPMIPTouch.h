@@ -53,8 +53,7 @@ namespace larocv {
     public:
     
       /// Default constructor
-      HIPMIPTouchData(std::string name="NoName", AlgorithmID_t id=0)
-	: AlgoDataBase(name,id)
+      HIPMIPTouchData()
       {  Clear(); }
     
       /// Default destructor
@@ -65,8 +64,6 @@ namespace larocv {
       AlgorithmID_t _input_id;
 
       void Clear() {
-      
-
 	_hip_mip_touch_pts_v_v.clear();
 	_hip_mip_touch_pts_v_v.resize(3);
 
@@ -77,7 +74,7 @@ namespace larocv {
 
     };
   }
-  
+
   /**
      \class larocv::HIPMIPTouchFactory
      \brief A concrete factory class for larocv::HIPMIPTouch
@@ -90,11 +87,8 @@ namespace larocv {
     ~HIPMIPTouchFactory() {}
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new HIPMIPTouch(instance_name); }
-    /// data create method
-    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new data::HIPMIPTouchData(instance_name,id);}
   };
-  
+    
 }
 #endif
 /** @} */ // end of doxygen group 

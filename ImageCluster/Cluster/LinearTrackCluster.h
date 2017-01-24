@@ -94,9 +94,6 @@ namespace larocv {
     ~LinearTrackClusterFactory() {}
     /// create method
     ImageClusterBase* create(const std::string instance_name) { return new LinearTrackCluster(instance_name); }
-    /// data create method
-    data::AlgoDataBase* create_data(const std::string instance_name, const AlgorithmID_t id)
-    { return new data::LinearTrackArray(instance_name,id);}
   };
   
 }

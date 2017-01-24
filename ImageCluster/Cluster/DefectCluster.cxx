@@ -33,6 +33,8 @@ namespace larocv {
     }else{
       LAROCV_INFO() << "Not using linear track cluster algo..." << std::endl;
     }
+
+    Register(new data::DefectClusterData);
   }
 
   larocv::Cluster2DArray_t DefectCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -41,13 +43,13 @@ namespace larocv {
 						    larocv::ROI& roi)
   {
     if(this->ID()==0) throw larbys("DefectCluster should not be run 1st!");
-    auto& data          = AlgoData<data::DefectClusterData>();
+    auto& data          = AlgoData<data::DefectClusterData>(0);
     auto& plane_data    = data._raw_cluster_vv[meta.plane()];
 
     // process vertex associated particle clusters if provided, and if not yet processed
     if( _vertextrack_algo_id!=kINVALID_ALGO_ID && data.get_vertex_clusters().empty()) {
 
-      auto const& vtxtrack_data = AlgoData<data::VertexClusterArray>(_vertextrack_algo_id);
+      auto const& vtxtrack_data = AlgoData<data::VertexClusterArray>(_vertextrack_algo_id,0);
 
       // particle vertex cluster array
       const auto& vtx_cluster_v = vtxtrack_data._vtx_cluster_v;
@@ -75,7 +77,7 @@ namespace larocv {
     }
     else if( _lineartrack_algo_id!=kINVALID_ALGO_ID && data.get_vertex_clusters().empty()) {
       
-      auto const& lintrack_data = AlgoData<data::LinearTrackArray>(_lineartrack_algo_id);
+      auto const& lintrack_data = AlgoData<data::LinearTrackArray>(_lineartrack_algo_id,0);
 
       // particle vertex cluster array
       const auto& lin_cluster_v = lintrack_data.get_clusters();
