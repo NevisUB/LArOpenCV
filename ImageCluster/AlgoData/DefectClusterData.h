@@ -37,7 +37,7 @@ namespace larocv {
       */      
       ~AtomicContour(){}
 
-      //Always protect existing class members
+      //Always protect existing class members upon assignment
       AtomicContour& operator=(const GEO2D_Contour_t& ctor) {
 	GEO2D_Contour_t::operator=(ctor);
 	return *this;
@@ -60,12 +60,19 @@ namespace larocv {
       bool is_associated(const ContourDefect& ac) const;
       /// retrieve a list of defect points associated
       const std::vector<size_t>& associated_defects() const;
+      /// add an edge
+      void add_edge(geo2d::Vector<float>& edge);
+      /// get all edges
+      const std::vector<geo2d::Vector<float> >& edges();
       
     private:
       /// unique atomic cluster id
       size_t _atomic_id;
       /// associated defect point(s) id, use std::vector instead of std::set for Python-friendly support
-      std::vector<size_t> _defect_id_v;  
+      std::vector<size_t> _defect_id_v;
+      /// edges vector
+      std::vector<geo2d::Vector<float> > _edges_v;
+      
     };
     
     class ContourDefect {

@@ -9,7 +9,7 @@ namespace larocv {
   namespace data {
 
     void AtomicContour::clear()
-    { GEO2D_Contour_t::clear(); _parent_idx = -1; _defect_id_v.clear(); }
+    { GEO2D_Contour_t::clear(); _parent_idx = -1; _defect_id_v.clear(); _edges_v.clear(); }
     
     size_t AtomicContour::id() const
     { return _atomic_id; }
@@ -27,6 +27,12 @@ namespace larocv {
     
     const std::vector<size_t>& AtomicContour::associated_defects() const
     { return _defect_id_v; }
+
+    void AtomicContour::add_edge(geo2d::Vector<float>& edge)
+    { _edges_v.push_back(edge); }
+    
+    const std::vector<geo2d::Vector<float>>& AtomicContour::edges()
+    { return _edges_v; }
     
     ////////////////////////////////////////////////////////////////
     

@@ -1107,6 +1107,7 @@ DefectBreaker::AtomsEdge(const larocv::data::ClusterCompound& cluster,
       LAROCV_INFO() << std::string(ss.str()) << std::endl;
     }
   }
+  
   return result_v;
 }
 
@@ -1162,8 +1163,13 @@ larocv::data::ClusterCompound DefectBreaker::SplitContour(const GEO2D_Contour_t&
   // get start/end
   auto atom_edges_v = AtomsEdge(cluscomp, start, ordered_atom_id_v);
 
-  //do something with ordered_atom_id_v;
   //do something with start end -- ensure each atomic has start and end point...
+  for(uint atom_idx=0; atom_idx<cluscomp.size(); ++atom_idx) {
+    auto& atom = cluscomp.at(atom_idx);
+    auto& edges = atom_edges_v[atom_idx];
+    atom.add_edge(edges.first);
+    atom.add_edge(edges.second);
+  }
   
   return cluscomp;
 
