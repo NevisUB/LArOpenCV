@@ -8,7 +8,7 @@ namespace larocv {
   /// Global larocv::ROIParametersFactory to register AlgoFactory
   static ROIParametersFactory __global_ROIParametersFactory__;
   
-  void ROIParameters::_Configure_(const ::fcllite::PSet &pset)
+  void ROIParameters::_Configure_(const Config_t &pset)
   {}
 
   Cluster2DArray_t ROIParameters::_Process_(const larocv::Cluster2DArray_t& clusters,

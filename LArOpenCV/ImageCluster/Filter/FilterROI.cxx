@@ -8,7 +8,7 @@ namespace larocv {
   /// Global larocv::FilterROIFactory to register AlgoFactory
   static FilterROIFactory __global_FilterROIFactory__;
 
-  void FilterROI::_Configure_(const ::fcllite::PSet &pset)
+  void FilterROI::_Configure_(const Config_t &pset)
   {
 
   }

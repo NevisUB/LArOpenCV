@@ -8,7 +8,7 @@ namespace larocv{
   /// Global larocv::NearestConeClusterFactory to register AlgoFactory
   static NearestConeClusterFactory __global_NearestConeClusterFactory__;
   
-  void NearestConeCluster::_Configure_(const ::fcllite::PSet &pset)
+  void NearestConeCluster::_Configure_(const Config_t &pset)
   {}
 
   Cluster2DArray_t NearestConeCluster::_Process_(const larocv::Cluster2DArray_t& clusters,

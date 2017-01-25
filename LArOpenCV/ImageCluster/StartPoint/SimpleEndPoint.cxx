@@ -5,7 +5,7 @@
 
 namespace larocv {
 
-  void SimpleEndPoint::_Configure_(const ::fcllite::PSet &pset)
+  void SimpleEndPoint::_Configure_(const Config_t &pset)
   {
   }
 

@@ -9,7 +9,7 @@ namespace larocv{
   /// Global larocv::DeadWireCombineFactory to register AlgoFactory
   static DeadWireCombineFactory __global_DeadWireCombineFactory__;
   
-  void DeadWireCombine::_Configure_(const ::fcllite::PSet &pset)
+  void DeadWireCombine::_Configure_(const Config_t &pset)
   {
 
     _min_width = pset.get<int>("MinWireWidth"); //should maybe correlated to blur size
@@ -18,9 +18,12 @@ namespace larocv{
 
     auto deadwirepath = pset.get< std::string >("DeadWirePath");
     std::cout << "\t>> Configuring DeadWireCombine with fcl: " << deadwirepath << " <<\n";
+    /*
     ::fcllite::ConfigManager algo_mgr("DeadWireCombine");
     algo_mgr.AddCfgFile(deadwirepath);
     auto const& algo_cfg = algo_mgr.Config().get_pset("DeadWireCombine");
+    */
+    auto algo_cfg = CreatePSetFromFile(deadwirepath,"DeadWireCombine");
 
     auto p0_l = algo_cfg.get< std::vector<int> >("Plane0Left");
     auto p0_r = algo_cfg.get< std::vector<int> >("Plane0Right");

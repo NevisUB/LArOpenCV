@@ -8,7 +8,7 @@ namespace larocv{
   /// Global larocv::SimpleCutsFactory to register AlgoFactory
   static SimpleCutsFactory __global_SimpleCutsFactory__;
 
-  void SimpleCuts::_Configure_(const ::fcllite::PSet &pset)
+  void SimpleCuts::_Configure_(const Config_t &pset)
   {
     _min_hits      = pset.get<int>("MinHits");
     _min_area      = pset.get<float>("MinArea");

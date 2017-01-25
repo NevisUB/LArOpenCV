@@ -3,15 +3,15 @@
 
 #include "InConeCluster.h"
 #include "LArUtil/GeometryHelper.h"
-#include "ClusterRecoUtil/Base/Polygon2D.h"
-#include "ClusterRecoUtil/Base/ClusterParams.h"
+#include "RecoTool/ClusterRecoUtil/Base/Polygon2D.h"
+#include "RecoTool/ClusterRecoUtil/Base/ClusterParams.h"
 
 namespace larocv {
 
   /// Global larocv::InConeClusterFactory to register AlgoFactory
   static InConeClusterFactory __global_InConeClusterFactory__;
 
-  void InConeCluster::_Configure_(const ::fcllite::PSet &pset)
+  void InConeCluster::_Configure_(const Config_t &pset)
   {
     _area_separation  = pset.get<double> ( "AreaCut"    );
     _cone_length      = pset.get<double> ( "ConeLength" );

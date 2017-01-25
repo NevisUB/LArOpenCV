@@ -16,11 +16,10 @@ INCFLAGS += $(shell basictool-config --includes)
 INCFLAGS += $(shell recotool-config --includes)
 INCFLAGS += $(shell larlite-config --includes)
 INCFLAGS += $(shell python-config --includes)
+INCFLAGS += -I$(LARLITE_USERDEVDIR)
 INCFLAGS += -I$(shell python -c "import numpy; print numpy.get_include()")
 INCFLAGS += -I$(OPENCV_INCDIR)
 INCFLAGS += -I$(LAROPENCV_BASEDIR)
-INCFLAGS += -I$(LAROPENCV_IMAGECLUSTERDIR)/Base
-INCFLAGS += -I$(LAROPENCV_IMAGECLUSTERDIR)/Util
 INCFLAGS += -I$(GEO2D_BASEDIR)
 
 # platform-specific options

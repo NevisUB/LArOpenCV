@@ -8,7 +8,7 @@ namespace larocv{
   /// Global larocv::ChargeDistribOverlapFactory to register AlgoFactory
   static ChargeDistribOverlapFactory __global_ChargeDistribOverlapFactory__;
 
-  void ChargeDistribOverlap::_Configure_(const ::fcllite::PSet &pset)
+  void ChargeDistribOverlap::_Configure_(const Config_t &pset)
   {
     _verbose = pset.get<bool>("Verbose");
     _debug   = pset.get<bool>("Debug");

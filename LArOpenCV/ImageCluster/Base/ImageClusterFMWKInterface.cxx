@@ -9,6 +9,9 @@
 #include "LArOpenCV/Core/larbys.h"
 namespace larocv {
 
+  Config_t CreatePSetFromFile(std::string fname, std::string cfg_name)
+  { return ::fcllite::CreatePSetFromFile(fname,cfg_name); }
+
   void IntersectionPoint(const size_t wire1, const size_t plane1,
 			 const size_t wire2, const size_t plane2,
 			 double& y, double& z)

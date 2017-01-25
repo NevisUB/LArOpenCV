@@ -1,10 +1,23 @@
 #ifndef IMAGECLUSTERFMWKINTERFACE_H
 #define IMAGECLUSTERFMWKINTERFACE_H
 
+#define USE_LARLITE_PSET 1
+//#define USE_LARCV_PSET 1
+
+#ifdef USE_LARLITE_PSET
 #include "BasicTool/FhiclLite/PSet.h"
+#include "BasicTool/FhiclLite/FhiclLiteUtilFunc.h"
 namespace larocv{
   typedef ::fcllite::PSet Config_t;
+  Config_t CreatePSetFromFile(std::string fname, std::string cfg_name="noname");
 }
+#endif
+#ifdef USE_LARCV_PSET
+#include "core/Base/PSet.h"
+namespace larocv{
+  typedef ::larcv::PSet Config_t;
+}
+#endif
 
 #include "Geo2D/Core/Vector.h"
 

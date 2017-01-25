@@ -8,7 +8,7 @@ namespace larocv{
   /// Global larocv::AttachedClustersFactory to register AlgoFactory
   static AttachedClustersFactory __global_AttachedClustersFactory__;
 
-  void AttachedClusters::_Configure_(const ::fcllite::PSet &pset)
+  void AttachedClusters::_Configure_(const Config_t &pset)
   {
     _max_defect_size         = pset.get<int>  ( "MaxDefectSize" );
     _hull_contour_area_ratio = pset.get<float>( "HullContourAreaRatio" );

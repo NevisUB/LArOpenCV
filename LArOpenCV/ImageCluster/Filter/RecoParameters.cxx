@@ -8,7 +8,7 @@ namespace larocv {
   /// Global larocv::RecoParametersFactory to register AlgoFactory
   static RecoParametersFactory __global_RecoParametersFactory__;
   
-  void RecoParameters::_Configure_(const ::fcllite::PSet &pset)
+  void RecoParameters::_Configure_(const Config_t &pset)
   {}
 
   Cluster2DArray_t RecoParameters::_Process_(const larocv::Cluster2DArray_t& clusters,

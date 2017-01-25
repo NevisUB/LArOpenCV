@@ -2,21 +2,24 @@
 #define __CLUSDEADWIREOVERLAP_CXX__
 
 #include "ClusDeadWireOverlap.h"
-#include "FhiclLite/ConfigManager.h"
+//#include "FhiclLite/ConfigManager.h"
 
 namespace larocv{
 
   /// Global larocv::ClusDeadWireOverlapFactory to register ClusterAlgoFactory
   static ClusDeadWireOverlapFactory __global_ClusDeadWireOverlapFactory__;
 
-  void ClusDeadWireOverlap::_Configure_(const ::fcllite::PSet &pset)
+  void ClusDeadWireOverlap::_Configure_(const Config_t &pset)
   {
     //Wire loading code from Vic's DeadWireCombine Merge algorithm
     auto deadwirepath = pset.get< std::string >("DeadWirePath");
+    /*
     std::cout << "\t>> Configuring DeadWireCombine with fcl: " << deadwirepath << " <<\n";
     ::fcllite::ConfigManager algo_mgr("DeadWireCombine");
     algo_mgr.AddCfgFile(deadwirepath);
     auto const& algo_cfg = algo_mgr.Config().get_pset("DeadWireCombine");
+    */
+    auto algo_cfg = CreatePSetFromFile(deadwirepath,"DeadWireCombine");
 
     auto p0_l = algo_cfg.get< std::vector<int> >("Plane0Left");
     auto p0_r = algo_cfg.get< std::vector<int> >("Plane0Right");

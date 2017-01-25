@@ -16,10 +16,10 @@
 #define __LARLITE_LARIMAGEHIT_H__
 
 #include "Analysis/ana_base.h"
-#include "Core/ImageManager.h"
-#include "App/LArImageClusterBase.h"
-#include "Core/LArOCVTypes.h"
-#include "Core/laropencv_base.h"
+#include "LArOpenCV/Core/ImageManager.h"
+#include "LArOpenCV/App/LArImageClusterBase.h"
+#include "LArOpenCV/Core/LArOCVTypes.h"
+#include "LArOpenCV/Core/laropencv_base.h"
 
 namespace larlite {
 

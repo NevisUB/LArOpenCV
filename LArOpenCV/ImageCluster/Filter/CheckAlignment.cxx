@@ -9,7 +9,7 @@ namespace larocv{
   /// Global larocv::CheckAlignmentFactory to register AlgoFactory
   static CheckAlignmentFactory __global_CheckAlignmentFactory__;
   
-  void CheckAlignment::_Configure_(const ::fcllite::PSet &pset)
+  void CheckAlignment::_Configure_(const Config_t &pset)
   {
     _ratio_cut     = pset.get<float>("RatioCut");
     _min_dist      = pset.get<float>("MinDist");

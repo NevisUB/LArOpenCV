@@ -8,7 +8,7 @@ namespace larocv{
   /// Global larocv::VertexInHullFactory to register AlgoFactory
   static VertexInHullFactory __global_VertexInHullFactory__;
   
-  void VertexInHull::_Configure_(const ::fcllite::PSet &pset)
+  void VertexInHull::_Configure_(const Config_t &pset)
   {}
 
   Cluster2DArray_t VertexInHull::_Process_(const larocv::Cluster2DArray_t& clusters,

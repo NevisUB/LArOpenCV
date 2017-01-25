@@ -2,14 +2,14 @@
 #define __CHECKSTARTDISTANCE_CXX__
 
 #include "CheckStartDistance.h"
-#include "PCAUtilities.h"
+#include "LArOpenCV/ImageCluster/Util/PCAUtilities.h"
 
 namespace larocv {
 
   /// Global larocv::CheckStartDistanceFactory to register AlgoFactory
   static CheckStartDistanceFactory __global_CheckStartDistanceFactory__;
   
-  void CheckStartDistance::_Configure_(const ::fcllite::PSet& pset) {
+  void CheckStartDistance::_Configure_(const Config_t& pset) {
     _max_start_d = pset.get<double>("MaxStartEndDistance");
     
     _w = 0.0557;

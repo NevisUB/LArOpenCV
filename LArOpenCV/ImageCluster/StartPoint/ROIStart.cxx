@@ -8,7 +8,7 @@ namespace larocv {
   /// Global larocv::ROIStartFactory to register AlgoFactory
   static ROIStartFactory __global_ROIStartFactory__;
 
-  void ROIStart::_Configure_(const ::fcllite::PSet &pset)
+  void ROIStart::_Configure_(const Config_t &pset)
   {
      _min_vertex_dist = pset.get<float>("MinVtxDist") ;
   }

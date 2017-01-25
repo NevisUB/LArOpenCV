@@ -10,7 +10,7 @@ namespace larocv{
   /// Global larocv::VtxAlignFactory to register AlgoFactory
   static VtxAlignFactory __global_VtxAlignFactory__;
 
-  void VtxAlign::_Configure_(const ::fcllite::PSet &pset)
+  void VtxAlign::_Configure_(const Config_t &pset)
   {
   _require_3planes = pset.get<bool>  ("RequireThreePlanes");
   _ratio_cut       = pset.get<float>  ("RatioCut");

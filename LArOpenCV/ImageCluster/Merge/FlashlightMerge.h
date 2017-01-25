@@ -14,8 +14,8 @@
 #ifndef __FLASHLIGHTMERGE_H__
 #define __FLASHLIGHTMERGE_H__
 
-#include "ClusterAlgoBase.h"
-#include "AlgoFactory.h"
+#include "LArOpenCV/ImageCluster/Base/ClusterAlgoBase.h"
+#include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -42,7 +42,7 @@ namespace larocv {
   protected:
 
     /// Configuration method
-    void _Configure_(const ::fcllite::PSet &pset);
+    void _Configure_(const Config_t &pset);
 
     /// Process method
     larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,

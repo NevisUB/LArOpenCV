@@ -3,7 +3,7 @@
 
 #include "LArImageClusterBase.h"
 #include "LArUtil/Geometry.h"
-#include "FhiclLite/ConfigManager.h"
+#include "BasicTool/FhiclLite/ConfigManager.h"
 
 #include "DataFormat/rawdigit.h"
 #include "DataFormat/hit.h"

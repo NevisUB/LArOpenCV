@@ -3,15 +3,15 @@
 #define __BOUNDRECTSTART_CXX__
 
 #include "BoundRectStart.h"
-#include "PCAUtilities.h"
-#include "StatUtilities.h"
+#include "LArOpenCV/ImageCluster/Util/PCAUtilities.h"
+#include "LArOpenCV/ImageCluster/Util/StatUtilities.h"
 
 namespace larocv {
 
   /// Global larocv::BoundRectStartFactory to register AlgoFactory
   static BoundRectStartFactory __global_BoundRectStartFactory__;
 
-  void BoundRectStart::_Configure_(const ::fcllite::PSet &pset)
+  void BoundRectStart::_Configure_(const Config_t &pset)
   {
     _nDivWidth = pset.get<int>("NDivWidth");
     _cutbadreco = pset.get<bool>("CutBadReco");

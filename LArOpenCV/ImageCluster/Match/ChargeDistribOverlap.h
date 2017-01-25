@@ -14,8 +14,8 @@
 #ifndef __CHARGEDISTRIBOVERLAP_H__
 #define __CHARGEDISTRIBOVERLAP_H__
 
-#include "MatchAlgoBase.h"
-#include "AlgoFactory.h"
+#include "LArOpenCV/ImageCluster/Base/MatchAlgoBase.h"
+#include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArUtil/PxUtils.h"
 #include "LArUtil/GeometryHelper.h"
 #include "LArUtil/DetectorProperties.h"
@@ -41,7 +41,7 @@ namespace larocv {
   protected:
 
     /// Configuration method
-    void _Configure_(const ::fcllite::PSet &pset);
+    void _Configure_(const Config_t &pset);
 
     /// Process method
     double _Process_(const larocv::Cluster2DPtrArray_t& clusters, const std::vector<double>& roi_vtx); 

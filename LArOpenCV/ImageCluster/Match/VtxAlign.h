@@ -14,8 +14,8 @@
 #ifndef __VTXALIGN_H__
 #define __VTXALIGN_H__
 
-#include "MatchAlgoBase.h"
-#include "AlgoFactory.h"
+#include "LArOpenCV/ImageCluster/Base/MatchAlgoBase.h"
+#include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 
 namespace larocv {
   /**
@@ -39,7 +39,7 @@ namespace larocv {
   protected:
 
     /// Configuration method
-    void _Configure_(const ::fcllite::PSet &pset);
+    void _Configure_(const Config_t &pset);
 
     /// Process method
     double _Process_(const larocv::Cluster2DPtrArray_t& clusters, const std::vector<double>& roi_vtx);

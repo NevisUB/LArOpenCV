@@ -2,7 +2,7 @@
 #define __LARLITE_LARIMAGEHIT_CXX__
 
 #include "LArImageHit.h"
-#include "Core/larbys.h"
+#include "LArOpenCV/Core/larbys.h"
 
 #include "LArUtil/Geometry.h"
 #include "LArUtil/GeometryHelper.h"

@@ -8,7 +8,7 @@ namespace larocv{
   /// Global larocv::SatelliteMergeFactory to register AlgoFactory
   static SatelliteMergeFactory __global_SatelliteMergeFactory__;
 
-  void SatelliteMerge::_Configure_(const ::fcllite::PSet &pset)
+  void SatelliteMerge::_Configure_(const Config_t &pset)
   {
     _area_separation  = pset.get<double> ( "AreaCut"           );
     _min_sat_dist     = pset.get<double> ( "MinSatDistance"    );
