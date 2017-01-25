@@ -11,6 +11,9 @@
 #pragma link off all functions;
 
 #pragma link C++ class DefectBreaker+;
+#pragma link C++ class larocv::ClusterHIPMIP+;
+#pragma link C++ class larocv::VertexParticleCluster+;
+
 //ADD_NEW_CLASS ... do not change this line
 #endif
 

@@ -10,6 +10,13 @@ namespace larocv {
 		     const GEO2D_ContourArray_t& veto_ctor_v,
 		     float pi_threshold=0);
 
+
+  cv::Mat MaskImage(const cv::Mat& img,
+		    const GEO2D_ContourArray_t& veto_ctor_v,
+		    int   tol=0,
+		    bool  maskout=true);
+
+  
   cv::Mat MaskImage(const cv::Mat& img,
 		    const GEO2D_ContourArray_t& veto_ctor_v,
 		    float pi_threshold=0,
@@ -24,7 +31,7 @@ namespace larocv {
 		    const geo2d::Circle<float>& c,
 		    float pi_threshold=0,
 		    bool  maskout=true);
-
+  
   double Distance(const geo2d::Vector<float>& pt,
 		  const GEO2D_Contour_t& ctor);
 
