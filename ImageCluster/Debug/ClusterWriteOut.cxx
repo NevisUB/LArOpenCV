@@ -20,7 +20,7 @@ namespace larocv{
     if (! meta.debug() ) throw larbys("You can not call ClusterWriteOut outside of debug mode");
 
     std::stringstream ss1, ss2;
-
+    /*
     ::larlite::user_info uinfo{};
     ss1 << "Algo_"<<Name()<<"_Plane_"<<meta.plane()<<"_clusters";
     uinfo.store("ID",ss1.str());
@@ -128,7 +128,7 @@ namespace larocv{
     clear_ss(ss2);
     
     meta.ev_user()->emplace_back(uinfo);
-
+    */
     return clusters;    
   }
 

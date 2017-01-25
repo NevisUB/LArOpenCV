@@ -333,14 +333,16 @@ namespace larocv{
 
       std::stringstream ss1, ss2;
 
+      /*
       ::larlite::user_info uinfo{};
       ss1 << "Algo_"<<Name()<<"_Plane_"<<meta.plane()<<"_clusters";
       uinfo.store("ID",ss1.str());
-
+      */
+      
       ss1.str(std::string());
       ss1.clear();
 
-      uinfo.store("N_hulls",(int)oclusters.size());
+      //uinfo.store("N_hulls",(int)oclusters.size());
 
       LAROCV_DEBUG() << "Writing debug information for " << oclusters.size() << "\n";
     
@@ -358,8 +360,8 @@ namespace larocv{
 	  double x = meta.XtoTimeTick(point.x);
 	  double y = meta.YtoWire(point.y);
 	
-	  uinfo.append(ss1.str(),x);
-	  uinfo.append(ss2.str(),y);
+	  //uinfo.append(ss1.str(),x);
+	  //uinfo.append(ss2.str(),y);
 	}
 	
 	ss1.str(std::string());
@@ -368,7 +370,7 @@ namespace larocv{
 	ss2.clear();
       }
 
-      meta.ev_user()->emplace_back(uinfo);
+      //meta.ev_user()->emplace_back(uinfo);
     }
 
 

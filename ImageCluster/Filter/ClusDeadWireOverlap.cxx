@@ -120,10 +120,12 @@ namespace larocv{
 
       std::stringstream ss1, ss2, ss3, ss4;
 
+      /*
       ::larlite::user_info uinfo{};
       ss1 << "Algo_"<<Name()<<"_Plane_"<<meta.plane()<<"_clusters";
       uinfo.store("ID",ss1.str());
-
+      */
+      
       ss1.str(std::string());
       ss1.clear();
 
@@ -145,12 +147,12 @@ namespace larocv{
 
         float min = min_max_wire[i].first + meta.origin().x;  
         float max = min_max_wire[i].second + meta.origin().x;
-
+	/*
         uinfo.append(ss1.str(),min);
         uinfo.append(ss2.str(),max);
         uinfo.append(ss3.str(),(min_max_time[i].first + meta.origin().y + 2400));
         uinfo.append(ss4.str(),(min_max_time[i].second + meta.origin().y + 2400));
-
+	*/
         ss1.str(std::string());
         ss1.clear();
         ss2.str(std::string());
@@ -161,7 +163,7 @@ namespace larocv{
         ss4.clear();
       }
 
-      meta.ev_user()->emplace_back(uinfo);
+      //meta.ev_user()->emplace_back(uinfo);
 
       std::cout<<"Meta origin: "<<meta.origin().x <<", "<<meta.origin().y <<std::endl ;
     }

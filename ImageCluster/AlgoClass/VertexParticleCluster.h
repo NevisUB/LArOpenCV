@@ -6,6 +6,11 @@
 #include "FhiclLite/PSet.h"
 #include "AlgoData/VertexClusterData.h"
 
+//#define UNIT_TEST
+//#ifdef UNIT_TEST
+//#include "PyUtil/PyUtil.h"
+//#endif
+
 namespace larocv {
  
   class VertexParticleCluster : public laropencv_base {
@@ -25,7 +30,15 @@ namespace larocv {
     std::vector<GEO2D_Contour_t>
     CreateParticleCluster(const ::cv::Mat& img,
 			  const data::CircleVertex& vtx2d);
-
+    /*
+#ifdef UNIT_TEST
+    /// For unit test purpose in python
+    std::vector<GEO2D_Contour_t>
+    CreateParticleCluster(PyObject*,
+			  const data::CircleVertex& vtx2d);
+#endif
+    */
+    
     //
     // Public algorithm configuration attributes
     //
