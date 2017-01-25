@@ -7,6 +7,7 @@
 #include "AlgoFactory.h"
 #include "AlgoData/HIPClusterData.h"
 #include "Core/Vector.h"
+#include "AlgoClass/ClusterHIPMIP.h"
 
 namespace larocv {
  
@@ -16,7 +17,8 @@ namespace larocv {
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
     HIPCluster(const std::string name = "HIPCluster") :
-      ClusterAlgoBase(name)
+      ClusterAlgoBase(name),
+      _ClusterHIPMIP()
     {}
     
     /// Default destructor
@@ -37,6 +39,8 @@ namespace larocv {
     
   private:
 
+    ClusterHIPMIP _ClusterHIPMIP;
+    
     int _min_hip_cluster_size;
     int _min_mip_cluster_size;
 

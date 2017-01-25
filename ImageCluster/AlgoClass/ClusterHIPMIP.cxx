@@ -10,7 +10,10 @@ using larocv::larbys;
 
 namespace larocv {
 
-  ClusterHIPMIP::ClusterHIPMIP()
+  ClusterHIPMIP::ClusterHIPMIP() :
+    _mip_thresh_mask_m(), // empty cv mat
+    _mip_thresh_m(), // empty cv mat
+    _hip_thresh_m() //empty cv mat
   {
     _min_hip_cluster_size = 5;
     _min_mip_cluster_size = 20;
@@ -69,21 +72,17 @@ namespace larocv {
     LAROCV_DEBUG() << "MIP level: " << MIP_LEVEL << "... HIP level: " << HIP_LEVEL << std::endl;
     
     //Threshold the input image to certain ADC value, this is our MIP
-    cv::Mat mip_thresh_m;
-
-    threshold(mod_img_m, mip_thresh_m, MIP_LEVEL,255,0);
-
+    threshold(mod_img_m, _mip_thresh_m, MIP_LEVEL,255,0);
 
     //Threshold the input image to HIP ADC value, this is our HIP
-    cv::Mat hip_thresh_m;
-    threshold(mod_img_m, hip_thresh_m, HIP_LEVEL,255,0);
+    threshold(mod_img_m, _hip_thresh_m, HIP_LEVEL,255,0);
     LAROCV_DEBUG() << "Thresholded HIP" << std::endl;
 
     //HIP contour finding
     std::vector<cv::Vec4i> hip_cv_hierarchy_v;
     hip_cv_hierarchy_v.clear();
     
-    cv::findContours(hip_thresh_m,
+    cv::findContours(_hip_thresh_m,
 		     hip_ctor_v,
 		     hip_cv_hierarchy_v,
 		     CV_RETR_EXTERNAL,
@@ -106,16 +105,16 @@ namespace larocv {
 
     //Mask them out of the MIP image.
     LAROCV_DEBUG() << "Masking hip image" << std::endl;
-    auto mip_thresh_mask_m = MaskImage(mip_thresh_m,        //input image
-				       hip_ctor_v,          //hip contours
-				       _hip_mask_tolerance, //make the edges fatter for mask
-				       true);                //yes, mask
+    _mip_thresh_mask_m = MaskImage(_mip_thresh_m,        //input image
+				   hip_ctor_v,          //hip contours
+				   _hip_mask_tolerance, //make the edges fatter for mask
+				   true);                //yes, mask
     
     // mip contour finding
     std::vector<cv::Vec4i> mip_cv_hierarchy_v;
     mip_cv_hierarchy_v.clear();
     
-    cv::findContours(mip_thresh_m,
+    cv::findContours(_mip_thresh_m,
 		     mip_ctor_v,
 		     mip_cv_hierarchy_v,
 		     CV_RETR_EXTERNAL,
@@ -126,7 +125,7 @@ namespace larocv {
     std::vector<cv::Vec4i> mip_cv_hierarchy_mask_v;
     mip_cv_hierarchy_mask_v.clear();
     
-    cv::findContours(mip_thresh_mask_m,
+    cv::findContours(_mip_thresh_mask_m,
 		     mip_ctor_mask_v,
 		     mip_cv_hierarchy_mask_v,
 		     CV_RETR_EXTERNAL,
