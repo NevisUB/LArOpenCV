@@ -407,6 +407,32 @@ namespace larocv {
     return result_v;
   }
 
+  /*
+  std::vector<GEO2D_Contour_t>
+  VertexParticleCluster::CreateParticleCluster(PyObject*,
+					       const data::CircleVertex& vtx2d)
+  {
+    float **carray;
+    //Create C arrays from numpy objects:
+    const int dtype = NPY_FLOAT;
+    PyArray_Descr *descr = PyArray_DescrFromType(dtype);
+    npy_intp dims[3];
+    if (PyArray_AsCArray(&pyarray, (void **)&carray, dims, 2, descr) < 0) {
+      logger::get("PyUtil").send(larcv::msg::kCRITICAL,__FUNCTION__,__LINE__,"ERROR: cannot convert to 2D C-array");
+      throw larbys();
+    }
+
+    std::vector<float> res_data(dims[0]*dims[1],0.);
+    for(int i=0; i<dims[0]; ++i) {
+      for(int j=0; j<dims[1]; ++j) {
+	res_data[i * dims[1] + j] = (float)(carray[i][j]);
+      }
+    }
+    PyArray_Free(pyarray,(void *)carray);
+
+    Image2D res(std::move(meta),std::move(res_data));
+  }
+  */
 }
 
 #endif
