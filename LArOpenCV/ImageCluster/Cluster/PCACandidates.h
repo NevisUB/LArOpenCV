@@ -6,6 +6,7 @@
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoData/PCACandidatesData.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/PCACrossing.h"
 #include "Geo2D/Core/Geo2D.h"
 
 namespace larocv {
@@ -16,7 +17,8 @@ namespace larocv {
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
     PCACandidates(const std::string name = "PCACandidates") :
-      ImageAnaBase(name)
+      ImageAnaBase(name),
+      _PCACrossing()
     {}
     
     /// Default destructor
@@ -39,12 +41,11 @@ namespace larocv {
 
   private:
 
-    geo2d::Line<float> calculate_pca(const GEO2D_Contour_t& ctor);
-
     AlgorithmID_t _defect_cluster_algo_id;
-    float _pca_x_d_to_q;
-    int   _nonzero_pixel_thresh;
+    
     bool  _per_vertex;
+
+    PCACrossing _PCACrossing;
   };
 
   /**

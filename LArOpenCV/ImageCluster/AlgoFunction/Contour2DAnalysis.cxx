@@ -155,6 +155,27 @@ namespace larocv {
     cv::convexHull(cv::Mat(merged_ctor), result);
     return result;
   }
+
+
+  geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor) {
+    
+    cv::Mat ctor_pts(ctor.size(), 2, CV_32FC1); // 32 bit precision is fine
+    
+    for (unsigned i = 0; i < ctor_pts.rows; ++i) {
+      ctor_pts.at<float>(i, 0) = ctor.at(i).x;
+      ctor_pts.at<float>(i, 1) = ctor.at(i).y;
+    }
+    
+    cv::PCA pca_ana(ctor_pts, cv::Mat(), CV_PCA_DATA_AS_ROW,0);
+      
+    geo2d::Line<float> pca_principle(geo2d::Vector<float>(pca_ana.mean.at<float>(0,0),
+							  pca_ana.mean.at<float>(0,1)),
+				     geo2d::Vector<float>(pca_ana.eigenvectors.at<float>(0,0),
+							  pca_ana.eigenvectors.at<float>(0,1)));
+    return pca_principle;
+  }
+
+  
   
 }
 #endif

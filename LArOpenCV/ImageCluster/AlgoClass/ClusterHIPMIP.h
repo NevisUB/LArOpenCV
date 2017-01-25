@@ -21,10 +21,15 @@ namespace larocv {
     /// Optional configuration method
     void Configure(const Config_t &pset);
 
-    /// Main function to create particle cluster using polar coordinate
+    /// Main function to separate hip and mip contours
     std::pair<std::vector<GEO2D_Contour_t>, std::vector<GEO2D_Contour_t> >
     IsolateHIPMIP(const ::cv::Mat& img);
 
+
+    const cv::Mat& get_mip_masked_img() { return _mip_thresh_mask_m; }
+    const cv::Mat& get_mip_thresh_img() { return _mip_thresh_m;      }
+    const cv::Mat& get_hip_thresh_img() { return _hip_thresh_m;      }
+    
     //double _contour_dist_threshold;
 
     int _min_hip_cluster_size;
@@ -43,7 +48,9 @@ namespace larocv {
 
     
   private:
-    
+    cv::Mat _mip_thresh_mask_m;
+    cv::Mat _mip_thresh_m;
+    cv::Mat _hip_thresh_m;
     
   };
   
