@@ -19,7 +19,6 @@
 #include <opencv2/core/core.hpp>
 #include "larbys.h"
 #include "LArOCVTypes.h"
-#include "DataFormat/user_info.h"
 
 namespace larocv {
 
@@ -100,8 +99,8 @@ namespace larocv {
     void set_debug(bool d) { _debug = d; }
     const bool debug() const { return _debug; }
 
-    void set_ev_user(::larlite::event_user* ui) { EVUSERINFO = ui; }
-    ::larlite::event_user* ev_user() { return EVUSERINFO; } //all caps to remind you this is a global instance
+    //void set_ev_user(::larlite::event_user* ui) { EVUSERINFO = ui; }
+    //::larlite::event_user* ev_user() { return EVUSERINFO; } //all caps to remind you this is a global instance
 
     void set_roi_cropped(bool d) { _roi_cropped = d; }
     const bool roi_cropped() const { return _roi_cropped; }
@@ -118,8 +117,6 @@ namespace larocv {
     size_t _plane;             ///< unique plane ID number
 
     bool _debug;
-
-    ::larlite::event_user* EVUSERINFO;
 
     bool _roi_cropped;
 

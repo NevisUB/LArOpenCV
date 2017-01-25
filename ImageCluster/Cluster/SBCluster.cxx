@@ -70,7 +70,7 @@ namespace larocv {
       result_v.emplace_back(new_clus); //this makes a copy
       
     }
-    
+    /*
     if ( meta.debug() ) {
 
       std::stringstream ss1, ss2;
@@ -112,7 +112,7 @@ namespace larocv {
 
       meta.ev_user()->emplace_back(uinfo);
     }
-    
+    */    
     return result_v;
   }
  

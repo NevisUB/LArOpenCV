@@ -33,10 +33,10 @@ namespace larocv {
 
     //start -- debug
     std::stringstream ss1,ss2,ss3,ss4;
-    ::larlite::user_info uinfo{};
+    //::larlite::user_info uinfo{};
 
-    ss1 << "Algo_"<<Name()<<"_Plane_"<<meta.plane()<<"_clusters";
-    uinfo.store("ID",ss1.str());
+    //ss1 << "Algo_"<<Name()<<"_Plane_"<<meta.plane()<<"_clusters";
+    //uinfo.store("ID",ss1.str());
 
     ss1.str(std::string());
     ss1.clear();
@@ -223,15 +223,15 @@ namespace larocv {
         double x1 = meta.XtoTimeTick(c1._cone_contour[i].x);
         double y1 = meta.YtoWire(c1._cone_contour[i].y);
       
-        uinfo.append(ss_x.str(),x1); 
-        uinfo.append(ss_y.str(),y1); 
+        //uinfo.append(ss_x.str(),x1); 
+        //uinfo.append(ss_y.str(),y1); 
         
 	if ( i ==2 ){
         double x1 = meta.XtoTimeTick(c1._cone_contour[0].x);
         double y1 = meta.YtoWire(c1._cone_contour[0].y);
       
-        uinfo.append(ss_x.str(),x1); 
-        uinfo.append(ss_y.str(),y1); 
+        //uinfo.append(ss_x.str(),x1); 
+        //uinfo.append(ss_y.str(),y1); 
 	}
 
        }
@@ -247,10 +247,10 @@ namespace larocv {
     for (size_t i = 0; i < used_sats.size(); i++) {
       if ( !used_sats[i] ) result.push_back(satellite_v[i]);
     }
-
+    /*
    if ( meta.debug() ) 
-   meta.ev_user()->emplace_back(uinfo);
-
+     meta.ev_user()->emplace_back(uinfo);
+    */
 
     return result;
   }
