@@ -38,6 +38,18 @@ namespace larocv {
     return line_v;
   }
 
+  std::vector<geo2d::Line<float> >
+  PCACrossing::ComputePCALines(const data::ClusterCompound& cluscomp) {
+    
+    std::vector<geo2d::Line<float> > line_v;
+    line_v.reserve(cluscomp.size());
+    
+    for(const auto& atomic : cluscomp)
+      line_v.emplace_back(CalcPCA(atomic));
+
+    return line_v;
+  }
+
 
   std::vector<geo2d::Vector<float> >
   PCACrossing::ComputeIntersections(const std::vector<geo2d::Line<float> >& line_v,
@@ -76,7 +88,7 @@ namespace larocv {
   std::vector<geo2d::Vector<float> >
   PCACrossing::ComputeIntersections(const std::vector<GEO2D_Contour_t>& cluscomp,
 				    const cv::Mat& img) {
-
+    
     LAROCV_DEBUG() << "Gettting intersections from PCA of incoming contours" << std::endl;
     
     auto line_v = ComputePCALines(cluscomp);
@@ -84,6 +96,18 @@ namespace larocv {
     return ComputeIntersections(line_v,img);
   }
 
+  std::vector<geo2d::Vector<float> >
+  PCACrossing::ComputeIntersections(const data::ClusterCompound& cluscomp,
+				    const cv::Mat& img) {
+    
+    LAROCV_DEBUG() << "Gettting intersections from PCA of incoming contours" << std::endl;
+    
+    auto line_v = ComputePCALines(cluscomp);
+    
+    return ComputeIntersections(line_v,img);
+  }
+
+  
   void
   PCACrossing::FilterIntersections(std::vector<geo2d::Vector<float> >& pts_v,
 				   const cv::Mat& img) {
