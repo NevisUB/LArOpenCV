@@ -30,7 +30,6 @@
 #pragma link C++ class larocv::data::ParticleCompoundArray+;
 #pragma link C++ class larocv::data::DefectClusterData+;
 
-
 #pragma link C++ class larocv::data::ParticleCluster+;
 #pragma link C++ class larocv::data::ParticleClusterArray+;
 #pragma link C++ class larocv::data::VertexClusterArray+;

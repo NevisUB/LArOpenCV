@@ -266,17 +266,17 @@ namespace larocv {
       _vtx_cluster_v.clear();
     }
     /*
-    void DefectClusterData::push_back(const larocv::data::ParticleCompoundArray& col)
-    {
+      void DefectClusterData::push_back(const larocv::data::ParticleCompoundArray& col)
+      {
       _vtx_cluster_v.push_back(col);
       _vtx_cluster_v.back()._id = _vtx_cluster_v.size() - 1;
-    }
+      }
 
-    void DefectClusterData::emplace_back(larocv::data::ParticleCompoundArray&& col)
-    {
+      void DefectClusterData::emplace_back(larocv::data::ParticleCompoundArray&& col)
+      {
       _vtx_cluster_v.emplace_back(std::move(col));
       _vtx_cluster_v.back()._id = _vtx_cluster_v.size() - 1;
-    }
+      }
     */
     void DefectClusterData::insert(size_t vtx_id, const larocv::data::ParticleCompoundArray& col)
     {
