@@ -17,6 +17,9 @@
 
 #include "Core/LArOCVTypes.h"
 #include "Core/Vector.h"
+#include "Core/Line.h"
+#include "Core/Circle.h"
+#include "Core/BoundingBox.h"
 
 namespace larocv {
 
@@ -67,6 +70,46 @@ namespace larocv {
       /// unique vertex id
       size_t _id;
     };
+
+    /*
+      \class PointPCA
+      @brief Represent a line (actually not PCA...) approximated using PCA at a particular point
+    */
+    class PointPCA {
+    public:
+      PointPCA(){}      
+      PointPCA(const geo2d::Vector<float>& in_pt,
+	       const geo2d::Line<float>& in_line)
+	: pt(in_pt), line(in_line)
+      {}
+      geo2d::Vector<float> pt;   ///< point around which PCA approximation is made
+      geo2d::Line<float>   line; ///< long PCA axis of the neighboring pixels 
+    };
+    
+    /**
+       \class CircleVertex
+       @brief Vertex estimated by Refine2DVertex and its family (carries extra information about vertex)
+    */
+    class CircleVertex {
+    public:
+      CircleVertex() {Clear();}
+      ~CircleVertex() {}
+      
+      // Attribute variables
+      geo2d::Vector<float> center;        ///< 2D vertex point
+      geo2d::Vector<float> error;         ///< 2D vertex point error
+      float radius;                       ///< 2D radius inspected around the vertex
+      std::vector<larocv::data::PointPCA> xs_v; ///< List of charge deposit point on the circumference
+      std::vector<float> dtheta_v;        ///< List of dtheta = angle between center=>cs vs. PCA @ xs
+      
+      /// Attribute clear method
+      void Clear();
+      /// Sum of dtheta_v
+      float sum_dtheta() const;
+    };
+
+
+    
   }
 }
 #endif

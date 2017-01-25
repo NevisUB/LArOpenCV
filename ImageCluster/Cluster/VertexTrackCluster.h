@@ -1,5 +1,3 @@
-//by vic
-
 #ifndef __VERTEXTRACKCLUSTER_H__
 #define __VERTEXTRACKCLUSTER_H__
 
@@ -41,7 +39,7 @@ namespace larocv {
 				      larocv::ROI& roi);
     
   private:
-    
+
     std::vector<larocv::data::ParticleCluster>
     TrackHypothesis(const ::cv::Mat& img,const ImageMeta& meta, const data::CircleVertex& vtx);
 

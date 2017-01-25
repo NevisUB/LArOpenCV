@@ -26,43 +26,6 @@ namespace larocv {
   namespace data {
 
     /*
-      \class PointPCA
-      @brief Represent a line (actually not PCA...) approximated using PCA at a particular point
-    */
-    class PointPCA {
-    public:
-      PointPCA(){}      
-      PointPCA(const geo2d::Vector<float>& in_pt,
-	       const geo2d::Line<float>& in_line)
-	: pt(in_pt), line(in_line)
-      {}
-      geo2d::Vector<float> pt;   ///< point around which PCA approximation is made
-      geo2d::Line<float>   line; ///< long PCA axis of the neighboring pixels 
-    };
-    
-    /**
-       \class CircleVertex
-       @brief Vertex estimated by Refine2DVertex and its family (carries extra information about vertex)
-    */
-    class CircleVertex {
-    public:
-      CircleVertex() {Clear();}
-      ~CircleVertex() {}
-      
-      // Attribute variables
-      geo2d::Vector<float> center;        ///< 2D vertex point
-      geo2d::Vector<float> error;         ///< 2D vertex point error
-      float radius;                       ///< 2D radius inspected around the vertex
-      std::vector<larocv::data::PointPCA> xs_v; ///< List of charge deposit point on the circumference
-      std::vector<float> dtheta_v;        ///< List of dtheta = angle between center=>cs vs. PCA @ xs
-      
-      /// Attribute clear method
-      void Clear();
-      /// Sum of dtheta_v
-      float sum_dtheta() const;
-    };
-
-    /*
       \class Refine2DVertexData
       @brief Algorithm data created by Refine2DVertex, stores essential attributes for analysis
     */
@@ -110,12 +73,6 @@ namespace larocv {
       /// CircleVertex for corresponding Vertex3D: outer index = vertex3d, inner index = plane
       std::vector<std::vector<larocv::data::CircleVertex> > _circle_vtx_vv;
 
-      /*
-      geo2d::VectorArray<float>   _cand_vtx_v;   ///< deprecated
-      std::vector< float >        _cand_score_v; ///< deprecated
-      std::vector< bool  >        _cand_valid_v; ///< deprecated
-      std::vector< geo2d::VectorArray<float> > _cand_xs_vv; ///< deprecated
-      */
     };
   }
 }

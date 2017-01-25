@@ -25,7 +25,8 @@ HOST            = $(shell uname -n)
 OSNAMEMODE      = $(OSNAME)
 
 LDFLAGS += $(shell basictool-config --libs)
-LDFLAGS += -L$(LARLITE_LIBDIR) -lLArOpenCV_Core -lLArOpenCV_ImageClusterAlgoData -lLArOpenCV_Utils -lLArOpenCV_ImageClusterBase -lRecoTool_ClusterRecoUtil -lRecoTool_ClusterRecoUtilAlg
+LDFLAGS += -L$(LARLITE_LIBDIR) -lLArOpenCV_Core -lLArOpenCV_Utils -lLArOpenCV_ImageClusterAlgoFunction -lLArOpenCV_ImageClusterAlgoData -lLArOpenCV_ImageClusterBase
+LDFLAGS += -L$(LARLITE_LIBDIR) -lRecoTool_ClusterRecoUtil -lRecoTool_ClusterRecoUtilAlg
 LDFLAGS += -L$(GEO2D_LIBDIR) -lGeo2D_Core
 LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc
 

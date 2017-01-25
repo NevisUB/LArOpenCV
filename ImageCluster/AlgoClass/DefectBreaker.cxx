@@ -2,6 +2,11 @@
 #define DEFECTBREAKER_CXX
 
 #include "DefectBreaker.h"
+#include "Core/Geo2D.h"
+#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include "Core/larbys.h"
 
 void DefectBreaker::Configure(const fcllite::PSet &pset) {
   _min_defect_size      = pset.get<int>("MinDefectSize",5);

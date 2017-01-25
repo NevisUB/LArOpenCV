@@ -9,20 +9,6 @@ namespace larocv {
   namespace data {
     
     //////////////////////////////////////////////////////////////
-    
-    void CircleVertex::Clear()
-    {
-      center.x = center.y = -1;
-      error.x  = error.y  = -1;
-      radius   = -1;
-      xs_v.clear();
-      dtheta_v.clear();
-    }
-    
-    float CircleVertex::sum_dtheta() const
-    { float res=0; for(auto const& d : dtheta_v) res += d; return res; }
-    
-    //////////////////////////////////////////////////////////////
     void Refine2DVertexData::Clear() {
 
       _num_planes = 3;      
@@ -30,18 +16,6 @@ namespace larocv {
       _vtx3d_v.clear();
       _circle_vtx_vv.clear();
 
-      /*
-      _cand_valid_v.clear();
-      _cand_score_v.clear();
-      _cand_vtx_v.clear();
-      
-      _cand_valid_v.resize(3,false);
-      _cand_score_v.resize(3,-1);
-      _cand_vtx_v.resize(3);
-      _cand_xs_vv.resize(3);
-
-      for(auto& d : _cand_xs_vv)      d.clear();
-      */
     }
 
     size_t Refine2DVertexData::num_vertex() const

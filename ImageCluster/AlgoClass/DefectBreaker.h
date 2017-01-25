@@ -1,15 +1,9 @@
 #ifndef DEFECTBREAKER_H
 #define DEFECTBREAKER_H
 
-#include <iostream>
 #include "FhiclLite/PSet.h"
 #include "Core/Line.h"
 #include "Core/LineSegment.h"
-#include "Core/Geo2D.h"
-#include <opencv2/opencv.hpp>
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include "Core/larbys.h"
 #include "Core/laropencv_logger.h"
 #include "AlgoData/DefectClusterData.h"
 
