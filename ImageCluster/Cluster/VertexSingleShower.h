@@ -7,6 +7,7 @@
 #include "AlgoData/dQdXProfilerData.h"
 #include "AlgoData/VertexClusterData.h"
 #include "AlgoData/LinearTrackClusterData.h"
+#include "AlgoClass/LArPlaneGeo.h"
 namespace larocv {
  
   class VertexSingleShower : public larocv::ImageAnaBase {
@@ -34,6 +35,8 @@ namespace larocv {
 
     /// Inherited class configuration method
     void _Configure_(const ::fcllite::PSet &pset);
+
+    void Reset();
     
     void _Process_(const larocv::Cluster2DArray_t& clusters,
 		   const ::cv::Mat& img,
@@ -56,14 +59,6 @@ namespace larocv {
     SingleShowerHypothesis(const ::cv::Mat& img,
 			   const size_t plane,
 			   const data::CircleVertex& vtx);
-    float y2wire(float y, const size_t plane) const;
-    float x2tick(float x, const size_t plane) const;
-    float wire2y(float wire, const size_t plane) const;
-    float tick2x(float tick, const size_t plane) const;
-    bool  YZPoint(const geo2d::Vector<float>& pt0, const size_t plane0,
-		  const geo2d::Vector<float>& pt1, const size_t plane1,
-		  larocv::data::Vertex3D& result) const;
-
     geo2d::VectorArray<float>
     ValidShowerPointOnCircle(const ::cv::Mat& img,
 			     const geo2d::Circle<float>& circle,
@@ -74,6 +69,7 @@ namespace larocv {
 			  std::vector<larocv::data::Vertex3D>& res_vtx_v,
 			  std::vector<std::vector<larocv::data::CircleVertex> >& res_cvtx_v) const;
 
+    LArPlaneGeo _geo_algo;
     std::vector<larocv::data::Vertex3D> _cand_vertex_v;
     AlgorithmID_t _algo_id_dqdx;
     AlgorithmID_t _algo_id_vertex_track;
@@ -91,12 +87,7 @@ namespace larocv {
     float  _min_compat_dist;
     float _xplane_tick_resolution;
     std::vector<size_t> _seed_plane_v;
-    float  _trigger_tick;
-    std::vector<float> _tick_offset_v;
-    std::vector<float> _wire_comp_factor_v;
-    std::vector<float> _time_comp_factor_v;
-    geo2d::VectorArray<float> _origin_v;
-    
+
     std::vector<larocv::data::Vertex3D> _ltrack_vertex_v;
     std::vector<larocv::data::Vertex3D> _vtrack_vertex_v;
     std::vector<larocv::data::Vertex3D> _vedge_vertex_v;
