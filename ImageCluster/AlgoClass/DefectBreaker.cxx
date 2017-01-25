@@ -4,10 +4,11 @@
 #include "DefectBreaker.h"
 
 void DefectBreaker::Configure(const fcllite::PSet &pset) {
-
   _min_defect_size      = pset.get<int>("MinDefectSize",5);
   _hull_edge_pts_split  = pset.get<int>("NHullEdgePoints",50);
   _n_allowed_breaks     = pset.get<int>("NAllowedBreaks",10);
+  int log_level         = pset.get<int>("Verbosity",2);
+  _logger->set((larocv::msg::Level_t)log_level);
 }
 
 cv::Vec4i DefectBreaker::max_hull_edge(const GEO2D_Contour_t& ctor,
@@ -36,24 +37,7 @@ cv::Vec4i DefectBreaker::max_hull_edge(const GEO2D_Contour_t& ctor,
   return defects[max_idx];
 }
 
-bool DefectBreaker::on_line(const geo2d::Line<float>& line,::cv::Point pt) { 
 
-  float eps = 0.9;
-
-  float xpos = pt.x;
-  float ypos = pt.y;
-    
-  if ((ypos < line.y(xpos) + eps) and
-      (ypos > line.y(xpos) - eps))
-    return true;
-    
-  if ((ypos < line.y(xpos + eps)) and
-      (ypos > line.y(xpos - eps)))
-    return true;
-    
-  return false;
-    
-}
 void DefectBreaker::split_contour(const GEO2D_Contour_t& ctor,
 				  GEO2D_Contour_t& ctor1,
 				  GEO2D_Contour_t& ctor2,
@@ -127,10 +111,6 @@ void DefectBreaker::split_contour(const GEO2D_Contour_t& ctor,
   // for each point in the copy contour
   for(auto& pt : ctor_copy) {
 
-    // // point on the line (with tolerance) --  we should put it into both output contours
-    // if ( on_line(line,pt) )
-    // 	{ ctor1.emplace_back(pt); ctor2.emplace_back(pt); continue; }
-      
     // point is above the line -- put in contour 1
     if ( pt.y > line.y(pt.x) )
       { ctor1.emplace_back(pt); continue; }
@@ -1115,23 +1095,35 @@ DefectBreaker::AtomsEdge(const larocv::data::ClusterCompound& cluster,
 geo2d::Vector<float> DefectBreaker::ChooseStartPoint(larocv::data::ClusterCompound& cluscomp) {
 
   geo2d::Vector<float> start(larocv::kINVALID_FLOAT,larocv::kINVALID_FLOAT);
-  
-  size_t ass_defect_id = larocv::kINVALID_SIZE;
-  
-  //return the first atomic you see with 1 defect
-  for(const auto& atomic_contour : cluscomp) {
-    const auto& ass_defects_id_v = atomic_contour.associated_defects();
 
-    if (ass_defects_id_v.size() != 1) continue;
+  if (cluscomp.size() > 1) {
 
-    ass_defect_id = ass_defects_id_v[0];
+    const larocv::data::AtomicContour* start_atomic = nullptr;
+    
+    size_t ass_defect_id = larocv::kINVALID_SIZE;
+    
+    //return the first atomic you see with 1 defect
+    for(const auto& atomic_contour : cluscomp) {
+      const auto& ass_defects_id_v = atomic_contour.associated_defects();
+
+      //find the first contour that has a single defect
+      if (ass_defects_id_v.size() == 1) {
+	start_atomic  = &atomic_contour;
+	ass_defect_id = ass_defects_id_v[0];
+	break;
+      }
+      
+    }
+  
+    if ( !start_atomic)
+      throw larocv::larbys("Could not choose starting atomic based on ass defects");
     
     const auto& pt_defect = cluscomp.get_defect(ass_defect_id);
 
-    //look for the farthest points away on the contour
     float max_dist = 0;
-    
-    for(const auto& pt : atomic_contour) {
+    //look for the farthest points away on the contour
+
+    for(const auto& pt : *start_atomic) {
       geo2d::Vector<float> pt_f(pt.x,pt.y);
       auto dist = geo2d::dist(pt_f,pt_defect._pt_defect);
       if (dist > max_dist) {
@@ -1139,11 +1131,25 @@ geo2d::Vector<float> DefectBreaker::ChooseStartPoint(larocv::data::ClusterCompou
 	start = pt_f;
       }
     }
-    LAROCV_DEBUG() << "Got a point farthest away from " << pt_defect._pt_defect << "... its " << start << std::endl;
-    break;
+    
+  }  else { // single cluster
+    
+    //Find the point farthest lowest in Y (wire)
+    float maxy = larocv::kINVALID_FLOAT;
+    for(const auto& pt : cluscomp.at(0))  {
+      if (pt.y < maxy) {
+	maxy = pt.y;
+	start.x = (float) pt.x;
+	start.y = (float) pt.y;
+      }
+    }
+
+    if (maxy == larocv::kINVALID_FLOAT)
+      throw larocv::larbys("No maxy found");
   }
 
-  if (ass_defect_id == larocv::kINVALID_SIZE)
+  
+  if ( start.x == larocv::kINVALID_SIZE)
     throw larocv::larbys("Could not choose starting edge");
 
   return start;

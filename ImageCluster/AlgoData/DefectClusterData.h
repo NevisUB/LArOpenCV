@@ -247,6 +247,7 @@ namespace larocv {
       
       /*
       /// copy-add vertex-wise ParticleClusterArray compound information
+
       void push_back(const Vertex3D& vtx, const larocv::data::ParticleCompoundArray& col);
       /// move-add vertex-wise ParticleClusterArray compound information
       void emplace_back(const Vertex3D& vtx, larocv::data::ParticleCompoundArray&& col);

@@ -8,6 +8,7 @@
 
 #include "Core/Geo2D.h"
 #include "AlgoData/DefectClusterData.h"
+#include "AlgoClass/DefectBreaker.h"
 
 namespace larocv {
 
@@ -31,51 +32,24 @@ namespace larocv {
     /// Inherited class configuration method
     void _Configure_(const ::fcllite::PSet &pset);
     
-    larocv::Cluster2DArray_t _Process_(const larocv::Cluster2DArray_t& clusters,
-				       const ::cv::Mat& img,
-				       larocv::ImageMeta& meta,
-				       larocv::ROI& roi);
-
-
-    cv::Vec4i max_hull_edge(const GEO2D_Contour_t& ctor, std::vector<cv::Vec4i> defects);
-
-    bool on_line(const geo2d::Line<float>& line,::cv::Point pt);
+    Cluster2DArray_t _Process_(const Cluster2DArray_t& clusters,
+			       const ::cv::Mat& img,
+			       ImageMeta& meta,
+			       ROI& roi);
     
-    void split_contour(const GEO2D_Contour_t& ctor,GEO2D_Contour_t& ctor1,GEO2D_Contour_t& ctor2, const geo2d::Line<float>& line);
-    
-    void fill_hull_and_defects(const Contour_t& ctor,
-			       std::vector<int>& hullpts,
-			       std::vector<cv::Vec4i>& defects,
-			       std::vector<float>& defects_d);
-    
-    void filter_defects(std::vector<cv::Vec4i>& defects,
-			std::vector<float>& defects_d,
-			float min_defect_size);
-    
-    geo2d::Line<float> find_line_hull_defect(const Contour_t& ctor, cv::Vec4i defect);
 
-    geo2d::Line<float> scan_breaker(const Contour_t& ctor, cv::Vec4i defect);
-
-    data::ClusterCompound BreakContour(const larocv::GEO2D_Contour_t& ctor);
-
-    void AssociateDefects(const data::ClusterCompound& cluscomp,
-			  const data::AtomicContour& parent,
-			  const data::ContourDefect& defect,
-			  data::AtomicContour& child1,
-			  data::AtomicContour& child2);
-    
   private:
-    int _min_defect_size;
-    int _hull_edge_pts_split;
     AlgorithmID_t _vertextrack_algo_id;
     AlgorithmID_t _lineartrack_algo_id;
+
+    DefectBreaker _DefectBreaker;
     
   };
 
   
   /**
-     \class larocv::DefectClusterFactory
-     \brief A concrete factory class for larocv::DefectCluster
+     \class DefectClusterFactory
+     \brief A concrete factory class for DefectCluster
   */
   class DefectClusterFactory : public AlgoFactoryBase {
   public:
