@@ -6,6 +6,7 @@
 #include "opencv2/imgproc.hpp"
 
 namespace larocv {
+
   cv::Mat CleanImage(const cv::Mat& img,
 		     const GEO2D_ContourArray_t& veto_ctor_v,
 		     float pi_threshold)
@@ -32,15 +33,37 @@ namespace larocv {
   {
     cv::Mat thresh_img;
     cv::threshold(img,thresh_img,pi_threshold,1000,3);
-    
+
     cv::Mat mask = cv::Mat(img.size(), img.type(), 0);
     cv::drawContours(mask, veto_ctor_v, -1, cv::Scalar(255), CV_FILLED, cv::LINE_8);
-    
+
     if(maskout) cv::bitwise_not(mask,mask);
 
     thresh_img.copyTo(thresh_img,mask);
 
     return thresh_img;
+  }
+  
+  cv::Mat MaskImage(const cv::Mat& img,
+		    const GEO2D_ContourArray_t& veto_ctor_v,
+		    int   tol,
+		    bool  maskout)
+
+  {
+    cv::Mat dst_img(img.size(),img.type());
+
+    cv::Mat mask = cv::Mat(img.size(), img.type(), CV_8UC1);
+    cv::drawContours(mask, veto_ctor_v, -1, cv::Scalar(255), -1, cv::LINE_8); // fill inside
+    if (tol > 0)
+      cv::drawContours(mask, veto_ctor_v, -1, cv::Scalar(255), tol, cv::LINE_8); // make the edges thicker to mask outwards
+
+    //invert mask
+    if(maskout) cv::bitwise_not(mask,mask);
+
+    //for some reason, input image and masked image cannot be the same from vic's test
+    img.copyTo(dst_img,mask);
+
+    return dst_img;
   }
   
   cv::Mat MaskImage(const cv::Mat& img,
