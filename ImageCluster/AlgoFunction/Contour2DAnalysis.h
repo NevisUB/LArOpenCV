@@ -3,6 +3,7 @@
 
 #include "Base/ImageClusterTypes.h"
 #include "Core/Circle.h"
+#include "Core/Line.h"
 
 namespace larocv {
 
@@ -49,6 +50,8 @@ namespace larocv {
 
   GEO2D_Contour_t Merge(const GEO2D_Contour_t& ctor1,
 			const GEO2D_Contour_t& ctor2);
+  
+  geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor);
   
 }
 #endif
