@@ -130,7 +130,7 @@ namespace larlite {
       auto      & meta = _img_mgr.meta_at(plane);
       auto const& roi  = _img_mgr.roi_at(plane);
 
-      if (_debug) meta.set_ev_user(ev_user);
+      // if (_debug) meta.set_ev_user(ev_user);
       
       if (!meta.num_pixel_row() || !meta.num_pixel_column()) continue;
       

@@ -25,23 +25,29 @@ namespace larocv {
     _filter_intersections = pset.get<bool>("FilterXs",true);
     _filter_px_val_thresh = pset.get<int>("FilterPxValThresh",10.0);
   }
-  
+
+  std::vector<geo2d::Line<float> >
+  PCACrossing::ComputePCALines(const std::vector<GEO2D_Contour_t>& cluscomp) {
+
+    std::vector<geo2d::Line<float> > line_v;
+    line_v.reserve(cluscomp.size());
+    
+    for(const auto& atomic : cluscomp)
+      line_v.emplace_back(CalcPCA(atomic));
+
+    return line_v;
+  }
+
 
   std::vector<geo2d::Vector<float> >
-  PCACrossing::ComputeIntersections(data::ClusterCompound cluscomp,
+  PCACrossing::ComputeIntersections(const std::vector<geo2d::Line<float> >& line_v,
 				    const cv::Mat& img) {
 
-    LAROCV_DEBUG() << "Computing intersections for " << cluscomp.size() << " atomics" << std::endl;
+    LAROCV_DEBUG() << "Computing intersections for " << line_v.size() << " lines" << std::endl;
     LAROCV_DEBUG() << "Will filter based on nonzero pix? : " << _filter_intersections << std::endl;
     
     std::vector<geo2d::Vector<float> > intersections_v;
 
-    std::vector<geo2d::Line<float> > line_v;
-    line_v.reserve(cluscomp.size());
-
-    for(const auto& atomic : cluscomp)
-      line_v.emplace_back(CalcPCA(atomic));
-    
     intersections_v.reserve(line_v.size() * line_v.size());
     
     for(size_t i=0; i<line_v.size(); ++i) {
@@ -65,6 +71,17 @@ namespace larocv {
     LAROCV_DEBUG() << "After filter have " << intersections_v.size() << " intersections" << std::endl;
     
     return intersections_v;
+  }
+  
+  std::vector<geo2d::Vector<float> >
+  PCACrossing::ComputeIntersections(const std::vector<GEO2D_Contour_t>& cluscomp,
+				    const cv::Mat& img) {
+
+    LAROCV_DEBUG() << "Gettting intersections from PCA of incoming contours" << std::endl;
+    
+    auto line_v = ComputePCALines(cluscomp);
+
+    return ComputeIntersections(line_v,img);
   }
 
   void
