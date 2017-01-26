@@ -20,8 +20,8 @@ namespace larocv {
     _dilation_size = 2;
     _dilation_iter = 1;
     _blur_size     = 2;
-    _theta_hi      = 20;
-    _theta_lo      = 20;
+    _theta_hi      = 5;
+    _theta_lo      = 5;
     _pi_threshold  = 10;
     _use_theta_half_angle = true;
     _contour_dist_threshold = 5;
