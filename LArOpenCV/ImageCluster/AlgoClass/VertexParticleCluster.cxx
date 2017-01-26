@@ -20,8 +20,8 @@ namespace larocv {
     _dilation_size = 2;
     _dilation_iter = 1;
     _blur_size     = 2;
-    _theta_hi      = 5;
-    _theta_lo      = 5;
+    _theta_hi      = 3;
+    _theta_lo      = 3;
     _pi_threshold  = 10;
     _use_theta_half_angle = true;
     _contour_dist_threshold = 5;
@@ -106,17 +106,18 @@ namespace larocv {
     GEO2D_ContourArray_t res;
     
     // Prepare image for analysis per vertex
+    // Threshold
     ::cv::Mat thresh_img;
-    /* 
-       // Using dilate/blur/threshold
-       auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,::cv::Size(_dilation_size,_dilation_size));
-       ::cv::dilate(img,thresh_img,kernel,::cv::Point(-1,-1),_dilation_iter);
-       ::cv::blur(thresh_img,thresh_img,::cv::Size(_blur_size,_blur_size));
-       ::cv::threshold(thresh_img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
-    */
-    // OR using just threshold
     ::cv::threshold(img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
 
+    /*
+    // Using dilate/blur/threshold for super cluster
+    ::cv::Mat blur_img;
+    auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,::cv::Size(_dilation_size,_dilation_size));
+    ::cv::dilate(thresh_img,blur_img,kernel,::cv::Point(-1,-1),_dilation_iter);
+    ::cv::blur(blur_img,blur_img,::cv::Size(_blur_size,_blur_size));
+    */
+    
     // Make super cluster
     CreateSuperCluster(thresh_img);
 
