@@ -1,6 +1,7 @@
 #ifndef __CONTOUR2DANALYSIS_H_
 #define __CONTOUR2DANALYSIS_H_
 
+#include "LArOpenCV/Core/laropencv_logger.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
 #include "Geo2D/Core/Circle.h"
 #include "Geo2D/Core/Line.h"
@@ -17,20 +18,14 @@ namespace larocv {
 		    int   tol=0,
 		    bool  maskout=true);
 
-  
-  cv::Mat MaskImage(const cv::Mat& img,
-		    const GEO2D_ContourArray_t& veto_ctor_v,
-		    float pi_threshold=0,
-		    bool  maskout=true);
-
   cv::Mat MaskImage(const cv::Mat& img,
 		    const GEO2D_Contour_t& veto_ctor,
-		    float pi_threshold=0,
+		    int   tol=0,
 		    bool  maskout=true);
 
   cv::Mat MaskImage(const cv::Mat& img,
 		    const geo2d::Circle<float>& c,
-		    float pi_threshold=0,
+		    int   tol=0,
 		    bool  maskout=true);
   
   double Distance(const geo2d::Vector<float>& pt,

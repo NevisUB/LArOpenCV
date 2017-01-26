@@ -6,11 +6,6 @@
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/AlgoData/VertexClusterData.h"
 
-//#define UNIT_TEST
-//#ifdef UNIT_TEST
-//#include "PyUtil/PyUtil.h"
-//#endif
-
 namespace larocv {
  
   class VertexParticleCluster : public laropencv_base {
@@ -26,19 +21,25 @@ namespace larocv {
     /// Optional configuration method
     void Configure(const Config_t &pset);
 
+    void PrintConfig() const;
+
     /// Main function to create particle cluster using polar coordinate
     std::vector<GEO2D_Contour_t>
     CreateParticleCluster(const ::cv::Mat& img,
 			  const data::CircleVertex& vtx2d);
-    /*
-#ifdef UNIT_TEST
-    /// For unit test purpose in python
-    std::vector<GEO2D_Contour_t>
-    CreateParticleCluster(PyObject*,
-			  const data::CircleVertex& vtx2d);
-#endif
-    */
-    
+
+    /// Access to super clusters
+    GEO2D_ContourArray_t
+    SuperClusters() const { return _super_cluster_v; }
+
+    /// Access to seed clusters
+    GEO2D_ContourArray_t
+    SeedClusters() const { return _seed_cluster_v; }
+
+    /// Access to child clusters
+    GEO2D_ContourArray_t
+    ChildClusters() const { return _child_cluster_v; }
+
     //
     // Public algorithm configuration attributes
     //

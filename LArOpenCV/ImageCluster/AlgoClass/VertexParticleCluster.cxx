@@ -4,13 +4,19 @@
 #include "VertexParticleCluster.h"
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
+#include "LArOpenCV/Core/larbys.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
+
+#ifdef UNIT_TEST
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/ndarrayobject.h>
+#endif
 
 namespace larocv {
 
   VertexParticleCluster::VertexParticleCluster()
   {
+    set_verbosity(msg::kNORMAL);
     _dilation_size = 2;
     _dilation_iter = 1;
     _blur_size     = 2;
@@ -19,6 +25,23 @@ namespace larocv {
     _pi_threshold  = 10;
     _use_theta_half_angle = true;
     _contour_dist_threshold = 5;
+  }
+
+  void
+  VertexParticleCluster::PrintConfig() const
+  {
+    std::stringstream ss;
+    ss << "Configuration parameter dump..." << std::endl
+       << "    _dilation_size  = " << _dilation_size << std::endl
+       << "    _dilation_iter  = " << _dilation_iter << std::endl
+       << "    _blur_size      = " << _blur_size      << std::endl
+       << "    _theta_hi       = " << _theta_hi       << std::endl
+       << "    _theta_lo       = " << _theta_lo       << std::endl
+       << "    _pi_threshold   = " << _pi_threshold   << std::endl
+       << "    _use_half_angle = " << _use_theta_half_angle << std::endl
+       << "    _contour_dist_threshold = " << _contour_dist_threshold << std::endl
+       << std::endl;
+    LAROCV_NORMAL() << ss.str();
   }
 
   void VertexParticleCluster::Configure(const Config_t &pset)
@@ -31,17 +54,15 @@ namespace larocv {
     
     _theta_hi = pset.get<int>("ThetaHi",20);
     _theta_lo = pset.get<int>("ThetaLo",20);
-
     _pi_threshold = pset.get<unsigned short>("PIThreshold",10);
-    
     _use_theta_half_angle = true;
-
     _contour_dist_threshold = pset.get<float>("ContourMinDist",5);
   }
 
   void
   VertexParticleCluster::CreateSuperCluster(const ::cv::Mat& img)
-  {    
+  {
+    LAROCV_DEBUG() << std::endl;
     //
     // Analyze fraction of pixels clustered
     // 0) find a contour that contains the subject 2D vertex, and find allcontained non-zero pixels inside
@@ -49,6 +70,8 @@ namespace larocv {
     _super_cluster_v.clear();
     std::vector<::cv::Vec4i> cv_hierarchy_v;
     ::cv::findContours(img, _super_cluster_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    LAROCV_INFO() << "Created " << _super_cluster_v.size()
+		  << " super-set contours from image (rows,cols) = (" << img.rows << "," << img.cols << ")" << std::endl;
   }
 
   size_t
@@ -57,19 +80,20 @@ namespace larocv {
     size_t parent_ctor_id   = kINVALID_SIZE;
     size_t parent_ctor_size = 0;
     double dist2vtx = -1e9;
+    LAROCV_DEBUG() << std::endl;
     for(size_t ctor_id=0; ctor_id < _super_cluster_v.size(); ++ctor_id){
       auto const& ctor = _super_cluster_v[ctor_id];
       LAROCV_DEBUG() << "ctor id: " << ctor_id << std::endl;
       auto dist = ::cv::pointPolygonTest(ctor, vtx2d, true);
-      LAROCV_DEBUG() << "\tgot dist: " << dist << std::endl;
+      LAROCV_DEBUG() << "    dist: " << dist << std::endl;
       if(dist < dist2vtx) continue;
-      LAROCV_DEBUG() << "\tdist > dist2vtx " << std::endl;
       if(dist2vtx >=0 && parent_ctor_size > ctor.size()) continue;
       parent_ctor_id = ctor_id;
       parent_ctor_size = ctor.size();
       dist2vtx = dist;
-      LAROCV_DEBUG() << "\t ctor chosen of size: " << ctor.size() << std::endl;
+      LAROCV_DEBUG() << "    size: " << ctor.size() << std::endl;
     }
+    LAROCV_INFO() << "Vertex @ " << vtx2d << " belongs to super cluster id " << parent_ctor_id << std::endl;
     return parent_ctor_id;
   }
 
@@ -77,6 +101,8 @@ namespace larocv {
   VertexParticleCluster::CreateParticleCluster(const ::cv::Mat& img,
 					       const data::CircleVertex& vtx2d)
   {
+    LAROCV_DEBUG() << std::endl;
+    
     GEO2D_ContourArray_t res;
     
     // Prepare image for analysis per vertex
@@ -99,16 +125,21 @@ namespace larocv {
     if(super_cluster_id == kINVALID_SIZE) return res;
     
     // Create seed clusters
-    auto img_circle = MaskImage(thresh_img, geo2d::Circle<float>(vtx2d.center,vtx2d.radius * 1.5), _pi_threshold, false);
+    cv::imwrite("original.png", thresh_img);
+    geo2d::Circle<float> mask_region(vtx2d.center,vtx2d.radius * 1.5);
+    auto img_circle = MaskImage(thresh_img, mask_region, 0, false);
+    cv::imwrite("circle_masked.png", img_circle);
     _seed_cluster_v = ParticleHypothesis(img_circle,vtx2d);
 
     if(_seed_cluster_v.empty()) return res;
 
     // Create contours on masked image (outside seed)
-    auto img_rest = MaskImage(thresh_img, geo2d::Circle<float>(vtx2d.center,vtx2d.radius), _pi_threshold, true);
-
+    auto img_rest = MaskImage(thresh_img, mask_region, 0, true);
+    cv::imwrite("circle_outside.png", img_rest);
+    
     // Apply further mask to exclude outside super contour
-    img_rest = MaskImage(img_rest, GEO2D_ContourArray_t(1,_super_cluster_v[super_cluster_id]), _pi_threshold, false);
+    img_rest = MaskImage(img_rest, _super_cluster_v[super_cluster_id], 0, false);
+    cv::imwrite("supercluster_inside.png", img_rest);
 
     // Find contours outside circle
     _child_cluster_v.clear();
@@ -407,32 +438,6 @@ namespace larocv {
     return result_v;
   }
 
-  /*
-  std::vector<GEO2D_Contour_t>
-  VertexParticleCluster::CreateParticleCluster(PyObject*,
-					       const data::CircleVertex& vtx2d)
-  {
-    float **carray;
-    //Create C arrays from numpy objects:
-    const int dtype = NPY_FLOAT;
-    PyArray_Descr *descr = PyArray_DescrFromType(dtype);
-    npy_intp dims[3];
-    if (PyArray_AsCArray(&pyarray, (void **)&carray, dims, 2, descr) < 0) {
-      logger::get("PyUtil").send(larcv::msg::kCRITICAL,__FUNCTION__,__LINE__,"ERROR: cannot convert to 2D C-array");
-      throw larbys();
-    }
-
-    std::vector<float> res_data(dims[0]*dims[1],0.);
-    for(int i=0; i<dims[0]; ++i) {
-      for(int j=0; j<dims[1]; ++j) {
-	res_data[i * dims[1] + j] = (float)(carray[i][j]);
-      }
-    }
-    PyArray_Free(pyarray,(void *)carray);
-
-    Image2D res(std::move(meta),std::move(res_data));
-  }
-  */
 }
 
 #endif

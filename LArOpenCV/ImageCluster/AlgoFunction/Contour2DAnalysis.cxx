@@ -4,7 +4,7 @@
 #include "Contour2DAnalysis.h"
 #include "Geo2D/Core/VectorArray.h"
 #include "opencv2/imgproc.hpp"
-
+#include <opencv2/opencv.hpp>
 namespace larocv {
 
   cv::Mat CleanImage(const cv::Mat& img,
@@ -27,21 +27,12 @@ namespace larocv {
   }
 
   cv::Mat MaskImage(const cv::Mat& img,
-		    const GEO2D_ContourArray_t& veto_ctor_v,
-		    float pi_threshold,
+		    const GEO2D_Contour_t& veto_ctor,
+		    int   tol,
 		    bool  maskout)
   {
-    cv::Mat thresh_img;
-    cv::threshold(img,thresh_img,pi_threshold,1000,3);
-
-    cv::Mat mask = cv::Mat(img.size(), img.type(), 0);
-    cv::drawContours(mask, veto_ctor_v, -1, cv::Scalar(255), CV_FILLED, cv::LINE_8);
-
-    if(maskout) cv::bitwise_not(mask,mask);
-
-    thresh_img.copyTo(thresh_img,mask);
-
-    return thresh_img;
+    GEO2D_ContourArray_t veto_ctor_v(1,veto_ctor);
+    return MaskImage(img, veto_ctor_v, tol, maskout);
   }
   
   cv::Mat MaskImage(const cv::Mat& img,
@@ -50,8 +41,7 @@ namespace larocv {
 		    bool  maskout)
 
   {
-    cv::Mat dst_img(img.size(),img.type());
-
+    cv::Mat dst_img(img.size(),img.type(),CV_8UC1);
     cv::Mat mask = cv::Mat(img.size(), img.type(), CV_8UC1);
     cv::drawContours(mask, veto_ctor_v, -1, cv::Scalar(255), -1, cv::LINE_8); // fill inside
     if (tol > 0)
@@ -61,20 +51,23 @@ namespace larocv {
     if(maskout) cv::bitwise_not(mask,mask);
 
     //for some reason, input image and masked image cannot be the same from vic's test
+    cv::imwrite("afunc_mask.png",mask);
+    cv::imwrite("afunc_original.png",img);
     img.copyTo(dst_img,mask);
-
+    cv::imwrite("afunc_result.png",dst_img);
     return dst_img;
   }
   
   cv::Mat MaskImage(const cv::Mat& img,
 		    const geo2d::Circle<float>& c,
-		    float pi_threshold,
+		    int  tol,
 		    bool  maskout)
   {
-    cv::Mat thresh_img;
-    cv::threshold(img,thresh_img,pi_threshold,1000,3);
-    
-    cv::Mat mask = cv::Mat(img.size(),img.type(),0);
+    cv::Mat dst_img(img.size(),img.type(), CV_8UC1);
+    cv::Mat mask = cv::Mat(img.size(),img.type(),CV_8UC1);
+    LAROCV_SDEBUG() << "Creating a mask for image (rows,cols) = (" << img.rows << "," << img.cols << ")"
+		    << " with a circle mask @ " << c.center << " radius " << c.radius << std::endl;
+
     cv::circle(mask, // output
 	       cv::Point( (int)(c.center.x+0.5),(int(c.center.y+0.5))), // center
 	       (int)(c.radius), // radius
@@ -82,9 +75,19 @@ namespace larocv {
 	       -1, // color filled
 	       ::cv::LINE_8, // type of boundary
 	       0);
-    thresh_img.copyTo(thresh_img,mask);
+    if(tol>0)
+      cv::circle(mask, // output
+		 cv::Point( (int)(c.center.x+0.5),(int(c.center.y+0.5))), // center
+		 (int)(c.radius), // radius
+		 cv::Scalar(255), // single channel
+		 tol, // color filled
+		 ::cv::LINE_8, // type of boundary
+		 0);
 
-    return thresh_img;
+    if(maskout) cv::bitwise_not(mask,mask);
+
+    img.copyTo(dst_img,mask);
+    return dst_img;
   }
 
   double Distance(const geo2d::Vector<float>& pt,
