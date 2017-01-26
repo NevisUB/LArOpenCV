@@ -49,7 +49,8 @@ namespace larocv {
     
     float _theta_hi;
     float _theta_lo;
-
+    float _mask_fraction_radius;
+    
     unsigned short _pi_threshold;
 
     bool   _use_theta_half_angle;

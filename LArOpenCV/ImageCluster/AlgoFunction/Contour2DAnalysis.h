@@ -28,20 +28,20 @@ namespace larocv {
 		    int   tol=0,
 		    bool  maskout=true);
   
-  double Distance(const geo2d::Vector<float>& pt,
-		  const GEO2D_Contour_t& ctor);
+  double Pt2PtDistance(const geo2d::Vector<float>& pt,
+		       const GEO2D_Contour_t& ctor);
 
-  double Distance(const geo2d::Vector<float>& pt,
-		  const GEO2D_Contour_t& ctor,
-		  geo2d::Vector<float>& closest_pt);
+  double Pt2PtDistance(const geo2d::Vector<float>& pt,
+		       const GEO2D_Contour_t& ctor,
+		       geo2d::Vector<float>& closest_pt);
 
-  double Distance(const GEO2D_Contour_t& ctor1,
-		  const GEO2D_Contour_t& ctor2,
-		  geo2d::Vector<float>& closest_pt1,
-		  geo2d::Vector<float>& closest_pt2);
+  double Pt2PtDistance(const GEO2D_Contour_t& ctor1,
+		       const GEO2D_Contour_t& ctor2,
+		       geo2d::Vector<float>& closest_pt1,
+		       geo2d::Vector<float>& closest_pt2);
 
-  double Distance(const GEO2D_Contour_t& ctor1,
-		  const GEO2D_Contour_t& ctor2);
+  double Pt2PtDistance(const GEO2D_Contour_t& ctor1,
+		       const GEO2D_Contour_t& ctor2);
 
   GEO2D_Contour_t Merge(const GEO2D_Contour_t& ctor1,
 			const GEO2D_Contour_t& ctor2);

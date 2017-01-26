@@ -90,16 +90,16 @@ namespace larocv {
     return dst_img;
   }
 
-  double Distance(const geo2d::Vector<float>& pt,
-		  const GEO2D_Contour_t& ctor)
+  double Pt2PtDistance(const geo2d::Vector<float>& pt,
+		       const GEO2D_Contour_t& ctor)
   {
     static geo2d::Vector<float> closest_pt;
-    return Distance(pt,ctor,closest_pt);
+    return Pt2PtDistance(pt,ctor,closest_pt);
   }
 
-  double Distance(const geo2d::Vector<float>& pt,
-		  const GEO2D_Contour_t& ctor,
-		  geo2d::Vector<float>& closest_pt)
+  double Pt2PtDistance(const geo2d::Vector<float>& pt,
+		       const GEO2D_Contour_t& ctor,
+		       geo2d::Vector<float>& closest_pt)
   {
     double min_dist=1.e20;
     double dist,dx,dy;
@@ -116,18 +116,18 @@ namespace larocv {
     return sqrt(min_dist);
   }
 
-  double Distance(const GEO2D_Contour_t& ctor1,
-		  const GEO2D_Contour_t& ctor2)
+  double Pt2PtDistance(const GEO2D_Contour_t& ctor1,
+		       const GEO2D_Contour_t& ctor2)
   {
     static geo2d::Vector<float> pt1;
     static geo2d::Vector<float> pt2;
-    return Distance(ctor1,ctor2,pt1,pt2);
+    return Pt2PtDistance(ctor1,ctor2,pt1,pt2);
   }
 
-  double Distance(const GEO2D_Contour_t& ctor1,
-		  const GEO2D_Contour_t& ctor2,
-		  geo2d::Vector<float>& closest_pt1,
-		  geo2d::Vector<float>& closest_pt2)
+  double Pt2PtDistance(const GEO2D_Contour_t& ctor1,
+		       const GEO2D_Contour_t& ctor2,
+		       geo2d::Vector<float>& closest_pt1,
+		       geo2d::Vector<float>& closest_pt2)
   {
     double min_dist=1.e20;
     double dist,dx,dy;

@@ -20,11 +20,12 @@ namespace larocv {
     _dilation_size = 2;
     _dilation_iter = 1;
     _blur_size     = 2;
-    _theta_hi      = 3;
-    _theta_lo      = 3;
+    _theta_hi      = 5;
+    _theta_lo      = 5;
     _pi_threshold  = 10;
     _use_theta_half_angle = true;
     _contour_dist_threshold = 5;
+    _mask_fraction_radius = -1;
   }
 
   void
@@ -162,7 +163,7 @@ namespace larocv {
       double dist;
       for(size_t seed_idx=0; seed_idx<_seed_cluster_v.size(); ++seed_idx) {
 	if(used_seed_v[seed_idx]) continue;
-	dist = Distance(xs_pt,_seed_cluster_v[seed_idx]);
+	dist = cv::pointPolygonTest(_seed_cluster_v[seed_idx],xs_pt,true);
 	if(dist > min_dist) continue;
 	if(dist > _contour_dist_threshold) continue;
 	min_dist = dist;
@@ -173,7 +174,7 @@ namespace larocv {
       min_dist = 1.e20;
       for(size_t child_idx=0; child_idx<_child_cluster_v.size(); ++child_idx) {
 	if(used_child_v[child_idx]) continue;
-	dist = Distance(xs_pt,_child_cluster_v[child_idx]);
+	dist = cv::pointPolygonTest(_child_cluster_v[child_idx],xs_pt,true);
 	if(dist > min_dist) continue;
 	if(dist > _contour_dist_threshold) continue;
 	min_dist = dist;
@@ -206,19 +207,67 @@ namespace larocv {
   VertexParticleCluster::ParticleHypothesis(const ::cv::Mat& img,
 					    const data::CircleVertex& vtx)
   {
-
+    GEO2D_ContourArray_t result_v;
+    
     auto const& ref_vtx  = vtx.center;
     auto const& ref_xs_v = vtx.xs_v;
-
-    GEO2D_ContourArray_t result_v;
-
-    bool use_half_angle = (ref_xs_v.size() > 2) && _use_theta_half_angle;
+    LAROCV_INFO() << "# crossing points = " << ref_xs_v.size() << std::endl;
+    if(ref_xs_v.empty()) return result_v;
     
-    for(int xs_pt_idx=0; xs_pt_idx<ref_xs_v.size(); ++xs_pt_idx) {
+    // Order a list of xs points in angle
+    std::map<double,size_t> angle_order_m;
+    for(size_t pca_idx=0; pca_idx<ref_xs_v.size(); ++pca_idx){
+      auto const& pt = ref_xs_v[pca_idx].pt;
+      double angle = geo2d::angle(ref_vtx,pt);
+      if(angle<0) angle+=360;
+      angle_order_m[angle] = pca_idx;
+    }
+
+    std::vector<geo2d::Vector<float> > xs_v;
+    xs_v.reserve(ref_xs_v.size());
+    std::vector<double> angle_v;
+    angle_v.reserve(ref_xs_v.size());
+    for(auto const& angle_idx : angle_order_m) {
+      xs_v.push_back(ref_xs_v[angle_idx.second].pt);
+      LAROCV_INFO() << "Crossing " << angle_idx.second << " @ "
+		    << xs_v.back() << " ... angle = " << angle_idx.first << std::endl;
+      angle_v.push_back(angle_idx.first);
+    }
+    // Define angle range
+    std::vector<double> theta_lo_v; // just width, not absolute angle
+    std::vector<double> theta_hi_v; // just width, not absolute angle
+    theta_lo_v.resize(ref_xs_v.size(),0);
+    theta_hi_v.resize(ref_xs_v.size(),360);
+
+    if(ref_xs_v.size()==1) {
+      theta_lo_v[0] = 180;
+      theta_hi_v[0] = 180;
+    }
+    if(ref_xs_v.size()==2) {
+      theta_hi_v[0] = (angle_v[1] - angle_v[0])/2.;
+      theta_lo_v[0] = 180. - theta_hi_v[0];
+      theta_hi_v[1] = theta_lo_v[0];
+      theta_lo_v[1] = theta_hi_v[0];
+    }else{
+      for(size_t xs_idx=0; (xs_idx+1)<xs_v.size(); ++xs_idx)
+	theta_hi_v[xs_idx] = (angle_v[xs_idx+1] - angle_v[xs_idx])/2.;
+      for(size_t xs_idx=1; xs_idx<xs_v.size(); ++xs_idx)
+	theta_lo_v[xs_idx] = theta_hi_v[xs_idx-1];
+      // take care of hi of last + lo of first
+      theta_lo_v.front() = theta_hi_v.back() = 180. - (angle_v.back() - angle_v.front())/2.;
+    }
+    if(!_use_theta_half_angle) {
+      for(size_t xs_idx=0; xs_idx<xs_v.size(); ++xs_idx) {
+	if(theta_hi_v[xs_idx] > _theta_hi) theta_hi_v[xs_idx] = _theta_hi;
+	if(theta_lo_v[xs_idx] > _theta_lo) theta_lo_v[xs_idx] = _theta_lo;
+      }
+    }
+
+    for(int xs_pt_idx=0; xs_pt_idx<xs_v.size(); ++xs_pt_idx) {
 
       auto ref_vtx_copy = ref_vtx;
 
-      float angle,theta_lo,theta_hi;
+      float angle = geo2d::angle(ref_vtx_copy,xs_v[xs_pt_idx]) + 180;
 
       cv::Mat rot_img;
       cv::Mat img_copy = img;
@@ -235,17 +284,19 @@ namespace larocv {
       ref_vtx_copy.y+=padding;
       
       LAROCV_DEBUG() << "Reference vertex @ " << ref_vtx_copy << std::endl;
-      
+      float theta_lo = theta_lo_v[xs_pt_idx];
+      float theta_hi = theta_hi_v[xs_pt_idx];
+      /*
       if (use_half_angle) {
-	int idx0  = xs_pt_idx-1 >= 0 ? (xs_pt_idx-1)%ref_xs_v.size() : xs_pt_idx-1+ref_xs_v.size();
+	int idx0  = xs_pt_idx-1 >= 0 ? (xs_pt_idx-1)%xs_v.size() : xs_pt_idx-1+xs_v.size();
 	int idx1  = xs_pt_idx;
-	int idx2  = (xs_pt_idx+1)%ref_xs_v.size();
+	int idx2  = (xs_pt_idx+1)%xs_v.size();
 	
 	LAROCV_DEBUG() << "idx0 : " << idx0 << "... idx1: " << idx1 << "... idx2: " << idx2 << std::endl;
 
-	auto xs0 = ref_xs_v[idx0].pt; xs0.x+=padding; xs0.y+=padding;
-	auto xs1 = ref_xs_v[idx1].pt; xs1.x+=padding; xs1.y+=padding;
-	auto xs2 = ref_xs_v[idx2].pt; xs2.x+=padding; xs2.y+=padding;
+	auto xs0 = xs_v[idx0]; xs0.x+=padding; xs0.y+=padding;
+	auto xs1 = xs_v[idx1]; xs1.x+=padding; xs1.y+=padding;
+	auto xs2 = xs_v[idx2]; xs2.x+=padding; xs2.y+=padding;
 	
 	LAROCV_DEBUG() << "Inspecting XS0 @ " << xs0 << " XS1 @ " << xs1 << " XS2 @ " << xs2 << std::endl;
 
@@ -271,7 +322,7 @@ namespace larocv {
 	
       } else { 
       
-	auto xs = ref_xs_v[xs_pt_idx].pt; xs.x+=padding; xs.y+=padding;
+	auto xs = xs_v[xs_pt_idx]; xs.x+=padding; xs.y+=padding;
 	
 	LAROCV_DEBUG() << "Inspecting XS @ " << xs << std::endl;
 	
@@ -282,7 +333,7 @@ namespace larocv {
 	theta_hi = _theta_hi;
       
       }
-      
+      */      
       auto rot = ::cv::getRotationMatrix2D(ref_vtx_copy,angle,1.);
       cv::Rect bbox = cv::RotatedRect(ref_vtx_copy,img_padded.size(),angle).boundingRect(); 
       LAROCV_DEBUG() << "bbox : " << bbox << "... size " << bbox.size() << std::endl;
@@ -302,8 +353,8 @@ namespace larocv {
       cv::Mat rot_polarimg, sb_img;
       
       // Cluster per xs-point found in Refine2DVertex
-
-      int max_radius=1000;
+      const float max_radius_range = 1.5;
+      int max_radius=vtx.radius * max_radius_range;
 
       ::cv::threshold(rot_img,rot_img,_pi_threshold,255,CV_THRESH_BINARY);
       
@@ -323,15 +374,15 @@ namespace larocv {
 	cv::imwrite(std::string(ss3.str()).c_str(), rot_polarimg);
       }
 
-      /*
       // mask-out very-near vtx pixels
-      size_t mask_col_max = _mask_radius/1000. * rot_polarimg.cols + 1;
-      for(size_t row=0; row<rot_polarimg.rows; row++) {
-	for(size_t col=0; col<mask_col_max; ++col) {
-	  rot_polarimg.at<unsigned char>(row, col) = (unsigned char)0;
+      if(_mask_fraction_radius >0. && _mask_fraction_radius < 1.0) {
+	size_t mask_col_max = (int)(_mask_fraction_radius * max_radius_range * rot_polarimg.cols) + 1;
+	for(size_t row=0; row<rot_polarimg.rows; row++) {
+	  for(size_t col=0; col<mask_col_max; ++col) {
+	    rot_polarimg.at<unsigned char>(row, col) = (unsigned char)0;
+	  }
 	}
       }
-      */
       
       // mask-out a bit further pixels for angles outside the range
       size_t row_min, row_max;
