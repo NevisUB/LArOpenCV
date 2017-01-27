@@ -21,7 +21,6 @@
 #pragma link C++ class larocv::PCACandidates+;
 //#pragma link C++ class larocv::CircleVertex+;
 #pragma link C++ class larocv::Refine2DVertex;
-#pragma link C++ class larocv::Refine2DVertexPlaneScanInfo+;
 //#pragma link C++ class larocv::ProjectionCluster+;
 #pragma link C++ class larocv::VertexTrackCluster+;
 #pragma link C++ class larocv::VertexParticleCluster+;
