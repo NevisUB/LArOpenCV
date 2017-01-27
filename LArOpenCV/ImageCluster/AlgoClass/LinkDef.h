@@ -16,7 +16,8 @@
 #pragma link C++ class larocv::LArPlaneGeo+;
 #pragma link C++ class larocv::VertexParticleCluster+;
 #pragma link C++ class larocv::PiRange+;
-
+#pragma link C++ class larocv::TrackVertexScan2D+;
+#pragma link C++ class larocv::TrackVertexScan2DPlaneInfo+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
 

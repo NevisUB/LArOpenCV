@@ -13,7 +13,7 @@ namespace larocv {
   void VertexTrackCluster::_Configure_(const Config_t &pset)
   {
     _algo.set_verbosity(this->logger().level());
-    _algo.Configure(pset.get_pset("VertexParticleCluster"));
+    _algo.Configure(pset.get<Config_t>("VertexParticleCluster"));
     _algo.PrintConfig();
 
     _pi_threshold = _algo._pi_threshold;
