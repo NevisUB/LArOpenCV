@@ -5,6 +5,7 @@
 #include "LArOpenCV/ImageCluster/Base/ClusterAlgoBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoData/VertexClusterData.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/VertexParticleCluster.h"
 
 namespace larocv {
  
@@ -14,12 +15,7 @@ namespace larocv {
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
     VertexTrackCluster(const std::string name = "VertexTrackCluster") :
-      ClusterAlgoBase(name),
-      _dilation_size ( 5 ),
-      _dilation_iter ( 2 ),
-      _blur_size     ( 5 ),
-      _thresh        ( 1 ),
-      _thresh_maxval (255)
+      ClusterAlgoBase(name)
     {}
     
     /// Default destructor
@@ -40,29 +36,10 @@ namespace larocv {
     
   private:
 
-    std::vector<larocv::data::ParticleCluster>
-    TrackHypothesis(const ::cv::Mat& img,const ImageMeta& meta, const data::CircleVertex& vtx);
-
+    VertexParticleCluster _algo;
     AlgorithmID_t _refine2d_algo_id;
-
-    int _dilation_size;
-    int _dilation_iter;
-    
-    int _blur_size;
-    
-    float _thresh;
-    float _thresh_maxval;
-
-    float _mask_radius;
-    
-    float _theta_hi;
-    float _theta_lo;
-
     unsigned short _pi_threshold;
-
-    bool _use_theta_half_angle;
     float _contour_pad;
-    
   };
   
   /**

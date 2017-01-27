@@ -51,10 +51,10 @@ namespace larocv {
     if(maskout) cv::bitwise_not(mask,mask);
 
     //for some reason, input image and masked image cannot be the same from vic's test
-    cv::imwrite("afunc_mask.png",mask);
-    cv::imwrite("afunc_original.png",img);
+    //cv::imwrite("afunc_mask.png",mask);
+    //cv::imwrite("afunc_original.png",img);
     img.copyTo(dst_img,mask);
-    cv::imwrite("afunc_result.png",dst_img);
+    //cv::imwrite("afunc_result.png",dst_img);
     return dst_img;
   }
   

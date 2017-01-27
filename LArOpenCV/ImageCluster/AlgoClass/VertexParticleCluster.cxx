@@ -6,7 +6,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include "LArOpenCV/Core/larbys.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
-
 #ifdef UNIT_TEST
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
@@ -15,8 +14,10 @@
 namespace larocv {
 
   VertexParticleCluster::VertexParticleCluster()
+    : laropencv_base("VertexParticleCluster")
   {
     set_verbosity(msg::kNORMAL);
+    _prange.set_verbosity(msg::kNORMAL);
     _dilation_size = 2;
     _dilation_iter = 1;
     _blur_size     = 2;
@@ -26,6 +27,9 @@ namespace larocv {
     _use_theta_half_angle = true;
     _contour_dist_threshold = 5;
     _mask_fraction_radius = -1;
+    _mask_min_radius = 3;
+    _refine_polar_cluster = true;
+    _refine_cartesian_cluster = true;
   }
 
   void
@@ -40,24 +44,32 @@ namespace larocv {
        << "    _theta_lo       = " << _theta_lo       << std::endl
        << "    _pi_threshold   = " << _pi_threshold   << std::endl
        << "    _use_half_angle = " << _use_theta_half_angle << std::endl
-       << "    _contour_dist_threshold = " << _contour_dist_threshold << std::endl
+       << "    _mask_fraction_radius     = " << _mask_fraction_radius << std::endl
+       << "    _mask_min_radius          = " << _mask_min_radius << std::endl
+       << "    _refine_cartesian_cluster = " << _refine_cartesian_cluster << std::endl
+       << "    _refine_polar_cluster     = " << _refine_polar_cluster << std::endl
+       << "    _contour_dist_threshold   = " << _contour_dist_threshold << std::endl
        << std::endl;
-    LAROCV_NORMAL() << ss.str();
+    LAROCV_INFO() << ss.str();
   }
 
   void VertexParticleCluster::Configure(const Config_t &pset)
   {
     this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
-
+    _prange.set_verbosity(logger().level());
     //_dilation_size = pset.get<int>("DilationSize",2);
     //_dilation_iter = pset.get<int>("DilationIter",1);
     //_blur_size     = pset.get<int>("BlurSize",2);
     
-    _theta_hi = pset.get<int>("ThetaHi",20);
-    _theta_lo = pset.get<int>("ThetaLo",20);
+    _theta_hi = pset.get<int>("ThetaHi",10);
+    _theta_lo = pset.get<int>("ThetaLo",10);
     _pi_threshold = pset.get<unsigned short>("PIThreshold",10);
-    _use_theta_half_angle = true;
-    _contour_dist_threshold = pset.get<float>("ContourMinDist",5);
+    _use_theta_half_angle     = pset.get<bool>("UseHalfAngle",true);
+    _contour_dist_threshold   = pset.get<float>("ContourMinDist",5);
+    _refine_polar_cluster     = pset.get<bool>("RefinePolarCluster",true);
+    _refine_cartesian_cluster = pset.get<bool>("RefineCartesianCluster",true);
+    _mask_fraction_radius     = pset.get<float>("MaskFractionRadius",-1.);
+    _mask_min_radius          = pset.get<float>("MaskMinRadius",3);
   }
 
   void
@@ -73,6 +85,11 @@ namespace larocv {
     ::cv::findContours(img, _super_cluster_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
     LAROCV_INFO() << "Created " << _super_cluster_v.size()
 		  << " super-set contours from image (rows,cols) = (" << img.rows << "," << img.cols << ")" << std::endl;
+    if(this->logger().level() == msg::kDEBUG) {
+      for(size_t i=0; i<_super_cluster_v.size(); ++i)
+	LAROCV_DEBUG() << "    Super contour " << i
+		       << " ... " << _super_cluster_v[i].size() << " contour points" << std::endl;
+    }
   }
 
   size_t
@@ -103,6 +120,7 @@ namespace larocv {
 					       const data::CircleVertex& vtx2d)
   {
     LAROCV_DEBUG() << std::endl;
+    _prange.set_verbosity(logger().level());
     
     GEO2D_ContourArray_t res;
     
@@ -125,23 +143,19 @@ namespace larocv {
     // Find if relevant super cluster is found
     auto super_cluster_id = FindSuperCluster(vtx2d.center);
     if(super_cluster_id == kINVALID_SIZE) return res;
-    
+
     // Create seed clusters
-    cv::imwrite("original.png", thresh_img);
-    geo2d::Circle<float> mask_region(vtx2d.center,vtx2d.radius * 1.5);
+    geo2d::Circle<float> mask_region(vtx2d.center,vtx2d.radius);
     auto img_circle = MaskImage(thresh_img, mask_region, 0, false);
-    cv::imwrite("circle_masked.png", img_circle);
     _seed_cluster_v = ParticleHypothesis(img_circle,vtx2d);
 
     if(_seed_cluster_v.empty()) return res;
 
     // Create contours on masked image (outside seed)
     auto img_rest = MaskImage(thresh_img, mask_region, 0, true);
-    cv::imwrite("circle_outside.png", img_rest);
     
     // Apply further mask to exclude outside super contour
     img_rest = MaskImage(img_rest, _super_cluster_v[super_cluster_id], 0, false);
-    cv::imwrite("supercluster_inside.png", img_rest);
 
     // Find contours outside circle
     _child_cluster_v.clear();
@@ -274,7 +288,7 @@ namespace larocv {
 
       cv::Mat img_padded;
       int padding = sqrt(img.rows*img.rows+img.cols*img.cols)/2;
-      LAROCV_DEBUG() << "Diagonal is: " << padding << "... from row: " << img.rows << "... and cols: " << img.cols << std::endl;
+      //LAROCV_DEBUG() << "Diagonal is: " << padding << "... from row: " << img.rows << "... and cols: " << img.cols << std::endl;
 
       img_padded.create(img_copy.rows + 2*padding, img_copy.cols + 2*padding, img_copy.type());
       img_padded.setTo(cv::Scalar::all(0));
@@ -286,61 +300,13 @@ namespace larocv {
       LAROCV_DEBUG() << "Reference vertex @ " << ref_vtx_copy << std::endl;
       float theta_lo = theta_lo_v[xs_pt_idx];
       float theta_hi = theta_hi_v[xs_pt_idx];
-      /*
-      if (use_half_angle) {
-	int idx0  = xs_pt_idx-1 >= 0 ? (xs_pt_idx-1)%xs_v.size() : xs_pt_idx-1+xs_v.size();
-	int idx1  = xs_pt_idx;
-	int idx2  = (xs_pt_idx+1)%xs_v.size();
-	
-	LAROCV_DEBUG() << "idx0 : " << idx0 << "... idx1: " << idx1 << "... idx2: " << idx2 << std::endl;
-
-	auto xs0 = xs_v[idx0]; xs0.x+=padding; xs0.y+=padding;
-	auto xs1 = xs_v[idx1]; xs1.x+=padding; xs1.y+=padding;
-	auto xs2 = xs_v[idx2]; xs2.x+=padding; xs2.y+=padding;
-	
-	LAROCV_DEBUG() << "Inspecting XS0 @ " << xs0 << " XS1 @ " << xs1 << " XS2 @ " << xs2 << std::endl;
-
-	float angle0  = geo2d::angle(ref_vtx_copy,xs0);
-	float angle1  = geo2d::angle(ref_vtx_copy,xs1);
-	float angle2  = geo2d::angle(ref_vtx_copy,xs2);
-
-	LAROCV_DEBUG() << "Angles are 0: " << angle0 << "... 1: " << angle1 << "... 2: " << angle2 << std::endl;
-
-	if ( angle0 < 0 ) angle0+=360;
-	if ( angle1 < 0 ) angle1+=360;
-	if ( angle2 < 0 ) angle2+=360;
-      
-	float dangle10 = std::abs(angle1-angle0)/2.0;
-	float dangle21 = std::abs(angle2-angle1)/2.0;
-      
-	angle = angle1 < 0 ? angle1+180-360. : angle1+180;
-
-	LAROCV_DEBUG() << "Computed angle: " << angle << "... dangle10: " << dangle10 << "... dangle21: " << dangle21 << std::endl;
-
-	theta_lo = dangle10;
-	theta_hi = dangle21;
-	
-      } else { 
-      
-	auto xs = xs_v[xs_pt_idx]; xs.x+=padding; xs.y+=padding;
-	
-	LAROCV_DEBUG() << "Inspecting XS @ " << xs << std::endl;
-	
-	angle = geo2d::angle(ref_vtx_copy,xs);
-	angle += 180.;
-
-	theta_lo = _theta_lo;
-	theta_hi = _theta_hi;
-      
-      }
-      */      
       auto rot = ::cv::getRotationMatrix2D(ref_vtx_copy,angle,1.);
       cv::Rect bbox = cv::RotatedRect(ref_vtx_copy,img_padded.size(),angle).boundingRect(); 
-      LAROCV_DEBUG() << "bbox : " << bbox << "... size " << bbox.size() << std::endl;
+      //LAROCV_DEBUG() << "bbox : " << bbox << "... size " << bbox.size() << std::endl;
       
       cv::warpAffine(img_padded, rot_img, rot, bbox.size());
 
-      LAROCV_DEBUG() << "rot_img rows: " << rot_img.rows << "... cols: " << rot_img.cols << std::endl;
+      //LAROCV_DEBUG() << "rot_img rows: " << rot_img.rows << "... cols: " << rot_img.cols << std::endl;
 
       if(this->logger().level() == ::larocv::msg::kDEBUG) {
 	std::stringstream ss1,ss2;
@@ -375,8 +341,11 @@ namespace larocv {
       }
 
       // mask-out very-near vtx pixels
-      if(_mask_fraction_radius >0. && _mask_fraction_radius < 1.0) {
-	size_t mask_col_max = (int)(_mask_fraction_radius * max_radius_range * rot_polarimg.cols) + 1;
+      float mask_radius = 0;
+      if(_mask_fraction_radius >0.) mask_radius = _mask_fraction_radius * max_radius_range * vtx.radius;
+      if(_mask_min_radius>0. && mask_radius < _mask_min_radius) mask_radius = _mask_min_radius;
+      if(mask_radius>0.) {
+	size_t mask_col_max = (int)(mask_radius/(vtx.radius * max_radius_range) * rot_polarimg.cols) + 1;
 	for(size_t row=0; row<rot_polarimg.rows; row++) {
 	  for(size_t col=0; col<mask_col_max; ++col) {
 	    rot_polarimg.at<unsigned char>(row, col) = (unsigned char)0;
@@ -386,7 +355,7 @@ namespace larocv {
       
       // mask-out a bit further pixels for angles outside the range
       size_t row_min, row_max;
-
+      
       LAROCV_DEBUG() << "rot_polarimg... rows: " << rot_polarimg.rows << "... cols: " << rot_polarimg.cols << std::endl;
       LAROCV_DEBUG() << "theta_lo: " << theta_lo << "... theta_hi: " << theta_hi << std::endl;
 
@@ -429,7 +398,6 @@ namespace larocv {
       int   target_idx=-1;
       for(size_t polar_ctor_idx = 0; polar_ctor_idx < polar_ctor_v.size(); ++polar_ctor_idx) {
 	auto const& polar_ctor = polar_ctor_v[polar_ctor_idx];
-	LAROCV_DEBUG() << "Polar contour idx : " << polar_ctor_idx << " of size " << polar_ctor.size() << std::endl;
 	for(auto const& pt : polar_ctor) {
 	  float angle = pt.y / (float)(rot_polarimg.rows) * 360. - 180;
 	  if(angle < -5 || angle > 5) continue;
@@ -437,15 +405,44 @@ namespace larocv {
 	  min_radius = pt.x;
 	  target_idx = polar_ctor_idx;
 	}
-	LAROCV_DEBUG() << "min_radius : " << min_radius << std::endl;
+	LAROCV_DEBUG() << "Polar contour idx : " << polar_ctor_idx << " of size " << polar_ctor.size()
+		       << " ... min_radius : " << min_radius << std::endl;
       }
       if(target_idx < 0) {
 	LAROCV_DEBUG() << "No relevant contour find for this xs point" << std::endl;
 	continue;
       }
       
+      LAROCV_DEBUG() << "Chose polar contour at index : " << target_idx << " of size " << polar_ctor_v[target_idx].size() << std::endl;
+
+      if(_refine_polar_cluster) {
+	// Refine contour
+	cv::Mat filled_ctor(rot_polarimg.size(),rot_polarimg.type(),CV_8UC1);
+	polar_ctor_v[0] = polar_ctor_v[target_idx];
+	polar_ctor_v.resize(1);
+	cv::drawContours(filled_ctor, polar_ctor_v, -1, cv::Scalar(255), -1, cv::LINE_8); // fill inside
+	//cv::drawContours(filled_ctor, polar_ctor_v, -1, cv::Scalar(255),  2, cv::LINE_8); // make the edges thicker to mask outwards
+	polar_ctor_v.clear();
+	cv_hierarchy_v.clear();
+	::cv::findContours(filled_ctor, polar_ctor_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+	// pick the maximal area contour
+	if(polar_ctor_v.empty()) {
+	  LAROCV_CRITICAL() << "Lost contour in polar-refining step?!" << std::endl;	
+	  throw larbys();
+	}
+	target_idx = 0;
+	if(polar_ctor_v.size()>1) {
+	  double max_ctor_area = 0;
+	  for(size_t cand_idx=0; cand_idx<polar_ctor_v.size(); ++cand_idx) {
+	    double ctor_area = cv::contourArea(polar_ctor_v[cand_idx], false);
+	    if(ctor_area < max_ctor_area) continue;
+	    max_ctor_area = ctor_area;
+	    target_idx = cand_idx;
+	  }
+	}
+      }
+      
       auto const& polar_contour = polar_ctor_v[target_idx];
-      LAROCV_DEBUG() << "Chose polar contour at index : " << target_idx << " of size " << polar_contour.size() << std::endl;
       
       float rows = rot_polarimg.rows;
       float cols = rot_polarimg.cols;
@@ -458,6 +455,8 @@ namespace larocv {
       //std::stringstream ss5;
       //ss3 << "Inserting into contour : ";
       ::geo2d::Vector<int> this_pt,last_pt;
+      ::geo2d::Vector<float> this_fpt;
+      _prange.SetAngle(angle_v[xs_pt_idx],theta_lo,theta_hi);
       for (size_t pt_idx=0; pt_idx<polar_contour.size(); ++pt_idx) {
       	auto const& polar_pt = polar_contour[pt_idx];
 	
@@ -475,14 +474,54 @@ namespace larocv {
 	
       	//res_contour._contour[pt_idx].x = (int)(pt.x + 0.5) - padding;
       	//res_contour._contour[pt_idx].y = (int)(pt.y + 0.5) - padding;
-
+	
 	this_pt.x -= padding;
 	this_pt.y -= padding;
-	if(pt_idx == 0 || this_pt.x != last_pt.x || this_pt.y != last_pt.y)
-	  contour.push_back(this_pt);
+
+	if(pt_idx == 0 || this_pt.x != last_pt.x || this_pt.y != last_pt.y) {
+
+	  // compute the angle of this contour point, make sure it is within the angular range
+	  this_fpt.x = this_pt.x;
+	  this_fpt.y = this_pt.y;
+	  double this_angle = ::geo2d::angle(ref_vtx,this_fpt);
+	  if(!_prange.Inside(this_angle)) {
+	    double this_dist = ::geo2d::dist(ref_vtx,this_fpt);
+	    this_angle = (_prange.CloserEdge(this_angle) ? _prange.AngleHi() : _prange.AngleLo());
+	    this_fpt.x = ref_vtx.x + this_dist * cos(2 * M_PI * this_angle/360.);
+	    this_fpt.y = ref_vtx.y + this_dist * sin(2 * M_PI * this_angle/360.);
+	    this_pt.x = (int)this_fpt.x;
+	    this_pt.y = (int)this_fpt.y;
+	  }
+	  if(pt_idx == 0 || this_pt.x != last_pt.x || this_pt.y != last_pt.y) 
+	    contour.push_back(this_pt);
+	}
 	last_pt = this_pt;
 	
 	//ss5<<"[" << res_contour._contour[pt_idx].x << "," << res_contour._contour[pt_idx].y << "],";
+      }
+      if(_refine_cartesian_cluster) {
+	// Refine contour
+	auto masked = MaskImage(img,contour,0,false);
+	GEO2D_ContourArray_t cartesian_ctor_v;
+	cartesian_ctor_v.clear();
+	cv_hierarchy_v.clear();
+	findContours(masked, cartesian_ctor_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+	// pick the maximal area contour
+	if(cartesian_ctor_v.empty()) {
+	  LAROCV_CRITICAL() << "Lost contour in cartesian-refining step?!" << std::endl;	
+	  throw larbys();
+	}
+	size_t target_idx = 0;
+	if(cartesian_ctor_v.size()>1) {
+	  double max_ctor_area = 0;
+	  for(size_t cand_idx=0; cand_idx<cartesian_ctor_v.size(); ++cand_idx) {
+	    double ctor_area = cv::contourArea(cartesian_ctor_v[cand_idx], false);
+	    if(ctor_area < max_ctor_area) continue;
+	    max_ctor_area = ctor_area;
+	    target_idx = cand_idx;
+	  }
+	}	
+	contour = cartesian_ctor_v[target_idx];
       }
       result_v.emplace_back(std::move(contour));
     }

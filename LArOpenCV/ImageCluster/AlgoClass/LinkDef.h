@@ -15,9 +15,11 @@
 #pragma link C++ class larocv::PCACrossing+;
 #pragma link C++ class larocv::LArPlaneGeo+;
 #pragma link C++ class larocv::VertexParticleCluster+;
+#pragma link C++ class larocv::PiRange+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
 
 
 

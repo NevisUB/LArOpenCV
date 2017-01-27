@@ -147,6 +147,7 @@ namespace larocv {
     _profile = main_cfg.get<bool>("Profile");
 
     this->set_verbosity((msg::Level_t)(main_cfg.get<unsigned short>("Verbosity",(unsigned short)(this->logger().level()))));
+    ::larocv::logger::get_shared().set(this->logger().level());
 
     _show_image = main_cfg.get<bool>("ShowImage",false);
 
