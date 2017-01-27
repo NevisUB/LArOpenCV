@@ -36,8 +36,8 @@ namespace larocv {
 
   bool LinearTrackCluster::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
+    // Get a list of vertx already found in the image
     auto const& part_data = AlgoData<data::VertexClusterArray> ( _algo_id_part, 0 );
-
     std::vector<std::vector<geo2d::Vector<float> > > vtx2d_vv;
     for(auto const& interaction : part_data._vtx_cluster_v) {
       for(size_t plane=0; plane<interaction.num_planes(); ++plane) {
@@ -45,14 +45,17 @@ namespace larocv {
 	vtx2d_vv[plane].push_back(interaction.get_circle_vertex(plane).center);
       }
     }
+
+    // Register to SingleLinearTrack algorithm to search for an independent (separated) single track
     for(size_t plane=0; plane<vtx2d_vv.size(); ++plane)
 
       _algo.RegisterVertex2D(plane,vtx2d_vv[plane]);
-    
+
+    // Find linear track
+    auto ltrack_v = _algo.FindLinearTrack(img_v);    
+
+    // Record
     auto& data = AlgoData<larocv::data::LinearTrackArray>(0);
-
-    auto ltrack_v = _algo.FindLinearTrack(img_v);
-
     for(size_t idx=0; idx<ltrack_v.size(); ++idx)
       data.emplace_back(std::move(ltrack_v[idx]));
 
