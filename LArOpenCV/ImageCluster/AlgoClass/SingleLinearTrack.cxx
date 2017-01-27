@@ -40,7 +40,7 @@ namespace larocv {
     return pca_principle;
   }
   
-  void SingleLinearTrack::Configure(const ::fcllite::PSet &pset)
+  void SingleLinearTrack::Configure(const Config_t &pset)
   {
     _min_size_track_ctor = pset.get<size_t>("TrackContourSizeMin");
     _min_length_track_ctor = pset.get<float>("TrackContourLengthMin");

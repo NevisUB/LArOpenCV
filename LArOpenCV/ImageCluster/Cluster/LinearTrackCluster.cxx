@@ -17,7 +17,7 @@ namespace larocv {
   /// Global larocv::LinearTrackClusterFactory to register AlgoFactory
   static LinearTrackClusterFactory __global_LinearTrackClusterFactory__;
 
-  void LinearTrackCluster::_Configure_(const ::fcllite::PSet &pset)
+  void LinearTrackCluster::_Configure_(const Config_t &pset)
   {
     _algo.set_verbosity(this->logger().level());
     _algo.Configure(pset.get<Config_t>("SingleLinearTrack"));
