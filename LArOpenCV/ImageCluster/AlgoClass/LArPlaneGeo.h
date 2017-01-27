@@ -24,8 +24,12 @@ namespace larocv {
     /// Plane parameter configuration method
     void ResetPlaneInfo(const larocv::ImageMeta& meta);
 
+    float tick_offset(const size_t plane) const;
+    float x_offset(const size_t plane) const;
+
     float y2wire(float y, const size_t plane) const;
     float x2tick(float x, const size_t plane) const;
+    float x2cm  (float x, const size_t plane) const;
     float wire2y(float wire, const size_t plane) const;
     float tick2x(float tick, const size_t plane) const;
     bool  YZPoint(const geo2d::Vector<float>& pt0, const size_t plane0,

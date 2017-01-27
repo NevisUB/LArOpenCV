@@ -23,7 +23,7 @@
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/AlgoData/AlgoDataVertex.h"
-
+#include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
 namespace larocv {
 
   
@@ -71,13 +71,7 @@ namespace larocv {
     /// Default destructor
     ~TrackVertexScan2D(){}
 
-    void Reset()
-    {
-      for(auto& i : _plane_scan_info_v) i.Clear();
-      _veto_ctor_vv.clear();
-      _scan_marker_v.clear();
-      _origin_v.clear();
-    }
+    void Reset() { _geo.Reset(); }
 
     /// Configuration method
     void Configure(const Config_t &pset);
@@ -174,11 +168,9 @@ namespace larocv {
     double CircleWeight(const larocv::data::CircleVertex& cvtx);
 
     std::vector<std::vector<geo2d::Vector<int> > > VertexVetoRegion(const ::cv::Mat& img);
+
+    LArPlaneGeo _geo;
       
-    std::vector<float> _tick_offset_v;
-    std::vector<float> _wire_comp_factor_v;
-    std::vector<float> _time_comp_factor_v;
-    geo2d::VectorArray<float> _origin_v;
     std::vector<std::vector<std::vector<geo2d::Vector<int> > > > _veto_ctor_vv;
     float _straight_line_angle_cut;
     float _xplane_tick_resolution;
@@ -195,7 +187,7 @@ namespace larocv {
     bool _use_polar_spread;
     float _time_exclusion_radius;
     float _wire_exclusion_radius;
-    float _trigger_tick;
+
     std::vector< std::vector<bool> > _scan_marker_v;
     std::vector< size_t > _seed_plane_v;
     bool _require_3planes;

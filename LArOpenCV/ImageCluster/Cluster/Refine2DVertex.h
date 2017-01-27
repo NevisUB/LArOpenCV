@@ -46,7 +46,7 @@ namespace larocv {
   protected:
 
     /// Configuration method
-    void _Configure_(const ::fcllite::PSet &pset);
+    void _Configure_(const Config_t &pset);
     
     /// Process method
     void _Process_(const larocv::Cluster2DArray_t& clusters,

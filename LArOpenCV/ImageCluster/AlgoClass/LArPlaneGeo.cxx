@@ -47,11 +47,20 @@ namespace larocv {
     _origin_v.at(meta.plane()).y = meta.origin().y;
   }
 
+  float LArPlaneGeo::tick_offset(const size_t plane) const
+  { return _tick_offset_v.at(plane); }
+
+  float LArPlaneGeo::x_offset(const size_t plane) const
+  { return _tick_offset_v.at(plane) / _time_comp_factor_v.at(plane); }
+
   float LArPlaneGeo::y2wire(float y, const size_t plane) const
   { return (y * _wire_comp_factor_v.at(plane) + _origin_v.at(plane).y); }
 
   float LArPlaneGeo::x2tick(float x, const size_t plane) const
   { return (x * _time_comp_factor_v.at(plane) + _origin_v.at(plane).x); }
+
+  float LArPlaneGeo::x2cm  (float x, const size_t plane) const
+  { return larocv::TriggerTick2Cm(x2tick(x,plane) - _trigger_tick); }
 
   float LArPlaneGeo::wire2y(float wire, const size_t plane) const
   { return (wire - _origin_v.at(plane).y) / _wire_comp_factor_v.at(plane); }
