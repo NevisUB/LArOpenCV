@@ -4,6 +4,7 @@
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoData/LinearTrackClusterData.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/SingleLinearTrack.h"
 
 namespace larocv {
  
@@ -24,6 +25,9 @@ namespace larocv {
 
   protected:
 
+    void Reset()
+    { _algo.Reset(); }
+
     /// Inherited class configuration method
     void _Configure_(const Config_t &pset);
     
@@ -35,51 +39,8 @@ namespace larocv {
     bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
 
   private:
-
-    void FindEdges(const cv::Mat& img,
-		   const GEO2D_Contour_t& ctor,
-		   geo2d::Vector<float>& edge1,
-		   geo2d::Vector<float>& edge2) const;
-
-    void EdgesFromMeanValue(const GEO2D_Contour_t& ctor,
-			    geo2d::Vector<float>& edge1,
-			    geo2d::Vector<float>& edge2) const;
-    
-    void EdgesFromPCAProjection(const cv::Mat& img,
-				const GEO2D_Contour_t& ctor,
-				geo2d::Vector<float>& edge1,
-				geo2d::Vector<float>& edge2) const;
-    
-    std::vector<larocv::data::LinearTrack2D> FindLinearTrack2D(size_t plane, const cv::Mat& img) const;
-
-    void FindLinearTrack(const std::vector<std::vector<larocv::data::LinearTrack2D> >& strack_vv);
-
-    geo2d::Line<float> calc_pca(const GEO2D_Contour_t & ctor) const;
-    
-    float y2wire(float y, const size_t plane) const;
-    float x2tick(float x, const size_t plane) const;
-    float wire2y(float wire, const size_t plane) const;
-    float tick2x(float tick, const size_t plane) const;
-    bool  YZPoint(const geo2d::Vector<float>& pt0, const size_t plane0,
-		  const geo2d::Vector<float>& pt1, const size_t plane1,
-		  larocv::data::Vertex3D& result) const;
-
-    bool _edges_from_mean;
-    float _minimum_neighbor_distance;
-    size_t _num_planes;
+    SingleLinearTrack _algo;
     AlgorithmID_t _algo_id_part;
-    //float  _part_pxfrac_threshold;
-    size_t _min_size_track_ctor;
-    float  _min_length_track_ctor;
-    float  _pi_threshold;
-    float  _min_compat_dist;
-    float _xplane_tick_resolution;
-    std::vector<size_t> _seed_plane_v;
-    float  _trigger_tick;
-    std::vector<float> _tick_offset_v;
-    std::vector<float> _wire_comp_factor_v;
-    std::vector<float> _time_comp_factor_v;
-    geo2d::VectorArray<float> _origin_v;
   };
 
   /**
