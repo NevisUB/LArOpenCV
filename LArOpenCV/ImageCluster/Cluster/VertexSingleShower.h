@@ -4,6 +4,7 @@
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/OneTrackOneShower.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/ElectronShowerVertexSeed.h"
 
 namespace larocv {
  
@@ -45,6 +46,7 @@ namespace larocv {
   private:
 
     OneTrackOneShower _algo;
+    ElectronShowerVertexSeed _algo_seed;
     AlgorithmID_t _algo_id_dqdx;
     AlgorithmID_t _algo_id_vertex_track;
     AlgorithmID_t _algo_id_linear_track;

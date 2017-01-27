@@ -1,8 +1,7 @@
 #ifndef __ONETRACKONESHOWER_H__
 #define __ONETRACKONESHOWER_H__
 
-#include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
-#include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
+#include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/AlgoData/SingleShowerData.h"
 #include "LArOpenCV/ImageCluster/AlgoData/dQdXProfilerData.h"
 #include "LArOpenCV/ImageCluster/AlgoData/VertexClusterData.h"
@@ -38,19 +37,11 @@ namespace larocv {
     std::vector<data::SingleShower>
     CreateSingleShower(const std::vector<const cv::Mat>& img_v);
 
-    void RetrieveVertex(const std::vector<const cv::Mat>& img_v,
-			const larocv::data::VertexClusterArray& part,
-			const larocv::data::dQdXProfilerData& dqdx);
-
-    void RetrieveVertex(const larocv::data::LinearTrackArray& data);
+    void RegisterSeed(const std::vector<data::Vertex3D>& seed_v)
+    { _cand_vertex_v = seed_v; }
 
   private:
 
-    std::vector<larocv::data::Vertex3D>
-    ListCandidateVertex(const std::vector<larocv::data::Vertex3D>& ltrack_vertex_v,
-			const std::vector<larocv::data::Vertex3D>& vtrack_vertex_v,
-			const std::vector<larocv::data::Vertex3D>& vedge_vertex_v) const;
-    
     larocv::data::ShowerCluster
     SingleShowerHypothesis(const ::cv::Mat& img,
 			   const size_t plane,
@@ -68,27 +59,19 @@ namespace larocv {
     LArPlaneGeo _geo_algo;
     std::vector<larocv::data::Vertex3D> _cand_vertex_v;
 
-    float _part_pxfrac_threshold;
     float _theta_lo;
     float _theta_hi;
 
-    float _vertex_min_separation;
     float _circle_default_radius;
-    float _circle_min_separation;
     size_t _valid_xs_npx;
     size_t _num_planes;
     float  _pi_threshold;
-    float  _min_compat_dist;
     float _xplane_tick_resolution;
     std::vector<size_t> _seed_plane_v;
 
-    std::vector<larocv::data::Vertex3D> _ltrack_vertex_v;
-    std::vector<larocv::data::Vertex3D> _vtrack_vertex_v;
-    std::vector<larocv::data::Vertex3D> _vedge_vertex_v;
-
     std::vector<larocv::data::Vertex3D> _shower_vtx3d_v;
     std::vector<std::vector<larocv::data::CircleVertex> > _shower_vtx2d_vv;
-    
+
   };
 
 }
