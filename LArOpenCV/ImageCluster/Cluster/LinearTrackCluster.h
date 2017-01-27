@@ -68,7 +68,7 @@ namespace larocv {
     float _minimum_neighbor_distance;
     size_t _num_planes;
     AlgorithmID_t _algo_id_part;
-    float  _part_pxfrac_threshold;
+    //float  _part_pxfrac_threshold;
     size_t _min_size_track_ctor;
     float  _min_length_track_ctor;
     float  _pi_threshold;
