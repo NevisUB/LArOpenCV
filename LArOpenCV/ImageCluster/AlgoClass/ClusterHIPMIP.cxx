@@ -33,7 +33,7 @@ namespace larocv {
   void ClusterHIPMIP::Configure(const Config_t &pset)
   {
     this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
-
+    
     _min_hip_cluster_size = pset.get<int>("MinHIPClusterSize",5);
     _min_mip_cluster_size = pset.get<int>("MinMIPClusterSize",20);
 
@@ -121,9 +121,13 @@ namespace larocv {
 		     CV_CHAIN_APPROX_SIMPLE);
 
 
+    LAROCV_DEBUG() << "Found " << mip_ctor_v.size() << " MIP contours"<< std::endl;
+    
     // masked mip contour finding
     std::vector<cv::Vec4i> mip_cv_hierarchy_mask_v;
     mip_cv_hierarchy_mask_v.clear();
+
+    LAROCV_DEBUG() << "Found " << mip_ctor_v.size() << " masked MIP contours"<< std::endl;
     
     cv::findContours(_mip_thresh_mask_m,
 		     mip_ctor_mask_v,
@@ -155,6 +159,9 @@ namespace larocv {
     //swap them out -- the thresholded masked mips and all masked mips
     std::swap(mip_ctor_mask_v,mip_ctor_mask_v_tmp);
 
+    LAROCV_DEBUG() << "Now " << mip_ctor_v.size() << " MIP contours after size cut"<< std::endl;
+    LAROCV_DEBUG() << "Now " << mip_ctor_mask_v.size() << " masked MIP contours after size cut" << std::endl;
+    
     return _mask_hip ? std::make_pair(hip_ctor_v,mip_ctor_mask_v) : std::make_pair(hip_ctor_v,mip_ctor_v);
   }
   

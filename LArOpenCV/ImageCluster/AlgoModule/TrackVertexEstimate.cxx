@@ -15,13 +15,10 @@ namespace larocv {
     _algo.set_verbosity(this->logger().level());
     _algo.Configure(pset.get<Config_t>("TrackVertexScan2D"));
 
-
     _vertex_seed_algo_id = kINVALID_ID;
 
     auto const vertex_seed_algo_name = pset.get<std::string>("VertexSeedsAlgoName","");
     if(!vertex_seed_algo_name.empty()) _vertex_seed_algo_id = this->ID(vertex_seed_algo_name);
-
-
   
     Register(new data::TrackVertexEstimateData);
   }

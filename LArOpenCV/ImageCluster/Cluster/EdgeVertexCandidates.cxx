@@ -92,7 +92,6 @@ namespace larocv {
       std::vector<geo2d::Vector<float> > edge_pt_v(3,geo2d::Vector<float>(kINVALID_FLOAT,kINVALID_FLOAT));
       std::vector<geo2d::Vector<float> > side_pt_v(3,geo2d::Vector<float>(kINVALID_FLOAT,kINVALID_FLOAT));
 
-
       larocv::data::EdgeVertexCandidateArray edge_vtx_candidate_array;
       
       for(uint plane_id=0; plane_id < 3; ++plane_id) {

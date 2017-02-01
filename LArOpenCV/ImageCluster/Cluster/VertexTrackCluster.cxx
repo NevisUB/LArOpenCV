@@ -88,14 +88,16 @@ namespace larocv {
       
       for(size_t cidx=0; cidx<contour_v.size(); ++cidx) {
 	auto& contour = contour_v[cidx];
+	LAROCV_DEBUG() << "On contour: " << cidx << "... size: " << contour.size() << std::endl;
 	data::ParticleCluster cluster;
 	cluster._ctor = std::move(contour);
 	// Find # pixels in this cluster from the parent
 	size_t num_pixel = 0;
 	float qsum = 0;
 	for(auto const& pt : parent_points) {
+	  // LAROCV_DEBUG() << "pt: " << pt << std::endl;
 	  auto dist = ::cv::pointPolygonTest(cluster._ctor,pt,true);
-	  //LAROCV_DEBUG() << "pt : " << pt << "... @ dist: " << dist << std::endl;
+	  // LAROCV_DEBUG() << "... @ dist: " << dist << std::endl;
 	  if(dist<-1.0*_contour_pad) continue;
 	  num_pixel += 1;
 	  qsum      += (float)img.at<uchar>(pt.y,pt.x);
