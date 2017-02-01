@@ -176,6 +176,19 @@ namespace larocv {
 	continue;
       }
 
+      if ( inter_pt == cv::Point(p2) ){
+	LAROCV_DEBUG() << "inter pt: " << inter_pt << " is p2: " << cv::Point(p2) << std::endl;
+	
+	//Lets add a second point on this contour
+	if (valid_first&& first_pt != cv::Point(p1)) {
+	  LAROCV_DEBUG() << "Insert new pt: " << first_pt << std::endl;
+	  ctor_copy.emplace_back(std::move(first_pt));
+	}
+      
+	n_inters++;
+	continue;
+      }
+
       
       if (valid_first && first_pt != cv::Point(p1)) {
 	LAROCV_DEBUG() << "Insert new pt: " << first_pt << std::endl;
