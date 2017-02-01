@@ -124,7 +124,7 @@ namespace larocv {
 	
 	//Make a point after
 	int rightx = inter_pt.x + 1;
-	int righty = ctor_s.y(rightx);
+	int righty;
 	try { righty = ctor_s.y(rightx); }
 	catch(...) { valid_second = false; }
 

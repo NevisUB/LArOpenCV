@@ -47,6 +47,7 @@
 #pragma link C++ class larocv::data::EdgeVertexCandidatesData+;
 
 #pragma link C++ class larocv::data::VertexSeedsData+;
+#pragma link C++ class larocv::data::TrackVertexEstimateData+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

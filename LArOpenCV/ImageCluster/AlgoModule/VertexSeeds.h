@@ -1,9 +1,7 @@
-//by vic
-
 #ifndef __VERTEXSEEDS_H__
 #define __VERTEXSEEDS_H__
 
-#include "LArOpenCV/ImageCluster/Base/ClusterAlgoBase.h"
+#include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 
 #include "LArOpenCV/ImageCluster/AlgoClass/ClusterHIPMIP.h"
@@ -14,13 +12,13 @@
 
 namespace larocv {
 
-  class VertexSeeds : public larocv::ClusterAlgoBase {
+  class VertexSeeds : public larocv::ImageAnaBase {
     
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
     VertexSeeds(const std::string name = "VertexSeeds") :
-      ClusterAlgoBase(name),
+      ImageAnaBase(name),
       _ClusterHIPMIP(),
       _DefectBreaker(),
       _PCACrossing()
@@ -37,10 +35,12 @@ namespace larocv {
     /// Inherited class configuration method
     void _Configure_(const Config_t &pset);
     
-    Cluster2DArray_t _Process_(const Cluster2DArray_t& clusters,
-			       const ::cv::Mat& img,
-			       ImageMeta& meta,
-			       ROI& roi);
+    void _Process_(const Cluster2DArray_t& clusters,
+		   const ::cv::Mat& img,
+		   ImageMeta& meta,
+		   ROI& roi);
+
+    bool _PostProcess_(const std::vector<const cv::Mat>& img_v) { return true; }
     
   private:
     

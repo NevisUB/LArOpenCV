@@ -2,7 +2,6 @@
 #define __VERTEXSEEDS_CXX__
 
 #include "VertexSeeds.h"
-#include "Geo2D/Core/Geo2D.h"
 
 namespace larocv {
 
@@ -30,12 +29,16 @@ namespace larocv {
     return ctors;
   }
   
-  Cluster2DArray_t VertexSeeds::_Process_(const Cluster2DArray_t& clusters,
+  void VertexSeeds::_Process_(const Cluster2DArray_t& clusters,
 					  const ::cv::Mat& img,
 					  ImageMeta& meta,
 					  ROI& roi)
   {
 
+    auto& vertex_seeds_data = AlgoData<data::VertexSeedsData>(0);
+    
+    data::VertexSeeds vertex_seeds;
+    
     // Cluster the HIPS and MIPS
     auto hip_mip_p = _ClusterHIPMIP.IsolateHIPMIP(img);
 
@@ -62,17 +65,15 @@ namespace larocv {
       // generate seeds from PCA
       auto intersections = _PCACrossing.ComputeIntersections(cluscomp,img);  
 
-      LAROCV_DEBUG() << "Generated " << intersections.size() << std::endl;
+      LAROCV_DEBUG() << "Generated " << intersections.size() << " pca intersections" << std::endl;
 
-      //Now... we have defects and pca inters as seeds... store them in algo data...
-
-      //do it
+      vertex_seeds.store_compound(std::move(cluscomp));
+      vertex_seeds.store_pcaxs(std::move(intersections));
     }
 
-
-    // done...
-
-    return Cluster2DArray_t();
+    vertex_seeds_data.plant_seeds(std::move(vertex_seeds),meta.plane());
+    
+    return;
   }
   
 
