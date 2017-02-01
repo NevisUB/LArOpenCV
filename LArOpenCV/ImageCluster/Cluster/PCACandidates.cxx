@@ -97,8 +97,7 @@ namespace larocv {
 	    // estimate pca
 	    auto pca_principle = CalcPCA(atom);
 	    // register this pca w/ id
-	    data.move(std::move(pca_principle),
-		      atom.id(), compound.id(), meta.plane());
+	    data.move(std::move(pca_principle), atom.id(), compound.id(), meta.plane());
 	  }
 	}
       }

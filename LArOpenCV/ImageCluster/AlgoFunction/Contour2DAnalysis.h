@@ -46,7 +46,7 @@ namespace larocv {
   GEO2D_Contour_t Merge(const GEO2D_Contour_t& ctor1,
 			const GEO2D_Contour_t& ctor2);
   
-  geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor);
+  geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor,float EPS=1e-6);
   
 }
 #endif

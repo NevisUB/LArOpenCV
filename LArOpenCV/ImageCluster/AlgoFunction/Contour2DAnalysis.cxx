@@ -161,7 +161,7 @@ namespace larocv {
   }
 
 
-  geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor) {
+  geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor,float EPS) {
     
     LAROCV_SDEBUG() << "Calculating PCA for: " << ctor.size() << " points" << std::endl;
     
@@ -174,17 +174,21 @@ namespace larocv {
     
     cv::PCA pca_ana(ctor_pts, cv::Mat(), CV_PCA_DATA_AS_ROW,0);
 
-    auto& meanx=pca_ana.mean.at<float>(0,0);
-    auto& meany=pca_ana.mean.at<float>(0,1);
+    
+    auto meanx=pca_ana.mean.at<float>(0,0);
+    auto meany=pca_ana.mean.at<float>(0,1);
 
-    auto& eigenPx=pca_ana.eigenvectors.at<float>(0,0);
-
-    if (eigenPx==0) throw larbys("Invalid Px");
-
-    auto& eigenPy=pca_ana.eigenvectors.at<float>(0,1);
+    auto eigenPx=pca_ana.eigenvectors.at<float>(0,0);
+    auto eigenPy=pca_ana.eigenvectors.at<float>(0,1);
 
     LAROCV_SDEBUG() << "meanx : " << meanx << "... meany: " << meany << "... ePx: " << eigenPx << "... ePy: " << eigenPy << std::endl;
     
+    if (eigenPx==0) { 
+      LAROCV_SINFO() << "Invalid Px inf detected set PX=EPS" << std::endl;
+      eigenPx=EPS;
+    }
+
+
     geo2d::Line<float> pca_principle(geo2d::Vector<float>(meanx,meany),
 				     geo2d::Vector<float>(eigenPx,eigenPy));
     return pca_principle;

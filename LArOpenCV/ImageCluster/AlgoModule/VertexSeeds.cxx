@@ -26,9 +26,8 @@ namespace larocv {
 
     ctors.insert( ctors.end(), ctor_arr_1.begin(), ctor_arr_1.end());
     ctors.insert( ctors.end(), ctor_arr_2.begin(), ctor_arr_2.end());
-
-    return ctors;
     
+    return ctors;
   }
   
   Cluster2DArray_t VertexSeeds::_Process_(const Cluster2DArray_t& clusters,

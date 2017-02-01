@@ -14,7 +14,7 @@ namespace larocv {
     _min_defect_size      = pset.get<int>("MinDefectSize",5);
     _hull_edge_pts_split  = pset.get<int>("NHullEdgePoints",50);
     _n_allowed_breaks     = pset.get<int>("NAllowedBreaks",10);
-    int log_level         = pset.get<int>("Verbosity",2);
+    int log_level         = pset.get<int>("Verbosity",0);
     _logger->set((larocv::msg::Level_t)log_level);
   }
   
@@ -59,19 +59,21 @@ namespace larocv {
     GEO2D_Contour_t ctor_copy;
     ctor_copy.reserve(ctor.size());
     
-    geo2d::LineSegment<float> ctor_segment(-1,-1,-1,-1);
-    geo2d::LineSegment<float> span_segment(-1,-1,-1,-1);
+    geo2d::LineSegment<float> ctor_s(-1,-1,-1,-1);
+    geo2d::LineSegment<float> span_s(-1,-1,-1,-1);
     
     uint n_inters=0;
     uint n_new_inters=0;
     
     for(unsigned i=0; i<ctor.size(); ++i) {
-      
+
       auto p1 = cv::Point2f(ctor[ i   %pts_c]);
       auto p2 = cv::Point2f(ctor[(i+1)%pts_c]);
+
+      LAROCV_DEBUG() << "Scan p1: " << p1 << ". p2: " << p2 << std::endl;
       
-      ctor_segment.pt1 = p1;
-      ctor_segment.pt2 = p2;
+      ctor_s.pt1 = p1;
+      ctor_s.pt2 = p2;
       
       // put the first point into the copy contour
       ctor_copy.emplace_back(p1);
@@ -87,28 +89,107 @@ namespace larocv {
       geo2d::Vector<float> p3(min_x,line.y(min_x));
       geo2d::Vector<float> p4(max_x,line.y(max_x));
       
-      span_segment.pt1 = p3;
-      span_segment.pt2 = p4;
+      span_s.pt1 = p3;
+      span_s.pt2 = p4;
       
       // intersection points for the two segments, one I made
       // and the other is the contour itself
       geo2d::Vector<float> ip(0,0);
       
       // do they intersect
-      if ( ! geo2d::IntersectionPoint(ctor_segment,span_segment,ip) ) continue;
+      if ( ! geo2d::IntersectionPoint(ctor_s,span_s,ip) ) continue;
       
       //they intersect, cast to int
       cv::Point inter_pt(ip.x,ip.y);
+
+      LAROCV_DEBUG() << "Calculated inter pt: " << inter_pt << std::endl;
+      
+      // calculate first and second point
+      // the two points before & after inter pt
+      cv::Point first_pt(kINVALID_INT,kINVALID_INT);
+      cv::Point second_pt(kINVALID_INT,kINVALID_INT);
+      
+      bool valid_first  = true;
+      bool valid_second = true;
+      
+      //not vertical
+      if (p2.x != p1.x) {
+	//Make a point before
+	int leftx = inter_pt.x - 1;
+	int lefty;
+	try { lefty = ctor_s.y(leftx); }
+	catch(...) { valid_first = false; }
+      
+	if (valid_first) first_pt = cv::Point(leftx,lefty);
+	
+	//Make a point after
+	int rightx = inter_pt.x + 1;
+	int righty = ctor_s.y(rightx);
+	try { righty = ctor_s.y(rightx); }
+	catch(...) { valid_second = false; }
+
+	if (valid_second) second_pt = cv::Point(rightx,righty);
+	
+	if ( p2.x < p1.x ) {
+	  std::swap(first_pt,second_pt);
+	  std::swap(valid_first,valid_second);
+	}
+	
+      }
+      //is vertical
+      else {
+	//Make a point above
+	int topy = inter_pt.y + 1;
+	int topx;
+	try { topx = ctor_s.x(topy); }
+	catch(...) { valid_first = false; }
+
+	if (valid_first) first_pt = cv::Point(topx,topy);
+	
+	//Make a point below
+	int boty = inter_pt.y - 1;
+	int botx;
+	try { botx = ctor_s.x(boty); }
+	catch(...) { valid_second = false; }
+
+	if (valid_second) second_pt = cv::Point(botx,boty);
+	
+	if ( p2.y < p1.y )  {
+	  std::swap(first_pt,second_pt);
+	  std::swap(valid_first,valid_second);
+	}
+      }
+      
       
       //this point is already a part of the contour, don't put a duplicate inside
-      if ( inter_pt == cv::Point(p1) or inter_pt == cv::Point(p2) ){
-	LAROCV_DEBUG() << "inter_pt " << inter_pt << " is either p1 " << p1 << " or " << p2 << std::endl;
+      //if ( inter_pt == cv::Point(p1) or inter_pt == cv::Point(p2) ){
+      if ( inter_pt == cv::Point(p1) ){
+	LAROCV_DEBUG() << "inter pt: " << inter_pt << " is p1: " << cv::Point(p1) << std::endl;
+	
+	//Lets add a second point on this contour
+	if (valid_second && second_pt != cv::Point(p2)) {
+	  LAROCV_DEBUG() << "Insert new pt: " << second_pt << std::endl;
+	  ctor_copy.emplace_back(std::move(second_pt));
+	}
+      
 	n_inters++;
 	continue;
       }
+
       
-      LAROCV_DEBUG() << "Inserting a new point: " << inter_pt << std::endl;
+      if (valid_first && first_pt != cv::Point(p1)) {
+	LAROCV_DEBUG() << "Insert new pt: " << first_pt << std::endl;
+	ctor_copy.emplace_back(std::move(first_pt));
+      }
+      
+      LAROCV_DEBUG() << "Insert inter pt: " << inter_pt << std::endl;
       ctor_copy.emplace_back(std::move(inter_pt));// this cv::Point2f has been floored with typecast
+      
+      if (valid_second && second_pt != cv::Point(p2)) {
+	LAROCV_DEBUG() << "Insert new pt: " << second_pt << std::endl;
+	ctor_copy.emplace_back(std::move(second_pt));
+      }
+      
       n_new_inters++;
       n_inters++;
     }
