@@ -18,14 +18,18 @@ namespace larocv {
     {}
     
     /// Default destructor
-    virtual ~TrackVertexEstimate(){}
+    ~TrackVertexEstimate(){}
+    
+    void Reset()
+    { _algo.Reset(); }
 
-    /// Finalize after process
+    /// Finalize after (possily multiple) Process call. TFile may be used to write output.
     void Finalize(TFile*) {}
-
+    
+    const TrackVertexScan2D& Algo() const { return _algo; }
+    
   protected:
 
-    /// Inherited class configuration method
     void _Configure_(const Config_t &pset);
     
     void _Process_(const larocv::Cluster2DArray_t& clusters,

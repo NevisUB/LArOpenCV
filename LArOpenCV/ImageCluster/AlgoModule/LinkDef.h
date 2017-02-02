@@ -10,7 +10,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class larocv::VertexSeeds+;
-#pragma link C++ class larocv::TrackVertexEstimator+;
+#pragma link C++ class larocv::TrackVertexEstimate+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

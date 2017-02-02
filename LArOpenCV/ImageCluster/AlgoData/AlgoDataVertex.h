@@ -26,6 +26,7 @@ namespace larocv {
   namespace data {
 
     class Refine2DVertexData;
+    class TrackVertexEstimateData;
     class SingleTrackArray;
     /**
        \class Vertex2D
@@ -50,6 +51,7 @@ namespace larocv {
     */
     class Vertex3D {
       friend class Refine2DVertexData;
+      friend class TrackVertexEstimateData;
       friend class SingleTrackArray;
     public:
       Vertex3D(size_t id=kINVALID_SIZE) : _id(id) {clear();}

@@ -32,6 +32,8 @@ namespace larocv {
     const auto& vertex_seeds_data = AlgoData<data::VertexSeedsData>(_vertex_seed_algo_id,0);
 
     auto points = vertex_seeds_data.harvest_seed_points(meta.plane());
+
+    LAROCV_DEBUG() << "Scanning " << points.size() << " seeds on plane " << meta.plane() << std::endl;
     
     _algo.AnalyzePlane(img,meta,points);
     
@@ -45,8 +47,8 @@ namespace larocv {
     std::vector<std::vector<data::CircleVertex> > vtx2d_vv;
     _algo.CreateTimeVertex3D(img_v,vtx3d_v,vtx2d_vv);
 
-    auto& data = AlgoData<data::Refine2DVertexData>(0);
-
+    auto& data = AlgoData<data::TrackVertexEstimateData>(0);
+    
     for(size_t idx=0; idx<vtx3d_v.size(); ++idx)
       data.emplace_back(0,std::move(vtx3d_v[idx]),std::move(vtx2d_vv[idx]));
 
@@ -57,8 +59,9 @@ namespace larocv {
     for(size_t idx=0; idx<vtx3d_v.size(); ++idx)
       data.emplace_back(0,std::move(vtx3d_v[idx]),std::move(vtx2d_vv[idx]));
 
-    return false;
+    return true;
   }
   
 }
 #endif
+
