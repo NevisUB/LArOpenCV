@@ -28,11 +28,18 @@ namespace larocv {
     const std::vector<size_t>& AtomicContour::associated_defects() const
     { return _defect_id_v; }
 
+    void AtomicContour::set_pca(const geo2d::Line<float>& line)
+    {  _pca = line; }
+
+    const geo2d::Line<float>& AtomicContour::pca()
+      { return _pca; }
+    
     void AtomicContour::add_edge(geo2d::Vector<float>& edge)
     { _edges_v.push_back(edge); }
     
     const std::vector<geo2d::Vector<float>>& AtomicContour::edges()
     { return _edges_v; }
+
     
     ////////////////////////////////////////////////////////////////
     

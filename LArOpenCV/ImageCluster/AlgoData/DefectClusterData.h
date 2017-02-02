@@ -3,7 +3,6 @@
 
 #include "LArOpenCV/ImageCluster/Base/AlgoDataBase.h"
 #include "Geo2D/Core/Line.h"
-#include <set>
 
 namespace larocv {
 
@@ -64,6 +63,10 @@ namespace larocv {
       void add_edge(geo2d::Vector<float>& edge);
       /// get all edges
       const std::vector<geo2d::Vector<float> >& edges();
+      /// pca line setter
+      void set_pca(const geo2d::Line<float>& line);
+      /// pca line getter
+      const geo2d::Line<float>& pca();
       
     private:
       /// unique atomic cluster id
@@ -72,6 +75,8 @@ namespace larocv {
       std::vector<size_t> _defect_id_v;
       /// edges vector
       std::vector<geo2d::Vector<float> > _edges_v;
+      /// pca line
+      geo2d::Line<float> _pca;
       
     };
     

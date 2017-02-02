@@ -16,7 +16,8 @@ namespace larocv {
 
     _pi_threshold = _VertexParticleCluster._pi_threshold;
     auto const vtx_algo_name = pset.get<std::string>("TrackVertexEstimateAlgo");
-    _track_vertex_estimate_algo_id = this->ID(vtx_algo_name);    
+    _track_vertex_estimate_algo_id = this->ID(vtx_algo_name);
+
     _contour_pad = pset.get<float>("ContourPad",0.);
 
     Register(new data::VertexClusterArray);      // is this needed?
@@ -29,21 +30,21 @@ namespace larocv {
 				       larocv::ROI& roi)
   {
     // Algorithm data
-    auto& data = AlgoData<data::VertexClusterArray>(0);
+    auto& vtx_data = AlgoData<data::VertexClusterArray>(0);
     
     // if given from Refine2DVertex, fill
-    if(_track_vertex_estimate_algo_id!=kINVALID_ID && data._vtx_cluster_v.empty()) {
+    if(_track_vertex_estimate_algo_id!=kINVALID_ID && vtx_data._vtx_cluster_v.empty()) {
       
       auto const& ref_data = AlgoData<data::TrackVertexEstimateData>(_track_vertex_estimate_algo_id,0);
 
-      data._vtx_cluster_v.resize(ref_data.get_vertex().size());
+      vtx_data._vtx_cluster_v.resize(ref_data.get_vertex().size());
       
       for(size_t vtx_id = 0; vtx_id < ref_data.get_vertex().size(); ++vtx_id) {
 
 	auto const& vtx3d = ref_data.get_vertex()[vtx_id];
 	auto const& circle_vtx_v = ref_data.get_circle_vertex(vtx3d.id());
 	
-	auto& vtx_cluster = data._vtx_cluster_v[vtx_id];
+	auto& vtx_cluster = vtx_data._vtx_cluster_v[vtx_id];
 	vtx_cluster.set_vertex(vtx3d, circle_vtx_v);
       }
     }
@@ -51,9 +52,9 @@ namespace larocv {
     // Run clustering for this plane & store
     auto const plane = meta.plane();
     
-    for(size_t vtx_id = 0; vtx_id < data._vtx_cluster_v.size(); ++vtx_id) {
+    for(size_t vtx_id = 0; vtx_id < vtx_data._vtx_cluster_v.size(); ++vtx_id) {
       
-      auto& vtx_cluster = data._vtx_cluster_v[vtx_id];
+      auto& vtx_cluster = vtx_data._vtx_cluster_v[vtx_id];
       auto const& circle_vtx = vtx_cluster.get_circle_vertex(plane);
       LAROCV_DEBUG() << "Vertex ID " << vtx_id << " plane " << plane
 		     << " CircleVertex @ " << circle_vtx.center << " w/ R = " << circle_vtx.radius << std::endl;
@@ -93,7 +94,6 @@ namespace larocv {
 	// Find # pixels in this cluster from the parent
 	size_t num_pixel = 0;
 	float qsum = 0;
-	//if (!cluster._ctor.empty()) {
 	  for(auto const& pt : parent_points) {
 	    // LAROCV_DEBUG() << "pt: " << pt << std::endl;
 	    auto dist = ::cv::pointPolygonTest(cluster._ctor,pt,true);
@@ -106,16 +106,9 @@ namespace larocv {
 	cluster._num_pixel = num_pixel;
 	cluster._qsum = qsum;
 	vtx_cluster.emplace_back(plane,std::move(cluster));
-	//}
       }
     }
-    
-    
-    //
-    // Analyze dQdX be breaking up particle clusters into atomics, and
-    // projecting charge profile onto the PCA line
-    
-    
+
     
     return;
   }
@@ -123,7 +116,39 @@ namespace larocv {
   
   bool TrackParticleCluster::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
-    // try and match particle clusters?
+
+    // get out vertex_data from ProcessFunction
+    const auto& vtx_data = AlgoData<data::VertexClusterArray>(0);
+    
+    // make our own defect cluster data...
+    auto& cluster_data = AlgoData<data::DefectClusterData>(1);
+
+    // particle vertex cluster array
+    const auto& vtx_cluster_v = vtx_data._vtx_cluster_v;
+    
+    // loop over vtx
+    for(auto const& vtx_cluster : vtx_cluster_v) {
+      data::ParticleCompoundArray pcompound_set;
+      // loop over planes
+      for(size_t plane = 0 ; plane < vtx_cluster.num_planes(); ++plane) {
+	// loop over clusters on this plane
+	for(auto const& pcluster : vtx_cluster.get_clusters(plane)) {
+	  LAROCV_INFO() << "Inspecting defects for Vertex " << vtx_cluster.id()
+			<< " plane " << plane
+			<< " particle " << pcluster.id()
+			<< std::endl;
+	  auto pcompound = _DefectBreaker.SplitContour(pcluster._ctor);
+
+	  //calculate the PCA
+	  
+	  pcompound_set.emplace_back(plane,std::move(pcompound));
+	}
+      }
+      // record
+      cluster_data.move(vtx_cluster.id(),std::move(pcompound_set));
+    }
+    LAROCV_INFO() << "Finished processing all vertex (result size = "
+		  << cluster_data.num_vertex_clusters() << " vertex clusters)" << std::endl;
     
     return true;
   }
