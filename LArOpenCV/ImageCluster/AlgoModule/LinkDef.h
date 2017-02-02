@@ -11,6 +11,7 @@
 
 #pragma link C++ class larocv::VertexSeeds+;
 #pragma link C++ class larocv::TrackVertexEstimate+;
+#pragma link C++ class larocv::TrackParticleCluster+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

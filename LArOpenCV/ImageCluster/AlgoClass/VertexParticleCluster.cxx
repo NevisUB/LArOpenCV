@@ -80,11 +80,14 @@ namespace larocv {
     // Analyze fraction of pixels clustered
     // 0) find a contour that contains the subject 2D vertex, and find allcontained non-zero pixels inside
     // 1) per particle cluster count # of pixels from 0) that is contained inside
+
+    auto img_copy = img.clone();
+    
     _super_cluster_v.clear();
     std::vector<::cv::Vec4i> cv_hierarchy_v;
-    ::cv::findContours(img, _super_cluster_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    ::cv::findContours(img_copy, _super_cluster_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
     LAROCV_INFO() << "Created " << _super_cluster_v.size()
-		  << " super-set contours from image (rows,cols) = (" << img.rows << "," << img.cols << ")" << std::endl;
+		  << " super-set contours from image (rows,cols) = (" << img_copy.rows << "," << img_copy.cols << ")" << std::endl;
     if(this->logger().level() == msg::kDEBUG) {
       for(size_t i=0; i<_super_cluster_v.size(); ++i)
 	LAROCV_DEBUG() << "    Super contour " << i
@@ -119,6 +122,12 @@ namespace larocv {
   VertexParticleCluster::CreateParticleCluster(const ::cv::Mat& img,
 					       const data::CircleVertex& vtx2d)
   {
+    if(this->logger().level() == ::larocv::msg::kDEBUG) {
+      std::stringstream ss0;
+      ss0 << "orig_plane_input.png";
+      cv::imwrite(std::string(ss0.str()).c_str(), img);
+    }
+    
     LAROCV_DEBUG() << std::endl;
     _prange.set_verbosity(logger().level());
     
@@ -127,7 +136,8 @@ namespace larocv {
     // Prepare image for analysis per vertex
     // Threshold
     ::cv::Mat thresh_img;
-    ::cv::threshold(img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
+    LAROCV_DEBUG() << "Thresholding to pi threshold: " << _pi_threshold << std::endl;
+    ::cv::threshold(img, thresh_img, _pi_threshold, 255, 0);//CV_THRESH_BINARY);
 
     /*
     // Using dilate/blur/threshold for super cluster
@@ -140,13 +150,17 @@ namespace larocv {
     // Make super cluster
     CreateSuperCluster(thresh_img);
 
-    // Find if relevant super cluster is found
     auto super_cluster_id = FindSuperCluster(vtx2d.center);
     if(super_cluster_id == kINVALID_SIZE) return res;
 
     // Create seed clusters
-    geo2d::Circle<float> mask_region(vtx2d.center,vtx2d.radius);
+    LAROCV_DEBUG() << "Masking region @ " << vtx2d.center << " rad: " << vtx2d.radius << std::endl;
+    float rad = vtx2d.radius;
+    geo2d::Circle<float> mask_region(vtx2d.center,rad);
+
     auto img_circle = MaskImage(thresh_img, mask_region, 0, false);
+
+    // Create seed clusters
     _seed_cluster_v = ParticleHypothesis(img_circle,vtx2d);
 
     if(_seed_cluster_v.empty()) return res;
@@ -278,17 +292,20 @@ namespace larocv {
     }
 
     for(int xs_pt_idx=0; xs_pt_idx<xs_v.size(); ++xs_pt_idx) {
+      LAROCV_DEBUG() << "xs pt idx: " << xs_pt_idx << std::endl;
 
       auto ref_vtx_copy = ref_vtx;
-
+      LAROCV_DEBUG() << "ref_vtx_copy: " << ref_vtx_copy << std::endl;
+      
       float angle = geo2d::angle(ref_vtx_copy,xs_v[xs_pt_idx]) + 180;
-
+      LAROCV_DEBUG() << "angle: " << angle << std::endl;
+      
       cv::Mat rot_img;
       cv::Mat img_copy = img;
 
       cv::Mat img_padded;
       int padding = sqrt(img.rows*img.rows+img.cols*img.cols)/2;
-      //LAROCV_DEBUG() << "Diagonal is: " << padding << "... from row: " << img.rows << "... and cols: " << img.cols << std::endl;
+      LAROCV_DEBUG() << "Diagonal is: " << padding << "... from row: " << img.rows << "... and cols: " << img.cols << std::endl;
 
       img_padded.create(img_copy.rows + 2*padding, img_copy.cols + 2*padding, img_copy.type());
       img_padded.setTo(cv::Scalar::all(0));
@@ -300,18 +317,21 @@ namespace larocv {
       LAROCV_DEBUG() << "Reference vertex @ " << ref_vtx_copy << std::endl;
       float theta_lo = theta_lo_v[xs_pt_idx];
       float theta_hi = theta_hi_v[xs_pt_idx];
+      LAROCV_DEBUG() << "theta lo: " << theta_lo << "... theta hi: " << theta_hi << std::endl;
+	
       auto rot = ::cv::getRotationMatrix2D(ref_vtx_copy,angle,1.);
       cv::Rect bbox = cv::RotatedRect(ref_vtx_copy,img_padded.size(),angle).boundingRect(); 
-      //LAROCV_DEBUG() << "bbox : " << bbox << "... size " << bbox.size() << std::endl;
-      
+
+      LAROCV_DEBUG() << "bbox : " << bbox << "... size " << bbox.size() << std::endl;
       cv::warpAffine(img_padded, rot_img, rot, bbox.size());
 
-      //LAROCV_DEBUG() << "rot_img rows: " << rot_img.rows << "... cols: " << rot_img.cols << std::endl;
-
+      LAROCV_DEBUG() << "rot_img rows: " << rot_img.rows << "... cols: " << rot_img.cols << std::endl;
       if(this->logger().level() == ::larocv::msg::kDEBUG) {
-	std::stringstream ss1,ss2;
-	ss1 << "norm_plane_xs" << xs_pt_idx << ".png";
+	std::stringstream ss0,ss1,ss2;
+	ss0 << "norm_plane_xs" << xs_pt_idx << ".png";
+	ss1 << "pad_plane_xs" << xs_pt_idx << ".png";
 	ss2 << "rot_plane_xs" << xs_pt_idx << ".png";
+	cv::imwrite(std::string(ss0.str()).c_str(), img);
 	cv::imwrite(std::string(ss1.str()).c_str(), img_padded);
 	cv::imwrite(std::string(ss2.str()).c_str(), rot_img);
       }
@@ -322,6 +342,8 @@ namespace larocv {
       const float max_radius_range = 1.5;
       int max_radius=vtx.radius * max_radius_range;
 
+      LAROCV_DEBUG() << "Set max_radius: " << max_radius << std::endl;
+      
       ::cv::threshold(rot_img,rot_img,_pi_threshold,255,CV_THRESH_BINARY);
       
       cv::linearPolar(rot_img,        //input

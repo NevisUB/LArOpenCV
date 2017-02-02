@@ -2,8 +2,7 @@
 #define __TRACKVERTEXESTIMATE_CXX__
 
 #include "TrackVertexEstimate.h"
-#include "LArOpenCV/ImageCluster/AlgoData/VertexSeedsData.h"
-#include "LArOpenCV/ImageCluster/AlgoData/Refine2DVertexData.h"
+#include "VertexSeeds.h"
 
 namespace larocv {
 
