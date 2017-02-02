@@ -225,7 +225,7 @@ namespace larocv {
       else if(child_idx == kINVALID_SIZE)
 	res[xs_idx] = _seed_cluster_v[seed_idx];
       else
-	res[xs_idx] = std::move(Merge(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx]));
+	res[xs_idx] = std::move(MergeAndRefine(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx],thresh_img));
     }
     
     return res;
@@ -547,7 +547,7 @@ namespace larocv {
       }
       result_v.emplace_back(std::move(contour));
     }
-
+    
     return result_v;
   }
 

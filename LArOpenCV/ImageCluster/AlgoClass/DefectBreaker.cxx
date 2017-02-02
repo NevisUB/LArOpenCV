@@ -1256,13 +1256,15 @@ namespace larocv {
     return start;
   }
   
-  larocv::data::ClusterCompound DefectBreaker::SplitContour(const GEO2D_Contour_t& in_ctor) {
+  larocv::data::ClusterCompound DefectBreaker::SplitContour(const GEO2D_Contour_t& in_ctor,
+							    geo2d::Vector<float>* start_) {
     
     // break, create atomics, associate defects
     auto cluscomp = BreakContour(in_ctor);
-    
+
     //need to determine starting point for ordering, find the atomic which has 1 associated defect
-    auto start = ChooseStartPoint(cluscomp);
+    geo2d::Vector<float> start;
+    start = !start_ ? ChooseStartPoint(cluscomp) : *start_;
     
     // order atomics
     auto const ordered_atom_id_v = OrderAtoms(cluscomp,start);

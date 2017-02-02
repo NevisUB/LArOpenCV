@@ -156,11 +156,41 @@ namespace larocv {
     merged_ctor.reserve(ctor1.size()+ctor2.size());
     merged_ctor.insert(merged_ctor.end(), ctor1.begin(), ctor1.end());
     merged_ctor.insert(merged_ctor.end(), ctor2.begin(), ctor2.end());
+
     cv::convexHull(cv::Mat(merged_ctor), result);
+    
     return result;
   }
 
+  GEO2D_Contour_t MergeAndRefine(const GEO2D_Contour_t& ctor1,
+				 const GEO2D_Contour_t& ctor2,
+				 const cv::Mat& img)
+  {
+    GEO2D_Contour_t result;
+    GEO2D_Contour_t merged_ctor;
+    merged_ctor.reserve(ctor1.size()+ctor2.size());
+    merged_ctor.insert(merged_ctor.end(), ctor1.begin(), ctor1.end());
+    merged_ctor.insert(merged_ctor.end(), ctor2.begin(), ctor2.end());
 
+    cv::convexHull(cv::Mat(merged_ctor), result);
+
+    auto masked_img = MaskImage(img,result,0,true);
+
+    GEO2D_ContourArray_t result_v;
+    std::vector<cv::Vec4i> cv_hierarchy_v;
+    cv::findContours(masked_img,result_v,cv_hierarchy_v,CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE); 
+    if (!result_v.size()) throw larbys("No refined contour can be determined");
+    if (result_v.size()==1) return result_v[0];
+
+    uint size=0;
+    int idx=-1;
+    for(uint i=0;i<result_v.size();++i) { if (result_v.size() > size) { idx=i; size=result_v.size(); } }
+    if(idx<0) throw larbys("No refined contour can be determined");
+      
+    return result_v[idx];
+  }
+
+  
   geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor,float EPS) {
     
     LAROCV_SDEBUG() << "Calculating PCA for: " << ctor.size() << " points" << std::endl;

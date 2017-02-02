@@ -27,7 +27,8 @@ namespace larocv {
     void Configure(const Config_t &pset);
     
     //split contour --> break into atomics and define edges
-    larocv::data::ClusterCompound SplitContour(const GEO2D_Contour_t& in_ctor);
+    larocv::data::ClusterCompound SplitContour(const GEO2D_Contour_t& in_ctor,
+					       geo2d::Vector<float>* start_=nullptr);
     
     //break contour --> create atomics
     larocv::data::ClusterCompound BreakContour(const GEO2D_Contour_t& in_ctor);
