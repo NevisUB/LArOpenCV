@@ -15,55 +15,50 @@ namespace larocv {
     
   public:
     
-    AtomicAnalysis() :
-      _logger(nullptr)
-    { _logger = &(larocv::logger::get("DBLogger")); }
+    AtomicAnalysis();
     
     ~AtomicAnalysis(){}
     
     void Configure(const Config_t &pset);
 
-    void
-    AssociateDefects(const larocv::data::ClusterCompound& cluscomp,
-		     const larocv::data::AtomicContour& parent,
-		     const larocv::data::ContourDefect& defect,
-		     larocv::data::AtomicContour& child1,
-		     larocv::data::AtomicContour& child2);
     
     double
-    DistanceAtom2Point(const larocv::data::AtomicContour& atom,
+    DistanceAtom2Point(const data::AtomicContour& atom,
 		       const geo2d::Vector<float>& point) const;
     
     geo2d::Vector<float>
-    ChooseStartPoint(larocv::data::ClusterCompound& cluscomp);
+    ChooseStartPoint(data::ClusterCompound& cluscomp);
     
     std::vector<size_t>
-    OrderAtoms(const larocv::data::ClusterCompound& cluster,
+    OrderAtoms(const data::ClusterCompound& cluster,
 	       const geo2d::Vector<float>& start_) const;
     
     std::vector<std::pair<geo2d::Vector<float>,geo2d::Vector<float> > >
-    AtomsEdge(const larocv::data::ClusterCompound& cluster,
+    AtomsEdge(const data::ClusterCompound& cluster,
 	      const geo2d::Vector<float>& start_,
 	      const std::vector<size_t> atom_order_v) const;
     
-    // std::vector<float>
-    // AtomdQdX(const cv::Mat& img, const data::AtomicContour& atom,
-    // 	     const geo2d::Line<float>& pca,
-    // 	     const geo2d::Vector<float>& start,
-    // 	     const geo2d::Vector<float>& end) const;
+    std::vector<float>
+    AtomdQdX(const cv::Mat& img, const data::AtomicContour& atom,
+    	     const geo2d::Line<float>& pca,
+    	     const geo2d::Vector<float>& start,
+    	     const geo2d::Vector<float>& end) const;
+
+    void
+    RefineAtomicEndPoint(const cv::Mat& mat,
+			 data::AtomicContour& atomic);
     
     inline const larocv::logger& logger() const
     { return *_logger; }
+
+    float _pi_threshold;
+    float _dx_resolution;
+    float _atomic_region_pad;
+    float _atomic_contour_pad;
     
   private:    
     larocv::logger *_logger;
 
-    // float _pi_threshold;
-    // float _dx_resolution;
-    // float _atomic_region_pad;
-    // float _atomic_contour_pad;
-
-    
   };
 }
 

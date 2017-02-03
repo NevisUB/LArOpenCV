@@ -19,6 +19,7 @@
 #include "Geo2D/Core/Vector.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoDataBase.h"
 #include "AlgoDataVertex.h"
+#include "AlgoDataCluster.h"
 #include "Refine2DVertexData.h"
 
 namespace larocv {
@@ -31,22 +32,38 @@ namespace larocv {
        \class ParticleCluster
        @brief A cluster associated with a vertex and hence represents a particle
     */
-    class ParticleCluster {
+    class ParticleCluster : public ClusterCompound {
       friend class ParticleClusterArray;
     public:
-      ParticleCluster(size_t id=kINVALID_SIZE) : _cluster_id(id) {clear();}
+      ParticleCluster(size_t id=kINVALID_SIZE) :
+	ClusterCompound(),
+	_cluster_id(id)
+      { clear(); }
       ~ParticleCluster() {}
+
       /// attribute clear method
       void clear();
       /// cluster id retriever
       size_t id() const;
+
+      //Always protect existing class members upon assignment
+      ParticleCluster& operator=(const ClusterCompound& cluscomp) {
+	ClusterCompound::operator=(cluscomp);
+	return *this;
+      }
+
+      ParticleCluster& operator=(const ParticleCluster& pcluster) {
+	ClusterCompound::operator=(pcluster);
+	return *this;
+      }
       
       GEO2D_Contour_t _ctor; ///< contour to define a cluster
       size_t _num_pixel;     ///< # of non-zero pixel from parent contour, contained in this contour
       double _qsum;          ///< charge sum
       
     private:
-      size_t _cluster_id; ///< unique cluster id
+      size_t _cluster_id; ///< unique cluster id      
+      
     };
 
     /**
@@ -78,6 +95,8 @@ namespace larocv {
       const larocv::data::CircleVertex& get_circle_vertex(size_t plane) const;
       /// Plane-wise cluster list accessor
       const std::vector<larocv::data::ParticleCluster>& get_clusters(size_t plane) const;
+      /// Plane-wise cluster list accessor
+      std::vector<larocv::data::ParticleCluster>& get_clusters_writeable(size_t plane);
       //
       // modifiers
       //
@@ -115,7 +134,7 @@ namespace larocv {
     class VertexClusterArray : public larocv::data::AlgoDataBase {
     public:
       VertexClusterArray()
-      {Clear();}
+      { Clear(); }
       ~VertexClusterArray() {}
       
       /// Simply a list of VertexCluster (i.e. vertex-wise list of clusters)

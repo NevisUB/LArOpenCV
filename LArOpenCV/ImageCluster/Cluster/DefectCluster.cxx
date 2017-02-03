@@ -65,7 +65,7 @@ namespace larocv {
 			  << " plane " << plane
 			  << " particle " << pcluster.id()
 			  << std::endl;
-	    auto pcompound = _DefectBreaker.SplitContour(pcluster._ctor);
+	    auto pcompound = _DefectBreaker.BreakContour(pcluster._ctor);
 	    pcompound_set.emplace_back(plane,std::move(pcompound));
 	  }
 	}
@@ -93,7 +93,7 @@ namespace larocv {
 	  LAROCV_INFO() << "Inspecting defects for LinearTrack " << lin_cluster.id()
 			<< " plane " << plane
 			<< std::endl;
-	  auto pcompound = _DefectBreaker.SplitContour(lcluster.ctor);
+	  auto pcompound = _DefectBreaker.BreakContour(lcluster.ctor);
 	  pcompound_set.emplace_back(plane,std::move(pcompound));
 	}
 	// record
@@ -113,7 +113,7 @@ namespace larocv {
 		      << " cluster " << cindex
 		      << std::endl;
 
-	auto cluscomp = _DefectBreaker.SplitContour(cluster._contour);
+	auto cluscomp = _DefectBreaker.BreakContour(cluster._contour);
 
 	plane_data.emplace_back(std::move(cluscomp));
 

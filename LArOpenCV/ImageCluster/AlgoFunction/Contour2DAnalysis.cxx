@@ -44,6 +44,9 @@ namespace larocv {
   {
     cv::Mat dst_img(img.size(),img.type(),CV_8UC1);
     cv::Mat mask = cv::Mat(img.size(), img.type(), CV_8UC1);
+    LAROCV_SDEBUG() << "Creating a mask for image (rows,cols) = (" << img.rows << "," << img.cols << ")"
+		    << " with " << veto_ctor_v .size() << " contours" << std::endl;
+    
     cv::drawContours(mask, veto_ctor_v, -1, cv::Scalar(255), -1, cv::LINE_8); // fill inside
     if (tol > 0)
       cv::drawContours(mask, veto_ctor_v, -1, cv::Scalar(255), tol, cv::LINE_8); // make the edges thicker to mask outwards
@@ -51,11 +54,8 @@ namespace larocv {
     //invert mask
     if(maskout) cv::bitwise_not(mask,mask);
 
-    //for some reason, input image and masked image cannot be the same from vic's test
-    //cv::imwrite("afunc_mask.png",mask);
-    //cv::imwrite("afunc_original.png",img);
     img.copyTo(dst_img,mask);
-    //cv::imwrite("afunc_result.png",dst_img);
+
     return dst_img;
   }
   

@@ -70,6 +70,12 @@ namespace larocv {
       if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
       return _cluster_vv[plane];
     }
+
+    std::vector<larocv::data::ParticleCluster>& ParticleClusterArray::get_clusters_writeable(size_t plane)
+    {
+      if(plane >= _cluster_vv.size()) throw larbys("Invalid plane requested!");
+      return _cluster_vv[plane];
+    }
     
     void ParticleClusterArray::clear()
     {

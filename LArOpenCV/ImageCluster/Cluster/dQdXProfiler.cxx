@@ -320,7 +320,7 @@ namespace larocv {
 	    
 	    // order atoms
 	    auto const ordered_atom_id_v = OrderAtoms(particle,vtx2d);
-	  
+	    
 	    // get start/end
 	    auto atom_edges_v = AtomsEdge(particle, vtx2d, ordered_atom_id_v);
 	    

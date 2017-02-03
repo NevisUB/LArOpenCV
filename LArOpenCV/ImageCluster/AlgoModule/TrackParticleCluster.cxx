@@ -9,10 +9,11 @@ namespace larocv {
 
   /// Global larocv::TrackParticleClusterFactory to register AlgoFactory
   static TrackParticleClusterFactory __global_TrackParticleClusterFactory__;
-
+  
   void TrackParticleCluster::_Configure_(const Config_t &pset) {
-
+    
     _DefectBreaker.Configure(pset);
+    _AtomicAnalysis.Configure(pset);
 
     _VertexParticleCluster.set_verbosity(this->logger().level());
     _VertexParticleCluster.Configure(pset.get<Config_t>("VertexParticleCluster"));
@@ -25,7 +26,6 @@ namespace larocv {
     _contour_pad = pset.get<float>("ContourPad",0.);
 
     Register(new data::VertexClusterArray);
-    Register(new data::DefectClusterData);
   }
 
   void TrackParticleCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -122,52 +122,87 @@ namespace larocv {
   {
 
     // get out vertex_data from ProcessFunction
-    const auto& vtx_data = AlgoData<data::VertexClusterArray>(0);
+    auto& vtx_data = AlgoData<data::VertexClusterArray>(0);
     
-    // make our own defect cluster data...
-    auto& cluster_data = AlgoData<data::DefectClusterData>(1);
-
     // particle vertex cluster array
-    const auto& vtx_cluster_v = vtx_data._vtx_cluster_v;
+    auto& vtx_cluster_v = vtx_data._vtx_cluster_v;
     
     // loop over vtx
-    for(auto const& vtx_cluster : vtx_cluster_v) {
-      data::ParticleCompoundArray pcompound_set;
-      // loop over planes
-      for(size_t plane = 0 ; plane < vtx_cluster.num_planes(); ++plane) {
+    for(auto& pclusarray : vtx_cluster_v) {
 
-	auto  circle_vtx = vtx_cluster.get_circle_vertex(plane).center;
-	auto* circle_vtx_ptr = &circle_vtx;
-	LAROCV_DEBUG() << "Scanning 2D vertex @ " << circle_vtx << " on plane " << plane << std::endl;
+      // //particle cluster array
+      // data::ParticleCompoundArray pcompound_set;
+      
+      // loop over planes
+      for(size_t plane = 0 ; plane < pclusarray.num_planes(); ++plane) {
+
+	auto circle_vtx_c = pclusarray.get_circle_vertex(plane).center;
+	LAROCV_DEBUG() << "Scanning 2D vertex @ " << circle_vtx_c << " on plane " << plane << std::endl;
 	
-	// loop over clusters on this plane
-	for(auto const& pcluster : vtx_cluster.get_clusters(plane)) {
-	  LAROCV_INFO() << "Inspecting defects for Vertex " << vtx_cluster.id()
+	// loop over vertex clusters on this plane --> each one is particle cluster
+	for(auto& pcluster : pclusarray.get_clusters_writeable(plane)) {
+	  LAROCV_INFO() << "Inspecting defects for Vertex " << pclusarray.id()
 			<< " plane " << plane
 			<< " particle " << pcluster.id()
 			<< std::endl;
-	  auto pcompound = _DefectBreaker.SplitContour(pcluster._ctor,circle_vtx_ptr);
 
-	  //calculate the PCA per atomic
+	  // break this particle cluster
+	  auto pcompound = _DefectBreaker.BreakContour(pcluster._ctor);
+
+    	  // order atomics in thie particle cluster
+	  auto const ordered_atom_id_v = _AtomicAnalysis.OrderAtoms(pcompound,circle_vtx_c);
+    
+	  // get start/end points for this atomic
+	  auto atom_edges_v = _AtomicAnalysis.AtomsEdge(pcompound, circle_vtx_c, ordered_atom_id_v);
+
 	  LAROCV_DEBUG() << "Found " << pcompound.size() << " atomic(s)!" << std::endl;
-	  for (auto& atomic : pcompound) {
-	    LAROCV_DEBUG() << "... id " << atomic.id() << " of size " << atomic.size() << std::endl;
+
+	  // set per atomic information
+	  for (size_t atom_id=0; atom_id<pcompound.size(); ++atom_id) {
+	    auto& atomic = pcompound[atom_id];
+	    LAROCV_DEBUG() << "... id " << atomic.id() << " of size " << atomic.size() << " at index " << atom_id << std::endl;
+
+	    // set the edges
+	    auto& start_end = atom_edges_v[atom_id];
+	    atomic.add_edge(start_end.first);
+	    atomic.add_edge(start_end.second);
+	    
+	    // calculate the PCA per atomic
 	    atomic.set_pca(CalcPCA(atomic));
-	  }
-	  
-	  pcompound_set.emplace_back(plane,std::move(pcompound));
+
+	    // calculate the dQdX per atomic
+	    std::vector<float> atom_dqdx;
+	    try { 
+	      atom_dqdx = _AtomicAnalysis.AtomdQdX(img_v[plane],atomic,atomic.pca(),start_end.first, start_end.second);
+	    } catch (const larbys& err) {
+	      LAROCV_NORMAL() << "AtomdQdX could not be discerned" << std::endl;
+	      atom_dqdx = {};
+	    }
+
+	    atomic.set_dqdx(atom_dqdx);
+	    
+	    // refine the last atomic end point
+	    if (atomic.id() == ordered_atom_id_v.back())
+	      _AtomicAnalysis.RefineAtomicEndPoint(img_v[plane],atomic);
+
+	    pcluster = pcompound;
+	    
+	  } // end this atomic
+
+	  // refine the last atom's end point
+	  // pcompound_set.emplace_back(plane,std::move(pcompound));
 	}
 	LAROCV_DEBUG() << "End clusters on plane " << plane << std::endl;
       }
-      LAROCV_DEBUG() << "End vertex id " << vtx_cluster.id() << " with pcompound array " << pcompound_set.id() << std::endl;
+      // LAROCV_DEBUG() << "End vertex id " << vtx_cluster.id() << " with pcompound array " << pcompound_set.id() << std::endl;
       // record
-      cluster_data.move(vtx_cluster.id(),std::move(pcompound_set));
+      // cluster_data.move(vtx_cluster.id(),std::move(pcompound_set));
     }
-    LAROCV_INFO() << "Finished processing all vertex (result size = "
-		  << cluster_data.num_vertex_clusters() << " vertex clusters)" << std::endl;
-
+    // LAROCV_INFO() << "Finished processing all vertex (result size = "
+    // 		  << cluster_data.num_vertex_clusters() << " vertex clusters)" << std::endl;
+    
     return true;
-  }
+  } // end _PostProcess_
   
 }
 #endif

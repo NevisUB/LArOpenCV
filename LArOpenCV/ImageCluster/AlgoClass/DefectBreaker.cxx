@@ -569,6 +569,129 @@ namespace larocv {
     }
     return geo2d::Line<float>(geo2d::Vector<float>(0,yinter),geo2d::Vector<float>(1,dir));
   }
+
+  void DefectBreaker::AssociateDefects(const data::ClusterCompound& cluscomp,
+				       const data::AtomicContour& parent,
+				       const data::ContourDefect& defect,
+				       data::AtomicContour& child1,
+				       data::AtomicContour& child2)
+  {
+    
+    if(this->logger().level() <= msg::kDEBUG) {
+      std::stringstream ss;
+      ss << "Parent defect points:";
+      for(auto const& defect_id : parent.associated_defects())
+	ss << " ID " << defect_id << " @ " << cluscomp.get_defect(defect_id)._pt_defect;
+      ss << " ... new defect ID " << defect.id() << " @ " << defect._pt_defect;
+      LAROCV_DEBUG() << std::string(ss.str()) << std::endl;
+    }
+    // Three cases to handle
+    // case 0) parent is the "original" (i.e. no associated defect)
+    // case 1) parent is an "edge" (i.e. 1 associated defect)
+    // case 2) parent is "non-edge" (i.e. 2 associated defects)
+    
+    // case 0) simply associate both children to the defect
+    if(parent.associated_defects().empty()) {
+      LAROCV_DEBUG() << "Case 0: defect " << defect.id() << " is associated with both children" << std::endl;
+      child1.associate(defect.id());
+      child2.associate(defect.id());
+      return;
+    }
+    
+    // case 1 and 2 both require to compute the "closest defects from history" to each child
+    
+    // Look for the closest defect in the parent (parent) for child 1
+    double closest_defect1_dist1 = 1e20;
+    double closest_defect1_dist2 = 1e20;
+    size_t closest_defect1_id1 = kINVALID_SIZE;
+    size_t closest_defect1_id2 = kINVALID_SIZE;
+    for(auto const& defect_id : parent.associated_defects()) {
+      auto const& defect_pt = cluscomp.get_defect(defect_id)._pt_defect;
+      double dist = pointPolygonTest(child1,defect_pt,true) * -1.;
+      if(dist <  closest_defect1_dist1) {
+	// update 2nd closest defect
+	closest_defect1_dist2 = closest_defect1_dist1;
+	closest_defect1_id2   = closest_defect1_id1;
+	closest_defect1_dist1 = dist;
+	closest_defect1_id1 = defect_id;
+      }else if(dist < closest_defect1_dist2) {
+	closest_defect1_dist2 = dist;
+	closest_defect1_id2   = defect_id;
+      }
+    }
+    
+    LAROCV_DEBUG() << "Child1 atom size " << child1.size()
+		   << " closest defect " << closest_defect1_id1
+		   << " @ " << cluscomp.get_defect(closest_defect1_id1)._pt_defect
+		   << " dist = " << closest_defect1_dist1 << std::endl;
+    
+    // Look for the closest defect in the parent (parent) for child 2
+    double closest_defect2_dist1 = 1e20;
+    double closest_defect2_dist2 = 1e20;
+    size_t closest_defect2_id1 = kINVALID_SIZE;
+    size_t closest_defect2_id2 = kINVALID_SIZE;
+    for(auto const& defect_id : parent.associated_defects()) {
+      auto const& defect_pt = cluscomp.get_defect(defect_id)._pt_defect;
+      double dist = pointPolygonTest(child2,defect_pt,true) * -1.;
+      if(dist < closest_defect2_dist1) {
+	// update 2nd closest defect
+	closest_defect2_dist2 = closest_defect2_dist1;
+	closest_defect2_id2   = closest_defect2_id1;
+	closest_defect2_dist1 = dist;
+	closest_defect2_id1   = defect_id;
+      }else if(dist < closest_defect2_dist2) {
+	closest_defect2_dist2 = dist;
+	closest_defect2_id2   = defect_id;
+      }
+    }
+    LAROCV_DEBUG() << "Child2 atom size " << child2.size()
+		   << " closest defect " << closest_defect2_id1
+		   << " @ " << cluscomp.get_defect(closest_defect2_id1)._pt_defect
+		   << " dist = " << closest_defect2_dist1 << std::endl;
+    
+    // case 1) parent is an "edge"
+    // In this case one of children must inherit "edge" feature.
+    // The edge child should have a larger distance to the "closest" defect in the history (history = 1 defect anyway...)
+    if(parent.associated_defects().size() == 1) {
+      if(closest_defect1_dist1 > closest_defect2_dist1) {
+	child1.associate(defect.id());
+	child2.associate(defect.id());
+	child2.associate(closest_defect2_id1);
+	LAROCV_DEBUG() << "Case 1: new edge @ defect " << defect.id()
+		       << " and non-edge defect " << closest_defect2_id1
+		       << std::endl;
+      }else{
+	child1.associate(defect.id());
+	child1.associate(closest_defect1_id1);
+	child2.associate(defect.id());
+	LAROCV_DEBUG() << "Case 1: new edge @ defect " << defect.id()
+		       << " and non-edge defect " << closest_defect1_id1
+		       << std::endl;
+      }
+      return;
+    }
+    
+    // case 2) parent is "non-edge"
+    child1.associate(defect.id());
+    child1.associate(closest_defect1_id1);
+    
+    child2.associate(defect.id());
+    if(closest_defect1_id1 == closest_defect2_id1) {
+      child2.associate(closest_defect2_id2);
+      LAROCV_DEBUG() << "Case 2: defect pairs (" << defect.id() << "," << closest_defect1_id1 << ")"
+		     << " and (" << defect.id() << "," << closest_defect2_id2 << ")" << std::endl;
+    }
+    else {
+      child2.associate(closest_defect2_id1);
+      LAROCV_DEBUG() << "Case 2: defect pairs (" << defect.id() << "," << closest_defect1_id1 << ")"
+		     << " and (" << defect.id() << "," << closest_defect2_id1 << ")" << std::endl;
+    }    
+    return;
+  }
+
+
+
+
   
   larocv::data::ClusterCompound
   DefectBreaker::BreakContour(const larocv::GEO2D_Contour_t& in_ctor) {
@@ -777,7 +900,7 @@ namespace larocv {
 	a_ctor1 = ctor1;
 	larocv::data::AtomicContour a_ctor2;
 	a_ctor2 = ctor2;
-	_AtomicAnalysis.AssociateDefects(cluscomp,a_ctor,defect,a_ctor1,a_ctor2);
+	AssociateDefects(cluscomp,a_ctor,defect,a_ctor1,a_ctor2);
 	
 	candidate_ctor_v.push_back(a_ctor1);
 	candidate_ctor_v.push_back(a_ctor2);
@@ -884,33 +1007,7 @@ namespace larocv {
     return cluscomp;
   }
   
-  
-  larocv::data::ClusterCompound DefectBreaker::SplitContour(const GEO2D_Contour_t& in_ctor,
-							    geo2d::Vector<float>* start_) {
-    
-    // break, create atomics, associate defects
-    auto cluscomp = BreakContour(in_ctor);
 
-    //need to determine starting point for ordering, find the atomic which has 1 associated defect
-    geo2d::Vector<float> start = !start_ ? _AtomicAnalysis.ChooseStartPoint(cluscomp) : *start_;
-    
-    // order atomics
-    auto const ordered_atom_id_v = _AtomicAnalysis.OrderAtoms(cluscomp,start);
-    
-    // get start/end
-    auto atom_edges_v = _AtomicAnalysis.AtomsEdge(cluscomp, start, ordered_atom_id_v);
-    
-    //do something with start end -- ensure each atomic has start and end point...
-    for(uint atom_idx=0; atom_idx<cluscomp.size(); ++atom_idx) {
-      auto& atom = cluscomp.at(atom_idx);
-      auto& edges = atom_edges_v[atom_idx];
-      atom.add_edge(edges.first);
-      atom.add_edge(edges.second);
-    }
-    
-    return cluscomp;
-    
-  }
 }
 #endif
   

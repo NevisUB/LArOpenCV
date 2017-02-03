@@ -57,7 +57,7 @@ namespace larocv {
       LAROCV_DEBUG() << "Analyzing contour of size " << ctor.size() << std::endl;
       
       // split ctor and create a cluster compound (has defects, atomics, start/end pt)
-      auto cluscomp = _DefectBreaker.SplitContour(ctor);
+      auto cluscomp = _DefectBreaker.BreakContour(ctor);
 
       LAROCV_DEBUG() << "I split this contour into " << cluscomp.size() << " atomics" << std::endl;
       LAROCV_DEBUG() << "Found " << cluscomp.get_defects().size() << " defects for seeds" << std::endl;

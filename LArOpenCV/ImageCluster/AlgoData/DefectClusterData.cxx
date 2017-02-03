@@ -24,7 +24,6 @@ namespace larocv {
       }
       return false;
     }
-    
     const std::vector<size_t>& AtomicContour::associated_defects() const
     { return _defect_id_v; }
 
@@ -37,12 +36,19 @@ namespace larocv {
     void AtomicContour::add_edge(geo2d::Vector<float>& edge)
     { _edges_v.push_back(edge); }
     
-    const std::vector<geo2d::Vector<float>>& AtomicContour::edges()
+    std::vector<geo2d::Vector<float>>& AtomicContour::edges()
     { return _edges_v; }
 
+    /// dqdx setter
+    void AtomicContour::set_dqdx(const std::vector<float>& dqdx) {
+      _dqdx_v = dqdx;
+    }
+    /// dqdx getter
+    const std::vector<float>& AtomicContour::dqdx() {
+      return _dqdx_v;
+    }
     
     ////////////////////////////////////////////////////////////////
-    
     ContourDefect::ContourDefect(const geo2d::Vector<int>& pt_start,
 				 const geo2d::Vector<int>& pt_end,
 				 const geo2d::Vector<int>& pt_defect,
