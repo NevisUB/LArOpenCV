@@ -27,11 +27,10 @@ namespace larocv {
   void ElectronShowerVertexSeed::Configure(const Config_t &pset)
   {
     _part_pxfrac_threshold = pset.get<float>("PixelFracThreshold");
+    _circle_default_radius = pset.get<float>("CircleDefaultRadius",10);//10
 
     _pi_threshold = 5;
     _vertex_min_separation = 3;
-    _circle_default_radius = pset.get<float>("CircleDefaultRadius",10);//10
-
     _xplane_tick_resolution = 3;
     _num_planes = 3;
   }

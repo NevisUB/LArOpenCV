@@ -19,7 +19,7 @@ namespace larocv {
     auto const vertex_seed_algo_name = pset.get<std::string>("VertexSeedsAlgoName","");
     if(!vertex_seed_algo_name.empty()) _vertex_seed_algo_id = this->ID(vertex_seed_algo_name);
   
-    Register(new data::TrackVertexEstimateData);
+    Register(new data::VertexEstimateData);
   }
 
   void TrackVertexEstimate::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -46,7 +46,7 @@ namespace larocv {
     std::vector<std::vector<data::CircleVertex> > vtx2d_vv;
     _algo.CreateTimeVertex3D(img_v,vtx3d_v,vtx2d_vv);
 
-    auto& data = AlgoData<data::TrackVertexEstimateData>(0);
+    auto& data = AlgoData<data::VertexEstimateData>(0);
     
     for(size_t idx=0; idx<vtx3d_v.size(); ++idx)
       data.emplace_back(0,std::move(vtx3d_v[idx]),std::move(vtx2d_vv[idx]));

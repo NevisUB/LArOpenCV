@@ -54,7 +54,7 @@ namespace larocv {
     size_t _num_planes;
     float  _pi_threshold;
     float _xplane_tick_resolution;
-
+    
     std::vector<larocv::data::Vertex3D> _ltrack_vertex_v;
     std::vector<larocv::data::Vertex3D> _vtrack_vertex_v;
     std::vector<larocv::data::Vertex3D> _vedge_vertex_v;

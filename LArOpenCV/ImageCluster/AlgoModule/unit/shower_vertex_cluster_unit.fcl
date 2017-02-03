@@ -1,0 +1,92 @@
+ProcessDriver: {
+
+  Verbosity:    2
+  EnableFilter: true
+  RandomAccess: false
+  ProcessType:  ["LArbysImage"]
+  ProcessName:  ["LArbysImage"]
+  AnaFile:     ""
+
+  IOManager: {
+    Verbosity:   2
+    Name:        "IOManager"
+    IOMode:      0
+    OutFileName: ""
+    InputFiles:  []
+    InputDirs:   []
+    StoreOnlyType: []
+    StoreOnlyName: []
+  }
+
+  ProcessList: {
+    LArbysImage: {
+
+      Verbosity: 0
+      Profile: true
+
+      TrackImageProducer: "trk_test"
+      ShowerImageProducer: "shr_test"
+      
+      Debug: true
+
+      Q2Gray: 2
+      QMin: 0.1
+      QMax: 500
+
+      MatchPlaneWeights: [1.,1.,1.]
+
+      ImageClusterManager: {
+        StoreAlgoData: false  
+        Verbosity: 0
+        Profile:   true
+
+        ClusterAlgoType: ["LinearTrackSeeds","ShowerVertexEstimate","ShowerParticleCluster"]
+        ClusterAlgoName: ["lineartrackseeds","shrvtxest","shrparclus"]
+        EnableWireCheck: false
+          
+        ShowImage: false
+
+        MatchAlgoType: ""
+        MatchAlgoName: ""
+
+        ReClusterAlgoType: ""
+        ReClusterAlgoName: ""
+
+        UseOnlyTwoPlanes: false
+        RequirePlane: 2
+
+        ImageClusterViewer: {
+          Verbosity: 2
+          Width:  800
+          Height: 800
+          MinContourArea: 0
+        }
+
+	lineartrackseeds : {
+	  SingleLinearTrack : {
+          TrackContourSizeMin : 10
+          TrackContourLengthMin : 6.
+          #VertexTrackClusterName : "vtxctor"
+          SeedPlane : [2,0,1]
+	 }
+        }
+
+	shrvtxest : {
+	   Verbosity: 0		  
+            ElectronShowerVertexSeed : {
+	    Verbosity: 0
+	    PixelFracThreshold : 0.9
+	    }
+	    VertexParticleClusterName : ""
+	    LinearTrackSeedsName : "lineartrackseeds"
+	}
+	shrparclus : {
+          ImageSetID : 1
+  	  OneTrackOneShower : {}
+	  ShowerVertexEstimateName: "shrvtxest"
+        }
+      }
+    }
+  }
+}
+

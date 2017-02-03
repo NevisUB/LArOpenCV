@@ -39,7 +39,7 @@ namespace larocv {
     // if given from Refine2DVertex, fill
     if(_track_vertex_estimate_algo_id!=kINVALID_ID && vtx_data._vtx_cluster_v.empty()) {
       
-      auto const& ref_data = AlgoData<data::TrackVertexEstimateData>(_track_vertex_estimate_algo_id,0);
+      auto const& ref_data = AlgoData<data::VertexEstimateData>(_track_vertex_estimate_algo_id,0);
 
       vtx_data._vtx_cluster_v.resize(ref_data.get_vertex().size());
       

@@ -28,6 +28,8 @@ namespace larocv {
     class Refine2DVertexData;
     class TrackVertexEstimateData;
     class SingleTrackArray;
+    class VertexEstimateData;
+    
     /**
        \class Vertex2D
        @brief A simple 2D vertex class with a sense of "goodness" (score, algorithm dependent)
@@ -52,6 +54,7 @@ namespace larocv {
     class Vertex3D {
       friend class Refine2DVertexData;
       friend class TrackVertexEstimateData;
+      friend class VertexEstimateData;
       friend class SingleTrackArray;
     public:
       Vertex3D(size_t id=kINVALID_SIZE) : _id(id) {clear();}

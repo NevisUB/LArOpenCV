@@ -4,6 +4,7 @@
 #include "ShowerVertexEstimate.h"
 #include "LArOpenCV/ImageCluster/AlgoData/LinearTrackClusterData.h"
 #include "LArOpenCV/ImageCluster/AlgoData/VertexClusterData.h"
+#include "LArOpenCV/ImageCluster/AlgoData/VertexEstimateData.h"
 
 namespace larocv {
 
@@ -17,8 +18,8 @@ namespace larocv {
     _algo_seed.set_verbosity(this->logger().level());
     _algo_seed.Configure(pset.get<Config_t>("ElectronShowerVertexSeed"));
     
-    auto algo_name_vertex_track = pset.get<std::string>("VertexTrackClusterName");
-    auto algo_name_linear_track = pset.get<std::string>("LinearTrackClusterName");
+    auto algo_name_vertex_track = pset.get<std::string>("VertexParticleClusterName");
+    auto algo_name_linear_track = pset.get<std::string>("LinearTrackSeedsName");
 
     _algo_id_vertex_track = kINVALID_ALGO_ID;
     _algo_id_linear_track = kINVALID_ALGO_ID;
@@ -29,7 +30,7 @@ namespace larocv {
     if (!algo_name_linear_track.empty())
     _algo_id_linear_track = this->ID( algo_name_linear_track );
     
-    Register(new data::ShowerVertexEstimateData);
+    Register(new data::VertexEstimateData);
   }
 
   void ShowerVertexEstimate::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -49,7 +50,7 @@ namespace larocv {
       auto const& ltrack_data = AlgoData<data::LinearTrackArray>(_algo_id_linear_track, 0);
       _algo_seed.RegisterSeed(ltrack_data);
     }
-
+    
     if ( _algo_id_vertex_track != kINVALID_ALGO_ID ) {
       auto const& vtrack_data = AlgoData<data::VertexClusterArray>(_algo_id_vertex_track, 0);
       _algo_seed.RegisterSeed(img_v, vtrack_data);
@@ -57,8 +58,11 @@ namespace larocv {
 
     auto vtx3d_v = _algo_seed.CreateSeed();
 
+    auto& data = AlgoData<data::VertexEstimateData>(0);
+
     LAROCV_DEBUG() << "Identified " << vtx3d_v.size() << " vertex candidates" << std::endl;
-    
+    for(auto& vtx3d : vtx3d_v)
+      data.emplace_back(2,std::move(vtx3d));
     
     return true;
   }
