@@ -166,14 +166,8 @@ namespace larocv {
 				 const GEO2D_Contour_t& ctor2,
 				 const cv::Mat& img)
   {
-    GEO2D_Contour_t result;
-    GEO2D_Contour_t merged_ctor;
-    merged_ctor.reserve(ctor1.size()+ctor2.size());
-    merged_ctor.insert(merged_ctor.end(), ctor1.begin(), ctor1.end());
-    merged_ctor.insert(merged_ctor.end(), ctor2.begin(), ctor2.end());
-
-    cv::convexHull(cv::Mat(merged_ctor), result);
-
+    auto result = Merge(ctor1,ctor2);
+    
     auto masked_img = MaskImage(img,result,0,true);
 
     GEO2D_ContourArray_t result_v;

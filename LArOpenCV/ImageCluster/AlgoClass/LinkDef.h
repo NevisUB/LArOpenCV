@@ -14,6 +14,7 @@
 #pragma link C++ class larocv::PCACrossing+;
 #pragma link C++ class larocv::LArPlaneGeo+;
 #pragma link C++ class larocv::VertexParticleCluster+;
+#pragma link C++ class larocv::AtomicAnalysis+;
 #pragma link C++ class larocv::PiRange+;
 #pragma link C++ class larocv::SingleLinearTrack+;
 #pragma link C++ class larocv::TrackVertexScan2D+;

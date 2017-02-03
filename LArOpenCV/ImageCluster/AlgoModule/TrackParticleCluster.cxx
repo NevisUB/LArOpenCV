@@ -3,6 +3,7 @@
 
 #include "TrackVertexEstimate.h"
 #include "TrackParticleCluster.h"
+#include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.cxx"
 
 namespace larocv {
 
@@ -10,6 +11,9 @@ namespace larocv {
   static TrackParticleClusterFactory __global_TrackParticleClusterFactory__;
 
   void TrackParticleCluster::_Configure_(const Config_t &pset) {
+
+    _DefectBreaker.Configure(pset);
+
     _VertexParticleCluster.set_verbosity(this->logger().level());
     _VertexParticleCluster.Configure(pset.get<Config_t>("VertexParticleCluster"));
     _VertexParticleCluster.PrintConfig();
@@ -146,8 +150,10 @@ namespace larocv {
 
 	  //calculate the PCA per atomic
 	  LAROCV_DEBUG() << "Found " << pcompound.size() << " atomic(s)!" << std::endl;
-	  for (const auto& atomic : pcompound)
+	  for (auto& atomic : pcompound) {
 	    LAROCV_DEBUG() << "... id " << atomic.id() << " of size " << atomic.size() << std::endl;
+	    atomic.set_pca(CalcPCA(atomic));
+	  }
 	  
 	  pcompound_set.emplace_back(plane,std::move(pcompound));
 	}
@@ -159,7 +165,7 @@ namespace larocv {
     }
     LAROCV_INFO() << "Finished processing all vertex (result size = "
 		  << cluster_data.num_vertex_clusters() << " vertex clusters)" << std::endl;
-    
+
     return true;
   }
   

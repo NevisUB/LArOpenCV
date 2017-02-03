@@ -6,6 +6,7 @@
 #include "LArOpenCV/Core/laropencv_logger.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/AlgoData/DefectClusterData.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
 
 using larocv::GEO2D_Contour_t;
 
@@ -16,41 +17,26 @@ namespace larocv {
   public:
     
     DefectBreaker()   :
+      _AtomicAnalysis() ,
       _min_defect_size    (larocv::kINVALID_INT),
       _hull_edge_pts_split(larocv::kINVALID_INT),
       _n_allowed_breaks   (larocv::kINVALID_INT),
       _logger(nullptr)
+      
     { _logger = &(larocv::logger::get("DBLogger")); }
     
     ~DefectBreaker(){}
     
     void Configure(const Config_t &pset);
+
+
+    //break contour --> create atomics
+    larocv::data::ClusterCompound BreakContour(const GEO2D_Contour_t& in_ctor);
+
     
     //split contour --> break into atomics and define edges
     larocv::data::ClusterCompound SplitContour(const GEO2D_Contour_t& in_ctor,
 					       geo2d::Vector<float>* start_=nullptr);
-    
-    //break contour --> create atomics
-    larocv::data::ClusterCompound BreakContour(const GEO2D_Contour_t& in_ctor);
-    
-    void AssociateDefects(const larocv::data::ClusterCompound& cluscomp,
-			  const larocv::data::AtomicContour& parent,
-			  const larocv::data::ContourDefect& defect,
-			  larocv::data::AtomicContour& child1,
-			  larocv::data::AtomicContour& child2);
-    
-    double DistanceAtom2Point(const larocv::data::AtomicContour& atom, const geo2d::Vector<float>& point) const;
-    
-    geo2d::Vector<float> ChooseStartPoint(larocv::data::ClusterCompound& cluscomp);
-    
-    std::vector<size_t> OrderAtoms(const larocv::data::ClusterCompound& cluster,
-				   const geo2d::Vector<float>& start_) const;
-    
-    std::vector<std::pair<geo2d::Vector<float>,geo2d::Vector<float> > >
-    AtomsEdge(const larocv::data::ClusterCompound& cluster,
-	      const geo2d::Vector<float>& start_,
-	      const std::vector<size_t> atom_order_v) const;
-    
     
     inline const larocv::logger& logger() const
     { return *_logger; }
@@ -72,7 +58,8 @@ namespace larocv {
     geo2d::Line<float> scan_breaker(const GEO2D_Contour_t& ctor, cv::Vec4i defect);
     
   private:
-    
+
+    AtomicAnalysis _AtomicAnalysis;
     int _min_defect_size;
     int _hull_edge_pts_split;
     int _n_allowed_breaks;
