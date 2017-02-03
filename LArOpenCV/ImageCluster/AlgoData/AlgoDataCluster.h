@@ -164,8 +164,12 @@ namespace larocv {
       // const geo2d::Vector<float>& start_pt() const;
       // /// queries 2D coordinate point that corresponds to an atom's start position
       // const geo2d::Vector<float>& atom_start_pt(size_t atom_index) const;
-      // /// queries the end point
-      // const geo2d::Vector<float>& end_pt() const;
+
+      /// sets the end point
+      void set_end_pt(geo2d::Vector<float>& ep);
+      /// queries the end point
+      const geo2d::Vector<float>& end_pt() const;
+
       // /// queries the end point
       // const geo2d::Vector<float>& atom_end_pt(const size_t atom_index) const;
       // /// resolution of dx
@@ -183,8 +187,10 @@ namespace larocv {
       // std::vector<size_t> _start_index_v;
       // /// atomic cluster's boundary (start) location in 2D coordinate system
       // std::vector<geo2d::Vector<float> > _start_pt_v;
-      // /// end point of ALL atoms' chain
-      // geo2d::Vector<float> _end_pt;
+
+      /// end point of ALL atoms' chain
+      geo2d::Vector<float> _end_pt;
+
       // /// atomic cluster's id array
       // std::vector<size_t> _atom_id_v;
       

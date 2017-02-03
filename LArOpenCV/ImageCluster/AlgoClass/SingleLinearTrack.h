@@ -54,8 +54,6 @@ namespace larocv {
 
     void FindLinearTrack(const std::vector<std::vector<larocv::data::LinearTrack2D> >& strack_vv);
 
-    geo2d::Line<float> calc_pca(const GEO2D_Contour_t & ctor) const;
-    
     LArPlaneGeo _geo;
     bool _edges_from_mean;
     float _minimum_neighbor_distance;

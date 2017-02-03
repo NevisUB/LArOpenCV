@@ -129,9 +129,6 @@ namespace larocv {
     
     // loop over vtx
     for(auto& pclusarray : vtx_cluster_v) {
-
-      // //particle cluster array
-      // data::ParticleCompoundArray pcompound_set;
       
       // loop over planes
       for(size_t plane = 0 ; plane < pclusarray.num_planes(); ++plane) {
@@ -182,8 +179,10 @@ namespace larocv {
 	    atomic.set_dqdx(atom_dqdx);
 	    
 	    // refine the last atomic end point
-	    if (atomic.id() == ordered_atom_id_v.back())
+	    if (atomic.id() == ordered_atom_id_v.back()) {
 	      _AtomicAnalysis.RefineAtomicEndPoint(img_v[plane],atomic);
+	      pcompound.set_end_pt(atomic.edges()[1]);
+	    }
 
 	    pcluster = pcompound;
 	    

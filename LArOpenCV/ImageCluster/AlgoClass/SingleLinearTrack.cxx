@@ -7,38 +7,10 @@
 #include "Geo2D/Core/spoon.h"
 #include <map>
 #include <array>
+#include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
+
 namespace larocv {
 
-  geo2d::Line<float> SingleLinearTrack::calc_pca(const GEO2D_Contour_t & ctor) const{
-    //LAROCV_DEBUG() << "Calculating PCA for: " << ctor.size() << " points" << std::endl;
-    
-    cv::Mat ctor_pts(ctor.size(), 2, CV_32FC1); //32 bit precision is fine
-
-    //std::cout << "{\n";
-    for (unsigned i = 0; i < ctor_pts.rows; ++i) {
-      //std::cout << ctor[i] << std::endl;
-      ctor_pts.at<float>(i, 0) = ctor[i].x;
-      ctor_pts.at<float>(i, 1) = ctor[i].y;
-    }
-    //std::cout << "}\n";
-    
-    cv::PCA pca_ana(ctor_pts, cv::Mat(), CV_PCA_DATA_AS_ROW,0);
-
-    auto& meanx=pca_ana.mean.at<float>(0,0);
-    auto& meany=pca_ana.mean.at<float>(0,1);
-
-    auto& eigenPx=pca_ana.eigenvectors.at<float>(0,0);
-
-    if (eigenPx==0) throw geo2d::spoon("Invalid Px");
-
-    auto& eigenPy=pca_ana.eigenvectors.at<float>(0,1);
-
-    //LAROCV_DEBUG() << "meanx : " << meanx << "... meany: " << meany << "... ePx: " << eigenPx << "... ePy: " << eigenPy << std::endl;
-    
-    geo2d::Line<float> pca_principle(geo2d::Vector<float>(meanx,meany),
-				     geo2d::Vector<float>(eigenPx,eigenPy));
-    return pca_principle;
-  }
   
   void SingleLinearTrack::Configure(const Config_t &pset)
   {
@@ -134,7 +106,7 @@ namespace larocv {
     geo2d::Line<float> pca_line;
     bool valid_pca = true;
     try {
-      pca_line = calc_pca(inside_pts);
+      pca_line = CalcPCA(inside_pts);
     } catch(geo2d::spoon) {
       //pca line gave infinite slope
       valid_pca=false;
@@ -232,18 +204,22 @@ namespace larocv {
     for(auto const& ctor : parent_ctor_v) {
       bool used=false;
       geo2d::Vector<float> edge1, edge2;
+      LAROCV_DEBUG() << "Searching edges" << std::endl;
       FindEdges(thresh_img,ctor,edge1,edge2);
       if(ctor.size() < _min_size_track_ctor && geo2d::dist(edge1,edge2) < _min_length_track_ctor) { // ||
 	LAROCV_DEBUG() << "Ignoring too-small contour @ size = " << ctor.size()
 		       << " and length " << geo2d::dist(edge1,edge2) << std::endl;
 	continue;
       }
+      LAROCV_DEBUG() << "Found edge1 " << edge1 << "... edge2: " << edge2 << std::endl;
       // check if this contour is a part of clustered interaction
-      for(auto const& vtx2d : _registered_vtx2d_vv.at(plane)) {
-	auto dist = ::cv::pointPolygonTest(ctor, vtx2d, true);
-	if(dist>=0) { used = true; break; }
-	dist *= -1.;
-	if(dist < _minimum_neighbor_distance) { used = true; break; }
+      if ( plane < _registered_vtx2d_vv.size() ) {
+	for(auto const& vtx2d : _registered_vtx2d_vv.at(plane)) {
+	  auto dist = ::cv::pointPolygonTest(ctor, vtx2d, true);
+	  if(dist>=0) { used = true; break; }
+	  dist *= -1.;
+	  if(dist < _minimum_neighbor_distance) { used = true; break; }
+	}
       }
       // if(used) {
       // 	LAROCV_DEBUG() << "Ignoring contour too-close to an alredy-found vertex" << std::endl;
