@@ -30,6 +30,7 @@ namespace larocv {
     _mask_min_radius = 3;
     _refine_polar_cluster = true;
     _refine_cartesian_cluster = true;
+    _refine_merge = false;
   }
 
   void
@@ -70,6 +71,7 @@ namespace larocv {
     _refine_cartesian_cluster = pset.get<bool>("RefineCartesianCluster",true);
     _mask_fraction_radius     = pset.get<float>("MaskFractionRadius",-1.);
     _mask_min_radius          = pset.get<float>("MaskMinRadius",3);
+    _refine_merge             = pset.get<bool>("RefineMerge",false);
   }
 
   void
@@ -137,7 +139,7 @@ namespace larocv {
     // Threshold
     ::cv::Mat thresh_img;
     LAROCV_DEBUG() << "Thresholding to pi threshold: " << _pi_threshold << std::endl;
-    ::cv::threshold(img, thresh_img, _pi_threshold, 255, 0);//CV_THRESH_BINARY);
+    ::cv::threshold(img, thresh_img, _pi_threshold, 255,0); //CV_THRESH_BINARY);
 
     /*
     // Using dilate/blur/threshold for super cluster
@@ -155,8 +157,8 @@ namespace larocv {
 
     // Create seed clusters
     LAROCV_DEBUG() << "Masking region @ " << vtx2d.center << " rad: " << vtx2d.radius << std::endl;
-    float rad = vtx2d.radius;
-    geo2d::Circle<float> mask_region(vtx2d.center,rad);
+
+    geo2d::Circle<float> mask_region(vtx2d.center,vtx2d.radius);
 
     auto img_circle = MaskImage(thresh_img, mask_region, 0, false);
 
@@ -225,7 +227,14 @@ namespace larocv {
       else if(child_idx == kINVALID_SIZE)
 	res[xs_idx] = _seed_cluster_v[seed_idx];
       else
-	res[xs_idx] = std::move(MergeAndRefine(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx],thresh_img));
+	res[xs_idx] = _refine_merge ?
+	  std::move(MergeAndRefine(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx],thresh_img))
+	  :
+	  std::move(Merge(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx]));
+
+
+	  
+	
     }
     
     return res;

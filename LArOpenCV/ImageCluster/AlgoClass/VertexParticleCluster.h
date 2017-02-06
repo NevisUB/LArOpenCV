@@ -61,6 +61,8 @@ namespace larocv {
     bool   _refine_cartesian_cluster;
     bool   _use_theta_half_angle;
     double _contour_dist_threshold;
+
+    bool _refine_merge;
     
   private:
 
