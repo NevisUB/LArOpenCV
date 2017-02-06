@@ -166,23 +166,89 @@ namespace larocv {
 				 const GEO2D_Contour_t& ctor2,
 				 const cv::Mat& img)
   {
+    LAROCV_SDEBUG() << "Merge and refine..." << std::endl;
+    LAROCV_SDEBUG() << "... received 2 contours sizes " << ctor1.size() << ", " << ctor2.size() << std::endl;
     auto result = Merge(ctor1,ctor2);
-    
-    auto masked_img = MaskImage(img,result,0,true);
+    auto masked_img = MaskImage(img,result,0,false);
 
     GEO2D_ContourArray_t result_v;
     std::vector<cv::Vec4i> cv_hierarchy_v;
-    cv::findContours(masked_img,result_v,cv_hierarchy_v,CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE); 
+    cv::findContours(masked_img,result_v,cv_hierarchy_v,CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    LAROCV_SDEBUG() << "... found " << result_v.size() << " contours in mask" << std::endl;
+    
     if (!result_v.size()) throw larbys("No refined contour can be determined");
-    if (result_v.size()==1) return result_v[0];
-
+    if (result_v.size()==1) {
+      LAROCV_SDEBUG() << "... returning contour of size " << result_v[0].size() << std::endl;
+      return result_v[0];
+    }
+    
     uint size=0;
     int idx=-1;
-    for(uint i=0;i<result_v.size();++i) { if (result_v.size() > size) { idx=i; size=result_v.size(); } }
+    for(uint i=0;i<result_v.size();++i) {
+      if (result_v.size() > size)
+	{ idx=i; size=result_v.size(); }
+    }
+    
     if(idx<0) throw larbys("No refined contour can be determined");
-      
+
+    LAROCV_SDEBUG() << "... returning contour of size " << result_v[idx].size() << std::endl;
+    
     return result_v[idx];
   }
+
+
+  GEO2D_Contour_t MergeByMask(const GEO2D_Contour_t& ctor1,
+			      const GEO2D_Contour_t& ctor2,
+			      const cv::Mat& img)
+  {
+    
+    LAROCV_SDEBUG() << "Merging by mask..." << std::endl;
+      
+    GEO2D_ContourArray_t ctor_v;
+    ctor_v.resize(2);
+    ctor_v[0] = ctor1;
+    ctor_v[1] = ctor2;
+    LAROCV_SDEBUG() << "... received 2 contours sizes " << ctor1.size() << ", " << ctor2.size() << std::endl;
+    
+    auto masked_img = MaskImage(img,ctor_v,0,false);
+
+    if(logger().level() == msg::kDEBUG) {
+      static int img_ctr=-1;
+      img_ctr+=1;
+      std::stringstream ss1,ss2;
+      ss1 << "orig_img_" << img_ctr << ".png";
+      ss2 << "mask_img_" << img_ctr << ".png";
+      cv::imwrite(ss1.str().c_str(),img);
+      cv::imwrite(ss2.str().c_str(),masked_img);
+    }
+    
+    GEO2D_ContourArray_t result_v;
+    std::vector<cv::Vec4i> cv_hierarchy_v;
+
+    cv::findContours(masked_img,result_v,cv_hierarchy_v,CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+
+    LAROCV_SDEBUG() << "... found " << result_v.size() << " contours in mask" << std::endl;
+    
+    if (!result_v.size()) throw larbys("No refined contour can be determined");
+    if (result_v.size()==1) {
+      LAROCV_SDEBUG() << "... returning contour of size " << result_v[0].size() << std::endl;
+      return result_v[0];
+    }
+    
+    uint size=0;
+    int idx=-1;
+    for(uint i=0;i<result_v.size();++i) {
+      if (result_v.size() > size)
+	{ idx=i; size=result_v.size(); }
+    }
+    
+    if( idx < 0) throw larbys("No refined contour can be determined");
+
+    LAROCV_SDEBUG() << "... returning contour of size " << result_v[idx].size() << std::endl;
+    
+    return result_v[idx];
+  }
+  
 
   
   geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor,float EPS) {

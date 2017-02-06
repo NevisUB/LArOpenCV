@@ -30,7 +30,7 @@ namespace larocv {
     _mask_min_radius = 3;
     _refine_polar_cluster = true;
     _refine_cartesian_cluster = true;
-    _refine_merge = false;
+    _merge_by_mask = false;
   }
 
   void
@@ -71,7 +71,7 @@ namespace larocv {
     _refine_cartesian_cluster = pset.get<bool>("RefineCartesianCluster",true);
     _mask_fraction_radius     = pset.get<float>("MaskFractionRadius",-1.);
     _mask_min_radius          = pset.get<float>("MaskMinRadius",3);
-    _refine_merge             = pset.get<bool>("RefineMerge",false);
+    _merge_by_mask            = pset.get<bool>("MergeByMask",true);
   }
 
   void
@@ -227,14 +227,9 @@ namespace larocv {
       else if(child_idx == kINVALID_SIZE)
 	res[xs_idx] = _seed_cluster_v[seed_idx];
       else
-	res[xs_idx] = _refine_merge ?
-	  std::move(MergeAndRefine(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx],thresh_img))
-	  :
-	  std::move(Merge(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx]));
-
-
-	  
-	
+      res[xs_idx] = _merge_by_mask ?
+	std::move(MergeByMask(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx],thresh_img)) :
+	std::move(Merge(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx]));
     }
     
     return res;

@@ -49,7 +49,11 @@ namespace larocv {
   GEO2D_Contour_t MergeAndRefine(const GEO2D_Contour_t& ctor1,
 				 const GEO2D_Contour_t& ctor2,
 				 const cv::Mat& img);
-
+  
+  GEO2D_Contour_t MergeByMask(const GEO2D_Contour_t& ctor1,
+			      const GEO2D_Contour_t& ctor2,
+			      const cv::Mat& img);
+  
   
   geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor,float EPS=1e-6);
   
