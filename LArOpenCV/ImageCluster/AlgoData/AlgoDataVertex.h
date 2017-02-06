@@ -1,17 +1,3 @@
-/**
- * \file Vertex.h
- *
- * \ingroup AlgoData
- * 
- * \brief Class def header for a class Vertex2D and Vertex3D
- *
- * @author kazuhiro
- */
-
-/** \addtogroup AlgoData
-
-    @{*/
-
 #ifndef __ALGODATA_VERTEX_H__
 #define __ALGODATA_VERTEX_H__
 

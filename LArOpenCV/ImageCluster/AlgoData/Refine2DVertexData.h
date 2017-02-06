@@ -19,7 +19,7 @@
 #include "Geo2D/Core/Line.h"
 #include "Geo2D/Core/Circle.h"
 #include "Geo2D/Core/BoundingBox.h"
-#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataVertex.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataParticle.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoDataBase.h"
 namespace larocv {
 

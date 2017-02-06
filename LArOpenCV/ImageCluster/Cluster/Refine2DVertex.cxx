@@ -11,7 +11,7 @@
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/SpectrumAnalysis.h"
-#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataVertex.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataParticle.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Refine2DVertexData.h"
 #include <array>
 #include <map>

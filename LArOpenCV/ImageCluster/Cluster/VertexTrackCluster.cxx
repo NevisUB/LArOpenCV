@@ -5,6 +5,7 @@
 #include "Refine2DVertex.h"
 #include "Geo2D/Core/Geo2D.h"
 
+
 namespace larocv {
 
   /// Global larocv::VertexTrackClusterFactory to register AlgoFactory

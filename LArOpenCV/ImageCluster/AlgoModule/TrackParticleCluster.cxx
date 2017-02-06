@@ -35,7 +35,7 @@ namespace larocv {
   {
     // Algorithm data
     auto& vtx_data = AlgoData<data::VertexClusterArray>(0);
-    
+
     // if given from Refine2DVertex, fill
     if(_track_vertex_estimate_algo_id!=kINVALID_ID && vtx_data._vtx_cluster_v.empty()) {
       
@@ -146,7 +146,7 @@ namespace larocv {
 	  // break this particle cluster
 	  auto pcompound = _DefectBreaker.BreakContour(pcluster._ctor);
 
-    	  // order atomics in thie particle cluster
+    	  // order atomics in this particle cluster
 	  auto const ordered_atom_id_v = _AtomicAnalysis.OrderAtoms(pcompound,circle_vtx_c);
     
 	  // get start/end points for this atomic
@@ -166,7 +166,7 @@ namespace larocv {
 	    
 	    // calculate the PCA per atomic
 	    atomic.set_pca(CalcPCA(atomic));
-
+	    
 	    // calculate the dQdX per atomic
 	    std::vector<float> atom_dqdx;
 	    try { 
@@ -183,22 +183,13 @@ namespace larocv {
 	      _AtomicAnalysis.RefineAtomicEndPoint(img_v[plane],atomic);
 	      pcompound.set_end_pt(atomic.edges()[1]);
 	    }
-
-	    pcluster = pcompound;
 	    
-	  } // end this atomic
-
-	  // refine the last atom's end point
-	  // pcompound_set.emplace_back(plane,std::move(pcompound));
+	    pcluster = pcompound;
+	  } 
 	}
 	LAROCV_DEBUG() << "End clusters on plane " << plane << std::endl;
       }
-      // LAROCV_DEBUG() << "End vertex id " << vtx_cluster.id() << " with pcompound array " << pcompound_set.id() << std::endl;
-      // record
-      // cluster_data.move(vtx_cluster.id(),std::move(pcompound_set));
     }
-    // LAROCV_INFO() << "Finished processing all vertex (result size = "
-    // 		  << cluster_data.num_vertex_clusters() << " vertex clusters)" << std::endl;
     
     return true;
   } // end _PostProcess_
