@@ -49,7 +49,8 @@ namespace larocv {
 				    GEO2D_Contour_t& ctor1,
 				    GEO2D_Contour_t& ctor2,
 				    const geo2d::Line<float>& line) {
-    
+    LAROCV_DEBUG() << "Attempting contour split with line pt: " << line.pt << "... dir: " << line.dir << std::endl;
+
     //get the two intersection points of this contour and this line
     //one of these points is presumably on the contour
     //the other needs to be extended through the contour, and calculated
@@ -88,6 +89,7 @@ namespace larocv {
       
       geo2d::Vector<float> p3(min_x,line.y(min_x));
       geo2d::Vector<float> p4(max_x,line.y(max_x));
+      LAROCV_DEBUG() << "\t... made p3: " << p3 << "-> p4: " << p4 << std::endl;
       
       span_s.pt1 = p3;
       span_s.pt2 = p4;
@@ -95,9 +97,36 @@ namespace larocv {
       // intersection points for the two segments, one I made
       // and the other is the contour itself
       geo2d::Vector<float> ip(0,0);
+
+      bool edge_inter=false;
+      if (p3 == p1) {
+	ip = p1;
+	LAROCV_DEBUG() << "... intersection at p1-p3 edge detected" << std::endl;
+	edge_inter=true;
+      }
+      else if (p3 == p2) {
+	ip = p2;
+	LAROCV_DEBUG() << "... intersection at p2-p3 edge detected" << std::endl;
+	edge_inter=true;
+      }
+      else if (p4 == p1) {
+	ip = p1;
+	LAROCV_DEBUG() << "... intersection at p1-p4 edge detected" << std::endl;
+	edge_inter=true;
+      }
+      else if (p4 == p2) {
+	ip = p2;
+	LAROCV_DEBUG() << "... intersection at p2-p3 edge detected" << std::endl;
+	edge_inter=true;
+      }
+
       
       // do they intersect
-      if ( ! geo2d::IntersectionPoint(ctor_s,span_s,ip) ) continue;
+      if ( ! geo2d::IntersectionPoint(ctor_s,span_s,ip) ) {
+	if (edge_inter) LAROCV_CRITICAL() << "Edges are the same but intersection is faulty" << std::endl;
+	else continue;
+      }
+      LAROCV_DEBUG() << "!! Intersection identified !!" << std::endl;
       
       //they intersect, cast to int
       cv::Point inter_pt(ip.x,ip.y);
