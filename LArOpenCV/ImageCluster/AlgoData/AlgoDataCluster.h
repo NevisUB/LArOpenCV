@@ -143,6 +143,10 @@ namespace larocv {
       void associate(size_t atom_id, size_t defect_id);
       /// retrieve a list of atomic clusters
       const std::vector<larocv::data::AtomicContour>& get_atoms() const;
+      /// set the atomic ordering
+      void set_atomic_order(std::vector<size_t> atom_idx_v);
+      /// retreive the ordered atomics
+      std::vector<larocv::data::AtomicContour*> get_ordered_atoms();
       /// retrieve a list of defects
       const std::vector<larocv::data::ContourDefect>& get_defects() const;
       /// retrieve an atomic cluster by id
@@ -176,9 +180,9 @@ namespace larocv {
       // const double dx_resolution() const { return _dx_resolution; }
       
     protected:
-      std::vector< ContourDefect > _ctor_defect_v; ///< a list of contour defect, ordered by their unique ID
+      std::vector<ContourDefect> _ctor_defect_v; ///< a list of contour defect, ordered by their unique ID
       size_t _cluster_id; ///< unique ID associated with original cluster
-      
+      std::vector<size_t> _ordered_index_v;
       // /// unique ID (should respect Particle cluster id)
       // // size_t _cluster_id;
       // /// resolution of dx
