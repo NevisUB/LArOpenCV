@@ -23,10 +23,12 @@ namespace larocv {
 
   void OneTrackOneShower::Configure(const Config_t &pset)
   {
-
+    auto this_verbosity = (msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level())));
+    this->set_verbosity(this_verbosity);
     _par_algo.Configure(pset);
     _par_algo._pi_threshold = 5;
-    
+    _par_algo.set_verbosity(this_verbosity);
+      
     _pi_threshold = 5;
     _circle_default_radius = pset.get<float>("CircleDefaultRadius",10);//10
 
