@@ -14,7 +14,7 @@ namespace larocv {
     _min_defect_size      = pset.get<int>("MinDefectSize",5);
     _hull_edge_pts_split  = pset.get<int>("NHullEdgePoints",50);
     _n_allowed_breaks     = pset.get<int>("NAllowedBreaks",10);
-    int log_level         = pset.get<int>("Verbosity",0);
+    int log_level         = pset.get<int>("Verbosity",2);
     _logger->set((larocv::msg::Level_t)log_level);
   }
   
@@ -123,8 +123,8 @@ namespace larocv {
       
       // do they intersect
       if ( ! geo2d::IntersectionPoint(ctor_s,span_s,ip) ) {
-	if (edge_inter) LAROCV_CRITICAL() << "Edges are the same but intersection is faulty" << std::endl;
-	else continue;
+	if (edge_inter) {LAROCV_INFO() << "Edges are the same but intersection is faulty" << std::endl;}
+	else {continue;}
       }
       LAROCV_DEBUG() << "!! Intersection identified !!" << std::endl;
       
