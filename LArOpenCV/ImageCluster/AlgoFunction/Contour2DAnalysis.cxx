@@ -218,7 +218,64 @@ namespace larocv {
     return pca_principle;
   }
 
-  
+  double AreaOverlap(const GEO2D_Contour_t& ctr0, const GEO2D_Contour_t& ctr1)
+  {
+    int rows, cols;
+    rows = cols = 0;
+    for(auto const& pt : ctr0) {
+      if(rows < pt.y) rows = (int)(pt.y)+1;
+      if(cols < pt.x) cols = (int)(pt.x)+1;
+    }
+    for(auto const& pt : ctr1) {
+      if(rows < pt.y) rows = (int)(pt.y)+1;
+      if(cols < pt.x) cols = (int)(pt.x)+1;
+    }
+    cv::Mat img0(rows,cols,CV_8UC1,cv::Scalar(0));
+    cv::drawContours(img0, ctr0, -1, cv::Scalar(255), 1, cv::LINE_8);
+
+    cv::Mat img1(rows,cols,CV_8UC1,cv::Scalar(0));
+    cv::drawContours(img1, ctr1, -1, cv::Scalar(255), 1, cv::LINE_8);
+
+    cv::Mat res;
+    cv::bitwise_and(img0,img1,res);
+
+    return cv::countNonZero(res);
+  }
+
+  size_t FindContainingContour(const GEO2D_ContourArray_t& contour_v, const GEO2D_Contour_t& ctr)
+  {
+    size_t res = kINVALID_SIZE;
+    double max_area = -1;
+    for(size_t idx = 0; idx<contour_v.size(); ++idx) {
+      auto area_overlap = AreaOverlap(contour_v[idx],ctr);
+      if(area_overlap>max_area) {
+	max_area = area_overlap;
+	res = idx;
+      }
+    }
+    return res;
+  }
+
+  size_t FindContainingContour(const GEO2D_ContourArray_t& contour_v, const geo2d::Vector<float>& pt)
+  {
+    size_t parent_ctor_id   = kINVALID_SIZE;
+    size_t parent_ctor_size = 0;
+    double dist2vtx = -1e9;
+    for(size_t ctor_id=0; ctor_id < contour_v.size(); ++ctor_id){
+      auto const& ctor = contour_v[ctor_id];
+      LAROCV_SDEBUG() << "ctor id: " << ctor_id << std::endl;
+      auto dist = ::cv::pointPolygonTest(ctor, pt, true);
+      LAROCV_SDEBUG() << "    dist: " << dist << std::endl;
+      if(dist < dist2vtx) continue;
+      if(dist2vtx >=0 && parent_ctor_size > ctor.size()) continue;
+      parent_ctor_id = ctor_id;
+      parent_ctor_size = ctor.size();
+      dist2vtx = dist;
+      LAROCV_SDEBUG() << "    size: " << ctor.size() << std::endl;
+    }
+    LAROCV_SINFO() << "Vertex @ " << pt << " belongs to super cluster id " << parent_ctor_id << std::endl;
+    return parent_ctor_id;
+  }  
   
 }
 #endif

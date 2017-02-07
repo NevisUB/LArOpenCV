@@ -49,9 +49,14 @@ namespace larocv {
   GEO2D_Contour_t MergeAndRefine(const GEO2D_Contour_t& ctor1,
 				 const GEO2D_Contour_t& ctor2,
 				 const cv::Mat& img);
-
   
   geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor,float EPS=1e-6);
+
+  double AreaOverlap(const GEO2D_Contour_t& ctr0, const GEO2D_Contour_t& ctr1);
+
+  size_t FindContainingContour(const GEO2D_ContourArray_t& contour_v, const GEO2D_Contour_t& ctr);
+
+  size_t FindContainingContour(const GEO2D_ContourArray_t& contour_v, const geo2d::Vector<float>& pt);
   
 }
 #endif

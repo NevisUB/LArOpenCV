@@ -72,55 +72,10 @@ namespace larocv {
     _mask_min_radius          = pset.get<float>("MaskMinRadius",3);
   }
 
-  void
-  VertexParticleCluster::CreateSuperCluster(const ::cv::Mat& img)
-  {
-    LAROCV_DEBUG() << std::endl;
-    //
-    // Analyze fraction of pixels clustered
-    // 0) find a contour that contains the subject 2D vertex, and find allcontained non-zero pixels inside
-    // 1) per particle cluster count # of pixels from 0) that is contained inside
-
-    auto img_copy = img.clone();
-    
-    _super_cluster_v.clear();
-    std::vector<::cv::Vec4i> cv_hierarchy_v;
-    ::cv::findContours(img_copy, _super_cluster_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-    LAROCV_INFO() << "Created " << _super_cluster_v.size()
-		  << " super-set contours from image (rows,cols) = (" << img_copy.rows << "," << img_copy.cols << ")" << std::endl;
-    if(this->logger().level() == msg::kDEBUG) {
-      for(size_t i=0; i<_super_cluster_v.size(); ++i)
-	LAROCV_DEBUG() << "    Super contour " << i
-		       << " ... " << _super_cluster_v[i].size() << " contour points" << std::endl;
-    }
-  }
-
-  size_t
-  VertexParticleCluster::FindSuperCluster(const ::geo2d::Vector<float>& vtx2d) const
-  {
-    size_t parent_ctor_id   = kINVALID_SIZE;
-    size_t parent_ctor_size = 0;
-    double dist2vtx = -1e9;
-    LAROCV_DEBUG() << std::endl;
-    for(size_t ctor_id=0; ctor_id < _super_cluster_v.size(); ++ctor_id){
-      auto const& ctor = _super_cluster_v[ctor_id];
-      LAROCV_DEBUG() << "ctor id: " << ctor_id << std::endl;
-      auto dist = ::cv::pointPolygonTest(ctor, vtx2d, true);
-      LAROCV_DEBUG() << "    dist: " << dist << std::endl;
-      if(dist < dist2vtx) continue;
-      if(dist2vtx >=0 && parent_ctor_size > ctor.size()) continue;
-      parent_ctor_id = ctor_id;
-      parent_ctor_size = ctor.size();
-      dist2vtx = dist;
-      LAROCV_DEBUG() << "    size: " << ctor.size() << std::endl;
-    }
-    LAROCV_INFO() << "Vertex @ " << vtx2d << " belongs to super cluster id " << parent_ctor_id << std::endl;
-    return parent_ctor_id;
-  }
-
   GEO2D_ContourArray_t
   VertexParticleCluster::CreateParticleCluster(const ::cv::Mat& img,
-					       const data::CircleVertex& vtx2d)
+					       const data::CircleVertex& vtx2d,
+					       const GEO2D_Contour_t& super_cluster)
   {
     if(this->logger().level() == ::larocv::msg::kDEBUG) {
       std::stringstream ss0;
@@ -147,12 +102,6 @@ namespace larocv {
     ::cv::blur(blur_img,blur_img,::cv::Size(_blur_size,_blur_size));
     */
     
-    // Make super cluster
-    CreateSuperCluster(thresh_img);
-
-    auto super_cluster_id = FindSuperCluster(vtx2d.center);
-    if(super_cluster_id == kINVALID_SIZE) return res;
-
     // Create seed clusters
     LAROCV_DEBUG() << "Masking region @ " << vtx2d.center << " rad: " << vtx2d.radius << std::endl;
     float rad = vtx2d.radius;
@@ -169,7 +118,7 @@ namespace larocv {
     auto img_rest = MaskImage(thresh_img, mask_region, 0, true);
     
     // Apply further mask to exclude outside super contour
-    img_rest = MaskImage(img_rest, _super_cluster_v[super_cluster_id], 0, false);
+    img_rest = MaskImage(img_rest, super_cluster, 0, false);
 
     // Find contours outside circle
     _child_cluster_v.clear();

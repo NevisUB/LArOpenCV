@@ -3,7 +3,12 @@
 
 #include "TrackVertexEstimate.h"
 #include "TrackParticleCluster.h"
-#include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.cxx"
+#include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
+#include "LArOpenCV/ImageCluster/AlgoData/DefectClusterData.h"
+#include "LArOpenCV/ImageCluster/AlgoData/TrackParticleClusterData.h"
+#include "LArOpenCV/ImageCluster/AlgoData/VertexClusterData.h"
+
+#include "LArOpenCV/ImageCluster/AlgoData/ContourArrayData.h"
 
 namespace larocv {
 
@@ -20,8 +25,12 @@ namespace larocv {
     _VertexParticleCluster.PrintConfig();
 
     _pi_threshold = _VertexParticleCluster._pi_threshold;
+    
     auto const vtx_algo_name = pset.get<std::string>("TrackVertexEstimateAlgo");
     _track_vertex_estimate_algo_id = this->ID(vtx_algo_name);
+
+    auto const scluster_algo_name = pset.get<std::string>("TrackSuperClusterAlgo");
+    _track_super_cluster_algo_id = this->ID(scluster_algo_name);
 
     _contour_pad = pset.get<float>("ContourPad",0.);
 
@@ -55,6 +64,7 @@ namespace larocv {
 
     // Run clustering for this plane & store
     auto const plane = meta.plane();
+    auto const& super_cluster_v = AlgoData<data::ContourArrayData>(_track_super_cluster_algo_id,plane);
     
     for(size_t vtx_id = 0; vtx_id < vtx_data._vtx_cluster_v.size(); ++vtx_id) {
       
@@ -62,28 +72,33 @@ namespace larocv {
       auto const& circle_vtx = vtx_cluster.get_circle_vertex(plane);
       LAROCV_DEBUG() << "Vertex ID " << vtx_id << " plane " << plane
 		     << " CircleVertex @ " << circle_vtx.center << " w/ R = " << circle_vtx.radius << std::endl;
+
+      // Find corresponding super cluster
+      auto const super_cluster_id = FindContainingContour(super_cluster_v, circle_vtx.center);
+      if(super_cluster_id == kINVALID_SIZE) {
+	LAROCV_WARNING() << "Skipping Vertex ID " << vtx_id << " on plane " << plane << " as no super-cluster found..." << std::endl;
+	continue;
+      }
       
       // Create track contours from the vertex point
-      auto contour_v = _VertexParticleCluster.CreateParticleCluster(img,circle_vtx);
+      auto contour_v = _VertexParticleCluster.CreateParticleCluster(img,circle_vtx,super_cluster_v[super_cluster_id]);
 
       //
       // Analyze fraction of pixels clustered
       // 0) find a contour that contains the subject 2D vertex, and find allcontained non-zero pixels inside
       // 1) per track cluster count # of pixels from 0) that is contained inside
 
-      auto const parent_ctor_id = _VertexParticleCluster.FindSuperCluster(circle_vtx.center);
       geo2d::VectorArray<int> parent_points;
-      if(parent_ctor_id != kINVALID_SIZE) {
-	auto const& parent_ctor = _VertexParticleCluster.SuperClusters()[parent_ctor_id];
-	geo2d::VectorArray<int> points;
-	findNonZero(img, points);
-	parent_points.reserve(points.size());
-	for(auto const& pt : points) {
-	  auto dist = ::cv::pointPolygonTest(parent_ctor,pt,true);
-	  if(dist<-1.0*_contour_pad) continue;
-	  parent_points.push_back(pt);
-	}
+      auto const& parent_ctor = super_cluster_v[super_cluster_id];
+      geo2d::VectorArray<int> points;
+      findNonZero(img, points);
+      parent_points.reserve(points.size());
+      for(auto const& pt : points) {
+	auto dist = ::cv::pointPolygonTest(parent_ctor,pt,true);
+	if(dist<-1.0*_contour_pad) continue;
+	parent_points.push_back(pt);
       }
+
       vtx_cluster.set_num_pixel(plane,parent_points.size());
 
       LAROCV_INFO() << "# non-zero pixels " << parent_points.size()

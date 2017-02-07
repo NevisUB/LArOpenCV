@@ -27,14 +27,8 @@ namespace larocv {
     /// Main function to create particle cluster using polar coordinate
     std::vector<GEO2D_Contour_t>
     CreateParticleCluster(const ::cv::Mat& img,
-			  const data::CircleVertex& vtx2d);
-
-    /// Find the super cluster that contains this vtx
-    size_t FindSuperCluster(const ::geo2d::Vector<float>& vtx2d) const;
-
-    /// Access to super clusters
-    const GEO2D_ContourArray_t&
-    SuperClusters() const { return _super_cluster_v; }
+			  const data::CircleVertex& vtx2d,
+			  const GEO2D_Contour_t& super_cluster);
 
     /// Access to seed clusters
     const GEO2D_ContourArray_t&
@@ -64,13 +58,10 @@ namespace larocv {
     
   private:
 
-    void CreateSuperCluster(const ::cv::Mat& img);
-
     GEO2D_ContourArray_t
     ParticleHypothesis(const ::cv::Mat& img,
 		       const data::CircleVertex& vtx);
     
-    GEO2D_ContourArray_t _super_cluster_v;
     GEO2D_ContourArray_t _seed_cluster_v;
     GEO2D_ContourArray_t _child_cluster_v;
     PiRange _prange;

@@ -40,6 +40,7 @@ namespace larocv {
 
     VertexParticleCluster _algo;
     AlgorithmID_t _refine2d_algo_id;
+    AlgorithmID_t _track_super_cluster_algo_id;
     unsigned short _pi_threshold;
     float _contour_pad;
   };

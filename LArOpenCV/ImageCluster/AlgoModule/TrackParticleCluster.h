@@ -6,9 +6,6 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/VertexParticleCluster.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/DefectBreaker.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
-#include "LArOpenCV/ImageCluster/AlgoData/DefectClusterData.h"
-#include "LArOpenCV/ImageCluster/AlgoData/TrackParticleClusterData.h"
-#include "LArOpenCV/ImageCluster/AlgoData/VertexClusterData.h"
 
 namespace larocv {
  
@@ -46,6 +43,7 @@ namespace larocv {
     AtomicAnalysis _AtomicAnalysis;
     
     AlgorithmID_t _track_vertex_estimate_algo_id;
+    AlgorithmID_t _track_super_cluster_algo_id;
     unsigned short _pi_threshold;
     float _contour_pad;
   };

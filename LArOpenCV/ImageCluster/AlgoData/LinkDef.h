@@ -49,6 +49,7 @@
 #pragma link C++ class larocv::data::TrackVertexEstimateData+;
 #pragma link C++ class larocv::data::ShowerVertexEstimateData+;
 
+#pragma link C++ class larocv::data::ContourArrayData+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
 
