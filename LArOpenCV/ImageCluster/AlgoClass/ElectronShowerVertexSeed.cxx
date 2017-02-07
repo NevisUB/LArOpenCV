@@ -50,6 +50,7 @@ namespace larocv {
     LAROCV_INFO() << "# Vertex3D from LinearCluster: " << _ltrack_vertex_v.size() << std::endl;
   }
 
+  /* // --vic: deprecate
   void ElectronShowerVertexSeed::RegisterSeed(const std::vector<const cv::Mat>& img_v,
 					      const larocv::data::VertexClusterArray& part,
 					      const larocv::data::dQdXProfilerData& dqdx)
@@ -168,7 +169,8 @@ namespace larocv {
 
     LAROCV_INFO() << "# Vertex3D from VertexTrackCluster: " << _vtrack_vertex_v.size() << std::endl;
     LAROCV_INFO() << "# Vertex3D from dQdXProfiler: " << _vedge_vertex_v.size() << std::endl;
-  }
+  } 
+  */
 
   void ElectronShowerVertexSeed::RegisterSeed(const std::vector<const cv::Mat>& img_v,
 					      const larocv::data::VertexClusterArray& part)

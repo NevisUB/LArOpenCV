@@ -3,8 +3,8 @@
 
 #include "LArOpenCV/Core/LArOCVTypes.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
-#include "AlgoDataVertex.h"
-#include "AlgoDataCluster.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataVertex.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataCluster.h"
 
 namespace larocv {
   namespace data {

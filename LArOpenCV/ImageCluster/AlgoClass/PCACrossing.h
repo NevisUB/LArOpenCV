@@ -5,7 +5,7 @@
 #include "LArOpenCV/Core/laropencv_base.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
-#include "LArOpenCV/ImageCluster/AlgoData/DefectClusterData.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataCluster.h"
 
 namespace larocv {
  

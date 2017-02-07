@@ -115,7 +115,6 @@ namespace larocv {
 
     class ClusterCompound : public std::vector<AtomicContour> {
       friend class ClusterCompoundArray;
-      friend class ParticleCompoundArray;
     public:
       
       ClusterCompound(size_t id=kINVALID_SIZE)
@@ -227,12 +226,10 @@ namespace larocv {
       /// move-insert a cluster
       void emplace_back(ClusterCompound&& c);
 
-      
     private:      
       /// list of cluster compounds
       std::vector<larocv::data::ClusterCompound> _cluster_v;
     };
-
     
   }
 }

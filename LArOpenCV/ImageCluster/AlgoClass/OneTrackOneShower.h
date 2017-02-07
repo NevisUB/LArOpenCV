@@ -3,7 +3,6 @@
 
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/AlgoData/SingleShowerData.h"
-#include "LArOpenCV/ImageCluster/AlgoData/dQdXProfilerData.h"
 #include "LArOpenCV/ImageCluster/AlgoData/VertexClusterData.h"
 #include "LArOpenCV/ImageCluster/AlgoData/LinearTrackClusterData.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"

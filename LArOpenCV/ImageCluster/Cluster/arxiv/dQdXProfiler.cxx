@@ -1,13 +1,11 @@
 #ifndef __DQDXPROFILER_CXX__
 #define __DQDXPROFILER_CXX__
 
+#include "Geo2D/Core/VectorArray.h"
+#include "Geo2D/Core/Geo2D.h"
 #include "dQdXProfiler.h"
-#include "PCACandidates.h"
-#include "DefectCluster.h"
-#include "AtomicTrackAna.h"
-#include "Core/VectorArray.h"
-#include "Core/Geo2D.h"
-#include "Refine2DVertex.h"
+#include "LArOpenCV/ImageCluster/AlgoData/VertexClusterData.h"
+#include "LArOpenCV/ImageCluster/AlgoData/LinearTrackClusterData.h"
 
 //#include <typeinfo>
 
@@ -16,18 +14,36 @@ namespace larocv {
   /// Global larocv::dQdXProfilerFactory to register AlgoFactory
   static dQdXProfilerFactory __global_dQdXProfilerFactory__;
 
-  void dQdXProfiler::_Configure_(const ::fcllite::PSet &pset)
+  void dQdXProfiler::_Configure_(const Config_t &pset)
   {
-    auto const pca_algo_name    = pset.get<std::string>("PCACandidatesName");
-    auto const atomic_algo_name = pset.get<std::string>("AtomicTrackAnaName");
-    auto const def_algo_name    = pset.get<std::string>("2ndDefectClusterName");
-    auto const ref_algo_name    = pset.get<std::string>("Refine2DVertexName");
-    _pca_algo_id    = this->ID(pca_algo_name);
-    _atomic_algo_id = this->ID(atomic_algo_name);
-    _def_algo_id    = this->ID(def_algo_name);
-    _ref_algo_id    = this->ID(ref_algo_name);
+    auto const pca_algo_name = pset.get<std::string>("PCACandidatesName");
+    _pca_algo_id = this->ID( pca_algo_name );
+
+    auto const vertextrack_algo_name = pset.get<std::string>("VertexTrackClusterName","");
+    _vtxtrack_algo_id = kINVALID_ALGO_ID;
+    if(!vertextrack_algo_name.empty()) {
+      LAROCV_INFO() << "Using vertex track cluster algo: " << vertextrack_algo_name << std::endl;
+      _vtxtrack_algo_id = this->ID( vertextrack_algo_name );
+    }else{
+      LAROCV_INFO() << "Not using vertex track cluster algo..." << std::endl;
+    }
+
+    auto const lineartrack_algo_name = pset.get<std::string>("LinearTrackClusterName","");
+    _lintrack_algo_id = kINVALID_ALGO_ID;
+    if(!lineartrack_algo_name.empty()) {
+      LAROCV_INFO() << "Using linear track cluster algo: " << lineartrack_algo_name << std::endl;
+      _lintrack_algo_id = this->ID(lineartrack_algo_name);
+    }else{
+      LAROCV_INFO() << "Not using linear track cluster algo..." << std::endl;
+    }
+    
     _pi_threshold   = 10;
     _dx_resolution  = 1.;
+
+    _atomic_region_pad  = 5.;
+    _atomic_contour_pad = 3.;
+
+    Register(new data::dQdXProfilerData);
   }
   
   void dQdXProfiler::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -35,348 +51,608 @@ namespace larocv {
 			       larocv::ImageMeta& meta,
 			       larocv::ROI& roi)
   {
-    cv::Mat thresh_img = img;
-    //::cv::threshold(img, thresh_img, 10,255,CV_THRESH_BINARY);
-
-    auto const& pca_data    = AlgoData<data::PCACandidatesData>(_pca_algo_id);
-    auto const& defect_data = AlgoData<data::DefectClusterData>(pca_data._input_id);
-    //    auto const& atomic_data = AlgoData<larocv::AtomicTrackAnaData>(_atomic_algo_id);
-
-    auto& data = AlgoData<data::dQdXProfilerData>();
-
-    // Construct cluster=>line mapping ... elaborated due to how PCACandidates stores info
-    // First construct a pointer vector
-    std::vector<const geo2d::Line<float>*> pcaptr_v;
-    std::vector<int> cluster2pca;
-    pcaptr_v.reserve(clusters.size());
-    cluster2pca.resize(clusters.size());
-    auto const& pca_lines_v  = pca_data._ctor_lines_v_v[meta.plane()];
-    
-    //for(size_t i = 0; i < pca_lines_v_v.size(); i++)
-    //for(size_t j = 0; j < pca_lines_v_v[i].size(); j++)
-    for(size_t atomic_id=0;atomic_id<clusters.size();++atomic_id) {
-      cluster2pca.at(atomic_id) = pcaptr_v.size();
-      pcaptr_v.push_back(&(pca_lines_v.at(atomic_id)));
-    }
-
-
-    // Define a bounding box in which we will work
-    geo2d::Vector<float> box_tl(-1,-1);
-    geo2d::Vector<float> box_br(-1,-1);
-    for(size_t c_idx=0; c_idx < clusters.size(); ++c_idx) {
-      LAROCV_DEBUG() << "Current box1:" << box_tl << " => " << box_br << std::endl;
-      if(clusters[c_idx]._contour.size()<3) continue;
-      // for(auto const& pt : clusters[c_idx]._contour)
-      // 	LAROCV_DEBUG() << "    Pt: " << pt << std::endl;
-      auto const rect = cv::boundingRect( cv::Mat(clusters[c_idx]._contour) );
-      LAROCV_DEBUG() << "Cluster ID " << c_idx
-		     << " points=" << clusters[c_idx]._contour.size() << " ... Box: " << rect << std::endl;
-      auto const tl = rect.tl();
-      auto const br = rect.br();
-      if(box_tl.x < 0) {
-	box_tl.x = tl.x; box_tl.y = tl.y;
-	box_br.x = br.x; box_br.y = br.y;
-	continue;
-      }
-      if(tl.x < box_tl.x) box_tl.x = tl.x;
-      if(tl.y < box_tl.y) box_tl.y = tl.y;
-      if(br.x > box_br.x) box_br.x = br.x;
-      if(br.y > box_br.y) box_br.y = br.y;
-      
-      LAROCV_DEBUG() << "Current box2:" << box_tl << " => " << box_br << std::endl;
-    }
-    
-    auto const& box_origin = box_tl;
-    const float box_width  = box_br.x - box_tl.x;
-    const float box_height = box_br.y - box_tl.y;
-    LAROCV_DEBUG() << "Ground BBox TL: " << box_tl << " width: " << box_width << " height: " << box_height << std::endl;
-    auto const bbox = cv::Rect(box_origin.x, box_origin.y, box_width, box_height);
-    
-    // Crop the image
-    auto const small_img = cv::Mat(thresh_img,bbox);
-    
-    //cv::threshold(small_img,small_img,_pi_threshold,1000,3);
-    
-    // List points that we care
-    auto& pts = data._pts_vv[meta.plane()];
-    pts.clear();
-    cv::findNonZero(small_img, pts);
-    // Correct point's coordinate
-    for(auto& pt : pts) {
-      pt.x += box_origin.x;
-      pt.y += box_origin.y;
-    }
-
-    // create pt=>cluster map
-    auto& pt2cluster = data._pt2cluster_vv[meta.plane()];
-    pt2cluster.resize(pts.size());
-    for(auto& v : pt2cluster) v = kINVALID_SIZE;
-    
-    for (unsigned pt_idx = 0; pt_idx < pts.size(); ++pt_idx) {
-      auto const& pt = pts[pt_idx];
-      for(size_t c_idx = 0; c_idx < clusters.size(); ++c_idx) {
-	auto const& ctor = clusters[c_idx]._contour;
-	if( cv::pointPolygonTest(ctor, pt, false) < 0 ) continue;
-	pt2cluster[pt_idx] = c_idx;
-	break;
-      }
-    }
-
-    //some points not associated to a cluster, lets "attach" them to the nearest one, with distance cut
-    for (unsigned pt_idx = 0; pt_idx < pts.size(); ++pt_idx) {
-      auto const& pt = pts[pt_idx];
-      if (pt2cluster[pt_idx] != kINVALID_SIZE) continue;
-
-      int   min_idx=-1;
-      float min_d  =9.e6;
-      
-      for(size_t c_idx = 0; c_idx < clusters.size(); ++c_idx) {
-	auto const& ctor = clusters[c_idx]._contour;
-	for(const auto& ctor_pt : ctor) {
-	  float d=std::sqrt(std::pow(pt.x-ctor_pt.x,2)+std::pow(pt.y-ctor_pt.y,2));
-	  if (d < min_d) {
-	    min_d   = d;
-	    min_idx = c_idx;
-	  }
-	}
-      }
-
-      if ( min_d>5 )   min_idx=-1;
-      if (min_idx==-1) continue;
-
-      pt2cluster[pt_idx] = min_idx;
-    }
-    
-
-    
-    // compute a point projection on each corresponding pca
-    // record min/max bounds later for binning
-    std::pair<float,float> def_bound;
-    def_bound.first  = kINVALID_FLOAT;
-    def_bound.second = kINVALID_FLOAT;
-    //LAROCV_DEBUG()<<"defbound.first kINVALID_FLOAT is "<<def_bound.first<<std::endl;
-    auto& pt2dist  = data._pt2dist_vv[meta.plane()];
-    auto& bounds_v = data._bounds_vv[meta.plane()];
-    pt2dist.resize(pt2cluster.size());
-    for(auto& v : pt2dist) v = kINVALID_FLOAT;
-    bounds_v.resize(clusters.size());
-    for(auto& v : bounds_v) v = def_bound;
-
-    geo2d::Vector<float> pt0, pt1, pt2;
-    float dist;
-    for(size_t pt_idx=0; pt_idx < pts.size(); ++pt_idx) {
-      auto const& c_idx = pt2cluster[pt_idx];
-      if(c_idx == kINVALID_SIZE) continue;
-      if(cluster2pca.at(c_idx) < 0) throw larbys("PCA not found");
-      auto const& pcaptr = pcaptr_v.at(cluster2pca[c_idx]);
-      
-      pt0.x = pts[pt_idx].x; pt0.y = pts[pt_idx].y;
-      geo2d::ClosestPoint<float>(*pcaptr, pt0, pt1, pt2);
-      pt1 -= pcaptr->pt;
-
-      if(pcaptr->dir.x) dist = pt1.x / pcaptr->dir.x;
-      else              dist = pt1.y / pcaptr->dir.y;
-
-      pt2dist[pt_idx] = dist;
-
-      auto& bound = bounds_v.at(c_idx);
-      //LAROCV_DEBUG()<<"?? Here bound has x "<<bound.first <<" y as "<<bound.second <<std::endl;
-      
-      if(bound.first == kINVALID_FLOAT)
-	{ bound.first = bound.second = dist; }
-      else {
-	if(bound.first  > dist) bound.first  = dist;
-	if(bound.second < dist) bound.second = dist;
-      }
-    }
-
-    // Now compute binned distribution
-    auto& dqdx_vv = data._dqdx_vv;
-    dqdx_vv.resize(clusters.size());
-    for(size_t c_idx = 0; c_idx < dqdx_vv.size(); ++c_idx) {
-      auto& dqdx_v = dqdx_vv.at(c_idx);
-      auto const& bounds = bounds_v.at(c_idx);
-      if(bounds.first == bounds.second)	continue;
-      size_t num_dqdx = (bounds.second - bounds.first) / _dx_resolution + 1;
-      LAROCV_DEBUG() << "Plane " << meta.plane() << " Cluster " << c_idx
-		     << " got bounds " << bounds.first << " => " << bounds.second
-		     << " ... # bins " << num_dqdx << std::endl;
-      dqdx_v.resize(num_dqdx);
-      for(auto& d : dqdx_v) d = 0.;
-    }
-    size_t num_invalid_pts = 0;
-    for(size_t pt_idx = 0; pt_idx < pts.size(); ++pt_idx) {
-      auto const& c_idx  = pt2cluster.at(pt_idx);
-      if(c_idx == kINVALID_SIZE) {
-	num_invalid_pts++;
-	continue;
-      }
-      auto const& pt     = pts.at(pt_idx);
-      auto const& bounds = bounds_v.at(c_idx);
-      auto const& dist   = pt2dist.at(pt_idx);
-      size_t dqdx_idx = (dist - bounds.first) / _dx_resolution;
-      // LAROCV_DEBUG() << "Point " << pt_idx << " @ (" << pt.x << "," << pt.y << ") @ " << dist
-      // 	        << " belongs to cluster " << c_idx << std::endl;
-      dqdx_vv.at(c_idx).at(dqdx_idx) += (float)(thresh_img.at<unsigned char>(pt.y,pt.x));
-    }
-    LAROCV_DEBUG() << "Number of points not processed: " << num_invalid_pts << "/" << pts.size() << std::endl;
-
-    // order the contours -- the vic way... 
-    const auto& n_clusters = defect_data._plane_data[meta.plane()]._n_input_ctors;
-    const auto& atomic_ctor_ass_v_v = defect_data._plane_data[meta.plane()]._atomic_ctor_ass_vv;
-
-    std::vector<std::vector<uint> > dfect_cidx_v_v;
-    std::vector<std::vector<uint> > odfect_cidx_v_v;
-    
-    dfect_cidx_v_v.resize(n_clusters);
-    odfect_cidx_v_v.resize(n_clusters);
-
-    LAROCV_DEBUG() << " N : " << n_clusters << " atomic clusters incoming " << std::endl;
-    LAROCV_DEBUG() << " Number of defect clusters should be " << atomic_ctor_ass_v_v.size() << std::endl;
-
-    //for each of the original atomic cluster	  
-    for(unsigned track_cidx=0; track_cidx<n_clusters; ++track_cidx) {
-
-      //get this set of indicies
-      auto& dfect_cidx_v  = dfect_cidx_v_v[track_cidx];
-
-      //get this ordered (to be determined...) set of indicies
-      auto& odfect_cidx_v = odfect_cidx_v_v[track_cidx];
-      
-      odfect_cidx_v.clear();
-
-      //for each of the associated broken=>atomic association
-      //for(unsigned jj=0;jj<atomic_ctor_ass_v.size();++jj) {
-      for(const auto atomic_ctor_ass : atomic_ctor_ass_v_v[track_cidx] ) 
-
-	//else this broken cluster came from same atomic
-	dfect_cidx_v.emplace_back(atomic_ctor_ass);
-      
-
-      LAROCV_DEBUG() << " N : " << dfect_cidx_v.size() << " associated defect clusters to atomic " << track_cidx << std::endl;
-      
-      //lets get the left most contour
-      uint min_idx=-1;
-      int min_x=9e6;
-
-      //for each broken cluster (from the same atomic!)
-      for(unsigned kk=0;kk<dfect_cidx_v.size();++kk)  {
-	auto& ctor=clusters[ dfect_cidx_v[kk] ]._contour;
-	for(const auto& pt: ctor) {
-	  if(pt.x<min_x) {
-	    min_x = pt.x;
-	    min_idx=dfect_cidx_v[kk];
-	  }
-	}
-      }
-
-      LAROCV_DEBUG() << " Putting min_idx : " << min_idx << " into odfect_cidx_v\n";
-      
-      //put in the left most index
-      odfect_cidx_v.push_back(min_idx);
-
-      //until the ordered index vector is filled
-      while(odfect_cidx_v.size() != dfect_cidx_v.size()) {
-	
-	//get the last index in ordered vector
-	auto  curr_cidx  = odfect_cidx_v.back();
-	auto& curr_ctor  = clusters[curr_cidx]._contour;
-	
-	int min_idx=-1;
-	int min_d=9e6;
-	  
-	//for each of the broken clusters from the same atomic
-	for(unsigned kk=0;kk<dfect_cidx_v.size();++kk)  {
-
-	  //if this broken cluster aleady ordered, move on
-	  if ( std::find(odfect_cidx_v.begin(), odfect_cidx_v.end(), dfect_cidx_v[kk]) != odfect_cidx_v.end() )
-	    continue;
-	  
-	  auto& part_ctor=clusters[dfect_cidx_v[kk]]._contour;
-	  
-	  //else, loop pairwire between current contour and this one, and determine the min distance
-	  for(const auto& curr_pt : curr_ctor) {
-	    for(const auto& part_pt: part_ctor) {
-	      float d=std::sqrt(std::pow(part_pt.x-curr_pt.x,2)+std::pow(part_pt.y-curr_pt.y,2));
-	      if (d < min_d) {
-		min_d=d;
-		min_idx=dfect_cidx_v[kk];
-	      }
-	    }
-	  }
-	}
-	
-	//min_idx now filled with index which contains the closest contour
-	if (min_idx==-1){
-	  LAROCV_CRITICAL() << "curr_cidx: " << curr_cidx << " min_d : " << min_d << " min_idx : " << min_idx << std::endl;
-	  throw larbys("Could not find minimum index for this contour\n");
-	}
-	
-	//put it into ordering scheme
-	odfect_cidx_v.push_back(min_idx);
-      }
-    }
-
-    auto& o_dqdx_vv=data._o_dqdx_vvv[meta.plane()];
-    o_dqdx_vv.resize(n_clusters);
-    for(unsigned track_cidx=0; track_cidx<n_clusters; ++track_cidx) {
-      auto& o_dqdx_v=o_dqdx_vv[track_cidx];
-      for (const auto& odfect_cidx : odfect_cidx_v_v[track_cidx]) {
-	for(const auto& dqdx : dqdx_vv.at(odfect_cidx)) {
-	  o_dqdx_v.push_back(dqdx);
-	}
-      }
-    }
-    
-    //reorder dqdx
-    auto const& defectcluster_data   = AlgoData<data::DefectClusterData>(_def_algo_id);     //Read defect points from previous calculations
-    auto const& atomictrackana_data  = AlgoData<data::AtomicTrackAnaData>(_atomic_algo_id); //Read atomics info from previous calculations
-    //auto const& refine2dvertex_data = AlgoData<data::Refine2DVertexData>(_ref_algo_id);
-    LAROCV_DEBUG()<<"9 _atomic_algo_id is "<<_atomic_algo_id<<std::endl;
-    
-    auto const& atomic_ass_v_v      = defectcluster_data._plane_data[meta.plane()]._atomic_ctor_ass_vv;
-    auto const& n_track_clusters    = defectcluster_data._plane_data[meta.plane()]._n_input_ctors;
-    auto const& atomic_idx_per_clu  = atomictrackana_data._atomic_idx_per_clu_v_v_v[meta.plane()];
-    //auto const& ref_vtx             = refine2dvertex_data._cand_vtx_v[meta.plane()];//Get vertex per plane
-    //auto const& kink_vv             = atomictrackana_data._atomic_kink_vv[meta.plane()];
-
-    auto& dqdx_atomic_vvvv = data._dqdx_atomic_vvvv;
-    auto& dqdx_atomic_vvv  = dqdx_atomic_vvvv[meta.plane()];
-    
-    LAROCV_DEBUG()<<"(# of atomics)size of dqdx_atomic_vvv is "<<dqdx_atomic_vvv.size()<<std::endl;
-    
-    dqdx_atomic_vvv.clear();
-    dqdx_atomic_vvv.resize(n_track_clusters);
-    
-    for(unsigned int i=0; i< n_track_clusters; ++i) {  
-      
-      std::vector<size_t> atomic_index_v;
-      atomic_index_v.clear();
-      
-      //Find associated atomics in one track cluster
-      //for(size_t j=0;j<atomic_ass_v_v.size();++j){
-      for(const auto j : atomic_ass_v_v.at(i) ) {
-	atomic_index_v.push_back(j);
-      }
-      
-      dqdx_atomic_vvv[i].clear();
-      
-      for (auto & shit : atomic_idx_per_clu[i]){
-      //for(auto & shit : atomic_index_v){
-	
-	//LAROCV_DEBUG()<<dqdx_vvv[shit]<<std::endl;
-	
-	dqdx_atomic_vvv[i].push_back(dqdx_vv[atomic_index_v[shit]]);
-      }
-    }
-    
-    
-    
+    // need implementation for "clusters" per plane processing in future
+    return;
   }
 
-  bool dQdXProfiler::_PostProcess_(const std::vector<const cv::Mat>& img_v)
-  { return true; }
+  double dQdXProfiler::DistanceAtom2Vertex(const data::AtomicContour& atom, const geo2d::Vector<float>& vtx2d) const
+  {
+    geo2d::Vector<float> pt;
+    double point_dist = 0;
+    double closest_dist = 1e10;
+    for(auto const& contour_pt : atom) {
+      pt.x = contour_pt.x;
+      pt.y = contour_pt.y;
+      point_dist = geo2d::dist2(pt,vtx2d);
+      if(point_dist < closest_dist) closest_dist = point_dist;
+    }
+    return sqrt(closest_dist);
+  }
+
+  double dQdXProfiler::DistanceAtom2Vertex(const data::AtomicContour& atom, const data::CircleVertex& vtx2d) const
+  {
+    return DistanceAtom2Vertex(atom,vtx2d.center);
+  }
+
+  std::vector<size_t> dQdXProfiler::OrderAtoms(const data::ClusterCompound& cluster, const geo2d::Vector<float>& vtx2d) const
+  {
+    LAROCV_DEBUG() << "called for ClusterCompound ID " << cluster.id()
+		   << " ... 2D vtx @ " << vtx2d << std::endl;
+    // goal: order atoms in the cluster from start to the end of a trajectory
+    // 0) find the atom closest to 2d vtx
+    // 1) follow the association chain with defects to order the rest
+
+    // Retrieve atoms
+    auto const& atoms   = cluster.get_atoms();
+    // Prepare result
+    std::vector<size_t> result_v;
+    result_v.reserve(atoms.size());
+
+    // If no atoms, just return empty vector
+    if(atoms.empty()) return result_v;
+    result_v.resize(1);
+    
+    // Loop over atoms to find the closest to the 2D vertex on this plane
+    double closest_atom_dist2vtx = 1e9;
+    double start_atom_dist2vtx = 1e9;
+    size_t closest_atom_id = kINVALID_SIZE;
+    size_t start_atom_id = kINVALID_SIZE;
+    double atom_dist2vtx = 0;
+    LAROCV_DEBUG() << "Looping over " << atoms.size() << " atoms to find the closest one to the vtx" << std::endl;
+    for(auto const& atom : atoms) {
+      atom_dist2vtx = DistanceAtom2Vertex(atom, vtx2d);
+      LAROCV_DEBUG() << "Atom " << atom.id()
+		     << " distance = " << atom_dist2vtx
+		     << " # defect = " << atom.associated_defects().size()
+		     << std::endl;
+      if(atom_dist2vtx < closest_atom_dist2vtx) {
+	closest_atom_dist2vtx = atom_dist2vtx;
+	closest_atom_id = atom.id();
+      }
+      if(atom.associated_defects().size() < 2) {
+	if(atom_dist2vtx < start_atom_dist2vtx) {
+	  start_atom_dist2vtx = atom_dist2vtx;
+	  start_atom_id = atom.id();
+	}
+      }
+    }
+    LAROCV_DEBUG() << "Closest atom ID " << closest_atom_id << " distance " << closest_atom_dist2vtx << std::endl;
+    LAROCV_DEBUG() << "Start   atom ID " << start_atom_id << " distance " << start_atom_dist2vtx << std::endl;
+
+    result_v[0] = start_atom_id;
+    
+    // Do book keeping of used atom IDs
+    size_t last_atom_id = result_v[0];
+    std::vector<size_t> used_atom_id_v(atoms.size(),false);
+    used_atom_id_v[last_atom_id] = true;
+
+    // Loop over the rest of atoms to construct the chain
+    while(result_v.size() < atoms.size()) {
+
+      // retrieve last atom
+      auto const& last_atom = cluster.get_atom(last_atom_id);
+      // retrieve defects' id array
+      auto const& defect_id_s = last_atom.associated_defects();
+
+      LAROCV_DEBUG() << "Searching next atom (current ID=" << last_atom.id()
+		     << ") asociated # defects = " << defect_id_s.size() << std::endl;
+
+      // loop over associated defects, find the next associated atom
+      size_t next_atom_id = kINVALID_SIZE;
+      for(auto const& defect_id : defect_id_s) {
+	LAROCV_DEBUG() << "  associated defect ID " << defect_id << std::endl;
+	// retrieve a defect
+	auto const& defect = cluster.get_defect(defect_id);
+	// loop over associated atoms' id array
+	for(auto const& ass_atom_id : defect.associated_atoms()) {
+	  LAROCV_DEBUG() << "    association defect " << defect_id << " => atom " << ass_atom_id << std::endl;
+	  // if found in "used atom id list", ignore
+	  if(used_atom_id_v[ass_atom_id]) continue;
+	  // else this atom is our target. make sure there's no duplication
+	  if(next_atom_id != kINVALID_SIZE) {
+	    LAROCV_CRITICAL() << "Detected a logic inconsistency in atom/defect association (duplicated association)" << std::endl;
+	    throw larbys();
+	  }
+	  next_atom_id = ass_atom_id;
+	  LAROCV_DEBUG() << "    ... found next atom ID " << next_atom_id << std::endl;
+
+	  // Note one can just "break" the loop here to save time.
+	  // In this attempt we won't break to explicitly check the association's validity.
+	}
+
+      } // end looping over defects for this atom
+
+      // make sure next atom is found
+      if(next_atom_id == kINVALID_SIZE) {
+	LAROCV_CRITICAL() << "Detected a logic inconsistency in atom/defect association (next atom not found)" << std::endl;
+	throw larbys();
+      }
+      used_atom_id_v[next_atom_id] = true;
+      result_v.push_back(next_atom_id);
+      last_atom_id = next_atom_id;
+    } // end looping over to order atoms
+
+    return result_v;
+  }
+
+  std::vector<size_t> dQdXProfiler::OrderAtoms(const data::ClusterCompound& cluster, const data::CircleVertex& vtx2d) const
+  {
+    return OrderAtoms(cluster,vtx2d.center);
+  }
+
+  std::vector<std::pair<geo2d::Vector<float>,geo2d::Vector<float> > >
+  dQdXProfiler::AtomsEdge(const data::ClusterCompound& cluster,
+			  const geo2d::Vector<float>& vtx2d,
+			  const std::vector<size_t> atom_order_v) const
+  {
+    // goal: find the start/end of each atom
+    // 0) loop over ordered atoms starting from the closest to the vertex
+    // 1) for each atom compute the end by comparing w.r.t. the end of the last atom (1st one compare w/ vtx)
+    // 2) for each atom compute the start by comparing its own end
+    if(atom_order_v.size() != cluster.get_atoms().size()) {
+      LAROCV_CRITICAL() << "Atom's ordering index array length != # atoms!" << std::endl;
+      throw larbys();
+    }
+
+    // prepare result container
+    std::vector<std::pair<geo2d::Vector<float>,geo2d::Vector<float> > > result_v;
+    result_v.resize(atom_order_v.size());
+    // loop over atoms
+    auto const& atoms = cluster.get_atoms();
+    geo2d::Vector<float> pt, start, end, last_end;
+    last_end = vtx2d;
+    for(size_t order_index=0; order_index < atom_order_v.size(); ++order_index) {
+      auto const& atom_index = atom_order_v[order_index];
+      auto const& atom = atoms.at(atom_index);
+      LAROCV_DEBUG() << "Inspecting order " << order_index
+		     << " atom ID " << atom_index << std::endl;
+      // loop over points to find the end
+      double max_dist = 0;
+      for(auto const& ctor_pt : atom) {
+	pt.x = ctor_pt.x;
+	pt.y = ctor_pt.y;
+	auto dist = geo2d::dist(pt,last_end);
+	if(dist > max_dist) {
+	  max_dist = dist;
+	  end = pt;
+	  LAROCV_DEBUG() << "New end point candidate @ " << pt << " dist = " << max_dist << std::endl;
+	}
+      }
+      // loop over points to find the start
+      max_dist = 0;
+      for(auto const& ctor_pt : atom) {
+	pt.x = ctor_pt.x;
+	pt.y = ctor_pt.y;
+	auto dist = geo2d::dist(pt,end);
+	if(dist > max_dist) {
+	  max_dist = dist;
+	  start = pt;
+	  LAROCV_DEBUG() << "New start point candidate @ " << pt << " dist = " << max_dist << std::endl;
+	}
+      }
+      // record start/end + update last_end
+      last_end = end;
+      result_v[atom_index].first  = start;
+      result_v[atom_index].second = end;
+
+      if(this->logger().level() <= larocv::msg::kINFO) {
+	std::stringstream ss;
+	ss << "Atom ID " << atom.id() << " order index " << order_index
+	   << " start @ " << start
+	   << " end @ " << end
+	   << " # defects " << atom.associated_defects().size();
+	for(auto const& defect_id : atom.associated_defects())
+	  ss << " ... defect " << defect_id << " @ " << cluster.get_defect(defect_id)._pt_defect;
+	LAROCV_INFO() << std::string(ss.str()) << std::endl;
+      }
+    }
+    return result_v;
+  }
+
+  std::vector<std::pair<geo2d::Vector<float>,geo2d::Vector<float> > >
+  dQdXProfiler::AtomsEdge(const data::ClusterCompound& cluster,
+			  const data::CircleVertex& vtx2d,
+			  const std::vector<size_t> atom_order_v) const
+  {
+    return AtomsEdge(cluster,vtx2d.center,atom_order_v);
+  }
   
+  bool dQdXProfiler::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  {
+    LAROCV_DEBUG() << "processing" << std::endl;
+    auto const& pca_data = AlgoData<data::PCACandidatesData>  (_pca_algo_id,0);
+    auto const& def_data = AlgoData<data::DefectClusterData>  (pca_data._input_id,0);
+
+    if ( _lintrack_algo_id != kINVALID_ALGO_ID  && _vtxtrack_algo_id != kINVALID_ALGO_ID)
+      { LAROCV_CRITICAL() << "Specify only vertextrack or lineartrack algo name" << std::endl; throw larbys(); }
+
+    if ( _lintrack_algo_id == kINVALID_ALGO_ID  && _vtxtrack_algo_id == kINVALID_ALGO_ID)
+      { LAROCV_CRITICAL() << "Specify only vertextrack or lineartrack algo name" << std::endl; throw larbys(); }
+
+    auto& data = AlgoData<data::dQdXProfilerData>(0);
+        
+    if( _vtxtrack_algo_id != kINVALID_ALGO_ID ) {
+      LAROCV_DEBUG() << "VertexTrackAlgoID: " << _vtxtrack_algo_id << std::endl;
+      auto const& vtx_data = AlgoData<data::VertexClusterArray> (_vtxtrack_algo_id,0);
+
+      // Loop over vertex
+      for(auto const& vtx_clusters : vtx_data._vtx_cluster_v) {
+
+	// Retrieve vertex ID and 3D vertex
+	auto const  vtx_id  = vtx_clusters.id();
+	auto const& vtx3d   = vtx_clusters.get_vertex();
+
+	// Retrieve particle compound (cluster + atoms) information for this vertex
+	auto const& vtx_compound_array = def_data.get_vertex_cluster(vtx_id);
+
+	// Construct result container that stores clusters' dqdx per vertex candidate
+	data::ParticledQdXArray vtx_dqdx;
+
+	// Loop over planes
+	for(size_t plane_id=0; plane_id<vtx_clusters.num_planes(); ++plane_id) {
+
+	  LAROCV_INFO() << "Inspecting dQ/dX for vertex ID " << vtx3d.id()
+			<< " plane " << plane_id
+			<< " with " << vtx_compound_array.get_cluster(plane_id).size() << " particles..."
+			<< std::endl;
+
+	  // Retrieve 2D vertex on this plane
+	  auto const vtx2d = vtx_clusters.get_circle_vertex(plane_id);
+
+	  // Retrieve this plane's image
+	  if(plane_id >= img_v.size()) {
+	    LAROCV_CRITICAL() << "Vertex stored have a cluster on plane " << plane_id
+			      << " for which no image is found!" << std::endl;
+	    throw larbys();
+	  }
+	  cv::Mat img = img_v[plane_id];
+	  //::cv::threshold(img, thresh_img, 10,255,CV_THRESH_BINARY);
+	
+	  // Loop over particles to create dQ/dX per particle on this plane
+	  for(auto const& particle : vtx_compound_array.get_cluster(plane_id)) {
+
+	    // Goal: construct dQ/dX per particle and store in ParticledQdX object
+	    // 0) order atoms from vertex to the end of trajectory
+	    // 1) construct dq/dx per particle by looping over ordered atoms
+
+	    // result container
+	    data::ParticledQdX part_dqdx;
+	    
+	    // order atoms
+	    auto const ordered_atom_id_v = OrderAtoms(particle,vtx2d);
+	    
+	    // get start/end
+	    auto atom_edges_v = AtomsEdge(particle, vtx2d, ordered_atom_id_v);
+	    
+	    // loop atoms (from last one)
+	    for(auto const& atom_id : ordered_atom_id_v) {
+	      // retrieve atom
+	      auto const& atom = particle.get_atom(atom_id);
+	      // retrieve PCA
+	      auto const  pca_id = pca_data.index_atom(atom_id, particle.id(), plane_id, vtx_id);
+	      auto const& pca = pca_data.line(pca_id);
+	      // retrieve start/end
+	      auto& start_end = atom_edges_v[atom_id];
+	      // construct dq/dx
+	      std::vector<float> atom_dqdx;
+	      try { 
+		atom_dqdx = AtomdQdX(img, atom, pca, start_end.first, start_end.second);
+	      } catch (const larbys& err) {
+		LAROCV_NORMAL() << "AtomdQdX could not be discerned" << std::endl;
+		atom_dqdx = {};
+	      }
+	      // last atom's end point can be improved by the nearest non-zero pixel search
+	      if(atom_id == ordered_atom_id_v.back()) {
+		cv::Mat thresh_img;
+		::cv::threshold(img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
+		std::vector<geo2d::Vector<int> > nonzero_pts;
+		cv::findNonZero(thresh_img, nonzero_pts);
+		double min_dist=1e20;
+		double dist;
+		geo2d::Vector<float> particle_end_pt = start_end.second;
+		for(auto const& pt : nonzero_pts) {
+		  if(cv::pointPolygonTest(atom,pt,false)<0)
+		    continue;
+		  dist = pow((pt.x - start_end.second.x),2) + pow((pt.y - start_end.second.y),2);
+		  if(dist < min_dist) {
+		    particle_end_pt.x = pt.x;
+		    particle_end_pt.y = pt.y;
+		    min_dist = dist;
+		  }
+		}
+		start_end.second = particle_end_pt;
+	      }
+	      // append
+	      part_dqdx.push_back(atom_id, start_end.first, start_end.second, atom_dqdx);
+	    }// end loop over atoms to create dq/dx
+
+	    // register to vtx-wise dqdx collection
+	    vtx_dqdx.move(plane_id, particle.id(), std::move(part_dqdx));
+
+	  }// end loop over particles for one plane
+
+	}// end loop over planes for one vertex
+
+	// retiger vtx-wise dqdx to algo data
+	data.move(vtx_id, std::move(vtx_dqdx));
+
+      } // end loop over vertecies in this event
+
+      // done
+      return true;
+    }
+    else if( _lintrack_algo_id != kINVALID_ALGO_ID ) {
+
+      LAROCV_DEBUG() << "LinearTrackAlgoID: " << _lintrack_algo_id << std::endl;
+      
+      auto const& lintrack_data = AlgoData<data::LinearTrackArray> (_lintrack_algo_id,0);
+      
+      // Loop over vertex
+      for(auto const& trk_cluster : lintrack_data.get_clusters()) {
+
+	// Retrieve track ID and 3D vertex
+	auto const  trk_id  = trk_cluster.id();
+
+	// Retrieve particle compound (cluster + atoms) information for this vertex
+	auto const& trk_compound_array = def_data.get_vertex_cluster(trk_id);
+
+	// Construct result container that stores clusters' dqdx per vertex candidate
+	data::ParticledQdXArray vtx_dqdx;
+
+	// Loop over planes
+	for(size_t plane_id=0; plane_id < 3; ++plane_id) {
+
+	  //catch the case of no good edge point in this view
+	  try {
+	    LAROCV_INFO() << "Inspecting dQ/dX for edge " << " n/a "
+			  << " plane " << plane_id
+			  << " with " << trk_compound_array.get_cluster(plane_id).size() << " particles..."
+			  << std::endl;
+	    if (!trk_compound_array.get_cluster(plane_id).size())
+	      { LAROCV_INFO() << "No track compound array for plane id : " << plane_id << std::endl; continue; }
+	  }
+	  catch (const larbys& err) {
+	    // There is no contour here
+	    LAROCV_INFO() << "No track compound array for plane id : " << plane_id << std::endl;
+	    continue;
+	  }
+
+	  const auto& trk_cluster2d = trk_cluster.get_cluster(plane_id);
+
+	  //just choose the first edge
+	  
+	  geo2d::Vector<float> vtx2d = trk_cluster2d.edge2.x > (float) 1e6 ? trk_cluster2d.edge1 : trk_cluster2d.edge2;
+	  if ( vtx2d.x > (float) 1.e6 ) throw larbys(" Both edge1 and edge2 are fucked? ");
+	  
+	  // Retrieve this plane's image
+	  if(plane_id >= img_v.size()) {
+	    LAROCV_CRITICAL() << "Vertex stored have a cluster on plane " << plane_id
+			      << " for which no image is found!" << std::endl;
+	    throw larbys();
+	  }
+	  cv::Mat img = img_v[plane_id];
+	  //::cv::threshold(img, thresh_img, 10,255,CV_THRESH_BINARY);
+	
+	  // Loop over particles to create dQ/dX per particle on this plane
+	  for(auto const& particle : trk_compound_array.get_cluster(plane_id)) {
+
+	    // Goal: construct dQ/dX per particle and store in ParticledQdX object
+	    // 0) order atoms from vertex to the end of trajectory
+	    // 1) construct dq/dx per particle by looping over ordered atoms
+
+	    // result container
+	    data::ParticledQdX part_dqdx;
+
+	    // order atoms
+	    auto const ordered_atom_id_v = OrderAtoms(particle,vtx2d);
+	  
+	    // get start/end
+	    auto atom_edges_v = AtomsEdge(particle, vtx2d, ordered_atom_id_v);
+
+	    // loop atoms (from last one)
+	    for(auto const& atom_id : ordered_atom_id_v) {
+	      // retrieve atom
+	      auto const& atom = particle.get_atom(atom_id);
+	      // retrieve PCA
+	      auto const  pca_id = pca_data.index_atom(atom_id, particle.id(), plane_id, trk_id);
+	      auto const& pca = pca_data.line(pca_id);
+	      // retrieve start/end
+	      auto& start_end = atom_edges_v[atom_id];
+	      // construct dq/dx
+	      std::vector<float> atom_dqdx;
+	      try { 
+		atom_dqdx = AtomdQdX(img, atom, pca, start_end.first, start_end.second);
+	      } catch (const larbys& err) {
+		LAROCV_NORMAL() << "AtomdQdX could not be discerned" << std::endl;
+		atom_dqdx = {};
+	      }
+	      // last atom's end point can be improved by the nearest non-zero pixel search
+	      if(atom_id == ordered_atom_id_v.back()) {
+		cv::Mat thresh_img;
+		::cv::threshold(img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
+		std::vector<geo2d::Vector<int> > nonzero_pts;
+		cv::findNonZero(thresh_img, nonzero_pts);
+		double min_dist=1e20;
+		double dist;
+		geo2d::Vector<float> particle_end_pt = start_end.second;
+		for(auto const& pt : nonzero_pts) {
+		  if(cv::pointPolygonTest(atom,pt,false)<0)
+		    continue;
+		  dist = pow((pt.x - start_end.second.x),2) + pow((pt.y - start_end.second.y),2);
+		  if(dist < min_dist) {
+		    particle_end_pt.x = pt.x;
+		    particle_end_pt.y = pt.y;
+		    min_dist = dist;
+		  }
+		}
+		start_end.second = particle_end_pt;
+	      }
+	      // append
+	      part_dqdx.push_back(atom_id, start_end.first, start_end.second, atom_dqdx);
+	    }// end loop over atoms to create dq/dx
+
+	    // register to trk-wise dqdx collection
+	    vtx_dqdx.move(plane_id, particle.id(), std::move(part_dqdx));
+
+	  }// end loop over particles for one plane
+
+	}// end loop over planes for one vertex
+
+	// retiger trk-wise dqdx to algo data
+	data.move(trk_id, std::move(vtx_dqdx));
+
+      } // end loop over vertecies in this event
+
+      // done
+      return true;
+       
+    } else {
+      LAROCV_CRITICAL() << "Impossible condition reached!" << std::endl;
+      throw larbys();
+    }
+
+    return false;
+  }
+
+  std::vector<float> dQdXProfiler::AtomdQdX(const cv::Mat& img, const data::AtomicContour& atom,
+					    const geo2d::Line<float>& pca,
+					    const geo2d::Vector<float>& start,
+					    const geo2d::Vector<float>& end) const
+  {
+    // goal: construct dq/dx for a given atom along pca line
+    // 0) identify the set of pixels for this atom
+    // 1) project the set of pixels along pca
+    // 2) construct binned dq/dx spectrum
+
+    // Define a bounding box in which we will work based on contour + user defined pixel inflation
+    auto const rect_rotated = cv::boundingRect( cv::Mat(atom) );
+    auto tl = rect_rotated.tl();
+    auto br = rect_rotated.br();
+
+    // inflate the region by user defined pixel inflation on each side
+
+    tl.x -= _atomic_region_pad;
+    tl.y -= _atomic_region_pad;
+    br.x += _atomic_region_pad;
+    br.y += _atomic_region_pad;
+
+    // Enforce image boundary condition
+    if(tl.x < 0) tl.x = 0;
+    if(tl.y < 0) tl.y = 0;
+    if(br.x >= img.cols) br.x = img.cols-1;
+    if(br.y >= img.rows) br.y = img.rows-1;
+
+    auto width  = br.x-tl.x;
+    auto height = br.y-tl.y;
+
+    if (width  < 0) throw larbys("width < 0");
+    if (height < 0) throw larbys("height < 0");
+    
+    // Crop the image
+    auto const bbox = cv::Rect(tl.x, tl.y, width, height);
+
+    LAROCV_DEBUG() << "Calculating dQ/dX for atom " << atom.id()
+		   << " within the cropped image " << bbox << std::endl;
+    
+    auto const small_img = cv::Mat(img, bbox);
+    
+    // List points that we care
+    std::vector<geo2d::Vector<int> > pts_in_bbox;
+    cv::findNonZero(small_img, pts_in_bbox);
+    LAROCV_DEBUG() << "Found " << pts_in_bbox.size() << " non zero points" << std::endl;
+    // Cropped image is rectangular and some points in the image has nothing to do with an atom
+    // Collect only points that matter to this atom by using user defined distance cut to a contour
+    // Also correct its coordinate system w.r.t. bbox origin
+    std::vector<geo2d::Vector<float> > pts;
+    pts.reserve(pts_in_bbox.size());
+    double dist_threshold = _atomic_contour_pad;
+    for(auto const& pt : pts_in_bbox) {
+      double dist = cv::pointPolygonTest(atom, pt, true);
+      if(dist > dist_threshold) continue;
+      geo2d::Vector<float> pt_float;
+      pt_float.x = pt.x + tl.x;
+      pt_float.y = pt.y + tl.y;
+      pts.emplace_back(std::move(pt_float));
+    }
+    LAROCV_DEBUG() << "Found " << pts.size() << " non zero points including neighbors" << std::endl;
+    if(pts.empty())
+      return std::vector<float>();
+    
+    // compute a point projection on pca line
+    // 0) loop over points, for each point find the closest point of appraoch, A, on the PCA line
+    // 1) compute position of A w.r.t. pt1 that defines pca line (1D scalar)
+    // 2) record two edge points to figure out ordering in inter-atom perspective
+
+    size_t minpt_index, maxpt_index;
+    minpt_index = maxpt_index = kINVALID_SIZE;
+    double minpt_dist =  1e10;
+    double maxpt_dist = -1e10;
+    std::vector<float> pts_1dcoord;
+    pts_1dcoord.resize(pts.size(),kINVALID_FLOAT);
+    geo2d::Vector<float> scratch_pt1, scratch_pt2;
+    
+    for(size_t pt_index = 0; pt_index < pts.size(); ++pt_index) {
+
+      auto const& pt = pts[pt_index];
+
+      // find the projection point on a line + distance
+      auto dist = geo2d::ClosestPoint(pca, pt, scratch_pt1, scratch_pt2);
+
+      // find the distance from a reference point on line
+      //dist = geo2d::dist(pca.pt,scratch_pt1);
+      scratch_pt1 -= pca.pt;
+      if(pca.dir.x > pca.dir.y) { dist = scratch_pt1.x / pca.dir.x; }
+      else{ dist = scratch_pt1.y / pca.dir.y; }
+      
+      pts_1dcoord[pt_index] = dist;
+
+      // record edge points
+      if(dist < minpt_dist) {
+	minpt_index = pt_index;
+	minpt_dist  = dist;
+      }
+      if(dist > maxpt_dist) {
+	maxpt_index = pt_index;
+	maxpt_dist  = dist;
+      }
+    }
+
+    LAROCV_DEBUG() << " Min pt index " << minpt_index 
+		   << " Max pt index " << maxpt_index << std::endl;
+    LAROCV_DEBUG() << " Min pt @ " << pts[minpt_index]
+		   << " Max pt @ " << pts[maxpt_index] << std::endl;
+    LAROCV_DEBUG() << " Start  @ " << start << std::endl;
+    // Figure out the edge that should correspond to the start
+    if(geo2d::dist(pts[minpt_index],start) < geo2d::dist(pts[maxpt_index],start)) {
+      LAROCV_DEBUG() << " Start edge is Min pt @ " << pts[minpt_index] << std::endl;
+      // minpt is closer to start ... shift 1D coordinate location accordingly
+      for(auto& dist : pts_1dcoord)
+	dist = fabs(dist - minpt_dist);
+    }else{
+      LAROCV_DEBUG() << " Start edge is Max pt @ " << pts[maxpt_index] << std::endl;
+      // maxpt is closer to start ... shift 1D coordinate location accordingly
+      for(auto& dist : pts_1dcoord)
+	dist = fabs(dist - maxpt_dist);
+    }
+
+    // Create dqdx distribution
+    size_t num_bins = (maxpt_dist - minpt_dist) / _dx_resolution + 1;
+    std::vector<float> dqdx(num_bins,0.);
+    // Loop over point coordinates to fill dqdx bins
+    for(size_t pt_index=0; pt_index<pts.size(); ++pt_index) {
+
+      auto const& pt = pts[pt_index];
+      
+      float q = (float)(img.at<unsigned char>((size_t)(pt.y),(size_t)(pt.x)));
+
+      size_t bin = (pts_1dcoord[pt_index] / _dx_resolution);
+
+      dqdx[bin] += q;
+
+    }
+
+    return dqdx;
+  }  
   
 }
 #endif

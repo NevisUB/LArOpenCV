@@ -6,7 +6,6 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/VertexParticleCluster.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/DefectBreaker.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
-#include "LArOpenCV/ImageCluster/AlgoData/DefectClusterData.h"
 #include "LArOpenCV/ImageCluster/AlgoData/TrackParticleClusterData.h"
 #include "LArOpenCV/ImageCluster/AlgoData/VertexClusterData.h"
 

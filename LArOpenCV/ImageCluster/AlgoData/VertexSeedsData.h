@@ -2,7 +2,7 @@
 #define __ALGODATA_VERTEXSEEDSDATA_H__
 
 #include "LArOpenCV/ImageCluster/Base/AlgoDataBase.h"
-#include "LArOpenCV/ImageCluster/AlgoData/DefectClusterData.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataCluster.h"
 
 namespace larocv {
 
