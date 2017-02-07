@@ -23,9 +23,10 @@ namespace larocv {
 
   void OneTrackOneShower::Configure(const Config_t &pset)
   {
-    _theta_hi = pset.get<int>("ThetaHi",20);
-    _theta_lo = pset.get<int>("ThetaLo",20);
 
+    _par_algo.Configure(pset);
+    _par_algo._pi_threshold = 5;
+    
     _pi_threshold = 5;
     _circle_default_radius = pset.get<float>("CircleDefaultRadius",10);//10
 
@@ -131,234 +132,45 @@ namespace larocv {
     return res_v;
   }
   
-  larocv::data::ShowerCluster
+  data::ShowerCluster
   OneTrackOneShower::SingleShowerHypothesis(const ::cv::Mat& img,
-					    const size_t plane,
 					    const data::CircleVertex& vtx)
   {
+
     if(vtx.xs_v.size()!=1) {
       LAROCV_CRITICAL() << "Only 1 crossing-point CircleVertex can be provided..." << std::endl;
       throw larbys();
     }
-    auto const& ref_vtx  = vtx.center;
-    auto const& ref_xs_v = vtx.xs_v;
+    
+    auto res_ctor_v = _par_algo.CreateParticleCluster(img,vtx);
+    
+    data::ShowerCluster shower;
 
-    std::vector< larocv::data::ParticleCluster >result_v;
-
-    auto ref_vtx_copy = ref_vtx;
-    
-    float angle,theta_lo,theta_hi;
-    
-    cv::Mat rot_img;
-    cv::Mat img_copy = img;
-    
-    cv::Mat img_padded;
-    int padding = sqrt(img.rows*img.rows+img.cols*img.cols)/2;
-    LAROCV_DEBUG() << "Diagonal is: " << padding << "... from row: " << img.rows << "... and cols: " << img.cols << std::endl;
-    
-    img_padded.create(img_copy.rows + 2*padding, img_copy.cols + 2*padding, img_copy.type());
-    img_padded.setTo(cv::Scalar::all(0));
-    img_copy.copyTo(img_padded(cv::Rect(padding, padding, img.cols, img.rows)));
-    
-    ref_vtx_copy.x+=padding;
-    ref_vtx_copy.y+=padding;
-    
-    LAROCV_DEBUG() << "Reference vertex @ " << ref_vtx_copy << std::endl;
-    
-    auto xs = ref_xs_v[0].pt; xs.x+=padding; xs.y+=padding;
-    
-    LAROCV_DEBUG() << "Inspecting XS @ " << xs << std::endl;
-    
-    angle = geo2d::angle(ref_vtx_copy,xs);
-    angle += 180.;
-    
-    theta_lo = _theta_lo;
-    theta_hi = _theta_hi;
-    
-    auto rot = ::cv::getRotationMatrix2D(ref_vtx_copy,angle,1.);
-    cv::Rect bbox = cv::RotatedRect(ref_vtx_copy,img_padded.size(),angle).boundingRect(); 
-    LAROCV_DEBUG() << "bbox : " << bbox << "... size " << bbox.size() << std::endl;
-    
-    cv::warpAffine(img_padded, rot_img, rot, bbox.size());
-    
-    LAROCV_DEBUG() << "rot_img rows: " << rot_img.rows << "... cols: " << rot_img.cols << std::endl;
-    
-    if(this->logger().level() == ::larocv::msg::kDEBUG) {
-      std::stringstream ss1,ss2;
-      ss1 << "norm_plane_"<<plane<< "_xs" << ".png";
-      ss2 << "rot_plane_"<<plane << "_xs" << ".png";
-      cv::imwrite(std::string(ss1.str()).c_str(), img_padded);
-      cv::imwrite(std::string(ss2.str()).c_str(), rot_img);
-    }
-    
-    cv::Mat rot_polarimg, sb_img;
-    
-    // Cluster per xs-point found in Refine2DVertex
-    
-    int max_radius=1000;
-    
-    ::cv::threshold(rot_img,rot_img,_pi_threshold,255,CV_THRESH_BINARY);
-    
-    cv::linearPolar(rot_img,        //input
-		    rot_polarimg,   //output
-		    ref_vtx_copy,
-		    max_radius,
-		    cv::WARP_FILL_OUTLIERS); //seems like it has to set
-    
-    auto kernel = ::cv::getStructuringElement(cv::MORPH_RECT,
-					      cv::Size(20,2));
-    ::cv::dilate(rot_polarimg,rot_polarimg,kernel,::cv::Point(-1,-1),1);     
-    
-    if(this->logger().level() == ::larocv::msg::kDEBUG) {
-      std::stringstream ss3;
-      ss3 << "polar_plane_"<<plane<<"_xs" << ".png";
-      cv::imwrite(std::string(ss3.str()).c_str(), rot_polarimg);
-    }
-    
-    /*
-    // mask-out very-near vtx pixels
-    size_t mask_col_max = _mask_radius/1000. * rot_polarimg.cols + 1;
-    for(size_t row=0; row<rot_polarimg.rows; row++) {
-    for(size_t col=0; col<mask_col_max; ++col) {
-    rot_polarimg.at<unsigned char>(row, col) = (unsigned char)0;
-    }
-    }
-    */
-    
-    // mask-out a bit further pixels for angles outside the range
-    size_t row_min, row_max;
-    
-    LAROCV_DEBUG() << "rot_polarimg... rows: " << rot_polarimg.rows << "... cols: " << rot_polarimg.cols << std::endl;
-    LAROCV_DEBUG() << "theta_lo: " << theta_lo << "... theta_hi: " << theta_hi << std::endl;
-    
-    row_min = (size_t)((float)(rot_polarimg.rows) * (0.5 - theta_lo/360.)); // was 10/360.
-    row_max = (size_t)((float)(rot_polarimg.rows) * (0.5 + theta_hi/360.));
-    
-    LAROCV_DEBUG() << "row min: " << row_min << "... row max: " << row_max << std::endl;
-    
-    for(size_t row=0; row<=row_min; ++row) {
-      for(size_t col=0; col<rot_polarimg.cols; col++) {
-	rot_polarimg.at<unsigned char>(row,col) = (unsigned char)0;
-      }
-    }
-    
-    for(size_t row=row_max; row<rot_polarimg.rows; ++row) {
-      for(size_t col=0; col<rot_polarimg.cols; col++) {
-	rot_polarimg.at<unsigned char>(row,col) = (unsigned char)0;
-      }
-    }
-    if(this->logger().level() == ::larocv::msg::kDEBUG) {
-      std::stringstream ss4;
-      ss4 << "mask_plane_"<<plane << "_xs" << ".png";
-      cv::imwrite(std::string(ss4.str()).c_str(), rot_polarimg);     
-    }
-    //Contour finding
-    ContourArray_t polar_ctor_v;    
-    std::vector<::cv::Vec4i> cv_hierarchy_v;
-    polar_ctor_v.clear(); cv_hierarchy_v.clear();
-    
-    
-    ::cv::findContours(rot_polarimg,
-		       polar_ctor_v,
-		       cv_hierarchy_v,
-		       CV_RETR_EXTERNAL,
-		       CV_CHAIN_APPROX_SIMPLE);
-    
-    LAROCV_DEBUG() << "Found " << polar_ctor_v.size() << " contours\n";
-    // Find one contour that is closest to the vtx
-    float min_radius=1e4;
-    int   target_idx=-1;
-    for(size_t polar_ctor_idx = 0; polar_ctor_idx < polar_ctor_v.size(); ++polar_ctor_idx) {
-      auto const& polar_ctor = polar_ctor_v[polar_ctor_idx];
-      LAROCV_DEBUG() << "Polar contour idx : " << polar_ctor_idx << " of size " << polar_ctor.size() << std::endl;
-      for(auto const& pt : polar_ctor) {
-	float angle = pt.y / (float)(rot_polarimg.rows) * 360. - 180;
-	//std::cout<<"pt " << pt << " ... angle " << angle << std::endl;
-	if(angle < -5 || angle > 5) continue;
-	if(pt.x > min_radius) continue;
-	min_radius = pt.x;
-	target_idx = polar_ctor_idx;
-      }
-      //LAROCV_DEBUG() << "min_radius : " << min_radius << std::endl;
-    }
-
-    larocv::data::ShowerCluster shower;
-    if(target_idx < 0) {
-      LAROCV_DEBUG() << "No relevant contour find for this xs point" << std::endl;
-      return shower;
-    }
-    
-    auto const& polar_contour = polar_ctor_v[target_idx];
-    LAROCV_DEBUG() << "Chose polar contour at index : " << target_idx
-		   << " of size " << polar_contour.size() << std::endl;
-    
-    float rows = rot_polarimg.rows;
-    float cols = rot_polarimg.cols;
-    
-    //cv::Mat polar_ctor_mat = cv::Mat(img_padded.rows,img_padded.cols,CV_8UC1,cvScalar(0.));
-    
-    //Cluster2D res_contour;
-    //res_contour._contour.resize(polar_contour.size());
     auto& contour = shower.ctor;
-    contour.reserve(polar_contour.size());
-    
-    //std::stringstream ss5;
-    //ss3 << "Inserting into contour : ";
-    ::geo2d::Vector<int> this_pt,last_pt;
-    for (size_t pt_idx=0; pt_idx<polar_contour.size(); ++pt_idx) {
-      auto const& polar_pt = polar_contour[pt_idx];
-      
-      //polar_ctor_mat.at<unsigned char>(polar_pt.y,polar_pt.x) = (unsigned char) 255;
-      
-      //up case to floating point
-      float r = polar_pt.x;
-      float t = polar_pt.y;
-      
-      r = (r / cols) * max_radius;
-      t = ((t / rows) * 360.0 + angle) * M_PI / 180.0;
-      
-      this_pt.x = (size_t)((float) r * std::cos(t) + ref_vtx_copy.x + 0.5);
-      this_pt.y = (size_t)((float) r * std::sin(t) + ref_vtx_copy.y + 0.5);
-      
-      //res_contour._contour[pt_idx].x = (int)(pt.x + 0.5) - padding;
-      //res_contour._contour[pt_idx].y = (int)(pt.y + 0.5) - padding;
-      
-      this_pt.x -= padding;
-      this_pt.y -= padding;
-      if(pt_idx == 0 || this_pt.x != last_pt.x || this_pt.y != last_pt.y)
-	contour.push_back(this_pt);
-      last_pt = this_pt;
-      
-      //ss5<<"[" << res_contour._contour[pt_idx].x << "," << res_contour._contour[pt_idx].y << "],";
+    if ( res_ctor_v.empty() ) {
+      LAROCV_INFO() << "No single shower can be identified" << std::endl;
     }
-    //ss5<<std::endl;
-    //LAROCV_DEBUG() << ss5.str();
-    // cv::Mat cart_ctor_mat  = cv::Mat(img_padded.rows,img_padded.cols,CV_8UC1,cvScalar(0.));
-    // for(auto& cpt : res_contour._contour)
-    // 	cart_ctor_mat.at<unsigned char>(cpt.y,cpt.x) = (unsigned char) 255;
-    
-    // std::stringstream pp0;
-    // pp0 << "cart_ctor_mat_"<<plane<<".png";
-    // //cv::imwrite(pp0.str().c_str(),cart_ctor_mat);
-    
-    // std::stringstream pp1;
-    // pp1 << "polar_ctor_mat_"<<plane<<".png";
-    // //cv::imwrite(pp1.str().c_str(),polar_ctor_mat);
-    
-    //geo2d::UntanglePolygon(contour);
-    
-    // Make sure this contour is valid (= particle is valid cluster)
+    else if (res_ctor_v.size() == 1) {
+      LAROCV_INFO() << "Single shower identified" << std::endl;
+      contour = res_ctor_v[0];
+    }
+    else {
+      LAROCV_CRITICAL() << "Implement choosing largest area contour?" << std::endl;
+      throw larbys();
+    }
+      
     if(shower.ctor.size()<=2)
       shower.ctor.clear();
     else
       shower.start = vtx.center;
+
     return shower;
   }
 
   void OneTrackOneShower::ListShowerVertex(const std::vector<const cv::Mat>& img_v,
-					   const std::vector<larocv::data::Vertex3D>& cand_v,
-					   std::vector<larocv::data::Vertex3D>& res_vtx_v,
-					   std::vector<std::vector<larocv::data::CircleVertex> >& res_cvtx_v) const
+					   const std::vector<data::Vertex3D>& cand_v,
+					   std::vector<data::Vertex3D>& res_vtx_v,
+					   std::vector<std::vector<data::CircleVertex> >& res_cvtx_v) const
   {
     res_vtx_v.clear();
     res_cvtx_v.clear();
@@ -370,10 +182,10 @@ namespace larocv {
       auto const& cand_vtx = cand_v[vtx_idx];
       LAROCV_INFO() << "Inspecting vertex " << vtx_idx
 		    << " @ (" << cand_vtx.x << "," << cand_vtx.y << "," << cand_vtx.z << ")" << std::endl;
-      std::vector<larocv::data::CircleVertex> cvtx_v;
+      std::vector<data::CircleVertex> cvtx_v;
       cvtx_v.resize(_num_planes);
       for(size_t plane=0; plane<img_v.size(); ++plane) {
-	larocv::data::ShowerCluster scluster;
+	data::ShowerCluster scluster;
 	auto& cvtx = cvtx_v[plane];
 	cvtx.radius = _circle_default_radius;
 	circle.center.x = cand_vtx.vtx2d_v.at(plane).pt.x;
@@ -399,7 +211,7 @@ namespace larocv {
 	LAROCV_DEBUG() << "     # crossing points = " << xs_pt_v.size() << std::endl;
 	*/
 	for(auto const& xs_pt : xs_pt_v) {
-	  larocv::data::PointPCA pca_pt;
+	  data::PointPCA pca_pt;
 	  pca_pt.pt = xs_pt;
 	  pca_pt.line = SquarePCA(img, pca_pt.pt, 5, 5);
 	  cvtx.xs_v.push_back(pca_pt);
@@ -450,13 +262,13 @@ namespace larocv {
 	continue;
       }
 
-      larocv::data::SingleShower shower;
+      data::SingleShower shower;
       for(size_t plane=0; plane<img_v.size(); ++plane) {
 	auto const& img  = img_v[plane];
 	auto const& cvtx = vtx2d_v[plane];
 	if(cvtx.xs_v.size()!=1) continue;
 	LAROCV_INFO() << "Clustering attempt on plane " << plane << " with circle @ " << cvtx.center << std::endl;
-	shower.insert(plane,SingleShowerHypothesis(img, plane, cvtx));
+	shower.insert(plane,SingleShowerHypothesis(img, cvtx));
       }
       size_t num_good_plane=0;
       for(auto const& scluster: shower.get_clusters()) {
