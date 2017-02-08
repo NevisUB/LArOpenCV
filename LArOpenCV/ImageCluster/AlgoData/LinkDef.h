@@ -18,6 +18,13 @@
 #pragma link C++ class std::vector<larocv::data::Vertex3D>+;
 #pragma link C++ class larocv::data::Vertex3DArray+;
 
+#pragma link C++ class larocv::data::AtomicContour;
+#pragma link C++ class std::vector<larocv::data::AtomicContour>+;
+#pragma link C++ class larocv::data::ContourDefect;
+#pragma link C++ class std::vector<larocv::data::ContourDefect>+;
+#pragma link C++ class larocv::data::TrackClusterCompound+;
+#pragma link C++ class std::vector<larocv::data::TrackClusterCompound>+;
+
 //ADD_NEW_CLASS ... do not change this line
 #endif
 
