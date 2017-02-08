@@ -44,9 +44,6 @@ namespace larocv {
       /// Clear method
       virtual void Clear() { _Clear_(); }
 
-      /// Clear method to be implemented by child
-      virtual void _Clear_() = 0;
-
       /// ID getter
       AlgoDataID_t ID() const
       { return _id; }
@@ -60,6 +57,10 @@ namespace larocv {
       { return _type; }
 
     protected:
+
+      /// Clear method to be implemented by child
+      virtual void _Clear_() = 0;
+      
       /// Protected contructor, to be used by inherited class constructors
       AlgoDataBase(AlgoDataCategory_t cat, AlgoDataType_t type=kDataTypeUnknown)
 	: _id(kINVALID_SIZE), _category(cat), _type(type)
