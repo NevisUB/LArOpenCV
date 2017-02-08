@@ -26,7 +26,17 @@
 #pragma link C++ class std::vector<larocv::data::TrackClusterCompound>+;
 
 #pragma link C++ class larocv::data::ParticleCluster+;
-#pragma link C++ class std::vector<larocv::data::ParticleCluster+>;
+#pragma link C++ class std::vector<larocv::data::ParticleCluster>+;
+
+#pragma link C++ class larocv::data::VertexSeed2D;
+#pragma link C++ class std::vector<larocv::data::VertexSeed2D>+;
+#pragma link C++ class larocv::data::VertexSeed3D;
+#pragma link C++ class std::vector<larocv::data::VertexSeed3D>+;
+
+#pragma link C++ class larocv::data::LinearTrack2D+;
+#pragma link C++ class std::vector<larocv::data::LinearTrack2D>+;
+#pragma link C++ class larocv::data::LinearTrack+;
+#pragma link C++ class std::vector<larocv::data::LinearTrack>+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
