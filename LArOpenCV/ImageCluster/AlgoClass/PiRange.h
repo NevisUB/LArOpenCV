@@ -26,7 +26,7 @@ namespace larocv {
   public:
     
     /// Default constructor
-    PiRange() : laropencv_base("PiRange") {SetAngle(0,0,0);}
+    PiRange() : laropencv_base("PiRange") { _angle = _angle_hi = _angle_lo = 0;}
     
     /// Default destructor
     ~PiRange(){}

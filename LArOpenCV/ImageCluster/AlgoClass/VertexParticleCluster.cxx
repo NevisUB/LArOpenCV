@@ -110,7 +110,7 @@ namespace larocv {
     geo2d::Circle<float> mask_region(vtx2d.center,vtx2d.radius);
 
     auto img_circle = MaskImage(thresh_img, mask_region, 0, false);
-
+    
     // Create seed clusters
     _seed_cluster_v = ParticleHypothesis(img_circle,vtx2d);
 
@@ -169,16 +169,24 @@ namespace larocv {
 
       auto seed_idx  = match_v[xs_idx].first;
       auto child_idx = match_v[xs_idx].second;
-      if(seed_idx == kINVALID_SIZE && child_idx == kINVALID_SIZE)
+      if(seed_idx == kINVALID_SIZE && child_idx == kINVALID_SIZE) {
+	LAROCV_WARNING() << "No seed/child matched for XS index " << xs_idx << std::endl;
 	continue;
-      if(seed_idx == kINVALID_SIZE)
+      }
+      if(seed_idx == kINVALID_SIZE) {
+	LAROCV_WARNING() << "No seed matched for XS index " << xs_idx << std::endl;
 	res[xs_idx] = _child_cluster_v[child_idx];
-      else if(child_idx == kINVALID_SIZE)
+      }
+      else if(child_idx == kINVALID_SIZE) {
+	LAROCV_WARNING() << "No child matched for XS index " << xs_idx << std::endl;
 	res[xs_idx] = _seed_cluster_v[seed_idx];
-      else
-      res[xs_idx] = _merge_by_mask ?
+      }
+      else {
+	LAROCV_INFO() << "Child " << child_idx << " + Seed " << seed_idx << " matched for XS index " << xs_idx << std::endl;
+	res[xs_idx] = _merge_by_mask ?
 	std::move(MergeByMask(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx],thresh_img)) :
 	std::move(Merge(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx]));
+      }
     }
     
     return res;
@@ -192,12 +200,13 @@ namespace larocv {
     
     auto const& ref_vtx  = vtx.center;
     auto const& ref_xs_v = vtx.xs_v;
-    LAROCV_INFO() << "# crossing points = " << ref_xs_v.size() << std::endl;
+    auto ref_n_xs = ref_xs_v.size();
+    LAROCV_INFO() << "# crossing points = " << ref_n_xs << std::endl;
     if(ref_xs_v.empty()) return result_v;
     
     // Order a list of xs points in angle
     std::map<double,size_t> angle_order_m;
-    for(size_t pca_idx=0; pca_idx<ref_xs_v.size(); ++pca_idx){
+    for(size_t pca_idx=0; pca_idx<ref_n_xs; ++pca_idx){
       auto const& pt = ref_xs_v[pca_idx].pt;
       double angle = geo2d::angle(ref_vtx,pt);
       if(angle<0) angle+=360;
@@ -205,9 +214,9 @@ namespace larocv {
     }
 
     std::vector<geo2d::Vector<float> > xs_v;
-    xs_v.reserve(ref_xs_v.size());
+    xs_v.reserve(ref_n_xs);
     std::vector<double> angle_v;
-    angle_v.reserve(ref_xs_v.size());
+    angle_v.reserve(ref_n_xs);
     for(auto const& angle_idx : angle_order_m) {
       xs_v.push_back(ref_xs_v[angle_idx.second].pt);
       LAROCV_INFO() << "Crossing " << angle_idx.second << " @ "
@@ -217,14 +226,14 @@ namespace larocv {
     // Define angle range
     std::vector<double> theta_lo_v; // just width, not absolute angle
     std::vector<double> theta_hi_v; // just width, not absolute angle
-    theta_lo_v.resize(ref_xs_v.size(),0);
-    theta_hi_v.resize(ref_xs_v.size(),360);
+    theta_lo_v.resize(ref_n_xs,0);
+    theta_hi_v.resize(ref_n_xs,360);
 
-    if(ref_xs_v.size()==1) {
+    if(ref_n_xs==1) {
       theta_lo_v[0] = 180;
       theta_hi_v[0] = 180;
     }
-    if(ref_xs_v.size()==2) {
+    if(ref_n_xs==2) {
       theta_hi_v[0] = (angle_v[1] - angle_v[0])/2.;
       theta_lo_v[0] = 180. - theta_hi_v[0];
       theta_hi_v[1] = theta_lo_v[0];
@@ -244,6 +253,7 @@ namespace larocv {
       }
     }
 
+
     for(int xs_pt_idx=0; xs_pt_idx<xs_v.size(); ++xs_pt_idx) {
       LAROCV_DEBUG() << "xs pt idx: " << xs_pt_idx << std::endl;
 
@@ -254,7 +264,7 @@ namespace larocv {
       LAROCV_DEBUG() << "angle: " << angle << std::endl;
       
       cv::Mat rot_img;
-      cv::Mat img_copy = img;
+      cv::Mat img_copy = img.clone();
 
       cv::Mat img_padded;
       int padding = sqrt(img.rows*img.rows+img.cols*img.cols)/2;
@@ -288,7 +298,7 @@ namespace larocv {
 	cv::imwrite(std::string(ss1.str()).c_str(), img_padded);
 	cv::imwrite(std::string(ss2.str()).c_str(), rot_img);
       }
-
+      
       cv::Mat rot_polarimg, sb_img;
       
       // Cluster per xs-point found in Refine2DVertex
@@ -310,8 +320,10 @@ namespace larocv {
       ::cv::dilate(rot_polarimg,rot_polarimg,kernel,::cv::Point(-1,-1),1);     
 
       if(this->logger().level() == ::larocv::msg::kDEBUG) {
-	std::stringstream ss3;
+	std::stringstream ss2,ss3;
+	ss2 << "thresh_plane_xs" << xs_pt_idx << ".png";
 	ss3 << "polar_plane_xs" << xs_pt_idx << ".png";
+	cv::imwrite(std::string(ss2.str()).c_str(), rot_img);
 	cv::imwrite(std::string(ss3.str()).c_str(), rot_polarimg);
       }
 
@@ -327,6 +339,13 @@ namespace larocv {
 	  }
 	}
       }
+
+      if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	std::stringstream ss2;
+	ss2 << "mask_near_plane_xs" << xs_pt_idx << ".png";
+	cv::imwrite(std::string(ss2.str()).c_str(), rot_polarimg);
+      }
+
       
       // mask-out a bit further pixels for angles outside the range
       size_t row_min, row_max;
@@ -360,22 +379,21 @@ namespace larocv {
       std::vector<::cv::Vec4i> cv_hierarchy_v;
       polar_ctor_v.clear(); cv_hierarchy_v.clear();
 
-
       ::cv::findContours(rot_polarimg,
 			 polar_ctor_v,
 			 cv_hierarchy_v,
 			 CV_RETR_EXTERNAL,
 			 CV_CHAIN_APPROX_SIMPLE);
 
-      LAROCV_DEBUG() << "Found " << polar_ctor_v.size() << " contours\n";
+      LAROCV_DEBUG() << "Found " << polar_ctor_v.size() << " polar contours" << std::endl;
       // Find one contour that is closest to the vtx
       float min_radius=1e4;
       int   target_idx=-1;
       for(size_t polar_ctor_idx = 0; polar_ctor_idx < polar_ctor_v.size(); ++polar_ctor_idx) {
 	auto const& polar_ctor = polar_ctor_v[polar_ctor_idx];
 	for(auto const& pt : polar_ctor) {
-	  float angle = pt.y / (float)(rot_polarimg.rows) * 360. - 180;
-	  if(angle < -5 || angle > 5) continue;
+	  float pt_angle = pt.y / (float)(rot_polarimg.rows) * 360. - 180;
+	  if(pt_angle < -5 || pt_angle > 5) continue;
 	  if(pt.x > min_radius) continue;
 	  min_radius = pt.x;
 	  target_idx = polar_ctor_idx;
@@ -390,16 +408,25 @@ namespace larocv {
       
       LAROCV_DEBUG() << "Chose polar contour at index : " << target_idx << " of size " << polar_ctor_v[target_idx].size() << std::endl;
 
+      _refine_polar_cluster=true;
       if(_refine_polar_cluster) {
 	// Refine contour
-	cv::Mat filled_ctor(rot_polarimg.size(),rot_polarimg.type(),CV_8UC1);
+	::cv::Mat filled_ctor(rot_polarimg.size(),rot_polarimg.type(),CV_8UC1);
 	polar_ctor_v[0] = polar_ctor_v[target_idx];
 	polar_ctor_v.resize(1);
-	cv::drawContours(filled_ctor, polar_ctor_v, -1, cv::Scalar(255), -1, cv::LINE_8); // fill inside
-	//cv::drawContours(filled_ctor, polar_ctor_v, -1, cv::Scalar(255),  2, cv::LINE_8); // make the edges thicker to mask outwards
+	::cv::drawContours(filled_ctor, polar_ctor_v, -1, cv::Scalar(255), -1, cv::LINE_8); // fill inside
 	polar_ctor_v.clear();
 	cv_hierarchy_v.clear();
 	::cv::findContours(filled_ctor, polar_ctor_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+
+	if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	  auto img_tmp0 = rot_polarimg.clone();
+	  img_tmp0.setTo(0);
+	  drawContours(img_tmp0, GEO2D_ContourArray_t(1,polar_ctor_v[target_idx]), -1 , cv::Scalar(255),1,8);
+	  ::cv::imwrite("refine_polar_ctor_a.png",img_tmp0);
+	  ::cv::imwrite("refine_polar_ctor_b.png",filled_ctor);
+	}
+	
 	// pick the maximal area contour
 	if(polar_ctor_v.empty()) {
 	  LAROCV_CRITICAL() << "Lost contour in polar-refining step?!" << std::endl;	
@@ -416,26 +443,28 @@ namespace larocv {
 	  }
 	}
       }
-      
+
       auto const& polar_contour = polar_ctor_v[target_idx];
       
       float rows = rot_polarimg.rows;
       float cols = rot_polarimg.cols;
       
-      //cv::Mat polar_ctor_mat = cv::Mat(img_padded.rows,img_padded.cols,CV_8UC1,cvScalar(0.));
-            
       GEO2D_Contour_t contour;
       contour.reserve(polar_contour.size());
 
-      //std::stringstream ss5;
-      //ss3 << "Inserting into contour : ";
       ::geo2d::Vector<int> this_pt,last_pt;
       ::geo2d::Vector<float> this_fpt;
-      _prange.SetAngle(angle_v[xs_pt_idx],theta_lo,theta_hi);
+
+      auto xs_pt_angle = ref_n_xs==1 ? 180  : angle_v[xs_pt_idx];
+      LAROCV_DEBUG() << "Setting xs point index: " << xs_pt_idx
+		     << " angle " << angle_v[xs_pt_idx]
+		     << " theta lo " << theta_lo
+		     << " theta hi " << theta_hi << std::endl;
+      _prange.SetAngle(xs_pt_angle,theta_lo,theta_hi);
+
+      
       for (size_t pt_idx=0; pt_idx<polar_contour.size(); ++pt_idx) {
       	auto const& polar_pt = polar_contour[pt_idx];
-	
-	//polar_ctor_mat.at<unsigned char>(polar_pt.y,polar_pt.x) = (unsigned char) 255;
 	
       	//up case to floating point
       	float r = polar_pt.x;
@@ -447,36 +476,50 @@ namespace larocv {
       	this_pt.x = (size_t)((float) r * std::cos(t) + ref_vtx_copy.x + 0.5);
       	this_pt.y = (size_t)((float) r * std::sin(t) + ref_vtx_copy.y + 0.5);
 	
-      	//res_contour._contour[pt_idx].x = (int)(pt.x + 0.5) - padding;
-      	//res_contour._contour[pt_idx].y = (int)(pt.y + 0.5) - padding;
-	
 	this_pt.x -= padding;
 	this_pt.y -= padding;
-
+	
 	if(pt_idx == 0 || this_pt.x != last_pt.x || this_pt.y != last_pt.y) {
-
 	  // compute the angle of this contour point, make sure it is within the angular range
+
 	  this_fpt.x = this_pt.x;
 	  this_fpt.y = this_pt.y;
+	  
 	  double this_angle = ::geo2d::angle(ref_vtx,this_fpt);
 	  if(!_prange.Inside(this_angle)) {
 	    double this_dist = ::geo2d::dist(ref_vtx,this_fpt);
 	    this_angle = (_prange.CloserEdge(this_angle) ? _prange.AngleHi() : _prange.AngleLo());
-	    this_fpt.x = ref_vtx.x + this_dist * cos(2 * M_PI * this_angle/360.);
-	    this_fpt.y = ref_vtx.y + this_dist * sin(2 * M_PI * this_angle/360.);
+	    this_fpt.x = ref_vtx.x + this_dist * cos( 2 * M_PI * this_angle/360.);
+	    this_fpt.y = ref_vtx.y + this_dist * sin( 2 * M_PI * this_angle/360.);
 	    this_pt.x = (int)this_fpt.x;
 	    this_pt.y = (int)this_fpt.y;
 	  }
-	  if(pt_idx == 0 || this_pt.x != last_pt.x || this_pt.y != last_pt.y) 
+	  if(pt_idx == 0 || this_pt.x != last_pt.x || this_pt.y != last_pt.y) {
 	    contour.push_back(this_pt);
+	  }
 	}
 	last_pt = this_pt;
-	
-	//ss5<<"[" << res_contour._contour[pt_idx].x << "," << res_contour._contour[pt_idx].y << "],";
       }
+
       if(_refine_cartesian_cluster) {
 	// Refine contour
+	LAROCV_DEBUG() << "Refining cartesian contour of size: " << contour.size() << std::endl;
 	auto masked = MaskImage(img,contour,0,false);
+	
+	if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	  auto plane_tmp=0;
+	  auto img_tmp0 = img.clone();
+	  img_tmp0.setTo(0);
+	  drawContours(img_tmp0, GEO2D_ContourArray_t(1,contour), -1 , cv::Scalar(255),1,8);
+	  std::stringstream ss_a,ss_b,ss_c;
+	  ss_a << "imgid_" << plane_tmp << "_refine_cart_ctor_a.png";
+	  ss_b << "imgid_" << plane_tmp << "_refine_cart_ctor_b.png";
+	  ss_c << "imgid_" << plane_tmp << "_refine_cart_ctor_c.png";
+	  ::cv::imwrite(ss_a.str(),img);
+	  ::cv::imwrite(ss_b.str(),img_tmp0);
+	  ::cv::imwrite(ss_c.str(),masked);
+	}
+	
 	GEO2D_ContourArray_t cartesian_ctor_v;
 	cartesian_ctor_v.clear();
 	cv_hierarchy_v.clear();

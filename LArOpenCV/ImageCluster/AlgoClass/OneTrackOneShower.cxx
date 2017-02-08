@@ -13,8 +13,6 @@
 #include "LArOpenCV/ImageCluster/AlgoData/VertexClusterData.h"
 #include "LArOpenCV/ImageCluster/AlgoData/LinearTrackClusterData.h"
 
-//#include <typeinfo>
-
 namespace larocv {
 
   void OneTrackOneShower::Reset()
