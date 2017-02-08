@@ -15,7 +15,7 @@ namespace larocv {
     }
 
     if(range_hi < 0. || range_hi > 180.) {
-      LAROCV_CRITICAL() << "Lo range = " << range_hi << " (must be [0,180] range)" << std::endl;
+      LAROCV_CRITICAL() << "Hi range = " << range_hi << " (must be [0,180] range)" << std::endl;
       throw larbys();
     }
 
@@ -33,41 +33,44 @@ namespace larocv {
       LAROCV_CRITICAL() << "angle hi/lo are identical @ " << _angle_hi << std::endl;
       throw larbys();
     }
-    
-
   }
 
   bool PiRange::CloserEdge(double angle) const
   {
     while(angle>360) { angle -= 360.; }
     while(angle<0  ) { angle += 360.; }
+
     double dangle_hi = std::fabs(_angle_hi - angle);
     if( dangle_hi > 180. ) dangle_hi = 360. - dangle_hi;
 
     double dangle_lo = std::fabs(_angle_lo - angle);
     if( dangle_lo > 180. ) dangle_lo = 360. - dangle_lo;
-
+    
     return dangle_hi < dangle_lo;
   }
   
   bool PiRange::Inside(double angle) const
   {
+    if (_angle_lo==0   and _angle_hi==360) return true;
+    if (_angle_lo==360 and _angle_hi==0  ) return false;
+
     while(angle>360) { angle -= 360.; }
     while(angle<0  ) { angle += 360.; }
+
     if(CloserEdge(angle)) {
       double angle_rotate  = 360 - _angle_hi;
       double rotated_angle = angle + angle_rotate;
       if( rotated_angle > 360. ) rotated_angle -= 360.;
       LAROCV_DEBUG() << "Close to HI angle (" << AngleLo() << "," << AngleHi()
-		     << ") @ " << angle << " ... " << (rotated_angle > 180. ? "inside" : "outside")
+		     << ") @ " << angle << " ... rot " << rotated_angle << " is " << (rotated_angle > 180. ? "inside" : "outside")
 		     << std::endl;
-      return rotated_angle >180.;
+      return rotated_angle > 180.;
     }else{
       double angle_rotate  = 360. - _angle_lo;
       double rotated_angle = angle + angle_rotate;
       if( rotated_angle > 360. ) rotated_angle -= 360.;
       LAROCV_DEBUG() << "Close to LO angle (" << AngleLo() << "," << AngleHi()
-		     << ") @ " << angle << " ... " << (rotated_angle < 180. ? "inside" : "outside")
+		     << ") @ " << angle << " ... rot " << rotated_angle << " is " << (rotated_angle < 180. ? "inside" : "outside")
 		     << std::endl;
       return rotated_angle < 180.;
     }

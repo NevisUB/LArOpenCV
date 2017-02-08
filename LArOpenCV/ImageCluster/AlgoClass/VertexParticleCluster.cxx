@@ -254,12 +254,13 @@ namespace larocv {
     
     auto const& ref_vtx  = vtx.center;
     auto const& ref_xs_v = vtx.xs_v;
-    LAROCV_INFO() << "# crossing points = " << ref_xs_v.size() << std::endl;
+    auto ref_n_xs = ref_xs_v.size();
+    LAROCV_INFO() << "# crossing points = " << ref_n_xs << std::endl;
     if(ref_xs_v.empty()) return result_v;
     
     // Order a list of xs points in angle
     std::map<double,size_t> angle_order_m;
-    for(size_t pca_idx=0; pca_idx<ref_xs_v.size(); ++pca_idx){
+    for(size_t pca_idx=0; pca_idx<ref_n_xs; ++pca_idx){
       auto const& pt = ref_xs_v[pca_idx].pt;
       double angle = geo2d::angle(ref_vtx,pt);
       if(angle<0) angle+=360;
@@ -267,9 +268,9 @@ namespace larocv {
     }
 
     std::vector<geo2d::Vector<float> > xs_v;
-    xs_v.reserve(ref_xs_v.size());
+    xs_v.reserve(ref_n_xs);
     std::vector<double> angle_v;
-    angle_v.reserve(ref_xs_v.size());
+    angle_v.reserve(ref_n_xs);
     for(auto const& angle_idx : angle_order_m) {
       xs_v.push_back(ref_xs_v[angle_idx.second].pt);
       LAROCV_INFO() << "Crossing " << angle_idx.second << " @ "
@@ -279,14 +280,14 @@ namespace larocv {
     // Define angle range
     std::vector<double> theta_lo_v; // just width, not absolute angle
     std::vector<double> theta_hi_v; // just width, not absolute angle
-    theta_lo_v.resize(ref_xs_v.size(),0);
-    theta_hi_v.resize(ref_xs_v.size(),360);
+    theta_lo_v.resize(ref_n_xs,0);
+    theta_hi_v.resize(ref_n_xs,360);
 
-    if(ref_xs_v.size()==1) {
+    if(ref_n_xs==1) {
       theta_lo_v[0] = 180;
       theta_hi_v[0] = 180;
     }
-    if(ref_xs_v.size()==2) {
+    if(ref_n_xs==2) {
       theta_hi_v[0] = (angle_v[1] - angle_v[0])/2.;
       theta_lo_v[0] = 180. - theta_hi_v[0];
       theta_hi_v[1] = theta_lo_v[0];
@@ -508,7 +509,7 @@ namespace larocv {
       ::geo2d::Vector<int> this_pt,last_pt;
       ::geo2d::Vector<float> this_fpt;
 
-      auto xs_pt_angle = ref_xs_v.size()==1 ? 180  : angle_v[xs_pt_idx];
+      auto xs_pt_angle = ref_n_xs==1 ? 180  : angle_v[xs_pt_idx];
       LAROCV_DEBUG() << "Setting xs point index: " << xs_pt_idx
 		     << " angle " << angle_v[xs_pt_idx]
 		     << " theta lo " << theta_lo
@@ -539,7 +540,7 @@ namespace larocv {
 	  this_fpt.y = this_pt.y;
 	  
 	  double this_angle = ::geo2d::angle(ref_vtx,this_fpt);
-	  if(!_prange.Inside(this_angle) && ref_xs_v.size()!=1) {
+	  if(!_prange.Inside(this_angle)) {
 	    double this_dist = ::geo2d::dist(ref_vtx,this_fpt);
 	    this_angle = (_prange.CloserEdge(this_angle) ? _prange.AngleHi() : _prange.AngleLo());
 	    this_fpt.x = ref_vtx.x + this_dist * cos( 2 * M_PI * this_angle/360.);
