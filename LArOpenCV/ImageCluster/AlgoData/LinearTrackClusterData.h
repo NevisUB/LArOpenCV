@@ -47,6 +47,11 @@ namespace larocv {
 	return _strack_v[plane];
       }
 
+      const std::vector<LinearTrack2D>& get_clusters() const 
+      {
+	return _strack_v;
+      }
+
       void set_start_edge(unsigned short edge)
       {
 	if(edge>2) throw larbys("Invalid edge number!");
