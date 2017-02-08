@@ -36,7 +36,6 @@ namespace larocv {
 			std::make_move_iterator(std::end(seed_v)));
       }
     }
-
     ///////////////////////////////////////////////////////////////////////
     
 

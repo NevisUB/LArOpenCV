@@ -16,12 +16,12 @@ namespace larocv {
       ParticleCluster()
       { _Clear_(); }
       ~ParticleCluster() {}
-
+      
       /// attribute clear method
       void _Clear_() { _ctor.clear(); }
-
+      
       GEO2D_Contour_t _ctor; ///< contour to define a cluster
-
+      
     private:
       
     };

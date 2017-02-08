@@ -72,7 +72,7 @@ namespace larocv {
     */
     class Vertex3D : public AlgoDataArrayElementBase {
     public:
-      Vertex3D() {Clear();}
+      Vertex3D()  {}
       ~Vertex3D() {}
       
       /// attribute clear method
