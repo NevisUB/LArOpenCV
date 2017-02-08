@@ -88,7 +88,7 @@ namespace larocv {
 
     /**
        \class Vertex3DArray
-     */
+    */
     typedef AlgoDataArrayTemplate<Vertex3D> Vertex3DArray;
     
   }
