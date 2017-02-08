@@ -23,8 +23,10 @@ namespace larocv {
 
   /// larocv::ImageClusterBase inherit algorithm's unique identifier within larocv::ClusterImageManager
   typedef size_t AlgorithmID_t;
-  /// larocv::AlgoDataBase inherit data rep's identifier (unique when combined with AlgorithmID_t) per algorithm
-  typedef size_t AlgorithmDataID_t;
+  /// larocv::AlgoDataBase inherit data rep's identifier
+  typedef size_t AlgoDataID_t;
+  /// A generic type for an "index of an array"
+  typedef size_t Index_t;
   /// A unique identifier for a set of images
   typedef size_t ImageSetID_t;
   /// A image's unique identifier within larocv::ImageClusterManager
@@ -46,6 +48,16 @@ namespace larocv {
 
   typedef std::vector<std::vector<geo2d::Vector<int> > > GEO2D_ContourArray_t;
   typedef std::vector<geo2d::Vector<int> >               GEO2D_Contour_t;
-  
+
+  namespace data {
+    enum AlgoDataCategory_t {
+      kDataCatArray,        ///< AlgoDataArrayBase inherit class
+      kDataCatArrayElement, ///< AlgoDataArrayElementBase inherit class
+      kDataCatDefault       ///< Anything else
+    };
+    enum AlgoDataType_t {
+      kDataTypeUnknown
+    };
+  }
 }
 #endif

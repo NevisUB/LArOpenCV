@@ -45,6 +45,7 @@ namespace larocv {
 
   private:
     AlgorithmID_t _algo_id_shower_estimate;
+    AlgorithmID_t _algo_id_shower_super_cluster;
     OneTrackOneShower _algo;
   };
 

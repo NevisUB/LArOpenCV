@@ -3,8 +3,8 @@
 
 #include "LArOpenCV/Core/LArOCVTypes.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
-#include "AlgoDataVertex.h"
-#include "AlgoDataCluster.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataVertex.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataCluster.h"
 
 namespace larocv {
   namespace data {
@@ -45,11 +45,12 @@ namespace larocv {
       size_t _num_pixel;     ///< # of non-zero pixel from parent contour, contained in this contour
       double _qsum;          ///< charge sum
 
-      double dqdx();
+      std::vector<float> dqdx();
+      geo2d::Vector<float> start_point();
+      geo2d::Vector<float> end_point();
       
     private:
       size_t _cluster_id; ///< unique cluster id      
-      
     };
 
     /**

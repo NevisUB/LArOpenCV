@@ -99,19 +99,30 @@ namespace larocv {
 
     /// Access to ANY algorithm's data (const reference)
     template <class T>
-    const T& AlgoData(AlgorithmID_t algo_id, AlgorithmDataID_t data_id) const
+    const T& AlgoData(AlgorithmID_t algo_id, Index_t index) const
     {
       if(!_dataman_ptr) throw larbys("AlgoDataManager not available");
-      return *( (T*)(_dataman_ptr->Data(algo_id,data_id)));
+      return *( (T*)(_dataman_ptr->Data(algo_id,index)));
     }
 
     /// Access to OWN algorithm's data (non-const reference)
     template <class T>
-    T& AlgoData(AlgorithmDataID_t data_id)
+    T& AlgoData(Index_t index) 
     {
       if(!_dataman_ptr) throw larbys("AlgoDataManager not available");
-      return *( (T*)(_dataman_ptr->Data(_id,data_id)));
+      return *( (T*)(_dataman_ptr->Data(_id,index)));
     }
+
+    /// Access to association manager (read-only)
+    const data::AlgoDataAssManager& AssManager() const { return _dataman_ptr->AssManager(); }
+
+    /// Association storage method to create one-to-one association
+    void AssociateOne(const data::AlgoDataArrayElementBase& obj_a, const data::AlgoDataArrayElementBase& obj_b)
+    { _dataman_ptr->AssociateOne(obj_a,obj_b); }
+
+    /// Association storage method to create many-to-many association
+    void AssociateMany(const data::AlgoDataArrayElementBase& obj_a, const data::AlgoDataArrayElementBase& obj_b)
+    { _dataman_ptr->AssociateMany(obj_a,obj_b); }
     
   protected:
 

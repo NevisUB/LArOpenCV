@@ -52,7 +52,11 @@ namespace larocv {
 
     LAROCV_DEBUG() << "Combined: " << ctor_arr_v.size() << std::endl;
     
-    // loop over ctors in this plane
+
+    std::vector<geo2d::Line<float> > line_v;
+    line_v.reserve(ctor_arr_v.size()*3);
+
+    // loop over ctors in this plane    
     for (const auto& ctor : ctor_arr_v) {
       LAROCV_DEBUG() << "Analyzing contour of size " << ctor.size() << std::endl;
       
@@ -63,13 +67,19 @@ namespace larocv {
       LAROCV_DEBUG() << "Found " << cluscomp.get_defects().size() << " defects for seeds" << std::endl;
       
       // generate seeds from PCA
-      auto intersections = _PCACrossing.ComputeIntersections(cluscomp,img);  
-
-      LAROCV_DEBUG() << "Generated " << intersections.size() << " pca intersections" << std::endl;
-
+      for(auto & pca : _PCACrossing.ComputePCALines(cluscomp))
+	line_v.emplace_back(std::move(pca));
+    
       vertex_seeds.store_compound(std::move(cluscomp));
-      vertex_seeds.store_pcaxs(std::move(intersections));
     }
+
+    LAROCV_DEBUG() << "Generated " << line_v.size() << " pca lines" << std::endl;
+    
+    auto intersections = _PCACrossing.ComputeIntersections(line_v,img);
+
+    LAROCV_DEBUG() << "Generated " << line_v.size() << " intersections" << std::endl;
+    
+    vertex_seeds.store_pcaxs(std::move(intersections));
 
     vertex_seeds_data.plant_seeds(std::move(vertex_seeds),meta.plane());
     

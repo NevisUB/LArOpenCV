@@ -1,5 +1,5 @@
-#ifndef __ALGODATA_CLUSTER_H__
-#define __ALGODATA_CLUSTER_H__
+#ifndef __ALGODATA_CLUSTER_COMPOUND_H__
+#define __ALGODATA_CLUSTER_COMPOUND_H__
 
 #include "LArOpenCV/Core/LArOCVTypes.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
@@ -56,10 +56,6 @@ namespace larocv {
       void set_pca(const geo2d::Line<float>& line);
       /// pca line getter
       const geo2d::Line<float>& pca();
-      /// dqdx setter
-      void set_dqdx(const std::vector<float>& dqdx);
-      /// dqdx getter
-      const std::vector<float>& dqdx();
       
     private:
       /// unique atomic cluster id
@@ -70,8 +66,6 @@ namespace larocv {
       std::vector<geo2d::Vector<float> > _edges_v;
       /// pca line
       geo2d::Line<float> _pca;
-      /// dQ/dX array
-      std::vector<float>  _dqdx_v;
     };
     
     class ContourDefect {
@@ -115,7 +109,6 @@ namespace larocv {
 
     class ClusterCompound : public std::vector<AtomicContour> {
       friend class ClusterCompoundArray;
-      friend class ParticleCompoundArray;
     public:
       
       ClusterCompound(size_t id=kINVALID_SIZE)
@@ -143,6 +136,10 @@ namespace larocv {
       void associate(size_t atom_id, size_t defect_id);
       /// retrieve a list of atomic clusters
       const std::vector<larocv::data::AtomicContour>& get_atoms() const;
+      /// set the atomic ordering
+      void set_atomic_order(std::vector<size_t> atom_idx_v);
+      /// retreive the ordered atomics
+      std::vector<larocv::data::AtomicContour*> get_ordered_atoms();
       /// retrieve a list of defects
       const std::vector<larocv::data::ContourDefect>& get_defects() const;
       /// retrieve an atomic cluster by id
@@ -176,9 +173,9 @@ namespace larocv {
       // const double dx_resolution() const { return _dx_resolution; }
       
     protected:
-      std::vector< ContourDefect > _ctor_defect_v; ///< a list of contour defect, ordered by their unique ID
+      std::vector<ContourDefect> _ctor_defect_v; ///< a list of contour defect, ordered by their unique ID
       size_t _cluster_id; ///< unique ID associated with original cluster
-      
+      std::vector<size_t> _ordered_index_v;
       // /// unique ID (should respect Particle cluster id)
       // // size_t _cluster_id;
       // /// resolution of dx
@@ -223,12 +220,10 @@ namespace larocv {
       /// move-insert a cluster
       void emplace_back(ClusterCompound&& c);
 
-      
     private:      
       /// list of cluster compounds
       std::vector<larocv::data::ClusterCompound> _cluster_v;
     };
-
     
   }
 }

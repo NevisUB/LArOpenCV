@@ -71,7 +71,10 @@ namespace larocv {
     /// Default destructor
     ~TrackVertexScan2D(){}
 
-    void Reset() { _geo.Reset(); }
+    void Reset() {
+      _geo.Reset();
+      for(auto& p : _plane_scan_info_v) p.Clear();
+    }
 
     /// Configuration method
     void Configure(const Config_t &pset);

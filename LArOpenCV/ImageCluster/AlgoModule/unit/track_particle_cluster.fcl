@@ -95,6 +95,7 @@ ProcessDriver: {
                 RefineCartesianCluster: true
                 MaskFractionRadius: -1
                 MaskMinRadius: 3
+		RefineMerge: true
             }
         }
 

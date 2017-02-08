@@ -12,6 +12,32 @@ namespace larocv {
     
     size_t ParticleCluster::id() const
     { return _cluster_id; }
+
+    std::vector<float> ParticleCluster::dqdx() {
+      if (this->size()==0) return std::vector<float>();
+      if (this->size()==1) return (*this)[0].dqdx();
+      
+      size_t ndx = 0;
+      for(auto& atomic : this->get_ordered_atoms()) ndx+=atomic->dqdx().size();
+      
+      std::vector<float> comb_dqdx_v;
+      comb_dqdx_v.reserve(ndx);
+      
+      for(auto& atomic : this->get_ordered_atoms()) {
+	const auto& atom_dqdx = atomic->dqdx();
+	comb_dqdx_v.insert(comb_dqdx_v.end(),atom_dqdx.begin(),atom_dqdx.end());
+      }
+							 
+      return comb_dqdx_v;
+    }
+    
+    geo2d::Vector<float> ParticleCluster::start_point() {
+      return geo2d::Vector<float>();
+    }
+
+    geo2d::Vector<float> ParticleCluster::end_point() {
+      return geo2d::Vector<float>();
+    }
     
     ////////////////////////////////////////////////////////////////////
     

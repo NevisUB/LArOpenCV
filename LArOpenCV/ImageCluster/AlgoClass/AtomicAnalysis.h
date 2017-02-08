@@ -5,7 +5,8 @@
 #include "Geo2D/Core/LineSegment.h"
 #include "LArOpenCV/Core/laropencv_logger.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
-#include "LArOpenCV/ImageCluster/AlgoData/DefectClusterData.h"
+#include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataCluster.h"
 
 using larocv::GEO2D_Contour_t;
 

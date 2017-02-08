@@ -15,11 +15,11 @@ namespace larocv{
 				       const ::cv::Mat& img,
 				       larocv::ImageMeta& meta, larocv::ROI& roi)
   { 
-
+    
     //LAROCV_INFO() << "NAMERU JA NAI\n";
     return Cluster2DArray_t();
-  
-   }  
+    
+  }  
   
   
 

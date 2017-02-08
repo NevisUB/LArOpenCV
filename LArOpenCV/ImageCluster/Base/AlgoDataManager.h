@@ -16,6 +16,7 @@
 
 #include "LArOpenCV/Core/laropencv_base.h"
 #include "AlgoDataBase.h"
+#include "AlgoDataAssManager.h"
 #include <TTree.h>
 #include <vector>
 
@@ -57,14 +58,31 @@ namespace larocv {
       /// Algorithm Name getter from ID
       const std::string& Name (const AlgorithmID_t algo_id) const;
       
+      /// AlgoDataID_t search method
+      AlgoDataID_t AlgoDataID(const AlgorithmID_t algo_id, const Index_t index) const;
+
       /// Data access method
-      const AlgoDataBase* Data(const AlgorithmID_t algo_id, const AlgorithmDataID_t data_id=0) const;
-      
+      const AlgoDataBase* Data(const AlgorithmID_t algo_id, const Index_t index) const;
+
+      /// Data access method
+      const AlgoDataBase* Data(const AlgoDataID_t data_id) const;
+
+      /// Association storage method to create one-to-one association
+      void AssociateOne(const AlgoDataArrayElementBase& obj_a, const AlgoDataArrayElementBase& obj_b);
+
+      /// Association storage method to create many-to-many association
+      void AssociateMany(const AlgoDataArrayElementBase& obj_a, const AlgoDataArrayElementBase& obj_b);
+
+      /// Access to const ref of association manager
+      const AlgoDataAssManager& AssManager() const { return _ass_man; }
+
     private:
       bool   _tree_attached;
       TTree* _tree;
-      std::vector<std::vector<data::AlgoDataBase*> > _data_vv;
+      std::vector<std::vector<AlgoDataID_t> > _data_id_map;
+      std::vector<data::AlgoDataBase*> _data_v;
       std::vector<std::string> _name_v;
+      AlgoDataAssManager _ass_man;
     };
   }
 }

@@ -9,11 +9,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class larocv::PCABox+;
-#pragma link C++ class larocv::PCAPath+;
-//#pragma link C++ class larocv::Vertex2D+;
-#pragma link C++ class larocv::PID+;
-
 //ADD_NEW_CLASS ... do not change this line
 #endif
 
