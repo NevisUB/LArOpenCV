@@ -25,6 +25,9 @@
 #pragma link C++ class larocv::data::TrackClusterCompound+;
 #pragma link C++ class std::vector<larocv::data::TrackClusterCompound>+;
 
+#pragma link C++ class larocv::data::ParticleCluster+;
+#pragma link C++ class std::vector<larocv::data::ParticleCluster+>;
+
 //ADD_NEW_CLASS ... do not change this line
 #endif
 
