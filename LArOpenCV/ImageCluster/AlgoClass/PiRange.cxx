@@ -28,6 +28,13 @@ namespace larocv {
     while(_angle_hi<0  ) { _angle_hi += 360; }
     while(_angle_lo>360) { _angle_lo -= 360; }
     while(_angle_lo<0  ) { _angle_lo += 360; }
+
+    if (_angle_hi == _angle_lo) {
+      LAROCV_CRITICAL() << "angle hi/lo are identical @ " << _angle_hi << std::endl;
+      throw larbys();
+    }
+    
+
   }
 
   bool PiRange::CloserEdge(double angle) const

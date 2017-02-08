@@ -10,8 +10,6 @@
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/SpectrumAnalysis.h"
 
-//#include <typeinfo>
-
 namespace larocv {
 
   void OneTrackOneShower::Reset()
