@@ -2,6 +2,8 @@
 #define __ONETRACKONESHOWER_H__
 
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
+#include "LArOpenCV/ImageCluster/AlgoData/Vertex3D.h"
+#include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/VertexParticleCluster.h"
 
@@ -31,7 +33,7 @@ namespace larocv {
     
     void SetPlaneInfo(const ImageMeta& meta);
 
-    std::vector<data::SingleShower>
+    std::vector<data::ParticleCluster>
     CreateSingleShower(const std::vector<const cv::Mat>& img_v);
 
     void RegisterSeed(const std::vector<data::Vertex3D>& seed_v)
@@ -39,7 +41,7 @@ namespace larocv {
 
   private:
 
-    data::ShowerCluster
+    data::ParticleCluster
     SingleShowerHypothesis(const ::cv::Mat& img,
 			   const data::CircleVertex& vtx);
     geo2d::VectorArray<float>

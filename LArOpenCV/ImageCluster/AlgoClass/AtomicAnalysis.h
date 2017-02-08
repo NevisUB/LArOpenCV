@@ -6,7 +6,7 @@
 #include "LArOpenCV/Core/laropencv_logger.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
-#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataCluster.h"
+#include "LArOpenCV/ImageCluster/AlgoData/TrackClusterCompound.h"
 
 using larocv::GEO2D_Contour_t;
 
@@ -28,14 +28,14 @@ namespace larocv {
 		       const geo2d::Vector<float>& point) const;
     
     geo2d::Vector<float>
-    ChooseStartPoint(data::ClusterCompound& cluscomp);
+    ChooseStartPoint(data::TrackClusterCompound& cluscomp);
     
     std::vector<size_t>
-    OrderAtoms(const data::ClusterCompound& cluster,
+    OrderAtoms(const data::TrackClusterCompound& cluster,
 	       const geo2d::Vector<float>& start_) const;
     
     std::vector<std::pair<geo2d::Vector<float>,geo2d::Vector<float> > >
-    AtomsEdge(const data::ClusterCompound& cluster,
+    AtomsEdge(const data::TrackClusterCompound& cluster,
 	      const geo2d::Vector<float>& start_,
 	      const std::vector<size_t> atom_order_v) const;
     

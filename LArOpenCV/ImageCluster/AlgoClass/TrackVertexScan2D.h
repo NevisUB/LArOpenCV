@@ -22,7 +22,7 @@
 #include "LArOpenCV/Core/ImageMeta.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
-#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataVertex.h"
+#include "LArOpenCV/ImageCluster/AlgoData/Vertex3D.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
 namespace larocv {
 

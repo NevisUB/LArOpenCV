@@ -51,11 +51,11 @@ namespace larocv {
   
   
   std::vector<size_t>
-  AtomicAnalysis::OrderAtoms(const data::ClusterCompound& cluster,
+  AtomicAnalysis::OrderAtoms(const data::TrackClusterCompound& cluster,
 			     const geo2d::Vector<float>& start_) const
   {
     const auto& vtx2d = start_; 
-    LAROCV_DEBUG() << "called for ClusterCompound ID " << cluster.id()
+    LAROCV_DEBUG() << "called for ClusterCompound ID " << cluster.ID()
 		   << " ... 2D vtx @ " << vtx2d << std::endl;
     // goal: order atoms in the cluster from start to the end of a trajectory
     // 0) find the atom closest to 2d vtx
@@ -155,7 +155,7 @@ namespace larocv {
   }
   
   std::vector<std::pair<geo2d::Vector<float>,geo2d::Vector<float> > >
-  AtomicAnalysis::AtomsEdge(const data::ClusterCompound& cluster,
+  AtomicAnalysis::AtomsEdge(const data::TrackClusterCompound& cluster,
 			   const geo2d::Vector<float>& start_,
 			   const std::vector<size_t> atom_order_v) const
   {
@@ -227,7 +227,7 @@ namespace larocv {
   
   
   geo2d::Vector<float>
-  AtomicAnalysis::ChooseStartPoint(data::ClusterCompound& cluscomp) {
+  AtomicAnalysis::ChooseStartPoint(data::TrackClusterCompound& cluscomp) {
     
     geo2d::Vector<float> start(kINVALID_FLOAT,kINVALID_FLOAT);
     

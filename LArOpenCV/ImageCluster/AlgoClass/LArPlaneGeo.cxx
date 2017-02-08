@@ -72,7 +72,7 @@ namespace larocv {
 			    const geo2d::Vector<float>& pt1, const size_t plane1,
 			    larocv::data::Vertex3D& result) const
   {
-    result.clear();
+    result.Clear();
 
     if(std::fabs(pt0.x - pt1.x) > _xplane_tick_resolution) return false;
 

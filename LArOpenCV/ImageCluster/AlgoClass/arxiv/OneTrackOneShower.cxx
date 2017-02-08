@@ -9,9 +9,6 @@
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/SpectrumAnalysis.h"
-#include "LArOpenCV/ImageCluster/AlgoData/SingleShowerData.h"
-#include "LArOpenCV/ImageCluster/AlgoData/VertexClusterData.h"
-#include "LArOpenCV/ImageCluster/AlgoData/LinearTrackClusterData.h"
 
 namespace larocv {
 
@@ -135,7 +132,7 @@ namespace larocv {
     return res_v;
   }
   
-  data::ShowerCluster
+  data::ParticleCluster
   OneTrackOneShower::SingleShowerHypothesis(const ::cv::Mat& img,
 					    const data::CircleVertex& vtx,
 					    const GEO2D_Contour_t& super_cluster)
@@ -148,7 +145,7 @@ namespace larocv {
     
     auto res_ctor_v = _par_algo.CreateParticleCluster(img,vtx,super_cluster);
     
-    data::ShowerCluster shower;
+    data::ParticleCluster shower;
 
     auto& contour = shower.ctor;
     if ( res_ctor_v.empty() ) {
@@ -189,7 +186,7 @@ namespace larocv {
       std::vector<data::CircleVertex> cvtx_v;
       cvtx_v.resize(_num_planes);
       for(size_t plane=0; plane<img_v.size(); ++plane) {
-	data::ShowerCluster scluster;
+	data::ParticleCluster scluster;
 	auto& cvtx = cvtx_v[plane];
 	cvtx.radius = _circle_default_radius;
 	circle.center.x = cand_vtx.vtx2d_v.at(plane).pt.x;

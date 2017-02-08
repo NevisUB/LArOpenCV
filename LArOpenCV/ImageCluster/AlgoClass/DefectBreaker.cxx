@@ -599,7 +599,7 @@ namespace larocv {
     return geo2d::Line<float>(geo2d::Vector<float>(0,yinter),geo2d::Vector<float>(1,dir));
   }
 
-  void DefectBreaker::AssociateDefects(const data::ClusterCompound& cluscomp,
+  void DefectBreaker::AssociateDefects(const data::TrackClusterCompound& cluscomp,
 				       const data::AtomicContour& parent,
 				       const data::ContourDefect& defect,
 				       data::AtomicContour& child1,
@@ -722,7 +722,7 @@ namespace larocv {
 
 
   
-  larocv::data::ClusterCompound
+  larocv::data::TrackClusterCompound
   DefectBreaker::BreakContour(const larocv::GEO2D_Contour_t& in_ctor) {
     
     ////////////////////////////////////////////
@@ -730,7 +730,7 @@ namespace larocv {
     // longest hull edge. Break the contour into two. Re insert into queue
     // repeat operation on queue
     
-    larocv::data::ClusterCompound cluscomp;
+    larocv::data::TrackClusterCompound cluscomp;
     
     //contours which may be broken up are put in this queue
     std::vector<larocv::data::AtomicContour> candidate_ctor_v;

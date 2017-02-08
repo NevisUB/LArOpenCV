@@ -6,7 +6,7 @@
 #include "LArOpenCV/Core/laropencv_logger.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
-#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataCluster.h"
+#include "LArOpenCV/ImageCluster/AlgoData/TrackClusterCompound.h"
 
 using larocv::GEO2D_Contour_t;
 
@@ -30,7 +30,7 @@ namespace larocv {
 
 
     //break contour --> create atomics
-    larocv::data::ClusterCompound
+    larocv::data::TrackClusterCompound
     BreakContour(const GEO2D_Contour_t& in_ctor);
 
     
@@ -73,7 +73,7 @@ namespace larocv {
 		 cv::Vec4i defect);
 
     void
-    AssociateDefects(const data::ClusterCompound& cluscomp,
+    AssociateDefects(const data::TrackClusterCompound& cluscomp,
 		     const data::AtomicContour& parent,
 		     const data::ContourDefect& defect,
 		     data::AtomicContour& child1,

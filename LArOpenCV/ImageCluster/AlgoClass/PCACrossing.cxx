@@ -39,7 +39,7 @@ namespace larocv {
   }
 
   std::vector<geo2d::Line<float> >
-  PCACrossing::ComputePCALines(const data::ClusterCompound& cluscomp) {
+  PCACrossing::ComputePCALines(const data::TrackClusterCompound& cluscomp) {
     
     std::vector<geo2d::Line<float> > line_v;
     line_v.reserve(cluscomp.size());
@@ -97,7 +97,7 @@ namespace larocv {
   }
 
   std::vector<geo2d::Vector<float> >
-  PCACrossing::ComputeIntersections(const data::ClusterCompound& cluscomp,
+  PCACrossing::ComputeIntersections(const data::TrackClusterCompound& cluscomp,
 				    const cv::Mat& img) {
     
     LAROCV_DEBUG() << "Gettting intersections from PCA of incoming contours" << std::endl;
