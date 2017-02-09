@@ -2,9 +2,8 @@
 #define __ELECTRONSHOWERVERTEXSEED_H__
 
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
-//#include "LArOpenCV/ImageCluster/AlgoData/dQdXProfilerData.h"
-#include "LArOpenCV/ImageCluster/AlgoData/VertexClusterData.h"
-#include "LArOpenCV/ImageCluster/AlgoData/LinearTrackClusterData.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
+#include "LArOpenCV/ImageCluster/AlgoData/LinearTrack.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
 
 namespace larocv {
@@ -34,9 +33,9 @@ namespace larocv {
     // 		      const larocv::data::dQdXProfilerData& dqdx);
 
     void RegisterSeed(const std::vector<const cv::Mat>& img_v,
-		      const larocv::data::VertexClusterArray& part);
+		      const std::vector<data::VertexTrackInfoCollection>& vtxinfo_v);
     
-    void RegisterSeed(const larocv::data::LinearTrackArray& data);
+    void RegisterSeed(const larocv::data::LinearTrack3DArray& data);
 
   private:
 

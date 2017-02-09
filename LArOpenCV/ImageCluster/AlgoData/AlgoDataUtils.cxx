@@ -11,7 +11,7 @@ namespace larocv {
     OrganizeVertexInfo(const AlgoDataAssManager& ass_man,
 		       const Vertex3DArray& vtx3d_array,
 		       std::vector<const ParticleClusterArray*>& super_cluster_array_v,
-		       std::vector<const ParticleClusterArray*>& part_cluster_array_v,
+		       std::vector<const ParticleClusterArray*>& particle_array_v,
 		       std::vector<const TrackClusterCompoundArray*>& compound_array_v)
     {
       std::vector<VertexTrackInfoCollection> res_v;
@@ -26,12 +26,12 @@ namespace larocv {
       }
 
       if(!compound_array_v.empty() && num_planes != compound_array_v.size()) {
-	LAROCV_SCRITICAL() << "# planes != compound_v array size..." << std::endl;
+	LAROCV_SCRITICAL() << "# planes != compound_array_v array size..." << std::endl;
 	throw larbys();
       }
       
-      if(!part_cluster_array_v.empty() && num_planes != part_cluster_array_v.size()) {
-	LAROCV_SCRITICAL() << "# planes != part_cluster_v array size..." << std::endl;
+      if(!particle_array_v.empty() && num_planes != particle_array_v.size()) {
+	LAROCV_SCRITICAL() << "# planes != particle_array_v array size..." << std::endl;
 	throw larbys();
       }
 
@@ -56,30 +56,77 @@ namespace larocv {
 	    }
 	  }
 
-	  if(!part_cluster_array_v.empty()) {
-	    auto const& part_cluster_array  = part_cluster_array_v[plane];
-	    std::vector<const ParticleCluster*> part_ptr_v;
-	    if(!part_cluster_array)
-	      res.particle_vv.push_back(part_ptr_v);
-	    else{
-	      auto ass_idx_v = ass_man.GetManyAss(vtx3d,part_cluster_array->ID());
-	      for(auto const& cluster_idx : ass_idx_v)
-		part_ptr_v.push_back(&(part_cluster_array->as_vector().at(cluster_idx)));
-	      res.particle_vv.push_back(part_ptr_v);
-	    }
+	  bool process_particle = (!particle_array_v.empty() && particle_array_v[plane]);
+	  bool process_compound = (!compound_array_v.empty() && compound_array_v[plane]);
+	  std::vector<const ParticleCluster*>      particle_ptr_v;
+	  std::vector<const TrackClusterCompound*> compound_ptr_v;
+
+	  if(!process_particle && !process_compound) {
+	    if(!particle_array_v.empty())
+	      res.particle_vv.push_back(particle_ptr_v);
+	    if(!compound_array_v.empty())
+	      res.compound_vv.push_back(compound_ptr_v);
+	    continue;
 	  }
 
-	  if(!compound_array_v.empty()) {
+	  if(!process_particle) {
+	    // part_cluster_array not needed, let's get compound sorted
+	    if(!particle_array_v.empty())
+	      res.particle_vv.push_back(particle_ptr_v);
+	    auto const& compound_array = compound_array_v[plane];
+	    auto ass_idx_v = ass_man.GetManyAss(vtx3d,compound_array->ID());
+	    for(auto const& cluster_idx : ass_idx_v)
+	      compound_ptr_v.push_back(&(compound_array->as_vector().at(cluster_idx)));
+	    res.compound_vv.push_back(compound_ptr_v);
+	    continue;
+	  }
+	  if(!process_compound) {
+	    // compound_array is not needed, let's get particle contour sorted
+	    if(!compound_array_v.empty())
+	      res.compound_vv.push_back(compound_ptr_v);
+	    auto const& particle_array  = particle_array_v[plane];
+	    auto ass_idx_v = ass_man.GetManyAss(vtx3d,particle_array->ID());
+	    for(auto const& cluster_idx : ass_idx_v)
+	      particle_ptr_v.push_back(&(particle_array->as_vector().at(cluster_idx)));
+	    res.particle_vv.push_back(particle_ptr_v);
+	    continue;
+	  }
+
+	  // Reaching here means to treat both particle & compound
+	  // Since both are given, let's make sure array order is 1-to-1	  
+	  if(!particle_array_v.empty() && !compound_array_v.empty()) {
+	    
+	    auto const& particle_array  = particle_array_v[plane];
 	    auto const& compound_array      = compound_array_v[plane];
-	    std::vector<const TrackClusterCompound*> compound_ptr_v;
-	    if(!compound_array)
-	      res.compound_vv.push_back(compound_ptr_v);
-	    else{
-	      auto ass_idx_v = ass_man.GetManyAss(vtx3d,compound_array->ID());
-	      for(auto const& cluster_idx : ass_idx_v)
-		compound_ptr_v.push_back(&(compound_array->as_vector().at(cluster_idx)));
-	      res.compound_vv.push_back(compound_ptr_v);
+
+	    auto const& compound_ass = ass_man.GetManyAss(vtx3d,compound_array->ID());
+	    auto const& particle_ass = ass_man.GetManyAss(vtx3d,particle_array->ID());
+	    if(compound_ass.size() != particle_ass.size()) {
+	      LAROCV_SCRITICAL() << "Vertex3D (ID=" << vtx3d.ID() << ") have different number of associated"
+				 << " particles (" << particle_ass.size() << ") and"
+				 << " compounds (" << compound_ass.size() << ")!" << std::endl;
+	      throw larbys();
 	    }
+	    for(auto const& compound_idx : compound_ass) {
+	      auto const& compound = compound_array->as_vector().at(compound_idx);
+	      auto particle_idx = ass_man.GetOneAss(compound,particle_array->ID());
+	      // make sure particle index is found in retrieved association
+	      bool found=false;
+	      for(auto const& particle_ass_idx : particle_ass) {
+		if(particle_ass_idx == particle_idx) {
+		  found=true;
+		  break;
+		}
+	      }
+	      if(!found) {
+		LAROCV_SCRITICAL() << "Compound/Particle association is corrupted?!" << std::endl;
+		throw larbys();
+	      }
+	      particle_ptr_v.push_back(&(particle_array->as_vector().at(particle_idx)));
+	      compound_ptr_v.push_back(&(compound_array->as_vector().at(compound_idx)));
+	    }
+	    res.particle_vv.push_back(particle_ptr_v);
+	    res.compound_vv.push_back(compound_ptr_v);
 	  }
 	}
       }

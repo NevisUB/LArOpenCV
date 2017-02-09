@@ -36,9 +36,9 @@ namespace larocv {
   void ElectronShowerVertexSeed::SetPlaneInfo(const ImageMeta& meta)
   { _geo_algo.ResetPlaneInfo(meta); }
 
-  void ElectronShowerVertexSeed::RegisterSeed(const larocv::data::LinearTrackArray& data)
+  void ElectronShowerVertexSeed::RegisterSeed(const larocv::data::LinearTrack3DArray& data)
   {
-    for(auto const& ltrack : data.get_clusters()) {
+    for(auto const& ltrack : data.as_vector()) {
 
       if(ltrack.edge1.vtx2d_v.size())
 	_ltrack_vertex_v.push_back(ltrack.edge1);
@@ -171,46 +171,67 @@ namespace larocv {
   */
 
   void ElectronShowerVertexSeed::RegisterSeed(const std::vector<const cv::Mat>& img_v,
-					      const Vertex3D& vtx,
-					      const std::vector<const data::ParticleCluster*>& part_ptr_v,
-					      const std::vector<const data::ClusterCompound*>& comp_ptr_v)
+					      const std::vector<data::VertexTrackInfoCollection>& vtxinfo_v)
+  //const Vertex3D& vtx,
+  //					      const std::vector<const data::ParticleCluster*>& part_ptr_v,
+  //					      const std::vector<const data::ClusterCompound*>& comp_ptr_v)
   {
     std::vector<bool> good_plane_v(_num_planes,false);
     std::multimap<float,larocv::data::Vertex3D> vtrack_vtx_cand_m;
     std::multimap<float,larocv::data::Vertex3D> vedge_vtx_cand_m;
-    for(auto const& vtx_data : part._vtx_cluster_v) {
+    for(auto const& vtxinfo : vtxinfo_v) {
 
       for(size_t plane=0; plane<good_plane_v.size(); ++plane)
 	good_plane_v[plane] = false;
+
+      // Get useful attrivute references
+      auto const& super_contour_v = vtxinfo.super_contour_v;
+      auto const& particle_vv = vtxinfo.particle_vv;
+      auto const& compound_vv = vtxinfo.compound_vv;
+      if(super_contour_v.size() != _num_planes) {
+	LAROCV_CRITICAL() << "# planes for super cluster incorrect..." << std::endl;
+	throw larbys();
+      }
+      if(particle_vv.size() != _num_planes) {
+	LAROCV_CRITICAL() << "# planes for ParticleClusterArray incorrect..." << std::endl;
+	throw larbys();
+      }
+      if(compound_vv.size() != _num_planes) {
+	LAROCV_CRITICAL() << "# planes for CompoundClusterArray incorrect..." << std::endl;
+	throw larbys();
+      }
       
       size_t num_good_planes = 0;
       float  pxfrac_sum = 0;
       for(size_t plane=0; plane<_num_planes; ++plane) {
-	float pxfrac = vtx_data.num_pixel_fraction(plane);
+	double pxfrac = 0;
+	for(auto const& particle : particle_vv[plane])
+	  pxfrac += PixelFraction(img_v[plane], super_contour_v[plane]->_ctor, particle->_ctor);
 	if(pxfrac < _part_pxfrac_threshold) continue;
 	pxfrac_sum += pxfrac;
 	good_plane_v[plane] = true;
 	++num_good_planes;
       }
       if(num_good_planes < 2) continue;
-
+      
       // Fill a candidate interaction vertex
-      vtrack_vtx_cand_m.emplace(pxfrac_sum,vtx_data.get_vertex());
-
+      data::Vertex3D vtx3d(*(vtxinfo.vtx3d));
+      vtrack_vtx_cand_m.emplace(pxfrac_sum,vtx3d);
+      
       // Next fill edge-vertex
       for(size_t plane1=0; plane1<_num_planes; ++plane1) {
 	if(!good_plane_v[plane1]) continue;
 	for(size_t plane2=plane1+1; plane2<_num_planes; ++plane2) {
 	  if(!good_plane_v[plane2]) continue;
-
+	  
 	  std::vector<geo2d::Vector<float> > edge1_v;
-	  for(auto const& part : vtx_data.get_clusters(plane1))
-	    edge1_v.push_back(part.end_pt());
+	  for(auto const& compound : compound_vv[plane1])
+	    edge1_v.push_back(compound->end_pt());
 	  
 	  std::vector<geo2d::Vector<float> > edge2_v;
-	  for(auto const& part : vtx_data.get_clusters(plane2))
-	    edge2_v.push_back(part.end_pt());
-
+	  for(auto const& compound : compound_vv[plane2])
+	    edge2_v.push_back(compound->end_pt());
+	  
 	  // Loop over possible combinations
 	  larocv::data::Vertex3D pt;
 	  for(auto const& edge1 : edge1_v) {
@@ -230,7 +251,7 @@ namespace larocv {
 
 		// if ( (min_x + _circle_default_radius+0.5) > mat.cols ) throw larbys("scanning past image col boundary");
 		// if ( (min_y + _circle_default_radius+0.5) > mat.rows ) throw larbys("scanning past image row boundary");
-
+		
 		size_t step_x,step_y;
 		for(size_t dx=0; dx<(size_t)(_circle_default_radius+0.5); ++dx) {
 		  step_x = min_x+dx;
@@ -252,7 +273,7 @@ namespace larocv {
 	}
       }
     }
-
+    
     _vedge_vertex_v.clear();
     for(auto const& score_vtx : vedge_vtx_cand_m) {
       // check distance to the previous ... needs to be at least required 3D separation
