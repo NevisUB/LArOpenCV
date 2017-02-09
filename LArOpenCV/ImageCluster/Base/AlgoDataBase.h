@@ -59,7 +59,7 @@ namespace larocv {
     protected:
 
       /// Clear method to be implemented by child
-      virtual void _Clear_() = 0;
+      virtual void _Clear_() {}
       
       /// Protected contructor, to be used by inherited class constructors
       AlgoDataBase(AlgoDataCategory_t cat, AlgoDataType_t type=kDataTypeUnknown)

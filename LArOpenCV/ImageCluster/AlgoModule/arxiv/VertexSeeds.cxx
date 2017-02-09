@@ -51,7 +51,6 @@ namespace larocv {
     auto ctor_arr_v = combine_ctor_arrs(hip_mip_p.first,hip_mip_p.second);
 
     LAROCV_DEBUG() << "Combined: " << ctor_arr_v.size() << std::endl;
-    
 
     std::vector<geo2d::Line<float> > line_v;
     line_v.reserve(ctor_arr_v.size()*3);

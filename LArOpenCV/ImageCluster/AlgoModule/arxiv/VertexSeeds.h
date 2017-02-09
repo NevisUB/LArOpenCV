@@ -8,7 +8,7 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/DefectBreaker.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/PCACrossing.h"
 
-#include "LArOpenCV/ImageCluster/AlgoData/VertexSeedsData.h"
+#include "LArOpenCV/ImageCluster/AlgoData/VertexSeed.h"
 
 namespace larocv {
 
