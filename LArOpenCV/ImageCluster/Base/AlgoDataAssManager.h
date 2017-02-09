@@ -58,7 +58,7 @@ namespace larocv {
 
       /// Association getter
       const std::vector<Index_t>&
-      GetManyAss(const AlgoDataArrayElementBase& obj_a, const AlgoDataID_t type_b) const;
+      GetManyAss(const AlgoDataArrayElementBase& obj_a, const AlgoDataID_t id_b) const;
 
       /// Association search + getter
       const std::vector<std::vector<Index_t> >&
@@ -82,7 +82,7 @@ namespace larocv {
 
       /// Association getter
       Index_t
-      GetOneAss(const AlgoDataArrayElementBase& obj_a, const AlgoDataID_t type_b) const;
+      GetOneAss(const AlgoDataArrayElementBase& obj_a, const AlgoDataID_t id_b) const;
 
       /// Association search + getter
       const std::vector<Index_t>&
