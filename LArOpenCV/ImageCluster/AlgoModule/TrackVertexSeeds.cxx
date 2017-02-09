@@ -17,8 +17,7 @@ namespace larocv {
     _DefectBreaker.Configure(pset);
     _PCACrossing.Configure(pset);
 
-    Register(new data::VertexSeed2DArray);
-    Register(new data::TrackClusterCompoundArray);
+
   }
 
   GEO2D_ContourArray_t combine_ctor_arrs(const GEO2D_ContourArray_t& ctor_arr_1,
@@ -37,9 +36,11 @@ namespace larocv {
 				   ImageMeta& meta,
 				   ROI& roi)
   {
-    
-    auto& vertex_seeds_v = AlgoData<data::VertexSeed2DArray>(0);
-    auto& track_cluster_v = AlgoData<data::TrackClusterCompoundArray>(1);
+    Register(new data::VertexSeed2DArray);
+    Register(new data::TrackClusterCompoundArray);
+	
+    auto& vertex_seeds_v = AlgoData<data::VertexSeed2DArray>(meta.plane());
+    auto& track_cluster_v = AlgoData<data::TrackClusterCompoundArray>(meta.plane());
       
     data::VertexSeed2D vertex_seeds;
     data::TrackClusterCompound track_cluster;
@@ -74,24 +75,15 @@ namespace larocv {
       for(auto & pca : _PCACrossing.ComputePCALines(cluscomp))
 	line_v.emplace_back(std::move(pca));
 
-      std::vector<geo2d::Vector<float> > defect_point_v;
       for(const auto& ctor_defect : cluscomp.get_defects())
-	defect_point_v.emplace_back(ctor_defect._pt_defect);
-      
-      vertex_seeds.store_seeds(std::move(defect_point_v));
+	vertex_seeds_v.emplace_back(ctor_defect._pt_defect);
 
       track_cluster_v.emplace_back(std::move(cluscomp));
     }
 
     LAROCV_DEBUG() << "Generated " << line_v.size() << " pca lines" << std::endl;
-    
-    auto intersections = _PCACrossing.ComputeIntersections(line_v,img);
-
-    LAROCV_DEBUG() << "Generated " << line_v.size() << " intersections" << std::endl;
-
-    vertex_seeds.store_seeds(std::move(intersections));
-    
-    vertex_seeds_v.emplace_back(std::move(vertex_seeds));
+    for ( auto& seed : _PCACrossing.ComputeIntersections(line_v,img) )
+      vertex_seeds_v.emplace_back(std::move(seed));
     
     return;
   }

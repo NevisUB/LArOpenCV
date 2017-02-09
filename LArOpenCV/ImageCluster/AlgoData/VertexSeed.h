@@ -7,25 +7,21 @@ namespace larocv {
   namespace data {
 
     // store per compound
-    class VertexSeed2D : public AlgoDataArrayElementBase {
+    class VertexSeed2D : public AlgoDataArrayElementBase,
+			 public geo2d::Vector<float>
+    {
     public:
       VertexSeed2D() { _Clear_(); }
+      VertexSeed2D(const geo2d::Vector<float>& pt) { (*this)=pt; }
+      VertexSeed2D(geo2d::Vector<float>&& pt) { (*this)=std::move(pt); }
       ~VertexSeed2D(){}
 
-      void _Clear_() { _seed_v.clear(); }
-      const std::vector<geo2d::Vector<float> >& seeds() const { return _seed_v; }
-
-      void store_seed(const geo2d::Vector<float>& seed);
-      void move_seed(geo2d::Vector<float>&& seed);
-
-      void store_seeds(const std::vector<geo2d::Vector<float> >& seed_v);
-      void move_seeds(std::vector<geo2d::Vector<float> >&& seed_v);
+      void _Clear_() { this->x=kINVALID_FLOAT; this->y=kINVALID_FLOAT; }
       
     private:
-      std::vector<geo2d::Vector<float> > _seed_v;
       
     };
-
+    
     // store per compound
     class VertexSeed3D : public AlgoDataArrayElementBase {
     public:

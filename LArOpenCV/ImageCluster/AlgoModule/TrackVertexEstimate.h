@@ -3,12 +3,7 @@
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
-#include "LArOpenCV/ImageCluster/AlgoData/VertexEstimateData.h"
-#include "LArOpenCV/ImageCluster/AlgoData/VertexSeedsData.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/TrackVertexScan2D.h"
-
-//#include "LArOpenCV/ImageCluster/AlgoData/Refine2DVertexData.h"
-
 
 namespace larocv {
  

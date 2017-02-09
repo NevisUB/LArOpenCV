@@ -76,14 +76,19 @@ namespace larocv {
       ~Vertex3D() {}
       
       /// attribute clear method
-      void _Clear_() { vtx2d_v.clear(); x = y = z = kINVALID_DOUBLE; num_planes=0; }
+      void _Clear_()
+      { vtx2d_v.clear(); cvtx2d_v.clear(); x = y = z = kINVALID_DOUBLE; num_planes=0; type=-1;}
       
       /// Plane-wise 2D vertex point
       std::vector<larocv::data::Vertex2D> vtx2d_v;
+      /// Plane-wise 2D circle vertex point
+      std::vector<larocv::data::CircleVertex> cvtx2d_v;
       /// 3D vertex location
       double x, y, z;
       /// # of valid planes used in this estimate
       size_t num_planes;
+      ///
+      short type;
     };
 
     /**
