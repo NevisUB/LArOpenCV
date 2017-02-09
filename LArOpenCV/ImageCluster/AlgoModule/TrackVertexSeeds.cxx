@@ -17,6 +17,10 @@ namespace larocv {
     _DefectBreaker.Configure(pset);
     _PCACrossing.Configure(pset);
 
+    for(size_t plane=0; plane<3; ++plane)
+      Register(new data::VertexSeed2DArray);
+    for(size_t plane=0; plane<3; ++plane)
+      Register(new data::TrackClusterCompoundArray);
 
   }
 
@@ -36,11 +40,8 @@ namespace larocv {
 				   ImageMeta& meta,
 				   ROI& roi)
   {
-    Register(new data::VertexSeed2DArray);
-    Register(new data::TrackClusterCompoundArray);
-	
     auto& vertex_seeds_v = AlgoData<data::VertexSeed2DArray>(meta.plane());
-    auto& track_cluster_v = AlgoData<data::TrackClusterCompoundArray>(meta.plane());
+    auto& track_cluster_v = AlgoData<data::TrackClusterCompoundArray>(meta.plane()+3);
       
     data::VertexSeed2D vertex_seeds;
     data::TrackClusterCompound track_cluster;

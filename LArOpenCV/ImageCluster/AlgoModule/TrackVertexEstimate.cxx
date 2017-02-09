@@ -20,6 +20,7 @@ namespace larocv {
     auto const vertex_seed_algo_name = pset.get<std::string>("TrackVertexSeedsAlgoName","");
     if(!vertex_seed_algo_name.empty()) _vertex_seed_algo_id = this->ID(vertex_seed_algo_name);
 
+    Register(new data::Vertex3DArray);
   }
 
   void TrackVertexEstimate::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -42,9 +43,6 @@ namespace larocv {
 
   bool TrackVertexEstimate::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
-
-    Register(new data::Vertex3DArray);
-    
     std::vector<data::Vertex3D> vtx3d_v;
     std::vector<std::vector<data::CircleVertex> > vtx2d_vv;
     _algo.CreateTimeVertex3D(img_v,vtx3d_v,vtx2d_vv);

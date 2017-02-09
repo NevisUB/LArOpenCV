@@ -33,6 +33,8 @@ namespace larocv {
 
     _contour_pad = pset.get<float>("ContourPad",0.);
 
+    for(size_t plane=0; plane<3; ++plane)
+      Register(new data::ParticleClusterArray);
   }
 
   void TrackParticleCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
@@ -41,7 +43,6 @@ namespace larocv {
 				       larocv::ROI& roi)
   {
     // Algorithm data
-    Register(new data::ParticleClusterArray);
     auto& par_data = AlgoData<data::ParticleClusterArray>(meta.plane());
     
     const auto& vtx_data_v = AlgoData<data::Vertex3DArray>(_track_vertex_estimate_algo_id,0).as_vector();
@@ -53,7 +54,7 @@ namespace larocv {
     
     for(size_t vtx_id = 0; vtx_id < vtx_data_v.size(); ++vtx_id) {
       
-      auto& vtx3d = vtx_data_v[vtx_id];
+      auto const& vtx3d = vtx_data_v[vtx_id];
       auto const& circle_vtx = vtx3d.cvtx2d_v.at(plane);
       LAROCV_DEBUG() << "Vertex ID " << vtx_id << " plane " << plane
 		     << " CircleVertex @ " << circle_vtx.center << " w/ R = " << circle_vtx.radius << std::endl;
@@ -78,7 +79,10 @@ namespace larocv {
 	LAROCV_DEBUG() << "On contour: " << cidx << "... size: " << contour.size() << std::endl;
 	data::ParticleCluster cluster;
 	cluster._ctor = std::move(contour);
+	// Store
 	par_data.emplace_back(std::move(cluster));
+	// Create one-to-many association
+	AssociateMany(vtx3d,par_data.as_vector().back());
       }
     }
 
