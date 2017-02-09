@@ -12,8 +12,8 @@ namespace larocv {
     struct VertexTrackInfoCollection {
       const Vertex3D* vtx3d;
       std::vector<const ParticleCluster*> super_contour_v;
-      std::vector<std::vector<const ParticleCluster*> >      particle_v;
-      std::vector<std::vector<const TrackClusterCompound*> > compound_v;
+      std::vector<std::vector<const ParticleCluster*> >      particle_vv;
+      std::vector<std::vector<const TrackClusterCompound*> > compound_vv;
     };
 
     std::vector<VertexTrackInfoCollection>

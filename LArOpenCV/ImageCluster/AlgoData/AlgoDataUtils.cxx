@@ -60,12 +60,12 @@ namespace larocv {
 	    auto const& part_cluster_array  = part_cluster_array_v[plane];
 	    std::vector<const ParticleCluster*> part_ptr_v;
 	    if(!part_cluster_array)
-	      res.particle_v.push_back(part_ptr_v);
+	      res.particle_vv.push_back(part_ptr_v);
 	    else{
 	      auto ass_idx_v = ass_man.GetManyAss(vtx3d,part_cluster_array->ID());
 	      for(auto const& cluster_idx : ass_idx_v)
 		part_ptr_v.push_back(&(part_cluster_array->as_vector().at(cluster_idx)));
-	      res.particle_v.push_back(part_ptr_v);
+	      res.particle_vv.push_back(part_ptr_v);
 	    }
 	  }
 
@@ -73,12 +73,12 @@ namespace larocv {
 	    auto const& compound_array      = compound_array_v[plane];
 	    std::vector<const TrackClusterCompound*> compound_ptr_v;
 	    if(!compound_array)
-	      res.compound_v.push_back(compound_ptr_v);
+	      res.compound_vv.push_back(compound_ptr_v);
 	    else{
 	      auto ass_idx_v = ass_man.GetManyAss(vtx3d,compound_array->ID());
 	      for(auto const& cluster_idx : ass_idx_v)
 		compound_ptr_v.push_back(&(compound_array->as_vector().at(cluster_idx)));
-	      res.compound_v.push_back(compound_ptr_v);
+	      res.compound_vv.push_back(compound_ptr_v);
 	    }
 	  }
 	}
