@@ -343,7 +343,7 @@ namespace larocv {
     return parent_ctor_id;
   }  
 
-  double PixelFraction(const cv::Mat& img,const GEO2D_Contour_t& super_ctor, const GEO2D_Contour_t& target_ctor) {
+  double PixelFraction(const cv::Mat& img,const GEO2D_Contour_t& super_ctor, const GEO2D_ContourArray_t& target_ctor_v) {
 
     // mask this contour from the image
     auto super_img = MaskImage(img,super_ctor,0,false);
@@ -352,7 +352,9 @@ namespace larocv {
     double super_px = cv::countNonZero(super_img);
 
     //count the number of target pixels in this image
-    double target_px = cv::countNonZero(MaskImage(super_img,target_ctor,0,false));
+    double target_px = 0;
+    for(auto const& target_ctor : target_ctor_v) 
+      target_px += cv::countNonZero(MaskImage(super_img,target_ctor,0,false));
     
     if (super_px == 0) {
       LAROCV_SCRITICAL() << "Number of super pixels in image is zero!" << std::endl;

@@ -8,6 +8,8 @@ namespace larocv {
 
   namespace data {
 
+    
+
     /*
       \class ContourArrayData
     */

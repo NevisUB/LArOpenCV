@@ -64,6 +64,8 @@ namespace larocv {
   
   double PixelFraction(const cv::Mat& img,const GEO2D_Contour_t& super_ctor,const GEO2D_Contour_t& target_ctor);
 
+  double PixelFraction(const cv::Mat& img,const GEO2D_Contour_t& super_ctor,const GEO2D_ContourArray_t& target_ctor_v);
+
   
 }
 #endif
