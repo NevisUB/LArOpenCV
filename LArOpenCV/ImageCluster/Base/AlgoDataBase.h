@@ -143,8 +143,8 @@ namespace larocv {
       {
 	_data_v.resize(_data_v.size()+1);
 	auto& target = _data_v.back();
-	((AlgoDataArrayBase*)this)->SetID(target,_id);
-	((AlgoDataArrayBase*)this)->SetIndex(target,(_data_v.size()-1));
+	AlgoDataArrayBase::SetID(target,ID());
+	AlgoDataArrayBase::SetIndex(target,(_data_v.size()-1));
 	return target;
       }
 
@@ -153,8 +153,8 @@ namespace larocv {
       {
 	_data_v.push_back(data);
 	auto& target = _data_v.back();
-	((AlgoDataArrayBase*)this)->SetID(target,_id);
-	((AlgoDataArrayBase*)this)->SetIndex(target,(_data_v.size()-1));
+	AlgoDataArrayBase::SetID(target,ID());
+	AlgoDataArrayBase::SetIndex(target,(_data_v.size()-1));
       }
 
       /// Registerer
@@ -162,8 +162,8 @@ namespace larocv {
       {
 	_data_v.emplace_back(std::move(data));
 	auto& target = _data_v.back();
-	((AlgoDataArrayBase*)this)->SetID(target,_id);
-	((AlgoDataArrayBase*)this)->SetIndex(target,(_data_v.size()-1));
+	AlgoDataArrayBase::SetID(target,ID());
+	AlgoDataArrayBase::SetIndex(target,(_data_v.size()-1));
       }
 
       /// Const reference getter
