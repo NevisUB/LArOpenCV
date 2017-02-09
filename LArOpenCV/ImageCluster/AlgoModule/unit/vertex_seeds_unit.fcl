@@ -39,7 +39,7 @@ ProcessDriver: {
         Verbosity: 0
         Profile:   true
 
-        ClusterAlgoType: ["VertexSeeds"]
+        ClusterAlgoType: ["TrackVertexSeeds"]
         ClusterAlgoName: ["vtxseeds"]
         EnableWireCheck: false
           

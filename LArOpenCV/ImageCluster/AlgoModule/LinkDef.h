@@ -12,7 +12,7 @@
 #pragma link C++ class larocv::VertexSeeds+;
 #pragma link C++ class larocv::TrackVertexEstimate+;
 #pragma link C++ class larocv::TrackParticleCluster+;
-
+#pragma link C++ class larocv::SuperClusterer+;
 #pragma link C++ class larocv::LinearTrackSeeds+;
 #pragma link C++ class larocv::ShowerVertexEstimate+;
 #pragma link C++ class larocv::ShowerParticleCluster+;

@@ -38,6 +38,7 @@ int main() {
   target_ctor[2]=cv::Point(274,274);
   target_ctor[3]=cv::Point(274,225);
 
+  //if you want you can shift the target contour around
   for(auto& pt: target_ctor) pt+=cv::Point(-10,-10);
   
   cv::drawContours(mat_copy, larocv::GEO2D_ContourArray_t(1,target_ctor), -1, cv::Scalar(100), 3, cv::LINE_8);

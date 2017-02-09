@@ -17,10 +17,14 @@ namespace larocv {
     _DefectBreaker.Configure(pset);
     _PCACrossing.Configure(pset);
 
-    for(size_t plane=0; plane<3; ++plane)
+    for(size_t plane=0; plane<3; ++plane) {
+      LAROCV_DEBUG() << "Registering VertexSeed2DArray on plane " << plane << std::endl;
       Register(new data::VertexSeed2DArray);
-    for(size_t plane=0; plane<3; ++plane)
+    }
+    for(size_t plane=0; plane<3; ++plane) {
+      LAROCV_DEBUG() << "Registering TrackClusterCompountArray on plane " << plane << std::endl;
       Register(new data::TrackClusterCompoundArray);
+    }
 
   }
 
