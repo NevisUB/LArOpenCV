@@ -342,6 +342,26 @@ namespace larocv {
     LAROCV_SINFO() << "Vertex @ " << pt << " belongs to super cluster id " << parent_ctor_id << std::endl;
     return parent_ctor_id;
   }  
+
+  double PixelFraction(const cv::Mat& img,const GEO2D_Contour_t& super_ctor, const GEO2D_Contour_t& target_ctor) {
+
+    // mask this contour from the image
+    auto super_img = MaskImage(img,super_ctor,0,false);
+
+    //count the number of super pixels
+    double super_px = cv::countNonZero(super_img);
+
+    //count the number of target pixels in this image
+    double target_px = cv::countNonZero(MaskImage(super_img,target_ctor,0,false));
+    
+    if (super_px == 0) {
+      LAROCV_SCRITICAL() << "Number of super pixels in image is zero!" << std::endl;
+      throw larbys();
+    }
+
+    LAROCV_SDEBUG() << "...got " << super_px << " and " << target_px << " frac " << target_px/super_px << std::endl;
+    return target_px / super_px;
+  }
   
 }
 #endif

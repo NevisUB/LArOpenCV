@@ -62,5 +62,8 @@ namespace larocv {
 
   size_t FindContainingContour(const GEO2D_ContourArray_t& contour_v, const geo2d::Vector<float>& pt);
   
+  double PixelFraction(const cv::Mat& img,const GEO2D_Contour_t& super_ctor,const GEO2D_Contour_t& target_ctor);
+
+  
 }
 #endif
