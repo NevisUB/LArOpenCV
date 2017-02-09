@@ -16,7 +16,7 @@
 
 #include "ImageClusterTypes.h"
 #include "AlgoDataBase.h"
-
+#include <iostream>
 namespace larocv {
 
   class AlgoDataManager;
@@ -113,8 +113,11 @@ namespace larocv {
       {}
       ~AlgoDataArrayBase(){}
     protected:
-      void SetIndex(AlgoDataArrayElementBase& obj,Index_t index) { obj._index = index; }
-      void SetID(AlgoDataArrayElementBase& obj, AlgoDataID_t id) { obj._id = id;       }
+      void SetIndex(AlgoDataArrayElementBase& obj,Index_t index)
+      { obj._index = index; }
+
+      void SetID(AlgoDataArrayElementBase& obj, AlgoDataID_t id)
+      { obj._id = id;}
     };
     
     /**

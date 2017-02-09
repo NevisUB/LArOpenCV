@@ -45,7 +45,9 @@ namespace larocv {
 	throw larbys("Cannot register after TTree attachment happened!");
 
       _data_id_map[algo_id].push_back(_data_v.size());
+      data->_id = _data_v.size();
       _data_v.push_back(data);
+      
     }
     
     AlgorithmID_t AlgoDataManager::ID(const std::string& name) const
