@@ -8,7 +8,7 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
 
 namespace larocv {
- 
+
   class ElectronShowerVertexSeed : public larocv::laropencv_base {
     
   public:

@@ -171,7 +171,9 @@ namespace larocv {
   */
 
   void ElectronShowerVertexSeed::RegisterSeed(const std::vector<const cv::Mat>& img_v,
-					      const larocv::data::VertexClusterArray& part)
+					      const Vertex3D& vtx,
+					      const std::vector<const data::ParticleCluster*>& part_ptr_v,
+					      const std::vector<const data::ClusterCompound*>& comp_ptr_v)
   {
     std::vector<bool> good_plane_v(_num_planes,false);
     std::multimap<float,larocv::data::Vertex3D> vtrack_vtx_cand_m;
