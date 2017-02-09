@@ -1,5 +1,5 @@
-#ifndef __ALGODATA_VERTEX3D_H__
-#define __ALGODATA_VERTEX3D_H__
+#ifndef __ALGODATA_VERTEX_H__
+#define __ALGODATA_VERTEX_H__
 
 #include "LArOpenCV/Core/LArOCVTypes.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoDataBase.h"

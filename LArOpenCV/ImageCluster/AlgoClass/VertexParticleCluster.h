@@ -5,7 +5,7 @@
 #include "Geo2D/Core/VectorArray.h"
 #include "LArOpenCV/Core/laropencv_base.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
-#include "LArOpenCV/ImageCluster/AlgoData/Vertex3D.h"
+#include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 
 namespace larocv {
  

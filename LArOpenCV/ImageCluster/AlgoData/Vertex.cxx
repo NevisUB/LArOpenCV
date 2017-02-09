@@ -1,7 +1,7 @@
-#ifndef __ALGODATA_VERTEX3D_CXX__
-#define __ALGODATA_VERTEX3D_CXX__
+#ifndef __ALGODATA_VERTEX_CXX__
+#define __ALGODATA_VERTEX_CXX__
 
-#include "Vertex3D.h"
+#include "Vertex.h"
 
 namespace larocv {
   namespace data {

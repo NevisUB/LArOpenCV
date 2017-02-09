@@ -2,12 +2,13 @@
 #define __SINGLELINEARTRACK_H__
 
 #include "LArOpenCV/Core/laropencv_base.h"
-#include "LArOpenCV/ImageCluster/AlgoData/LinearTrackClusterData.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
+#include "LArOpenCV/ImageCluster/AlgoData/LinearTrack.h"
 #include "LArPlaneGeo.h"
 
+
 namespace larocv {
- 
+  
   class SingleLinearTrack : public larocv::laropencv_base {
     
   public:
@@ -26,11 +27,11 @@ namespace larocv {
     { _geo.Reset(); }
 
     void Configure(const Config_t &pset);
-
+    
     void RegisterVertex2D(const size_t plane,
 			  const std::vector<geo2d::Vector<float> >& vtx2d_v);
     
-    std::vector<data::LinearTrack>
+    std::vector<data::LinearTrack3D>
     FindLinearTrack(const std::vector<const cv::Mat>& img_v);
 
   private:

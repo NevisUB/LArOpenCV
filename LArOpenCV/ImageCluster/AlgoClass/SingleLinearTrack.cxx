@@ -247,7 +247,7 @@ namespace larocv {
     _registered_vtx2d_vv[plane] = vtx2d_v;
   }
 
-  std::vector<data::LinearTrack>
+  std::vector<data::LinearTrack3D>
   SingleLinearTrack::FindLinearTrack(const std::vector<const cv::Mat>& img_v)
   {
 
@@ -447,7 +447,7 @@ namespace larocv {
       } // end looping over 2nd plane of two plane pairs
     } // end looping over 1st plane of two plane pairs
 
-    std::vector<data::LinearTrack> res_v;
+    std::vector<data::LinearTrack3D> res_v;
 
     // now we have two and many plane candidates ... register
     for(size_t plane1=0; plane1<_num_planes; ++plane1) {
@@ -460,7 +460,7 @@ namespace larocv {
 	
 	for(auto const& cand_info : cand_info_v) {
 
-	  larocv::data::LinearTrack res;
+	  larocv::data::LinearTrack3D res;
 	  res.edge1.vtx2d_v.resize(_num_planes);
 	  res.edge2.vtx2d_v.resize(_num_planes);
 	  std::vector<larocv::data::LinearTrack2D> res_strack_v(_num_planes);
@@ -533,7 +533,7 @@ namespace larocv {
 	for(auto const& cand_info : cand_info_v) {
 	  if(used_vv[plane1][cand_info[0]]) continue;
 	  if(used_vv[plane2][cand_info[1]]) continue;
-	  larocv::data::LinearTrack res;
+	  larocv::data::LinearTrack3D res;
 	  res.edge1.vtx2d_v.resize(_num_planes);
 	  res.edge2.vtx2d_v.resize(_num_planes);
 	  std::vector<larocv::data::LinearTrack2D> res_strack_v(_num_planes);

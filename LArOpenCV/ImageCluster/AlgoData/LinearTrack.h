@@ -3,7 +3,7 @@
 
 #include "LArOpenCV/Core/larbys.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoDataBase.h"
-#include "LArOpenCV/ImageCluster/AlgoData/Vertex3D.h"
+#include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 
 namespace larocv {
 
@@ -22,11 +22,11 @@ namespace larocv {
       geo2d::Vector<float> edge2; ///< edge 2 of the track
     };
 
-    class LinearTrack : public AlgoDataArrayElementBase {
+    class LinearTrack3D : public AlgoDataArrayElementBase {
     public:
-      LinearTrack()
+      LinearTrack3D()
       {_Clear_();}
-      ~LinearTrack() {}
+      ~LinearTrack3D() {}
 
       void _Clear_()
       {
@@ -92,9 +92,9 @@ namespace larocv {
     };
 
     /**
-       \class LinearTrackArray
+       \class LinearTrack3DArray
     */
-    typedef AlgoDataArrayTemplate<LinearTrack> LinearTrackArray;
+    typedef AlgoDataArrayTemplate<LinearTrack3D> LinearTrack3DArray;
     
   }
 }

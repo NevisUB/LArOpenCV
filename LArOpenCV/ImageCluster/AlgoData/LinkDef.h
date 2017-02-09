@@ -35,8 +35,8 @@
 
 #pragma link C++ class larocv::data::LinearTrack2D+;
 #pragma link C++ class std::vector<larocv::data::LinearTrack2D>+;
-#pragma link C++ class larocv::data::LinearTrack+;
-#pragma link C++ class std::vector<larocv::data::LinearTrack>+;
+#pragma link C++ class larocv::data::LinearTrack3D+;
+#pragma link C++ class std::vector<larocv::data::LinearTrack3D>+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
