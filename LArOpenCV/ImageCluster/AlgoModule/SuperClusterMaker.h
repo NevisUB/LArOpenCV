@@ -1,5 +1,5 @@
-#ifndef __TRACKSUPERCLUSTER_H__
-#define __TRACKSUPERCLUSTER_H__
+#ifndef __SUPERCLUSTERMAKER_H__
+#define __SUPERCLUSTERMAKER_H__
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
@@ -7,18 +7,18 @@
 
 namespace larocv {
 
-  class TrackSuperCluster : public larocv::ImageAnaBase {
+  class SuperClusterMaker : public larocv::ImageAnaBase {
     
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
-    TrackSuperCluster(const std::string name = "TrackSuperCluster") :
+    SuperClusterMaker(const std::string name = "SuperClusterMaker") :
       ImageAnaBase(name),
       _SuperClusterer()
     {}
     
     /// Default destructor
-    virtual ~TrackSuperCluster(){}
+    virtual ~SuperClusterMaker(){}
 
     /// Finalize after process
     void Finalize(TFile*) {}
@@ -42,17 +42,17 @@ namespace larocv {
 
   
   /**
-     \class TrackSuperClusterFactory
-     \brief A concrete factory class for TrackSuperCluster
+     \class SuperClusterMakerFactory
+     \brief A concrete factory class for SuperClusterMaker
   */
-  class TrackSuperClusterFactory : public AlgoFactoryBase {
+  class SuperClusterMakerFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    TrackSuperClusterFactory() { AlgoFactory::get().add_factory("TrackSuperCluster",this); }
+    SuperClusterMakerFactory() { AlgoFactory::get().add_factory("SuperClusterMaker",this); }
     /// dtor
-    ~TrackSuperClusterFactory() {}
+    ~SuperClusterMakerFactory() {}
     /// create method
-    ImageClusterBase* create(const std::string instance_name) { return new TrackSuperCluster(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new SuperClusterMaker(instance_name); }
   };
   
 }

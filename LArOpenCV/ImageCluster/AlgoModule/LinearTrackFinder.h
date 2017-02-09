@@ -1,24 +1,23 @@
-#ifndef __LINEARTRACKSEEDS_H__
-#define __LINEARTRACKSEEDS_H__
+#ifndef __LINEARTRACKFINDER_H__
+#define __LINEARTRACKFINDER_H__
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
-#include "LArOpenCV/ImageCluster/AlgoData/LinearTrackClusterData.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/SingleLinearTrack.h"
 
 namespace larocv {
  
-  class LinearTrackSeeds : public larocv::ImageAnaBase {
+  class LinearTrackFinder : public larocv::ImageAnaBase {
     
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
-    LinearTrackSeeds(const std::string name = "LinearTrackSeeds") :
+    LinearTrackFinder(const std::string name = "LinearTrackFinder") :
       ImageAnaBase(name)
     {}
     
     /// Default destructor
-    virtual ~LinearTrackSeeds(){}
+    virtual ~LinearTrackFinder(){}
 
     /// Finalize after process
     void Finalize(TFile*) {}
@@ -44,17 +43,17 @@ namespace larocv {
   };
 
   /**
-     \class larocv::LinearTrackSeedsFactory
-     \brief A concrete factory class for larocv::LinearTrackSeeds
+     \class larocv::LinearTrackFinderFactory
+     \brief A concrete factory class for larocv::LinearTrackFinder
    */
-  class LinearTrackSeedsFactory : public AlgoFactoryBase {
+  class LinearTrackFinderFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    LinearTrackSeedsFactory() { AlgoFactory::get().add_factory("LinearTrackSeeds",this); }
+    LinearTrackFinderFactory() { AlgoFactory::get().add_factory("LinearTrackFinder",this); }
     /// dtor
-    ~LinearTrackSeedsFactory() {}
+    ~LinearTrackFinderFactory() {}
     /// create method
-    ImageClusterBase* create(const std::string instance_name) { return new LinearTrackSeeds(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new LinearTrackFinder(instance_name); }
   };
   
 }
