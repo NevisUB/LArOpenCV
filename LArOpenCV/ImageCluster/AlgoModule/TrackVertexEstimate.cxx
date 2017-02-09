@@ -70,6 +70,10 @@ namespace larocv {
       vertex3d_v.emplace_back(std::move(vtx3d));
     }
 
+    LAROCV_DEBUG() << "Inferred " << vertex3d_v.as_vector().size() << std::endl;
+    for(const auto& vtx :  vertex3d_v.as_vector())
+      LAROCV_DEBUG() << "... id " << vtx.ID() << std::endl;
+
     Reset();
     return true;
   }

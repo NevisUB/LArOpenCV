@@ -39,8 +39,8 @@ ProcessDriver: {
         Verbosity: 0
         Profile:   true
 
-        ClusterAlgoType: ["VertexSeeds","TrackVertexEstimate","TrackParticleCluster"]
-        ClusterAlgoName: ["vtxseeds","trackvtxest","trackparclus"]
+        ClusterAlgoType: ["SuperClusterMaker","TrackVertexSeeds","TrackVertexEstimate","TrackParticleCluster"]
+        ClusterAlgoName: ["superclusmaker","vtxseeds","trackvtxest","trackparclus"]
         EnableWireCheck: false
           
         ShowImage: false
@@ -61,6 +61,10 @@ ProcessDriver: {
           MinContourArea: 0
         }
 
+	superclusmaker : {
+	   SuperClusterer: {}
+        }
+
 	vtxseeds : {
            MinHIPClusterSize: 5
            MinMIPClusterSize: 0#20
@@ -78,13 +82,14 @@ ProcessDriver: {
 	}
 
 	trackvtxest : {
-  	   VertexSeedsAlgoName : "vtxseeds"
+  	   TrackVertexSeedsAlgoName : "vtxseeds"
 	   TrackVertexScan2D : {}
         }
 
 	trackparclus : {
            Verbosity : 0
-	   TrackVertexEstimateAlgo: "trackvtxest"
+           TrackVertexEstimateAlgo: "trackvtxest"
+           SuperClusterAlgo: "superclusmaker"
            VertexParticleCluster: {
                 ThetaHi: 10
                 ThetaLo: 10
@@ -98,7 +103,6 @@ ProcessDriver: {
 		RefineMerge: true
             }
         }
-
       }
     }
   }

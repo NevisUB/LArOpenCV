@@ -32,7 +32,7 @@ namespace larocv {
     int _dilation_size;
     int _dilation_iter;
     int _blur_size;
-    unsigned short _pi_threshold;
+    short _pi_threshold;
 
   };
   

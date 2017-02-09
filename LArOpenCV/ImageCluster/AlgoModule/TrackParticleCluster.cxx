@@ -28,7 +28,7 @@ namespace larocv {
     auto const vtx_algo_name = pset.get<std::string>("TrackVertexEstimateAlgo");
     _track_vertex_estimate_algo_id = this->ID(vtx_algo_name);
 
-    auto const scluster_algo_name = pset.get<std::string>("TrackSuperClusterAlgo");
+    auto const scluster_algo_name = pset.get<std::string>("SuperClusterAlgo");
     _track_super_cluster_algo_id = this->ID(scluster_algo_name);
 
     _contour_pad = pset.get<float>("ContourPad",0.);
@@ -42,15 +42,21 @@ namespace larocv {
 				       larocv::ImageMeta& meta,
 				       larocv::ROI& roi)
   {
+    auto const plane = meta.plane();
+
     // Algorithm data
-    auto& par_data = AlgoData<data::ParticleClusterArray>(meta.plane());
+    auto& par_data = AlgoData<data::ParticleClusterArray>(plane);
     
     const auto& vtx_data_v = AlgoData<data::Vertex3DArray>(_track_vertex_estimate_algo_id,0).as_vector();
 
+    LAROCV_DEBUG() << "Got " << vtx_data_v.size() << " vertices" << std::endl;
+    for(const auto& vtx : vtx_data_v)
+      LAROCV_DEBUG() << "... id " << vtx.ID() << std::endl;
+      
     // Run clustering for this plane & store
-    auto const plane = meta.plane();
-
     auto const& super_cluster_v = AlgoData<data::ContourArrayData>(_track_super_cluster_algo_id,plane);
+
+    LAROCV_DEBUG() << "Got " << super_cluster_v.size() << " super clusters on plane " << plane << std::endl;
     
     for(size_t vtx_id = 0; vtx_id < vtx_data_v.size(); ++vtx_id) {
       
@@ -69,11 +75,8 @@ namespace larocv {
       // Create track contours from the vertex point
       auto contour_v = _VertexParticleCluster.CreateParticleCluster(img,circle_vtx,super_cluster_v[super_cluster_id]);
 
-      //
-      // Analyze fraction of pixels clustered
-      // 0) find a contour that contains the subject 2D vertex, and find allcontained non-zero pixels inside
-      // 1) per track cluster count # of pixels from 0) that is contained inside
-
+      LAROCV_DEBUG() << "Found " << contour_v.size() << " contours for vertex id " << vtx_id << std::endl;
+      
       for(size_t cidx=0; cidx<contour_v.size(); ++cidx) {
 	auto& contour = contour_v[cidx];
 	LAROCV_DEBUG() << "On contour: " << cidx << "... size: " << contour.size() << std::endl;
@@ -85,7 +88,6 @@ namespace larocv {
 	AssociateMany(vtx3d,par_data.as_vector().back());
       }
     }
-
     
     return;
   }

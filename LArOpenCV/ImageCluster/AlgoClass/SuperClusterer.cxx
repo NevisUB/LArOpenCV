@@ -34,10 +34,10 @@ namespace larocv {
   void SuperClusterer::Configure(const Config_t &pset)
   {
     this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
-    _dilation_size = pset.get<int>("DilationSize",-1);
-    _dilation_iter = pset.get<int>("DilationIter",-1);
-    _blur_size     = pset.get<int>("BlurSize",-1);
-    _pi_threshold = pset.get<unsigned short>("PIThreshold",-1);
+    _dilation_size = pset.get<int>("DilationSize",2);
+    _dilation_iter = pset.get<int>("DilationIter",1);
+    _blur_size     = pset.get<int>("BlurSize",2);
+    _pi_threshold = pset.get<short>("PIThreshold",10);
   }
 
   void SuperClusterer::CreateSuperCluster(const ::cv::Mat& img, GEO2D_ContourArray_t& super_cluster_v) const

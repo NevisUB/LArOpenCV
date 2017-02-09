@@ -39,7 +39,7 @@ ProcessDriver: {
         Verbosity: 0
         Profile:   true
 
-        ClusterAlgoType: ["VertexSeeds","TrackVertexEstimate"]
+        ClusterAlgoType: ["TrackVertexSeeds","TrackVertexEstimate"]
         ClusterAlgoName: ["vtxseeds","trackvtxest"]
         EnableWireCheck: false
           
@@ -78,7 +78,7 @@ ProcessDriver: {
 	}
 
 	trackvtxest : {
-	VertexSeedsAlgoName : "vtxseeds"
+	TrackVertexSeedsAlgoName : "vtxseeds"
         TrackVertexScan2D : {}
         }
 

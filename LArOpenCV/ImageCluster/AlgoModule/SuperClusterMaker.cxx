@@ -24,7 +24,7 @@ namespace larocv {
 				    ROI& roi)
   {
     auto& data = AlgoData<data::ContourArrayData>(meta.plane());
-
+    
     _SuperClusterer.CreateSuperCluster(img,data);
     
   }
