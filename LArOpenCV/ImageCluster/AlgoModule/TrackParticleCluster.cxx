@@ -67,8 +67,11 @@ namespace larocv {
 
       // Find corresponding super cluster, currently have to make a copy
       GEO2D_ContourArray_t super_ctor_v;
-      super_ctor_v.resize(super_cluster_v.size());
-      for(const auto& super_cluster : super_cluster_v) super_ctor_v.emplace_back(super_cluster._ctor);
+      super_ctor_v.reserve(super_cluster_v.size());
+      for(const auto& super_cluster : super_cluster_v) {
+	LAROCV_DEBUG() << "... setting " << super_cluster._ctor.size() << std::endl;
+	  super_ctor_v.emplace_back(super_cluster._ctor);
+	}
       auto const super_cluster_id = FindContainingContour(super_ctor_v, circle_vtx.center);
       
       if(super_cluster_id == kINVALID_SIZE) {

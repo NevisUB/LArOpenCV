@@ -324,13 +324,14 @@ namespace larocv {
 
   size_t FindContainingContour(const GEO2D_ContourArray_t& contour_v, const geo2d::Vector<float>& pt)
   {
+    LAROCV_SDEBUG() << "Recieved " << contour_v.size() << " contours w/ pt " << pt << std::endl;
     size_t parent_ctor_id   = kINVALID_SIZE;
     size_t parent_ctor_size = 0;
     double dist2vtx = -1e9;
     for(size_t ctor_id=0; ctor_id < contour_v.size(); ++ctor_id){
       auto const& ctor = contour_v[ctor_id];
       LAROCV_SDEBUG() << "ctor id: " << ctor_id << std::endl;
-      auto dist = ::cv::pointPolygonTest(ctor, pt, true);
+      auto dist = cv::pointPolygonTest(ctor, pt, true);
       LAROCV_SDEBUG() << "    dist: " << dist << std::endl;
       if(dist < dist2vtx) continue;
       if(dist2vtx >=0 && parent_ctor_size > ctor.size()) continue;
