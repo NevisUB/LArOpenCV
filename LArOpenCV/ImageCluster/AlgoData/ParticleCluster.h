@@ -13,17 +13,14 @@ namespace larocv {
     */
     class ParticleCluster : public AlgoDataArrayElementBase {
     public:
-      ParticleCluster()
-      { _Clear_(); }
+      ParticleCluster(){ _Clear_(); }
+      //ParticleCluster(const GEO2D_Contour_t& ctor) : _ctor(ctor) {}
+      // ParticleCluster(GEO2D_Contour_t&& ctor) : _ctor(std::move(ctor)) {}
       ~ParticleCluster() {}
       
-      /// attribute clear method
       void _Clear_() { _ctor.clear(); }
-      
       GEO2D_Contour_t _ctor; ///< contour to define a cluster
-      
     private:
-      
     };
     
     /**

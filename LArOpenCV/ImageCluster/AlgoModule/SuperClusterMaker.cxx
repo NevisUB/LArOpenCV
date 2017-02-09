@@ -2,7 +2,7 @@
 #define __SUPERCLUSTERMAKER_CXX__
 
 #include "SuperClusterMaker.h"
-#include "LArOpenCV/ImageCluster/AlgoData/ContourArrayData.h"
+#include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
 
 namespace larocv {
 
@@ -13,9 +13,9 @@ namespace larocv {
   {
     _SuperClusterer.set_verbosity(this->logger().level());
     _SuperClusterer.Configure(pset.get<Config_t>("SuperClusterer"));
-    Register(new data::ContourArrayData); // plane 0
-    Register(new data::ContourArrayData); // plane 1
-    Register(new data::ContourArrayData); // plane 2
+    Register(new data::ParticleClusterArray); // plane 0
+    Register(new data::ParticleClusterArray); // plane 1
+    Register(new data::ParticleClusterArray); // plane 2
   }
 
   void SuperClusterMaker::_Process_(const Cluster2DArray_t& clusters,
@@ -23,9 +23,20 @@ namespace larocv {
 				    ImageMeta& meta,
 				    ROI& roi)
   {
-    auto& data = AlgoData<data::ContourArrayData>(meta.plane());
+    auto& par_v = AlgoData<data::ParticleClusterArray>(meta.plane());
     
-    _SuperClusterer.CreateSuperCluster(img,data);
+    GEO2D_ContourArray_t ctor_v;
+
+    _SuperClusterer.CreateSuperCluster(img,ctor_v);
+
+    for(auto& ctor : ctor_v) {
+      data::ParticleCluster pc;
+      pc._ctor=std::move(ctor);
+      par_v.emplace_back(std::move(pc));
+    }
+
+    LAROCV_DEBUG() << "Found " << par_v.as_vector().size()
+		   << " super particles on plane " << meta.plane() << std::endl;
     
   }
   

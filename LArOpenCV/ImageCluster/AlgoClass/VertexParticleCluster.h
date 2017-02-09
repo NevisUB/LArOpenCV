@@ -6,6 +6,7 @@
 #include "LArOpenCV/Core/laropencv_base.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
+#include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
 
 namespace larocv {
  
@@ -29,6 +30,11 @@ namespace larocv {
     CreateParticleCluster(const ::cv::Mat& img,
 			  const data::CircleVertex& vtx2d,
 			  const GEO2D_Contour_t& super_cluster);
+
+    std::vector<GEO2D_Contour_t>
+    CreateParticleCluster(const ::cv::Mat& img,
+			  const data::CircleVertex& vtx2d,
+			  const data::ParticleCluster& super_particle);
 
     /// Access to seed clusters
     const GEO2D_ContourArray_t&

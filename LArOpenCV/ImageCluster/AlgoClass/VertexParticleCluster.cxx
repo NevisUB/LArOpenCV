@@ -192,6 +192,15 @@ namespace larocv {
     return res;
   }
 
+  std::vector<GEO2D_Contour_t>
+  VertexParticleCluster::CreateParticleCluster(const ::cv::Mat& img,
+					       const data::CircleVertex& vtx2d,
+					       const data::ParticleCluster& super_particle)
+  {
+    return CreateParticleCluster(img,vtx2d,super_particle._ctor);
+  }
+
+
   GEO2D_ContourArray_t
   VertexParticleCluster::ParticleHypothesis(const ::cv::Mat& img,
 					    const data::CircleVertex& vtx)

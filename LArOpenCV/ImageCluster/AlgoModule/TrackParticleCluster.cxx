@@ -54,7 +54,7 @@ namespace larocv {
       LAROCV_DEBUG() << "... id " << vtx.ID() << std::endl;
       
     // Run clustering for this plane & store
-    auto const& super_cluster_v = AlgoData<data::ContourArrayData>(_track_super_cluster_algo_id,plane);
+    const auto& super_cluster_v = AlgoData<data::ParticleClusterArray>(_track_super_cluster_algo_id,plane).as_vector();
 
     LAROCV_DEBUG() << "Got " << super_cluster_v.size() << " super clusters on plane " << plane << std::endl;
     
@@ -65,12 +65,20 @@ namespace larocv {
       LAROCV_DEBUG() << "Vertex ID " << vtx_id << " plane " << plane
 		     << " CircleVertex @ " << circle_vtx.center << " w/ R = " << circle_vtx.radius << std::endl;
 
-      // Find corresponding super cluster
-      auto const super_cluster_id = FindContainingContour(super_cluster_v, circle_vtx.center);
+      // Find corresponding super cluster, currently have to make a copy
+      GEO2D_ContourArray_t super_ctor_v;
+      super_ctor_v.resize(super_cluster_v.size());
+      for(const auto& super_cluster : super_cluster_v) super_ctor_v.emplace_back(super_cluster._ctor);
+      auto const super_cluster_id = FindContainingContour(super_ctor_v, circle_vtx.center);
+      
       if(super_cluster_id == kINVALID_SIZE) {
 	LAROCV_WARNING() << "Skipping Vertex ID " << vtx_id << " on plane " << plane << " as no super-cluster found..." << std::endl;
 	continue;
       }
+
+      //this vertex is associated to this cluster
+      LAROCV_DEBUG() << "Associating vertex " << vtx_id << " with super cluster " << super_cluster_id << std::endl;
+      AssociateOne(vtx3d,super_cluster_v[super_cluster_id]); 
       
       // Create track contours from the vertex point
       auto contour_v = _VertexParticleCluster.CreateParticleCluster(img,circle_vtx,super_cluster_v[super_cluster_id]);

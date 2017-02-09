@@ -91,8 +91,8 @@ namespace larocv {
     LAROCV_DEBUG() << "Generated " << line_v.size() << " pca lines" << std::endl;
     for ( auto& seed : _PCACrossing.ComputeIntersections(line_v,img) )
       vertex_seeds_v.emplace_back(std::move(seed));
-    
-    return;
+
+        return;
   }
   
 

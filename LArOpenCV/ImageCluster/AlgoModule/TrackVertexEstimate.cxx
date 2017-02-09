@@ -46,9 +46,9 @@ namespace larocv {
     std::vector<data::Vertex3D> vtx3d_v;
     std::vector<std::vector<data::CircleVertex> > vtx2d_vv;
     _algo.CreateTimeVertex3D(img_v,vtx3d_v,vtx2d_vv);
-
+    
     auto& vertex3d_v  = AlgoData<data::Vertex3DArray>(0);
-
+    
     for(uint idx=0;idx<vtx3d_v.size();++idx) {
       auto& vtx2d_v=vtx2d_vv[idx];
       auto& vtx3d=vtx3d_v[idx];
@@ -74,6 +74,9 @@ namespace larocv {
     for(const auto& vtx :  vertex3d_v.as_vector())
       LAROCV_DEBUG() << "... id " << vtx.ID() << std::endl;
 
+
+
+    
     Reset();
     return true;
   }
