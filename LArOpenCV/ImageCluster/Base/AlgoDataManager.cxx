@@ -19,7 +19,7 @@ namespace larocv {
 
     void AlgoDataManager::Register(const AlgorithmID_t algo_id, const std::string name)
     {
-      LAROCV_INFO() << "Request to register an algorithm " << name << std::endl;
+      LAROCV_INFO() << "Request to register an algorithm " << name << " with ID = " << algo_id<< std::endl;
       for(auto const& n : _name_v) {
 	if(n != name) continue;
 	std::stringstream ss;

@@ -1,14 +1,12 @@
 ProcessDriver: {
-
-  Verbosity:    2
+  Verbosity:    0
   EnableFilter: true
   RandomAccess: false
   ProcessType:  ["LArbysImage"]
   ProcessName:  ["LArbysImage"]
   AnaFile:     ""
-
   IOManager: {
-    Verbosity:   2
+    Verbosity:   0
     Name:        "IOManager"
     IOMode:      0
     OutFileName: ""
@@ -17,66 +15,47 @@ ProcessDriver: {
     StoreOnlyType: []
     StoreOnlyName: []
   }
-
   ProcessList: {
     LArbysImage: {
-
       Verbosity: 0
       Profile: true
-
       TrackImageProducer: "test"
-      
       Debug: true
-
       Q2Gray: 2
       QMin: 0.1
       QMax: 500
-
       MatchPlaneWeights: [1.,1.,1.]
-
       ImageClusterManager: {
         StoreAlgoData: false  
         Verbosity: 0
         Profile:   true
-
         ClusterAlgoType: ["TrackVertexSeeds"]
         ClusterAlgoName: ["vtxseeds"]
         EnableWireCheck: false
-          
         ShowImage: false
-
         MatchAlgoType: ""
         MatchAlgoName: ""
-
         ReClusterAlgoType: ""
         ReClusterAlgoName: ""
-
         UseOnlyTwoPlanes: false
         RequirePlane: 2
-
         ImageClusterViewer: {
           Verbosity: 2
           Width:  800
           Height: 800
           MinContourArea: 0
         }
-
-	vtxseeds : {
+        vtxseeds : {
            MinHIPClusterSize: 5
            MinMIPClusterSize: 0#20
-           
            #MIPLevels: 10
            #HIPLevels: 50
-           
            #DilationSize: 2
            #DilationIter: 1
            #BlurSize: 2
-           
            #MaskHIP: false
-           
            #HIPMaskTolerance: 3.0
-	}
-
+       }
       }
     }
   }
