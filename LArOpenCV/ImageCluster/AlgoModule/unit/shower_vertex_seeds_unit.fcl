@@ -19,7 +19,9 @@ ProcessDriver: {
     LArbysImage: {
       Verbosity: 0
       Profile: true
-      ADCImageProducer: "test"
+      ADCImageProducer: "trk_test"
+      TrackImageProducer: "trk_test"
+      ShowerImageProducer: "shr_test"
       Debug: true
       Q2Gray: 2
       QMin: 0.1
@@ -29,8 +31,8 @@ ProcessDriver: {
         StoreAlgoData: false  
         Verbosity: 0
         Profile:   true
-        ClusterAlgoType: ["LinearTrackFinder"]
-        ClusterAlgoName: ["lineartrackfinder"]
+        ClusterAlgoType: ["LinearTrackFinder","SuperClusterMaker","ShowerVertexSeeds"]
+        ClusterAlgoName: ["lineartrackfinder","shower_superclustermaker","showervertexseeds"]
         EnableWireCheck: false
         ShowImage: false
         MatchAlgoType: ""
@@ -46,6 +48,7 @@ ProcessDriver: {
           MinContourArea: 0
         }
         lineartrackfinder: {
+         ImageSetID: 1
 	 TrackVertexEstimate: ""
          SingleLinearTrack : {
           TrackContourSizeMin : 10
@@ -54,6 +57,20 @@ ProcessDriver: {
 	  EdgesFromMean: true
           }
         }
+        shower_superclustermaker: {
+           ImageSetID: 2
+	   SuperClusterer : {}
+        }
+	showervertexseeds: {
+          ImageSetID: 1
+          Vertex3DName: ""
+          SuperClusterName: "shower_superclustermaker"
+          LinearTrackName: "lineartrackfinder"
+          TrackParticleName: ""
+	  ElectronShowerVertexSeed: {
+	  PixelFracThreshold: 0.8
+         }
+       }
       }
     }
   }
