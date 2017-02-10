@@ -25,5 +25,8 @@ namespace larocv {
 			       float width, float height);
 
   void CorrectEdgeRectangle(const ::cv::Mat& img, cv::Rect& rect,int w, int h);
+
+  cv::Mat MaskImage(const cv::Mat& img, const cv::Rect& rec, int tol=0, bool maskout=true);
+
 }
 #endif

@@ -6,6 +6,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include "LArOpenCV/Core/larbys.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
+#include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 #ifdef UNIT_TEST
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
@@ -31,6 +32,7 @@ namespace larocv {
     _refine_polar_cluster = true;
     _refine_cartesian_cluster = true;
     _merge_by_mask = false;
+    _refine_cartesian_thickness=2;
   }
 
   void
@@ -65,13 +67,14 @@ namespace larocv {
     _theta_hi = pset.get<int>("ThetaHi",10);
     _theta_lo = pset.get<int>("ThetaLo",10);
     _pi_threshold = pset.get<unsigned short>("PIThreshold",10);
-    _use_theta_half_angle     = pset.get<bool>("UseHalfAngle",true);
-    _contour_dist_threshold   = pset.get<float>("ContourMinDist",5);
-    _refine_polar_cluster     = pset.get<bool>("RefinePolarCluster",true);
-    _refine_cartesian_cluster = pset.get<bool>("RefineCartesianCluster",true);
-    _mask_fraction_radius     = pset.get<float>("MaskFractionRadius",-1.);
-    _mask_min_radius          = pset.get<float>("MaskMinRadius",3);
-    _merge_by_mask            = pset.get<bool>("MergeByMask",true);
+    _use_theta_half_angle       = pset.get<bool>("UseHalfAngle",true);
+    _contour_dist_threshold     = pset.get<float>("ContourMinDist",5);
+    _refine_polar_cluster       = pset.get<bool>("RefinePolarCluster",true);
+    _refine_cartesian_cluster   = pset.get<bool>("RefineCartesianCluster",true);
+    _mask_fraction_radius       = pset.get<float>("MaskFractionRadius",-1.);
+    _mask_min_radius            = pset.get<float>("MaskMinRadius",3);
+    _merge_by_mask              = pset.get<bool>("MergeByMask",true);
+    _refine_cartesian_thickness = pset.get<uint>("RefineCartesianThickness",2);
   }
 
   GEO2D_ContourArray_t
@@ -513,7 +516,22 @@ namespace larocv {
       if(_refine_cartesian_cluster) {
 	// Refine contour
 	LAROCV_DEBUG() << "Refining cartesian contour of size: " << contour.size() << std::endl;
+
 	auto masked = MaskImage(img,contour,0,false);
+	if (!cv::countNonZero(masked)) {
+	  LAROCV_WARNING() << "...masked image is empty, pad contour w/ " << _refine_cartesian_thickness << " px" << std::endl;
+	  if (contour.size() == 1) {
+	    auto rect=cv::Rect(contour.at(0).x-_refine_cartesian_thickness/2,
+			       contour.at(0).y-_refine_cartesian_thickness/2,
+			       _refine_cartesian_thickness,_refine_cartesian_thickness);
+	    
+	    LAROCV_WARNING() << "...this contour of size 1 & creating rectangle " << rect;
+	    masked = MaskImage(img,rect,0,false);
+	  } else { 
+	    masked = MaskImage(img,contour,_refine_cartesian_thickness,false);
+	  }
+	  
+	}
 	
 	if(this->logger().level() == ::larocv::msg::kDEBUG) {
 	  auto plane_tmp=0;
@@ -527,6 +545,7 @@ namespace larocv {
 	  ::cv::imwrite(ss_a.str(),img);
 	  ::cv::imwrite(ss_b.str(),img_tmp0);
 	  ::cv::imwrite(ss_c.str(),masked);
+	  if (contour.size()==1) std::exit(1);
 	}
 	
 	GEO2D_ContourArray_t cartesian_ctor_v;
@@ -535,7 +554,7 @@ namespace larocv {
 	findContours(masked, cartesian_ctor_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
 	// pick the maximal area contour
 	if(cartesian_ctor_v.empty()) {
-	  LAROCV_CRITICAL() << "Lost contour in cartesian-refining step?!" << std::endl;	
+	  LAROCV_CRITICAL() << "Lost contour in cartesian-refining step?!" << std::endl;
 	  throw larbys();
 	}
 	size_t target_idx = 0;

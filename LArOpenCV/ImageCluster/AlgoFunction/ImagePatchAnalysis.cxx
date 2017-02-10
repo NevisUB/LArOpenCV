@@ -183,8 +183,23 @@ namespace larocv {
     
   }
   
+  cv::Mat MaskImage(const cv::Mat& img, const cv::Rect& rec, int tol, bool maskout) {
+    
+    cv::Mat dst_img(img.size(),img.type(), CV_8UC1);
+    cv::Mat mask = cv::Mat(img.size(),img.type(),CV_8UC1);
+    LAROCV_SDEBUG() << "Creating a mask for image (rows,cols) = (" << img.rows << "," << img.cols << ")"
+		    << " with are rect mask @ (" << rec.x << "," << rec.y << ") "
+		    << "w/ width " << rec.width << " height " << rec.height << std::endl;
 
+    LAROCV_SWARNING() << "tol argument unused" << std::endl;
+    
+    mask(rec).setTo(cv::Scalar::all(255));
 
+    if(maskout) cv::bitwise_not(mask,mask);
+    
+    img.copyTo(dst_img,mask);
+    return dst_img;
+  }    
   
 }
 #endif

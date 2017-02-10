@@ -151,7 +151,7 @@ namespace larocv {
 	auto xs_pt_v = QPointOnCircle(img,circle,_pi_threshold);
 	LAROCV_INFO() << "Inspecting plane " << plane
 		      << " ... " << xs_pt_v.size()
-		      << " crossing points on circle @ " << circle.center << std::endl;
+		      << " crossing points on circle @ " << circle.center << " w/ rad " << circle.radius << std::endl;
 	xs_pt_v = this->ValidShowerPointOnCircle(img, circle, xs_pt_v);
 	/*
 	if(xs_pt_v.size()>1) {
