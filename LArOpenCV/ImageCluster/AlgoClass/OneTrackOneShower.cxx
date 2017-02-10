@@ -13,19 +13,12 @@
 namespace larocv {
 
   void OneTrackOneShower::Reset()
-  {
-    _geo_algo.Reset();
-    _geo_algo._xplane_tick_resolution = _xplane_tick_resolution;
-    _geo_algo._num_planes = _num_planes;
-  }
+  { _cand_vertex_v.clear(); }
 
   void OneTrackOneShower::Configure(const Config_t &pset)
   {
     auto this_verbosity = (msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level())));
     this->set_verbosity(this_verbosity);
-    _par_algo.Configure(pset);
-    _par_algo._pi_threshold = 5;
-    _par_algo.set_verbosity(this_verbosity);
       
     _pi_threshold = 5;
     _circle_default_radius = pset.get<float>("CircleDefaultRadius",10);//10
@@ -37,7 +30,7 @@ namespace larocv {
   }
 
   void OneTrackOneShower::SetPlaneInfo(const ImageMeta& meta)
-  { _geo_algo.ResetPlaneInfo(meta); }
+  {}
 
   geo2d::VectorArray<float>
   OneTrackOneShower::ValidShowerPointOnCircle(const ::cv::Mat& img,
@@ -132,50 +125,12 @@ namespace larocv {
     return res_v;
   }
   
-  data::ParticleCluster
-  OneTrackOneShower::SingleShowerHypothesis(const ::cv::Mat& img,
-					    const data::CircleVertex& vtx,
-					    const GEO2D_Contour_t& super_cluster)
+  std::vector<data::Vertex3D>
+  OneTrackOneShower::ListShowerVertex(const std::vector<const cv::Mat>& img_v,
+				      const std::vector<data::VertexSeed3D>& cand_v) const
   {
-
-    if(vtx.xs_v.size()!=1) {
-      LAROCV_CRITICAL() << "Only 1 crossing-point CircleVertex can be provided..." << std::endl;
-      throw larbys();
-    }
-    
-    auto res_ctor_v = _par_algo.CreateParticleCluster(img,vtx,super_cluster);
-    
-    data::ParticleCluster shower;
-
-    auto& contour = shower.ctor;
-    if ( res_ctor_v.empty() ) {
-      LAROCV_INFO() << "No single shower can be identified" << std::endl;
-    }
-    else if (res_ctor_v.size() == 1) {
-      LAROCV_INFO() << "Single shower identified" << std::endl;
-      contour = res_ctor_v[0];
-    }
-    else {
-      LAROCV_CRITICAL() << "Implement choosing largest area contour?" << std::endl;
-      throw larbys();
-    }
-      
-    if(shower.ctor.size()<=2)
-      shower.ctor.clear();
-    else
-      shower.start = vtx.center;
-
-    return shower;
-  }
-
-  void OneTrackOneShower::ListShowerVertex(const std::vector<const cv::Mat>& img_v,
-					   const std::vector<data::Vertex3D>& cand_v,
-					   std::vector<data::Vertex3D>& res_vtx_v,
-					   std::vector<std::vector<data::CircleVertex> >& res_cvtx_v) const
-  {
-    res_vtx_v.clear();
-    res_cvtx_v.clear();
-    
+    std::vector<data::Vertex3D> res_vtx3d_v;
+    res_vtx3d_v.clear();
     geo2d::Circle<float> circle;
     circle.radius = _circle_default_radius;
 
@@ -186,7 +141,6 @@ namespace larocv {
       std::vector<data::CircleVertex> cvtx_v;
       cvtx_v.resize(_num_planes);
       for(size_t plane=0; plane<img_v.size(); ++plane) {
-	data::ParticleCluster scluster;
 	auto& cvtx = cvtx_v[plane];
 	cvtx.radius = _circle_default_radius;
 	circle.center.x = cand_vtx.vtx2d_v.at(plane).pt.x;
@@ -218,31 +172,34 @@ namespace larocv {
 	  cvtx.xs_v.push_back(pca_pt);
 	}
       }
-
-      res_vtx_v.push_back(cand_vtx);
-      res_cvtx_v.push_back(cvtx_v);
+      data::Vertex3D vtx3d;
+      vtx3d.x = cand_vtx.x;
+      vtx3d.y = cand_vtx.y;
+      vtx3d.z = cand_vtx.z;
+      vtx3d.vtx2d_v = cand_vtx.vtx2d_v;
+      vtx3d.cvtx2d_v = cvtx_v;
+      res_vtx3d_v.emplace_back(std::move(vtx3d));
     }
+    return res_vtx3d_v;
   }
   
-  std::vector<data::SingleShower> OneTrackOneShower::CreateSingleShower(const std::vector<const cv::Mat>& img_v)
+  std::vector<data::Vertex3D>
+  OneTrackOneShower::CreateSingleShower(const std::vector<const cv::Mat>& img_v)
   {
     // Construct a single list of vertex candidates (ltrack=>vtrack=>vedge)
     LAROCV_INFO() << "# Vertex3D after combining all: " << _cand_vertex_v.size() << std::endl;
 
     // Now search for a single shower
     _shower_vtx3d_v.clear();
-    _shower_vtx2d_vv.clear();
+
+    std::vector<data::Vertex3D> result;
     
-    ListShowerVertex(img_v,_cand_vertex_v, _shower_vtx3d_v, _shower_vtx2d_vv);
+    _shower_vtx3d_v = ListShowerVertex(img_v,_cand_vertex_v);
     LAROCV_INFO() << "# Vertex3D candidate for single shower: " << _shower_vtx3d_v.size() << std::endl;
     
-    std::vector<data::SingleShower> shower_v;
-
     for(size_t i=0; i<_shower_vtx3d_v.size(); ++i) {
 
       auto const& vtx3d = _shower_vtx3d_v[i];
-      auto const& vtx2d_v = _shower_vtx2d_vv[i];
-      
       LAROCV_INFO() << "Inspecting 3D vertex ("
 		    << vtx3d.x << ","
 		    << vtx3d.y << ","
@@ -251,41 +208,21 @@ namespace larocv {
       // accept if 2 planes have 2D circle w/ only 1 crossing
       std::vector<size_t> num_xs_v(_num_planes+1,0);
       size_t num_plane_unique_xs = 0;
-      for(size_t plane=0; plane<vtx2d_v.size(); ++plane) {
-	auto const& vtx2d = vtx2d_v[plane];
-	LAROCV_DEBUG() << "  2D vertex @ " << vtx2d.center
-		       << " ... # crossing points = " << vtx2d.xs_v.size() << std::endl;
-	num_xs_v[plane] = vtx2d.xs_v.size();
-	if(vtx2d.xs_v.size() == 1) ++num_plane_unique_xs;
+      for(size_t plane=0; plane<vtx3d.vtx2d_v.size(); ++plane) {
+	auto const& cvtx2d = vtx3d.cvtx2d_v[plane];
+	LAROCV_DEBUG() << "  2D vertex @ " << cvtx2d.center
+		       << " ... # crossing points = " << cvtx2d.xs_v.size() << std::endl;
+	num_xs_v[plane] = cvtx2d.xs_v.size();
+	if(cvtx2d.xs_v.size() == 1) ++num_plane_unique_xs;
       }
       if(num_plane_unique_xs<2) {
 	LAROCV_DEBUG() << "Skipping this candidate... (# of planes w/ unique-circle-xs-pt is <2)" << std::endl;
 	continue;
       }
 
-      data::SingleShower shower;
-      for(size_t plane=0; plane<img_v.size(); ++plane) {
-	auto const& img  = img_v[plane];
-	auto const& cvtx = vtx2d_v[plane];
-	if(cvtx.xs_v.size()!=1) continue;
-	LAROCV_INFO() << "Clustering attempt on plane " << plane << " with circle @ " << cvtx.center << std::endl;
-	shower.insert(plane,SingleShowerHypothesis(img, cvtx));
-      }
-      size_t num_good_plane=0;
-      for(auto const& scluster: shower.get_clusters()) {
-	if(scluster.ctor.size()<3) continue;
-	++num_good_plane;
-      }
-      
-      if(num_good_plane<2) continue;
-
-      shower.set_vertex(vtx3d);
-
-      shower_v.emplace_back(std::move(shower));
+      result.push_back(vtx3d);
     }
-
-    // done
-    return shower_v;
+    return result;
   }
 
 }

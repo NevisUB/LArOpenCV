@@ -43,8 +43,6 @@ namespace larocv {
       compound_v.push_back(&(AlgoData<data::TrackClusterCompoundArray>(_compound_id,plane+img_v.size())));
     }
 
-    _ElectronShowerVertexSeed.Reset();
-
     auto input_vtxinfo_v = data::OrganizeVertexInfo(AssManager(),input_vtx3d_v,super_cluster_v,part_cluster_v,compound_v);
     _ElectronShowerVertexSeed.RegisterSeed(input_linear_track_v);
     _ElectronShowerVertexSeed.RegisterSeed(img_v,input_vtxinfo_v);
