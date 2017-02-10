@@ -110,7 +110,17 @@ namespace larocv {
 	// if defect is requested, let's make here
 	if(_create_compound) {
 	  auto const& particle = par_data.as_vector().back();
+	  // Create cluster compound
 	  auto cluscomp = _DefectBreaker.BreakContour(particle._ctor);
+	  // Order the atomics
+	  auto const ordered_atom_id_v = _AtomicAnalysis.OrderAtoms(cluscomp,circle_vtx.center);
+	  // Determine edges
+	  auto atom_edges_v = _AtomicAnalysis.AtomsEdge(cluscomp, circle_vtx.center, ordered_atom_id_v);
+	  // Get the farthest edge
+	  auto& last_start_end = atom_edges_v.at(ordered_atom_id_v.back());
+	  // Set the edge
+	  cluscomp.set_end_pt(last_start_end.second);
+	  // Store
 	  auto& compound_v = AlgoData<data::TrackClusterCompoundArray>(3+plane);
 	  compound_v.emplace_back(std::move(cluscomp));
 	  AssociateMany(vtx3d,compound_v.as_vector().back());

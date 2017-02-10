@@ -5,6 +5,7 @@
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/VertexParticleCluster.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/DefectBreaker.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
 
 namespace larocv {
  
@@ -46,6 +47,7 @@ namespace larocv {
 
     bool _create_compound;
     DefectBreaker _DefectBreaker;
+    AtomicAnalysis _AtomicAnalysis;
   };
 
   /**
