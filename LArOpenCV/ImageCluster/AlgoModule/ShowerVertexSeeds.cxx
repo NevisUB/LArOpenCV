@@ -66,15 +66,11 @@ namespace larocv {
       }
     }
 
-    _ElectronShowerVertexSeed.Reset();
-
     auto input_vtxinfo_v = data::OrganizeVertexInfo(AssManager(),
 						    input_vtx3d_v_ptr ? *(input_vtx3d_v_ptr) : data::Vertex3DArray(),
 						    super_cluster_v,
 						    part_cluster_v,
 						    compound_v);
-    
-    
     _ElectronShowerVertexSeed.RegisterSeed(img_v,input_vtxinfo_v);
     _ElectronShowerVertexSeed.RegisterSeed(input_linear_track_v);
     

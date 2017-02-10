@@ -28,6 +28,8 @@ namespace larocv {
     /// Finalize after process
     void Finalize(TFile*) {}
 
+    void Reset() { _ElectronShowerVertexSeed.Reset(); }
+
   protected:
 
     /// Inherited class configuration method
@@ -37,7 +39,7 @@ namespace larocv {
 		   const ::cv::Mat& img,
 		   ImageMeta& meta,
 		   ROI& roi)
-    {}
+    { _ElectronShowerVertexSeed.SetPlaneInfo(meta); }
 
     bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
     
