@@ -3,7 +3,7 @@
 
 #include "Geo2D/Core/Line.h"
 #include "Geo2D/Core/LineSegment.h"
-#include "LArOpenCV/Core/laropencv_logger.h"
+#include "LArOpenCV/Core/laropencv_base.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
 #include "LArOpenCV/ImageCluster/AlgoData/TrackClusterCompound.h"
@@ -12,31 +12,25 @@ using larocv::GEO2D_Contour_t;
 
 namespace larocv {
   
-  class DefectBreaker{
+  class DefectBreaker : public laropencv_base{
     
   public:
     
-    DefectBreaker()   :
+    DefectBreaker() :
+      laropencv_base("DefectBreaker"),
       _min_defect_size    (larocv::kINVALID_INT),
       _hull_edge_pts_split(larocv::kINVALID_INT),
-      _n_allowed_breaks   (larocv::kINVALID_INT),
-      _logger(nullptr)
-      
-    { _logger = &(larocv::logger::get("DBLogger")); }
+      _n_allowed_breaks   (larocv::kINVALID_INT)
+    { }
     
     ~DefectBreaker(){}
     
     void Configure(const Config_t &pset);
 
-
     //break contour --> create atomics
     larocv::data::TrackClusterCompound
     BreakContour(const GEO2D_Contour_t& in_ctor);
 
-    
-    inline const larocv::logger& logger() const
-    { return *_logger; }
-    
   private:
     
     cv::Vec4i
@@ -85,8 +79,6 @@ namespace larocv {
     int _min_defect_size;
     int _hull_edge_pts_split;
     int _n_allowed_breaks;
-    
-    larocv::logger *_logger;
     
   };
 }

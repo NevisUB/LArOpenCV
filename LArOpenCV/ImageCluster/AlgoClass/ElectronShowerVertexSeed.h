@@ -4,6 +4,8 @@
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 #include "LArOpenCV/ImageCluster/AlgoData/LinearTrack.h"
+#include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
+#include "LArOpenCV/ImageCluster/AlgoData/VertexSeed.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
 
 namespace larocv {
@@ -26,7 +28,7 @@ namespace larocv {
     
     void SetPlaneInfo(const ImageMeta& meta);
 
-    std::vector<data::Vertex3D> CreateSeed();
+    std::vector<data::VertexSeed3D> CreateSeed();
 
     // void RegisterSeed(const std::vector<const cv::Mat>& img_v,
     // 		      const larocv::data::VertexClusterArray& part,
@@ -39,7 +41,7 @@ namespace larocv {
 
   private:
 
-    std::vector<larocv::data::Vertex3D>
+    std::vector<larocv::data::VertexSeed3D>
     ListCandidateVertex(const std::vector<larocv::data::Vertex3D>& ltrack_vertex_v,
 			const std::vector<larocv::data::Vertex3D>& vtrack_vertex_v,
 			const std::vector<larocv::data::Vertex3D>& vedge_vertex_v) const;

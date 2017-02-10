@@ -310,12 +310,12 @@ namespace larocv {
     LAROCV_INFO() << "# Vertex3D from dQdXProfiler: " << _vedge_vertex_v.size() << std::endl;
   }
   
-  std::vector<larocv::data::Vertex3D>
+  std::vector<larocv::data::VertexSeed3D>
   ElectronShowerVertexSeed::ListCandidateVertex(const std::vector<larocv::data::Vertex3D>& ltrack_vertex_v,
 						const std::vector<larocv::data::Vertex3D>& vtrack_vertex_v,
 						const std::vector<larocv::data::Vertex3D>& vedge_vertex_v) const
   {
-    std::vector<larocv::data::Vertex3D> res_v;
+    std::vector<larocv::data::VertexSeed3D> res_v;
     for(auto const& pt : ltrack_vertex_v) {
       float min_dist = 1e9;
       for(auto const& vtx : res_v) {
@@ -327,7 +327,8 @@ namespace larocv {
 	LAROCV_INFO() << "Skipping LinearTrack vertex @ ("<<pt.x<<","<<pt.y<<","<<pt.z<<")"<<std::endl;
 	continue;
       }
-      res_v.push_back(pt);
+      data::VertexSeed3D seed(pt);
+      res_v.push_back(data::VertexSeed3D(pt));
     }
     for(auto const& pt : vtrack_vertex_v) {
       float min_dist = 1e9;
@@ -340,7 +341,7 @@ namespace larocv {
 	LAROCV_INFO() << "Skipping VertexTrackCluster vertex @ ("<<pt.x<<","<<pt.y<<","<<pt.z<<")"<<std::endl;
 	continue;
       }
-      res_v.push_back(pt);
+      res_v.push_back(data::VertexSeed3D(pt));
     }
     for(auto const& pt : vedge_vertex_v) {
       float min_dist = 1e9;
@@ -353,12 +354,12 @@ namespace larocv {
 	LAROCV_INFO() << "Skipping ParticleEnd vertex @ ("<<pt.x<<","<<pt.y<<","<<pt.z<<")"<<std::endl;
 	continue;
       }
-      res_v.push_back(pt);
+      res_v.push_back(data::VertexSeed3D(pt));
     }
     return res_v;
   }
 
-  std::vector<data::Vertex3D>
+  std::vector<data::VertexSeed3D>
   ElectronShowerVertexSeed::CreateSeed()
   { return ListCandidateVertex(_ltrack_vertex_v,_vtrack_vertex_v,_vedge_vertex_v); }
 

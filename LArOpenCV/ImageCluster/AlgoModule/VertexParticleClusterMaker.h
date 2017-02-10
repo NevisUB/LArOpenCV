@@ -1,25 +1,24 @@
-#ifndef __TRACKPARTICLECLUSTER_H__
-#define __TRACKPARTICLECLUSTER_H__
+#ifndef __VERTEXPARTICLECLUSTERMAKER_H__
+#define __VERTEXPARTICLECLUSTERMAKER_H__
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/VertexParticleCluster.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/DefectBreaker.h"
-#include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
 
 namespace larocv {
  
-  class TrackParticleCluster : public larocv::ImageAnaBase {
+  class VertexParticleClusterMaker : public larocv::ImageAnaBase {
     
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
-    TrackParticleCluster(const std::string name = "TrackParticleCluster") :
+    VertexParticleClusterMaker(const std::string name = "VertexParticleClusterMaker") :
       ImageAnaBase(name)
     {}
     
     /// Default destructor
-    ~TrackParticleCluster(){}
+    ~VertexParticleClusterMaker(){}
     
     void Reset() {}
 
@@ -39,28 +38,29 @@ namespace larocv {
 
   private:
     VertexParticleCluster _VertexParticleCluster;
-    DefectBreaker _DefectBreaker;
-    AtomicAnalysis _AtomicAnalysis;
     
     AlgorithmID_t _track_vertex_estimate_algo_id;
     AlgorithmID_t _track_super_cluster_algo_id;
     unsigned short _pi_threshold;
     float _contour_pad;
+
+    bool _create_compound;
+    DefectBreaker _DefectBreaker;
   };
 
   /**
-     \class larocv::TrackParticleClusterFactory
-     \brief A concrete factory class for larocv::TrackParticleCluster
+     \class larocv::VertexParticleClusterMakerFactory
+     \brief A concrete factory class for larocv::VertexParticleClusterMaker
    */
-  class TrackParticleClusterFactory : public AlgoFactoryBase {
+  class VertexParticleClusterMakerFactory : public AlgoFactoryBase {
 
   public:
     /// ctor
-    TrackParticleClusterFactory() { AlgoFactory::get().add_factory("TrackParticleCluster",this); }
+    VertexParticleClusterMakerFactory() { AlgoFactory::get().add_factory("VertexParticleClusterMaker",this); }
     /// dtor
-    ~TrackParticleClusterFactory() {}
+    ~VertexParticleClusterMakerFactory() {}
     /// create method
-    ImageClusterBase* create(const std::string instance_name) { return new TrackParticleCluster(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new VertexParticleClusterMaker(instance_name); }
   };
   
 }

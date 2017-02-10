@@ -1,5 +1,5 @@
-#ifndef __ALGOFUNCTIONTYPES_H__
-#define __ALGOFUNCTIONTYPES_H__
+#ifndef __ALGODATAUTILS_H__
+#define __ALGODATAUTILS_H__
 
 #include "ParticleCluster.h"
 #include "TrackClusterCompound.h"

@@ -47,9 +47,6 @@ namespace larocv {
     auto& vertex_seeds_v = AlgoData<data::VertexSeed2DArray>(meta.plane());
     auto& track_cluster_v = AlgoData<data::TrackClusterCompoundArray>(meta.plane()+3);
       
-    data::VertexSeed2D vertex_seeds;
-    data::TrackClusterCompound track_cluster;
-    
     // Cluster the HIPS and MIPS
     auto hip_mip_p = _ClusterHIPMIP.IsolateHIPMIP(img);
 
@@ -92,7 +89,7 @@ namespace larocv {
     for ( auto& seed : _PCACrossing.ComputeIntersections(line_v,img) )
       vertex_seeds_v.emplace_back(std::move(seed));
 
-        return;
+    return;
   }
   
 

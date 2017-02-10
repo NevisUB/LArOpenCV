@@ -1,5 +1,5 @@
-#ifndef __ALGODATAUTIL_CXX__
-#define __ALGODATAUTIL_CXX__
+#ifndef __ALGODATAUTILS_CXX__
+#define __ALGODATAUTILS_CXX__
 
 #include "AlgoDataUtils.h"
 #include "LArOpenCV/Core/larbys.h"
@@ -10,9 +10,9 @@ namespace larocv {
     std::vector<VertexTrackInfoCollection>
     OrganizeVertexInfo(const AlgoDataAssManager& ass_man,
 		       const Vertex3DArray& vtx3d_array,
-		       std::vector<const ParticleClusterArray*>& super_cluster_array_v,
-		       std::vector<const ParticleClusterArray*>& particle_array_v,
-		       std::vector<const TrackClusterCompoundArray*>& compound_array_v)
+		       std::vector<const ParticleClusterArray*> super_cluster_array_v,
+		       std::vector<const ParticleClusterArray*> particle_array_v,
+		       std::vector<const TrackClusterCompoundArray*> compound_array_v)
     {
       std::vector<VertexTrackInfoCollection> res_v;
       auto const& vtx3d_v = vtx3d_array.as_vector();

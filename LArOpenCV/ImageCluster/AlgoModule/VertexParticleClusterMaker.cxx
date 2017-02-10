@@ -1,23 +1,21 @@
-#ifndef __TRACKPARTICLECLUSTER_CXX__
-#define __TRACKPARTICLECLUSTER_CXX__
+#ifndef __VERTEXPARTICLECLUSTERMAKER_CXX__
+#define __VERTEXPARTICLECLUSTERMAKER_CXX__
 
 #include "TrackVertexEstimate.h"
-#include "TrackParticleCluster.h"
+#include "VertexParticleClusterMaker.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
-#include "LArOpenCV/ImageCluster/AlgoData/TrackClusterCompound.h"
 #include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
-#include "LArOpenCV/ImageCluster/AlgoData/ContourArrayData.h"
+#include "LArOpenCV/ImageCluster/AlgoData/TrackClusterCompound.h"
 
 namespace larocv {
 
-  /// Global larocv::TrackParticleClusterFactory to register AlgoFactory
-  static TrackParticleClusterFactory __global_TrackParticleClusterFactory__;
+  /// Global larocv::VertexParticleClusterMakerFactory to register AlgoFactory
+  static VertexParticleClusterMakerFactory __global_VertexParticleClusterMakerFactory__;
   
-  void TrackParticleCluster::_Configure_(const Config_t &pset) {
+  void VertexParticleClusterMaker::_Configure_(const Config_t &pset) {
     
     _DefectBreaker.Configure(pset);
-    _AtomicAnalysis.Configure(pset);
 
     _VertexParticleCluster.set_verbosity(this->logger().level());
     _VertexParticleCluster.Configure(pset.get<Config_t>("VertexParticleCluster"));
@@ -33,11 +31,20 @@ namespace larocv {
 
     _contour_pad = pset.get<float>("ContourPad",0.);
 
+    _create_compound = pset.get<bool>("CreateCompound",false);
+
     for(size_t plane=0; plane<3; ++plane)
       Register(new data::ParticleClusterArray);
+
+    if(_create_compound) {
+      _DefectBreaker.set_verbosity(this->logger().level());
+      _DefectBreaker.Configure(pset.get<Config_t>("DefectBreaker"));
+      for(size_t plane=0; plane<3; ++plane)
+	Register(new data::TrackClusterCompoundArray);
+    }
   }
 
-  void TrackParticleCluster::_Process_(const larocv::Cluster2DArray_t& clusters,
+  void VertexParticleClusterMaker::_Process_(const larocv::Cluster2DArray_t& clusters,
 				       const ::cv::Mat& img,
 				       larocv::ImageMeta& meta,
 				       larocv::ROI& roi)
@@ -91,20 +98,31 @@ namespace larocv {
       for(size_t cidx=0; cidx<contour_v.size(); ++cidx) {
 	auto& contour = contour_v[cidx];
 	LAROCV_DEBUG() << "On contour: " << cidx << "... size: " << contour.size() << std::endl;
+
 	data::ParticleCluster cluster;
 	cluster._ctor = std::move(contour);
+	
 	// Store
 	par_data.emplace_back(std::move(cluster));
 	// Create one-to-many association
 	AssociateMany(vtx3d,par_data.as_vector().back());
+
+	// if defect is requested, let's make here
+	if(_create_compound) {
+	  auto const& particle = par_data.as_vector().back();
+	  auto cluscomp = _DefectBreaker.BreakContour(particle._ctor);
+	  auto& compound_v = AlgoData<data::TrackClusterCompoundArray>(3+plane);
+	  compound_v.emplace_back(std::move(cluscomp));
+	  AssociateMany(vtx3d,compound_v.as_vector().back());
+	  AssociateOne(particle,compound_v.as_vector().back());
+	}
       }
     }
-    
     return;
   }
   
   
-  bool TrackParticleCluster::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  bool VertexParticleClusterMaker::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
 
     return true;

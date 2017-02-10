@@ -15,7 +15,7 @@ namespace larocv {
     _hull_edge_pts_split  = pset.get<int>("NHullEdgePoints",50);
     _n_allowed_breaks     = pset.get<int>("NAllowedBreaks",10);
     int log_level         = pset.get<int>("Verbosity",2);
-    _logger->set((larocv::msg::Level_t)log_level);
+    this->set_verbosity((msg::Level_t)log_level);
   }
   
   cv::Vec4i DefectBreaker::max_hull_edge(const GEO2D_Contour_t& ctor,
