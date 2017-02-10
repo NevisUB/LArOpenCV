@@ -15,7 +15,12 @@ namespace larocv {
     ShowerVertexSeeds(const std::string name = "ShowerVertexSeeds") :
       ImageAnaBase(name),
       _ElectronShowerVertexSeed()
-    {}
+    {
+      _vertex3d_id = kINVALID_ALGO_ID;
+      _super_cluster_id = kINVALID_ALGO_ID;
+      _linear_track_id = kINVALID_ALGO_ID;
+      _compound_id = kINVALID_ALGO_ID;
+    }
     
     /// Default destructor
     virtual ~ShowerVertexSeeds(){}
