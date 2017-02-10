@@ -17,7 +17,7 @@ namespace larocv {
 
     auto name_vertex3d      = pset.get<std::string>("Vertex3DName");
     auto name_super_cluster = pset.get<std::string>("SuperClusterName");
-    auto name_linear_track  = pset.get<std::string>("LiearTrackName");
+    auto name_linear_track  = pset.get<std::string>("LinearTrackName");
     auto name_compound      = pset.get<std::string>("TrackParticleName");
 
     _vertex3d_id      = this->ID(name_vertex3d);
