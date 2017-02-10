@@ -39,8 +39,8 @@ namespace larocv {
   private:
     VertexParticleCluster _VertexParticleCluster;
     
-    AlgorithmID_t _track_vertex_estimate_algo_id;
-    AlgorithmID_t _track_super_cluster_algo_id;
+    AlgorithmID_t _vertex_estimate_algo_id;
+    AlgorithmID_t _super_cluster_algo_id;
     unsigned short _pi_threshold;
     float _contour_pad;
 

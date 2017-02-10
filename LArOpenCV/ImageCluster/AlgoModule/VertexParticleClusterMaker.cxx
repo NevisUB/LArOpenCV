@@ -23,11 +23,11 @@ namespace larocv {
 
     _pi_threshold = _VertexParticleCluster._pi_threshold;
     
-    auto const vtx_algo_name = pset.get<std::string>("TrackVertexEstimateAlgo");
-    _track_vertex_estimate_algo_id = this->ID(vtx_algo_name);
+    auto const vtx_algo_name = pset.get<std::string>("VertexEstimateAlgo");
+    _vertex_estimate_algo_id = this->ID(vtx_algo_name);
 
     auto const scluster_algo_name = pset.get<std::string>("SuperClusterAlgo");
-    _track_super_cluster_algo_id = this->ID(scluster_algo_name);
+    _super_cluster_algo_id = this->ID(scluster_algo_name);
 
     _contour_pad = pset.get<float>("ContourPad",0.);
 
@@ -54,14 +54,14 @@ namespace larocv {
     // Algorithm data
     auto& par_data = AlgoData<data::ParticleClusterArray>(plane);
     
-    const auto& vtx_data_v = AlgoData<data::Vertex3DArray>(_track_vertex_estimate_algo_id,0).as_vector();
+    const auto& vtx_data_v = AlgoData<data::Vertex3DArray>(_vertex_estimate_algo_id,0).as_vector();
 
     LAROCV_DEBUG() << "Got " << vtx_data_v.size() << " vertices" << std::endl;
     for(const auto& vtx : vtx_data_v)
       LAROCV_DEBUG() << "... id " << vtx.ID() << std::endl;
       
     // Run clustering for this plane & store
-    const auto& super_cluster_v = AlgoData<data::ParticleClusterArray>(_track_super_cluster_algo_id,plane).as_vector();
+    const auto& super_cluster_v = AlgoData<data::ParticleClusterArray>(_super_cluster_algo_id,plane).as_vector();
 
     LAROCV_DEBUG() << "Got " << super_cluster_v.size() << " super clusters on plane " << plane << std::endl;
     

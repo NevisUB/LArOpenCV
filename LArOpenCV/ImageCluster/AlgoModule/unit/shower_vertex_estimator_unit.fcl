@@ -1,12 +1,10 @@
 ProcessDriver: {
-
   Verbosity:    2
   EnableFilter: true
   RandomAccess: false
   ProcessType:  ["LArbysImage"]
   ProcessName:  ["LArbysImage"]
   AnaFile:     ""
-
   IOManager: {
     Verbosity:   2
     Name:        "IOManager"
@@ -17,69 +15,66 @@ ProcessDriver: {
     StoreOnlyType: []
     StoreOnlyName: []
   }
-
   ProcessList: {
     LArbysImage: {
-
       Verbosity: 0
       Profile: true
-
-      TrackImageProducer: "test"
-      
+      ADCImageProducer: "trk_test"
+      TrackImageProducer: "trk_test"
+      ShowerImageProducer: "shr_test"
       Debug: true
-
       Q2Gray: 2
       QMin: 0.1
       QMax: 500
-
       MatchPlaneWeights: [1.,1.,1.]
-
       ImageClusterManager: {
         StoreAlgoData: false  
         Verbosity: 0
         Profile:   true
-
-        ClusterAlgoType: ["LinearTrackSeeds","ShowerVertexEstimate"]
-        ClusterAlgoName: ["lineartrackseeds","shrvtxest"]
+        ClusterAlgoType: ["LinearTrackFinder","SuperClusterMaker","ShowerVertexSeeds","ShowerVertexEstimate"]
+        ClusterAlgoName: ["lineartrackfinder","shower_superclustermaker","showervertexseeds","showervertexestimate"]
         EnableWireCheck: false
-          
         ShowImage: false
-
         MatchAlgoType: ""
         MatchAlgoName: ""
-
         ReClusterAlgoType: ""
         ReClusterAlgoName: ""
-
         UseOnlyTwoPlanes: false
         RequirePlane: 2
-
         ImageClusterViewer: {
           Verbosity: 2
           Width:  800
           Height: 800
           MinContourArea: 0
         }
-
-	lineartrackseeds : {
-	  SingleLinearTrack : {
+        lineartrackfinder: {
+         ImageSetID: 1
+	 TrackVertexEstimate: ""
+         SingleLinearTrack : {
           TrackContourSizeMin : 10
           TrackContourLengthMin : 6.
-          #VertexTrackClusterName : "vtxctor"
           SeedPlane : [2,0,1]
-	 }
+	  EdgesFromMean: true
+          }
         }
-
-	shrvtxest : {
-	   Verbosity: 0		  
-            ElectronShowerVertexSeed : {
-	    Verbosity: 0
-	    PixelFracThreshold : 0.9
-	    }
-	    VertexParticleClusterName : ""
-	    LinearTrackSeedsName : "lineartrackseeds"
-	}
-
+        shower_superclustermaker: {
+           ImageSetID: 2
+	   SuperClusterer : {}
+        }
+	showervertexseeds: {
+          ImageSetID: 1
+          Vertex3DName: ""
+          SuperClusterName: "shower_superclustermaker"
+          LinearTrackName: "lineartrackfinder"
+          TrackParticleName: ""
+	  ElectronShowerVertexSeed: {
+	  PixelFracThreshold: 0.8
+         }
+       }
+       showervertexestimate: {
+         ShowerVertexSeed: "showervertexseeds"
+         OneTrackOneShower: {}
+       }
       }
     }
   }

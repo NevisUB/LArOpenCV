@@ -71,6 +71,10 @@ ProcessDriver: {
 	  PixelFracThreshold: 0.8
          }
        }
+       showervertexestimate: {
+         ShowerVertexSeed: "showervertexseeds"
+         OneTrackOneShower: {}
+       }
       }
     }
   }
