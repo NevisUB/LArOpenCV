@@ -21,11 +21,21 @@ namespace larocv {
     auto name_compound      = pset.get<std::string>("TrackParticleName","");
 
 
-    if (!name_vertex3d.empty())
+    if (!name_vertex3d.empty()) {
       _vertex3d_id      = this->ID(name_vertex3d);
+      if (_vertex3d_id == kINVALID_ALGO_ID) {
+	LAROCV_CRITICAL() << "Vertex3D algorithm name does not exist!" << std::endl;
+	throw larbys();
+      }
+    }
 
-    if(!name_compound.empty())
+    if(!name_compound.empty()) {
       _compound_id      = this->ID(name_compound);
+      if (_compound_id == kINVALID_ALGO_ID) {
+	LAROCV_CRITICAL() << "TrackParticle algorithm name does not exist!" << std::endl;
+	throw larbys();
+      }
+    }
     
     _super_cluster_id = this->ID(name_super_cluster);
     _linear_track_id  = this->ID(name_linear_track);
