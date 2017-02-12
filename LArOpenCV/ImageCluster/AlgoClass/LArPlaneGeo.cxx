@@ -1,7 +1,8 @@
 #ifndef __LARPLANEGEO_CXX__
 #define __LARPLANEGEO_CXX__
 
-#include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKINterface.h"
+#include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
+#include "LArUtil/LArUtilException.h"
 #include "LArPlaneGeo.h"
 
 namespace larocv {
@@ -79,7 +80,15 @@ namespace larocv {
     auto wire0 = y2wire(pt0.y, plane0);
     auto wire1 = y2wire(pt1.y, plane1);
 
-    auto wire1_range = larocv::OverlapWireRange(wire0, plane0, plane1);
+    std::pair<double,double> wire1_range(kINVALID_DOUBLE,kINVALID_DOUBLE);
+    try {
+      wire1_range = larocv::OverlapWireRange(wire0, plane0, plane1);
+    }
+    catch(::larutil::LArUtilException& lare) {
+      LAROCV_WARNING() << lare.what() << "... bad YZ point estimate" << std::endl;
+      return false;
+    }
+    
     if(wire1 < wire1_range.first || wire1_range.second < wire1) return false;
 
     larocv::IntersectionPoint((size_t)(wire0+0.5), plane0, (size_t)(wire1+0.5), plane1, result.y, result.z);
