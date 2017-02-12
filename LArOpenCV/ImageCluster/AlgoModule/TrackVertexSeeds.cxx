@@ -29,7 +29,8 @@ namespace larocv {
   }
 
   GEO2D_ContourArray_t combine_ctor_arrs(const GEO2D_ContourArray_t& ctor_arr_1,
-					 const GEO2D_ContourArray_t& ctor_arr_2) {
+					 const GEO2D_ContourArray_t& ctor_arr_2)
+  {
     GEO2D_ContourArray_t ctors;
     ctors.reserve(ctor_arr_1.size() + ctor_arr_2.size());
 

@@ -20,7 +20,6 @@ namespace larocv {
     auto name_linear_track  = pset.get<std::string>("LinearTrackName");
     auto name_compound      = pset.get<std::string>("TrackParticleName","");
 
-
     if (!name_vertex3d.empty()) {
       _vertex3d_id      = this->ID(name_vertex3d);
       if (_vertex3d_id == kINVALID_ALGO_ID) {
@@ -39,7 +38,6 @@ namespace larocv {
     
     _super_cluster_id = this->ID(name_super_cluster);
     _linear_track_id  = this->ID(name_linear_track);
-
 
     Register(new data::VertexSeed3DArray);
   }

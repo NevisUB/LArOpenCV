@@ -525,12 +525,11 @@ namespace larocv {
 			       contour.at(0).y-_refine_cartesian_thickness/2,
 			       _refine_cartesian_thickness,_refine_cartesian_thickness);
 	    
-	    LAROCV_WARNING() << "...this contour of size 1 & creating rectangle " << rect;
+	    LAROCV_WARNING() << "...this contour of size 1 & creating rectangle " << rect << std::endl;
 	    masked = MaskImage(img,rect,0,false);
 	  } else { 
 	    masked = MaskImage(img,contour,_refine_cartesian_thickness,false);
 	  }
-	  
 	}
 	
 	if(this->logger().level() == ::larocv::msg::kDEBUG) {

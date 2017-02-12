@@ -31,7 +31,8 @@ namespace larocv {
 
     _contour_pad = pset.get<float>("ContourPad",0.);
 
-    _create_compound = pset.get<bool>("CreateCompound",false);
+    _create_compound   = pset.get<bool>("CreateCompound",false);
+    _min_particle_size = pset.get<uint>("MinParticleContourSize",3);
 
     for(size_t plane=0; plane<3; ++plane)
       Register(new data::ParticleClusterArray);
@@ -78,7 +79,7 @@ namespace larocv {
       for(const auto& super_cluster : super_cluster_v) {
 	LAROCV_DEBUG() << "... setting " << super_cluster._ctor.size() << std::endl;
 	  super_ctor_v.emplace_back(super_cluster._ctor);
-	}
+      }
       auto const super_cluster_id = FindContainingContour(super_ctor_v, circle_vtx.center);
       
       if(super_cluster_id == kINVALID_SIZE) {
@@ -92,13 +93,18 @@ namespace larocv {
       
       // Create track contours from the vertex point
       auto contour_v = _VertexParticleCluster.CreateParticleCluster(img,circle_vtx,super_cluster_v[super_cluster_id]);
-
+      
       LAROCV_DEBUG() << "Found " << contour_v.size() << " contours for vertex id " << vtx_id << std::endl;
       
       for(size_t cidx=0; cidx<contour_v.size(); ++cidx) {
 	auto& contour = contour_v[cidx];
 	LAROCV_DEBUG() << "On contour: " << cidx << "... size: " << contour.size() << std::endl;
 
+	if (contour.size() < _min_particle_size) {
+	  LAROCV_DEBUG() << "... size of this contour too small. Skip!" << std::endl;
+	  continue;
+	}
+	
 	data::ParticleCluster cluster;
 	cluster._ctor = std::move(contour);
 	

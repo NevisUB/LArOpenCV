@@ -43,11 +43,13 @@ namespace larocv {
     AlgorithmID_t _vertex_estimate_algo_id;
     AlgorithmID_t _super_cluster_algo_id;
     unsigned short _pi_threshold;
+    uint _min_particle_size;
     float _contour_pad;
 
     bool _create_compound;
     DefectBreaker _DefectBreaker;
     AtomicAnalysis _AtomicAnalysis;
+
   };
 
   /**
