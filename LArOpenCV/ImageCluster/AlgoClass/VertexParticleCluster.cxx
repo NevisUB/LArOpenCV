@@ -551,6 +551,7 @@ namespace larocv {
 	cartesian_ctor_v.clear();
 	cv_hierarchy_v.clear();
 	findContours(masked, cartesian_ctor_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+	LAROCV_DEBUG() << "Found " << cartesian_ctor_v.size() << " contours in masked image" << std::endl;
 	// pick the maximal area contour
 	if(cartesian_ctor_v.empty()) {
 	  LAROCV_CRITICAL() << "Lost contour in cartesian-refining step?!" << std::endl;

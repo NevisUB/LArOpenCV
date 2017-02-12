@@ -3,7 +3,8 @@
 
 #include "ImagePatchAnalysis.h"
 #include "Geo2D/Core/Geo2D.h"
-#include "opencv2/imgproc.hpp"
+#include <opencv2/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 #include "LArOpenCV/Core/laropencv_logger.h"
 #include "LArOpenCV/Core/larbys.h"
 
@@ -136,19 +137,25 @@ namespace larocv {
 			       geo2d::Vector<float> pt,
 			       float width, float height)
   {
-
+    LAROCV_SDEBUG() << "SquarePCA @ pt " << pt << " width " << width << " height " << height << std::endl;
     cv::Rect rect(pt.x-width, pt.y-height, 2*width+1, 2*height+1);
+    LAROCV_SDEBUG() << "set rect @ " << rect << std::endl;
     ::larocv::CorrectEdgeRectangle(img,rect,2*width+1,2*height+1);
-    
+    LAROCV_SDEBUG() << "corrected rect @ " << rect << std::endl;
+	
     auto small_img = ::cv::Mat(img,rect);
     ::cv::Mat thresh_small_img;
     //::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,CV_THRESH_BINARY);
-    ::cv::threshold(small_img,thresh_small_img,1,1000,3);
+    ::cv::threshold(small_img,thresh_small_img,1,255,0);
     geo2d::VectorArray<int> points;
     findNonZero(thresh_small_img, points);
 
     if(points.size() < 2) {
       LAROCV_SDEBUG() << "SquarePCA approx cannot be made (# points " << points.size() << " < 2)" << std::endl;
+      LAROCV_SDEBUG() << "... dumping image" << std::endl;
+      cv::imwrite("SquarePCA_img.png",img);
+      cv::imwrite("SquarePCA_small_img.png",small_img);
+      cv::imwrite("SquarePCA_thresh_small_img.png",thresh_small_img);
       throw larbys("SquarePCA found no point...");
     }
     

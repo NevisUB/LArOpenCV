@@ -166,6 +166,7 @@ namespace larocv {
 	LAROCV_DEBUG() << "     # crossing points = " << xs_pt_v.size() << std::endl;
 	*/
 	for(auto const& xs_pt : xs_pt_v) {
+	  LAROCV_DEBUG() << "Determining PCA @ " << xs_pt << std::endl;
 	  data::PointPCA pca_pt;
 	  pca_pt.pt = xs_pt;
 	  pca_pt.line = SquarePCA(img, pca_pt.pt, 5, 5);
