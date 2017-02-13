@@ -95,6 +95,8 @@ namespace larocv {
     const MatchBookKeeper& BookKeeper() const { return _book_keeper; }
     /// Original input image getter
     const std::vector<cv::Mat>& InputImages(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID) const;
+    /// Original input images writeable
+    std::vector<cv::Mat>& InputImagesRW(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID);
     /// Original image metadata getter
     const std::vector<larocv::ImageMeta>& InputImageMetas(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID) const;
     /// Original image roi getter

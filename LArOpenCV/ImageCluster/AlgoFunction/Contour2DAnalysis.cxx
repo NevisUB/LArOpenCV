@@ -8,6 +8,14 @@
 #include "LArOpenCV/Core/larbys.h"
 namespace larocv {
 
+  GEO2D_ContourArray_t FindContours(const cv::Mat& img) {
+    auto img_copy = img.clone();
+    GEO2D_ContourArray_t result_v;
+    std::vector<cv::Vec4i> cv_hierarchy_v;
+    cv::findContours(img_copy,result_v,cv_hierarchy_v,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
+    return result_v;
+  }
+  
   cv::Mat CleanImage(const cv::Mat& img,
 		     const GEO2D_ContourArray_t& veto_ctor_v,
 		     float pi_threshold)

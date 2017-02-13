@@ -8,6 +8,9 @@
 
 namespace larocv {
 
+  GEO2D_ContourArray_t FindContours(const cv::Mat& img);
+				    
+  
   cv::Mat CleanImage(const cv::Mat& img,
 		     const GEO2D_ContourArray_t& veto_ctor_v,
 		     float pi_threshold=0);
@@ -54,18 +57,25 @@ namespace larocv {
 			      const GEO2D_Contour_t& ctor2,
 			      const cv::Mat& img);
   
-  geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor,float EPS=1e-6);
+  geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor,
+			     float EPS=1e-6);
 
-  double AreaOverlap(const GEO2D_Contour_t& ctr0, const GEO2D_Contour_t& ctr1);
+  double AreaOverlap(const GEO2D_Contour_t& ctr0,
+		     const GEO2D_Contour_t& ctr1);
 
-  size_t FindContainingContour(const GEO2D_ContourArray_t& contour_v, const GEO2D_Contour_t& ctr);
+  size_t FindContainingContour(const GEO2D_ContourArray_t& contour_v,
+			       const GEO2D_Contour_t& ctr);
 
-  size_t FindContainingContour(const GEO2D_ContourArray_t& contour_v, const geo2d::Vector<float>& pt);
+  size_t FindContainingContour(const GEO2D_ContourArray_t& contour_v,
+			       const geo2d::Vector<float>& pt);
   
-  double PixelFraction(const cv::Mat& img,const GEO2D_Contour_t& super_ctor,const GEO2D_Contour_t& target_ctor);
+  double PixelFraction(const cv::Mat& img,
+		       const GEO2D_Contour_t& super_ctor,
+		       const GEO2D_Contour_t& target_ctor);
 
-  double PixelFraction(const cv::Mat& img,const GEO2D_Contour_t& super_ctor,const GEO2D_ContourArray_t& target_ctor_v);
-
+  double PixelFraction(const cv::Mat& img,
+		       const GEO2D_Contour_t& super_ctor,
+		       const GEO2D_ContourArray_t& target_ctor_v);
   
 }
 #endif

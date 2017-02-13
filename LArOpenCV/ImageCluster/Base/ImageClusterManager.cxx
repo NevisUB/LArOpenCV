@@ -79,6 +79,22 @@ namespace larocv {
     return _raw_img_vv[set_id];
   }
 
+  std::vector<cv::Mat>& ImageClusterManager::InputImagesRW(ImageSetID_t set_id)
+  {
+    LAROCV_INFO() << "User requested RW access to input image set " << (int)set_id << std::endl;
+    if(_raw_img_vv.empty()) 
+      throw larbys("No image available!");
+
+    if(set_id == kINVALID_SIZE) return _raw_img_vv.front();
+    if(set_id >= _raw_img_vv.size()) {
+      LAROCV_CRITICAL() << "Invalid image set id: " << set_id << std::endl;
+      throw larbys();
+    }
+
+    return _raw_img_vv[set_id];
+  }
+
+  
   const std::vector<larocv::ImageMeta>& ImageClusterManager::InputImageMetas(ImageSetID_t set_id) const
   {
     if(_raw_meta_vv.empty()) 
