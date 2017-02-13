@@ -6,6 +6,9 @@
 #include "LArOpenCV/ImageCluster/AlgoData/LinearTrack.h"
 #include "LArPlaneGeo.h"
 
+/*
+  @brief: find compatible 2D edge points across planes to create 3D edge points
+*/
 
 namespace larocv {
   
@@ -34,22 +37,24 @@ namespace larocv {
     std::vector<data::LinearTrack3D>
     FindLinearTrack(const std::vector<const cv::Mat>& img_v);
 
-  private:
-
-    void FindEdges(const cv::Mat& img,
-		   const GEO2D_Contour_t& ctor,
-		   geo2d::Vector<float>& edge1,
-		   geo2d::Vector<float>& edge2) const;
-
-    void EdgesFromMeanValue(const GEO2D_Contour_t& ctor,
-			    geo2d::Vector<float>& edge1,
-			    geo2d::Vector<float>& edge2) const;
+    void
+    FindEdges(const cv::Mat& img,
+	      const GEO2D_Contour_t& ctor,
+	      geo2d::Vector<float>& edge1,
+	      geo2d::Vector<float>& edge2) const;
     
-    void EdgesFromPCAProjection(const cv::Mat& img,
-				const GEO2D_Contour_t& ctor,
-				geo2d::Vector<float>& edge1,
-				geo2d::Vector<float>& edge2) const;
-
+    void
+    EdgesFromMeanValue(const GEO2D_Contour_t& ctor,
+		       geo2d::Vector<float>& edge1,
+		       geo2d::Vector<float>& edge2) const;
+    
+    void
+    EdgesFromPCAProjection(const cv::Mat& img,
+			   const GEO2D_Contour_t& ctor,
+			   geo2d::Vector<float>& edge1,
+			   geo2d::Vector<float>& edge2) const;
+    
+  public:
     std::vector<larocv::data::LinearTrack2D>
     FindLinearTrack2D(const size_t plane, const cv::Mat& img) const;
 

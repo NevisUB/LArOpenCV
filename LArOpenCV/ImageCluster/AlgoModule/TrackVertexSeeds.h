@@ -7,7 +7,9 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/ClusterHIPMIP.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/DefectBreaker.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/PCACrossing.h"
-
+/*
+  @brief: Created 2D vertex seeds from defect points and PCA crossing points
+*/
 namespace larocv {
 
   class TrackVertexSeeds : public larocv::ImageAnaBase {

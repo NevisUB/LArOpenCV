@@ -6,6 +6,10 @@
 #include "LArOpenCV/Core/ImageMeta.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 
+/*
+  @brief: Various functions for image pixel -> physical wire and tick conversion
+*/
+
 namespace larocv {
  
   class LArPlaneGeo : public laropencv_base {

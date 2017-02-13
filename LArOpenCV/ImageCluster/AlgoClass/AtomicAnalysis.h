@@ -8,6 +8,11 @@
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
 #include "LArOpenCV/ImageCluster/AlgoData/TrackClusterCompound.h"
 
+/*
+  @brief: various operations on atomics for: ordering, choosing start point, distance computation
+          edge point, dqdx, end point refinement
+*/
+
 using larocv::GEO2D_Contour_t;
 
 namespace larocv {

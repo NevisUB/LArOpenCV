@@ -5,7 +5,9 @@
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoData/VertexSeed.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/OneTrackOneShower.h"
-
+/*
+  @brief: estimate the shower vertex point using shower seeds
+*/
 namespace larocv {
  
   class ShowerVertexEstimate : public larocv::ImageAnaBase {

@@ -8,6 +8,10 @@
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
 #include "LArOpenCV/ImageCluster/AlgoData/TrackClusterCompound.h"
 
+/*
+@brief: given a contour, break that contour into atomic contours, store defect information
+*/
+
 using larocv::GEO2D_Contour_t;
 
 namespace larocv {

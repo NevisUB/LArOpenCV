@@ -3,6 +3,9 @@
 
 #include "LArOpenCV/ImageCluster/Base/AlgoDataBase.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
+/*
+  @brief: storage for 2D/3D vertex seeds
+*/
 namespace larocv {
   namespace data {
 

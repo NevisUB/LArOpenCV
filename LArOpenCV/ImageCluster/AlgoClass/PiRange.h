@@ -1,26 +1,14 @@
-/**
- * \file PiRange.h
- *
- * \ingroup AlgoClass
- * 
- * \brief Class def header for a class PiRange
- *
- * @author kazuhiro
- */
-
-/** \addtogroup AlgoClass
-
-    @{*/
 #ifndef PIRANGE_H
 #define PIRANGE_H
 
 #include "LArOpenCV/Core/laropencv_base.h"
+
+/*
+@brief: given an angular range [_angle_lo,_angle_hi) determine if given angle is in range
+*/
+
+
 namespace larocv {
-  /**
-     \class PiRange
-     User defined class PiRange ... these comments are used to generate
-     doxygen documentation!
-  */
   class PiRange : public laropencv_base {
     
   public:

@@ -4,7 +4,9 @@
 #include "LArOpenCV/Core/larbys.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoDataBase.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
-
+/*
+  @brief: 2D and 3D linear track information holding 2D and 3D edge information
+*/
 namespace larocv {
 
   namespace data {
@@ -12,6 +14,8 @@ namespace larocv {
     class LinearTrack2D {
     public:
       LinearTrack2D()  {clear();}
+      LinearTrack2D(GEO2D_Contour_t ct,geo2d::Vector<float> e1, geo2d::Vector<float> e2)
+      { ctor = ct; edge1=e1; edge2=e2; }
       ~LinearTrack2D() {}
       /// attribute clear method
       void clear()

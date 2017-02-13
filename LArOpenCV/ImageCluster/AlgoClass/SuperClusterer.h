@@ -6,6 +6,11 @@
 #include "LArOpenCV/Core/laropencv_base.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
+
+/*
+@brief: run contour finding on thresholded image after optional dilation, and bluring.
+*/
+
 namespace larocv {
  
   class SuperClusterer : public laropencv_base {

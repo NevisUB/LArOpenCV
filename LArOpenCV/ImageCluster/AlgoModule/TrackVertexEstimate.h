@@ -4,7 +4,9 @@
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/TrackVertexScan2D.h"
-
+/*
+  @brief: estimate the 3D track verticies from 2D track vertex seeds using sliding circle method
+*/
 namespace larocv {
  
   class TrackVertexEstimate : public larocv::ImageAnaBase {

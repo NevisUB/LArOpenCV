@@ -8,6 +8,10 @@
 #include "LArOpenCV/ImageCluster/AlgoData/VertexSeed.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
 
+/*
+  @brief: coordinate candidate 3D vertex for single shower finding
+*/
+
 namespace larocv {
 
   class ElectronShowerVertexSeed : public larocv::laropencv_base {

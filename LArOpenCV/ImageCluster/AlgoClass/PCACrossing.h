@@ -7,6 +7,10 @@
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoData/TrackClusterCompound.h"
 
+/*
+  @brief: given an array of contours, compute the PCA line crossing points
+*/
+
 namespace larocv {
  
   class PCACrossing : public laropencv_base {

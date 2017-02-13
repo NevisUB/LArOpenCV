@@ -8,6 +8,10 @@
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 #include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
 
+/*
+  @brief: create a particle cluster (data::Particle) using a polar clustering scheme & given 2D vertex
+*/
+
 namespace larocv {
  
   class VertexParticleCluster : public laropencv_base {

@@ -4,7 +4,9 @@
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/SuperClusterer.h"
-
+/*
+  @brief: create overall contour and store into algodata
+*/
 namespace larocv {
 
   class SuperClusterMaker : public larocv::ImageAnaBase {

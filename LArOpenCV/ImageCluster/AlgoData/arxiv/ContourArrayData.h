@@ -2,8 +2,8 @@
 #define __ALGODATA_CONTOURARRAYDATA_H__
 
 #include "LArOpenCV/ImageCluster/Base/AlgoDataBase.h"
-#include "AlgoDataVertex.h"
 #include "LArOpenCV/Core/larbys.h"
+
 namespace larocv {
 
   namespace data {

@@ -6,6 +6,11 @@
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
 
+/*
+@brief: chooses 3D vertex compatible with one track, and one track assumption. Uses QPoint crossing @ 2D vertex across
+        planes to choose 3D shower candidate seed
+*/
+
 namespace larocv {
 
   class OneTrackOneShower : public larocv::laropencv_base {

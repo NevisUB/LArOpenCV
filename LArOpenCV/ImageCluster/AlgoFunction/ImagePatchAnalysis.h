@@ -11,22 +11,38 @@
 namespace larocv {
   
   geo2d::VectorArray<float>
-  QPointOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle,
+  QPointOnCircle(const ::cv::Mat& img,
+		 const geo2d::Circle<float>& circle,
 		 const float pi_threshold=10);
 
-  geo2d::Vector<float> MeanPixel(const cv::Mat& img, const geo2d::Vector<float>& center,
-				 size_t range_x, size_t range_y, float pi_threshold=0);
+  geo2d::Vector<float>
+  MeanPixel(const cv::Mat& img,
+	    const geo2d::Vector<float>& center,
+	    size_t range_x,
+	    size_t range_y,
+	    float pi_threshold=0);
 
-  void FindEdges(const GEO2D_Contour_t& ctor,
-		 geo2d::Vector<float>& edge1, geo2d::Vector<float>& edge2);
+  void
+  FindEdges(const GEO2D_Contour_t& ctor,
+	    geo2d::Vector<float>& edge1,
+	    geo2d::Vector<float>& edge2);
 
-  geo2d::Line<float> SquarePCA(const ::cv::Mat& img,
-			       geo2d::Vector<float> pt,
-			       float width, float height);
+  geo2d::Line<float>
+  SquarePCA(const ::cv::Mat& img,
+	    geo2d::Vector<float> pt,
+	    float width, float height);
+  
+  void
+  CorrectEdgeRectangle(const ::cv::Mat& img,
+		       cv::Rect& rect,
+		       int w,
+		       int h);
 
-  void CorrectEdgeRectangle(const ::cv::Mat& img, cv::Rect& rect,int w, int h);
-
-  cv::Mat MaskImage(const cv::Mat& img, const cv::Rect& rec, int tol=0, bool maskout=true);
+  cv::Mat
+  MaskImage(const cv::Mat& img,
+	    const cv::Rect& rec,
+	    int tol=0,
+	    bool maskout=true);
 
 }
 #endif

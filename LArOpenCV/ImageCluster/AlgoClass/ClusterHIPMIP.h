@@ -6,6 +6,10 @@
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 
+/*
+  @brief: isolate HIP and MIP pixels into seprate contours
+*/
+
 namespace larocv {
  
   class ClusterHIPMIP : public laropencv_base {

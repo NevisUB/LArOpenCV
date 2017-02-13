@@ -7,6 +7,11 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/DefectBreaker.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
 
+/*
+  @brief: given a vertex, cluster in polar coordinates tracks coming from vertex
+          optional ability to break resulting contours into atomic contours
+*/
+
 namespace larocv {
  
   class VertexParticleClusterMaker : public larocv::ImageAnaBase {

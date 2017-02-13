@@ -4,7 +4,9 @@
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/SingleLinearTrack.h"
-
+/*
+  @brief: find a linear track (contour + two 2D edges). Correlate edges across planes and determine 3D edges.
+*/
 namespace larocv {
  
   class LinearTrackFinder : public larocv::ImageAnaBase {

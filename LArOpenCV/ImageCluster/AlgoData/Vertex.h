@@ -7,7 +7,9 @@
 #include "Geo2D/Core/Line.h"
 #include "Geo2D/Core/Circle.h"
 #include "Geo2D/Core/BoundingBox.h"
-
+/*
+  @brief: storage for 2D/3D verticies. Also includes "PointPCA" which is a local linear approximation
+*/
 namespace larocv {
 
   namespace data {

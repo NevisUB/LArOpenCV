@@ -1,16 +1,3 @@
-/**
- * \file TrackVertexScan2D.h
- *
- * \ingroup ImageCluster
- * 
- * \brief Class def header for a class TrackVertexScan2D
- *
- * @author kazuhiro
- */
-
-/** \addtogroup ImageCluster
-
-    @{*/
 #ifndef __TRACKVERTEXSCAN2D_H__
 #define __TRACKVERTEXSCAN2D_H__
 
@@ -24,13 +11,12 @@
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
-namespace larocv {
 
-  
-  /*
-    \class 
-    @brief Plane-wise algorithm data created by TrackVertexScan2D, stores granular details of data
-  */
+/*
+  @brief: vertex finding algorithm for finding cross plane compatible-time and compatible-wire 3D vertices
+*/
+
+namespace larocv {
   class TrackVertexScan2DPlaneInfo {
   public:
     TrackVertexScan2DPlaneInfo() { Clear(); }

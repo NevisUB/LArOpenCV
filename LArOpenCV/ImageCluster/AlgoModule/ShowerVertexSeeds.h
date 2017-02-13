@@ -4,7 +4,9 @@
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/ElectronShowerVertexSeed.h"
-
+/*
+  @brief: determine 3D shower vertex seeds from 3D edge points, 3D track vertex points, and 3D end points
+*/
 namespace larocv {
 
   class ShowerVertexSeeds : public larocv::ImageAnaBase {

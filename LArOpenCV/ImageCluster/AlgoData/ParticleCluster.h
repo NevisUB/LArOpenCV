@@ -4,7 +4,9 @@
 #include "LArOpenCV/Core/LArOCVTypes.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoDataBase.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
-
+/*
+  @brief: ParticleCluster holds a contour and may represent a unique particle
+*/
 namespace larocv {
   namespace data {
     /**

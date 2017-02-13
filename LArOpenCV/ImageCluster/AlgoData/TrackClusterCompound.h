@@ -5,8 +5,10 @@
 #include "LArOpenCV/ImageCluster/Base/AlgoDataBase.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
 #include "Geo2D/Core/Line.h"
-
-
+/*
+  @brief: storage for atomic clusters (AtomicContour), cluster compounds (TrackClusterCompound)
+          and defects (ContourDefect)
+*/
 namespace larocv {
   namespace data {
 
