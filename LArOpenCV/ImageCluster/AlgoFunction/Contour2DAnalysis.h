@@ -58,7 +58,8 @@ namespace larocv {
 			      const cv::Mat& img);
   
   geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor,
-			     float EPS=1e-6);
+			     float EPS=1e-6,
+			     const cv::Mat* mat=nullptr);
 
   double AreaOverlap(const GEO2D_Contour_t& ctr0,
 		     const GEO2D_Contour_t& ctr1);

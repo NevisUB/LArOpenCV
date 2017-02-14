@@ -260,11 +260,21 @@ namespace larocv {
   
 
   
-  geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor,float EPS) {
+  geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor,
+			     float EPS,
+			     const cv::Mat* mat) {
+
     
-    LAROCV_SDEBUG() << "Calculating PCA for: " << ctor.size() << " points" << std::endl;
-    
-    cv::Mat ctor_pts(ctor.size(), 2, CV_32FC1); //32 bit precision is fine
+    GEO2D_Contour_t points;
+    cv::Mat ctor_pts;
+    if (mat)  {
+      LAROCV_SDEBUG() << "Using given cv Mat @ " << mat << std::endl;
+      findNonZero(MaskImage(*mat,ctor,0,true), points);
+      LAROCV_SDEBUG() << "Calculating PCA for: " << points.size() << " points" << std::endl;
+      ctor_pts = cv::Mat(points.size(), 2, CV_32FC1);
+    }
+    else 
+      ctor_pts = cv::Mat(ctor.size(),2,CV_32FC1);
 
     for (unsigned i = 0; i < ctor_pts.rows; ++i) {
       ctor_pts.at<float>(i, 0) = ctor[i].x;
@@ -272,7 +282,6 @@ namespace larocv {
     }
     
     cv::PCA pca_ana(ctor_pts, cv::Mat(), CV_PCA_DATA_AS_ROW,0);
-
     
     auto meanx=pca_ana.mean.at<float>(0,0);
     auto meany=pca_ana.mean.at<float>(0,1);
