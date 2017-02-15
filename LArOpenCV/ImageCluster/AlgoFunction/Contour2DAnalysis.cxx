@@ -8,7 +8,8 @@
 #include "LArOpenCV/Core/larbys.h"
 namespace larocv {
 
-  GEO2D_ContourArray_t FindContours(const cv::Mat& img) {
+  GEO2D_ContourArray_t FindContours(const cv::Mat& img)
+  {
     auto img_copy = img.clone();
     GEO2D_ContourArray_t result_v;
     std::vector<cv::Vec4i> cv_hierarchy_v;
@@ -259,48 +260,72 @@ namespace larocv {
   }
   
 
-  
   geo2d::Line<float> CalcPCA(const GEO2D_Contour_t& ctor,
-			     float EPS,
-			     const cv::Mat* mat) {
-
+			     float EPS) {
     
-    GEO2D_Contour_t points;
-    cv::Mat ctor_pts;
-    if (mat)  {
-      LAROCV_SDEBUG() << "Using given cv Mat @ " << mat << std::endl;
-      findNonZero(MaskImage(*mat,ctor,0,true), points);
-      LAROCV_SDEBUG() << "Calculating PCA for: " << points.size() << " points" << std::endl;
-      ctor_pts = cv::Mat(points.size(), 2, CV_32FC1);
-    }
-    else 
-      ctor_pts = cv::Mat(ctor.size(),2,CV_32FC1);
-
-    for (unsigned i = 0; i < ctor_pts.rows; ++i) {
-      ctor_pts.at<float>(i, 0) = ctor[i].x;
-      ctor_pts.at<float>(i, 1) = ctor[i].y;
+    if(ctor.size() < 2) {
+      LAROCV_SCRITICAL() << "PCA approx cannot be made (# points " << ctor.size() << " < 2)" << std::endl;
+      throw larbys();
     }
     
-    cv::PCA pca_ana(ctor_pts, cv::Mat(), CV_PCA_DATA_AS_ROW,0);
+    cv::Mat mat(ctor.size(), 2, CV_32FC1);
+    
+    for (unsigned i = 0; i < mat.rows; ++i) {
+      mat.at<float>(i, 0) = ctor[i].x;
+      mat.at<float>(i, 1) = ctor[i].y;
+    }
+
+    return PrinciplePCA(mat,EPS);
+    
+  }
+  
+  geo2d::Line<float> CalcPCA(const cv::Mat& img,
+			     float EPS) {
+
+
+    GEO2D_Contour_t pts_v;
+    findNonZero(img, pts_v);
+    
+    if(pts_v.size() < 2) {
+      LAROCV_SCRITICAL() << "PCA approx cannot be made (# points " << pts_v.size() << " < 2)" << std::endl;
+      cv::imwrite("calc_pca_img.png",img);
+      throw larbys();
+    }
+    
+    cv::Mat mat(pts_v.size(), 2, CV_32FC1);
+    
+    for (unsigned i = 0; i < mat.rows; ++i) {
+      mat.at<float>(i, 0) = pts_v[i].x;
+      mat.at<float>(i, 1) = pts_v[i].y;
+    }
+
+    return PrinciplePCA(mat,EPS);
+  }
+  
+  geo2d::Line<float> PrinciplePCA(const cv::Mat& row_mat,
+				  float EPS) {
+
+    if (EPS<=0) throw larbys("Function called w/o EPS specified. Consider calling CalcPCA(...)!");
+    cv::PCA pca_ana(row_mat, cv::Mat(), CV_PCA_DATA_AS_ROW,0);
     
     auto meanx=pca_ana.mean.at<float>(0,0);
     auto meany=pca_ana.mean.at<float>(0,1);
-
+    
     auto eigenPx=pca_ana.eigenvectors.at<float>(0,0);
     auto eigenPy=pca_ana.eigenvectors.at<float>(0,1);
-
+    
     LAROCV_SDEBUG() << "meanx : " << meanx << "... meany: " << meany << "... ePx: " << eigenPx << "... ePy: " << eigenPy << std::endl;
     
     if (eigenPx==0) { 
-      LAROCV_SINFO() << "Invalid Px inf detected set PX=EPS" << std::endl;
+      LAROCV_SWARNING() << "Invalid Px inf detected set PX=EPS" << std::endl;
       eigenPx=EPS;
     }
-
-
-    geo2d::Line<float> pca_principle(geo2d::Vector<float>(meanx,meany),
-				     geo2d::Vector<float>(eigenPx,eigenPy));
-    return pca_principle;
+    
+    return geo2d::Line<float>(geo2d::Vector<float>(meanx,meany),
+			      geo2d::Vector<float>(eigenPx,eigenPy));
+    
   }
+
 
   double AreaOverlap(const GEO2D_Contour_t& ctr0, const GEO2D_Contour_t& ctr1)
   {
@@ -370,38 +395,24 @@ namespace larocv {
     //count the number of super pixels
     double super_px = cv::countNonZero(super_img);
 
+    if (super_px == 0) {
+      LAROCV_SCRITICAL() << "Number of super pixels in image is zero!" << std::endl;
+      LAROCV_SCRITICAL() << "super ctor size " << super_ctor.size();
+      cv::imwrite("super_img.png",super_img);
+      throw larbys();
+    }
+    
     //count the number of target pixels in this image
     double target_px = 0;
     for(auto const& target_ctor : target_ctor_v) 
       target_px += cv::countNonZero(MaskImage(super_img,target_ctor,0,false));
-    
-    if (super_px == 0) {
-      LAROCV_SCRITICAL() << "Number of super pixels in image is zero!" << std::endl;
-      throw larbys();
-    }
 
     LAROCV_SDEBUG() << "...got " << super_px << " and " << target_px << " frac " << target_px/super_px << std::endl;
     return target_px / super_px;
   }
 
   double PixelFraction(const cv::Mat& img,const GEO2D_Contour_t& super_ctor, const GEO2D_Contour_t& target_ctor) {
-      
-    // mask this contour from the image
-    auto super_img = MaskImage(img,super_ctor,0,false);
-
-    //count the number of super pixels
-    double super_px = cv::countNonZero(super_img);
-
-    //count the number of target pixels in this image
-    double target_px = cv::countNonZero(MaskImage(super_img,target_ctor,0,false));
-    
-    if (super_px == 0) {
-      LAROCV_SCRITICAL() << "Number of super pixels in image is zero!" << std::endl;
-      throw larbys();
-    }
-
-    LAROCV_SDEBUG() << "...got " << super_px << " and " << target_px << " frac " << target_px/super_px << std::endl;
-    return target_px / super_px;
+    return PixelFraction(img,super_ctor,GEO2D_ContourArray_t(1,target_ctor));
   }
   
 }

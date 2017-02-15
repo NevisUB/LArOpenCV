@@ -6,10 +6,21 @@
 namespace larocv {
   
   double
-  Mean(const std::vector<float>& array, size_t start=0, size_t nsample=0);
+  Mean(const std::vector<float>& array,
+       size_t start=0,
+       size_t nsample=0);
   
   double
-  Sigma(const std::vector<float>& array, size_t start=0, size_t nsample=0);
+  Sigma(const std::vector<float>& array,
+	size_t start=0,
+	size_t nsample=0);
+
+
+  double
+  Covariance(std::vector<float> array1, //makes a copy
+	     std::vector<float> array2, //same..
+	     size_t start=0,
+	     size_t nsample=0);
   
   std::vector<float>
   RollingMean(const std::vector<float>& array,
@@ -20,7 +31,6 @@ namespace larocv {
   RollingSigma(const std::vector<float>& array,
 	       size_t pre, size_t post,
 	       float ignore_value=-1);
-  
   
   
   std::vector<float>

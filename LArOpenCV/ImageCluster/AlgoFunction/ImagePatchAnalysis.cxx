@@ -7,6 +7,8 @@
 #include <opencv2/opencv.hpp>
 #include "LArOpenCV/Core/laropencv_logger.h"
 #include "LArOpenCV/Core/larbys.h"
+#include "Contour2DAnalysis.h"
+#include "SpectrumAnalysis.h"
 
 namespace larocv {
   
@@ -140,44 +142,60 @@ namespace larocv {
     LAROCV_SDEBUG() << "SquarePCA @ pt " << pt << " width " << width << " height " << height << std::endl;
     cv::Rect rect(pt.x-width, pt.y-height, 2*width+1, 2*height+1);
     LAROCV_SDEBUG() << "set rect @ " << rect << std::endl;
-    ::larocv::CorrectEdgeRectangle(img,rect,2*width+1,2*height+1);
+    CorrectEdgeRectangle(img,rect,2*width+1,2*height+1);
     LAROCV_SDEBUG() << "corrected rect @ " << rect << std::endl;
 	
-    auto small_img = ::cv::Mat(img,rect);
-    ::cv::Mat thresh_small_img;
-    //::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,CV_THRESH_BINARY);
-    ::cv::threshold(small_img,thresh_small_img,1,255,0);
-    geo2d::VectorArray<int> points;
-    findNonZero(thresh_small_img, points);
-
-    if(points.size() < 2) {
-      LAROCV_SDEBUG() << "SquarePCA approx cannot be made (# points " << points.size() << " < 2)" << std::endl;
-      LAROCV_SDEBUG() << "... dumping image" << std::endl;
-      cv::imwrite("SquarePCA_img.png",img);
-      cv::imwrite("SquarePCA_small_img.png",small_img);
-      cv::imwrite("SquarePCA_thresh_small_img.png",thresh_small_img);
-      throw larbys("SquarePCA found no point...");
-    }
+    auto small_img = cv::Mat(img,rect);
+    cv::Mat thresh_small_img;
+    cv::threshold(small_img,thresh_small_img,1,255,0);
     
-    cv::Mat mat_points(points.size(), 2, CV_32FC1);
-    for (unsigned i = 0; i < mat_points.rows; ++i) {
-      mat_points.at<float>(i, 0) = points[i].x;
-      mat_points.at<float>(i, 1) = points[i].y;
-    }
-
-    ::cv::PCA pcaobj(mat_points,::cv::Mat(),::cv::PCA::DATA_AS_ROW,0);
+    auto pca = CalcPCA(small_img);
     
-    pt.x += pcaobj.mean.at<float>(0,0) - width;
-    pt.y += pcaobj.mean.at<float>(0,1) - height;
+    pt.x += pca.pt.x - width;
+    pt.y += pca.pt.y - height;
+
+    pca.pt = pt;
     
-    auto dir = geo2d::Vector<float>(pcaobj.eigenvectors.at<float>(0,0),
-				    pcaobj.eigenvectors.at<float>(0,1));
-
-    //std::cout << "Mean @ (" << pt.x << "," << pt.y << ") ... dir (" << dir.x << "," << dir.y << std::endl;
-
-    return geo2d::Line<float>(pt,dir);
+    return pca;
   }
 
+  double
+  SquareR(const ::cv::Mat& img,
+	  geo2d::Vector<float> pt,
+	  float width, float height) {
+    
+    LAROCV_SDEBUG() << "SquareR @ pt " << pt << " width " << width << " height " << height << std::endl;
+    cv::Rect rect(pt.x-width, pt.y-height, 2*width+1, 2*height+1);
+    LAROCV_SDEBUG() << "set rect @ " << rect << std::endl;
+    CorrectEdgeRectangle(img,rect,2*width+1,2*height+1);
+    LAROCV_SDEBUG() << "corrected rect @ " << rect << std::endl;
+
+    auto small_img = cv::Mat(img,rect);
+    
+    GEO2D_Contour_t nonzero;
+    cv::findNonZero(small_img, nonzero);
+
+    //lets keep the same type as pixel location
+    std::vector<float> x_v;
+    x_v.reserve(nonzero.size());
+    std::vector<float> y_v;
+    y_v.reserve(nonzero.size());
+    
+    for(const auto& pt : nonzero) {
+      x_v.push_back(pt.x);
+      y_v.push_back(pt.y);
+    }
+
+    double numerator   = Covariance(x_v,y_v);
+    double denominator = Sigma(x_v) * Sigma(y_v);
+
+    
+    double r = denominator > 0 ? numerator / denominator : 0.0;
+    
+    return r;
+  }
+  
+  
   void CorrectEdgeRectangle(const ::cv::Mat& img, cv::Rect& rect,int w, int h)
   {
 

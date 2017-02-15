@@ -31,6 +31,11 @@ namespace larocv {
   SquarePCA(const ::cv::Mat& img,
 	    geo2d::Vector<float> pt,
 	    float width, float height);
+
+  double
+  SquareR(const ::cv::Mat& img,
+	  geo2d::Vector<float> pt,
+	  float width, float height);
   
   void
   CorrectEdgeRectangle(const ::cv::Mat& img,

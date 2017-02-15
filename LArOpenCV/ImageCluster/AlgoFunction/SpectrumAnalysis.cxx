@@ -7,33 +7,62 @@
 #include <stdexcept>
 
 namespace larocv {
-  
+
+
   double
-  Mean(const std::vector<float>& array, size_t start, size_t nsample)
+  Mean(const std::vector<float>& array,
+       size_t start,
+       size_t nsample)
   {
     if(!nsample) nsample = array.size();
     if(start > array.size() || (start+nsample) > array.size())
       throw std::invalid_argument("start larger than array size or too many samples from start point requested"); 
     
-    double sum = std::accumulate(array.begin()+start,array.begin()+start+nsample,0.0) / ((double)nsample);
+    double sum = std::accumulate(array.begin()+start,array.begin()+start+nsample,(double)0.0) / ((double)nsample);
     
     return sum;
   }
   
-  double
-  Sigma(const std::vector<float>& array, size_t start, size_t nsample)
+  double 
+  Sigma(const std::vector<float>& array,
+	size_t start,
+	size_t nsample)
   {
     if(!nsample) nsample = array.size();
     if(start > array.size() || (start+nsample) > array.size())
       throw std::invalid_argument("start larger than array size or too many samples from start point requested"); 
     
-    double sum  = std::accumulate   (array.begin()+start,array.begin()+start+nsample,0.0);
-    double sum2 = std::inner_product(array.begin()+start,array.begin()+start+nsample,array.begin()+start,0.0);
+    double sum  = std::accumulate   (array.begin()+start,array.begin()+start+nsample,(double)0.0);
+    double sum2 = std::inner_product(array.begin()+start,array.begin()+start+nsample,array.begin()+start,(double)0.0);
     
     sum = std::sqrt( sum2 / (double)nsample - std::pow(sum / (double)nsample,2) );
     
     return sum;
   }
+
+  double
+  Covariance(std::vector<float> array1, //makes a copy
+  	      std::vector<float> array2, //same..
+  	      size_t start,
+  	      size_t nsample)
+  {
+    if (array1.size() != array2.size()) throw std::invalid_argument("array 1 and array 2 do not have equal size");
+    if(!nsample) nsample = array1.size();
+    if(start > array1.size() || (start+nsample) > array1.size())
+      throw std::invalid_argument("start larger than array size or too many samples from start point requested"); 
+
+    double mean_array1 = Mean(array1);
+    double mean_array2 = Mean(array2);
+
+    for(auto& v:array1)v-=mean_array1;
+    for(auto& v:array2)v-=mean_array2;
+
+    double cov = std::inner_product(array1.begin()+start,array1.begin()+start+nsample,array2.begin()+start,(double)0.0);
+    cov /= (double) nsample;
+    
+    return cov;
+  }
+
   
   std::vector<float>
   RollingMean(const std::vector<float>& array,
