@@ -17,6 +17,8 @@ namespace larocv {
   {
     _min_hip_cluster_size = 5;
     _min_mip_cluster_size = 20;
+    _min_hip_cluster_pixels = 5;
+    _min_mip_cluster_pixels = 20;
     
     _mip_thresh = 10;
     _hip_thresh = 50;
@@ -36,6 +38,8 @@ namespace larocv {
     
     _min_hip_cluster_size = pset.get<int>("MinHIPClusterSize",5);
     _min_mip_cluster_size = pset.get<int>("MinMIPClusterSize",20);
+    _min_hip_cluster_pixels = pset.get<int>("MinHIPClusterPixels",5);
+    _min_mip_cluster_pixels = pset.get<int>("MinMIPClusterPixels",20);
 
     _mip_thresh = pset.get<int>("MIPLevels",10);
     _hip_thresh = pset.get<int>("HIPLevels",50);
@@ -89,14 +93,19 @@ namespace larocv {
 		     CV_CHAIN_APPROX_SIMPLE);
 
     LAROCV_DEBUG() << "Found " << hip_ctor_v.size() << " hip contours"  << std::endl;
-    //Filter the HIP contours to a minimum size
-    
+
     GEO2D_ContourArray_t hip_ctor_v_tmp;
     hip_ctor_v_tmp.reserve(hip_ctor_v.size());
-    
-    for (const auto& hip_ctor : hip_ctor_v)
-      if ( hip_ctor.size() > _min_hip_cluster_size)
+
+    //Filter the HIP contours to a minimum size    
+    for (const auto& hip_ctor : hip_ctor_v)  {
+      bool b_size = hip_ctor.size() > _min_hip_cluster_size;
+      bool b_npix = cv::countNonZero(MaskImage(mod_img_m,hip_ctor,0,false)) > _min_hip_cluster_pixels;
+      
+      if ( b_size and b_npix)
 	hip_ctor_v_tmp.emplace_back(hip_ctor);
+    }
+    
     
     //swap the size thresholded hips for all the hips
     std::swap(hip_ctor_v,hip_ctor_v_tmp);
@@ -145,14 +154,23 @@ namespace larocv {
     GEO2D_ContourArray_t mip_ctor_mask_v_tmp;
     mip_ctor_mask_v_tmp.reserve(mip_ctor_mask_v.size());
     
-    for (const auto& mip_ctor : mip_ctor_v)
-      if (mip_ctor.size() > _min_mip_cluster_size)
+    for (const auto& mip_ctor : mip_ctor_v) {
+      bool b_size = mip_ctor.size() > _min_mip_cluster_size;
+      bool b_npix = cv::countNonZero(MaskImage(mod_img_m,mip_ctor,0,false)) > _min_mip_cluster_pixels;
+      
+      if (b_size and b_npix)
 	mip_ctor_v_tmp.emplace_back(mip_ctor);
-
-    for (const auto& mip_ctor : mip_ctor_mask_v)
-      if (mip_ctor.size() > _min_mip_cluster_size)
-	mip_ctor_mask_v_tmp.emplace_back(mip_ctor);
-
+      
+    }
+    
+    for (const auto& mip_ctor : mip_ctor_mask_v) {
+      bool b_size = mip_ctor.size() > _min_mip_cluster_size;
+      bool b_npix = cv::countNonZero(MaskImage(mod_img_m,mip_ctor,0,false)) > _min_mip_cluster_pixels;
+      
+      if (b_size and b_npix)
+	mip_ctor_v_tmp.emplace_back(mip_ctor);
+    }
+    
     //swap them out -- the thresholded mips and all mips
     std::swap(mip_ctor_v,mip_ctor_v_tmp);
 

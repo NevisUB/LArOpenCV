@@ -180,7 +180,7 @@ namespace larocv {
     LAROCV_SDEBUG() << "... received 2 contours sizes " << ctor1.size() << ", " << ctor2.size() << std::endl;
     auto result = Merge(ctor1,ctor2);
     auto masked_img = MaskImage(img,result,0,false);
-
+    
     GEO2D_ContourArray_t result_v;
     std::vector<cv::Vec4i> cv_hierarchy_v;
     cv::findContours(masked_img,result_v,cv_hierarchy_v,CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);

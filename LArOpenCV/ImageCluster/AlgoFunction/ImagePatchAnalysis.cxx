@@ -11,6 +11,15 @@
 #include "SpectrumAnalysis.h"
 
 namespace larocv {
+
+  cv::Mat
+  Threshold(const cv::Mat& mat,
+	    double thresh,
+	    double max_val) {
+    auto mat_copy = mat.clone();
+    cv::threshold(mat,mat_copy,thresh,max_val,0);
+    return mat_copy;
+  }
   
   geo2d::VectorArray<float>
   QPointOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle, const float pi_threshold)

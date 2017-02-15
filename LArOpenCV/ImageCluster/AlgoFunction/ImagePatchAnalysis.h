@@ -9,6 +9,11 @@
 #include "Geo2D/Core/Line.h"
 
 namespace larocv {
+
+  cv::Mat
+  Threshold(const cv::Mat& mat,
+	    double thresh,
+	    double max_val);
   
   geo2d::VectorArray<float>
   QPointOnCircle(const ::cv::Mat& img,

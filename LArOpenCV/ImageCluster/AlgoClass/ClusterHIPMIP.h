@@ -38,6 +38,8 @@ namespace larocv {
 
     int _min_hip_cluster_size;
     int _min_mip_cluster_size;
+    int _min_hip_cluster_pixels;
+    int _min_mip_cluster_pixels;
 
     int _mip_thresh;
     int _hip_thresh;
