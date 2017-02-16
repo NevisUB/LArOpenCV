@@ -13,7 +13,7 @@ namespace larocv {
 
   PCACrossing::PCACrossing()
   {
-    _dist_to_pixel = 5.0;
+    _dist_to_pixel = 2.0;
     _filter_intersections = true;
     _filter_px_val_thresh = 10.0;
   }
@@ -21,7 +21,7 @@ namespace larocv {
   void PCACrossing::Configure(const Config_t &pset)
   {
     this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
-    _dist_to_pixel = pset.get<float>("DistToPixel",5.0);
+    _dist_to_pixel = pset.get<float>("DistToPixel",2.0);
     _filter_intersections = pset.get<bool>("FilterXs",true);
     _filter_px_val_thresh = pset.get<int>("FilterPxValThresh",10.0);
   }
@@ -115,23 +115,21 @@ namespace larocv {
     std::vector<geo2d::Vector<float> > pts_tmp_v;
     pts_tmp_v.reserve(pts_v.size());
     
-    //TODO: Do this with a MASK rather than point loop...
     auto thresh_img = img.clone();
     if (_filter_px_val_thresh > 0)
       cv::threshold(img,thresh_img,_filter_px_val_thresh,255,CV_THRESH_BINARY);
     
     //get the nonzero pixel values
-    std::vector<cv::Point_<int> > nonzero_v;
+    GEO2D_Contour_t nonzero_v;
     findNonZero(thresh_img,nonzero_v);
-
+    
     LAROCV_DEBUG() << "Found " << nonzero_v.size() << " non zero points" << std::endl;
-    float dist_to_px_2 = _dist_to_pixel*_dist_to_pixel;
 
     for(const auto& ipoint : pts_v ) {
       LAROCV_DEBUG() << "Examining pt: " << ipoint << std::endl;
       for(const auto& pt : nonzero_v) {
 	geo2d::Vector<float> pt_f = pt;
-	if ( geo2d::dist2(pt_f,ipoint) < dist_to_px_2 ) {
+	if ( geo2d::dist(pt_f,ipoint) < _dist_to_pixel  ) {
 	  LAROCV_DEBUG() << "Matched with " << pt_f << std::endl;
 	  pts_tmp_v.emplace_back(std::move(ipoint));
 	  break;
@@ -141,7 +139,7 @@ namespace larocv {
     
     std::swap(pts_tmp_v,pts_v);
   }
-
+  
 }
 
 #endif

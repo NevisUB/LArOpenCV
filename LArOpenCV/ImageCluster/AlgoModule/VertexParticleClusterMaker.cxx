@@ -15,7 +15,7 @@ namespace larocv {
   
   void VertexParticleClusterMaker::_Configure_(const Config_t &pset) {
     
-    _DefectBreaker.Configure(pset);
+    _DefectBreaker.Configure(pset.get<Config_t>("DefectBreaker"));
 
     _VertexParticleCluster.set_verbosity(this->logger().level());
     _VertexParticleCluster.Configure(pset.get<Config_t>("VertexParticleCluster"));

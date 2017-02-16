@@ -12,17 +12,17 @@ namespace larocv {
 
   void TrackVertexSeeds::_Configure_(const Config_t &pset)
   {
-
-    _ClusterHIPMIP.Configure(pset);
-    _DefectBreaker.Configure(pset);
-    _PCACrossing.Configure(pset);
+    
+    _ClusterHIPMIP.Configure(pset.get<Config_t>("ClusterHIPMIP"));
+    _DefectBreaker.Configure(pset.get<Config_t>("DefectBreaker"));
+    _PCACrossing.Configure(pset.get<Config_t>("PCACrossing"));
 
     for(size_t plane=0; plane<3; ++plane) {
       LAROCV_DEBUG() << "Registering VertexSeed2DArray on plane " << plane << std::endl;
       Register(new data::VertexSeed2DArray);
     }
     for(size_t plane=0; plane<3; ++plane) {
-      LAROCV_DEBUG() << "Registering TrackClusterCompountArray on plane " << plane << std::endl;
+      LAROCV_DEBUG() << "Registering TrackClusterCompoundArray on plane " << plane << std::endl;
       Register(new data::TrackClusterCompoundArray);
     }
 
@@ -49,7 +49,7 @@ namespace larocv {
     auto& track_cluster_v = AlgoData<data::TrackClusterCompoundArray>(meta.plane()+3);
       
     // Cluster the HIPS and MIPS
-    auto hip_mip_p = _ClusterHIPMIP.IsolateHIPMIP(img);
+    auto hip_mip_p = _ClusterHIPMIP.IsolateHIPMIP(img,meta.plane());
 
     LAROCV_DEBUG() << "Isolated " << hip_mip_p.first.size()
 		   << " HIPs and " << hip_mip_p.second.size()

@@ -27,7 +27,7 @@ namespace larocv {
 
     /// Main function to separate hip and mip contours
     std::pair<std::vector<GEO2D_Contour_t>, std::vector<GEO2D_Contour_t> >
-    IsolateHIPMIP(const ::cv::Mat& img);
+    IsolateHIPMIP(const ::cv::Mat& img,short plane=0);
 
 
     const cv::Mat& get_mip_masked_img() { return _mip_thresh_mask_m; }
@@ -41,8 +41,8 @@ namespace larocv {
     int _min_hip_cluster_pixels;
     int _min_mip_cluster_pixels;
 
-    int _mip_thresh;
-    int _hip_thresh;
+    std::vector<int> _mip_thresh_v;
+    std::vector<int> _hip_thresh_v;
 
     int _dilation_size;
     int _dilation_iter;

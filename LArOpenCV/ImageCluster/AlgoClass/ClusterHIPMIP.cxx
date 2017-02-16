@@ -20,8 +20,8 @@ namespace larocv {
     _min_hip_cluster_pixels = 5;
     _min_mip_cluster_pixels = 20;
     
-    _mip_thresh = 10;
-    _hip_thresh = 50;
+    _mip_thresh_v = {10,10,10};
+    _hip_thresh_v = {50,50,50};
       
     _dilation_size = 2;
     _dilation_iter = 1;
@@ -41,8 +41,8 @@ namespace larocv {
     _min_hip_cluster_pixels = pset.get<int>("MinHIPClusterPixels",5);
     _min_mip_cluster_pixels = pset.get<int>("MinMIPClusterPixels",20);
 
-    _mip_thresh = pset.get<int>("MIPLevels",10);
-    _hip_thresh = pset.get<int>("HIPLevels",50);
+    _mip_thresh_v = pset.get<std::vector<int> >("MIPLevels",{10,10,10});
+    _hip_thresh_v = pset.get<std::vector<int> >("HIPLevels",{50,50,50});
 
     _dilation_size = pset.get<int>("DilationSize",2);
     _dilation_iter = pset.get<int>("DilationIter",1);
@@ -55,7 +55,7 @@ namespace larocv {
   }
 
   std::pair<std::vector<GEO2D_Contour_t>, std::vector<GEO2D_Contour_t> >
-  ClusterHIPMIP::IsolateHIPMIP(const ::cv::Mat& img) {
+  ClusterHIPMIP::IsolateHIPMIP(const ::cv::Mat& img,short plane) {
     
     cv::Mat mod_img_m;
     
@@ -70,8 +70,8 @@ namespace larocv {
     GEO2D_ContourArray_t mip_ctor_mask_v;
     GEO2D_ContourArray_t hip_ctor_v;
     
-    int MIP_LEVEL = _mip_thresh;
-    int HIP_LEVEL = _hip_thresh;
+    int MIP_LEVEL = _mip_thresh_v.at(plane);
+    int HIP_LEVEL = _hip_thresh_v.at(plane);
 
     LAROCV_DEBUG() << "MIP level: " << MIP_LEVEL << "... HIP level: " << HIP_LEVEL << std::endl;
     
