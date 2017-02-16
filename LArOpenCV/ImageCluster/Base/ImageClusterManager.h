@@ -96,7 +96,9 @@ namespace larocv {
     /// Original input image getter
     const std::vector<cv::Mat>& InputImages(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID) const;
     /// Original input images writeable
-    std::vector<cv::Mat>& InputImagesRW(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID);
+    std::vector<cv::Mat>& InputImagesRW(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID,bool preserve_originals=false);
+    /// Return copy of originals
+    const std::vector<cv::Mat>& OriginalInputImages(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID);
     /// Original image metadata getter
     const std::vector<larocv::ImageMeta>& InputImageMetas(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID) const;
     /// Original image roi getter
@@ -120,6 +122,8 @@ namespace larocv {
     std::map<std::string,larocv::AlgorithmID_t> _cluster_alg_m;
     /// Array of images
     std::vector<std::vector<cv::Mat> > _raw_img_vv;
+    /// Copy of originals
+    std::vector<std::vector<cv::Mat> > _copy_img_vv;
     /// Array of metadata
     std::vector<std::vector<larocv::ImageMeta> > _raw_meta_vv;
     /// Array of roidata 

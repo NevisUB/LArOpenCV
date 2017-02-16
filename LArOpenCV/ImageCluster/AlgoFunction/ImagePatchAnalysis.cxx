@@ -12,6 +12,39 @@
 
 namespace larocv {
 
+
+  double
+  MeanDistanceToLine(const cv::Mat& img,
+		     const geo2d::Line<float>& line) {
+    GEO2D_Contour_t pts_v;
+    std::vector<float> dist_v;
+    cv::findNonZero(img,pts_v);
+    if (pts_v.empty()) throw larbys("No points found");
+    dist_v.reserve(pts_v.size());
+    geo2d::Vector<float> tmp1,tmp2;
+    for(const auto& pt : pts_v) {
+      geo2d::Vector<float> pt_f(pt);
+      dist_v.emplace_back(geo2d::ClosestPoint(line,pt_f,tmp1,tmp2));
+    }
+    return Mean(dist_v);
+  }
+  
+  double
+  SigmaDistanceToLine(const cv::Mat& img,
+		      const geo2d::Line<float>& line) {
+    GEO2D_Contour_t pts_v;
+    std::vector<float> dist_v;
+    cv::findNonZero(img,pts_v);
+    if (pts_v.empty()) throw larbys("No points found");
+    dist_v.reserve(pts_v.size());
+    geo2d::Vector<float> tmp1,tmp2;
+    for(const auto& pt : pts_v) {
+      geo2d::Vector<float> pt_f(pt);
+      dist_v.emplace_back(geo2d::ClosestPoint(line,pt_f,tmp1,tmp2));
+    }
+    return Sigma(dist_v);
+  }
+  
   cv::Mat
   Threshold(const cv::Mat& mat,
 	    double thresh,

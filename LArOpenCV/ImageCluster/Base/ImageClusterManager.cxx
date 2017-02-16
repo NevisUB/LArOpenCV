@@ -35,6 +35,7 @@ namespace larocv {
     _process_time=0;
 
     _raw_img_vv.clear();
+    _copy_img_vv.clear();
     _raw_meta_vv.clear();
     _raw_roi_vv.clear();
     
@@ -57,6 +58,7 @@ namespace larocv {
   void ImageClusterManager::ClearData()
   {
     _raw_img_vv.clear();
+    _copy_img_vv.clear();
     _raw_meta_vv.clear();
     _raw_roi_vv.clear();
     _clusters_vv.clear();
@@ -79,7 +81,7 @@ namespace larocv {
     return _raw_img_vv[set_id];
   }
 
-  std::vector<cv::Mat>& ImageClusterManager::InputImagesRW(ImageSetID_t set_id)
+  std::vector<cv::Mat>& ImageClusterManager::InputImagesRW(ImageSetID_t set_id,bool preserve_originals)
   {
     LAROCV_INFO() << "User requested RW access to input image set " << (int)set_id << std::endl;
     if(_raw_img_vv.empty()) 
@@ -91,9 +93,30 @@ namespace larocv {
       throw larbys();
     }
 
+    if (preserve_originals) {
+      LAROCV_INFO() << "Copying originals.." << std::endl;
+
+      for(size_t img_id=0; img_id < _raw_img_vv[set_id].size(); ++img_id)
+      _copy_img_vv[set_id][img_id] = _raw_img_vv[set_id][img_id].clone();
+    }
+    
     return _raw_img_vv[set_id];
   }
-
+  
+  const std::vector<cv::Mat>& ImageClusterManager::OriginalInputImages(ImageSetID_t set_id) {
+    
+    if(_copy_img_vv.empty()) 
+      throw larbys("No image available!");
+    
+    if(set_id == kINVALID_SIZE) return _copy_img_vv.front();
+    if(set_id >= _copy_img_vv.size()) {
+      LAROCV_CRITICAL() << "Invalid image set id: " << set_id << std::endl;
+      throw larbys();
+    }
+    
+    return _copy_img_vv[set_id];
+  }
+  
   
   const std::vector<larocv::ImageMeta>& ImageClusterManager::InputImageMetas(ImageSetID_t set_id) const
   {
@@ -291,10 +314,12 @@ namespace larocv {
     if(set_id == kINVALID_SIZE) set_id = 0;
     LAROCV_INFO() << "Adding an image @ set id " << set_id << std::endl;
     _raw_img_vv.resize(set_id+1);
+    _copy_img_vv.resize(set_id+1);
     _raw_meta_vv.resize(set_id+1);
     _raw_roi_vv.resize(set_id+1);
     
     _raw_img_vv[set_id].push_back(img);
+    _copy_img_vv[set_id].push_back(cv::Mat());
     _raw_meta_vv[set_id].push_back(meta);
     _raw_roi_vv[set_id].push_back(roi);
   }

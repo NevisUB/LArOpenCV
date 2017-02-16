@@ -10,6 +10,14 @@
 
 namespace larocv {
 
+  double
+  MeanDistanceToLine(const cv::Mat& img,
+		     const geo2d::Line<float>& line);
+
+  double
+  SigmaDistanceToLine(const cv::Mat& img,
+		      const geo2d::Line<float>& line);
+  
   cv::Mat
   Threshold(const cv::Mat& mat,
 	    double thresh,
