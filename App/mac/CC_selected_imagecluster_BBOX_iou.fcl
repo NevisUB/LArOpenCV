@@ -6,6 +6,7 @@ LArImageHit: {
   StoreOriginalImage: false
   Producer: clusterfilter 
   MatchPlaneWeights : [1,1,1]
+  HitRemoval : false
 
   # LArImageHit config
   PoolTimeTick: 6 
