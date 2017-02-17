@@ -22,11 +22,28 @@ namespace larocv {
   Threshold(const cv::Mat& mat,
 	    double thresh,
 	    double max_val);
-  
+
   geo2d::VectorArray<float>
   QPointOnCircle(const ::cv::Mat& img,
 		 const geo2d::Circle<float>& circle,
-		 const float pi_threshold=10);
+		 const float pi_threshold,
+		 const float supression=0);
+
+  std::vector<geo2d::VectorArray<float> >
+  QPointArrayOnCircleArray(const ::cv::Mat& img,
+			   const geo2d::Vector<float>& center,
+			   const std::vector<float>& radius_v,
+			   const float pi_threshold,
+			   const float supression=0);
+
+  
+  geo2d::VectorArray<float>
+  RadialIntersections(const ::cv::Mat& polarimg,
+		      const geo2d::Circle<float>& circle,
+		      const size_t col,
+		      const float pi_threshold,
+		      const float supression=0);
+
 
   geo2d::Vector<float>
   MeanPixel(const cv::Mat& img,

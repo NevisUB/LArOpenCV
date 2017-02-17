@@ -9,6 +9,7 @@
 #include "LArOpenCV/Core/larbys.h"
 #include "Contour2DAnalysis.h"
 #include "SpectrumAnalysis.h"
+#include <set>
 
 namespace larocv {
 
@@ -21,10 +22,9 @@ namespace larocv {
     cv::findNonZero(img,pts_v);
     if (pts_v.empty()) throw larbys("No points found");
     dist_v.reserve(pts_v.size());
-    geo2d::Vector<float> tmp1,tmp2;
     for(const auto& pt : pts_v) {
       geo2d::Vector<float> pt_f(pt);
-      dist_v.emplace_back(geo2d::ClosestPoint(line,pt_f,tmp1,tmp2));
+      dist_v.emplace_back(geo2d::Distance(line,pt_f));
     }
     return Mean(dist_v);
   }
@@ -37,10 +37,9 @@ namespace larocv {
     cv::findNonZero(img,pts_v);
     if (pts_v.empty()) throw larbys("No points found");
     dist_v.reserve(pts_v.size());
-    geo2d::Vector<float> tmp1,tmp2;
     for(const auto& pt : pts_v) {
       geo2d::Vector<float> pt_f(pt);
-      dist_v.emplace_back(geo2d::ClosestPoint(line,pt_f,tmp1,tmp2));
+      dist_v.emplace_back(geo2d::Distance(line,pt_f));
     }
     return Sigma(dist_v);
   }
@@ -55,16 +54,80 @@ namespace larocv {
   }
   
   geo2d::VectorArray<float>
-  QPointOnCircle(const ::cv::Mat& img, const geo2d::Circle<float>& circle, const float pi_threshold)
+  QPointOnCircle(const ::cv::Mat& img,
+		 const geo2d::Circle<float>& circle,
+		 const float pi_threshold,
+		 const float supression)
   {
-    geo2d::VectorArray<float> res;
-    
-    // Find crossing point
-    ::cv::Mat polarimg;
-    ::cv::linearPolar(img, polarimg, circle.center, circle.radius*2, ::cv::WARP_FILL_OUTLIERS);
+    cv::Mat polarimg;
+    cv::linearPolar(img, polarimg, circle.center, circle.radius*2, ::cv::WARP_FILL_OUTLIERS);
     
     size_t col = (size_t)(polarimg.cols / 2);
+    return RadialIntersections(polarimg,circle,col,pi_threshold,supression);
+  }
+
+  std::vector<geo2d::VectorArray<float> >
+  QPointArrayOnCircleArray(const ::cv::Mat& img,
+			   const geo2d::Vector<float>& center,
+			   const std::vector<float>& radius_v,
+			   const float pi_threshold,
+			   const float supression)
+  {
+    LAROCV_SDEBUG() << " called with center " << center
+		    << ", " << radius_v.size()
+		    << " radii, px thresh " << pi_threshold
+		    << ", & sup " << supression << std::endl;
     
+    std::vector<geo2d::VectorArray<float> > res_v;
+    if(radius_v.empty()) return res_v;
+    float max_radi = 0;
+    float min_radi = -1;
+    for(auto const& r : radius_v) {
+      if(r<=0) throw larbys("non-positive radius cannot be processed!");
+      if(min_radi<0) { min_radi = max_radi = r; continue; }
+      if(max_radi < r) max_radi = r;
+      if(min_radi > r) min_radi = r;
+    }
+    if(max_radi == min_radi) max_radi *= 1.1;
+    else max_radi += (max_radi - min_radi);
+    
+    // Find crossing point
+    cv::Mat polarimg;
+    cv::linearPolar(img, polarimg, center, max_radi, ::cv::WARP_FILL_OUTLIERS);
+
+    std::vector<size_t> col_v(radius_v.size(),0);
+    for(size_t r_idx=0; r_idx<radius_v.size(); ++r_idx) {
+      auto const& radius = radius_v[r_idx];
+      col_v[r_idx] = (size_t)(radius / max_radi * (float)(polarimg.cols) + 0.5);
+    }
+
+    for(size_t col_idx=0; col_idx<col_v.size(); ++col_idx) {
+
+      auto const& col    = col_v[col_idx];
+      auto const& radius = radius_v[col_idx];
+      LAROCV_SDEBUG() << "... @ radius " << radius << std::endl;
+	
+      auto res = RadialIntersections(polarimg,geo2d::Circle<float>(center,radius),col,pi_threshold,supression);
+	
+      res_v.emplace_back(std::move(res));
+    }
+    return res_v;
+  }
+
+  
+  geo2d::VectorArray<float>
+  RadialIntersections(const ::cv::Mat& polarimg,
+		      const geo2d::Circle<float>& circle,
+		      const size_t col,
+		      const float pi_threshold,
+		      const float supression)
+  {
+
+    if (col > polarimg.cols) {
+      LAROCV_SCRITICAL() << "Requested column " << col
+			 << " outside max column " << polarimg.cols << std::endl;
+      throw larbys();
+    }
     std::vector<std::pair<int,int> > range_v;
     std::pair<int,int> range(-1,-1);
     
@@ -78,7 +141,6 @@ namespace larocv {
 	}
 	continue;
       }
-      //std::cout << row << " / " << polarimg.rows << " ... " << q << std::endl;
       if(range.first < 0) range.first = range.second = row;
       
       else range.second = row;
@@ -92,20 +154,69 @@ namespace larocv {
 	range_v.pop_back();
       }
     }
-    // Compute xs points
+
+    std::vector<std::pair<float,float> > range_a_w_v;
+    range_a_w_v.reserve(range_a_w_v.size());
+    
     for(auto const& r : range_v) {
-      
-      //std::cout << "XS @ " << r.first << " => " << r.second << " ... " << polarimg.rows << std::endl;
       float angle = ((float)(r.first + r.second))/2.;
       if(angle < 0) angle += (float)(polarimg.rows);
       angle = angle * M_PI * 2. / ((float)(polarimg.rows));
+      float width = std::abs(r.second - r.first);
+      range_a_w_v.emplace_back(angle,width);
+    }
+
+    auto npts = range_a_w_v.size();
+    LAROCV_SDEBUG() << "\t... found " << npts << " & sup " << supression << std::endl;
+    
+    if(supression>0 and npts>1) {
+      LAROCV_SDEBUG() << "Applying angular supression" << std::endl;
       
+      std::vector<std::pair<float,float> > tmp_v;
+      tmp_v.reserve(range_a_w_v.size());
+
+      if (npts==2) {
+	if (std::abs(range_a_w_v[0].first - range_a_w_v[1].first) < supression) {
+	  tmp_v.emplace_back(range_a_w_v[0].second > range_a_w_v[1].second ? range_a_w_v[0] : range_a_w_v[1]);
+	  std::swap(tmp_v,range_a_w_v);
+	}
+      }
+      else if (npts>2) {
+	std::set<size_t> preserved_s;
+	std::set<size_t> modified_s;
+	
+	LAROCV_SDEBUG() << "Applying angular supression" << std::endl;
+	for(size_t r1=0;r1<npts;r1++) { 
+	  for(size_t r2=r1+1;r2<npts;r2++) {
+	    if (std::abs(range_a_w_v[r1].first-range_a_w_v[r2].first) < supression) {
+	      size_t pidx = range_a_w_v[r1].second > range_a_w_v[r2].second ? r1 : r2;
+	      size_t ridx = pidx == r1 ? r2 : r1;
+	      preserved_s.insert(pidx);
+	      modified_s.insert(pidx);
+	      modified_s.insert(ridx);
+	    }
+	  }
+	}
+	for(auto pidx : preserved_s) tmp_v.emplace_back(range_a_w_v[pidx]);
+	for(size_t r1=0;r1<npts;r1++) {
+	  if (modified_s.find(r1) != modified_s.end()) continue;
+	  tmp_v.emplace_back(range_a_w_v[r1]);
+	}
+	LAROCV_SDEBUG() << "Supressed " << npts << " to " << tmp_v.size() << std::endl; 
+	std::swap(tmp_v,range_a_w_v);
+      }
+      
+    }
+    // Compute xs points
+    geo2d::VectorArray<float> res;
+    res.reserve(range_a_w_v.size());
+    for(auto const& aw : range_a_w_v) {
       geo2d::Vector<float> pt;
-      pt.x = circle.center.x + circle.radius * cos(angle);
-      pt.y = circle.center.y + circle.radius * sin(angle);
-      
+      pt.x = circle.center.x + circle.radius * cos(aw.first);
+      pt.y = circle.center.y + circle.radius * sin(aw.first);
       res.push_back(pt);
     }
+    
     return res;
   }
 

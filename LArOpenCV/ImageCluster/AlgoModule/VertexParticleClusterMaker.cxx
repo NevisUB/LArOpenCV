@@ -68,8 +68,8 @@ namespace larocv {
     
     for(size_t vtx_id = 0; vtx_id < vtx_data_v.size(); ++vtx_id) {
       
-      auto const& vtx3d = vtx_data_v[vtx_id];
-      auto const& circle_vtx = vtx3d.cvtx2d_v.at(plane);
+      const auto& vtx3d = vtx_data_v[vtx_id];
+      const auto& circle_vtx = vtx3d.cvtx2d_v.at(plane);
       LAROCV_DEBUG() << "Vertex ID " << vtx_id << " plane " << plane
 		     << " CircleVertex @ " << circle_vtx.center << " w/ R = " << circle_vtx.radius << std::endl;
 

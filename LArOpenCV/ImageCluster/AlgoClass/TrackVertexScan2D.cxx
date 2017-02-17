@@ -17,8 +17,6 @@ namespace larocv{
 
   void TrackVertexScan2D::Configure(const Config_t &pset)
   {
-    //auto const circle_vtx_algo_name = pset.get<std::string>("CircleVertexAlgo");
-    //_circle_vertex_algo_id = this->ID(circle_vtx_algo_name);
 
     _straight_line_angle_cut = pset.get<float>("StraightLineAngleCut",10);
 
@@ -42,7 +40,8 @@ namespace larocv{
 
     _require_3planes = pset.get<bool>("Require3Planes",false);
     _vtx_3d_resolution = pset.get<float>("Vtx3DResolution",10);
-
+    _circle_vertex_supression = pset.get<float>("QPointSupression",0);
+    
     _seed_plane_v.resize(3);
     _seed_plane_v[0] = 2;
     _seed_plane_v[1] = 0;
@@ -415,89 +414,11 @@ namespace larocv{
     return res_v;
   }
 
-  std::vector<geo2d::VectorArray<float> >
-  TrackVertexScan2D::QPointArrayOnCircleArray(const ::cv::Mat& img, const geo2d::Vector<float>& center,
-					   const std::vector<float>& radius_v) const
-  {
-    std::vector<geo2d::VectorArray<float> > res_v;
-    if(radius_v.empty()) return res_v;
-    float max_radi = 0;
-    float min_radi = -1;
-    for(auto const& r : radius_v) {
-      if(r<=0) throw larbys("non-positive radius cannot be processed!");
-      if(min_radi<0) { min_radi = max_radi = r; continue; }
-      if(max_radi < r) max_radi = r;
-      if(min_radi > r) min_radi = r;
-    }
-    if(max_radi == min_radi) max_radi *= 1.1;
-    else max_radi += (max_radi - min_radi);
-    
-    // Find crossing point
-    ::cv::Mat polarimg;
-    ::cv::linearPolar(img, polarimg, center, max_radi, ::cv::WARP_FILL_OUTLIERS);
-
-    std::vector<size_t> col_v(radius_v.size(),0);
-    for(size_t r_idx=0; r_idx<radius_v.size(); ++r_idx) {
-      auto const& radius = radius_v[r_idx];
-      col_v[r_idx] = (size_t)(radius / max_radi * (float)(polarimg.cols) + 0.5);
-    }
-
-    for(size_t col_idx=0; col_idx<col_v.size(); ++col_idx) {
-
-      auto const& col    = col_v[col_idx];
-      auto const& radius = radius_v[col_idx];
-
-      geo2d::VectorArray<float> res;
-      std::vector<std::pair<int,int> > range_v;
-      std::pair<int,int> range(-1,-1);
-      for(size_t row=0; row<polarimg.rows; ++row) {
-	
-	float q = (float)(polarimg.at<unsigned char>(row, col));
-	if(q < _pi_threshold) {
-	  if(range.first >= 0) {
-	    range_v.push_back(range);
-	    range.first = range.second = -1;
-	  }
-	  continue;
-	}
-	//std::cout << row << " / " << polarimg.rows << " ... " << q << std::endl;
-	if(range.first < 0) range.first = range.second = row;
-	
-	else range.second = row;
-	
-      }
-      // Check if end should be combined w/ start
-      if(range_v.size() >= 2) {
-	if(range_v[0].first == 0 && (range_v.back().second+1) == polarimg.rows) {
-	  range_v[0].first = range_v.back().first - (int)(polarimg.rows);
-	  range_v.pop_back();
-	}
-      }
-      // Compute xs points
-      for(auto const& r : range_v) {
-	
-	//std::cout << "XS @ " << r.first << " => " << r.second << " ... " << polarimg.rows << std::endl;
-	float angle = ((float)(r.first + r.second))/2.;
-	if(angle < 0) angle += (float)(polarimg.rows);
-	angle = angle * M_PI * 2. / ((float)(polarimg.rows));
-	
-	geo2d::Vector<float> pt;
-	pt.x = center.x + radius * cos(angle);
-	pt.y = center.y + radius * sin(angle);
-	
-	res.push_back(pt);      
-      }
-
-      res_v.emplace_back(std::move(res));
-    }
-    return res_v;
-  }
-
   double TrackVertexScan2D::PointInspection(const cv::Mat& img, const geo2d::Vector<float>& pt)
   {
 
     // Get xs points for this step. if < 2 continue
-    auto const xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius),_pi_threshold);
+    auto const xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius),_pi_threshold,_circle_vertex_supression);
     
     if(xs_pts.size()<2) { return -1; }
     
@@ -549,8 +470,9 @@ namespace larocv{
     radius_v.reserve( (size_t)( (_cvtx_max_radius - _cvtx_min_radius) / _cvtx_radius_step ) );
     for(float radius = _cvtx_min_radius; radius <= _cvtx_max_radius; radius += _cvtx_radius_step)
       radius_v.push_back(radius);
-    
-    auto const temp_xs_vv = QPointArrayOnCircleArray(img,pt,radius_v);
+
+    //apply 2 degrees angular supression
+    auto const temp_xs_vv = QPointArrayOnCircleArray(img,pt,radius_v,_pi_threshold,_circle_vertex_supression);
 
     for(size_t r_idx = 0; r_idx < radius_v.size(); ++r_idx) {
 
@@ -625,8 +547,8 @@ namespace larocv{
     inner_circle.center = outer_circle.center = pt;
     inner_circle.radius = _radius;
     outer_circle.radius = _radius * 2.;
-    auto const inner_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius  ),_pi_threshold);
-    auto const outer_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius*2),_pi_threshold);
+    auto const inner_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius  ),_pi_threshold,_circle_vertex_supression);
+    auto const outer_xs_pts = QPointOnCircle(img,geo2d::Circle<float>(pt,_radius*2),_pi_threshold,_circle_vertex_supression);
     double inner_dtheta_sum = 0;
     double outer_dtheta_sum = 0;
     
@@ -691,8 +613,8 @@ namespace larocv{
   }
 
   bool TrackVertexScan2D::PlaneScan(const ::cv::Mat& img, const size_t plane,
-				 const geo2d::Circle<float> init_circle,
-				 const geo2d::Vector<float> pt_err)
+				    const geo2d::Circle<float> init_circle,
+				    const geo2d::Vector<float> pt_err)
   {
     bool res = false;
     
@@ -720,7 +642,7 @@ namespace larocv{
     std::vector<geo2d::Line<float>   > temp1_pca_v, temp2_pca_v;
 
     // Find valid PCAs per xs point 
-    for(auto const& pt : QPointOnCircle(img,init_circle,_pi_threshold)) {
+    for(auto const& pt : QPointOnCircle(img,init_circle,_pi_threshold,_circle_vertex_supression)) {
       try{
 	auto const line = SquarePCA(img,pt,_pca_box_size,_pca_box_size);
 	temp1_xs_v.push_back(pt);
@@ -731,7 +653,7 @@ namespace larocv{
     }
     
     // Find valid PCAs per xs point 
-    for(auto const& pt : QPointOnCircle(img,half_circle,_pi_threshold)) {
+    for(auto const& pt : QPointOnCircle(img,half_circle,_pi_threshold,_circle_vertex_supression)) {
       try{
 	auto const line = SquarePCA(img,pt,_pca_box_size,_pca_box_size);
 	temp2_xs_v.push_back(pt);

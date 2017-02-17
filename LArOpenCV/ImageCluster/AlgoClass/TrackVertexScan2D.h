@@ -114,10 +114,6 @@ namespace larocv {
     
   protected:
     
-    std::vector<geo2d::VectorArray<float> > QPointArrayOnCircleArray(const ::cv::Mat& img,
-								     const geo2d::Vector<float>& pt,
-								     const std::vector<float>& radius_v) const;
-
     float AngularSpread(const ::cv::Mat& polarimg,
 			float radius_frac_min,
 			float radius_frac_max,
@@ -185,6 +181,7 @@ namespace larocv {
     float _min_contour_rect_area;
     bool  _clean_image;
 
+    float _circle_vertex_supression;
     // temporary data
     /// tick range scanned for cross-plane consistency check
     float _xplane_tick_min;
