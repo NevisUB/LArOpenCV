@@ -75,6 +75,8 @@ namespace larlite {
     float _t_window_min ;
 
     bool _crop_w_roi;
+
+    bool _hit_removal ;
     
   };
 }
