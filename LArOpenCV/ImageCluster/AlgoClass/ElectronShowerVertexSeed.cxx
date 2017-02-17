@@ -51,18 +51,22 @@ namespace larocv {
   void ElectronShowerVertexSeed::RegisterSeed(const std::vector<const cv::Mat>& img_v,
 					      const std::vector<data::VertexTrackInfoCollection>& vtxinfo_v)
   {
+
     std::vector<bool> good_plane_v(_num_planes,false);
     std::multimap<float,larocv::data::Vertex3D> vtrack_vtx_cand_m;
     std::multimap<float,larocv::data::Vertex3D> vedge_vtx_cand_m;
+
+    LAROCV_INFO() << "Attempting register of " << vtxinfo_v.size() << " track vertex infos" << std::endl;
     for(auto const& vtxinfo : vtxinfo_v) {
 
-      for(size_t plane=0; plane<good_plane_v.size(); ++plane)
-	good_plane_v[plane] = false;
-
+      for(size_t plane_id=0; plane_id<good_plane_v.size(); ++plane_id)
+	good_plane_v[plane_id] = false;
+      
       // Get useful attrivute references
       auto const& super_contour_v = vtxinfo.super_contour_v;
       auto const& particle_vv = vtxinfo.particle_vv;
       auto const& compound_vv = vtxinfo.compound_vv;
+
       if(super_contour_v.size() != _num_planes) {
 	LAROCV_CRITICAL() << "# planes for super cluster incorrect..." << std::endl;
 	throw larbys();
@@ -75,22 +79,29 @@ namespace larocv {
 	LAROCV_CRITICAL() << "# planes for CompoundClusterArray incorrect..." << std::endl;
 	throw larbys();
       }
-      
       size_t num_good_planes = 0;
       float  pxfrac_sum = 0;
       for(size_t plane=0; plane<_num_planes; ++plane) {
 	double pxfrac = 0;
-	for(auto const& particle : particle_vv[plane])
-	  pxfrac += PixelFraction(img_v[plane], super_contour_v[plane]->_ctor, particle->_ctor);
+	for(const auto particle : particle_vv.at(plane)) {
+	  auto pxfrac_ = PixelFraction(img_v[plane],super_contour_v.at(plane)->_ctor,particle->_ctor);
+	  pxfrac+=pxfrac_;
+	}
+	LAROCV_DEBUG() << "Final px fraction is " << pxfrac << std::endl;
 	if(pxfrac < _part_pxfrac_threshold) continue;
 	pxfrac_sum += pxfrac;
 	good_plane_v[plane] = true;
 	++num_good_planes;
       }
       if(num_good_planes < 2) continue;
+
+      LAROCV_INFO() << "Inspecting track vertex seed @ (" << vtxinfo.vtx3d->x << "," << vtxinfo.vtx3d->y << "," << vtxinfo.vtx3d->z << ")" << std::endl;
+      if (vtxinfo.vtx3d->vtx2d_v.size() != _num_planes) {
+	LAROCV_CRITICAL() << "... this vertex num planes " << vtxinfo.vtx3d->vtx2d_v.size() << " is invalid" << std::endl;
+	throw larbys();
+      }
+      data::Vertex3D vtx3d = *(vtxinfo.vtx3d);
       
-      // Fill a candidate interaction vertex
-      data::Vertex3D vtx3d(*(vtxinfo.vtx3d));
       vtrack_vtx_cand_m.emplace(pxfrac_sum,vtx3d);
       
       // Next fill edge-vertex
@@ -182,7 +193,7 @@ namespace larocv {
     }
 
     LAROCV_INFO() << "# Vertex3D from VertexTrackCluster: " << _vtrack_vertex_v.size() << std::endl;
-    LAROCV_INFO() << "# Vertex3D from dQdXProfiler: " << _vedge_vertex_v.size() << std::endl;
+    LAROCV_INFO() << "# Vertex3D from ParticleCluster: " << _vedge_vertex_v.size() << std::endl;
   }
   
   std::vector<larocv::data::VertexSeed3D>

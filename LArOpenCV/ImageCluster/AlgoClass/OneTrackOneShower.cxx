@@ -133,11 +133,15 @@ namespace larocv {
     res_vtx3d_v.clear();
     geo2d::Circle<float> circle;
     circle.radius = _circle_default_radius;
-
+    LAROCV_INFO() << "Candidate 3D vertex seeds " << cand_v.size() << std::endl;
     for(size_t vtx_idx=0; vtx_idx<cand_v.size(); ++vtx_idx) {
       auto const& cand_vtx = cand_v[vtx_idx];
-      LAROCV_INFO() << "Inspecting vertex " << vtx_idx
+      LAROCV_INFO() << "Inspecting vertex seed " << vtx_idx
 		    << " @ (" << cand_vtx.x << "," << cand_vtx.y << "," << cand_vtx.z << ")" << std::endl;
+      if (cand_vtx.vtx2d_v.size() != _num_planes) {
+	LAROCV_CRITICAL() << " listing invalid vertex " << std::endl;
+	throw larbys();
+      }
       std::vector<data::CircleVertex> cvtx_v;
       cvtx_v.resize(_num_planes);
       for(size_t plane=0; plane<img_v.size(); ++plane) {

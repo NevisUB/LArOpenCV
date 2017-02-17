@@ -69,6 +69,14 @@ namespace larocv {
 						    super_cluster_v,
 						    part_cluster_v,
 						    compound_v);
+    
+    for(size_t idx=0; idx<input_vtxinfo_v.size(); ++idx) {
+      auto& res = input_vtxinfo_v[idx];
+      LAROCV_INFO() << "Finished inspection of track vertex " << idx
+		    << " @ (" << res.vtx3d->x << "," << res.vtx3d->y << "," << res.vtx3d->z << ") w/ nplanes " << res.vtx3d->vtx2d_v.size() << std::endl;
+      LAROCV_DEBUG() << "... at address " << res.vtx3d << std::endl;
+    }
+    
     _ElectronShowerVertexSeed.RegisterSeed(img_v,input_vtxinfo_v);
     _ElectronShowerVertexSeed.RegisterSeed(input_linear_track_v);
     
