@@ -37,6 +37,8 @@ namespace larlite {
     _debug = pset.get<bool>("Debug");
 
     _plane_weights = pset.get<std::vector<float>>("MatchPlaneWeights");
+
+    _hit_removal = pset.get<bool>("UseHitRemoval");
   }
   
   void LArImageHit::_Report_() const {
@@ -80,6 +82,8 @@ namespace larlite {
 
     for (auto const& h : *ev_hit) {
       if (h.Integral() < _charge_threshold) continue;
+
+      if ( _hit_removal && h.GoodnessOfFit() < 0 ) continue;
 
       auto const& wid = h.WireID();
 
@@ -177,6 +181,8 @@ namespace larlite {
       auto const& wid = h.WireID();
 
       if (wid.Plane >= wire_range_v.size()) continue;
+
+      if ( _hit_removal && h.GoodnessOfFit() < 0 ) continue;
 
       auto& mat = _img_mgr.img_at(wid.Plane);
 
