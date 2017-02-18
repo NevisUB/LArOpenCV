@@ -14,6 +14,24 @@ namespace larocv {
       std::vector<const ParticleCluster*> super_contour_v;
       std::vector<std::vector<const ParticleCluster*> >      particle_vv;
       std::vector<std::vector<const TrackClusterCompound*> > compound_vv;
+      /*
+      VertexTrackInfoCollection(const VertexTrackInfoCollection& obj)
+      { vtx3d = obj.vtx3d;
+	super_contour_v.resize(obj.super_contour_v.size());
+	for(size_t i=0; i<super_contour_v.size(); ++i) super_contour_v[i] = obj.super_contour_v[i];
+	particle_vv.resize(obj.particle_vv.size());
+	for(size_t i=0; i<particle_vv.size(); ++i) {
+	  particle_vv[i].resize(obj.particle_vv[i].size());
+	  for(size_t j=0; j<particle_vv[i].size(); ++j)
+	    particle_vv[i][j] = obj.particle_vv[i][j];
+	}
+	for(size_t i=0; i<compound_vv.size(); ++i) {
+	  compound_vv[i].resize(obj.compound_vv[i].size());
+	  for(size_t j=0; j<compound_vv[i].size(); ++j)
+	    compound_vv[i][j] = obj.compound_vv[i][j];
+	}
+      }
+      */
     };
 
     std::vector<VertexTrackInfoCollection>

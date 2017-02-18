@@ -137,11 +137,12 @@ namespace larocv {
 	  }
 	}
       }
+      
       for(size_t idx=0; idx<res_v.size(); ++idx) {
-      auto& res = res_v[idx];
-      LAROCV_SINFO() << "Finished inspection of track vertex " << idx
-		     << " @ (" << res.vtx3d->x << "," << res.vtx3d->y << "," << res.vtx3d->z << ") w/ nplanes " << res.vtx3d->vtx2d_v.size() << std::endl;
-      LAROCV_SDEBUG() << "... at address " << res.vtx3d << std::endl;
+	auto& res = res_v[idx];
+	LAROCV_SINFO() << "Finished inspection of track vertex " << idx
+		       << " @ (" << res.vtx3d->x << "," << res.vtx3d->y << "," << res.vtx3d->z << ") w/ nplanes " << res.vtx3d->vtx2d_v.size() << std::endl;
+	LAROCV_SDEBUG() << "... at address " << res.vtx3d << std::endl;
       }
       
       return res_v;

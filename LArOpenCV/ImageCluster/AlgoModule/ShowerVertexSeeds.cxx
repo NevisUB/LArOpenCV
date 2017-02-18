@@ -45,13 +45,6 @@ namespace larocv {
   bool ShowerVertexSeeds::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
 
-    const data::Vertex3DArray* input_vtx3d_v_ptr = nullptr;
-
-    if (_vertex3d_id!=kINVALID_ALGO_ID)
-      input_vtx3d_v_ptr = &AlgoData<data::Vertex3DArray>(_vertex3d_id,0);
-    
-    auto const& input_linear_track_v = AlgoData<data::LinearTrack3DArray>(_linear_track_id,0);
-    
     std::vector<const data::ParticleClusterArray*> super_cluster_v;
     std::vector<const data::ParticleClusterArray*> part_cluster_v;
     std::vector<const data::TrackClusterCompoundArray*> compound_v;
@@ -64,18 +57,27 @@ namespace larocv {
       }
     }
 
-    auto input_vtxinfo_v = data::OrganizeVertexInfo(AssManager(),
-						    input_vtx3d_v_ptr ? *(input_vtx3d_v_ptr) : data::Vertex3DArray(),
-						    super_cluster_v,
-						    part_cluster_v,
-						    compound_v);
+    std::vector<data::VertexTrackInfoCollection> input_vtxinfo_v;
+    if (_vertex3d_id!=kINVALID_ALGO_ID) {
+      auto const& input_vtx3d_v = AlgoData<data::Vertex3DArray>(_vertex3d_id,0);
+      //LAROCV_INFO() << "Retrieving algo id " << _vertex3d_id << " @ " << input_vtx3d_v_ptr << std::endl;
+      input_vtxinfo_v = data::OrganizeVertexInfo(AssManager(),
+						 input_vtx3d_v,
+						 super_cluster_v,
+						 part_cluster_v,
+						 compound_v);
+    }
     
+    LAROCV_INFO() << "input_vtxinfo_v size " << input_vtxinfo_v.size() << std::endl;
     for(size_t idx=0; idx<input_vtxinfo_v.size(); ++idx) {
-      auto& res = input_vtxinfo_v[idx];
+      auto const & res = input_vtxinfo_v[idx];
       LAROCV_INFO() << "Finished inspection of track vertex " << idx
 		    << " @ (" << res.vtx3d->x << "," << res.vtx3d->y << "," << res.vtx3d->z << ") w/ nplanes " << res.vtx3d->vtx2d_v.size() << std::endl;
       LAROCV_DEBUG() << "... at address " << res.vtx3d << std::endl;
+      
     }
+      
+    auto const& input_linear_track_v = AlgoData<data::LinearTrack3DArray>(_linear_track_id,0);
     
     _ElectronShowerVertexSeed.RegisterSeed(img_v,input_vtxinfo_v);
     _ElectronShowerVertexSeed.RegisterSeed(input_linear_track_v);
@@ -85,7 +87,7 @@ namespace larocv {
     auto& data = AlgoData<data::VertexSeed3DArray>(0);
     for(size_t i=0; i<vtx3d_seed_v.size(); ++i)
       data.emplace_back(std::move(vtx3d_seed_v[i]));
-
+    //data.push_back(vtx3d_seed_v[i]);
     return true;
   }
   
