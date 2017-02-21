@@ -415,6 +415,51 @@ namespace larocv {
     GEO2D_ContourArray_t target_ctor_v(1,target_ctor);
     return PixelFraction(img,super_ctor,target_ctor_v);
   }
+
+  double
+  CircumferenceAngularSum(const GEO2D_Contour_t& ctor) {
+    if (ctor.empty()) {
+      LAROCV_SCRITICAL() << "Cannot calculate angular sum for empty contour" << std::endl;
+      throw larbys();
+    }
+    
+    uint npts = ctor.size();
+
+    double circum=0.0;
+    double angle_sum=0.0;
+    double rad2deg=57.2957795131;
+    for(int cid=0; cid < npts; ++cid) {
+
+      int id1=cid;
+
+      int id0=id1-1;
+      int id2=id1+1;
+
+      if(id0 < 0)     id0 = npts-1;
+      if(id2 >= npts) id2 = 0;
+      
+      geo2d::Vector<float> pt0(ctor[id0]);
+      geo2d::Vector<float> pt1(ctor[id1]);
+      geo2d::Vector<float> pt2(ctor[id2]);
+
+      auto d21 = geo2d::dist(pt1,pt2);
+
+      circum+=d21;
+      
+      auto pt10 = pt0-pt1;
+      auto pt21 = pt2-pt1;
+
+      //for now use this
+      double angle = std::acos(pt21.dot(pt10) / (geo2d::length(pt10) * geo2d::length(pt21)));
+      angle*=rad2deg;
+      
+      angle_sum += angle * d21;
+    }
+
+    LAROCV_SDEBUG() << "Scanned contour size " << npts << " of circumference " << circum << std::endl;
+    return angle_sum / circum;
+  }
+
   
 }
 #endif

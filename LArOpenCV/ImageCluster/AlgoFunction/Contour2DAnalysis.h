@@ -103,6 +103,10 @@ namespace larocv {
   PixelFraction(const cv::Mat& img,
 		const GEO2D_Contour_t& super_ctor,
 		const GEO2D_ContourArray_t& target_ctor_v);
+
+  double
+  CircumferenceAngularSum(const GEO2D_Contour_t& ctor);
+   
   
 }
 #endif
