@@ -105,7 +105,8 @@ namespace larocv {
 		const GEO2D_ContourArray_t& target_ctor_v);
 
   double
-  CircumferenceAngularSum(const GEO2D_Contour_t& ctor);
+  CircumferenceAngularSum(const GEO2D_Contour_t& ctor,
+			  bool isclosed=false);
    
   
 }

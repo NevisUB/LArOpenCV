@@ -317,7 +317,7 @@ namespace larocv {
     LAROCV_SDEBUG() << "meanx : " << meanx << "... meany: " << meany << "... ePx: " << eigenPx << "... ePy: " << eigenPy << std::endl;
     
     if (eigenPx==0) { 
-      LAROCV_SWARNING() << "Invalid Px inf detected set PX=EPS" << std::endl;
+      LAROCV_SDEBUG() << "Invalid Px inf detected set PX=EPS" << std::endl;
       eigenPx=EPS;
     }
     
@@ -417,26 +417,33 @@ namespace larocv {
   }
 
   double
-  CircumferenceAngularSum(const GEO2D_Contour_t& ctor) {
+  CircumferenceAngularSum(const GEO2D_Contour_t& ctor,
+			  bool isclosed) {
     if (ctor.empty()) {
       LAROCV_SCRITICAL() << "Cannot calculate angular sum for empty contour" << std::endl;
       throw larbys();
     }
+
+    uint last_id = ctor.size();
+
+    if (isclosed) {
+      last_id=-1;
+      if (ctor.front() != ctor.back())
+	throw larbys("Caller specified ctor is closed, but it's not");
+    }
     
-    uint npts = ctor.size();
-
-    double circum=0.0;
-    double angle_sum=0.0;
-    double rad2deg=57.2957795131;
-    for(int cid=0; cid < npts; ++cid) {
-
+    double circum = 0.0;
+    double angle_sum = 0.0;
+    double weight_sum = 0.0;
+    double rad2deg = 57.2957795131;
+    
+    for(int cid=0; cid < last_id; ++cid) {
       int id1=cid;
-
       int id0=id1-1;
       int id2=id1+1;
 
-      if(id0 < 0)     id0 = npts-1;
-      if(id2 >= npts) id2 = 0;
+      if(id0 < 0)     id0 = last_id-1;
+      if(id2 >= last_id) id2 = 0;
       
       geo2d::Vector<float> pt0(ctor[id0]);
       geo2d::Vector<float> pt1(ctor[id1]);
@@ -450,14 +457,16 @@ namespace larocv {
       auto pt21 = pt2-pt1;
 
       //for now use this
-      double angle = std::acos(pt21.dot(pt10) / (geo2d::length(pt10) * geo2d::length(pt21)));
+      double angle = std::acos(pt21.dot(pt10) / (geo2d::length(pt10) * geo2d::length(pt21))); 
       angle*=rad2deg;
-      
-      angle_sum += angle * d21;
+
+      angle_sum += angle / d21;
+      weight_sum += 1/d21;
+      circum += d21;
     }
 
-    LAROCV_SDEBUG() << "Scanned contour size " << npts << " of circumference " << circum << std::endl;
-    return angle_sum / circum;
+    LAROCV_SDEBUG() << "Scanned contour size " << last_id << " of circumference " << circum << std::endl;
+    return angle_sum / weight_sum;
   }
 
   
