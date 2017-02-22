@@ -39,6 +39,8 @@ namespace larocv {
     bool  YZPoint(const geo2d::Vector<float>& pt0, const size_t plane0,
 		  const geo2d::Vector<float>& pt1, const size_t plane1,
 		  larocv::data::Vertex3D& result) const;
+    bool  YZPoint(const geo2d::Vector<float>& pt0, const size_t plane0,
+		  const geo2d::Vector<float>& pt1, const size_t plane1) const;
 
     float  _xplane_tick_resolution;
     size_t _num_planes;

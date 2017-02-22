@@ -16,6 +16,7 @@
 #pragma link C++ class larocv::LinearTrackSeeds+;
 #pragma link C++ class larocv::ShowerVertexEstimate+;
 #pragma link C++ class larocv::ShowerParticleCluster+;
+#pragma link C++ class larocv::ShowerFromTrackVertex+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

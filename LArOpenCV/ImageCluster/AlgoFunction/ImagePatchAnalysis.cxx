@@ -13,7 +13,13 @@
 
 namespace larocv {
 
-
+  GEO2D_Contour_t
+  FindNonZero(const cv::Mat& img) {
+    GEO2D_Contour_t pts_v;
+    cv::findNonZero(img,pts_v);
+    return pts_v;
+  }
+  
   double
   MeanDistanceToLine(const cv::Mat& img,
 		     const geo2d::Line<float>& line) {
@@ -167,7 +173,6 @@ namespace larocv {
     }
 
     auto npts = range_a_w_v.size();
-    LAROCV_SDEBUG() << "\t... found " << npts << " & sup " << supression << std::endl;
     
     if(supression>0 and npts>1) {
       LAROCV_SDEBUG() << "Applying angular supression" << std::endl;
@@ -349,7 +354,10 @@ namespace larocv {
   }
   
   
-  void CorrectEdgeRectangle(const ::cv::Mat& img, cv::Rect& rect,int w, int h)
+  void
+  CorrectEdgeRectangle(const ::cv::Mat& img,
+		       cv::Rect& rect,
+		       int w, int h)
   {
 
     //make it edge aware
@@ -361,7 +369,10 @@ namespace larocv {
     
   }
   
-  cv::Mat MaskImage(const cv::Mat& img, const cv::Rect& rec, int tol, bool maskout) {
+  cv::Mat
+  MaskImage(const cv::Mat& img,
+	    const cv::Rect& rec,
+	    int tol, bool maskout) {
     
     cv::Mat dst_img(img.size(),img.type(), CV_8UC1);
     cv::Mat mask = cv::Mat(img.size(),img.type(),CV_8UC1);

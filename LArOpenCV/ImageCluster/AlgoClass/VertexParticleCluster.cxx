@@ -110,7 +110,7 @@ namespace larocv {
     ::cv::dilate(thresh_img,blur_img,kernel,::cv::Point(-1,-1),_dilation_iter);
     ::cv::blur(blur_img,blur_img,::cv::Size(_blur_size,_blur_size));
     */
-    
+
     // Create seed clusters
     LAROCV_DEBUG() << "Masking region @ " << vtx2d.center << " rad: " << vtx2d.radius << std::endl;
 
@@ -234,7 +234,6 @@ namespace larocv {
 	std::move(Merge(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx]));
       }
     }
-    //    std::exit(1);
     return res;
   }
 

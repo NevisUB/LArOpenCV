@@ -190,6 +190,7 @@ namespace larocv {
       vtx3d.z = cand_vtx.z;
       vtx3d.vtx2d_v = cand_vtx.vtx2d_v;
       vtx3d.cvtx2d_v = cvtx_v;
+      vtx3d.type=2;
       res_vtx3d_v.emplace_back(std::move(vtx3d));
     }
     return res_vtx3d_v;

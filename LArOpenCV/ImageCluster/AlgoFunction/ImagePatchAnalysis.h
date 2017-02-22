@@ -10,6 +10,9 @@
 
 namespace larocv {
 
+  GEO2D_Contour_t
+  FindNonZero(const cv::Mat& img);
+  
   double
   MeanDistanceToLine(const cv::Mat& img,
 		     const geo2d::Line<float>& line);

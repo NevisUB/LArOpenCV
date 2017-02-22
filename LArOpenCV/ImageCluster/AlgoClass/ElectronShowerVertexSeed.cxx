@@ -134,10 +134,6 @@ namespace larocv {
 		auto const& mat = img_v[check_plane];
 		size_t min_x = (size_t)(check_pt.x - _circle_default_radius/2. + 0.5);
 		size_t min_y = (size_t)(check_pt.y - _circle_default_radius/2. + 0.5);
-
-		// if ( (min_x + _circle_default_radius+0.5) > mat.cols ) throw larbys("scanning past image col boundary");
-		// if ( (min_y + _circle_default_radius+0.5) > mat.rows ) throw larbys("scanning past image row boundary");
-		
 		size_t step_x,step_y;
 		for(size_t dx=0; dx<(size_t)(_circle_default_radius+0.5); ++dx) {
 		  step_x = min_x+dx;

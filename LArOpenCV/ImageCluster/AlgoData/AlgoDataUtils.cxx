@@ -47,22 +47,24 @@ namespace larocv {
 
 	// Plane wise business
 	auto const& vtx3d = vtx3d_v[idx];
+	LAROCV_SDEBUG() << "This vertex " << &vtx3d << std::endl;
 	for(size_t plane=0; plane<num_planes; ++plane) {
-
+	  LAROCV_SDEBUG() << "... @ plane " << plane << std::endl;
 	  if(!super_cluster_array_v.empty()) {
 	    auto const& super_cluster_array = super_cluster_array_v[plane];
-	    if(!super_cluster_array)
+	    if(!super_cluster_array or super_cluster_array->as_vector().empty()) {
 	      res.super_contour_v.push_back(nullptr);
-	    else{
+	      LAROCV_SDEBUG() << " ... no super cluster exists" << std::endl;
+	    } else {
 	      auto ass_idx = ass_man.GetOneAss(vtx3d,super_cluster_array->ID());
 	      if (ass_idx==kINVALID_SIZE)  {
-		LAROCV_SCRITICAL() << "associated super cluster index can not be found for vertex " << idx << std::endl;
+		LAROCV_SCRITICAL() << ".. associated super cluster index can not be found for vertex " << idx << std::endl;
 		throw larbys();
 	      }
+	      LAROCV_SDEBUG() << "... ass index " << ass_idx << " is found" << std::endl;
 	      res.super_contour_v.push_back(&(super_cluster_array->as_vector().at(ass_idx)));
 	    }
 	  }
-
 	  bool process_particle = (!particle_array_v.empty() && particle_array_v[plane]);
 	  bool process_compound = (!compound_array_v.empty() && compound_array_v[plane]);
 	  std::vector<const ParticleCluster*>      particle_ptr_v;
@@ -104,7 +106,7 @@ namespace larocv {
 	  if(!particle_array_v.empty() && !compound_array_v.empty()) {
 	    
 	    auto const& particle_array  = particle_array_v[plane];
-	    auto const& compound_array      = compound_array_v[plane];
+	    auto const& compound_array  = compound_array_v[plane];
 
 	    auto const& compound_ass = ass_man.GetManyAss(vtx3d,compound_array->ID());
 	    auto const& particle_ass = ass_man.GetManyAss(vtx3d,particle_array->ID());

@@ -52,7 +52,7 @@ namespace larocv {
     */
     class CircleVertex {
     public:
-      CircleVertex() {Clear();}
+      CircleVertex() { Clear(); }
       ~CircleVertex() {}
       
       // Attribute variables

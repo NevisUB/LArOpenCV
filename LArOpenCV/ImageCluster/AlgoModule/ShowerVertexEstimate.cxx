@@ -18,6 +18,14 @@ namespace larocv {
     
     auto algo_name_vertex_seed = pset.get<std::string>("ShowerVertexSeed");
     _algo_id_vertex_seed = this->ID( algo_name_vertex_seed );
+
+    auto algo_name_shower_from_track_vertex = pset.get<std::string>("ShowerFromTrackVertex","");
+    _algo_id_shower_track_vertex=kINVALID_ALGO_ID;
+    if (!algo_name_shower_from_track_vertex.empty()) {
+      _algo_id_shower_track_vertex = this->ID( algo_name_shower_from_track_vertex );
+      if(_algo_id_shower_track_vertex==kINVALID_ALGO_ID)
+	throw larbys("You specified an invalid ShowerFromTrackVertex algorithm name");
+    }
     
     Register(new data::Vertex3DArray);
   }
@@ -41,9 +49,17 @@ namespace larocv {
     _OneTrackOneShower.RegisterSeed(seed_v.as_vector());
 
     auto vtx3d_v = _OneTrackOneShower.CreateSingleShower(img_v);
-
+    
+    LAROCV_DEBUG() << "Found " << vtx3d_v.size() << " single shower vertex" << std::endl;
     for(size_t i=0; i<vtx3d_v.size(); ++i)
       data.emplace_back(std::move(vtx3d_v[i]));
+
+    if (_algo_id_shower_track_vertex!=kINVALID_ALGO_ID) {
+      const auto& shower_track_v = AlgoData<data::Vertex3DArray>(_algo_id_shower_track_vertex,0);
+      LAROCV_DEBUG() << "Found " << shower_track_v.as_vector().size() << " edge vertex" << std::endl;
+      for(const auto& vtx3d :  shower_track_v.as_vector()) 
+	data.push_back(vtx3d);
+    }    
     
     return true;
   }

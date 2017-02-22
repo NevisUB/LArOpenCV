@@ -1,26 +1,25 @@
-#ifndef __SHOWERVERTEXESTIMATE_H__
-#define __SHOWERVERTEXESTIMATE_H__
+#ifndef __SHOWERFROMTRACKVERTEX_H__
+#define __SHOWERFROMTRACKVERTEX_H__
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
-#include "LArOpenCV/ImageCluster/AlgoData/VertexSeed.h"
-#include "LArOpenCV/ImageCluster/AlgoClass/OneTrackOneShower.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
 /*
   @brief: estimate the shower vertex point using shower seeds
 */
 namespace larocv {
  
-  class ShowerVertexEstimate : public larocv::ImageAnaBase {
+  class ShowerFromTrackVertex : public larocv::ImageAnaBase {
     
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
-    ShowerVertexEstimate(const std::string name = "ShowerVertexEstimate") :
+    ShowerFromTrackVertex(const std::string name = "ShowerFromTrackVertex") :
       ImageAnaBase(name)
     {}
     
     /// Default destructor
-    ~ShowerVertexEstimate(){}
+    ~ShowerFromTrackVertex(){}
     
     void Reset();
 
@@ -40,23 +39,25 @@ namespace larocv {
     bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
 
   private:
-    OneTrackOneShower _OneTrackOneShower;
-    AlgorithmID_t _algo_id_vertex_seed;
-    AlgorithmID_t _algo_id_shower_track_vertex;
+    size_t _vertex3d_id;
+    size_t _compound_id;
+    LArPlaneGeo _geo;    
+    double _overlap_fraction;
+    double _circle_default_radius;
   };
 
   /**
-     \class larocv::ShowerVertexEstimateFactory
-     \brief A concrete factory class for larocv::ShowerVertexEstimate
+     \class larocv::ShowerFromTrackVertexFactory
+     \brief A concrete factory class for larocv::ShowerFromTrackVertex
    */
-  class ShowerVertexEstimateFactory : public AlgoFactoryBase {
+  class ShowerFromTrackVertexFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    ShowerVertexEstimateFactory() { AlgoFactory::get().add_factory("ShowerVertexEstimate",this); }
+    ShowerFromTrackVertexFactory() { AlgoFactory::get().add_factory("ShowerFromTrackVertex",this); }
     /// dtor
-    ~ShowerVertexEstimateFactory() {}
+    ~ShowerFromTrackVertexFactory() {}
     /// create method
-    ImageClusterBase* create(const std::string instance_name) { return new ShowerVertexEstimate(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new ShowerFromTrackVertex(instance_name); }
   };
   
 }

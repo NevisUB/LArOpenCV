@@ -107,6 +107,12 @@ namespace larocv {
     }
     return true;
   }
+  bool LArPlaneGeo::YZPoint(const geo2d::Vector<float>& pt0, const size_t plane0,
+			    const geo2d::Vector<float>& pt1, const size_t plane1) const
+  {
+    data::Vertex3D tmp;
+    return YZPoint(pt0,plane0,pt1,plane1,tmp);
+  }
   
 
 }

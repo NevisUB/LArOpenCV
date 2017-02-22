@@ -70,9 +70,15 @@ namespace larocv {
       
       const auto& vtx3d = vtx_data_v[vtx_id];
       const auto& circle_vtx = vtx3d.cvtx2d_v.at(plane);
+
       LAROCV_DEBUG() << "Vertex ID " << vtx_id << " plane " << plane
 		     << " CircleVertex @ " << circle_vtx.center << " w/ R = " << circle_vtx.radius << std::endl;
 
+      if (circle_vtx.radius<=0) {
+	LAROCV_DEBUG() << "This circle vertex is invalid, skip!" << std::endl;
+	continue;
+      }
+      
       // Find corresponding super cluster, currently have to make a copy
       GEO2D_ContourArray_t super_ctor_v;
       super_ctor_v.reserve(super_cluster_v.size());
@@ -140,7 +146,6 @@ namespace larocv {
   
   bool VertexParticleClusterMaker::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
-
     return true;
   } 
   
