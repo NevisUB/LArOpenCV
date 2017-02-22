@@ -95,10 +95,14 @@ namespace larocv {
     
     // Prepare image for analysis per vertex
     // Threshold
-    ::cv::Mat thresh_img;
+    ::cv::Mat thresh_img = Threshold(img,_pi_threshold,255);
     LAROCV_DEBUG() << "Thresholding to pi threshold: " << _pi_threshold << std::endl;
-    ::cv::threshold(img, thresh_img, _pi_threshold, 255,0); //CV_THRESH_BINARY);
-
+    if(this->logger().level() == ::larocv::msg::kDEBUG) {
+      std::stringstream ss0;
+      ss0 << "thresh_plane_input.png";
+      cv::imwrite(std::string(ss0.str()).c_str(), thresh_img);
+    }
+    
     /*
     // Using dilate/blur/threshold for super cluster
     ::cv::Mat blur_img;
@@ -117,53 +121,92 @@ namespace larocv {
     // Create seed clusters
     _seed_cluster_v = ParticleHypothesis(img_circle,vtx2d);
 
+    LAROCV_DEBUG() << "Found " << _seed_cluster_v.size() << " seed clusters" << std::endl;
+    if(this->logger().level() == ::larocv::msg::kDEBUG) {
+      for(const auto& ctor : _seed_cluster_v)
+	LAROCV_DEBUG() << "... size " << ctor.size() << std::endl;
+    }
+
+    
     if(_seed_cluster_v.empty()) return res;
 
     // Create contours on masked image (outside seed)
+    LAROCV_DEBUG() << "Scanning outside seed" << std::endl;
     auto img_rest = MaskImage(thresh_img, mask_region, 0, true);
-    
+    if(this->logger().level() == ::larocv::msg::kDEBUG) {
+      std::stringstream ss0;
+      ss0 << "img_rest_plane.png";
+      cv::imwrite(std::string(ss0.str()).c_str(), img_rest);
+    }
+
     // Apply further mask to exclude outside super contour
     img_rest = MaskImage(img_rest, super_cluster, 0, false);
 
+    if(this->logger().level() == ::larocv::msg::kDEBUG) {
+      std::stringstream ss0;
+      ss0 << "img_rest_exclude_plane.png";
+      cv::imwrite(std::string(ss0.str()).c_str(), img_rest);
+    }
+
     // Find contours outside circle
     _child_cluster_v.clear();
-    std::vector<::cv::Vec4i> cv_hierarchy_v;
-    ::cv::findContours(img_rest, _child_cluster_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    _child_cluster_v = FindContours(img_rest);
+    LAROCV_DEBUG() << "Found " << _child_cluster_v.size() << " children contours" << std::endl;
 
+    if(this->logger().level() == ::larocv::msg::kDEBUG) {
+      for(const auto& ctor : _child_cluster_v) {
+	LAROCV_DEBUG() << "... size " << ctor.size() << std::endl;
+      // 	std::stringstream ss;
+      // 	for(const auto& pt : ctor)
+      // 	  ss << pt << ",";
+      // 	LAROCV_DEBUG() << ss.str() << std::endl;
+      // }
+      }
+    }
+    
     // Analyze correlation of child & seed clusters
     std::vector<bool> used_seed_v(_seed_cluster_v.size(),false);
     std::vector<bool> used_child_v(_child_cluster_v.size(),false);
 
     std::vector<std::pair<size_t,size_t> > match_v;
     match_v.reserve(vtx2d.xs_v.size());
+    
     for(size_t xs_idx=0; xs_idx < vtx2d.xs_v.size(); ++xs_idx) {
       auto const& xs_pt = vtx2d.xs_v[xs_idx].pt;
-
+      LAROCV_DEBUG() << " @ " << xs_idx << " pt " << xs_pt << std::endl;
       size_t cand_seed_idx  = kINVALID_SIZE;
       size_t cand_child_idx = kINVALID_SIZE;
-      double min_dist = 1.e20;
+      double min_dist = kINVALID_DOUBLE;
       double dist;
+      
       for(size_t seed_idx=0; seed_idx<_seed_cluster_v.size(); ++seed_idx) {
 	if(used_seed_v[seed_idx]) continue;
-	dist = cv::pointPolygonTest(_seed_cluster_v[seed_idx],xs_pt,true);
+	dist = std::abs(cv::pointPolygonTest(_seed_cluster_v[seed_idx],xs_pt,true));
+	LAROCV_DEBUG() << "seed " << seed_idx << " @ dist " << dist << std::endl;
 	if(dist > min_dist) continue;
 	if(dist > _contour_dist_threshold) continue;
 	min_dist = dist;
 	cand_seed_idx = seed_idx;
+	LAROCV_DEBUG() << "... now min dist " << min_dist << " & cand seed " << cand_seed_idx << std::endl;
       }
       if(cand_seed_idx != kINVALID_SIZE) used_seed_v[cand_seed_idx] = true;
       
-      min_dist = 1.e20;
+      min_dist = kINVALID_DOUBLE;
       for(size_t child_idx=0; child_idx<_child_cluster_v.size(); ++child_idx) {
 	if(used_child_v[child_idx]) continue;
-	dist = cv::pointPolygonTest(_child_cluster_v[child_idx],xs_pt,true);
+	dist = std::abs(cv::pointPolygonTest(_child_cluster_v[child_idx],xs_pt,true));
+	LAROCV_DEBUG() << "child " << child_idx << " @ dist " << dist << std::endl;
 	if(dist > min_dist) continue;
 	if(dist > _contour_dist_threshold) continue;
 	min_dist = dist;
 	cand_child_idx = child_idx;
+	LAROCV_DEBUG() << "... now min dist " << min_dist << " & cand child " << cand_child_idx << std::endl;
       }
+
       if(cand_child_idx != kINVALID_SIZE) used_child_v[cand_child_idx] = true;
 
+      LAROCV_DEBUG() << " cand seed & child " << cand_seed_idx << "," << cand_child_idx << std::endl;
+      
       match_v[xs_idx] = std::make_pair(cand_seed_idx,cand_child_idx);
     }
 
@@ -191,7 +234,7 @@ namespace larocv {
 	std::move(Merge(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx]));
       }
     }
-    
+    //    std::exit(1);
     return res;
   }
 
@@ -420,30 +463,25 @@ namespace larocv {
       
       LAROCV_DEBUG() << "Chose polar contour at index : " << target_idx << " of size " << polar_ctor_v[target_idx].size() << std::endl;
 
-      _refine_polar_cluster=true;
       if(_refine_polar_cluster) {
 	// Refine contour
+	LAROCV_DEBUG() << "Refining polar contour" << std::endl;
 	::cv::Mat filled_ctor(rot_polarimg.size(),rot_polarimg.type(),CV_8UC1);
 	polar_ctor_v[0] = polar_ctor_v[target_idx];
 	polar_ctor_v.resize(1);
-	::cv::drawContours(filled_ctor, polar_ctor_v, -1, cv::Scalar(255), -1, cv::LINE_8); // fill inside
+	//::cv::drawContours(filled_ctor, polar_ctor_v, -1, cv::Scalar(255), -1, cv::LINE_8); // fill inside
+	filled_ctor = MaskImage(rot_polarimg,polar_ctor_v,-1,false);
 	polar_ctor_v.clear();
-	cv_hierarchy_v.clear();
-	::cv::findContours(filled_ctor, polar_ctor_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+	polar_ctor_v = FindContours(filled_ctor);
+	LAROCV_DEBUG() << "Found " << polar_ctor_v.size() << " polar contours in filled image" << std::endl;
 
-	if(this->logger().level() == ::larocv::msg::kDEBUG) {
-	  auto img_tmp0 = rot_polarimg.clone();
-	  img_tmp0.setTo(0);
-	  drawContours(img_tmp0, GEO2D_ContourArray_t(1,polar_ctor_v[target_idx]), -1 , cv::Scalar(255),1,8);
-	  ::cv::imwrite("refine_polar_ctor_a.png",img_tmp0);
-	  ::cv::imwrite("refine_polar_ctor_b.png",filled_ctor);
-	}
 	
 	// pick the maximal area contour
 	if(polar_ctor_v.empty()) {
 	  LAROCV_CRITICAL() << "Lost contour in polar-refining step?!" << std::endl;	
 	  throw larbys();
 	}
+	
 	target_idx = 0;
 	if(polar_ctor_v.size()>1) {
 	  double max_ctor_area = 0;
@@ -454,10 +492,18 @@ namespace larocv {
 	    target_idx = cand_idx;
 	  }
 	}
-      }
+		if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	  auto img_tmp0 = rot_polarimg.clone();
+	  img_tmp0.setTo(0);
+	  drawContours(img_tmp0, GEO2D_ContourArray_t(1,polar_ctor_v[target_idx]), -1 , cv::Scalar(255),1,8);
+	  ::cv::imwrite("refine_polar_ctor_a.png",img_tmp0);
+	  ::cv::imwrite("refine_polar_ctor_b.png",filled_ctor);
+	}
 
+      }
+      LAROCV_DEBUG() << "Chosen refined polar contour is @ " << target_idx << std::endl;
       auto const& polar_contour = polar_ctor_v[target_idx];
-      
+      LAROCV_DEBUG() << "... of size " << polar_contour.size() << std::endl;      
       float rows = rot_polarimg.rows;
       float cols = rot_polarimg.cols;
       
@@ -474,7 +520,6 @@ namespace larocv {
 		     << " theta hi " << theta_hi << std::endl;
       _prange.SetAngle(xs_pt_angle,theta_lo,theta_hi);
 
-      
       for (size_t pt_idx=0; pt_idx<polar_contour.size(); ++pt_idx) {
       	auto const& polar_pt = polar_contour[pt_idx];
 	
@@ -513,6 +558,8 @@ namespace larocv {
 	last_pt = this_pt;
       }
 
+      LAROCV_DEBUG() << "polar => cartesian contour is size " << contour.size() << std::endl;
+	
       if(_refine_cartesian_cluster) {
 	// Refine contour
 	LAROCV_DEBUG() << "Refining cartesian contour of size: " << contour.size() << std::endl;
@@ -544,14 +591,15 @@ namespace larocv {
 	  ::cv::imwrite(ss_a.str(),img);
 	  ::cv::imwrite(ss_b.str(),img_tmp0);
 	  ::cv::imwrite(ss_c.str(),masked);
-	  if (contour.size()==1) std::exit(1);
 	}
 	
-	GEO2D_ContourArray_t cartesian_ctor_v;
-	cartesian_ctor_v.clear();
-	cv_hierarchy_v.clear();
-	findContours(masked, cartesian_ctor_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+	GEO2D_ContourArray_t cartesian_ctor_v = FindContours(masked);
 	LAROCV_DEBUG() << "Found " << cartesian_ctor_v.size() << " contours in masked image" << std::endl;
+	if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	  for(const auto& ctor : cartesian_ctor_v)
+	    LAROCV_DEBUG() << "... of size " << ctor.size() << std::endl;
+	}
+	
 	// pick the maximal area contour
 	if(cartesian_ctor_v.empty()) {
 	  LAROCV_CRITICAL() << "Lost contour in cartesian-refining step?!" << std::endl;
@@ -566,7 +614,7 @@ namespace larocv {
 	    max_ctor_area = ctor_area;
 	    target_idx = cand_idx;
 	  }
-	}	
+	}
 	contour = cartesian_ctor_v[target_idx];
       }
       result_v.emplace_back(std::move(contour));
