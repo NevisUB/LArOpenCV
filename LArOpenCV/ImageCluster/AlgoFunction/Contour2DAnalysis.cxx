@@ -222,15 +222,15 @@ namespace larocv {
     
     auto masked_img = MaskImage(img,ctor_v,0,false);
 
-    if(logger().level() == msg::kDEBUG) {
-      static int img_ctr=-1;
-      img_ctr+=1;
-      std::stringstream ss1,ss2;
-      ss1 << "orig_img_" << img_ctr << ".png";
-      ss2 << "mask_img_" << img_ctr << ".png";
-      cv::imwrite(ss1.str().c_str(),img);
-      cv::imwrite(ss2.str().c_str(),masked_img);
-    }
+    // if(logger().level() == msg::kDEBUG) {
+    //   static int img_ctr=-1;
+    //   img_ctr+=1;
+    //   std::stringstream ss1,ss2;
+    //   ss1 << "orig_img_" << img_ctr << ".png";
+    //   ss2 << "mask_img_" << img_ctr << ".png";
+    //   cv::imwrite(ss1.str().c_str(),img);
+    //   cv::imwrite(ss2.str().c_str(),masked_img);
+    // }
     
     GEO2D_ContourArray_t result_v;
     std::vector<cv::Vec4i> cv_hierarchy_v;
@@ -288,7 +288,6 @@ namespace larocv {
     
     if(pts_v.size() < 2) {
       LAROCV_SCRITICAL() << "PCA approx cannot be made (# points " << pts_v.size() << " < 2)" << std::endl;
-      cv::imwrite("calc_pca_img.png",img);
       throw larbys();
     }
     
@@ -398,7 +397,7 @@ namespace larocv {
     if (super_px == 0) {
       LAROCV_SCRITICAL() << "Number of super pixels in image is zero!" << std::endl;
       LAROCV_SCRITICAL() << "super ctor size " << super_ctor.size();
-      cv::imwrite("super_img.png",super_img);
+      // cv::imwrite("super_img.png",super_img);
       throw larbys();
     }
     

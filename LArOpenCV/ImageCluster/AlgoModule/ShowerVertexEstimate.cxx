@@ -16,8 +16,13 @@ namespace larocv {
     _OneTrackOneShower.set_verbosity(this->logger().level());
     _OneTrackOneShower.Configure(pset.get<Config_t>("OneTrackOneShower"));
     
-    auto algo_name_vertex_seed = pset.get<std::string>("ShowerVertexSeed");
+    auto algo_name_vertex_seed = pset.get<std::string>("ShowerVertexSeed","");
     _algo_id_vertex_seed = this->ID( algo_name_vertex_seed );
+    if (!algo_name_vertex_seed.empty()) {
+      _algo_id_vertex_seed = this->ID( algo_name_vertex_seed );
+      if(_algo_id_vertex_seed==kINVALID_ALGO_ID)
+	throw larbys("You specified an invalid ShowerVertexSeed algorithm name");
+    }
 
     auto algo_name_shower_from_track_vertex = pset.get<std::string>("ShowerOnTrackEnd","");
     _algo_id_shower_track_vertex=kINVALID_ALGO_ID;
@@ -26,6 +31,15 @@ namespace larocv {
       if(_algo_id_shower_track_vertex==kINVALID_ALGO_ID)
 	throw larbys("You specified an invalid ShowerFromTrackVertex algorithm name");
     }
+
+    auto algo_name_track_vertex_estimate = pset.get<std::string>("TrackVertexEstimate","");
+    _algo_id_track_vertex_estimate=kINVALID_ALGO_ID;
+    if (!algo_name_track_vertex_estimate.empty()) {
+      _algo_id_track_vertex_estimate = this->ID( algo_name_track_vertex_estimate );
+      if(_algo_id_track_vertex_estimate==kINVALID_ALGO_ID)
+	throw larbys("You specified an invalid TrackVertexEstimate algorithm name");
+    }
+
     
     Register(new data::Vertex3DArray);
   }
@@ -54,11 +68,22 @@ namespace larocv {
     for(size_t i=0; i<vtx3d_v.size(); ++i)
       data.emplace_back(std::move(vtx3d_v[i]));
 
-    if (_algo_id_shower_track_vertex!=kINVALID_ALGO_ID) {
+    if (_algo_id_shower_track_vertex!=kINVALID_ALGO_ID and _algo_id_track_vertex_estimate != kINVALID_ALGO_ID) {
+      auto& ass_man = AssManager();
+
+      const auto& track_vertex_v = AlgoData<data::Vertex3DArray>(_algo_id_track_vertex_estimate,0);
       const auto& shower_track_v = AlgoData<data::Vertex3DArray>(_algo_id_shower_track_vertex,0);
-      LAROCV_DEBUG() << "Found " << shower_track_v.as_vector().size() << " edge vertex" << std::endl;
-      for(const auto& vtx3d :  shower_track_v.as_vector()) 
-	data.push_back(vtx3d);
+      
+      for(const auto& vtx3d :  shower_track_v.as_vector())  {
+	data::Vertex3D vtx3d_f = vtx3d;
+
+	auto ass_id = ass_man.GetOneAss(vtx3d_f,track_vertex_v.ID());
+	if (ass_id==kINVALID_SIZE)
+	  throw larbys("Associated track vertex cannot be found, sorry");
+	
+	data.emplace_back(std::move(vtx3d_f));
+	AssociateOne(track_vertex_v.as_vector()[ass_id],data.as_vector().back());
+      }
     }    
     
     return true;

@@ -7,6 +7,7 @@
 #include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
+#include <array>
 
 namespace larocv {
 
@@ -81,7 +82,7 @@ namespace larocv {
     for(size_t vtx3d_id=0; vtx3d_id<vtx3d_v.size(); ++vtx3d_id) {
       const auto& vtx3d = vtx3d_v[vtx3d_id];
 
-      std::vector<std::pair<size_t,size_t> > comp_shower_v;
+      std::vector<std::array<size_t,2> > comp_shower_v;
       std::vector<bool> valid_plane_v(3,false);
       
       LAROCV_DEBUG() << "Vtx ID " << vtx3d_id << std::endl;
@@ -104,7 +105,8 @@ namespace larocv {
 	  LAROCV_DEBUG() << "found  " << xs_pt_v.size()
 			 << " crossing points on circle @ " << circle.center << " w/ rad " << circle.radius << std::endl;
 	  if (xs_pt_v.empty()) continue;
-	  comp_shower_v.emplace_back(plane,compound_idx);
+
+	  comp_shower_v.push_back({{plane,compound_idx}});
 	  valid_plane_v[plane] = true;
 	}
       }
@@ -112,23 +114,23 @@ namespace larocv {
       for(auto valid_plane : valid_plane_v)
 	n_valid_planes += (size_t)valid_plane;
       
-      if (n_valid_planes != 2) {
+      if (n_valid_planes < 2) {
 	LAROCV_DEBUG() << "number of planes " << n_valid_planes << " invalid" << std::endl;
 	continue;
       }
       
       LAROCV_DEBUG() << "Detected compounds across " << n_valid_planes << " planes via Xs w/ shower pixels" << std::endl;
-      std::map<double,std::pair<size_t,size_t> > score_m;
+      std::map<std::array<size_t,2>,double> score_m;
 	       
       for(size_t comp1_idx=0;comp1_idx<comp_shower_v.size();++comp1_idx) {
 	auto& comp1_p = comp_shower_v[comp1_idx];
 	for(size_t comp2_idx=comp1_idx+1;comp2_idx<comp_shower_v.size();++comp2_idx) {
 	  auto& comp2_p = comp_shower_v[comp2_idx];
 
-	  auto comp1_pl = comp1_p.first;
-	  auto comp2_pl = comp2_p.first;
-	  auto comp1_id = comp1_p.second;
-	  auto comp2_id = comp2_p.second;
+	  auto comp1_pl = comp1_p[0];
+	  auto comp2_pl = comp2_p[0];
+	  auto comp1_id = comp1_p[1];
+	  auto comp2_id = comp2_p[1];
 	  
 	  if (comp1_pl == comp2_pl) continue;
 
@@ -168,62 +170,138 @@ namespace larocv {
 	    }
 	  }
 	  LAROCV_DEBUG() << "Overlap is " << overlap << std::endl;
-	  double frac = (double) overlap / (double) std::min(comp1_pts_v.size(),
-							     comp2_pts_v.size());
-	  LAROCV_DEBUG() << "Coverage fraction is " << frac << std::endl;
-	  score_m[frac]=std::make_pair(comp1_idx,comp2_idx);
+	  double overlap_d = overlap;
+	  double denom_d = std::min(comp1_pts_v.size(),comp2_pts_v.size());
+	  double frac = overlap_d / denom_d;
+						
+	  LAROCV_DEBUG() << "Coverage fraction is "<< overlap_d << " / " << denom_d << " = " << frac << std::endl;
+	  score_m[{{comp1_idx,comp2_idx}}]=frac;
 	} //end comp2
       } //end comp1
 
-      auto max_score = score_m.rbegin();
-      if ( max_score->first > _overlap_fraction ) {
+
+
+      //get the pair with the highest overlap fraction
+      double highest_score = -1;
+      std::array<size_t,2> highest_pair{{kINVALID_SIZE,kINVALID_SIZE}};
+      for(const auto& score : score_m) {
+	LAROCV_DEBUG() << "Score " << score.second
+		       << " @ (" << score.first[0] << "," << score.first[1] << ")" << std::endl;
+	if (score.second>highest_score) {
+	  highest_pair  = score.first;
+	  highest_score = score.second;
+	}
+      }
+
+      std::vector<bool> used_planes(3,false);
+      
+      if ( highest_score > _overlap_fraction ) {
 	LAROCV_DEBUG() << "Claiming a 3D vertex from particle end point comparison" << std::endl;
-	data::Vertex3D vtx3d;
-	vtx3d.type=3;
-	vtx3d.num_planes=2;
+	data::Vertex3D vtx3d_f;
+	vtx3d_f.type=3;
+	vtx3d_f.num_planes=2;
+	vtx3d_f.cvtx2d_v.resize(3);
+	
+	for(auto cid : highest_pair) {
+	  auto& comp_p = comp_shower_v[cid];
+	  auto plane_id = comp_p[0];
+	  LAROCV_DEBUG() << "Using id " << cid << " @ plane " << plane_id << std::endl;
+	  used_planes[plane_id]=true;
+	  const auto& comp1 = compound_v[plane_id]->as_vector()[comp_p[1]];
+	  auto& cvtx = vtx3d_f.cvtx2d_v[plane_id];
+	  cvtx.center = comp1.end_pt();
+	  cvtx.radius = _circle_default_radius;
+	  auto xs_v = QPointOnCircle(img_v[plane_id],geo2d::Circle<float>(cvtx.center,cvtx.radius),10);
+	  auto& ppca_v = cvtx.xs_v;
+	  for(auto & xs : xs_v) {
+	    data::PointPCA ppca;
+	    geo2d::Vector<float> pt_tmp(kINVALID_FLOAT,kINVALID_FLOAT);
+	    geo2d::Line<float> line(pt_tmp,pt_tmp);
+	    ppca = data::PointPCA(xs,line);
+	    ppca_v.emplace_back(ppca);
+	  }
+	}
 
-	auto comp1_id = max_score->second.first;
-	auto comp2_id = max_score->second.second;
-	
-	auto& comp1_p = comp_shower_v[comp1_id];
-	auto& comp2_p = comp_shower_v[comp2_id];
+	// handle many plane case....
+	if (n_valid_planes==3) {
+	  double highest_score_0 = -1;
+	  double highest_score_1 = -1;
+	  std::array<size_t,2> highest_pair_0;
+	  std::array<size_t,2> highest_pair_1;
 
-	auto plane1 = comp1_p.first;
-	auto plane2 = comp2_p.first;
-	
-	const auto& comp1 = compound_v[plane1]->as_vector()[comp1_p.second];
-	const auto& comp2 = compound_v[plane2]->as_vector()[comp2_p.second];
-	
-	vtx3d.cvtx2d_v.resize(3);
-
-	auto& cvtx1 = vtx3d.cvtx2d_v[plane1];
-	auto& cvtx2 = vtx3d.cvtx2d_v[plane2];
-	
-	cvtx1.center = comp1.end_pt();
-	cvtx1.radius = _circle_default_radius;
-	
-	cvtx2.center = comp2.end_pt();
-	cvtx2.radius = _circle_default_radius;
+	  const auto high0 = highest_pair[0];
+	  const auto high1 = highest_pair[1];
 	  
-	auto xs1_v = QPointOnCircle(img_v[plane1],geo2d::Circle<float>(cvtx1.center,cvtx1.radius),10);
-	auto xs2_v = QPointOnCircle(img_v[plane2],geo2d::Circle<float>(cvtx2.center,cvtx2.radius),10);
-	
-	auto& ppca1 = cvtx1.xs_v;
-	auto& ppca2 = cvtx2.xs_v;
+	  //filter the score map for pairs which have plane IDs which are !BOTH! used
+	  for(const auto& score : score_m) {
+	    auto this0 = score.first[0];
+	    auto this1 = score.first[1];
+	    auto plane0 = comp_shower_v[this0][0];
+	    auto plane1 = comp_shower_v[this1][0];
+	    if (used_planes[plane0] and used_planes[plane1]) continue;
+	    
+	    //the first one is here, but second is not
+	    if ((high0==this0 or high0==this1) and
+		(high1!=this0 and high1!=this1)) {
+		  if (score.second>highest_score_0) {
+		    highest_pair_0  = score.first;
+		    highest_score_0 = score.second;
+		  }
+	    }
 
-	for(auto & xs1 : xs1_v) 
-	  ppca1.emplace_back(data::PointPCA(xs1,SquarePCA(img_v[plane1],xs1,
-							  _pca_size,_pca_size)));
+	    //the second one is here, but first is not
+	    if ((high1==this0 or high1==this1) and
+		(high0!=this0 and high0!=this1)) {
+		  if (score.second>highest_score_1) {
+		    highest_pair_1  = score.first;
+		    highest_score_1 = score.second;
+		  }
+	    }
+	    
+	  }
 
-	for(auto & xs2 : xs2_v) 
-	  ppca2.emplace_back(data::PointPCA(xs2,SquarePCA(img_v[plane2],xs2,
-							  _pca_size,_pca_size)));
-	
+
+	  LAROCV_DEBUG() << "Got highest scores for both chosen pair (" << high0 << "," << high1 << ")" << std::endl;
+	  LAROCV_DEBUG() << high0 << " in pair (" << highest_pair_0[0] << "," << highest_pair_0[1] << ") w/ score " << highest_score_0 << std::endl;
+	  LAROCV_DEBUG() << high1 << " in pair (" << highest_pair_1[0] << "," << highest_pair_1[1] << ") w/ score " << highest_score_1 << std::endl;
+
+	  auto chosen_pair = highest_score_0>highest_score_1 ? highest_pair_0 : highest_pair_1;
+	  LAROCV_DEBUG() << "... chose pair (" << chosen_pair[0] << "," << chosen_pair[1] << ") --> adding additional plane" << std::endl;
+	  auto chosen_id = kINVALID_SIZE;
+	  if (chosen_pair[0] == high0 or chosen_pair[0] == high1) chosen_id = chosen_pair[1];
+	  if (chosen_pair[1] == high0 or chosen_pair[1] == high1) chosen_id = chosen_pair[0];
+	  if (chosen_id == kINVALID_SIZE)
+	    throw larbys("Fucked");
+
+	  vtx3d_f.num_planes=3;
+	  auto& comp_p = comp_shower_v[chosen_id];
+	  auto plane_id = comp_p[0];
+	  LAROCV_DEBUG() << "Using id " << chosen_id << " @ plane " << plane_id << std::endl;
+	  used_planes[plane_id]=true;
+	  const auto& comp1 = compound_v[plane_id]->as_vector()[comp_p[1]];
+	  auto& cvtx = vtx3d_f.cvtx2d_v[plane_id];
+	  cvtx.center = comp1.end_pt();
+	  cvtx.radius = _circle_default_radius;
+	  auto xs_v = QPointOnCircle(img_v[plane_id],geo2d::Circle<float>(cvtx.center,cvtx.radius),10);
+	  auto& ppca_v = cvtx.xs_v;
+	  for(auto & xs : xs_v) {
+	    data::PointPCA ppca;
+	    geo2d::Vector<float> pt_tmp(kINVALID_FLOAT,kINVALID_FLOAT);
+	    geo2d::Line<float> line(pt_tmp,pt_tmp);
+	    ppca = data::PointPCA(xs,line);
+	    ppca_v.emplace_back(ppca);
+	  }
+
+	}
+
 	LAROCV_DEBUG() << "Claimed..." << std::endl;
-	vertex3d_v.emplace_back(std::move(vtx3d));
+	
+	vertex3d_v.emplace_back(std::move(vtx3d_f));
+	AssociateOne(vtx3d,vertex3d_v.as_vector().back());
 	LAROCV_WARNING() << "No association information set!" << std::endl;
-      } // end overlap test
-    } // end this vertex
+	} // end overlap test
+	
+      } // end this vertex
     
     LAROCV_DEBUG() << "Inferred " << vertex3d_v.as_vector().size() << " vertices" << std::endl;
     LAROCV_DEBUG() << "end" << std::endl;

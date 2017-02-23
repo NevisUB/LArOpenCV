@@ -38,6 +38,8 @@ namespace larocv {
     bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
 
   private:
+    AlgorithmID_t _track_vertex_algo_id;
+    AlgorithmID_t _shower_vertex_algo_id;
   };
 
   /**

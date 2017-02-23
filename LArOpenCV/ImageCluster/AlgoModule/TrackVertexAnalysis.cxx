@@ -32,7 +32,7 @@ namespace larocv {
     }
     
     _min_time_wire_3d = pset.get<double>("MinTimeWireDistance3D",3.0); //cm
-
+    
     //number of planes to have... 
     _required_xs_planes = pset.get<uint>("RequiredXsPlanes",2);
     //... this many crossing points
@@ -40,13 +40,12 @@ namespace larocv {
     
     Register(new data::Vertex3DArray);
   }
-
+  
   
   bool TrackVertexAnalysis::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
-
     const auto& track_vtx_data = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
-
+    
     std::vector<const data::Vertex3D*> wire_vtx_v;
     std::vector<const data::Vertex3D*> time_vtx_v;
     
@@ -77,6 +76,13 @@ namespace larocv {
     
     
     auto& vtx_data = AlgoData<data::Vertex3DArray>(0);
+
+    for(const auto time_vtx : time_vtx_v)
+      vtx_data.push_back(*time_vtx);
+    
+    for(const auto wire_vtx : wire_vtx_v)
+      vtx_data.push_back(*wire_vtx);
+    
     return true;
   }
    
