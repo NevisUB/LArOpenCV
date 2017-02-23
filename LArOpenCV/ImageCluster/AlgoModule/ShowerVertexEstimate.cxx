@@ -19,7 +19,7 @@ namespace larocv {
     auto algo_name_vertex_seed = pset.get<std::string>("ShowerVertexSeed");
     _algo_id_vertex_seed = this->ID( algo_name_vertex_seed );
 
-    auto algo_name_shower_from_track_vertex = pset.get<std::string>("ShowerFromTrackVertex","");
+    auto algo_name_shower_from_track_vertex = pset.get<std::string>("ShowerOnTrackEnd","");
     _algo_id_shower_track_vertex=kINVALID_ALGO_ID;
     if (!algo_name_shower_from_track_vertex.empty()) {
       _algo_id_shower_track_vertex = this->ID( algo_name_shower_from_track_vertex );
