@@ -1,5 +1,5 @@
-#ifndef __SHOWERFROMTRACKVERTEX_H__
-#define __SHOWERFROMTRACKVERTEX_H__
+#ifndef __SHOWERONTRACKEND_H__
+#define __SHOWERONTRACKEND_H__
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
@@ -9,17 +9,17 @@
 */
 namespace larocv {
  
-  class ShowerFromTrackVertex : public larocv::ImageAnaBase {
+  class ShowerOnTrackEnd : public larocv::ImageAnaBase {
     
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
-    ShowerFromTrackVertex(const std::string name = "ShowerFromTrackVertex") :
+    ShowerOnTrackEnd(const std::string name = "ShowerOnTrackEnd") :
       ImageAnaBase(name)
     {}
     
     /// Default destructor
-    ~ShowerFromTrackVertex(){}
+    ~ShowerOnTrackEnd(){}
     
     void Reset();
 
@@ -44,20 +44,21 @@ namespace larocv {
     LArPlaneGeo _geo;    
     double _overlap_fraction;
     double _circle_default_radius;
+    uint _pca_size;
   };
 
   /**
-     \class larocv::ShowerFromTrackVertexFactory
-     \brief A concrete factory class for larocv::ShowerFromTrackVertex
+     \class larocv::ShowerOnTrackEndFactory
+     \brief A concrete factory class for larocv::ShowerOnTrackEnd
    */
-  class ShowerFromTrackVertexFactory : public AlgoFactoryBase {
+  class ShowerOnTrackEndFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    ShowerFromTrackVertexFactory() { AlgoFactory::get().add_factory("ShowerFromTrackVertex",this); }
+    ShowerOnTrackEndFactory() { AlgoFactory::get().add_factory("ShowerOnTrackEnd",this); }
     /// dtor
-    ~ShowerFromTrackVertexFactory() {}
+    ~ShowerOnTrackEndFactory() {}
     /// create method
-    ImageClusterBase* create(const std::string instance_name) { return new ShowerFromTrackVertex(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new ShowerOnTrackEnd(instance_name); }
   };
   
 }

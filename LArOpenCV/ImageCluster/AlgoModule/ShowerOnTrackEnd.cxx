@@ -1,7 +1,7 @@
-#ifndef __SHOWERFROMTRACKVERTEX_CXX__
-#define __SHOWERFROMTRACKVERTEX_CXX__
+#ifndef __SHOWERONTRACKEND_CXX__
+#define __SHOWERONTRACKEND_CXX__
 
-#include "ShowerFromTrackVertex.h"
+#include "ShowerOnTrackEnd.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 #include "LArOpenCV/ImageCluster/AlgoData/TrackClusterCompound.h"
 #include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
@@ -10,17 +10,18 @@
 
 namespace larocv {
 
-  /// Global larocv::ShowerFromTrackVertexFactory to register AlgoFactory
-  static ShowerFromTrackVertexFactory __global_ShowerFromTrackVertexFactory__;
+  /// Global larocv::ShowerOnTrackEndFactory to register AlgoFactory
+  static ShowerOnTrackEndFactory __global_ShowerOnTrackEndFactory__;
 
-  void ShowerFromTrackVertex::Reset()
+  void ShowerOnTrackEnd::Reset()
   {}
   
-  void ShowerFromTrackVertex::_Configure_(const Config_t &pset) {
+  void ShowerOnTrackEnd::_Configure_(const Config_t &pset) {
 
     _overlap_fraction = 0.7;
 
     _circle_default_radius=10;
+    _pca_size = 5;
     
     _vertex3d_id = kINVALID_ALGO_ID;
     _compound_id = kINVALID_ALGO_ID;
@@ -46,7 +47,7 @@ namespace larocv {
     Register(new data::Vertex3DArray);
   }
 
-  void ShowerFromTrackVertex::_Process_(const larocv::Cluster2DArray_t& clusters,
+  void ShowerOnTrackEnd::_Process_(const larocv::Cluster2DArray_t& clusters,
 					const ::cv::Mat& img,
 					larocv::ImageMeta& meta,
 					larocv::ROI& roi)
@@ -54,7 +55,7 @@ namespace larocv {
     _geo.ResetPlaneInfo(meta);
   }
   
-  bool ShowerFromTrackVertex::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  bool ShowerOnTrackEnd::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
     LAROCV_DEBUG() << "start" << std::endl;
     auto num_planes = img_v.size();
@@ -87,10 +88,7 @@ namespace larocv {
       for(size_t plane=0; plane<num_planes; ++plane) {
 	auto compound_array = compound_v[plane];
 	auto ass_idx_v = ass_man.GetManyAss(vtx3d,compound_array->ID());
-
-	LAROCV_DEBUG() << "Got " << ass_idx_v.size()
-		       << " associated track compounds for vertex " << vtx3d_id
-		       << " on plane " << plane << std::endl;
+	
 	const auto& vtx2d = vtx3d.vtx2d_v[plane];
 	LAROCV_DEBUG() << "[plane " << plane << "] 2D vertex @ " << vtx2d.pt << std::endl;
 	for(auto const& compound_idx : ass_idx_v) {
@@ -118,9 +116,9 @@ namespace larocv {
 	LAROCV_DEBUG() << "number of planes " << n_valid_planes << " invalid" << std::endl;
 	continue;
       }
-
+      
       LAROCV_DEBUG() << "Detected compounds across " << n_valid_planes << " planes via Xs w/ shower pixels" << std::endl;
-      std::map<double,std::pair<size_t,size_t> >score_m;
+      std::map<double,std::pair<size_t,size_t> > score_m;
 	       
       for(size_t comp1_idx=0;comp1_idx<comp_shower_v.size();++comp1_idx) {
 	auto& comp1_p = comp_shower_v[comp1_idx];
@@ -139,7 +137,7 @@ namespace larocv {
 
 	  auto const& comp1_par_arr  = particle_v[comp1_pl];
 	  auto const& comp2_par_arr  = particle_v[comp2_pl];
-
+	  
 	  auto comp1_par_idx = ass_man.GetOneAss(comp1,comp1_par_arr->ID());
 	  auto comp2_par_idx = ass_man.GetOneAss(comp2,comp2_par_arr->ID());
 
@@ -149,11 +147,11 @@ namespace larocv {
 	  auto comp1_pts_v = FindNonZero(MaskImage(Threshold(img_v[comp1_pl],-1,255),comp1_par._ctor,0,false));
 	  auto comp2_pts_v = FindNonZero(MaskImage(Threshold(img_v[comp2_pl],-1,255),comp2_par._ctor,0,false)); 
 	  
-	  LAROCV_DEBUG() << "(" << comp1_idx << "," << comp2_idx << ") : ("
-			 << comp1_id << "," << comp2_id << ") : ("
-			 << comp1_pts_v.size() << "," << comp2_pts_v.size() << ") : ("
-			 << comp1_pl << "," << comp2_pl << ") : ("
-			 << comp1_par._ctor.size() << "," << comp2_par._ctor.size() << ")" << std::endl;
+	  LAROCV_DEBUG() << "(" << comp1_id << "," << comp2_id << ") : "
+			 << "(" << comp1_pts_v.size() << "," << comp2_pts_v.size() << ") : "
+			 << "(" << comp1_pl << "," << comp2_pl << ") : "
+			 << "(" << comp1_par._ctor.size() << "," << comp2_par._ctor.size() << ")"
+			 << std::endl;
 
 	  size_t overlap = 0;
 	  std::vector<bool> used_2(comp2_pts_v.size(),false);
@@ -169,10 +167,9 @@ namespace larocv {
 	      }
 	    }
 	  }
-	  LAROCV_DEBUG() << "Overlap " << overlap << std::endl;
-	  double frac = comp1_pts_v.size() > comp2_pts_v.size() ?
-	    (double)overlap / (double)comp2_pts_v.size():
-	    (double)overlap / (double)comp1_pts_v.size();
+	  LAROCV_DEBUG() << "Overlap is " << overlap << std::endl;
+	  double frac = (double) overlap / (double) std::min(comp1_pts_v.size(),
+							     comp2_pts_v.size());
 	  LAROCV_DEBUG() << "Coverage fraction is " << frac << std::endl;
 	  score_m[frac]=std::make_pair(comp1_idx,comp2_idx);
 	} //end comp2
@@ -185,45 +182,50 @@ namespace larocv {
 	vtx3d.type=3;
 	vtx3d.num_planes=2;
 
-	auto& comp1_p = comp_shower_v[max_score->second.first ];
-	auto& comp2_p = comp_shower_v[max_score->second.second];
+	auto comp1_id = max_score->second.first;
+	auto comp2_id = max_score->second.second;
+	
+	auto& comp1_p = comp_shower_v[comp1_id];
+	auto& comp2_p = comp_shower_v[comp2_id];
 
-	const auto& comp1 = compound_v[comp1_p.first]->as_vector()[comp1_p.second];
-	const auto& comp2 = compound_v[comp2_p.first]->as_vector()[comp2_p.second];
+	auto plane1 = comp1_p.first;
+	auto plane2 = comp2_p.first;
+	
+	const auto& comp1 = compound_v[plane1]->as_vector()[comp1_p.second];
+	const auto& comp2 = compound_v[plane2]->as_vector()[comp2_p.second];
+	
 	vtx3d.cvtx2d_v.resize(3);
 
-	auto& cvtx1 = vtx3d.cvtx2d_v[comp1_p.first];
-	auto& cvtx2 = vtx3d.cvtx2d_v[comp2_p.first];
-
+	auto& cvtx1 = vtx3d.cvtx2d_v[plane1];
+	auto& cvtx2 = vtx3d.cvtx2d_v[plane2];
+	
 	cvtx1.center = comp1.end_pt();
 	cvtx1.radius = _circle_default_radius;
 	
 	cvtx2.center = comp2.end_pt();
 	cvtx2.radius = _circle_default_radius;
 	  
-	auto xs1_v = QPointOnCircle(img_v[comp1_p.first],geo2d::Circle<float>(cvtx1.center,cvtx1.radius),10);
-	auto xs2_v = QPointOnCircle(img_v[comp2_p.first],geo2d::Circle<float>(cvtx2.center,cvtx2.radius),10);
+	auto xs1_v = QPointOnCircle(img_v[plane1],geo2d::Circle<float>(cvtx1.center,cvtx1.radius),10);
+	auto xs2_v = QPointOnCircle(img_v[plane2],geo2d::Circle<float>(cvtx2.center,cvtx2.radius),10);
 	
 	auto& ppca1 = cvtx1.xs_v;
 	auto& ppca2 = cvtx2.xs_v;
 
 	for(auto & xs1 : xs1_v) 
-	  ppca1.emplace_back(data::PointPCA(xs1,SquarePCA(img_v[comp1_p.first],xs1,5,5)));
+	  ppca1.emplace_back(data::PointPCA(xs1,SquarePCA(img_v[plane1],xs1,
+							  _pca_size,_pca_size)));
 
 	for(auto & xs2 : xs2_v) 
-	  ppca2.emplace_back(data::PointPCA(xs2,SquarePCA(img_v[comp2_p.first],xs2,5,5)));
+	  ppca2.emplace_back(data::PointPCA(xs2,SquarePCA(img_v[plane2],xs2,
+							  _pca_size,_pca_size)));
 	
 	LAROCV_DEBUG() << "Claimed..." << std::endl;
 	vertex3d_v.emplace_back(std::move(vtx3d));
 	LAROCV_WARNING() << "No association information set!" << std::endl;
       } // end overlap test
-    } // end these vertex.
-
-
-    LAROCV_DEBUG() << "Inferred " << vertex3d_v.as_vector().size() << std::endl;
-    for(const auto& vtx :  vertex3d_v.as_vector())
-      LAROCV_DEBUG() << "... id " << vtx.ID() << std::endl;
+    } // end this vertex
     
+    LAROCV_DEBUG() << "Inferred " << vertex3d_v.as_vector().size() << " vertices" << std::endl;
     LAROCV_DEBUG() << "end" << std::endl;
     return true;
   }
