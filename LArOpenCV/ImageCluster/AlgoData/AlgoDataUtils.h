@@ -42,6 +42,9 @@ namespace larocv {
 		       std::vector<const TrackClusterCompoundArray*> compound_v = std::vector<const TrackClusterCompoundArray*>()
 		       );
 
+    double
+    Distance(const Vertex3D& vtx1, const Vertex3D& vtx2);
+
   }
 }
 

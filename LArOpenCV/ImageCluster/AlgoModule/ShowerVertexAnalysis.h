@@ -1,5 +1,5 @@
-#ifndef __SHOWERANALYSIS_H__
-#define __SHOWERANALYSIS_H__
+#ifndef __SHOWERVERTEXANALYSIS_H__
+#define __SHOWERVERTEXANALYSIS_H__
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
@@ -8,17 +8,17 @@
 */
 namespace larocv {
  
-  class ShowerAnalysis : public larocv::ImageAnaBase {
+  class ShowerVertexAnalysis : public larocv::ImageAnaBase {
     
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
-    ShowerAnalysis(const std::string name = "ShowerAnalysis") :
+    ShowerVertexAnalysis(const std::string name = "ShowerVertexAnalysis") :
       ImageAnaBase(name)
     {}
     
     /// Default destructor
-    ~ShowerAnalysis(){}
+    ~ShowerVertexAnalysis(){}
     
     void Reset();
 
@@ -41,17 +41,17 @@ namespace larocv {
   };
 
   /**
-     \class larocv::ShowerAnalysisFactory
-     \brief A concrete factory class for larocv::ShowerAnalysis
+     \class larocv::ShowerVertexAnalysisFactory
+     \brief A concrete factory class for larocv::ShowerVertexAnalysis
    */
-  class ShowerAnalysisFactory : public AlgoFactoryBase {
+  class ShowerVertexAnalysisFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    ShowerAnalysisFactory() { AlgoFactory::get().add_factory("ShowerAnalysis",this); }
+    ShowerVertexAnalysisFactory() { AlgoFactory::get().add_factory("ShowerVertexAnalysis",this); }
     /// dtor
-    ~ShowerAnalysisFactory() {}
+    ~ShowerVertexAnalysisFactory() {}
     /// create method
-    ImageClusterBase* create(const std::string instance_name) { return new ShowerAnalysis(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new ShowerVertexAnalysis(instance_name); }
   };
   
 }

@@ -1,7 +1,7 @@
-#ifndef __TRACKANALYSIS_CXX__
-#define __TRACKANALYSIS_CXX__
+#ifndef __SHOWERVERTEXANALYSIS_CXX__
+#define __SHOWERVERTEXANALYSIS_CXX__
 
-#include "TrackAnalysis.h"
+#include "ShowerVertexAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 #include "LArOpenCV/ImageCluster/AlgoData/TrackClusterCompound.h"
 #include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
@@ -10,20 +10,19 @@
 
 namespace larocv {
 
-  /// Global larocv::TrackAnalysisFactory to register AlgoFactory
-  static TrackAnalysisFactory __global_TrackAnalysisFactory__;
+  /// Global larocv::ShowerVertexAnalysisFactory to register AlgoFactory
+  static ShowerVertexAnalysisFactory __global_ShowerVertexAnalysisFactory__;
 
-  void TrackAnalysis::Reset()
+  void ShowerVertexAnalysis::Reset()
   {}
   
-  void TrackAnalysis::_Configure_(const Config_t &pset) {
+  void ShowerVertexAnalysis::_Configure_(const Config_t &pset) {
     Register(new data::Vertex3DArray);
   }
 
   
-  bool TrackAnalysis::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  bool ShowerVertexAnalysis::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
-
     //decide on vertex
 
     

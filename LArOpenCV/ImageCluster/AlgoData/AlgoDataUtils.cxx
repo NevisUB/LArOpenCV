@@ -149,6 +149,14 @@ namespace larocv {
       
       return res_v;
     }
+
+    double
+    Distance(const Vertex3D& vtx1, const Vertex3D& vtx2) {
+      return std::sqrt(std::pow(vtx1.x-vtx2.x,2)+
+		       std::pow(vtx1.y-vtx2.y,2)+
+		       std::pow(vtx1.z-vtx2.z,2));
+    }
+    
   }
 }
 #endif

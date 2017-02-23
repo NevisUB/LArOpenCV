@@ -20,6 +20,7 @@
 #pragma link C++ class larocv::TrackVertexScan2D+;
 #pragma link C++ class larocv::TrackVertexScan2DPlaneInfo+;
 #pragma link C++ class larocv::OneTrackOneShower+;
+#pragma link C++ class larocv::VertexAnalysis+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
