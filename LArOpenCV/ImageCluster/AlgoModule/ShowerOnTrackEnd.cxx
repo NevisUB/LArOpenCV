@@ -105,7 +105,6 @@ namespace larocv {
 	  LAROCV_DEBUG() << "found  " << xs_pt_v.size()
 			 << " crossing points on circle @ " << circle.center << " w/ rad " << circle.radius << std::endl;
 	  if (xs_pt_v.empty()) continue;
-
 	  comp_shower_v.push_back({{plane,compound_idx}});
 	  valid_plane_v[plane] = true;
 	}
@@ -207,9 +206,9 @@ namespace larocv {
 	  auto plane_id = comp_p[0];
 	  LAROCV_DEBUG() << "Using id " << cid << " @ plane " << plane_id << std::endl;
 	  used_planes[plane_id]=true;
-	  const auto& comp1 = compound_v[plane_id]->as_vector()[comp_p[1]];
+	  const auto& comp = compound_v[plane_id]->as_vector()[comp_p[1]];
 	  auto& cvtx = vtx3d_f.cvtx2d_v[plane_id];
-	  cvtx.center = comp1.end_pt();
+	  cvtx.center = comp.end_pt();
 	  cvtx.radius = _circle_default_radius;
 	  auto xs_v = QPointOnCircle(img_v[plane_id],geo2d::Circle<float>(cvtx.center,cvtx.radius),10);
 	  auto& ppca_v = cvtx.xs_v;
@@ -221,14 +220,14 @@ namespace larocv {
 	    ppca_v.emplace_back(ppca);
 	  }
 	}
-
+	
 	// handle many plane case....
 	if (n_valid_planes==3) {
 	  double highest_score_0 = -1;
 	  double highest_score_1 = -1;
 	  std::array<size_t,2> highest_pair_0;
 	  std::array<size_t,2> highest_pair_1;
-
+	  
 	  const auto high0 = highest_pair[0];
 	  const auto high1 = highest_pair[1];
 	  
@@ -243,28 +242,28 @@ namespace larocv {
 	    //the first one is here, but second is not
 	    if ((high0==this0 or high0==this1) and
 		(high1!=this0 and high1!=this1)) {
-		  if (score.second>highest_score_0) {
-		    highest_pair_0  = score.first;
-		    highest_score_0 = score.second;
-		  }
+	      if (score.second>highest_score_0) {
+		highest_pair_0  = score.first;
+		highest_score_0 = score.second;
+	      }
 	    }
-
+	    
 	    //the second one is here, but first is not
 	    if ((high1==this0 or high1==this1) and
 		(high0!=this0 and high0!=this1)) {
-		  if (score.second>highest_score_1) {
-		    highest_pair_1  = score.first;
-		    highest_score_1 = score.second;
-		  }
+	      if (score.second>highest_score_1) {
+		highest_pair_1  = score.first;
+		highest_score_1 = score.second;
+	      }
 	    }
 	    
 	  }
-
-
+	  
+	  
 	  LAROCV_DEBUG() << "Got highest scores for both chosen pair (" << high0 << "," << high1 << ")" << std::endl;
 	  LAROCV_DEBUG() << high0 << " in pair (" << highest_pair_0[0] << "," << highest_pair_0[1] << ") w/ score " << highest_score_0 << std::endl;
 	  LAROCV_DEBUG() << high1 << " in pair (" << highest_pair_1[0] << "," << highest_pair_1[1] << ") w/ score " << highest_score_1 << std::endl;
-
+	  
 	  auto chosen_pair = highest_score_0>highest_score_1 ? highest_pair_0 : highest_pair_1;
 	  LAROCV_DEBUG() << "... chose pair (" << chosen_pair[0] << "," << chosen_pair[1] << ") --> adding additional plane" << std::endl;
 	  auto chosen_id = kINVALID_SIZE;
@@ -272,15 +271,15 @@ namespace larocv {
 	  if (chosen_pair[1] == high0 or chosen_pair[1] == high1) chosen_id = chosen_pair[0];
 	  if (chosen_id == kINVALID_SIZE)
 	    throw larbys("Fucked");
-
+	  
 	  vtx3d_f.num_planes=3;
 	  auto& comp_p = comp_shower_v[chosen_id];
 	  auto plane_id = comp_p[0];
 	  LAROCV_DEBUG() << "Using id " << chosen_id << " @ plane " << plane_id << std::endl;
 	  used_planes[plane_id]=true;
-	  const auto& comp1 = compound_v[plane_id]->as_vector()[comp_p[1]];
+	  const auto& comp = compound_v[plane_id]->as_vector()[comp_p[1]];
 	  auto& cvtx = vtx3d_f.cvtx2d_v[plane_id];
-	  cvtx.center = comp1.end_pt();
+	  cvtx.center = comp.end_pt();
 	  cvtx.radius = _circle_default_radius;
 	  auto xs_v = QPointOnCircle(img_v[plane_id],geo2d::Circle<float>(cvtx.center,cvtx.radius),10);
 	  auto& ppca_v = cvtx.xs_v;
@@ -291,23 +290,22 @@ namespace larocv {
 	    ppca = data::PointPCA(xs,line);
 	    ppca_v.emplace_back(ppca);
 	  }
-
+	  
 	}
-
+	
 	LAROCV_DEBUG() << "Claimed..." << std::endl;
 	
 	vertex3d_v.emplace_back(std::move(vtx3d_f));
 	AssociateOne(vtx3d,vertex3d_v.as_vector().back());
 	LAROCV_WARNING() << "No association information set!" << std::endl;
-	} // end overlap test
-	
-      } // end this vertex
+      } // end overlap test
+    } // end this vertex
     
     LAROCV_DEBUG() << "Inferred " << vertex3d_v.as_vector().size() << " vertices" << std::endl;
     LAROCV_DEBUG() << "end" << std::endl;
     return true;
   }
-   
+  
 }
 #endif
 
