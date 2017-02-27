@@ -4,6 +4,7 @@
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/VertexAnalysis.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
 
 /*
   @brief: analyze track vertex
@@ -41,6 +42,8 @@ namespace larocv {
 
   private:
     VertexAnalysis _vertexana;
+    AtomicAnalysis _atomicanalysis;
+    
 
     AlgorithmID_t _track_vertex_algo_id;
     AlgorithmID_t _track_particle_algo_id;

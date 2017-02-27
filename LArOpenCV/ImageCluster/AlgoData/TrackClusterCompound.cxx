@@ -42,13 +42,13 @@ namespace larocv {
     void AtomicContour::set_start(geo2d::Vector<float> start)
     { _start = start; }
     
-    geo2d::Vector<float> AtomicContour::start_pt()
+    geo2d::Vector<float>& AtomicContour::start_pt()
     { return _start; }
     
     void AtomicContour::set_end(geo2d::Vector<float> end)
     { _end = end; }
     
-    geo2d::Vector<float> AtomicContour::end_pt()
+    geo2d::Vector<float>& AtomicContour::end_pt()
     { return _end; }
     
     void AtomicContour::add_edge(geo2d::Vector<float>& edge)

@@ -4,6 +4,7 @@
 #include "TrackVertexAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
+#include "LArOpenCV/ImageCluster/AlgoData/TrackClusterCompound.h"
 
 namespace larocv {
 
@@ -48,7 +49,8 @@ namespace larocv {
     
     std::vector<const data::Vertex3D*> wire_vtx_v;
     std::vector<const data::Vertex3D*> time_vtx_v;
-    
+    std::vector<const data::Vertex3D*> vtx_v;
+
     for(const auto& vtx3d : track_vtx_data.as_vector()) {
       if (vtx3d.type==0) time_vtx_v.push_back(&vtx3d);
       else if (vtx3d.type==1) wire_vtx_v.push_back(&vtx3d);
@@ -74,14 +76,38 @@ namespace larocv {
 		   << "[wire] " << wire_vtx_v.size()
 		   << " [time] " << time_vtx_v.size() << std::endl;
     
-    
+
+    for (const auto vtx: wire_vtx_v)
+      vtx_v.push_back(vtx);
+    for (const auto vtx: time_vtx_v)
+      vtx_v.push_back(vtx);
+
+
+    auto & assman = AssManager();
+
+    for (const auto vtx3d:vtx_v){
+  
+      for (uint p_id =0;p_id <3;p_id++){
+
+	auto& track_cluster_data = AlgoData<data::TrackClusterCompoundArray>(_track_vertex_algo_id,3+p_id);
+	auto ass_idx_v = assman.GetManyAss(*vtx3d, track_cluster_data.ID());
+	for (auto compound_id : ass_idx_v){
+	  auto& compound = track_cluster_data.as_vector()[compound_id];
+	  for (auto atomic : compound){
+	    auto pca = CalcPCA(atomic);
+	    auto dqdx = _atomicanalysis.AtomdQdX(img_v[p_id], atomic, pca, atomic.start_pt(), atomic.end_pt());
+	    atomic.set_dqdx(dqdx);
+	    LAROCV_DEBUG()<<'size of dqdx is '<<dqdx.size()<<std::endl;
+	  }
+	}
+      }
+    }
+
     auto& vtx_data = AlgoData<data::Vertex3DArray>(0);
 
-    for(const auto time_vtx : time_vtx_v)
-      vtx_data.push_back(*time_vtx);
+    for(const auto vtx : vtx_v)
+      vtx_data.push_back(*vtx);
     
-    for(const auto wire_vtx : wire_vtx_v)
-      vtx_data.push_back(*wire_vtx);
     
     return true;
   }

@@ -64,11 +64,11 @@ namespace larocv {
       /// start point setter
       void set_start(geo2d::Vector<float> start);
       /// start point getter
-      geo2d::Vector<float> start_pt();
+      geo2d::Vector<float>& start_pt();
       /// end point setter
       void set_end(geo2d::Vector<float> end);
       /// end point getter
-      geo2d::Vector<float> end_pt();
+      geo2d::Vector<float>& end_pt();
       
     private:
       /// unique atomic cluster id
