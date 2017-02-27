@@ -86,18 +86,19 @@ namespace larocv {
     auto & assman = AssManager();
 
     for (const auto vtx3d:vtx_v){
-  
+      LAROCV_DEBUG()<<"vtx3d..."<<vtx3d<<std::endl;
       for (uint p_id =0;p_id <3;p_id++){
-
-	auto& track_cluster_data = AlgoData<data::TrackClusterCompoundArray>(_track_vertex_algo_id,3+p_id);
+	LAROCV_DEBUG()<<"plane..."<<p_id<<std::endl;
+	auto& track_cluster_data = AlgoData<data::TrackClusterCompoundArray>(_track_particle_algo_id,3+p_id);
 	auto ass_idx_v = assman.GetManyAss(*vtx3d, track_cluster_data.ID());
+	LAROCV_DEBUG() << "Found " << ass_idx_v.size() << " associated track cluster compounds " << std::endl;
 	for (auto compound_id : ass_idx_v){
 	  auto& compound = track_cluster_data.as_vector()[compound_id];
 	  for (auto atomic : compound){
 	    auto pca = CalcPCA(atomic);
 	    auto dqdx = _atomicanalysis.AtomdQdX(img_v[p_id], atomic, pca, atomic.start_pt(), atomic.end_pt());
 	    atomic.set_dqdx(dqdx);
-	    LAROCV_DEBUG()<<'size of dqdx is '<<dqdx.size()<<std::endl;
+	    LAROCV_DEBUG()<<"size of dqdx is :"<<dqdx.size()<<std::endl;
 	  }
 	}
       }
