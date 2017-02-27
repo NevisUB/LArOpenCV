@@ -33,49 +33,49 @@ namespace larocv {
 
     //break contour --> create atomics
     larocv::data::TrackClusterCompound
-    BreakContour(const GEO2D_Contour_t& in_ctor);
+    BreakContour(const GEO2D_Contour_t& in_ctor) const;
 
   private:
     
     cv::Vec4i
     max_hull_edge(const GEO2D_Contour_t& ctor,
-		  std::vector<cv::Vec4i> defects);
+		  std::vector<cv::Vec4i> defects) const;
     
     bool
     on_line(const geo2d::Line<float>& line,
-	    cv::Point pt);
+	    cv::Point pt) const;
     
     void
     split_contour(const GEO2D_Contour_t& ctor,
 		  GEO2D_Contour_t& ctor1,
 		  GEO2D_Contour_t& ctor2,
-		  const geo2d::Line<float>& line);
+		  const geo2d::Line<float>& line) const;
     
     void
     fill_hull_and_defects(const GEO2D_Contour_t& ctor,
 			  std::vector<int>& hullpts,
 			  std::vector<cv::Vec4i>& defects,
-			  std::vector<float>& defects_d);
+			  std::vector<float>& defects_d) const;
 
     void
     filter_defects(std::vector<cv::Vec4i>& defects,
 		   std::vector<float>& defects_d,
-		   float min_defect_size);
+		   float min_defect_size) const;
     
     geo2d::Line<float>
     find_line_hull_defect(const GEO2D_Contour_t& ctor,
-			  cv::Vec4i defect);
+			  cv::Vec4i defect) const;
     
     geo2d::Line<float>
     scan_breaker(const GEO2D_Contour_t& ctor,
-		 cv::Vec4i defect);
+		 cv::Vec4i defect) const;
 
     void
     AssociateDefects(const data::TrackClusterCompound& cluscomp,
 		     const data::AtomicContour& parent,
 		     const data::ContourDefect& defect,
 		     data::AtomicContour& child1,
-		     data::AtomicContour& child2);
+		     data::AtomicContour& child2) const;
     
     
   private:

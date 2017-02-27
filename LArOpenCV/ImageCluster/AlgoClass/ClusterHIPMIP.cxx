@@ -76,21 +76,14 @@ namespace larocv {
     LAROCV_DEBUG() << "MIP level: " << MIP_LEVEL << "... HIP level: " << HIP_LEVEL << std::endl;
     
     //Threshold the input image to certain ADC value, this is our MIP
-    threshold(mod_img_m, _mip_thresh_m, MIP_LEVEL,255,0);
+    cv::threshold(mod_img_m, _mip_thresh_m, MIP_LEVEL,255,0);
 
     //Threshold the input image to HIP ADC value, this is our HIP
-    threshold(mod_img_m, _hip_thresh_m, HIP_LEVEL,255,0);
+    cv::threshold(mod_img_m, _hip_thresh_m, HIP_LEVEL,255,0);
     LAROCV_DEBUG() << "Thresholded HIP" << std::endl;
 
     //HIP contour finding
-    std::vector<cv::Vec4i> hip_cv_hierarchy_v;
-    hip_cv_hierarchy_v.clear();
-    
-    cv::findContours(_hip_thresh_m,
-		     hip_ctor_v,
-		     hip_cv_hierarchy_v,
-		     CV_RETR_EXTERNAL,
-		     CV_CHAIN_APPROX_SIMPLE);
+    hip_ctor_v = FindContours(_hip_thresh_m);
 
     LAROCV_DEBUG() << "Found " << hip_ctor_v.size() << " hip contours"  << std::endl;
 
@@ -120,30 +113,16 @@ namespace larocv {
 				   true);                //yes, mask
     
     // mip contour finding
-    std::vector<cv::Vec4i> mip_cv_hierarchy_v;
-    mip_cv_hierarchy_v.clear();
-    
-    cv::findContours(_mip_thresh_m,
-		     mip_ctor_v,
-		     mip_cv_hierarchy_v,
-		     CV_RETR_EXTERNAL,
-		     CV_CHAIN_APPROX_SIMPLE);
-
+    mip_ctor_v = FindContours(_mip_thresh_m);
 
     LAROCV_DEBUG() << "Found " << mip_ctor_v.size() << " MIP contours"<< std::endl;
     
     // masked mip contour finding
-    std::vector<cv::Vec4i> mip_cv_hierarchy_mask_v;
-    mip_cv_hierarchy_mask_v.clear();
 
     LAROCV_DEBUG() << "Found " << mip_ctor_v.size() << " masked MIP contours"<< std::endl;
-    
-    cv::findContours(_mip_thresh_mask_m,
-		     mip_ctor_mask_v,
-		     mip_cv_hierarchy_mask_v,
-		     CV_RETR_EXTERNAL,
-		     CV_CHAIN_APPROX_SIMPLE);
-    
+
+    mip_ctor_mask_v = FindContours(_mip_thresh_mask_m);
+
     //Filter the MIP contours to a minimum size
 
     // mips

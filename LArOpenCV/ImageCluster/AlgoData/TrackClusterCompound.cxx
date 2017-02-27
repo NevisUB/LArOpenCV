@@ -32,11 +32,29 @@ namespace larocv {
 
     const geo2d::Line<float>& AtomicContour::pca()
       { return _pca; }
+
+    void AtomicContour::set_dqdx(const std::vector<float>& dqdx)
+    { _dqdx_v = dqdx;}
+    
+    const std::vector<float>& AtomicContour::dqdx()
+    { return _dqdx_v; }
+
+    void AtomicContour::set_start(geo2d::Vector<float> start)
+    { _start = start; }
+    
+    geo2d::Vector<float> AtomicContour::start_pt()
+    { return _start; }
+    
+    void AtomicContour::set_end(geo2d::Vector<float> end)
+    { _end = end; }
+    
+    geo2d::Vector<float> AtomicContour::end_pt()
+    { return _end; }
     
     void AtomicContour::add_edge(geo2d::Vector<float>& edge)
     { _edges_v.push_back(edge); }
     
-    std::vector<geo2d::Vector<float>>& AtomicContour::edges()
+    std::vector<geo2d::Vector<float> >& AtomicContour::edges()
     { return _edges_v; }
 
 
@@ -147,6 +165,11 @@ namespace larocv {
     { return _ctor_defect_v; }
     
     const AtomicContour& TrackClusterCompound::get_atom(size_t id) const
+    {
+      if(id >= this->size()) throw larbys("Invalid atomic id requested");
+      return this->at(id);
+    }
+    AtomicContour& TrackClusterCompound::get_atomic(size_t id)
     {
       if(id >= this->size()) throw larbys("Invalid atomic id requested");
       return this->at(id);

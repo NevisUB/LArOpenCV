@@ -8,6 +8,7 @@
 #include <map>
 #include <array>
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
+#include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 
 namespace larocv {
 
@@ -21,6 +22,9 @@ namespace larocv {
     _seed_plane_v = pset.get<std::vector<size_t> >("SeedPlane");
     
     _edges_from_mean = pset.get<bool>("EdgesFromMean",true);
+    _break_linear_tracks = pset.get<bool>("BreakLinearTracks",false);
+    if (_break_linear_tracks)
+      _DefectBreaker.Configure(pset.get<Config_t>("DefectBreaker"));
     
     for(auto const& plane : _seed_plane_v) {
       if(plane >= _seed_plane_v.size()) {
@@ -180,25 +184,56 @@ namespace larocv {
   std::vector<larocv::data::LinearTrack2D>
   SingleLinearTrack::FindLinearTrack2D(const size_t plane, const cv::Mat& img) const
   {
-    // NOTE: this is just MIP contour finding from HIPCluster.cxx
-    // NOTE: replace this with getting HIPCluster algo data
-    
-    // Prepare image for analysis per vertex
     ::cv::Mat thresh_img;
-    //::cv::threshold(thresh_img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
     
     //Dilate
     auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,::cv::Size(2,2));
-    ::cv::dilate(img,thresh_img,kernel,::cv::Point(-1,-1),1);
+    cv::dilate(img,thresh_img,kernel,::cv::Point(-1,-1),1);
     
     //Blur
-    ::cv::blur(thresh_img,thresh_img,::cv::Size(2,2));
-
-    ::cv::threshold(thresh_img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
+    cv::blur(thresh_img,thresh_img,::cv::Size(2,2));
     
-    GEO2D_ContourArray_t parent_ctor_v;
-    std::vector<::cv::Vec4i> cv_hierarchy_v;
-    ::cv::findContours(thresh_img, parent_ctor_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    thresh_img = Threshold(thresh_img, _pi_threshold, 1);
+
+    auto parent_ctor_v = FindContours(thresh_img);
+
+    GEO2D_ContourArray_t parent_ctor_temp_v;
+    parent_ctor_temp_v.reserve(parent_ctor_v.size());
+    
+    // optionally break contours
+    if ( _break_linear_tracks )  {
+      LAROCV_DEBUG() << "Broke " << parent_ctor_v.size() << " linear tracks..." << std::endl;
+
+      for (auto& ctor : parent_ctor_v) {
+	// if contour is larger than size 2
+	if (ctor.size() > 2) {
+	  LAROCV_DEBUG() << "... ctor size " << ctor.size() << std::endl;
+	  //attempt breaking
+	  auto cluscomp  = _DefectBreaker.BreakContour(ctor);
+	  LAROCV_DEBUG() << "... ... broken into " << cluscomp.size() << std::endl;
+	  for(auto& atomic : cluscomp) 
+	    parent_ctor_temp_v.emplace_back(std::move(atomic));
+
+	  //this contour was broken into two, keep the original contour
+	  if (cluscomp.size()>1) {
+	    LAROCV_DEBUG() << "... keeping original contour size " << ctor.size() << std::endl;
+	    parent_ctor_temp_v.emplace_back(ctor);
+	  }
+	  
+	}
+	// too small to break, put it in anyways
+	else  {
+	  LAROCV_DEBUG() << "Too small! saving contour of size " << ctor.size() << std::endl;
+	  parent_ctor_temp_v.emplace_back(std::move(ctor));
+	}
+
+      }
+      
+      LAROCV_DEBUG() << "... into " << parent_ctor_temp_v.size() << " tracks." << std::endl;
+      std::swap(parent_ctor_temp_v,parent_ctor_v);
+    }
+    
+    
     LAROCV_INFO() << "Plane " << plane << " found " << parent_ctor_v.size() << " LinearTrack2D candidates..." << std::endl;
     std::vector<larocv::data::LinearTrack2D> result_v;
     for(auto const& ctor : parent_ctor_v) {

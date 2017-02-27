@@ -33,7 +33,7 @@ namespace larocv {
 		       const geo2d::Vector<float>& point) const;
     
     geo2d::Vector<float>
-    ChooseStartPoint(data::TrackClusterCompound& cluscomp);
+    ChooseStartPoint(data::TrackClusterCompound& cluscomp) const;
     
     std::vector<size_t>
     OrderAtoms(const data::TrackClusterCompound& cluster,
@@ -52,7 +52,7 @@ namespace larocv {
 
     void
     RefineAtomicEndPoint(const cv::Mat& mat,
-			 data::AtomicContour& atomic);
+			 data::AtomicContour& atomic) const;
     
     inline const larocv::logger& logger() const
     { return *_logger; }

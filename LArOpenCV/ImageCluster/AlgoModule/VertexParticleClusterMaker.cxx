@@ -121,13 +121,22 @@ namespace larocv {
 
 	// if defect is requested, let's make here
 	if(_create_compound) {
-	  auto const& particle = par_data.as_vector().back();
+	  auto& particle = par_data.as_vector().back();
 	  // Create cluster compound
 	  auto cluscomp = _DefectBreaker.BreakContour(particle._ctor);
 	  // Order the atomics
 	  auto const ordered_atom_id_v = _AtomicAnalysis.OrderAtoms(cluscomp,circle_vtx.center);
 	  // Determine edges
 	  auto atom_edges_v = _AtomicAnalysis.AtomsEdge(cluscomp, circle_vtx.center, ordered_atom_id_v);
+	  // set start and end point per atomic
+	  for(auto atom_id : ordered_atom_id_v) {
+	    auto& atom = cluscomp.get_atomic(atom_id);
+	    auto& start_end = atom_edges_v[atom_id];
+	    atom.set_start(start_end.first);
+	    atom.set_end(start_end.second);
+	  }
+	  // set the atomic order
+	  cluscomp.set_atomic_order(ordered_atom_id_v);
 	  // Get the farthest edge
 	  auto& last_start_end = atom_edges_v.at(ordered_atom_id_v.back());
 	  // Set the edge

@@ -5,6 +5,7 @@
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/AlgoData/LinearTrack.h"
 #include "LArPlaneGeo.h"
+#include "DefectBreaker.h"
 
 /*
   @brief: find compatible 2D edge points across planes to create 3D edge points
@@ -61,11 +62,12 @@ namespace larocv {
     void FindLinearTrack(const std::vector<std::vector<larocv::data::LinearTrack2D> >& strack_vv);
 
     LArPlaneGeo _geo;
+    DefectBreaker _DefectBreaker;
+    bool _break_linear_tracks;
     bool _edges_from_mean;
     float _minimum_neighbor_distance;
     size_t _num_planes;
     AlgorithmID_t _algo_id_part;
-    //float  _part_pxfrac_threshold;
     size_t _min_size_track_ctor;
     float  _min_length_track_ctor;
     float  _pi_threshold;

@@ -57,7 +57,19 @@ namespace larocv {
       void set_pca(const geo2d::Line<float>& line);
       /// pca line getter
       const geo2d::Line<float>& pca();
-
+      /// dqdx setter
+      void set_dqdx(const std::vector<float>& dqdx);
+      /// dqdx getter 
+      const std::vector<float>& dqdx();
+      /// start point setter
+      void set_start(geo2d::Vector<float> start);
+      /// start point getter
+      geo2d::Vector<float> start_pt();
+      /// end point setter
+      void set_end(geo2d::Vector<float> end);
+      /// end point getter
+      geo2d::Vector<float> end_pt();
+      
     private:
       /// unique atomic cluster id
       size_t _atomic_id;
@@ -67,6 +79,12 @@ namespace larocv {
       std::vector<geo2d::Vector<float> > _edges_v;
       /// pca line
       geo2d::Line<float> _pca;
+      /// dqdx
+      std::vector<float> _dqdx_v;
+      /// start
+      geo2d::Vector<float> _start;
+      /// end
+      geo2d::Vector<float> _end;
     };
     
     class ContourDefect {
@@ -142,6 +160,8 @@ namespace larocv {
       const std::vector<larocv::data::ContourDefect>& get_defects() const;
       /// retrieve an atomic cluster by id
       const larocv::data::AtomicContour& get_atom(size_t id) const;
+      /// retrieve an atomic cluster by id
+      larocv::data::AtomicContour& get_atomic(size_t id);
       /// retrieve a defect by id
       const larocv::data::ContourDefect& get_defect(size_t id) const;
       /// sets the end point

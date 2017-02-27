@@ -227,7 +227,7 @@ namespace larocv {
   
   
   geo2d::Vector<float>
-  AtomicAnalysis::ChooseStartPoint(data::TrackClusterCompound& cluscomp) {
+  AtomicAnalysis::ChooseStartPoint(data::TrackClusterCompound& cluscomp) const {
     
     geo2d::Vector<float> start(kINVALID_FLOAT,kINVALID_FLOAT);
     
@@ -431,7 +431,7 @@ namespace larocv {
     return dqdx;
   }
 
-  void AtomicAnalysis::RefineAtomicEndPoint(const cv::Mat& img, data::AtomicContour& atom) {
+  void AtomicAnalysis::RefineAtomicEndPoint(const cv::Mat& img, data::AtomicContour& atom) const {
     cv::Mat thresh_img;
     ::cv::threshold(img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
     std::vector<geo2d::Vector<int> > nonzero_pts;

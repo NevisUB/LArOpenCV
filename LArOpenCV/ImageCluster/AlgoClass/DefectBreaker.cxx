@@ -19,7 +19,7 @@ namespace larocv {
   }
   
   cv::Vec4i DefectBreaker::max_hull_edge(const GEO2D_Contour_t& ctor,
-					 std::vector<cv::Vec4i> defects) {
+					 std::vector<cv::Vec4i> defects) const {
     
     float max_dist = -1;
     int max_idx    = -1;
@@ -48,7 +48,7 @@ namespace larocv {
   void DefectBreaker::split_contour(const GEO2D_Contour_t& ctor,
 				    GEO2D_Contour_t& ctor1,
 				    GEO2D_Contour_t& ctor2,
-				    const geo2d::Line<float>& line) {
+				    const geo2d::Line<float>& line) const {
     LAROCV_DEBUG() << "Attempting contour split with line pt: " << line.pt << "... dir: " << line.dir << std::endl;
 
     //get the two intersection points of this contour and this line
@@ -253,7 +253,7 @@ namespace larocv {
   void DefectBreaker::fill_hull_and_defects(const GEO2D_Contour_t& ctor,
 					    std::vector<int>& hullpts,
 					    std::vector<cv::Vec4i>& defects,
-					    std::vector<float>& defects_d) {
+					    std::vector<float>& defects_d) const {
     
     //Make this hull
     ::cv::convexHull(ctor, hullpts);
@@ -273,7 +273,7 @@ namespace larocv {
   }
   void DefectBreaker::filter_defects(std::vector<cv::Vec4i>& defects,
 				     std::vector<float>& defects_d,
-				     float min_defect_size){
+				     float min_defect_size) const{
     
     std::vector<cv::Vec4i> defects_tmp;
     defects_tmp.reserve(defects.size());
@@ -290,7 +290,7 @@ namespace larocv {
     std::swap(defects_tmp  ,defects);
     std::swap(defects_d_tmp,defects_d);
   }
-  geo2d::Line<float> DefectBreaker::find_line_hull_defect(const GEO2D_Contour_t& ctor, cv::Vec4i defect_info) {
+  geo2d::Line<float> DefectBreaker::find_line_hull_defect(const GEO2D_Contour_t& ctor, cv::Vec4i defect_info) const{
     
     //number of points in contour
     int pts_c = ctor.size();
@@ -444,7 +444,7 @@ namespace larocv {
     return geo2d::Line<float>(geo2d::Vector<float>(0,yinter),
 			      geo2d::Vector<float>(1,dir));
   }
-  geo2d::Line<float> DefectBreaker::scan_breaker(const GEO2D_Contour_t& ctor, cv::Vec4i defect_info) {
+  geo2d::Line<float> DefectBreaker::scan_breaker(const GEO2D_Contour_t& ctor, cv::Vec4i defect_info) const{
     
     //number of points in contour
     int pts_c = ctor.size();
@@ -603,7 +603,7 @@ namespace larocv {
 				       const data::AtomicContour& parent,
 				       const data::ContourDefect& defect,
 				       data::AtomicContour& child1,
-				       data::AtomicContour& child2)
+				       data::AtomicContour& child2) const
   {
     
     if(this->logger().level() <= msg::kDEBUG) {
@@ -717,13 +717,9 @@ namespace larocv {
     }    
     return;
   }
-
-
-
-
   
   larocv::data::TrackClusterCompound
-  DefectBreaker::BreakContour(const larocv::GEO2D_Contour_t& in_ctor) {
+  DefectBreaker::BreakContour(const larocv::GEO2D_Contour_t& in_ctor) const{
     
     ////////////////////////////////////////////
     // Take a single contour, find the defect on the side with 
