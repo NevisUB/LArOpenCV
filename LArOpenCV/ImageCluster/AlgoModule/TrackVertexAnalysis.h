@@ -50,6 +50,7 @@ namespace larocv {
     float _min_time_wire_3d;
     uint _required_xs_planes;
     uint _required_xs;
+    bool _compute_dqdx;
     
   };
 

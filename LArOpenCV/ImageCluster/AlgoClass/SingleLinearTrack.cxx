@@ -171,9 +171,9 @@ namespace larocv {
   
   
   void SingleLinearTrack::FindEdges(const cv::Mat& img,
-				     const GEO2D_Contour_t& ctor,
-				     geo2d::Vector<float>& edge1,
-				     geo2d::Vector<float>& edge2) const
+				    const GEO2D_Contour_t& ctor,
+				    geo2d::Vector<float>& edge1,
+				    geo2d::Vector<float>& edge2) const
   {
     if (_edges_from_mean)
       EdgesFromMeanValue(ctor,edge1,edge2);
@@ -210,9 +210,11 @@ namespace larocv {
 	  LAROCV_DEBUG() << "... ctor size " << ctor.size() << std::endl;
 	  //attempt breaking
 	  auto cluscomp  = _DefectBreaker.BreakContour(ctor);
-	  LAROCV_DEBUG() << "... ... broken into " << cluscomp.size() << std::endl;
-	  for(auto& atomic : cluscomp) 
+	  LAROCV_DEBUG() << "... broken into " << cluscomp.size() << std::endl;
+	  for(auto& atomic : cluscomp) {
+	    LAROCV_DEBUG() << "... ... atomic size " << atomic.size() << std::endl;
 	    parent_ctor_temp_v.emplace_back(std::move(atomic));
+	  }
 
 	  //this contour was broken into two, keep the original contour
 	  if (cluscomp.size()>1) {
@@ -232,7 +234,6 @@ namespace larocv {
       LAROCV_DEBUG() << "... into " << parent_ctor_temp_v.size() << " tracks." << std::endl;
       std::swap(parent_ctor_temp_v,parent_ctor_v);
     }
-    
     
     LAROCV_INFO() << "Plane " << plane << " found " << parent_ctor_v.size() << " LinearTrack2D candidates..." << std::endl;
     std::vector<larocv::data::LinearTrack2D> result_v;

@@ -81,7 +81,6 @@ namespace larocv {
   PrinciplePCA(const cv::Mat& row_mat,
 	       float EPS=0);
   
-  
   double
   AreaOverlap(const GEO2D_Contour_t& ctr0,
 	      const GEO2D_Contour_t& ctr1);
@@ -93,7 +92,7 @@ namespace larocv {
   size_t
   FindContainingContour(const GEO2D_ContourArray_t& contour_v,
 			const geo2d::Vector<float>& pt);
-  
+
   double
   PixelFraction(const cv::Mat& img,
 		const GEO2D_Contour_t& super_ctor,
