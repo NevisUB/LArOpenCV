@@ -75,6 +75,7 @@ namespace larocv {
     _mask_min_radius            = pset.get<float>("MaskMinRadius",3);
     _merge_by_mask              = pset.get<bool>("MergeByMask",true);
     _refine_cartesian_thickness = pset.get<uint>("RefineCartesianThickness",2);
+    _reset_xs                   = pset.get<bool>("ResetXs",false);
   }
 
   GEO2D_ContourArray_t
@@ -90,6 +91,8 @@ namespace larocv {
     
     LAROCV_DEBUG() << std::endl;
     _prange.set_verbosity(logger().level());
+    
+    auto cvtx2d = vtx2d;
     
     GEO2D_ContourArray_t res;
     
@@ -110,16 +113,35 @@ namespace larocv {
     ::cv::dilate(thresh_img,blur_img,kernel,::cv::Point(-1,-1),_dilation_iter);
     ::cv::blur(blur_img,blur_img,::cv::Size(_blur_size,_blur_size));
     */
-
+    
     // Create seed clusters
-    LAROCV_DEBUG() << "Masking region @ " << vtx2d.center << " rad: " << vtx2d.radius << std::endl;
+    LAROCV_DEBUG() << "Masking region @ " << cvtx2d.center << " rad: " << cvtx2d.radius << std::endl;
+    
+    geo2d::Circle<float> mask_region(cvtx2d.center,cvtx2d.radius);
 
-    geo2d::Circle<float> mask_region(vtx2d.center,vtx2d.radius);
+    if (_reset_xs) {
+      LAROCV_DEBUG() << "Requested to recompute XS" << std::endl;
 
+      if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	LAROCV_DEBUG() << "Current Xs ("<<cvtx2d.xs_v.size()<<")..."<<std::endl;
+	for(const auto& xs : cvtx2d.xs_v)
+	  LAROCV_DEBUG() << "... " << xs.pt << std::endl; 
+      }
+      cvtx2d.xs_v.clear();
+      for(auto& xs : QPointOnCircle(img,mask_region,10))
+	cvtx2d.xs_v.emplace_back(xs,geo2d::Line<float>());
+      
+      if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	LAROCV_DEBUG() << "Updated Xs ("<<cvtx2d.xs_v.size()<<")..."<<std::endl;
+	for(const auto& xs : cvtx2d.xs_v)
+	  LAROCV_DEBUG() << "... " << xs.pt << std::endl; 
+      }
+    }
+    
     auto img_circle = MaskImage(thresh_img, mask_region, 0, false);
     
     // Create seed clusters
-    _seed_cluster_v = ParticleHypothesis(img_circle,vtx2d);
+    _seed_cluster_v = ParticleHypothesis(img_circle,cvtx2d);
 
     LAROCV_DEBUG() << "Found " << _seed_cluster_v.size() << " seed clusters" << std::endl;
     if(this->logger().level() == ::larocv::msg::kDEBUG) {
@@ -127,7 +149,6 @@ namespace larocv {
 	LAROCV_DEBUG() << "... size " << ctor.size() << std::endl;
     }
 
-    
     if(_seed_cluster_v.empty()) return res;
 
     // Create contours on masked image (outside seed)
@@ -169,10 +190,10 @@ namespace larocv {
     std::vector<bool> used_child_v(_child_cluster_v.size(),false);
 
     std::vector<std::pair<size_t,size_t> > match_v;
-    match_v.reserve(vtx2d.xs_v.size());
+    match_v.reserve(cvtx2d.xs_v.size());
     
-    for(size_t xs_idx=0; xs_idx < vtx2d.xs_v.size(); ++xs_idx) {
-      auto const& xs_pt = vtx2d.xs_v[xs_idx].pt;
+    for(size_t xs_idx=0; xs_idx < cvtx2d.xs_v.size(); ++xs_idx) {
+      auto const& xs_pt = cvtx2d.xs_v[xs_idx].pt;
       LAROCV_DEBUG() << " @ " << xs_idx << " pt " << xs_pt << std::endl;
       size_t cand_seed_idx  = kINVALID_SIZE;
       size_t cand_child_idx = kINVALID_SIZE;
@@ -210,8 +231,8 @@ namespace larocv {
       match_v[xs_idx] = std::make_pair(cand_seed_idx,cand_child_idx);
     }
 
-    res.resize(vtx2d.xs_v.size());
-    for(size_t xs_idx=0; xs_idx<vtx2d.xs_v.size(); ++xs_idx) {
+    res.resize(cvtx2d.xs_v.size());
+    for(size_t xs_idx=0; xs_idx<cvtx2d.xs_v.size(); ++xs_idx) {
 
       auto seed_idx  = match_v[xs_idx].first;
       auto child_idx = match_v[xs_idx].second;
@@ -361,7 +382,7 @@ namespace larocv {
 
       LAROCV_DEBUG() << "Set max_radius: " << max_radius << std::endl;
       
-      ::cv::threshold(rot_img,rot_img,_pi_threshold,255,CV_THRESH_BINARY);
+      cv::threshold(rot_img,rot_img,_pi_threshold,255,CV_THRESH_BINARY);
       
       cv::linearPolar(rot_img,        //input
 		      rot_polarimg,   //output
@@ -369,10 +390,11 @@ namespace larocv {
 		      max_radius,
 		      cv::WARP_FILL_OUTLIERS); //seems like it has to set
 
-      auto kernel = ::cv::getStructuringElement(cv::MORPH_RECT,
-      						cv::Size(20,2));
-      ::cv::dilate(rot_polarimg,rot_polarimg,kernel,::cv::Point(-1,-1),1);     
+      auto kernel = cv::getStructuringElement(cv::MORPH_RECT,
+					      cv::Size(20,2));
 
+      cv::dilate(rot_polarimg,rot_polarimg,kernel,::cv::Point(-1,-1),1);     
+      
       if(this->logger().level() == ::larocv::msg::kDEBUG) {
 	std::stringstream ss2,ss3;
 	ss2 << "thresh_plane_xs" << xs_pt_idx << ".png";
@@ -406,7 +428,7 @@ namespace larocv {
       
       LAROCV_DEBUG() << "rot_polarimg... rows: " << rot_polarimg.rows << "... cols: " << rot_polarimg.cols << std::endl;
       LAROCV_DEBUG() << "theta_lo: " << theta_lo << "... theta_hi: " << theta_hi << std::endl;
-
+      
       row_min = (size_t)((float)(rot_polarimg.rows) * (0.5 - theta_lo/360.)); // was 10/360.
       row_max = (size_t)((float)(rot_polarimg.rows) * (0.5 + theta_hi/360.));
 
@@ -429,15 +451,7 @@ namespace larocv {
 	cv::imwrite(std::string(ss4.str()).c_str(), rot_polarimg);     
       }
       //Contour finding
-      ContourArray_t polar_ctor_v;    
-      std::vector<::cv::Vec4i> cv_hierarchy_v;
-      polar_ctor_v.clear(); cv_hierarchy_v.clear();
-
-      ::cv::findContours(rot_polarimg,
-			 polar_ctor_v,
-			 cv_hierarchy_v,
-			 CV_RETR_EXTERNAL,
-			 CV_CHAIN_APPROX_SIMPLE);
+      auto polar_ctor_v = FindContours(rot_polarimg);
 
       LAROCV_DEBUG() << "Found " << polar_ctor_v.size() << " polar contours" << std::endl;
       // Find one contour that is closest to the vtx
