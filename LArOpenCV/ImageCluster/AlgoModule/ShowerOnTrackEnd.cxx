@@ -19,10 +19,10 @@ namespace larocv {
   
   void ShowerOnTrackEnd::_Configure_(const Config_t &pset) {
 
-    _overlap_fraction = 0.7;
+    _overlap_fraction = pset.get<float>("OverlapFraction",0.7);
 
-    _circle_default_radius=10;
-    _pca_size = 5;
+    _circle_default_radius= pset.get<uint>("CircleDefaultRadius",10);
+    _pca_size = pset.get<uint>("PCABoxSize",5);
     
     _vertex3d_id = kINVALID_ALGO_ID;
     _compound_id = kINVALID_ALGO_ID;
@@ -49,9 +49,9 @@ namespace larocv {
   }
 
   void ShowerOnTrackEnd::_Process_(const larocv::Cluster2DArray_t& clusters,
-					const ::cv::Mat& img,
-					larocv::ImageMeta& meta,
-					larocv::ROI& roi)
+				   const ::cv::Mat& img,
+				   larocv::ImageMeta& meta,
+				   larocv::ROI& roi)
   {
     _geo.ResetPlaneInfo(meta);
   }
@@ -61,7 +61,7 @@ namespace larocv {
     LAROCV_DEBUG() << "start" << std::endl;
     auto num_planes = img_v.size();
     auto& ass_man = AssManager();
-
+    
     // my 3d vertex
     auto& vertex3d_v  = AlgoData<data::Vertex3DArray>(0);
     
@@ -81,7 +81,7 @@ namespace larocv {
     LAROCV_DEBUG() << "Inspect " << vtx3d_v.size() << std::endl;
     for(size_t vtx3d_id=0; vtx3d_id<vtx3d_v.size(); ++vtx3d_id) {
       const auto& vtx3d = vtx3d_v[vtx3d_id];
-
+      
       std::vector<std::array<size_t,2> > comp_shower_v;
       std::vector<bool> valid_plane_v(3,false);
       
@@ -197,7 +197,7 @@ namespace larocv {
       if ( highest_score > _overlap_fraction ) {
 	LAROCV_DEBUG() << "Claiming a 3D vertex from particle end point comparison" << std::endl;
 	data::Vertex3D vtx3d_f;
-	vtx3d_f.type=3;
+	vtx3d_f.type=data::VertexType_t::kEndOfTrack;
 	vtx3d_f.num_planes=2;
 	vtx3d_f.cvtx2d_v.resize(3);
 	
@@ -222,6 +222,7 @@ namespace larocv {
 	}
 	
 	// handle many plane case....
+	size_t chosen_id = kINVALID_SIZE;
 	if (n_valid_planes==3) {
 	  double highest_score_0 = -1;
 	  double highest_score_1 = -1;
@@ -266,7 +267,6 @@ namespace larocv {
 	  
 	  auto chosen_pair = highest_score_0>highest_score_1 ? highest_pair_0 : highest_pair_1;
 	  LAROCV_DEBUG() << "... chose pair (" << chosen_pair[0] << "," << chosen_pair[1] << ") --> adding additional plane" << std::endl;
-	  auto chosen_id = kINVALID_SIZE;
 	  if (chosen_pair[0] == high0 or chosen_pair[0] == high1) chosen_id = chosen_pair[1];
 	  if (chosen_pair[1] == high0 or chosen_pair[1] == high1) chosen_id = chosen_pair[0];
 	  if (chosen_id == kINVALID_SIZE)
@@ -292,11 +292,38 @@ namespace larocv {
 	  }
 	  
 	}
-	
 	LAROCV_DEBUG() << "Claimed..." << std::endl;
-	
 	vertex3d_v.emplace_back(std::move(vtx3d_f));
 	AssociateOne(vtx3d,vertex3d_v.as_vector().back());
+	
+	//Associate this new vertex with particle
+	for(auto cid : highest_pair) {
+	  auto& comp_p = comp_shower_v[cid];
+	  auto plane_id = comp_p[0];
+	  auto comp_id  = comp_p[1];
+	  
+	  auto const& comp_par_arr  = particle_v[plane_id];
+	  const auto& comp = compound_v[plane_id]->as_vector()[comp_id];
+	  auto comp_par_idx = ass_man.GetOneAss(comp,comp_par_arr->ID());
+	  const auto& comp_par = comp_par_arr->as_vector().at(comp_par_idx);
+	  AssociateOne(vertex3d_v.as_vector().back(),comp_par);
+	  std::cout << "Associated vertex " << vertex3d_v.as_vector().back().ID()
+		    << " associated to... " << comp_par.ID() << std::endl;
+	}
+	//many plane case... associate with this particle
+	if (n_valid_planes==3) {
+	  auto& comp_p = comp_shower_v[chosen_id];
+	  auto plane_id = comp_p[0];
+	  auto comp_id  = comp_p[1];
+	  
+	  auto const& comp_par_arr  = particle_v[plane_id];
+	  const auto& comp = compound_v[plane_id]->as_vector()[comp_id];
+	  auto comp_par_idx = ass_man.GetOneAss(comp,comp_par_arr->ID());
+	  const auto& comp_par = comp_par_arr->as_vector().at(comp_par_idx);
+	  AssociateOne(vertex3d_v.as_vector().back(),comp_par);
+	  std::cout << "Associated vertex " << vertex3d_v.as_vector().back().ID()
+		    << " associated to... " << comp_par.ID() << std::endl;
+	}
 	LAROCV_WARNING() << "No association information set!" << std::endl;
       } // end overlap test
     } // end this vertex

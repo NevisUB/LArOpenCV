@@ -50,7 +50,7 @@ namespace larocv {
       
     // Cluster the HIPS and MIPS
     auto hip_mip_p = _ClusterHIPMIP.IsolateHIPMIP(img,meta.plane());
-
+    
     LAROCV_DEBUG() << "Isolated " << hip_mip_p.first.size()
 		   << " HIPs and " << hip_mip_p.second.size()
 		   << " MIPS" << std::endl;

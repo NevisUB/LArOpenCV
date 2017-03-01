@@ -39,7 +39,7 @@ namespace larocv {
       
     }
     
-    if (max_idx == -1) throw larocv::larbys("Maximum hull edge could not be calculated\n");
+    if (max_idx == -1) throw larbys("Maximum hull edge could not be calculated\n");
     
     return defects[max_idx];
   }
@@ -358,7 +358,7 @@ namespace larocv {
 	start += hull_to_defect * dist_defect_to_hull;
 	end   += hull_to_defect * dist_defect_to_hull;
 	
-	if(dist_defect_to_hull < 1) throw larocv::larbys("Could not locate a breaking line");
+	if(dist_defect_to_hull < 1) throw larbys("Could not locate a breaking line");
       }
       first=false;
       
@@ -498,9 +498,9 @@ namespace larocv {
       
       if(!first) {
 	if( !scan_mode ) {
-	  if ( scan_edge2 < 1 ) throw larocv::larbys("LOGIC ERROR");
+	  if ( scan_edge2 < 1 ) throw larbys("LOGIC ERROR");
 	  if ( ctor_idx_v[(scan_edge2-1)%(ctor.size())] == defect_info[2] )  
-	    throw larocv::larbys("Scan reached the defect point. Could not locate the breaking line...");
+	    throw larbys("Scan reached the defect point. Could not locate the breaking line...");
 	  --scan_edge2;
 	}else{
 	  if ( ctor_idx_v[(scan_edge1+1)%(ctor.size())] == defect_info[2] )  {
@@ -717,19 +717,30 @@ namespace larocv {
     }    
     return;
   }
+
+
+  GEO2D_ContourArray_t
+  DefectBreaker::SplitContour(const GEO2D_Contour_t& in_ctor) const {
+    auto clus_comp = BreakContour(in_ctor);
+    GEO2D_ContourArray_t ctor_v;
+    ctor_v.reserve(clus_comp.size());
+    for(auto& atomic : clus_comp)
+      ctor_v.emplace_back(std::move(atomic));
+    return ctor_v;
+  }
   
-  larocv::data::TrackClusterCompound
-  DefectBreaker::BreakContour(const larocv::GEO2D_Contour_t& in_ctor) const{
+  data::TrackClusterCompound
+  DefectBreaker::BreakContour(const GEO2D_Contour_t& in_ctor) const{
     
     ////////////////////////////////////////////
     // Take a single contour, find the defect on the side with 
     // longest hull edge. Break the contour into two. Re insert into queue
     // repeat operation on queue
     
-    larocv::data::TrackClusterCompound cluscomp;
+    data::TrackClusterCompound cluscomp;
     
     //contours which may be broken up are put in this queue
-    std::vector<larocv::data::AtomicContour> candidate_ctor_v;
+    std::vector<data::AtomicContour> candidate_ctor_v;
     std::vector<bool> deprecate_ctor_v;
     
     int nbreaks=0;
@@ -740,7 +751,7 @@ namespace larocv {
     
     LAROCV_DEBUG() << "Original contour size: " << in_ctor.size() << std::endl;
     
-    larocv::data::AtomicContour first_a_ctor;
+    data::AtomicContour first_a_ctor;
     first_a_ctor = in_ctor;
     candidate_ctor_v.push_back(first_a_ctor);
     deprecate_ctor_v.push_back(false);
@@ -748,14 +759,14 @@ namespace larocv {
     while(nbreaks<=_n_allowed_breaks) {
       
       // get a contour out off the list
-      size_t target_ctor_idx=larocv::kINVALID_SIZE;
+      size_t target_ctor_idx=kINVALID_SIZE;
       for(size_t candidate_idx=0; candidate_idx < candidate_ctor_v.size(); ++candidate_idx) {
 	if(deprecate_ctor_v[candidate_idx]) continue;
 	target_ctor_idx = candidate_idx;
 	break;
       }
       
-      if(target_ctor_idx == larocv::kINVALID_SIZE) {
+      if(target_ctor_idx == kINVALID_SIZE) {
 	LAROCV_DEBUG() << "No more cluster to break..." << std::endl;
 	break;
       }
@@ -769,7 +780,7 @@ namespace larocv {
       //this contour contains only two points. it's a line. should not exist.
       if (ctor.size() <= 2) {
 	LAROCV_CRITICAL() << "Contour too small (size<=2)... should not appear!" << std::endl;
-	throw larocv::larbys();
+	throw larbys();
 	//deprecate_ctor_v[target_ctor_idx] = true;
 	//ctor.clear();
 	//continue;
@@ -863,14 +874,14 @@ namespace larocv {
       try{
 	min_line = find_line_hull_defect(ctor,chosen_edge);
 	broken=true;
-      }catch(const larocv::larbys& err) {
+      }catch(const larbys& err) {
 	LAROCV_INFO() << "Could not break the contour by moving hull line ..."<<std::endl;
       }
       if(!broken) {
 	try{
 	  min_line = scan_breaker(ctor, chosen_edge);
 	  broken = true;
-	}catch(const larocv::larbys& err) {
+	}catch(const larbys& err) {
 	  LAROCV_INFO() << "Could not break the contour by scanning the perimeter..." << std::endl;
 	}
       }
@@ -921,9 +932,9 @@ namespace larocv {
 	defect._dist      = (float)chosen_edge[3] / 256.;
 	defect._split_line = min_line;
 	
-	larocv::data::AtomicContour a_ctor1;
+	data::AtomicContour a_ctor1;
 	a_ctor1 = ctor1;
-	larocv::data::AtomicContour a_ctor2;
+	data::AtomicContour a_ctor2;
 	a_ctor2 = ctor2;
 	AssociateDefects(cluscomp,a_ctor,defect,a_ctor1,a_ctor2);
 	
@@ -936,7 +947,7 @@ namespace larocv {
 	
 	if(ctor1.size()<=2) { LAROCV_DEBUG() << "Broken contour too small (size<=2)... ignoring..." << std::endl; }
 	else {
-	  larocv::data::AtomicContour a_ctor1;
+	  data::AtomicContour a_ctor1;
 	  a_ctor1 = ctor1;
 	  for(auto const& defect_id : a_ctor.associated_defects())
 	    a_ctor1.associate(defect_id);
@@ -947,7 +958,7 @@ namespace larocv {
 	
 	if(ctor2.size()<=2) { LAROCV_DEBUG() << "Broken contour too small (size<=2)... ignoring..." << std::endl; }
 	else {
-	  larocv::data::AtomicContour a_ctor2;
+	  data::AtomicContour a_ctor2;
 	  a_ctor2 = ctor2;
 	  for(auto const& defect_id : a_ctor.associated_defects())
 	    a_ctor2.associate(defect_id);
@@ -999,7 +1010,7 @@ namespace larocv {
 			<< " ... "
 			<< "# of atoms = " << atomic_ctor_v.size()
 			<< std::endl;
-      throw larocv::larbys();
+      throw larbys();
     }
     
     
@@ -1014,7 +1025,7 @@ namespace larocv {
     }
     
     // INFO report
-    if(this->logger().level() <= ::larocv::msg::kINFO) {
+    if(this->logger().level() <= msg::kINFO) {
       std::stringstream ss;
       ss << "Reporting the final set of atoms/defects" << std::endl;
       for(auto const& atom : cluscomp.get_atoms()) {

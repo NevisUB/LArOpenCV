@@ -68,6 +68,16 @@ namespace larocv {
       float sum_dtheta() const;
     };
 
+
+
+    enum class VertexType_t : unsigned {
+      kUnknown,
+	kTime,
+	kWire,
+	kShower,
+	kEndOfTrack
+	};
+    
     /**
        \class Vertex3D
        @brief A simple 3D vertex class with a colleciton of 2D projections
@@ -79,7 +89,7 @@ namespace larocv {
       
       /// attribute clear method
       void _Clear_()
-      { vtx2d_v.clear(); cvtx2d_v.clear(); x = y = z = kINVALID_DOUBLE; num_planes=0; type=-1;}
+      { vtx2d_v.clear(); cvtx2d_v.clear(); x = y = z = kINVALID_DOUBLE; num_planes=0; type=VertexType_t::kUnknown;}
       
       /// Plane-wise 2D vertex point
       std::vector<larocv::data::Vertex2D> vtx2d_v;
@@ -89,8 +99,8 @@ namespace larocv {
       double x, y, z;
       /// # of valid planes used in this estimate
       size_t num_planes;
-      ///
-      short type;
+      /// type of vertex
+      VertexType_t type;
     };
 
     /**

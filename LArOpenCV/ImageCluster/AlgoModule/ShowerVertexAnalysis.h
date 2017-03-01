@@ -3,6 +3,7 @@
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
+
 /*
   @brief: analyze shower vertex
 */
@@ -40,6 +41,10 @@ namespace larocv {
   private:
     AlgorithmID_t _track_vertex_algo_id;
     AlgorithmID_t _shower_vertex_algo_id;
+    AlgorithmID_t _shower_vertex_particle_algo_id;
+    AlgorithmID_t _track_vertex_particle_algo_id;
+    AlgorithmID_t _linear_track_algo_id;
+    
   };
 
   /**

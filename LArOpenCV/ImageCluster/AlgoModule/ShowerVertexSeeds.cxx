@@ -60,7 +60,7 @@ namespace larocv {
     std::vector<data::VertexTrackInfoCollection> input_vtxinfo_v;
     if (_vertex3d_id!=kINVALID_ALGO_ID) {
       auto const& input_vtx3d_v = AlgoData<data::Vertex3DArray>(_vertex3d_id,0);
-      //LAROCV_INFO() << "Retrieving algo id " << _vertex3d_id << " @ " << input_vtx3d_v_ptr << std::endl;
+
       input_vtxinfo_v = data::OrganizeVertexInfo(AssManager(),
 						 input_vtx3d_v,
 						 super_cluster_v,
@@ -85,8 +85,9 @@ namespace larocv {
     auto vtx3d_seed_v = _ElectronShowerVertexSeed.CreateSeed();
     
     auto& data = AlgoData<data::VertexSeed3DArray>(0);
-    for(size_t i=0; i<vtx3d_seed_v.size(); ++i)
+    for(size_t i=0; i<vtx3d_seed_v.size(); ++i)  {
       data.emplace_back(std::move(vtx3d_seed_v[i]));
+    }
 
     return true;
   }

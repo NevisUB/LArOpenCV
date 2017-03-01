@@ -63,8 +63,8 @@ namespace larocv {
     std::vector<const data::Vertex3D*> vtx_v;
 
     for(const auto& vtx3d : track_vtx_data.as_vector()) {
-      if (vtx3d.type==0) time_vtx_v.push_back(&vtx3d);
-      else if (vtx3d.type==1) wire_vtx_v.push_back(&vtx3d);
+      if (vtx3d.type==data::VertexType_t::kTime) time_vtx_v.push_back(&vtx3d);
+      else if (vtx3d.type==data::VertexType_t::kWire) wire_vtx_v.push_back(&vtx3d);
       else throw larbys("Vtx3D type is not wire or time... what?");
     }
     

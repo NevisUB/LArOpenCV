@@ -67,7 +67,7 @@ namespace larocv {
     cv::blur(mod_img_m,mod_img_m,cv::Size(_blur_size,_blur_size));
 
     GEO2D_ContourArray_t mip_ctor_v;
-    GEO2D_ContourArray_t mip_ctor_mask_v;
+    //GEO2D_ContourArray_t mip_ctor_mask_v;
     GEO2D_ContourArray_t hip_ctor_v;
     
     int MIP_LEVEL = _mip_thresh_v.at(plane);
@@ -99,18 +99,14 @@ namespace larocv {
 	hip_ctor_v_tmp.emplace_back(hip_ctor);
     }
     
-    
     //swap the size thresholded hips for all the hips
     std::swap(hip_ctor_v,hip_ctor_v_tmp);
 
     LAROCV_DEBUG() << "Reduced to " << hip_ctor_v.size() << " hip contours after size cut"  << std::endl;
 
-    //Mask them out of the MIP image.
-    LAROCV_DEBUG() << "Masking hip image" << std::endl;
-    _mip_thresh_mask_m = MaskImage(_mip_thresh_m,        //input image
-				   hip_ctor_v,          //hip contours
-				   _hip_mask_tolerance, //make the edges fatter for mask
-				   true);                //yes, mask
+    // //Mask them out of the MIP image.
+    // LAROCV_DEBUG() << "Masking hip image" << std::endl;
+    // _mip_thresh_mask_m = MaskImage(_mip_thresh_m,hip_ctor_v,_hip_mask_tolerance,true);               
     
     // mip contour finding
     mip_ctor_v = FindContours(_mip_thresh_m);
@@ -119,9 +115,9 @@ namespace larocv {
     
     // masked mip contour finding
 
-    LAROCV_DEBUG() << "Found " << mip_ctor_v.size() << " masked MIP contours"<< std::endl;
+    // LAROCV_DEBUG() << "Found " << mip_ctor_v.size() << " masked MIP contours"<< std::endl;
 
-    mip_ctor_mask_v = FindContours(_mip_thresh_mask_m);
+    // mip_ctor_mask_v = FindContours(_mip_thresh_mask_m);
 
     //Filter the MIP contours to a minimum size
 
@@ -129,9 +125,9 @@ namespace larocv {
     GEO2D_ContourArray_t mip_ctor_v_tmp;
     mip_ctor_v_tmp.reserve(mip_ctor_v.size());
 
-    // masked mips
-    GEO2D_ContourArray_t mip_ctor_mask_v_tmp;
-    mip_ctor_mask_v_tmp.reserve(mip_ctor_mask_v.size());
+    // // masked mips
+    // GEO2D_ContourArray_t mip_ctor_mask_v_tmp;
+    // mip_ctor_mask_v_tmp.reserve(mip_ctor_mask_v.size());
     
     for (const auto& mip_ctor : mip_ctor_v) {
       bool b_size = mip_ctor.size() > _min_mip_cluster_size;
@@ -142,24 +138,26 @@ namespace larocv {
       
     }
     
-    for (const auto& mip_ctor : mip_ctor_mask_v) {
-      bool b_size = mip_ctor.size() > _min_mip_cluster_size;
-      bool b_npix = cv::countNonZero(MaskImage(mod_img_m,mip_ctor,0,false)) > _min_mip_cluster_pixels;
+    // for (const auto& mip_ctor : mip_ctor_mask_v) {
+    //   bool b_size = mip_ctor.size() > _min_mip_cluster_size;
+    //   bool b_npix = cv::countNonZero(MaskImage(mod_img_m,mip_ctor,0,false)) > _min_mip_cluster_pixels;
       
-      if (b_size and b_npix)
-	mip_ctor_v_tmp.emplace_back(mip_ctor);
-    }
+    //   if (b_size and b_npix)
+    // 	mip_ctor_v_tmp.emplace_back(mip_ctor);
+    // }
     
     //swap them out -- the thresholded mips and all mips
     std::swap(mip_ctor_v,mip_ctor_v_tmp);
 
-    //swap them out -- the thresholded masked mips and all masked mips
-    std::swap(mip_ctor_mask_v,mip_ctor_mask_v_tmp);
+    // //swap them out -- the thresholded masked mips and all masked mips
+    // std::swap(mip_ctor_mask_v,mip_ctor_mask_v_tmp);
 
     LAROCV_DEBUG() << "Now " << mip_ctor_v.size() << " MIP contours after size cut"<< std::endl;
-    LAROCV_DEBUG() << "Now " << mip_ctor_mask_v.size() << " masked MIP contours after size cut" << std::endl;
+    //LAROCV_DEBUG() << "Now " << mip_ctor_mask_v.size() << " masked MIP contours after size cut" << std::endl;
+
+    //return _mask_hip ? std::make_pair(hip_ctor_v,mip_ctor_mask_v) : std::make_pair(hip_ctor_v,mip_ctor_v);
+    return std::make_pair(hip_ctor_v,mip_ctor_v);
     
-    return _mask_hip ? std::make_pair(hip_ctor_v,mip_ctor_mask_v) : std::make_pair(hip_ctor_v,mip_ctor_v);
   }
   
 }

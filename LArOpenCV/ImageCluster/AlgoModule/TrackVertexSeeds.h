@@ -41,6 +41,11 @@ namespace larocv {
 		   ROI& roi);
 
     bool _PostProcess_(const std::vector<const cv::Mat>& img_v) { return true; }
+
+  public:
+    const ClusterHIPMIP& ClusterHIPMIPAlgo() { return _ClusterHIPMIP; }
+    const DefectBreaker& DefectBreakerAlgo() { return _DefectBreaker; }
+    const PCACrossing& PCACrossingAlgo()     { return _PCACrossing;   }
     
   private:
     

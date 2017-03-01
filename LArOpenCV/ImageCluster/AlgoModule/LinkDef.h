@@ -9,7 +9,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class larocv::VertexSeeds+;
+#pragma link C++ class larocv::TrackVertexSeeds+;
 #pragma link C++ class larocv::TrackVertexEstimate+;
 #pragma link C++ class larocv::TrackParticleCluster+;
 #pragma link C++ class larocv::SuperClusterer+;

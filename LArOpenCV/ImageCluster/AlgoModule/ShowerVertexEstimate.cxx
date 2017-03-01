@@ -3,6 +3,7 @@
 
 #include "ShowerVertexEstimate.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
+#include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
 
 namespace larocv {
 
@@ -38,6 +39,14 @@ namespace larocv {
       _algo_id_track_vertex_estimate = this->ID( algo_name_track_vertex_estimate );
       if(_algo_id_track_vertex_estimate==kINVALID_ALGO_ID)
 	throw larbys("You specified an invalid TrackVertexEstimate algorithm name");
+    }
+
+    auto algo_name_track_vertex_particle_cluster = pset.get<std::string>("TrackVertexParticleCluster","");
+    _algo_id_track_vertex_particle_cluster=kINVALID_ALGO_ID;
+    if (!algo_name_track_vertex_particle_cluster.empty()) {
+      _algo_id_track_vertex_particle_cluster = this->ID( algo_name_track_vertex_particle_cluster );
+      if(_algo_id_track_vertex_particle_cluster==kINVALID_ALGO_ID)
+	throw larbys("You specified an invalid TrackVertexParticleCluster algorithm name");
     }
 
     
@@ -76,13 +85,20 @@ namespace larocv {
       
       for(const auto& vtx3d :  shower_track_v.as_vector())  {
 	data::Vertex3D vtx3d_f = vtx3d;
-
-	auto ass_id = ass_man.GetOneAss(vtx3d_f,track_vertex_v.ID());
+	
+	auto ass_id = ass_man.GetOneAss(vtx3d,track_vertex_v.ID());
 	if (ass_id==kINVALID_SIZE)
 	  throw larbys("Associated track vertex cannot be found, sorry");
 	
 	data.emplace_back(std::move(vtx3d_f));
 	AssociateOne(track_vertex_v.as_vector()[ass_id],data.as_vector().back());
+
+	for(size_t plane=0;plane<3;++plane) {
+	  const auto& track_par_v = AlgoData<data::ParticleClusterArray>(_algo_id_track_vertex_particle_cluster,plane);
+	  auto par_ass_id = ass_man.GetOneAss(vtx3d,track_par_v.ID());
+	  if (par_ass_id==kINVALID_SIZE) continue;
+	  AssociateOne(data.as_vector().back(),track_par_v.as_vector()[par_ass_id]);
+	}
       }
     }    
     

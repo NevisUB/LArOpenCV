@@ -209,7 +209,8 @@ namespace larocv {
 
   GEO2D_Contour_t MergeByMask(const GEO2D_Contour_t& ctor1,
 			      const GEO2D_Contour_t& ctor2,
-			      const cv::Mat& img)
+			      const cv::Mat& img,
+			      uint tol)
   {
     
     LAROCV_SDEBUG() << "Merging by mask..." << std::endl;
@@ -220,17 +221,8 @@ namespace larocv {
     ctor_v[1] = ctor2;
     LAROCV_SDEBUG() << "... received 2 contours sizes " << ctor1.size() << ", " << ctor2.size() << std::endl;
     
-    auto masked_img = MaskImage(img,ctor_v,0,false);
+    auto masked_img = MaskImage(img,ctor_v,tol,false);
 
-    // if(logger().level() == msg::kDEBUG) {
-    //   static int img_ctr=-1;
-    //   img_ctr+=1;
-    //   std::stringstream ss1,ss2;
-    //   ss1 << "orig_img_" << img_ctr << ".png";
-    //   ss2 << "mask_img_" << img_ctr << ".png";
-    //   cv::imwrite(ss1.str().c_str(),img);
-    //   cv::imwrite(ss2.str().c_str(),masked_img);
-    // }
     
     GEO2D_ContourArray_t result_v;
     std::vector<cv::Vec4i> cv_hierarchy_v;
@@ -245,16 +237,20 @@ namespace larocv {
       return result_v[0];
     }
     
-    uint size=0;
+    size_t max_area=0;
     int idx=-1;
     for(uint i=0;i<result_v.size();++i) {
-      if (result_v.size() > size)
-	{ idx=i; size=result_v.size(); }
+      const auto& ctor = result_v[i];
+      auto area = cv::contourArea(ctor);
+      if ( area > max_area ) {
+	max_area=area;
+	idx=i;
+      }
     }
     
     if( idx < 0) throw larbys("No refined contour can be determined");
 
-    LAROCV_SDEBUG() << "... returning contour of size " << result_v[idx].size() << std::endl;
+    LAROCV_SDEBUG() << "... returning max area contour of size " << result_v[idx].size() << std::endl;
     
     return result_v[idx];
   }

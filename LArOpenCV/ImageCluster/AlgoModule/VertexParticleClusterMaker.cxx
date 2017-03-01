@@ -58,9 +58,7 @@ namespace larocv {
     const auto& vtx_data_v = AlgoData<data::Vertex3DArray>(_vertex_estimate_algo_id,0).as_vector();
 
     LAROCV_DEBUG() << "Got " << vtx_data_v.size() << " vertices" << std::endl;
-    for(const auto& vtx : vtx_data_v)
-      LAROCV_DEBUG() << "... id " << vtx.ID() << std::endl;
-      
+
     // Run clustering for this plane & store
     const auto& super_cluster_v = AlgoData<data::ParticleClusterArray>(_super_cluster_algo_id,plane).as_vector();
 
@@ -105,7 +103,7 @@ namespace larocv {
       for(size_t cidx=0; cidx<contour_v.size(); ++cidx) {
 	auto& contour = contour_v[cidx];
 	LAROCV_DEBUG() << "On contour: " << cidx << "... size: " << contour.size() << std::endl;
-
+	
 	if (contour.size() < _min_particle_size) {
 	  LAROCV_DEBUG() << "... size of this contour too small. Skip!" << std::endl;
 	  continue;
@@ -113,7 +111,7 @@ namespace larocv {
 	
 	data::ParticleCluster cluster;
 	cluster._ctor = std::move(contour);
-	
+	  
 	// Store
 	par_data.emplace_back(std::move(cluster));
 	// Create one-to-many association

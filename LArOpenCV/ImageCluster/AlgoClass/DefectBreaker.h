@@ -35,6 +35,10 @@ namespace larocv {
     larocv::data::TrackClusterCompound
     BreakContour(const GEO2D_Contour_t& in_ctor) const;
 
+    //break contour --> into more contours
+    GEO2D_ContourArray_t
+    SplitContour(const GEO2D_Contour_t& in_ctor) const;
+    
   private:
     
     cv::Vec4i

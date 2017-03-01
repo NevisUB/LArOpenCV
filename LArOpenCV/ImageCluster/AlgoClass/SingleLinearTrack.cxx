@@ -209,15 +209,15 @@ namespace larocv {
 	if (ctor.size() > 2) {
 	  LAROCV_DEBUG() << "... ctor size " << ctor.size() << std::endl;
 	  //attempt breaking
-	  auto cluscomp  = _DefectBreaker.BreakContour(ctor);
-	  LAROCV_DEBUG() << "... broken into " << cluscomp.size() << std::endl;
-	  for(auto& atomic : cluscomp) {
-	    LAROCV_DEBUG() << "... ... atomic size " << atomic.size() << std::endl;
-	    parent_ctor_temp_v.emplace_back(std::move(atomic));
+	  auto ctor_v  = _DefectBreaker.SplitContour(ctor);
+	  LAROCV_DEBUG() << "... broken into " << ctor_v.size() << std::endl;
+	  for(auto& ctor : ctor_v) {
+	    LAROCV_DEBUG() << "... ... ctor size " << ctor.size() << std::endl;
+	    parent_ctor_temp_v.emplace_back(std::move(ctor));
 	  }
 
 	  //this contour was broken into two, keep the original contour
-	  if (cluscomp.size()>1) {
+	  if (ctor_v.size()>1) {
 	    LAROCV_DEBUG() << "... keeping original contour size " << ctor.size() << std::endl;
 	    parent_ctor_temp_v.emplace_back(ctor);
 	  }
