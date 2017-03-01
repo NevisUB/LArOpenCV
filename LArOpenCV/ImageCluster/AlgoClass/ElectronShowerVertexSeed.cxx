@@ -38,13 +38,16 @@ namespace larocv {
 
   void ElectronShowerVertexSeed::RegisterSeed(const larocv::data::LinearTrack3DArray& data)
   {
-    for(auto const& ltrack : data.as_vector()) {
 
-      if(ltrack.edge1.vtx2d_v.size())
+    for (const auto& ltrack : data.as_vector()) { 
+      if(ltrack.edge1.vtx2d_v.size()) {
 	_ltrack_vertex_v.push_back(ltrack.edge1);
-      if(ltrack.edge2.vtx2d_v.size())
+      }
+      if(ltrack.edge2.vtx2d_v.size()) {
 	_ltrack_vertex_v.push_back(ltrack.edge2);
+      }
     }
+    
     LAROCV_INFO() << "# Vertex3D from LinearCluster: " << _ltrack_vertex_v.size() << std::endl;
   }
   
@@ -192,13 +195,12 @@ namespace larocv {
     LAROCV_INFO() << "# Vertex3D from ParticleCluster: " << _vedge_vertex_v.size() << std::endl;
   }
   
-  std::vector<larocv::data::VertexSeed3D>
-  ElectronShowerVertexSeed::ListCandidateVertex(const std::vector<larocv::data::Vertex3D>& ltrack_vertex_v,
-						const std::vector<larocv::data::Vertex3D>& vtrack_vertex_v,
-						const std::vector<larocv::data::Vertex3D>& vedge_vertex_v) const
+  void
+  ElectronShowerVertexSeed::ListCandidateVertex(std::vector<larocv::data::VertexSeed3D>& res_v,
+						const std::vector<larocv::data::Vertex3D>& vertex_v,
+						data::SeedType_t type) 
   {
-    std::vector<larocv::data::VertexSeed3D> res_v;
-    for(auto const& pt : ltrack_vertex_v) {
+    for (const auto& pt : vertex_v){
       float min_dist = 1e9;
       for(auto const& vtx : res_v) {
 	float dist = sqrt(pow(vtx.x-pt.x,2)+pow(vtx.y-pt.y,2)+pow(vtx.z-pt.z,2));
@@ -206,44 +208,24 @@ namespace larocv {
 	if(min_dist < _vertex_min_separation) break;
       }
       if(min_dist < _vertex_min_separation) {
-	LAROCV_INFO() << "Skipping LinearTrack vertex @ ("<<pt.x<<","<<pt.y<<","<<pt.z<<")"<<std::endl;
+	LAROCV_INFO() << "Skipping vertex type " << (uint)type << " @ ("<<pt.x<<","<<pt.y<<","<<pt.z<<")"<<std::endl;
 	continue;
       }
       data::VertexSeed3D seed(pt);
-      res_v.push_back(data::VertexSeed3D(pt));
+      seed.type=type;
+      res_v.emplace_back(std::move(seed));
     }
-    for(auto const& pt : vtrack_vertex_v) {
-      float min_dist = 1e9;
-      for(auto const& vtx : res_v) {
-	float dist = sqrt(pow(vtx.x-pt.x,2)+pow(vtx.y-pt.y,2)+pow(vtx.z-pt.z,2));
-	if(dist < min_dist) min_dist = dist;
-	if(min_dist < _vertex_min_separation) break;
-      }
-      if(min_dist < _vertex_min_separation) {
-	LAROCV_INFO() << "Skipping VertexTrackCluster vertex @ ("<<pt.x<<","<<pt.y<<","<<pt.z<<")"<<std::endl;
-	continue;
-      }
-      res_v.push_back(data::VertexSeed3D(pt));
-    }
-    for(auto const& pt : vedge_vertex_v) {
-      float min_dist = 1e9;
-      for(auto const& vtx : res_v) {
-	float dist = sqrt(pow(vtx.x-pt.x,2)+pow(vtx.y-pt.y,2)+pow(vtx.z-pt.z,2));
-	if(dist < min_dist) min_dist = dist;
-	if(min_dist < _vertex_min_separation) break;
-      }
-      if(min_dist < _vertex_min_separation) {
-	LAROCV_INFO() << "Skipping ParticleEnd vertex @ ("<<pt.x<<","<<pt.y<<","<<pt.z<<")"<<std::endl;
-	continue;
-      }
-      res_v.push_back(data::VertexSeed3D(pt));
-    }
-    return res_v;
   }
 
   std::vector<data::VertexSeed3D>
   ElectronShowerVertexSeed::CreateSeed()
-  { return ListCandidateVertex(_ltrack_vertex_v,_vtrack_vertex_v,_vedge_vertex_v); }
-
+  {
+    std::vector<larocv::data::VertexSeed3D> res_v;
+    res_v.reserve(10); // resreve space for 10 seeds
+    ListCandidateVertex(res_v,_ltrack_vertex_v,data::SeedType_t::kEdge);
+    ListCandidateVertex(res_v,_vtrack_vertex_v,data::SeedType_t::kTrack);
+    ListCandidateVertex(res_v,_vedge_vertex_v,data::SeedType_t::kEnd);
+    return res_v;
+  }
 }
 #endif

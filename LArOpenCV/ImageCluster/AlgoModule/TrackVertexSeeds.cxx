@@ -77,18 +77,24 @@ namespace larocv {
       // generate seeds from PCA
       for(auto & pca : _PCACrossing.ComputePCALines(cluscomp))
 	line_v.emplace_back(std::move(pca));
+      
       LAROCV_DEBUG() << "Inserting " << cluscomp.get_defects().size() << " defects" << std::endl;
       for(const auto& ctor_defect : cluscomp.get_defects()) {
 	LAROCV_DEBUG() << "..." << ctor_defect._pt_defect << std::endl;
-	vertex_seeds_v.emplace_back(ctor_defect._pt_defect);
+	data::VertexSeed2D seed(ctor_defect._pt_defect);
+	seed.type=data::SeedType_t::kDefect;
+	vertex_seeds_v.emplace_back(std::move(seed));
       }
 
       track_cluster_v.emplace_back(std::move(cluscomp));
     }
 
     LAROCV_DEBUG() << "Generated " << line_v.size() << " pca lines" << std::endl;
-    for ( auto& seed : _PCACrossing.ComputeIntersections(line_v,img) )
+    for ( const auto& pca_seed : _PCACrossing.ComputeIntersections(line_v,img) ) {
+      data::VertexSeed2D seed(pca_seed);
+      seed.type=data::SeedType_t::kPCA;
       vertex_seeds_v.emplace_back(std::move(seed));
+    }
 
     return;
   }

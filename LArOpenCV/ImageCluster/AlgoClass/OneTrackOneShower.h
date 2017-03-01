@@ -39,7 +39,7 @@ namespace larocv {
 
     void RegisterSeed(const std::vector<data::VertexSeed3D>& seed_v)
     { _cand_vertex_v = seed_v; }
-
+    
   private:
 
     geo2d::VectorArray<float>

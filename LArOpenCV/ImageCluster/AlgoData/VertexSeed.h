@@ -9,6 +9,15 @@
 namespace larocv {
   namespace data {
 
+    enum class SeedType_t {
+      kUnknown,
+	kDefect,
+	kPCA,
+	kEdge,
+	kEnd,
+	kTrack
+    };
+    
     // store per compound
     class VertexSeed2D : public AlgoDataArrayElementBase,
 			 public geo2d::Vector<float>
@@ -16,10 +25,14 @@ namespace larocv {
     public:
       VertexSeed2D() { Clear(); }
       VertexSeed2D(const geo2d::Vector<float>& pt) { this->x=pt.x; this->y=pt.y; }
-      //VertexSeed2D(geo2d::Vector<float>&& pt) { (*this)=std::move(pt); }
       ~VertexSeed2D(){}
+
+      SeedType_t type;
+      
     protected:
-      void _Clear_() { this->x=kINVALID_FLOAT; this->y=kINVALID_FLOAT; }
+      void _Clear_()
+      { this->x=kINVALID_FLOAT; this->y=kINVALID_FLOAT; type=SeedType_t::kUnknown; }
+      
     };
     
     // store per compound
@@ -34,12 +47,22 @@ namespace larocv {
       std::vector<larocv::data::Vertex2D> vtx2d_v;
       /// 3D vertex location
       double x, y, z;
+      SeedType_t type;
+
+      // inline bool operator==(const VertexSeed3D& lhs,const VertexSeed3D& rhs) {
+      // 	if ( lhs.x != rhs.x ) return false;
+      // 	if ( lhs.y != rhs.y ) return false;
+      // 	if ( lhs.z != rhs.z ) return false;
+      // 	if ( lhs.type != rhs.type ) return false;
+      // 	return true;
+      // }
+      
     protected:
       /// attribute clear method
       void _Clear_()
-      { vtx2d_v.clear(); x = y = z = kINVALID_DOUBLE; }
-    };
-    
+      { vtx2d_v.clear(); x = y = z = kINVALID_DOUBLE; type=SeedType_t::kUnknown; }
+      
+    };    
     /**
        \class VertexSeed2DArray
     */

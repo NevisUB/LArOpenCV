@@ -88,7 +88,6 @@ namespace larocv {
     for(size_t i=0; i<vtx3d_seed_v.size(); ++i)  {
       data.emplace_back(std::move(vtx3d_seed_v[i]));
     }
-
     return true;
   }
   

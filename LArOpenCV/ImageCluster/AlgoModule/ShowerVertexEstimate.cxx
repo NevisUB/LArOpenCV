@@ -65,8 +65,9 @@ namespace larocv {
 
   bool ShowerVertexEstimate::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {
-    auto const& seed_v = AlgoData<data::VertexSeed3DArray>(_algo_id_vertex_seed,0);
 
+    auto const& seed_v = AlgoData<data::VertexSeed3DArray>(_algo_id_vertex_seed,0);
+    
     auto& data = AlgoData<data::Vertex3DArray>(0);
 
     _OneTrackOneShower.RegisterSeed(seed_v.as_vector());
@@ -74,8 +75,9 @@ namespace larocv {
     auto vtx3d_v = _OneTrackOneShower.CreateSingleShower(img_v);
     
     LAROCV_DEBUG() << "Found " << vtx3d_v.size() << " single shower vertex" << std::endl;
-    for(size_t i=0; i<vtx3d_v.size(); ++i)
+    for(size_t i=0; i<vtx3d_v.size(); ++i) {
       data.emplace_back(std::move(vtx3d_v[i]));
+    }
 
     if (_algo_id_shower_track_vertex!=kINVALID_ALGO_ID and _algo_id_track_vertex_estimate != kINVALID_ALGO_ID) {
       auto& ass_man = AssManager();

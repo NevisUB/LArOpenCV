@@ -157,19 +157,6 @@ namespace larocv {
 		      << " ... " << xs_pt_v.size()
 		      << " crossing points on circle @ " << circle.center << " w/ rad " << circle.radius << std::endl;
 	xs_pt_v = this->ValidShowerPointOnCircle(img, circle, xs_pt_v);
-	/*
-	if(xs_pt_v.size()>1) {
-	  LAROCV_DEBUG() << "     # crossing points = " << xs_pt_v.size() << std::endl;
-	  num_good_plane = 0;
-	  break;
-	}
-	if(xs_pt_v.empty()) {
-	  LAROCV_DEBUG() << "     # crossing points = " << xs_pt_v.size() << std::endl;
-	  continue;
-	}
-	LAROCV_DEBUG() << "     # crossing points = " << xs_pt_v.size() << std::endl;
-	*/
-
 	for(auto const& xs_pt : xs_pt_v) {
 	  LAROCV_DEBUG() << "Determining PCA @ " << xs_pt << std::endl;
 	  data::PointPCA pca_pt;

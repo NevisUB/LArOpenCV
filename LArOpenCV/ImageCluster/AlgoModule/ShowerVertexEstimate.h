@@ -41,6 +41,7 @@ namespace larocv {
 
   private:
     OneTrackOneShower _OneTrackOneShower;
+    AlgorithmID_t _algo_id_linear_track;
     AlgorithmID_t _algo_id_vertex_seed;
     AlgorithmID_t _algo_id_shower_track_vertex;
     AlgorithmID_t _algo_id_track_vertex_estimate;

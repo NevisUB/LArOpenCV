@@ -44,14 +44,19 @@ namespace larocv {
     void RegisterSeed(const larocv::data::LinearTrack3DArray& data);
 
   private:
-
-    std::vector<larocv::data::VertexSeed3D>
-    ListCandidateVertex(const std::vector<larocv::data::Vertex3D>& ltrack_vertex_v,
-			const std::vector<larocv::data::Vertex3D>& vtrack_vertex_v,
-			const std::vector<larocv::data::Vertex3D>& vedge_vertex_v) const;
+    
+    // std::vector<larocv::data::VertexSeed3D>
+    // ListCandidateVertex(const std::vector<larocv::data::Vertex3D>& ltrack_vertex_v,
+    // 			const std::vector<larocv::data::Vertex3D>& vtrack_vertex_v,
+    // 			const std::vector<larocv::data::Vertex3D>& vedge_vertex_v) const;
+    
+    void
+    ListCandidateVertex(std::vector<larocv::data::VertexSeed3D>& res_v,
+			const std::vector<larocv::data::Vertex3D>& vertex_v,
+			data::SeedType_t type);
     
     LArPlaneGeo _geo_algo;
-
+    
     float _part_pxfrac_threshold;
 
     float _vertex_min_separation;
@@ -63,7 +68,7 @@ namespace larocv {
     std::vector<larocv::data::Vertex3D> _ltrack_vertex_v;
     std::vector<larocv::data::Vertex3D> _vtrack_vertex_v;
     std::vector<larocv::data::Vertex3D> _vedge_vertex_v;
-
+    
   };
 
 }

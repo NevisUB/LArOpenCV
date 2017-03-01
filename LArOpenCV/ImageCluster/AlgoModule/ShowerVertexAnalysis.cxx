@@ -195,6 +195,9 @@ namespace larocv {
 	    LAROCV_DEBUG() << "Associated shower=>shower vertex id " << vtx_data.as_vector().back().ID()
 			   << " with shower " << par_data.as_vector().back().ID() << std::endl;
 	  }
+
+	  //how to get the linear track
+	  
 	  
 	} // end this plane
       }

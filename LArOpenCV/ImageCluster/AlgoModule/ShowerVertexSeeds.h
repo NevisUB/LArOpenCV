@@ -54,7 +54,6 @@ namespace larocv {
     ElectronShowerVertexSeed _ElectronShowerVertexSeed;
   };
 
-  
   /**
      \class ShowerVertexSeedsFactory
      \brief A concrete factory class for ShowerVertexSeeds
@@ -72,4 +71,3 @@ namespace larocv {
 }
 #endif
 /** @} */ // end of doxygen group 
-
