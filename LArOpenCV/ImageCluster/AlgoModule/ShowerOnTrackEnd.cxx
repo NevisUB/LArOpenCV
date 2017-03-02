@@ -307,8 +307,8 @@ namespace larocv {
 	  auto comp_par_idx = ass_man.GetOneAss(comp,comp_par_arr->ID());
 	  const auto& comp_par = comp_par_arr->as_vector().at(comp_par_idx);
 	  AssociateOne(vertex3d_v.as_vector().back(),comp_par);
-	  std::cout << "Associated vertex " << vertex3d_v.as_vector().back().ID()
-		    << " associated to... " << comp_par.ID() << std::endl;
+	  LAROCV_DEBUG() << "Associated vertex " << vertex3d_v.as_vector().back().ID()
+			 << " associated to... " << comp_par.ID() << std::endl;
 	}
 	//many plane case... associate with this particle
 	if (n_valid_planes==3) {
@@ -321,8 +321,8 @@ namespace larocv {
 	  auto comp_par_idx = ass_man.GetOneAss(comp,comp_par_arr->ID());
 	  const auto& comp_par = comp_par_arr->as_vector().at(comp_par_idx);
 	  AssociateOne(vertex3d_v.as_vector().back(),comp_par);
-	  std::cout << "Associated vertex " << vertex3d_v.as_vector().back().ID()
-		    << " associated to... " << comp_par.ID() << std::endl;
+	  LAROCV_DEBUG() << "Associated vertex " << vertex3d_v.as_vector().back().ID()
+			 << " associated to... " << comp_par.ID() << std::endl;
 	}
 	LAROCV_WARNING() << "No association information set!" << std::endl;
       } // end overlap test

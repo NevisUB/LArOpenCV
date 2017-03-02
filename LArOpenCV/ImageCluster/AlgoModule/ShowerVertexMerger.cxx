@@ -103,7 +103,7 @@ namespace larocv {
 	  
 	  //get associated shower for this vertex on this plane
 	  const auto& shower_vtx_par_data = AlgoData<data::ParticleClusterArray>(_shower_vertex_shower_particle_algo_id,plane);
-
+	  
 	  auto shower_particle_ass_id_v = ass_man.GetManyAss(shower_vtx,shower_vtx_par_data.ID());
 	  bool shower_exists=true;
 	  if (shower_particle_ass_id_v.empty()) {
@@ -140,7 +140,6 @@ namespace larocv {
 	    for now just do it
 
 	   */
-
 	  
 	  //Join the two via merge
 	  const auto& img = img_v[plane];

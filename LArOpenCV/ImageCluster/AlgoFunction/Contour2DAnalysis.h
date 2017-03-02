@@ -35,6 +35,11 @@ namespace larocv {
 	    const geo2d::Circle<float>& c,
 	    int   tol=0,
 	    bool  maskout=true);
+
+  uint
+  CountNonZero(const cv::Mat& img,
+	       const GEO2D_Contour_t& ctor,
+	       uint tol=0);
   
   double
   Pt2PtDistance(const geo2d::Vector<float>& pt,
@@ -107,7 +112,6 @@ namespace larocv {
   double
   CircumferenceAngularSum(const GEO2D_Contour_t& ctor,
 			  bool isclosed=false);
-   
   
 }
 #endif

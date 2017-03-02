@@ -43,6 +43,7 @@ namespace larocv {
     Register(new data::Vertex3DArray);
     
     _compute_dqdx = pset.get<bool>("CalculatedQdX",false);
+    
     if(_compute_dqdx) {
       for(short pid=0;pid<3;++pid)
 	Register(new data::ParticleClusterArray);
@@ -61,7 +62,7 @@ namespace larocv {
     std::vector<const data::Vertex3D*> wire_vtx_v;
     std::vector<const data::Vertex3D*> time_vtx_v;
     std::vector<const data::Vertex3D*> vtx_v;
-
+    
     for(const auto& vtx3d : track_vtx_data.as_vector()) {
       if (vtx3d.type==data::VertexType_t::kTime) time_vtx_v.push_back(&vtx3d);
       else if (vtx3d.type==data::VertexType_t::kWire) wire_vtx_v.push_back(&vtx3d);

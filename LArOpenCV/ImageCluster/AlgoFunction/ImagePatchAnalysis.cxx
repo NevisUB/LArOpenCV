@@ -388,7 +388,8 @@ namespace larocv {
     
     img.copyTo(dst_img,mask);
     return dst_img;
-  }    
-  
+  }
+
+
 }
 #endif

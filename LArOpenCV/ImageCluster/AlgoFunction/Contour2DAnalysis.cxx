@@ -6,6 +6,7 @@
 #include "opencv2/imgproc.hpp"
 #include <opencv2/opencv.hpp>
 #include "LArOpenCV/Core/larbys.h"
+
 namespace larocv {
 
   GEO2D_ContourArray_t FindContours(const cv::Mat& img)
@@ -16,6 +17,8 @@ namespace larocv {
     cv::findContours(img_copy,result_v,cv_hierarchy_v,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
     return result_v;
   }
+
+
   
   cv::Mat CleanImage(const cv::Mat& img,
 		     const GEO2D_ContourArray_t& veto_ctor_v,
@@ -101,6 +104,14 @@ namespace larocv {
     return dst_img;
   }
 
+
+  uint
+  CountNonZero(const cv::Mat& img,
+	       const GEO2D_Contour_t& ctor,
+	       uint tol){
+    return cv::countNonZero(MaskImage(img,ctor,tol,false));
+  }
+
   double Pt2PtDistance(const geo2d::Vector<float>& pt,
 		       const GEO2D_Contour_t& ctor)
   {
@@ -181,12 +192,13 @@ namespace larocv {
     auto result = Merge(ctor1,ctor2);
     auto masked_img = MaskImage(img,result,0,false);
     
-    GEO2D_ContourArray_t result_v;
-    std::vector<cv::Vec4i> cv_hierarchy_v;
-    cv::findContours(masked_img,result_v,cv_hierarchy_v,CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    auto result_v = FindContours(masked_img);
     LAROCV_SDEBUG() << "... found " << result_v.size() << " contours in mask" << std::endl;
     
-    if (!result_v.size()) throw larbys("No refined contour can be determined");
+    if (!result_v.size()) {
+      
+      throw larbys("No refined contour can be determined");
+    }
     if (result_v.size()==1) {
       LAROCV_SDEBUG() << "... returning contour of size " << result_v[0].size() << std::endl;
       return result_v[0];
@@ -212,7 +224,7 @@ namespace larocv {
 			      const cv::Mat& img,
 			      uint tol)
   {
-    
+
     LAROCV_SDEBUG() << "Merging by mask..." << std::endl;
       
     GEO2D_ContourArray_t ctor_v;
@@ -223,32 +235,28 @@ namespace larocv {
     
     auto masked_img = MaskImage(img,ctor_v,tol,false);
 
-    
-    GEO2D_ContourArray_t result_v;
-    std::vector<cv::Vec4i> cv_hierarchy_v;
-
-    cv::findContours(masked_img,result_v,cv_hierarchy_v,CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    auto result_v = FindContours(masked_img);
 
     LAROCV_SDEBUG() << "... found " << result_v.size() << " contours in mask" << std::endl;
     
-    if (!result_v.size()) throw larbys("No refined contour can be determined");
+    if (!result_v.size()) throw larbys("No contours found in masked image");
     if (result_v.size()==1) {
       LAROCV_SDEBUG() << "... returning contour of size " << result_v[0].size() << std::endl;
       return result_v[0];
     }
     
-    size_t max_area=0;
+    size_t max_npx=0;
     int idx=-1;
     for(uint i=0;i<result_v.size();++i) {
       const auto& ctor = result_v[i];
-      auto area = cv::contourArea(ctor);
-      if ( area > max_area ) {
-	max_area=area;
+      auto npx = CountNonZero(masked_img,ctor);
+      if ( npx > max_npx ) {
+	max_npx = npx;
 	idx=i;
       }
     }
     
-    if( idx < 0) throw larbys("No refined contour can be determined");
+    if( idx < 0) throw larbys("No index found, refined contour can be determined.");
 
     LAROCV_SDEBUG() << "... returning max area contour of size " << result_v[idx].size() << std::endl;
     
@@ -463,7 +471,7 @@ namespace larocv {
     LAROCV_SDEBUG() << "Scanned contour size " << last_id << " of circumference " << circum << std::endl;
     return angle_sum / weight_sum;
   }
-
   
+
 }
 #endif
