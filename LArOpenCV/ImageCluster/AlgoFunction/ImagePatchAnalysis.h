@@ -29,14 +29,14 @@ namespace larocv {
   geo2d::VectorArray<float>
   QPointOnCircle(const ::cv::Mat& img,
 		 const geo2d::Circle<float>& circle,
-		 const float pi_threshold,
+		 const float pi_threshold=0.1,
 		 const float supression=0);
 
   std::vector<geo2d::VectorArray<float> >
   QPointArrayOnCircleArray(const ::cv::Mat& img,
 			   const geo2d::Vector<float>& center,
 			   const std::vector<float>& radius_v,
-			   const float pi_threshold,
+			   const float pi_threshold=0.1,
 			   const float supression=0);
 
   

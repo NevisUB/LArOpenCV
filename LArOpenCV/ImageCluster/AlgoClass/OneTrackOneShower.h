@@ -64,7 +64,12 @@ namespace larocv {
     std::vector<size_t> _seed_plane_v;
 
     std::vector<data::Vertex3D> _shower_vtx3d_v;
-
+    
+    bool _grad_circle;
+    float _grad_circle_min;
+    float _grad_circle_max;
+    float _grad_circle_step;
+    std::vector<float> _grad_circle_rad_v;
   };
 
 }

@@ -23,6 +23,17 @@ namespace larocv {
     _pi_threshold = 5;
     _circle_default_radius = pset.get<float>("CircleDefaultRadius",10);
 
+    _grad_circle = pset.get<bool> ("GraduateCircle",false);
+    if (_grad_circle) {
+      _grad_circle_min = pset.get<float>("GraduateCircleMin");
+      _grad_circle_max = pset.get<float>("GraduateCircleMax");
+      _grad_circle_step = pset.get<float>("GraduateCircleStep");
+      for(float step = _grad_circle_min;
+	  step <= _grad_circle_max;
+	  step += _grad_circle_step)
+	_grad_circle_rad_v.push_back(step);
+    }
+    
     _xplane_tick_resolution = 3;
     _num_planes = 3;
 
@@ -107,7 +118,7 @@ namespace larocv {
       // now check coordinates registered
       size_t valid_px_count=0;
       for(auto const& pt : check_pts) {
-	if( ((float)(img.at<unsigned char>(pt.y,pt.x))) > _pi_threshold )
+	if( ((float)(img.at<uchar>(pt.y,pt.x))) > _pi_threshold )
 	  ++valid_px_count;
       }
 
@@ -152,11 +163,59 @@ namespace larocv {
 	cvtx.center.x = circle.center.x;
 	cvtx.center.y = circle.center.y;
 	auto const& img = img_v[plane];
-	auto xs_pt_v = QPointOnCircle(img,circle,_pi_threshold);
-	LAROCV_INFO() << "Inspecting plane " << plane
-		      << " ... " << xs_pt_v.size()
-		      << " crossing points on circle @ " << circle.center << " w/ rad " << circle.radius << std::endl;
-	xs_pt_v = this->ValidShowerPointOnCircle(img, circle, xs_pt_v);
+
+	geo2d::VectorArray<float> xs_pt_v;
+
+	if (_grad_circle) {
+	  LAROCV_DEBUG() << "Graduating circle @ " << circle.center << std::endl;
+	  auto xs_pt_vv = QPointArrayOnCircleArray(img,circle.center,_grad_circle_rad_v);
+	  
+	  if (xs_pt_vv.size() != _grad_circle_rad_v.size())
+	    throw larbys("Returned QPoint array size does not match radius size");
+
+	  //keep track of 2*pi*(r+1) number of pixels (over estimate the circumference of largest circle)
+	  std::vector<size_t> xs_count_v((int)2*4*_grad_circle_max,0);
+	  
+	  for(size_t rad_id=0;rad_id<xs_pt_vv.size();++rad_id) {
+	    circle.radius = _grad_circle_rad_v[rad_id];
+	    auto& xs_pt_v_ = xs_pt_vv[rad_id];
+	    LAROCV_DEBUG() << "Inspect XS " << xs_pt_v_.size() << " @ rad " << circle.radius << std::endl;
+	    xs_pt_v_ = this->ValidShowerPointOnCircle(img, circle, xs_pt_v_);
+	    if (xs_pt_v_.size() > xs_count_v.size()) throw larbys("More crossing points than expected max size");
+	    xs_count_v[xs_pt_v_.size()]++;
+	  }
+
+	  //get the mode of size, avoid 0...
+	  auto max_iter = std::max_element(xs_count_v.begin()+1,xs_count_v.end());
+	  auto mode_xs = std::distance(xs_count_v.begin(), max_iter);
+	  if (*max_iter) {
+	    
+	    for(size_t count=0;count<xs_count_v.size();++count)
+	      if(xs_count_v[count]>0)
+		LAROCV_DEBUG() << "XS: " << count << " is " << xs_count_v[count] << std::endl;
+	  
+	    LAROCV_DEBUG() << "Found mode " << mode_xs << std::endl;
+
+	    //get the largest circle with this XS
+
+	    for(size_t rad_id=0;rad_id<xs_pt_vv.size();++rad_id) {
+	      const auto& xs_pt_v_ = xs_pt_vv[rad_id];
+	      if(xs_pt_v_.size() != mode_xs) continue;
+	      xs_pt_v = xs_pt_v_;
+	      LAROCV_DEBUG() << "Set xs pt vector of size " << xs_pt_v.size()
+			     << " @ rad " << _grad_circle_rad_v[rad_id] << std::endl;
+	    }
+	  }
+	  
+	} else {
+	  xs_pt_v = QPointOnCircle(img,circle,_pi_threshold);
+	  LAROCV_INFO() << "Inspecting plane " << plane
+			<< " ... " << xs_pt_v.size()
+			<< " crossing points on circle @ " << circle.center
+			<< " w/ rad " << circle.radius << std::endl;
+	  xs_pt_v = this->ValidShowerPointOnCircle(img, circle, xs_pt_v);
+	}
+	
 	for(auto const& xs_pt : xs_pt_v) {
 	  LAROCV_DEBUG() << "Determining PCA @ " << xs_pt << std::endl;
 	  data::PointPCA pca_pt;
