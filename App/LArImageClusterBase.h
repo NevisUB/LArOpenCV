@@ -88,6 +88,7 @@ namespace larlite {
     
     bool _store_contours;
     bool _debug;
+    bool _hit_removal;
 
     std::string _vtx_producer;
     std::vector<float> _plane_weights;

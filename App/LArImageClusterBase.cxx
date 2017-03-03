@@ -24,6 +24,7 @@ namespace larlite {
     _fout = 0;
     _num_stored = 0;
     _num_clusters = 0;
+    _hit_removal = false;
     _producer = "";
     _store_original_img = false;
     _event = 0;
@@ -46,6 +47,7 @@ namespace larlite {
     _profile = main_cfg.get<bool>("Profile");
     _producer = main_cfg.get<std::string>("Producer");
     _store_original_img = main_cfg.get<bool>("StoreOriginalImage");
+    //_hit_removal = main_cfg.get<bool>("UseHitRemoval");
     _process_count = 0;
     _process_time_image_extraction = 0;
     _process_time_analyze = 0;
@@ -224,6 +226,9 @@ namespace larlite {
     for (size_t hindex = 0; hindex < ev_hit->size(); ++hindex) {
       
       auto const& h = (*ev_hit)[hindex];
+
+      if ( _hit_removal && (h.GoodnessOfFit() < 0) )
+	continue;
 
       auto const& wid = h.WireID();
 
