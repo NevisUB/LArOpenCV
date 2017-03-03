@@ -9,7 +9,25 @@
 #include "ReClusterAlgoFactory.h"
 #include "BaseUtil.h"
 
+#include "ImageCluster/Cluster/PolarCluster.h"
+#include "ImageCluster/Cluster/FillClusterParams.h"
+#include "ImageCluster/Filter/SimpleCuts.h"
+#include "ImageCluster/Filter/FilterROI.h"
+#include "ImageCluster/Direction/BoundingRectDir.h"
+#include "ImageCluster/StartPoint/BoundRectStart.h"
+#include "ImageCluster/Filter/ROIParameters.h"
+#include "ImageCluster/Filter/VertexInHull.h"
+#include "ImageCluster/Cluster/UpdateMeta.h"
+#include "ImageCluster/Merge/FlashlightMerge.h"
+#include "ImageCluster/StartPoint/SimpleEndPoint.h"
+#include "ImageCluster/Filter/CheckAlignment.h"
+#include "ImageCluster/Filter/CheckWires.h"
+#include "ImageCluster/Debug/ClusterWriteOut.h"
+
+#include "ImageCluster/Match/IoUOverlap.h"
+
 namespace larocv {
+
 
   ImageClusterManager::ImageClusterManager(const std::string name)
     : laropencv_base(name)
@@ -127,9 +145,15 @@ namespace larocv {
     _cluster_alg_v.clear();
     _cluster_alg_m.clear();
 
+
+
     for(size_t i=0; i<cluster_instance_type_v.size(); ++i) {
       auto const& name = cluster_instance_name_v[i];
       auto const& type = cluster_instance_type_v[i];
+
+      //auto a = PolarClusterFactory();
+      //auto b = ClusterAlgoFactory::get().add_factory(name,*a);
+      
       if(_cluster_alg_m.find(name) != _cluster_alg_m.end()) {
 	LAROCV_CRITICAL((*this)) << "Duplicate algorithm name found!" << std::endl;
 	throw larbys("Duplicate algorithm name found!");
