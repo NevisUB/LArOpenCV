@@ -70,6 +70,7 @@ namespace larocv {
     float _grad_circle_max;
     float _grad_circle_step;
     std::vector<float> _grad_circle_rad_v;
+    bool _require_unique;
   };
 
 }

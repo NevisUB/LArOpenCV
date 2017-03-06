@@ -33,7 +33,7 @@ namespace larocv {
 	  step += _grad_circle_step)
 	_grad_circle_rad_v.push_back(step);
     }
-    
+    _require_unique = pset.get<bool>("RequireUnique",true);
     _xplane_tick_resolution = 3;
     _num_planes = 3;
 
@@ -189,24 +189,20 @@ namespace larocv {
 	  auto max_iter = std::max_element(xs_count_v.begin()+1,xs_count_v.end());
 	  auto mode_xs = std::distance(xs_count_v.begin(), max_iter);
 	  if (*max_iter) {
-	    
 	    for(size_t count=0;count<xs_count_v.size();++count)
 	      if(xs_count_v[count]>0)
 		LAROCV_DEBUG() << "XS: " << count << " is " << xs_count_v[count] << std::endl;
-	  
 	    LAROCV_DEBUG() << "Found mode " << mode_xs << std::endl;
-
 	    //get the largest circle with this XS
-
 	    for(size_t rad_id=0;rad_id<xs_pt_vv.size();++rad_id) {
 	      const auto& xs_pt_v_ = xs_pt_vv[rad_id];
 	      if(xs_pt_v_.size() != mode_xs) continue;
 	      xs_pt_v = xs_pt_v_;
+	      circle.radius = _grad_circle_rad_v[rad_id];
 	      LAROCV_DEBUG() << "Set xs pt vector of size " << xs_pt_v.size()
 			     << " @ rad " << _grad_circle_rad_v[rad_id] << std::endl;
 	    }
 	  }
-	  
 	} else {
 	  xs_pt_v = QPointOnCircle(img,circle,_pi_threshold);
 	  LAROCV_INFO() << "Inspecting plane " << plane
@@ -272,7 +268,13 @@ namespace larocv {
 	LAROCV_DEBUG() << "  2D vertex @ " << cvtx2d.center
 		       << " ... # crossing points = " << cvtx2d.xs_v.size() << std::endl;
 	num_xs_v[plane] = cvtx2d.xs_v.size();
-	if(cvtx2d.xs_v.size() == 1) ++num_plane_unique_xs;
+	if (_require_unique) {
+	  if(cvtx2d.xs_v.size() == 1) ++num_plane_unique_xs;
+	}
+	else {
+	  if(cvtx2d.xs_v.size()) ++num_plane_unique_xs;
+	}
+	    
       }
       if(num_plane_unique_xs<2) {
 	LAROCV_DEBUG() << "Skipping this candidate... (# of planes w/ unique-circle-xs-pt is <2)" << std::endl;

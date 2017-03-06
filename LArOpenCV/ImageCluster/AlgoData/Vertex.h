@@ -75,7 +75,8 @@ namespace larocv {
 	kTime,
 	kWire,
 	kShower,
-	kEndOfTrack
+	kEndOfTrack,
+	kEdge
 	};
     
     /**

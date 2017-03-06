@@ -12,9 +12,7 @@ namespace larocv {
   {}
   
   void ShowerVertexAnalysis::_Configure_(const Config_t &pset) {
-    
   }
-  
   
   bool ShowerVertexAnalysis::_PostProcess_(const std::vector<const cv::Mat>& img_v)
   {

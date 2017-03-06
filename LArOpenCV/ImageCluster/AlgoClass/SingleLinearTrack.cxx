@@ -9,6 +9,7 @@
 #include <array>
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
+#include <algorithm>
 
 namespace larocv {
 
@@ -347,7 +348,10 @@ namespace larocv {
 	    cand12_ok = _geo.YZPoint(strack1.edge1, seed1_plane, strack2.edge2, seed2_plane, cand12);
 	    cand21_ok = _geo.YZPoint(strack1.edge2, seed1_plane, strack2.edge1, seed2_plane, cand21);
 	    cand22_ok = _geo.YZPoint(strack1.edge2, seed1_plane, strack2.edge2, seed2_plane, cand22);
-
+	    LAROCV_DEBUG()<< "pt "<<strack1.edge1<<" @ plane "<<seed1_plane<<" & pt "<<strack2.edge1<<" @ plane "<<seed2_plane<<" is "<<cand11_ok<<std::endl;
+	    LAROCV_DEBUG()<< "pt "<<strack1.edge1<<" @ plane "<<seed1_plane<<" & pt "<<strack2.edge2<<" @ plane "<<seed2_plane<<" is "<<cand12_ok<<std::endl;
+	    LAROCV_DEBUG()<< "pt "<<strack1.edge2<<" @ plane "<<seed1_plane<<" & pt "<<strack2.edge1<<" @ plane "<<seed2_plane<<" is "<<cand21_ok<<std::endl;
+	    LAROCV_DEBUG()<< "pt "<<strack1.edge2<<" @ plane "<<seed1_plane<<" & pt "<<strack2.edge2<<" @ plane "<<seed2_plane<<" is "<<cand22_ok<<std::endl;
 	    if(!cand11_ok && !cand12_ok && !cand21_ok && !cand22_ok) continue;
 
 	    LAROCV_DEBUG() << "LinearTrack2D pair " << strack1_idx << " and " << strack2_idx
@@ -358,6 +362,11 @@ namespace larocv {
 			   << (cand22_ok ? 1 : 0) << ")"
 			   << std::endl;
 
+	    if (cand11_ok) cand11.type=data::VertexType_t::kEdge;
+	    if (cand12_ok) cand12.type=data::VertexType_t::kEdge;
+	    if (cand21_ok) cand21.type=data::VertexType_t::kEdge;
+	    if (cand22_ok) cand22.type=data::VertexType_t::kEdge;
+	    
 	    // Loop over other planes and find possible combination strack
 	    std::array<double,4> sum_min_dist_v;
 	    std::array<size_t,4> num_good_plane_v;
@@ -369,7 +378,7 @@ namespace larocv {
 	    for(size_t plane=0; plane<_num_planes; ++plane) {
 	      
 	      if(plane == seed1_plane || plane == seed2_plane) continue;
-
+	      LAROCV_DEBUG() << "Examine plane " << plane << std::endl;
 	      // Loop over linear track on this plane, find the best representative strack
 	      auto const& strack_v = strack_vv[plane];
 	      std::array<double,4> min_dist_v;
@@ -379,9 +388,11 @@ namespace larocv {
 		strack_idx_v[cand_idx] = kINVALID_SIZE;
 	      }
 	      double dist=0;
+	      LAROCV_DEBUG() << "... found " << strack_v.size() << " tracks" << std::endl;
 	      for(size_t strack_idx=0; strack_idx < strack_v.size(); ++strack_idx) {
 		if(used_vv[plane][strack_idx]) continue;
 		auto const& strack = strack_v[strack_idx];
+		LAROCV_DEBUG() << "Unused, projecting onto this plane..." << std::endl;
 		// Find closest edge point
 		if(cand11_ok) {
 		  auto const& edge11 = cand11.vtx2d_v[plane].pt;
@@ -411,9 +422,9 @@ namespace larocv {
 		  dist = geo2d::dist(edge22, strack.edge2);
 		  if(dist < min_dist_v[3] && dist < _min_compat_dist) { min_dist_v[3] = dist; strack_idx_v[3] = strack_idx; }
 		}
-	      }
+	      } // end strack
 	      for(size_t cand_idx=0; cand_idx<4; ++cand_idx) {
-
+		
 		if(strack_idx_v[cand_idx] == kINVALID_SIZE) continue;
 
 		if(sum_min_dist_v[cand_idx]== 1e9)
@@ -424,8 +435,9 @@ namespace larocv {
 		num_good_plane_v[cand_idx] += 1;
 	      }
 	      strack_idx_vv.push_back(strack_idx_v);
-	    }
-	    // Now let's make a decision on 4 candidate cases
+	    } // end 4 possible projections
+	    
+	    // Now let's make a decision on 4 candidate cases by minimizing average distance between projection and edge
 	    size_t best_cand_idx = kINVALID_SIZE;
 	    double min_dist=1e9;
 	    for(size_t cand_idx=0; cand_idx<4; ++cand_idx) {
@@ -484,7 +496,7 @@ namespace larocv {
     } // end looping over 1st plane of two plane pairs
 
     std::vector<data::LinearTrack3D> res_v;
-
+    std::vector<geo2d::VectorArray<float> > used_edges_vv;
     // now we have two and many plane candidates ... register
     for(size_t plane1=0; plane1<_num_planes; ++plane1) {
       for(size_t plane2=0; plane2<_num_planes; ++plane2) {
@@ -495,11 +507,11 @@ namespace larocv {
 		       << cand_info_v.size() << " vertex candidates" << std::endl;
 	
 	for(auto const& cand_info : cand_info_v) {
-
 	  larocv::data::LinearTrack3D res;
 	  res.edge1.vtx2d_v.resize(_num_planes);
 	  res.edge2.vtx2d_v.resize(_num_planes);
 	  std::vector<larocv::data::LinearTrack2D> res_strack_v(_num_planes);
+	  geo2d::VectorArray<float> used_edges_v;
 	  auto const& strack1 = strack_vv[plane1][cand_info[0]];
 	  auto const& strack2 = strack_vv[plane2][cand_info[1]];
 	  res_strack_v[plane1] = strack1;
@@ -508,23 +520,54 @@ namespace larocv {
 	  auto const& cand_type = cand_info[2];
 	  bool edge2_ok = false;
 	  if (cand_type == 0) {
+	    LAROCV_DEBUG() << "Registering type 0" << std::endl;
 	    _geo.YZPoint(strack1.edge1, plane1, strack2.edge1, plane2, res.edge1);
 	    edge2_ok = _geo.YZPoint(strack1.edge2, plane1, strack2.edge2, plane2, res.edge2);
+	    used_edges_v.push_back(strack1.edge1);
+	    used_edges_v.push_back(strack2.edge1);
+	    if(edge2_ok) {
+	      used_edges_v.push_back(strack1.edge2);
+	      used_edges_v.push_back(strack2.edge2);
+	    }
 	  }
 	  else if (cand_type == 1) {
+	    LAROCV_DEBUG() << "Registering type 1" << std::endl;
 	    _geo.YZPoint(strack1.edge1, plane1, strack2.edge2, plane2, res.edge1);
 	    edge2_ok = _geo.YZPoint(strack1.edge2, plane1, strack2.edge1, plane2, res.edge2);
 	    std::swap(res_strack_v[plane2].edge1,res_strack_v[plane2].edge2);
+
+	    used_edges_v.push_back(strack1.edge1);
+	    used_edges_v.push_back(strack2.edge2);
+	    if(edge2_ok) {
+	      used_edges_v.push_back(strack1.edge2);
+	      used_edges_v.push_back(strack2.edge1);
+	    }
 	  }
 	  else if (cand_type == 2) {
+	    LAROCV_DEBUG() << "Registering type 2" << std::endl;
 	    _geo.YZPoint(strack1.edge2, plane1, strack2.edge1, plane2, res.edge1);
 	    edge2_ok = _geo.YZPoint(strack1.edge1, plane1, strack2.edge2, plane2, res.edge2);
-	    std::swap(res_strack_v[plane1].edge1,res_strack_v[plane1].edge2);	    
+	    std::swap(res_strack_v[plane1].edge1,res_strack_v[plane1].edge2);
+	    
+	    used_edges_v.push_back(strack1.edge2);
+	    used_edges_v.push_back(strack2.edge1);
+	    if(edge2_ok) {
+	      used_edges_v.push_back(strack1.edge1);
+	      used_edges_v.push_back(strack2.edge2);
+	    }
 	  }else {
+	    LAROCV_DEBUG() << "Registering type " << cand_type << std::endl;
 	    _geo.YZPoint(strack1.edge2, plane1, strack2.edge2, plane2, res.edge1);
 	    edge2_ok = _geo.YZPoint(strack1.edge1, plane1, strack2.edge1, plane2, res.edge2);
 	    std::swap(res_strack_v[plane1].edge1,res_strack_v[plane1].edge2);
 	    std::swap(res_strack_v[plane2].edge1,res_strack_v[plane2].edge2);
+
+	    used_edges_v.push_back(strack1.edge2);
+	    used_edges_v.push_back(strack2.edge2);
+	    if(edge2_ok) {
+	      used_edges_v.push_back(strack1.edge1);
+	      used_edges_v.push_back(strack2.edge1);
+	    }
 	  }
 	  LAROCV_INFO() << "Solid many-plane match ..."
 			<< " plane " << plane1 << " @ " << res.edge1.vtx2d_v[plane1].pt
@@ -533,6 +576,7 @@ namespace larocv {
 			<< std::endl;
 
 	  // Loop over other planes and find possible combination for edge1
+	  LAROCV_DEBUG() << "Loop over other planes and find possible combination for edge1" << std::endl;
 	  for(size_t plane=0; plane<_num_planes; ++plane) {
 	    auto const& edge2d = res.edge1.vtx2d_v.at(plane).pt;
 	    double min_dist = 1e9;
@@ -540,25 +584,38 @@ namespace larocv {
 	    size_t best_strack_id = kINVALID_SIZE;
 	    bool   swap_edges = false;
 	    auto const& strack_v = strack_vv[plane];
+	    std::vector<geo2d::Vector<float> > single_edge_v;
+	    single_edge_v.resize(strack_v.size());
 	    for(size_t strack_id=0; strack_id<strack_v.size(); ++strack_id) {
+	      LAROCV_DEBUG() << "track " << strack_id << " @ plane " << plane << std::endl;
 	      if(used_vv[plane][strack_id]) continue;
+	      auto& sedge = single_edge_v[strack_id];
+	      LAROCV_DEBUG() << "... is unused" << std::endl;
 	      dist = geo2d::dist(edge2d, strack_v[strack_id].edge1);
-	      if(dist < min_dist && dist < _min_compat_dist) { min_dist = dist; best_strack_id = strack_id; swap_edges = false; }
+	      if(dist < min_dist && dist < _min_compat_dist) { min_dist = dist; best_strack_id = strack_id; swap_edges = false; sedge = strack_v[strack_id].edge1; }
+	      LAROCV_DEBUG() << "compared edge " << strack_v[strack_id].edge1 << " to " << edge2d << std::endl;
+	      LAROCV_DEBUG() << "... found dist " << dist << " & min_dist " << min_dist << " & best_strack_id " << best_strack_id << " & swap " << swap_edges << std::endl;
 	      dist = geo2d::dist(edge2d, strack_v[strack_id].edge2);
-	      if(dist < min_dist && dist < _min_compat_dist) { min_dist = dist; best_strack_id = strack_id; swap_edges = true; }
+	      if(dist < min_dist && dist < _min_compat_dist) { min_dist = dist; best_strack_id = strack_id; swap_edges = true;  sedge = strack_v[strack_id].edge2; }
+	      LAROCV_DEBUG() << "compared edge " << strack_v[strack_id].edge2 << " to " << edge2d << std::endl;
+	      LAROCV_DEBUG() << "... found dist " << dist << " & min_dist " << min_dist << " & best_strack_id " << best_strack_id << " & swap " << swap_edges << std::endl;
 	    }
 	    
 	    if(best_strack_id == kINVALID_SIZE) continue;
-
+	    LAROCV_DEBUG() << "found a best track id " << best_strack_id << " @ plane " << plane << std::endl;
 	    res_strack_v[plane] = strack_v[best_strack_id];
+	    used_edges_v.push_back(single_edge_v[best_strack_id]);
+	    
 	    if(swap_edges)
 	      std::swap(res_strack_v[plane].edge1,res_strack_v[plane].edge2);
-	  }
+	    
+	  } // end loop plane
 	  res.move(std::move(res_strack_v));
 	  res_v.emplace_back(std::move(res));
-	}
-      }
-    }
+	  used_edges_vv.emplace_back(std::move(used_edges_v));
+	} // end candidate info
+      } // end second plane
+    } // end first plane
 
     // now we have two and many plane candidates ... register
     for(size_t seed1_idx=0; seed1_idx<_seed_plane_v.size(); ++seed1_idx) {
@@ -566,13 +623,19 @@ namespace larocv {
 	auto const& plane1 = _seed_plane_v[seed1_idx];
 	auto const& plane2 = _seed_plane_v[seed2_idx];
 	auto const& cand_info_v = two_plane_cand_vvv[plane1][plane2];
+	LAROCV_DEBUG() << "Two plane candidate info @ plane " << plane1
+		       << " & @ plane " << plane2 << " size " << two_plane_cand_vvv[plane1][plane2].size() << std::endl;
 	for(auto const& cand_info : cand_info_v) {
+	  LAROCV_DEBUG() << "used cand info [" << plane1 << "][" << cand_info[0] << "] = " << used_vv[plane1][cand_info[0]] << std::endl;
+	  LAROCV_DEBUG() << "used cand info [" << plane2 << "][" << cand_info[1] << "] = " << used_vv[plane2][cand_info[1]] << std::endl;
 	  if(used_vv[plane1][cand_info[0]]) continue;
 	  if(used_vv[plane2][cand_info[1]]) continue;
+	  LAROCV_DEBUG() << "Unused candidate pair (" << cand_info[0] << "," << cand_info[1] << ")" << std::endl;
 	  larocv::data::LinearTrack3D res;
 	  res.edge1.vtx2d_v.resize(_num_planes);
 	  res.edge2.vtx2d_v.resize(_num_planes);
 	  std::vector<larocv::data::LinearTrack2D> res_strack_v(_num_planes);
+	  geo2d::VectorArray<float> used_edges_v;
 	  auto const& strack1 = strack_vv[plane1][cand_info[0]];
 	  auto const& strack2 = strack_vv[plane2][cand_info[1]];
 	  res_strack_v[plane1] = strack1;
@@ -583,21 +646,42 @@ namespace larocv {
 	  if (cand_type == 0) {
 	    _geo.YZPoint(strack1.edge1, plane1, strack2.edge1, plane2, res.edge1);
 	    edge2_ok = _geo.YZPoint(strack1.edge2, plane1, strack2.edge2, plane2, res.edge2);
+	    used_edges_v.push_back(strack1.edge1);
+	    used_edges_v.push_back(strack2.edge1);
+		      
 	  }
 	  else if (cand_type == 1) {
 	    _geo.YZPoint(strack1.edge1, plane1, strack2.edge2, plane2, res.edge1);
 	    edge2_ok = _geo.YZPoint(strack1.edge2, plane1, strack2.edge1, plane2, res.edge2);
 	    std::swap(res_strack_v[plane2].edge1,res_strack_v[plane2].edge2);
+	    used_edges_v.push_back(strack1.edge1);
+	    used_edges_v.push_back(strack2.edge2);
+	    if(edge2_ok) {
+	      used_edges_v.push_back(strack1.edge2);
+	      used_edges_v.push_back(strack2.edge1);  
+	    }
 	  }
 	  else if (cand_type == 2) {
 	    _geo.YZPoint(strack1.edge2, plane1, strack2.edge1, plane2, res.edge1);
 	    edge2_ok = _geo.YZPoint(strack1.edge1, plane1, strack2.edge2, plane2, res.edge2);
-	    std::swap(res_strack_v[plane1].edge1,res_strack_v[plane1].edge2);	    
+	    std::swap(res_strack_v[plane1].edge1,res_strack_v[plane1].edge2);
+	    used_edges_v.push_back(strack1.edge2);
+	    used_edges_v.push_back(strack2.edge1);
+	    if(edge2_ok) {
+	      used_edges_v.push_back(strack1.edge1);
+	      used_edges_v.push_back(strack2.edge2);  
+	    }
 	  }else {
 	    _geo.YZPoint(strack1.edge2, plane1, strack2.edge2, plane2, res.edge1);
 	    edge2_ok = _geo.YZPoint(strack1.edge1, plane1, strack2.edge1, plane2, res.edge2);
 	    std::swap(res_strack_v[plane1].edge1,res_strack_v[plane1].edge2);
 	    std::swap(res_strack_v[plane2].edge1,res_strack_v[plane2].edge2);
+	    used_edges_v.push_back(strack1.edge2);
+	    used_edges_v.push_back(strack2.edge2);
+	    if(edge2_ok) {
+	      used_edges_v.push_back(strack1.edge1);
+	      used_edges_v.push_back(strack2.edge1);  
+	    }
 	  }
 
 	  LAROCV_INFO() << "Solid many-plane match ..."
@@ -614,27 +698,173 @@ namespace larocv {
 	    size_t best_strack_id = kINVALID_SIZE;
 	    bool   swap_edges = false;
 	    auto const& strack_v = strack_vv[plane];
+	    std::vector<geo2d::Vector<float> > single_edge_v;
+	    single_edge_v.resize(strack_v.size());
 	    for(size_t strack_id=0; strack_id<strack_v.size(); ++strack_id) {
 	      if(used_vv[plane][strack_id]) continue;
+	      auto& sedge = single_edge_v[strack_id];
 	      dist = geo2d::dist(edge2d, strack_v[strack_id].edge1);
-	      if(dist < min_dist && dist < _min_compat_dist) { min_dist = dist; best_strack_id = strack_id; swap_edges = false; }
+	      if(dist < min_dist && dist < _min_compat_dist) { min_dist = dist; best_strack_id = strack_id; swap_edges = false; sedge=strack_v[strack_id].edge1; }
 	      dist = geo2d::dist(edge2d, strack_v[strack_id].edge2);
-	      if(dist < min_dist && dist < _min_compat_dist) { min_dist = dist; best_strack_id = strack_id; swap_edges = true; }
+	      if(dist < min_dist && dist < _min_compat_dist) { min_dist = dist; best_strack_id = strack_id; swap_edges = true;  sedge=strack_v[strack_id].edge2; }
 	    }
 	    
 	    if(best_strack_id == kINVALID_SIZE) continue;
 
 	    res_strack_v[plane] = strack_v[best_strack_id];
+	    used_edges_v.push_back(single_edge_v[best_strack_id]);
 	    if(swap_edges)
 	      std::swap(res_strack_v[plane].edge1,res_strack_v[plane].edge2);
 	  }
 	  res.move(std::move(res_strack_v));
 	  res_v.emplace_back(std::move(res));
+	  used_edges_vv.emplace_back(std::move(used_edges_v));
+	}
+      } // end seed2
+    } // end seed1
+
+    //For these linear tracks, try to estimate the other 3D edge given existing linear tracks
+    for(size_t resid=0;resid<res_v.size();++resid) {
+      auto& res=res_v[resid];
+      //Both vertex found OK, skip doing this
+      if (res.edge1.x!=kINVALID_DOUBLE && res.edge2.x!=kINVALID_DOUBLE) {
+	LAROCV_DEBUG() << "Skipping LinearTrack3D " << resid << std::endl;
+	continue;
+      }
+      
+      std::multimap<double,std::pair<std::array<geo2d::Vector<float>,3>,data::Vertex3D> > score_map;	
+      auto& used_edges_v=used_edges_vv[resid];
+
+      LAROCV_DEBUG() << "Linear track ("<<resid<<") has "<<res.get_clusters().size()<<" tracks & "<< used_edges_v.size() << " used edges" <<std::endl;
+
+      auto& invalid_vtx = res.edge1.x==kINVALID_DOUBLE ? res.edge1 : res.edge2;
+      if (invalid_vtx.x!=kINVALID_DOUBLE && invalid_vtx.y!=kINVALID_DOUBLE && invalid_vtx.z!=kINVALID_DOUBLE)
+	throw larbys("Invalid vertex cannot be found but X value is not set...");
+
+      for(size_t plane1=0;plane1<res.get_clusters().size();++plane1) {
+	for(size_t plane2=plane1+1;plane2<res.get_clusters().size();++plane2) {
+	  std::array<bool,3> used_planes{{false,false,false}};
+	  used_planes[plane1]=true;
+	  used_planes[plane2]=true;
+	  auto& strack1 = res.get_clusters()[plane1];
+	  auto& strack2 = res.get_clusters()[plane2];
+	  auto* t1e1=&strack1.edge1;
+	  auto* t1e2=&strack1.edge2;
+	  auto* t2e1=&strack2.edge1;
+	  auto* t2e2=&strack2.edge2;
+	  if (!used_edges_v.empty()) {
+	    if(std::find(used_edges_v.begin(), used_edges_v.end(), *t1e1) != used_edges_v.end()) t1e1=nullptr;
+	    if(std::find(used_edges_v.begin(), used_edges_v.end(), *t1e2) != used_edges_v.end()) t1e2=nullptr;
+	    if(std::find(used_edges_v.begin(), used_edges_v.end(), *t2e1) != used_edges_v.end()) t2e1=nullptr;
+	    if(std::find(used_edges_v.begin(), used_edges_v.end(), *t2e2) != used_edges_v.end()) t2e2=nullptr;
+	  }
+
+	  if (!t1e1 && !t1e2 && !t2e1 && !t2e2) {
+	    LAROCV_DEBUG() << "...skip..." << std::endl;
+	    continue;
+	  }
+	  bool edge1121_ok=false;
+	  bool edge1122_ok=false;
+	  bool edge1221_ok=false;
+	  bool edge1222_ok=false;
+	    
+	  if (t1e1 && t2e1)
+	    edge1121_ok = _geo.YZPoint(strack1.edge1, plane1, strack2.edge1, plane2);
+	  if (t1e1 && t2e2)
+	    edge1122_ok = _geo.YZPoint(strack1.edge1, plane1, strack2.edge2, plane2);
+	  if (t1e2 && t2e1)
+	    edge1221_ok = _geo.YZPoint(strack1.edge2, plane1, strack2.edge1, plane2);
+	  if (t1e2 && t2e2)
+	    edge1222_ok = _geo.YZPoint(strack1.edge2, plane1, strack2.edge2, plane2);
+
+	  if (!edge1121_ok && !edge1122_ok && !edge1221_ok && !edge1222_ok) continue;
+	    
+	  size_t other_plane=4;
+	  for(size_t plane=0;plane<3;++plane) {
+	    if (!used_planes[plane])
+	      {other_plane=plane;break;}
+	  }
+	  if (other_plane==4) throw larbys("Other plane could not be determined");
+	  
+	  LAROCV_DEBUG() << "Projecting onto other plane " << other_plane << std::endl;
+	  const geo2d::Vector<float>* comp_edge1=nullptr;
+	  const geo2d::Vector<float>* comp_edge2=nullptr;
+
+	  int n_oks = edge1121_ok+edge1122_ok+edge1221_ok+edge1222_ok;
+
+	  if (n_oks!=1) throw larbys("Logic error number of compatability exceeds 1");
+	  
+	  if (edge1121_ok) { comp_edge1=&strack1.edge1; comp_edge2=&strack2.edge1; }
+	  if (edge1122_ok) { comp_edge1=&strack1.edge1; comp_edge2=&strack2.edge2; }
+	  if (edge1221_ok) { comp_edge1=&strack1.edge2; comp_edge2=&strack2.edge1; }
+	  if (edge1222_ok) { comp_edge1=&strack1.edge2; comp_edge2=&strack2.edge2; }
+	  
+	  geo2d::Vector<float> pt_iv(kINVALID_FLOAT,kINVALID_FLOAT);
+	  std::array<geo2d::Vector<float>,3> edges_arr{{pt_iv,pt_iv,pt_iv}};
+	  
+	  edges_arr[plane1]=*comp_edge1;
+	  edges_arr[plane2]=*comp_edge2;
+	    
+	  auto& strack3 = res.get_clusters()[other_plane];
+	  auto* t3e1=&strack3.edge1;
+	  auto* t3e2=&strack3.edge2;
+	  if(std::find(used_edges_v.begin(), used_edges_v.end(), *t3e1) != used_edges_v.end()) t3e1=nullptr;
+	  if(std::find(used_edges_v.begin(), used_edges_v.end(), *t3e2) != used_edges_v.end()) t3e2=nullptr;
+
+	  data::Vertex3D vtx3d;
+	  _geo.YZPoint(*comp_edge1, plane1, *comp_edge2, plane2,vtx3d);
+	  double min_dist=kINVALID_DOUBLE;
+
+
+	  if (!t3e1 && !t3e2)  {
+	    LAROCV_DEBUG() << "No additional edge can be found";
+	    score_map.emplace(min_dist,std::make_pair(edges_arr,vtx3d));
+	    continue;
+	  }
+
+	  const geo2d::Vector<float>* closest_edge=nullptr;
+	      
+	  if (t3e1) {
+	    auto dist = geo2d::dist(vtx3d.vtx2d_v[other_plane].pt, *t3e1);
+	    if(dist < min_dist && dist < _min_compat_dist) { min_dist = dist; closest_edge=t3e1; } 
+	  }
+	  if (t3e2) {
+	    auto dist = geo2d::dist(vtx3d.vtx2d_v[other_plane].pt, *t3e2);
+	    if(dist < min_dist && dist < _min_compat_dist) { min_dist = dist; closest_edge=t3e2; }
+	  }
+	  if (min_dist==kINVALID_DOUBLE) {
+	    LAROCV_DEBUG() << "No additional compatible edge can be found";
+	    score_map.emplace(min_dist,std::make_pair(edges_arr,vtx3d));
+	    continue;
+	  }
+
+	  LAROCV_DEBUG() << "Compatible edge found @ " << *closest_edge << " @ dist " << min_dist << std::endl;
+	  edges_arr[other_plane]=*closest_edge;
+	  score_map.emplace(min_dist,std::make_pair(edges_arr,vtx3d));
 	}
       }
-    }
-    return res_v;
-  }
 
+      LAROCV_DEBUG()<<"Dumping score map"<<std::endl;
+      double min_score=kINVALID_DOUBLE;
+      for(auto const& score_res : score_map) {
+	const auto score=score_res.first;
+	LAROCV_DEBUG() << "Score " << score << std::endl;
+	const auto& vtx3d=score_res.second.second;
+	LAROCV_DEBUG() << "\t 3D vertex @("<<vtx3d.x<<","<<vtx3d.y<<","<<vtx3d.z<<")"<<std::endl;
+	const auto& pt_arr=score_res.second.first;
+	LAROCV_DEBUG() << "\t... (0)" << pt_arr[0] << " & est. "<< vtx3d.vtx2d_v[0].pt << std::endl;
+	LAROCV_DEBUG() << "\t... (1)" << pt_arr[1] << " & est. "<< vtx3d.vtx2d_v[1].pt << std::endl;
+	LAROCV_DEBUG() << "\t... (2)" << pt_arr[2] << " & est. "<< vtx3d.vtx2d_v[2].pt << std::endl;
+	if  (score_res.first<min_score) {
+	  min_score=score;
+	  invalid_vtx=vtx3d;
+	}
+      }
+    } // end this res
+
+    
+    return res_v;
+  } // end FindLinearTrack
+  
 }
 #endif
