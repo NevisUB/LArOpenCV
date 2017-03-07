@@ -44,6 +44,8 @@ namespace larocv {
 	throw larbys();
       }
     }
+
+    _geo.Configure(pset.get<Config_t>("LArPlaneGeo"));
     
     Register(new data::Vertex3DArray);
   }

@@ -31,6 +31,8 @@ namespace larocv {
     _vertex_min_separation = 3;
     _xplane_tick_resolution = 3;
     _num_planes = 3;
+
+    _geo_algo.Configure(pset.get<Config_t>("LArPlaneGeo"));
   }
 
   void ElectronShowerVertexSeed::SetPlaneInfo(const ImageMeta& meta)

@@ -50,9 +50,11 @@ namespace larocv{
     _min_contour_length = 5;
     _min_contour_rect_area = 20;
 
+    _geo.Configure(pset.get<Config_t>("LArPlaneGeo"));
+    
     _plane_scan_info_v.resize(3);
     for(auto& i : _plane_scan_info_v) i.Clear();
-
+    
   }
 
 

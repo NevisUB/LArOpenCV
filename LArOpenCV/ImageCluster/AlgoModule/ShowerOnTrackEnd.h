@@ -15,7 +15,8 @@ namespace larocv {
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
     ShowerOnTrackEnd(const std::string name = "ShowerOnTrackEnd") :
-      ImageAnaBase(name)
+      ImageAnaBase(name),
+      _geo()
     {}
     
     /// Default destructor

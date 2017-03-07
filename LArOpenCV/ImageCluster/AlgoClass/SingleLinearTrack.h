@@ -18,7 +18,9 @@ namespace larocv {
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
-    SingleLinearTrack() : laropencv_base("SingleLinearTrack")
+    SingleLinearTrack() :
+      laropencv_base("SingleLinearTrack"),
+      _geo()
     {}
     
     /// Default destructor

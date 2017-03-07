@@ -38,6 +38,8 @@ namespace larocv {
     _num_planes = 3;
 
     _valid_xs_npx = pset.get<size_t>("ValidXsNpx",1);
+
+    _geo_algo.Configure(pset.get<Config_t>("LArPlaneGeo"));
   }
 
   void OneTrackOneShower::SetPlaneInfo(const ImageMeta& meta)

@@ -51,7 +51,9 @@ namespace larocv {
   public:
     
     /// Default constructor
-    TrackVertexScan2D() : laropencv_base("TrackVertexScan2D")
+    TrackVertexScan2D() :
+      laropencv_base("TrackVertexScan2D"),
+      _geo()
     {}
     
     /// Default destructor

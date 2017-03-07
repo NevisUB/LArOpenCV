@@ -19,7 +19,9 @@ namespace larocv {
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
-    ElectronShowerVertexSeed() : laropencv_base("ElectronShowerVertexSeed")
+    ElectronShowerVertexSeed() :
+      laropencv_base("ElectronShowerVertexSeed"),
+      _geo_algo()
     {}
     
     /// Default destructor

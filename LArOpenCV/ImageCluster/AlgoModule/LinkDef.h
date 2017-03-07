@@ -17,7 +17,7 @@
 #pragma link C++ class larocv::ShowerVertexEstimate+;
 #pragma link C++ class larocv::ShowerParticleCluster+;
 #pragma link C++ class larocv::ShowerOnTrackEnd+;
-#pragma link C++ class larocv::ShowerOnEdge+;
+//#pragma link C++ class larocv::ShowerOnEdge+;
 #pragma link C++ class larocv::ShowerVertexMerger+;
 #pragma link C++ class larocv::TrackVertexAnalysis+;
 #pragma link C++ class larocv::ShowerVertexAnalysis+;

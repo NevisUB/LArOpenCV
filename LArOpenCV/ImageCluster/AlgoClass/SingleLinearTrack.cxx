@@ -35,8 +35,9 @@ namespace larocv {
     }
     _minimum_neighbor_distance = 5.0;
     _min_compat_dist = 5;
-    _xplane_tick_resolution = 3;
     _num_planes = 3;
+
+    _geo.Configure(pset.get<Config_t>("LArPlaneGeo"));
   }
   
   void SingleLinearTrack::EdgesFromMeanValue(const GEO2D_Contour_t& ctor,
@@ -855,7 +856,7 @@ namespace larocv {
 	LAROCV_DEBUG() << "\t... (0)" << pt_arr[0] << " & est. "<< vtx3d.vtx2d_v[0].pt << std::endl;
 	LAROCV_DEBUG() << "\t... (1)" << pt_arr[1] << " & est. "<< vtx3d.vtx2d_v[1].pt << std::endl;
 	LAROCV_DEBUG() << "\t... (2)" << pt_arr[2] << " & est. "<< vtx3d.vtx2d_v[2].pt << std::endl;
-	if  (score_res.first<min_score) {
+	if  (score<=min_score) {
 	  min_score=score;
 	  invalid_vtx=vtx3d;
 	}

@@ -18,7 +18,9 @@ namespace larocv {
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
-    OneTrackOneShower() : laropencv_base("OneTrackOneShower")
+    OneTrackOneShower() :
+      laropencv_base("OneTrackOneShower"),
+      _geo_algo()
     {}
     
     /// Default destructor

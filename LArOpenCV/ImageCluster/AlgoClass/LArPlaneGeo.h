@@ -22,6 +22,9 @@ namespace larocv {
     /// Default destructor
     virtual ~LArPlaneGeo(){}
 
+    /// Configuration
+    void Configure(const Config_t &pset);
+
     /// Explicit re-set function to put all parameters back to constructor default
     void Reset();
 

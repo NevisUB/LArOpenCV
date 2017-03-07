@@ -8,9 +8,6 @@
 namespace larocv {
 
   LArPlaneGeo::LArPlaneGeo()
-  { Reset(); }
-
-  void LArPlaneGeo::Reset()
   {
     _xplane_tick_resolution = 3;
     _trigger_tick = 3200;
@@ -21,8 +18,15 @@ namespace larocv {
     _tick_offset_v[0] = 0.;
     _tick_offset_v[1] = 4.54;
     _tick_offset_v[2] = 7.78;
+  
     //_tick_offset_v[1] = 0.;
     //_tick_offset_v[2] = 0.;
+
+    Reset();
+  }
+
+  void LArPlaneGeo::Reset()
+  {
     _wire_comp_factor_v.clear();
     _time_comp_factor_v.clear();
     _origin_v.clear();
@@ -31,6 +35,16 @@ namespace larocv {
     _origin_v.resize(_num_planes);
   }
 
+  void LArPlaneGeo::Configure(const Config_t &pset)
+  {
+    this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
+    _xplane_tick_resolution=pset.get<float>("XPlaneTickResolution",3);
+    _trigger_tick=pset.get<float>("TriggerTick",3200);
+    
+    Reset();
+  }
+
+  
   void LArPlaneGeo::ResetPlaneInfo(const larocv::ImageMeta& meta)
   {
     if(meta.plane() >= _num_planes) {
