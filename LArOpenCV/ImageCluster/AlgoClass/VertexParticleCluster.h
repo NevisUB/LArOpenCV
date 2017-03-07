@@ -68,7 +68,7 @@ namespace larocv {
 
     bool   _use_theta_half_angle;
     double _contour_dist_threshold;
-
+    bool _use_xs_radius_threshold;
     bool _reset_xs;
     
   private:

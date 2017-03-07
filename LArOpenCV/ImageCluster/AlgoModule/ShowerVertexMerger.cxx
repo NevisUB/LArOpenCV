@@ -73,7 +73,6 @@ namespace larocv {
   {
     LAROCV_DEBUG() << "start" << std::endl;
     
-    
     //track and shower vertex
     const auto& track_vtx_data = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
     const auto& shower_vtx_data = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);
@@ -142,7 +141,7 @@ namespace larocv {
 	   */
 	  
 	  //Join the two via merge
-	  const auto& img = img_v[plane];
+	  const auto& img = img_v.at(plane);
 	  auto merged_ctor = MergeByMask(shower_par._ctor,track_par._ctor,img,3);
 	  LAROCV_DEBUG() << "Merge track ctor size " << track_par._ctor.size()
 			 << " with shower ctor size " << shower_par._ctor.size()

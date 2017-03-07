@@ -68,6 +68,7 @@ namespace larocv {
     _theta_lo = pset.get<int>("ThetaLo",10);
     _pi_threshold = pset.get<unsigned short>("PIThreshold",10);
     _use_theta_half_angle       = pset.get<bool>("UseHalfAngle",true);
+    _use_xs_radius_threshold    = pset.get<bool>("UseXsRadiusMinDist",false);
     _contour_dist_threshold     = pset.get<float>("ContourMinDist",5);
     _refine_polar_cluster       = pset.get<bool>("RefinePolarCluster",true);
     _refine_cartesian_cluster   = pset.get<bool>("RefineCartesianCluster",true);
@@ -174,6 +175,7 @@ namespace larocv {
     _child_cluster_v = FindContours(img_rest);
     LAROCV_DEBUG() << "Found " << _child_cluster_v.size() << " children contours" << std::endl;
 
+    
     if(this->logger().level() == ::larocv::msg::kDEBUG) {
       for(const auto& ctor : _child_cluster_v) {
 	LAROCV_DEBUG() << "... size " << ctor.size() << std::endl;
@@ -191,6 +193,10 @@ namespace larocv {
 
     std::vector<std::pair<size_t,size_t> > match_v;
     match_v.reserve(cvtx2d.xs_v.size());
+
+    float contour_dist_threshold = _contour_dist_threshold;
+    if(_use_xs_radius_threshold)
+      contour_dist_threshold=cvtx2d.radius;
     
     for(size_t xs_idx=0; xs_idx < cvtx2d.xs_v.size(); ++xs_idx) {
       auto const& xs_pt = cvtx2d.xs_v[xs_idx].pt;
@@ -205,7 +211,7 @@ namespace larocv {
 	dist = std::abs(cv::pointPolygonTest(_seed_cluster_v[seed_idx],xs_pt,true));
 	LAROCV_DEBUG() << "seed " << seed_idx << " @ dist " << dist << std::endl;
 	if(dist > min_dist) continue;
-	if(dist > _contour_dist_threshold) continue;
+	if(dist > contour_dist_threshold) continue;
 	min_dist = dist;
 	cand_seed_idx = seed_idx;
 	LAROCV_DEBUG() << "... now min dist " << min_dist << " & cand seed " << cand_seed_idx << std::endl;
@@ -218,7 +224,7 @@ namespace larocv {
 	dist = std::abs(cv::pointPolygonTest(_child_cluster_v[child_idx],xs_pt,true));
 	LAROCV_DEBUG() << "child " << child_idx << " @ dist " << dist << std::endl;
 	if(dist > min_dist) continue;
-	if(dist > _contour_dist_threshold) continue;
+	if(dist > contour_dist_threshold) continue;
 	min_dist = dist;
 	cand_child_idx = child_idx;
 	LAROCV_DEBUG() << "... now min dist " << min_dist << " & cand child " << cand_child_idx << std::endl;
@@ -255,6 +261,7 @@ namespace larocv {
 	std::move(Merge(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx]));
       }
     }
+
     return res;
   }
 
@@ -479,11 +486,10 @@ namespace larocv {
       if(_refine_polar_cluster) {
 	// Refine contour
 	LAROCV_DEBUG() << "Refining polar contour" << std::endl;
-	::cv::Mat filled_ctor(rot_polarimg.size(),rot_polarimg.type(),CV_8UC1);
 	polar_ctor_v[0] = polar_ctor_v[target_idx];
 	polar_ctor_v.resize(1);
 	//::cv::drawContours(filled_ctor, polar_ctor_v, -1, cv::Scalar(255), -1, cv::LINE_8); // fill inside
-	filled_ctor = MaskImage(rot_polarimg,polar_ctor_v,-1,false);
+	auto filled_ctor = MaskImage(rot_polarimg,polar_ctor_v,-1,false);
 	polar_ctor_v.clear();
 	polar_ctor_v = FindContours(filled_ctor);
 	LAROCV_DEBUG() << "Found " << polar_ctor_v.size() << " polar contours in filled image" << std::endl;
@@ -505,7 +511,7 @@ namespace larocv {
 	    target_idx = cand_idx;
 	  }
 	}
-		if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	if(this->logger().level() == ::larocv::msg::kDEBUG) {
 	  auto img_tmp0 = rot_polarimg.clone();
 	  img_tmp0.setTo(0);
 	  drawContours(img_tmp0, GEO2D_ContourArray_t(1,polar_ctor_v[target_idx]), -1 , cv::Scalar(255),1,8);
@@ -606,8 +612,9 @@ namespace larocv {
 	  ::cv::imwrite(ss_c.str(),masked);
 	}
 	
-	GEO2D_ContourArray_t cartesian_ctor_v = FindContours(masked);
+	auto cartesian_ctor_v = FindContours(masked);
 	LAROCV_DEBUG() << "Found " << cartesian_ctor_v.size() << " contours in masked image" << std::endl;
+
 	if(this->logger().level() == ::larocv::msg::kDEBUG) {
 	  for(const auto& ctor : cartesian_ctor_v)
 	    LAROCV_DEBUG() << "... of size " << ctor.size() << std::endl;

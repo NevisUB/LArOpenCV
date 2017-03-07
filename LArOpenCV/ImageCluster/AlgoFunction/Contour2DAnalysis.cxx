@@ -9,7 +9,8 @@
 
 namespace larocv {
 
-  GEO2D_ContourArray_t FindContours(const cv::Mat& img)
+  GEO2D_ContourArray_t
+  FindContours(const cv::Mat& img)
   {
     auto img_copy = img.clone();
     GEO2D_ContourArray_t result_v;
@@ -20,9 +21,10 @@ namespace larocv {
 
 
   
-  cv::Mat CleanImage(const cv::Mat& img,
-		     const GEO2D_ContourArray_t& veto_ctor_v,
-		     float pi_threshold)
+  cv::Mat
+  CleanImage(const cv::Mat& img,
+	     const GEO2D_ContourArray_t& veto_ctor_v,
+	     float pi_threshold)
   {
     cv::Mat thresh_img;
     ::cv::threshold(img,thresh_img,pi_threshold,1000,3);
@@ -354,7 +356,9 @@ namespace larocv {
     return cv::countNonZero(res);
   }
 
-  size_t FindContainingContour(const GEO2D_ContourArray_t& contour_v, const GEO2D_Contour_t& ctr)
+  size_t
+  FindContainingContour(const GEO2D_ContourArray_t& contour_v,
+			const GEO2D_Contour_t& ctr)
   {
     size_t res = kINVALID_SIZE;
     double max_area = -1;
@@ -368,7 +372,9 @@ namespace larocv {
     return res;
   }
 
-  size_t FindContainingContour(const GEO2D_ContourArray_t& contour_v, const geo2d::Vector<float>& pt)
+  size_t
+  FindContainingContour(const GEO2D_ContourArray_t& contour_v,
+			const geo2d::Vector<float>& pt)
   {
     LAROCV_SDEBUG() << "Recieved " << contour_v.size() << " contours w/ pt " << pt << std::endl;
     size_t parent_ctor_id   = kINVALID_SIZE;
@@ -380,7 +386,7 @@ namespace larocv {
       auto dist = cv::pointPolygonTest(ctor, pt, true);
       LAROCV_SDEBUG() << "    dist: " << dist << std::endl;
       if(dist < dist2vtx) continue;
-      if(dist2vtx >=0 && parent_ctor_size > ctor.size()) continue;
+      if(dist2vtx >= 0 && parent_ctor_size > ctor.size()) continue;
       parent_ctor_id = ctor_id;
       parent_ctor_size = ctor.size();
       dist2vtx = dist;
@@ -390,7 +396,10 @@ namespace larocv {
     return parent_ctor_id;
   }  
 
-  double PixelFraction(const cv::Mat& img,const GEO2D_Contour_t& super_ctor, const GEO2D_ContourArray_t& target_ctor_v) {
+  double
+  PixelFraction(const cv::Mat& img,
+		const GEO2D_Contour_t& super_ctor,
+		const GEO2D_ContourArray_t& target_ctor_v) {
 
     // mask this contour from the image
     auto super_img = MaskImage(img,super_ctor,0,false);

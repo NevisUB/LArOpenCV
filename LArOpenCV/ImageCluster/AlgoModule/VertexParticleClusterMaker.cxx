@@ -92,10 +92,13 @@ namespace larocv {
       }
 
       //this vertex is associated to this cluster
-      LAROCV_DEBUG() << "Associating vertex " << vtx_id << " with super cluster " << super_cluster_id << std::endl;
+      LAROCV_DEBUG() << "Associating vertex " << vtx_id
+		     << " with super cluster " << super_cluster_id
+		     << std::endl;
+
       AssociateOne(vtx3d,super_cluster_v[super_cluster_id]); 
       
-      // Create track contours from the vertex point
+      // Create contours from the vertex point
       auto contour_v = _VertexParticleCluster.CreateParticleCluster(img,circle_vtx,super_cluster_v[super_cluster_id]);
       
       LAROCV_DEBUG() << "Found " << contour_v.size() << " contours for vertex id " << vtx_id << std::endl;

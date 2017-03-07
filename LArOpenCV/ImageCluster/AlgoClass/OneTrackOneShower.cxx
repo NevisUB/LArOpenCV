@@ -191,9 +191,11 @@ namespace larocv {
 	  auto max_iter = std::max_element(xs_count_v.begin()+1,xs_count_v.end());
 	  auto mode_xs = std::distance(xs_count_v.begin(), max_iter);
 	  if (*max_iter) {
+
 	    for(size_t count=0;count<xs_count_v.size();++count)
 	      if(xs_count_v[count]>0)
 		LAROCV_DEBUG() << "XS: " << count << " is " << xs_count_v[count] << std::endl;
+	    
 	    LAROCV_DEBUG() << "Found mode " << mode_xs << std::endl;
 	    //get the largest circle with this XS
 	    for(size_t rad_id=0;rad_id<xs_pt_vv.size();++rad_id) {
@@ -201,6 +203,7 @@ namespace larocv {
 	      if(xs_pt_v_.size() != mode_xs) continue;
 	      xs_pt_v = xs_pt_v_;
 	      circle.radius = _grad_circle_rad_v[rad_id];
+	      cvtx.radius = circle.radius;
 	      LAROCV_DEBUG() << "Set xs pt vector of size " << xs_pt_v.size()
 			     << " @ rad " << _grad_circle_rad_v[rad_id] << std::endl;
 	    }
