@@ -47,7 +47,7 @@ namespace larlite {
     _profile = main_cfg.get<bool>("Profile");
     _producer = main_cfg.get<std::string>("Producer");
     _store_original_img = main_cfg.get<bool>("StoreOriginalImage");
-    //_hit_removal = main_cfg.get<bool>("UseHitRemoval");
+    _hit_removal = main_cfg.get<bool>("UseHitRemoval");
     _process_count = 0;
     _process_time_image_extraction = 0;
     _process_time_analyze = 0;
