@@ -70,6 +70,8 @@ namespace larocv {
     double _contour_dist_threshold;
     bool _use_xs_radius_threshold;
     bool _reset_xs;
+    bool _reset_fixed_rad;
+    float _reset_fixed_rad_size;
     
   private:
 

@@ -366,13 +366,10 @@ namespace larocv {
 			const GEO2D_Contour_t& ctr)
   {
     size_t res = kINVALID_SIZE;
-    double max_area = -1;
+    double max_area = 0;
     for(size_t idx = 0; idx<contour_v.size(); ++idx) {
       auto area_overlap = AreaOverlap(contour_v[idx],ctr);
-      // LAROCV_SDEBUG() << "Overlap of " << area_overlap
-      // 		      << " bt ctor0 " << ctr.size()
-      // 		      << " ctor"<<idx<<" "<<contour_v[idx].size()<<std::endl;
-      if(area_overlap>max_area) {
+      if(area_overlap>=max_area) {
 	max_area = area_overlap;
 	res = idx;
       }

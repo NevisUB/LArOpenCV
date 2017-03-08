@@ -77,6 +77,11 @@ namespace larocv {
     _merge_by_mask              = pset.get<bool>("MergeByMask",true);
     _refine_cartesian_thickness = pset.get<uint>("RefineCartesianThickness",2);
     _reset_xs                   = pset.get<bool>("ResetXs",false);
+    if (_reset_xs) {
+      _reset_fixed_rad = pset.get<bool>("ResetXsFixedRad",true);
+      _reset_fixed_rad_size = pset.get<float>("ResetXsFixedRadSize",10);
+    }
+
   }
 
   GEO2D_ContourArray_t
@@ -129,8 +134,24 @@ namespace larocv {
 	  LAROCV_DEBUG() << "... " << xs.pt << std::endl; 
       }
       cvtx2d.xs_v.clear();
-      for(auto& xs : QPointOnCircle(img,mask_region,10))
-	cvtx2d.xs_v.emplace_back(xs,geo2d::Line<float>());
+      if (_reset_fixed_rad) {
+	mask_region.radius=_reset_fixed_rad_size;
+	for(auto& xs : QPointOnCircle(img,mask_region,10))
+	  cvtx2d.xs_v.emplace_back(xs,geo2d::Line<float>());
+      }
+      else {
+	auto xs_vv = QPointArrayOnCircleArray(img,cvtx2d.center,{5,6,7,8,9,10},10,0);
+	LAROCV_DEBUG() << "Computed " << xs_vv.size()
+		       << " @ radii 5->10 " << std::endl;
+	//get the largest radii with non-zero crossings
+	size_t largest_id=kINVALID_SIZE;
+	for(size_t xs_vid=0;xs_vid<xs_vv.size();++xs_vid) {
+	  if (xs_vv[xs_vid].empty()) continue;
+	  largest_id=xs_vid;
+	}
+	for(auto& xs : xs_vv[largest_id])
+	  cvtx2d.xs_v.emplace_back(xs,geo2d::Line<float>());
+      }
       
       if(this->logger().level() == ::larocv::msg::kDEBUG) {
 	LAROCV_DEBUG() << "Updated Xs ("<<cvtx2d.xs_v.size()<<")..."<<std::endl;

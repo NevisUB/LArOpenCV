@@ -67,6 +67,9 @@ namespace larocv {
       if (_shower_super_cluster_maker_algo_id==kINVALID_ALGO_ID)
 	throw larbys("Given ShowerSuperClusterAlgo name is INVALID!");
     }
+
+
+    _merge_compatible_showers=pset.get<bool>("MergeCompatibleShowers");
     
     Register(new data::Vertex3DArray);
 
@@ -174,6 +177,7 @@ namespace larocv {
 	  }
 	  
 	  const auto& track_par = track_vtx_par_data.as_vector()[track_particle_id];
+
 	  /*
 
 	    Make decision to merge or not based on trunk angle
@@ -188,7 +192,6 @@ namespace larocv {
 	  LAROCV_DEBUG() << "Merge track ctor size " << track_par._ctor.size()
 			 << " with shower ctor size " << shower_ctor.size()
 			 << " into size " << merged_ctor.size() << " ctor" << std::endl;
-	  //std::exit(1);
 	  
 	  //put in the shower cluster
 	  data::ParticleCluster shower_cluster;
@@ -221,7 +224,10 @@ namespace larocv {
       } // end this on edge vertex
       
       else  {
-	// shower vertex, connect tracks and showers
+	// shower vertex, connect tracks and showers,
+	// if shower is not unique lets replace it with the corresponding
+	// shower super cluster
+
 	vtx_data.push_back(shower_vtx);
 	LAROCV_DEBUG() << "This vertex of type " << (uint)vtx_data.as_vector().back().type << std::endl;
 		  
@@ -234,16 +240,40 @@ namespace larocv {
 	  auto track_particle_ass_id_v = ass_man.GetManyAss(shower_vtx,shower_vtx_track_par_data.ID());
 	  auto shower_particle_ass_id_v = ass_man.GetManyAss(shower_vtx,shower_vtx_shower_par_data.ID());
 	  
-	  LAROCV_DEBUG() << "Got " << shower_particle_ass_id_v.size() << " associated showers on plane " << plane << std::endl;
-	  for(auto shower_par_ass_id : shower_particle_ass_id_v) {
-	    auto shower_cluster = shower_vtx_shower_par_data.as_vector()[shower_par_ass_id];
-	    shower_cluster.type=data::ParticleType_t::kShower;
-	    par_data.emplace_back(std::move(shower_cluster));
-	    AssociateMany(vtx_data.as_vector().back(),par_data.as_vector().back());
-	    LAROCV_DEBUG() << "Associated shower vertex id " << vtx_data.as_vector().back().ID()
-			   << " with shower particle " << par_data.as_vector().back().ID() << std::endl;
+	  LAROCV_DEBUG() << "Got " << shower_particle_ass_id_v.size() << " associated showers on plane " << plane << std::endl;	  
+
+	  if (_merge_compatible_showers) {
+	    const auto& super_ctor_v = super_ctor_vv[plane];
+	    std::vector<std::vector<size_t> > super_to_shower_vv;
+	    super_to_shower_vv.resize(super_ctor_v.size());
+	    for(auto shower_par_ass_id : shower_particle_ass_id_v) {
+	      const auto& shower_par = shower_vtx_shower_par_data.as_vector()[shower_par_ass_id];
+	      auto const super_cluster_id = FindContainingContour(super_ctor_v, shower_par._ctor);
+	      if (super_cluster_id==kINVALID_SIZE) 
+		{ LAROCV_WARNING()<<"No super cluster found? skip"<<std::endl; continue; }
+	      super_to_shower_vv[super_cluster_id].push_back(shower_par_ass_id);
+	    }
+	    //merge
+	    for(size_t super_id=0;super_id<super_to_shower_vv.size();++super_id) {
+	      if (super_to_shower_vv[super_id].empty()) continue;
+	      data::ParticleCluster shower_cluster;
+	      shower_cluster._ctor = super_ctor_v[super_id];
+	      shower_cluster.type=data::ParticleType_t::kShower;
+	      par_data.emplace_back(std::move(shower_cluster));
+	      AssociateMany(vtx_data.as_vector().back(),par_data.as_vector().back());
+	      LAROCV_DEBUG() << "Associated shower vertex id " << vtx_data.as_vector().back().ID()
+			     << " with shower particle " << par_data.as_vector().back().ID() << std::endl;
+	    }
+	  } else {
+	    for(auto shower_par_ass_id : shower_particle_ass_id_v) {
+	      auto shower_cluster = shower_vtx_shower_par_data.as_vector()[shower_par_ass_id];
+	      shower_cluster.type=data::ParticleType_t::kShower;
+	      par_data.emplace_back(std::move(shower_cluster));
+	      AssociateMany(vtx_data.as_vector().back(),par_data.as_vector().back());
+	      LAROCV_DEBUG() << "Associated shower vertex id " << vtx_data.as_vector().back().ID()
+			     << " with shower particle " << par_data.as_vector().back().ID() << std::endl;
+	    }
 	  }
-	  
 	  LAROCV_DEBUG() << "Got " << track_particle_ass_id_v.size() << " associated tracks on plane " << plane << std::endl;
 	  for(auto track_par_ass_id : track_particle_ass_id_v) {
 	    auto track_cluster = shower_vtx_track_par_data.as_vector()[track_par_ass_id];
@@ -253,7 +283,6 @@ namespace larocv {
 	    LAROCV_DEBUG() << "Associated shower vertex id " << vtx_data.as_vector().back().ID()
 			   << " with track particle " << par_data.as_vector().back().ID() << std::endl;
 	  }
-	  
 	} // end this plane
       }
     }
