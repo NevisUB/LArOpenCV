@@ -6,6 +6,17 @@
 namespace larocv {
 
   std::map<std::string,logger> *logger::_logger_m = nullptr;
+
+  logger& logger::get(const std::string name)
+  {
+    if(!_logger_m) _logger_m = new std::map<std::string,larocv::logger>();
+    auto iter = _logger_m->find(name);
+    if(iter == _logger_m->end()) {
+      iter = _logger_m->emplace(name,logger(name)).first;
+      iter->second.set(msg::kNORMAL);
+    }
+    return iter->second;
+  };
   
   std::ostream& logger::send(const msg::Level_t level) const
   {

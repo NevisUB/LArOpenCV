@@ -56,7 +56,11 @@ namespace larocv {
     std::string _name;
     
     /// Set of loggers
+#ifndef __CINT__
+#ifndef __CLING__
     static std::map<std::string,larocv::logger> *_logger_m;
+#endif
+#endif
     
   public:
 
@@ -78,7 +82,8 @@ namespace larocv {
     }
     
     /// Getter of a message instance 
-    static logger& get(const std::string name)
+    static logger& get(const std::string name);
+    /*
     {
       if(!_logger_m) _logger_m = new std::map<std::string,larocv::logger>();
       auto iter = _logger_m->find(name);
@@ -88,6 +93,7 @@ namespace larocv {
       }
       return iter->second;
     };
+    */
     //
     // Verbosity level checker
     //
