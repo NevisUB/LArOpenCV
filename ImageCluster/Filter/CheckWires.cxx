@@ -86,7 +86,7 @@ namespace larocv{
     //std::cout<<"Range is :" <<range <<", "<<roi.width()<<", score: "<<score<<std::endl ;
 
   meta.set_score(score) ;
-  std::cout<<"Meta score :" <<meta.score() <<std::endl ;
+  //std::cout<<"Meta score :" <<meta.score() <<std::endl ;
   
   return clusters; 
 }
