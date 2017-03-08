@@ -44,7 +44,8 @@ namespace larocv {
     AlgorithmID_t _track_vertex_particle_algo_id;
     AlgorithmID_t _shower_vertex_track_particle_algo_id;
     AlgorithmID_t _shower_vertex_shower_particle_algo_id;
-
+    AlgorithmID_t _shower_super_cluster_maker_algo_id;
+    
   };
 
   /**

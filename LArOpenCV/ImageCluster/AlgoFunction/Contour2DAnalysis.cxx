@@ -252,6 +252,7 @@ namespace larocv {
     for(uint i=0;i<result_v.size();++i) {
       const auto& ctor = result_v[i];
       auto npx = CountNonZero(masked_img,ctor);
+      LAROCV_SDEBUG() << "("<<i<<") w/ npx "<<npx<<std::endl;
       if ( npx > max_npx ) {
 	max_npx = npx;
 	idx=i;
@@ -260,7 +261,7 @@ namespace larocv {
     
     if( idx < 0) throw larbys("No index found, refined contour can be determined.");
 
-    LAROCV_SDEBUG() << "... returning max area contour of size " << result_v[idx].size() << std::endl;
+    LAROCV_SDEBUG()<< "... returning ("<<idx<<") of size "<<result_v[idx].size()<<" with npx "<<max_npx<<std::endl;
     
     return result_v[idx];
   }
@@ -332,7 +333,9 @@ namespace larocv {
   }
 
 
-  double AreaOverlap(const GEO2D_Contour_t& ctr0, const GEO2D_Contour_t& ctr1)
+  double
+  AreaOverlap(const GEO2D_Contour_t& ctr0,
+	      const GEO2D_Contour_t& ctr1)
   {
     int rows, cols;
     rows = cols = 0;
@@ -344,14 +347,16 @@ namespace larocv {
       if(rows < pt.y) rows = (int)(pt.y)+1;
       if(cols < pt.x) cols = (int)(pt.x)+1;
     }
-    cv::Mat img0(rows,cols,CV_8UC1,cv::Scalar(0));
-    cv::drawContours(img0, ctr0, -1, cv::Scalar(255), 1, cv::LINE_8);
+    cv::Mat res(rows,cols,CV_8UC1,cv::Scalar(255));
+    res = MaskImage(res,ctr0,0,false);
+    res = MaskImage(res,ctr1,0,false);
 
-    cv::Mat img1(rows,cols,CV_8UC1,cv::Scalar(0));
-    cv::drawContours(img1, ctr1, -1, cv::Scalar(255), 1, cv::LINE_8);
-
-    cv::Mat res;
-    cv::bitwise_and(img0,img1,res);
+    // cv::Mat img0(rows,cols,CV_8UC1,cv::Scalar(0));
+    // cv::drawContours(img0, ctr0, -1, cv::Scalar(255), 1, cv::LINE_8);
+    // cv::Mat img1(rows,cols,CV_8UC1,cv::Scalar(0));
+    // cv::drawContours(img1, ctr1, -1, cv::Scalar(255), 1, cv::LINE_8);
+    // cv::Mat res;
+    // cv::bitwise_and(img0,img1,res);
 
     return cv::countNonZero(res);
   }
@@ -364,6 +369,9 @@ namespace larocv {
     double max_area = -1;
     for(size_t idx = 0; idx<contour_v.size(); ++idx) {
       auto area_overlap = AreaOverlap(contour_v[idx],ctr);
+      // LAROCV_SDEBUG() << "Overlap of " << area_overlap
+      // 		      << " bt ctor0 " << ctr.size()
+      // 		      << " ctor"<<idx<<" "<<contour_v[idx].size()<<std::endl;
       if(area_overlap>max_area) {
 	max_area = area_overlap;
 	res = idx;
