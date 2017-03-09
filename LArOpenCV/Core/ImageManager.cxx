@@ -23,6 +23,13 @@ namespace larocv {
     _roi_v.push_back(roi);
   }
 
+  void ImageManager::emplace_back(cv::Mat&& img, larocv::ImageMeta&& meta)
+  {
+    _mat_v.push_back(std::move(img));
+    _meta_v.push_back(std::move(meta));
+    _roi_v.push_back(larocv::ROI());
+  }
+
   ::cv::Mat& ImageManager::img_at(size_t index)
   {
     if(index >= _mat_v.size()) throw larbys("Requested image index exceeds available image count");
