@@ -26,8 +26,8 @@ namespace larocv{
     for(auto& cluster : clusters) {
 
       if (cluster._numHits() < _min_hits)      continue;
-      if (cluster._perimeter < _min_area)      continue;
-      if (cluster._area      < _min_perimeter) continue;
+      if (cluster._area      < _min_area)      continue;
+      if (cluster._perimeter < _min_perimeter) continue;
       if (cluster._sumCharge < _min_charge)    continue;
       if (cluster._length    < _min_length)    continue;
       if (cluster._width     < _min_width)     continue;
