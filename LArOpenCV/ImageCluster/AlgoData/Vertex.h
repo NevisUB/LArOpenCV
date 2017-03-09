@@ -69,7 +69,6 @@ namespace larocv {
     };
 
 
-
     enum class VertexType_t : unsigned {
       kUnknown,
 	kTime,

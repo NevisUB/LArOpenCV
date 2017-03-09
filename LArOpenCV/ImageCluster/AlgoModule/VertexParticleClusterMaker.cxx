@@ -54,7 +54,6 @@ namespace larocv {
 
     // Algorithm data
     auto& par_data = AlgoData<data::ParticleClusterArray>(plane);
-    
     const auto& vtx_data_v = AlgoData<data::Vertex3DArray>(_vertex_estimate_algo_id,0).as_vector();
 
     LAROCV_DEBUG() << "Got " << vtx_data_v.size() << " vertices" << std::endl;

@@ -38,6 +38,13 @@
 #pragma link C++ class larocv::data::LinearTrack3D+;
 #pragma link C++ class std::vector<larocv::data::LinearTrack3D>+;
 
+#pragma link C++ class larocv::data::PointPCA+;
+#pragma link C++ class std::vector<larocv::data::PointPCA>+;
+#pragma link C++ class larocv::data::CircleVertex+;
+#pragma link C++ class std::vector<larocv::data::CircleVertex>+;
+#pragma link C++ enum class larocv::data::ParticleType_t+;
+#pragma link C++ enum class larocv::data::VertexType_t+;
+
 //ADD_NEW_CLASS ... do not change this line
 #endif
 

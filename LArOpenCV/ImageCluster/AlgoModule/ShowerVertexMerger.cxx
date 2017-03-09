@@ -104,6 +104,8 @@ namespace larocv {
     for(const auto& shower_vtx : shower_vtx_data.as_vector()) {
 
       LAROCV_DEBUG() << "Observed vertex of type " << (uint) shower_vtx.type << std::endl;
+
+      // End of track vertex first
       if (shower_vtx.type==data::VertexType_t::kEndOfTrack) {
 	
 	//get associated track vertex
@@ -112,9 +114,10 @@ namespace larocv {
 	const auto& track_vtx = track_vtx_data.as_vector()[track_vertex_ass_id];
 
 	auto shower_vertex = track_vtx;
-	shower_vertex.type = data::VertexType_t::kEndOfTrack;//data::VertexType_t::kShower;
+	shower_vertex.type = data::VertexType_t::kEndOfTrack;
 	vtx_data.emplace_back(std::move(shower_vertex));
-
+	AssociateOne(vtx_data.as_vector().back(),track_vtx);
+	
 	LAROCV_DEBUG() << "This vertex of type " << (uint)vtx_data.as_vector().back().type << std::endl;
 	
 	for(size_t plane=0;plane<3;++plane) {
@@ -181,7 +184,7 @@ namespace larocv {
 	  /*
 
 	    Make decision to merge or not based on trunk angle
-	    for now just do it
+	    for now just do it, maybe we can pick this up in analysis stage
 
 	   */
 	  

@@ -14,11 +14,9 @@ namespace larocv {
        @brief A cluster associated with a vertex and hence represents a particle
     */
 
-    enum class ParticleType_t : unsigned {
-      kUnknown=0,
-	kTrack,
-	kShower
-	};
+    enum class ParticleType_t : unsigned
+    { kUnknown=0,kTrack,kShower};
+
     
     class ParticleCluster : public AlgoDataArrayElementBase {
     public:
