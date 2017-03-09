@@ -67,20 +67,6 @@ namespace larocv{
 
     }
 
-    // std::cout << "\t==> con_start_end\n";
-    // for( const auto& c : con_start_end ) {
-    //   std::cout << "[" << c.first << "] : {";
-    //   for( const auto& cc : c.second ) std::cout << cc << ",";
-    //   std::cout << "}\n";
-    // }
-    // std::cout << "\t==> com_start_end\n";
-    // for( const auto& c : com_start_end ) {
-    //   std::cout << "[" << c.first << "] : {";
-    //   for( const auto& cc : c.second ) std::cout << cc << ",";
-    //   std::cout << "}\n";
-    // }
-    
-    
     for ( const auto& u : used ) {
 
       if ( ! u.second )
