@@ -129,7 +129,7 @@ namespace larocv {
     class TrackClusterCompound: public AlgoDataArrayElementBase,
 				public std::vector<AtomicContour> {
     public:
-      
+
       TrackClusterCompound(size_t id=kINVALID_SIZE)
       {_Clear_();}
       ~TrackClusterCompound() {}
