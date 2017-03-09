@@ -13,6 +13,7 @@
 #pragma link C++ namespace larocv::msg;
 #pragma link C++ class larocv::larbys+;
 #pragma link C++ class larocv::logger+;
+#pragma link C++ class std::map<std::string,larocv::logger>+;
 #pragma link C++ class larocv::laropencv_base+;
 #pragma link C++ class larocv::Point2D+;
 #pragma link C++ class larocv::Point2DArray+;

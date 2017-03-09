@@ -42,6 +42,26 @@ namespace larocv {
     strm << file_name.c_str() << "::L" << line_num << " ";
     return strm;
   }
+  
+  /// Getter of a message instance 
+  logger& logger::get(const std::string name)
+  {
+    if(!_logger_m) _logger_m = new std::map<std::string,larocv::logger>();
+    auto iter = _logger_m->find(name);
+    if(iter == _logger_m->end()) {
+      iter = _logger_m->emplace(name,logger(name)).first;
+      iter->second.set(msg::kNORMAL);
+    }
+    return iter->second;
+  };
+  
+  /// Getter for a shared logger
+  logger& logger::get_shared()
+  {
+    if(!_shared_logger) _shared_logger = new logger("GLOBAL");
+    return *_shared_logger;
+  }
+  
 }
 
 #endif

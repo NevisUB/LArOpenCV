@@ -45,6 +45,21 @@
 #pragma link C++ enum class larocv::data::ParticleType_t+;
 #pragma link C++ enum class larocv::data::VertexType_t+;
 
+#pragma link C++ class larocv::data::Vertex3DArray+;
+
+#pragma link C++ class larocv::data::ParticleClusterArray+;
+#pragma link C++ class larocv::data::TrackClusterCompoundArray+;
+#pragma link C++ class std::vector<larocv::data::ParticleClusterArray>+;
+#pragma link C++ class std::vector<larocv::data::TrackClusterCompoundArray>+;
+
+#pragma link C++ class larocv::data::AlgoDataArrayTemplate<larocv::data::Vertex3D>+;
+#pragma link C++ class larocv::data::AlgoDataArrayTemplate<larocv::data::ParticleCluster>+;
+#pragma link C++ class larocv::data::AlgoDataArrayTemplate<larocv::data::TrackClusterCompound>+;
+
+#pragma link C++ class std::vector<larocv::data::AlgoDataArrayTemplate<larocv::data::Vertex3D> >+;
+#pragma link C++ class std::vector<larocv::data::AlgoDataArrayTemplate<larocv::data::ParticleCluster> >+;
+#pragma link C++ class std::vector<larocv::data::AlgoDataArrayTemplate<larocv::data::TrackClusterCompound> >+;
+
 //ADD_NEW_CLASS ... do not change this line
 #endif
 

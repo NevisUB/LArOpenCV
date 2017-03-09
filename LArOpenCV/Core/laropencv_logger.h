@@ -1,16 +1,3 @@
-/**
- * \file laropencv_logger.h
- *
- * \ingroup Core
- * 
- * \brief Compiler macro def header for a larocv logger
- *
- * @author kazuhiro
- */
-
-/** \addtogroup Core
-
-    @{*/
 #ifndef __LAROPENCV_LOGGER_H__
 #define __LAROPENCV_LOGGER_H__
 
@@ -20,17 +7,7 @@
 #include "LArOCVTypes.h"
 
 namespace larocv {
-  /**
-     \class larcaffe::logger
-  */
-  /**
 
-     \class logger
-     \brief Utility class used to show formatted message on the screen.
-     A logger class for larcaffe. Simply shows a formatted colored message on a screen. \n
-     A static getter method is provided to create a sharable logger instance (see larcaffe_base for useage). \n
-  */
-  
   class logger{
     
   public:
@@ -55,7 +32,7 @@ namespace larocv {
     /// Name
     std::string _name;
     
-    /// Set of loggers
+    //#ifndef __CLING__
     static std::map<std::string,larocv::logger> *_logger_m;
 
     /// Shared logger for functions
@@ -81,22 +58,11 @@ namespace larocv {
     }
     
     /// Getter of a message instance 
-    static logger& get(const std::string name)
-    {
-      if(!_logger_m) _logger_m = new std::map<std::string,larocv::logger>();
-      auto iter = _logger_m->find(name);
-      if(iter == _logger_m->end()) {
-	iter = _logger_m->emplace(name,logger(name)).first;
-	iter->second.set(msg::kNORMAL);
-      }
-      return iter->second;
-    };
+    static logger& get(const std::string name);
+
     /// Getter for a shared logger
-    static logger& get_shared()
-    {
-      if(!_shared_logger) _shared_logger = new logger("GLOBAL");
-      return *_shared_logger;
-    }
+    static logger& get_shared();
+
     //
     // Verbosity level checker
     //
