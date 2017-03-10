@@ -27,7 +27,7 @@ namespace larocv {
 	     float pi_threshold)
   {
     cv::Mat thresh_img;
-    ::cv::threshold(img,thresh_img,pi_threshold,1000,3);
+    cv::threshold(img,thresh_img,pi_threshold,1000,3);
     geo2d::VectorArray<int> points;
     findNonZero(thresh_img, points);
     for(auto const& pt : points) {

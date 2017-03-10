@@ -48,6 +48,10 @@ namespace larocv {
     float  _xplane_tick_resolution;
     size_t _num_planes;
     float  _trigger_tick;
+
+    float Overlap(const geo2d::VectorArray<float>& pts0_v, const size_t plane0,
+		  const geo2d::VectorArray<float>& pts1_v, const size_t plane1,
+		  bool overcover=true) const;
     
   private:
     std::vector<float> _tick_offset_v;

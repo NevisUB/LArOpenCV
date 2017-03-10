@@ -1,16 +1,3 @@
-/**
- * \file MatchBookKeeper.h
- *
- * \ingroup ImageCluster
- * 
- * \brief Class def header for a class MatchBookKeeper
- *
- * @author kazuhiro
- */
-
-/** \addtogroup ImageCluster
-
-    @{*/
 #ifndef IMAGECLUSTER_MATCHBOOKKEEPER_H
 #define IMAGECLUSTER_MATCHBOOKKEEPER_H
 
@@ -19,11 +6,7 @@
 #include <map>
 
 namespace larocv {
-  /**
-     \class MatchBookKeeper
-     User defined class MatchBookKeeper ... these comments are used to generate
-     doxygen documentation!
-  */
+
   class MatchBookKeeper {
     
   public:

@@ -127,7 +127,55 @@ namespace larocv {
     data::Vertex3D tmp;
     return YZPoint(pt0,plane0,pt1,plane1,tmp);
   }
-  
 
+
+  float LArPlaneGeo::Overlap(const geo2d::VectorArray<float>& pts0_v, const size_t plane0,
+			     const geo2d::VectorArray<float>& pts1_v, const size_t plane1,
+			     bool overcover) const
+  {
+    
+    //get the smallest set of points
+    const geo2d::VectorArray<float>* max_pts_v=nullptr;
+    const geo2d::VectorArray<float>* min_pts_v=nullptr;
+    size_t min_plane=kINVALID_SIZE;
+    size_t max_plane=kINVALID_SIZE;
+    if (pts0_v.size()>=pts1_v.size()) {
+      max_pts_v = &pts0_v;
+      min_pts_v = &pts1_v;
+      max_plane = plane0;
+      min_plane = plane1;
+    }
+    else {
+      max_pts_v = &pts1_v;
+      min_pts_v = &pts0_v;
+      max_plane = plane1;
+      min_plane = plane0;
+    }
+
+    float overlap=0.0;
+    std::vector<bool> used_v(max_pts_v->size(),false);
+    for(size_t min_id=0;min_id<min_pts_v->size();++min_id) {
+      const auto& min_pt = (*min_pts_v)[min_id];
+      for(size_t max_id=0;max_id<max_pts_v->size();++max_id) {
+	if (used_v[max_id]) continue;
+	const auto& max_pt = (*max_pts_v)[max_id];
+	if (YZPoint(min_pt,min_plane,max_pt,max_plane)) {
+	  overlap+=1.0;
+	  used_v[max_id] = true;
+	  if (!overcover) break;
+	}
+      }
+    }
+
+    // it's possible for overlap to be greater than 1...
+    // a point on the first plane may overlap 2 points on the second?
+    
+    overlap /= (float)min_pts_v->size();
+    
+    LAROCV_DEBUG() << "Calculated overlap " << overlap << std::endl;
+    return overlap;
+  }
+  
 }
 #endif
+  
