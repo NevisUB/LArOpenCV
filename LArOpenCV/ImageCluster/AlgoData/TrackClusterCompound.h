@@ -19,8 +19,9 @@ namespace larocv {
     class AtomicContour : public GEO2D_Contour_t {
       friend class TrackClusterCompound;
     public:
-      
-      AtomicContour(size_t atomic_id = kINVALID_SIZE)
+      AtomicContour()
+	: GEO2D_Contour_t(), _atomic_id(kINVALID_SIZE) { clear(); }
+      AtomicContour(size_t atomic_id)
 	: GEO2D_Contour_t(), _atomic_id(atomic_id) { clear(); }
       AtomicContour(const GEO2D_Contour_t& ctor,size_t atomic_id)
 	: GEO2D_Contour_t(ctor)
@@ -90,8 +91,9 @@ namespace larocv {
     class ContourDefect {
       friend class TrackClusterCompound;
     public:
-      
-      ContourDefect(size_t defect_id = kINVALID_SIZE)
+      ContourDefect()
+	: _defect_id(kINVALID_SIZE) {clear();}
+      ContourDefect(size_t defect_id)
 	: _defect_id(defect_id) {clear();}
       ContourDefect(const geo2d::Vector<int>& pt_start,
 		    const geo2d::Vector<int>& pt_end,
@@ -129,8 +131,8 @@ namespace larocv {
     class TrackClusterCompound: public AlgoDataArrayElementBase,
 				public std::vector<AtomicContour> {
     public:
-
-      TrackClusterCompound(size_t id=kINVALID_SIZE)
+      
+      TrackClusterCompound()
       {_Clear_();}
       ~TrackClusterCompound() {}
       
