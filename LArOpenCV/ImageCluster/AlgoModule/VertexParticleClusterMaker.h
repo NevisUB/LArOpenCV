@@ -39,7 +39,7 @@ namespace larocv {
 		   const ::cv::Mat& img,
 		   larocv::ImageMeta& meta,
 		   larocv::ROI& roi);
-
+    
     bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
 
   private:

@@ -4,6 +4,7 @@
 #include "LArOpenCV/Core/laropencv_base.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
 
 /*
   @brief: XXX
@@ -39,7 +40,12 @@ namespace larocv {
 		     uint nxs);
 
     bool
-    RequireParticleCount(std::vector<std::vector<data::ParticleCluster> >& pars_vv,
+    RequireParticleCount(const std::vector<std::vector<data::ParticleCluster> >& pars_vv,
+			 uint nplanes,
+			 uint nxs);
+
+    bool
+    RequireParticleCount(const std::vector<std::vector<const data::ParticleCluster*> >& pars_vv,
 			 uint nplanes,
 			 uint nxs);
 
@@ -48,17 +54,32 @@ namespace larocv {
 		    uint nplanes,
 		    uint nxs);
 
-    bool
-    MatchExists(std::vector<std::vector<data::ParticleCluster> >& pars_vv,
-		const cv::Mat& img,
-		float threshold,
-		size_t required_per_plane);
-  private:
-  private:
-  private:
-  private:
-  private:
+    std::vector<std::vector<std::pair<size_t,size_t> > >
+    MatchClusters(const std::vector<std::vector<data::ParticleCluster> >& pars_vv,
+		  const std::vector<const cv::Mat>& img_v,
+		  float threshold,
+		  size_t required_per_plane,
+		  size_t required_matches);
+
     
+    std::vector<std::vector<std::pair<size_t,size_t> > >
+    MatchClusters(const std::vector<std::vector<const data::ParticleCluster* > >& pars_ptr_vv,
+		  const std::vector<const cv::Mat>& img_v,
+		  float threshold,
+		  size_t required_per_plane,
+		  size_t required_matches);
+    
+    bool
+    MatchExists(const std::vector<std::vector<const data::ParticleCluster*> >& pars_ptr_vv,
+		const std::vector<const cv::Mat>& img_v,
+		float threshold,
+		size_t required_per_plane,
+		size_t required_matches,
+		std::vector<std::vector<std::pair<size_t,size_t> > >& match_vv);
+    
+  private:
+
+    LArPlaneGeo _geo;
     
   };
   
