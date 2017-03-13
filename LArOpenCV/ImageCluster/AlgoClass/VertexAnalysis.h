@@ -38,7 +38,21 @@ namespace larocv {
 		     uint nplanes,
 		     uint nxs);
 
-    
+    bool
+    RequireParticleCount(std::vector<std::vector<data::ParticleCluster> >& pars_vv,
+			 uint nplanes,
+			 uint nxs);
+
+    bool
+    RequireCrossing(const data::Vertex3D& vtx3d,
+		    uint nplanes,
+		    uint nxs);
+
+    bool
+    MatchExists(std::vector<std::vector<data::ParticleCluster> >& pars_vv,
+		const cv::Mat& img,
+		float threshold,
+		size_t required_per_plane);
   private:
   private:
   private:
