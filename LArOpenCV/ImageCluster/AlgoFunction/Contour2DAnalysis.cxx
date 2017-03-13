@@ -271,7 +271,7 @@ namespace larocv {
 			     float EPS) {
     
     if(ctor.size() < 2) {
-      LAROCV_SCRITICAL() << "PCA approx cannot be made (# points " << ctor.size() << " < 2)" << std::endl;
+      LAROCV_SWARNING() << "PCA approx cannot be made (# points " << ctor.size() << " < 2)" << std::endl;
       throw larbys();
     }
     
@@ -294,7 +294,7 @@ namespace larocv {
     findNonZero(img, pts_v);
     
     if(pts_v.size() < 2) {
-      LAROCV_SCRITICAL() << "PCA approx cannot be made (# points " << pts_v.size() << " < 2)" << std::endl;
+      LAROCV_SWARNING() << "PCA approx cannot be made (# points " << pts_v.size() << " < 2)" << std::endl;
       throw larbys();
     }
     
@@ -413,8 +413,8 @@ namespace larocv {
     double super_px = cv::countNonZero(super_img);
 
     if (super_px == 0) {
-      LAROCV_SCRITICAL() << "Number of super pixels in image is zero!" << std::endl;
-      LAROCV_SCRITICAL() << "super ctor size " << super_ctor.size();
+      LAROCV_SWARNING() << "Number of super pixels in image is zero!" << std::endl;
+      LAROCV_SWARNING() << "super ctor size " << super_ctor.size();
       // cv::imwrite("super_img.png",super_img);
       throw larbys();
     }
@@ -437,7 +437,7 @@ namespace larocv {
   CircumferenceAngularSum(const GEO2D_Contour_t& ctor,
 			  bool isclosed) {
     if (ctor.empty()) {
-      LAROCV_SCRITICAL() << "Cannot calculate angular sum for empty contour" << std::endl;
+      LAROCV_SWARNING() << "Cannot calculate angular sum for empty contour" << std::endl;
       throw larbys();
     }
 

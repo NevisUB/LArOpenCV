@@ -200,11 +200,11 @@ namespace larocv {
     if(this->logger().level() == ::larocv::msg::kDEBUG) {
       for(const auto& ctor : _child_cluster_v) {
 	LAROCV_DEBUG() << "... size " << ctor.size() << std::endl;
-      // 	std::stringstream ss;
-      // 	for(const auto& pt : ctor)
-      // 	  ss << pt << ",";
-      // 	LAROCV_DEBUG() << ss.str() << std::endl;
-      // }
+	// 	std::stringstream ss;
+	// 	for(const auto& pt : ctor)
+	// 	  ss << pt << ",";
+	// 	LAROCV_DEBUG() << ss.str() << std::endl;
+	// }
       }
     }
     
@@ -278,8 +278,8 @@ namespace larocv {
       else {
 	LAROCV_INFO() << "Child " << child_idx << " + Seed " << seed_idx << " matched for XS index " << xs_idx << std::endl;
 	res[xs_idx] = _merge_by_mask ?
-	std::move(MergeByMask(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx],thresh_img)) :
-	std::move(Merge(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx]));
+	  std::move(MergeByMask(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx],thresh_img)) :
+	  std::move(Merge(_seed_cluster_v[seed_idx],_child_cluster_v[child_idx]));
       }
     }
 
@@ -358,6 +358,8 @@ namespace larocv {
 
 
     for(int xs_pt_idx=0; xs_pt_idx<xs_v.size(); ++xs_pt_idx) {
+      bool valid_xs=true;
+      
       LAROCV_DEBUG() << "xs pt idx: " << xs_pt_idx << std::endl;
 
       auto ref_vtx_copy = ref_vtx;
@@ -603,19 +605,22 @@ namespace larocv {
       if(_refine_cartesian_cluster) {
 	// Refine contour
 	LAROCV_DEBUG() << "Refining cartesian contour of size: " << contour.size() << std::endl;
-
 	auto masked = MaskImage(img,contour,0,false);
-	if (!cv::countNonZero(masked)) {
-	  LAROCV_WARNING() << "...masked image is empty, pad contour w/ " << _refine_cartesian_thickness << " px" << std::endl;
+	//LAROCV_WARNING() << "... nonzero in masked image is " << cv::countNonZero(masked) << std::endl;
+	if (cv::countNonZero(masked)<_refine_cartesian_thickness) {
+	  LAROCV_WARNING() << "...masked image has less than 5 pixels, pad region w/ " << _refine_cartesian_thickness << " px" << std::endl;
 	  if (contour.size() == 1) {
-	    auto rect=cv::Rect(contour.at(0).x-_refine_cartesian_thickness/2,
-			       contour.at(0).y-_refine_cartesian_thickness/2,
-			       _refine_cartesian_thickness,_refine_cartesian_thickness);
-	    
-	    LAROCV_WARNING() << "...this contour of size 1 & creating rectangle " << rect << std::endl;
+	    float width =_refine_cartesian_thickness;
+	    float height=_refine_cartesian_thickness;
+	    auto rect = cv::Rect(contour.front().x-width/2,
+				 contour.front().y-height/2,
+				 width,height);
+	    CorrectEdgeRectangle(img,rect,2*width+1,2*height+1);
 	    masked = MaskImage(img,rect,0,false);
-	  } else { 
+	    //LAROCV_WARNING() << "... nonzero in masked image is " << cv::countNonZero(masked) << std::endl;
+	  } else {
 	    masked = MaskImage(img,contour,_refine_cartesian_thickness,false);
+	    //LAROCV_WARNING() << "... nonzero in masked image is " << cv::countNonZero(masked) << std::endl;
 	  }
 	}
 	
@@ -641,11 +646,13 @@ namespace larocv {
 	    LAROCV_DEBUG() << "... of size " << ctor.size() << std::endl;
 	}
 	
-	// pick the maximal area contour
 	if(cartesian_ctor_v.empty()) {
-	  LAROCV_CRITICAL() << "Lost contour in cartesian-refining step?!" << std::endl;
-	  throw larbys();
+	  LAROCV_CRITICAL() << "Lost contour in cartesian-refining step? # nonzero pixels is " << cv::countNonZero(masked) << std::endl;
+	  //throw larbys();
+	  valid_xs=false;
 	}
+
+	// pick the maximal area contour
 	size_t target_idx = 0;
 	if(cartesian_ctor_v.size()>1) {
 	  double max_ctor_area = 0;
@@ -656,8 +663,12 @@ namespace larocv {
 	    target_idx = cand_idx;
 	  }
 	}
-	contour = cartesian_ctor_v[target_idx];
+	if (valid_xs)
+	  contour = cartesian_ctor_v[target_idx];
+	
       }
+
+      if (!valid_xs) LAROCV_CRITICAL() << "Invalid XS detected" << std::endl;
       result_v.emplace_back(std::move(contour));
     }
     
