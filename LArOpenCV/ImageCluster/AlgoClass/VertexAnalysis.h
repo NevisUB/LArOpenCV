@@ -78,6 +78,8 @@ namespace larocv {
 		size_t required_per_plane,
 		size_t required_matches,
 		std::vector<std::vector<std::pair<size_t,size_t> > >& match_vv);
+
+    const LArPlaneGeo& Geo() { return _geo; }
     
   private:
 

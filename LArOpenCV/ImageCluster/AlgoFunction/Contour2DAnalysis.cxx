@@ -415,8 +415,8 @@ namespace larocv {
     if (super_px == 0) {
       LAROCV_SWARNING() << "Number of super pixels in image is zero!" << std::endl;
       LAROCV_SWARNING() << "super ctor size " << super_ctor.size();
-      // cv::imwrite("super_img.png",super_img);
-      throw larbys();
+      return 0.0;
+      //throw larbys();
     }
     
     //count the number of target pixels in this image
