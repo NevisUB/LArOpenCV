@@ -21,6 +21,11 @@ namespace larocv {
   VertexAnalysis::Configure(const Config_t &pset)
   {}
 
+  void
+  VertexAnalysis::ResetPlaneInfo(const larocv::ImageMeta& meta)
+  {
+    _geo.ResetPlaneInfo(meta);
+  }
 
   void
   VertexAnalysis::MergeNearby(const std::vector<const data::Vertex3D*>& vtx1_v,
@@ -122,19 +127,27 @@ namespace larocv {
       }
       offset+=pars_v.size();
     }
+    	
+    auto comb_vv = PlaneClusterCombinations(seed_v);
+    LAROCV_DEBUG()<<"----> Calculated " << comb_vv.size() << " combinations" << std::endl;
+    
+    for(const auto& comb_v : comb_vv) {
+      LAROCV_DEBUG() << "======" << std::endl;
 
-    for(const auto& comb_v : PlaneClusterCombinations(seed_v)) {
       if (comb_v.size()==2) {
-	
+
 	auto plane0=comb_v[0].first;
 	auto plane1=comb_v[1].first;
-
+	
 	if (clusters_per_plane_vv[plane0].size()<required_per_plane) continue;
 	if (clusters_per_plane_vv[plane1].size()<required_per_plane) continue;
 
 	auto cid0=comb_v[0].second;
 	auto cid1=comb_v[1].second;
 
+	LAROCV_DEBUG() << "["<<plane0<<","<<cid0<<"] & "
+		       << "["<<plane1<<","<<cid1<<"]"<<std::endl;
+	
 	auto id0 = clusters_per_plane_vv[plane0][cid0];
 	auto id1 = clusters_per_plane_vv[plane1][cid1];
 
@@ -144,6 +157,8 @@ namespace larocv {
 
 	// require the same type of particle to be matched
 	if (type0!=type1) continue;
+	
+	LAROCV_DEBUG() << "... accepted" << std::endl;
 	
 	// get the contour
 	const auto& ctor0 = particle_ptr_v[id0]->_ctor;
@@ -159,7 +174,7 @@ namespace larocv {
 	
 	auto nzero0_i = FindNonZero(img0);
 	auto nzero1_i = FindNonZero(img1);
-
+	
 	//cast to float
 	geo2d::VectorArray<float> nzero0_f;
 	nzero0_f.reserve(nzero0_i.size());
@@ -174,13 +189,16 @@ namespace larocv {
 	  nzero1_f.emplace_back(pt.x,pt.y);
 	
 	auto overlap = _geo.Overlap(nzero0_f,plane0,nzero1_f,plane1,false);
-
+	LAROCV_DEBUG() << "overlap " << overlap << std::endl;
+	
 	if (overlap<threshold) continue;
 
 	std::vector<uint> match_v(2,kINVALID_INT);
 	match_v[0]=id0;
 	match_v[1]=id1;
 	
+	LAROCV_DEBUG() << "id... 0: " << id0
+		       << " 1: " << id1 << std::endl;
 	_MatchBookKeeper.Match(match_v,overlap);
       }
       else if (comb_v.size()==3) {
@@ -196,7 +214,12 @@ namespace larocv {
 	auto cid0=comb_v[0].second;
 	auto cid1=comb_v[1].second;
 	auto cid2=comb_v[2].second;
-
+	
+	LAROCV_DEBUG() << "["<<plane0<<","<<cid0<<"] & "
+		       << "["<<plane1<<","<<cid1<<"] & "
+		       << "["<<plane2<<","<<cid2<<"]"<<std::endl;
+	
+	
 	auto id0 = clusters_per_plane_vv[plane0][cid0];
 	auto id1 = clusters_per_plane_vv[plane1][cid1];
 	auto id2 = clusters_per_plane_vv[plane2][cid2];
@@ -209,6 +232,8 @@ namespace larocv {
 	if (type0!=type1) continue;
 	if (type0!=type2) continue;
 	if (type1!=type2) continue;
+
+	LAROCV_DEBUG() << "... accepted" << std::endl;
 	
 	// get the contour
 	const auto& ctor0 = particle_ptr_v[id0]->_ctor;
@@ -253,20 +278,31 @@ namespace larocv {
 	auto overlap12 = _geo.Overlap(nzero1_f,plane1,nzero2_f,plane2,false);
 
 	ushort invalid_overlap_count=0;
-
+	
 	if (overlap01<threshold) invalid_overlap_count+=1;
 	if (overlap02<threshold) invalid_overlap_count+=1;
 	if (overlap12<threshold) invalid_overlap_count+=1;
-
-	if (invalid_overlap_count >= 2) continue;
-
+	
+	if (invalid_overlap_count >= 2){
+	  LAROCV_DEBUG() << "Invalid overlap" << std::endl;
+	  continue;
+	}
+	
 	auto overlap = overlap01+overlap02+overlap12;
+	
+	LAROCV_DEBUG() << "o01: " << overlap01
+		       << " o02: " << overlap02
+		       << " o12: " << overlap12 << " = " << overlap << std::endl;
+	
 	if (overlap == 0.0) continue;
 	
 	std::vector<uint> match_v(3,kINVALID_INT);
 	match_v[0]=id0;
 	match_v[1]=id1;
 	match_v[2]=id2;
+	LAROCV_DEBUG() << "id) 0: " << id0
+		       << "... 1: " << id1
+		       << "... 2: " << id2 << std::endl;
 	
 	_MatchBookKeeper.Match(match_v,overlap);
       }
@@ -288,11 +324,13 @@ namespace larocv {
       std::vector<std::pair<size_t,size_t> > match_v;
       match_v.reserve(match.size()); // the number of matches contours
       LAROCV_DEBUG() << "... matched " << match.size() << " particles" << std::endl;
-      for(auto par_id : match)
+      for(auto par_id : match) {
 	match_v.emplace_back(particle_id_to_plane_v[par_id]);
+	LAROCV_DEBUG() << "\t ["<<match_v.back().first <<","<<match_v.back().second<<"]"<<std::endl;
+      }
       match_vv.emplace_back(std::move(match_v));
     }
-      
+    LAROCV_DEBUG() << "return" << std::endl;
     return true;
   }
 

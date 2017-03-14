@@ -25,7 +25,9 @@ namespace larocv {
     /// Optional configuration method
     void Configure(const Config_t &pset);
 
-
+    void
+    ResetPlaneInfo(const larocv::ImageMeta& meta);
+    
     void
     MergeNearby(const std::vector<const data::Vertex3D*>& vtx1_v,
 		std::vector<const data::Vertex3D*>& vtx2_v,
