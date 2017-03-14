@@ -58,7 +58,7 @@ namespace larocv {
 
   std::vector<std::vector<std::pair<size_t,size_t> > >
   VertexAnalysis::MatchClusters(const std::vector<std::vector<data::ParticleCluster> >& pars_vv,
-				const std::vector<const cv::Mat>& img_v,
+				const std::vector<cv::Mat>& img_v,
 				float threshold,
 				size_t required_per_plane,
 				size_t required_matches) {
@@ -83,7 +83,7 @@ namespace larocv {
 				
   std::vector<std::vector<std::pair<size_t,size_t> > >
   VertexAnalysis::MatchClusters(const std::vector<std::vector<const data::ParticleCluster* > >& pars_ptr_vv,
-				const std::vector<const cv::Mat>& img_v,
+				const std::vector<cv::Mat>& img_v,
 				float threshold,
 				size_t required_per_plane,
 				size_t required_matches) {
@@ -95,7 +95,7 @@ namespace larocv {
   
   bool
   VertexAnalysis::MatchExists(const std::vector<std::vector<const data::ParticleCluster*> >& pars_ptr_vv,
-			      const std::vector<const cv::Mat>& img_v,
+			      const std::vector<cv::Mat>& img_v,
 			      float threshold,
 			      size_t required_per_plane,
 			      size_t required_matches,
