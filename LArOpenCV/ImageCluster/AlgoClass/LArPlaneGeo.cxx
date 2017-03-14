@@ -88,12 +88,12 @@ namespace larocv {
 			    larocv::data::Vertex3D& result) const
   {
     result.Clear();
-
+    
     if(std::fabs(pt0.x - pt1.x) > _xplane_tick_resolution) return false;
-
+    
     auto wire0 = y2wire(pt0.y, plane0);
     auto wire1 = y2wire(pt1.y, plane1);
-
+    
     std::pair<double,double> wire1_range(kINVALID_DOUBLE,kINVALID_DOUBLE);
     try {
       wire1_range = larocv::OverlapWireRange(wire0, plane0, plane1);
@@ -115,7 +115,14 @@ namespace larocv {
     result.vtx2d_v.resize(_num_planes);
     for(size_t plane=0; plane<_num_planes; ++plane) {
       auto& vtx2d = result.vtx2d_v[plane].pt;
-      auto wire = larocv::WireCoordinate(result.y, result.z, plane);
+      double wire = kINVALID_DOUBLE;
+      try {
+	wire = larocv::WireCoordinate(result.y, result.z, plane);
+      } catch(::larutil::LArUtilException& lare) {
+	LAROCV_WARNING() << lare.what() << "... bad wire coordinate requested "
+			 << "@ ("<<result.y<<","<<result.z<<") plane " << plane << std::endl;
+	return false;
+      }
       vtx2d.y = wire2y(wire,plane);
       vtx2d.x = (pt0.x + pt1.x)/2.;
     }
