@@ -72,10 +72,10 @@ namespace larocv {
 
 	auto track_par_ass_id_v = ass_man.GetManyAss(vtx3d,track_par_data.ID());
 	for(auto track_par_id : track_par_ass_id_v) {
-	  const auto& track_par = track_par_data.as_vector()[track_par_id];
-	  //if (track_par.type!=data::ParticleType_t::kTrack) throw larbys("Not a track particle!");
+	  auto track_par = track_par_data.as_vector()[track_par_id];
 	  auto track_comp_id = ass_man.GetOneAss(track_par,track_comp_data.ID());
 	  const auto& track_comp = track_comp_data.as_vector()[track_comp_id];
+	  track_par.type=data::ParticleType_t::kTrack;
 	  par_data.push_back(track_par);
 	  comp_data.push_back(track_comp);
 	  AssociateOne(par_data.as_vector().back(),comp_data.as_vector().back());
@@ -84,8 +84,8 @@ namespace larocv {
 	}
 	auto shower_par_ass_id_v = ass_man.GetManyAss(vtx3d,shower_par_data.ID());	
 	for(auto shower_par_id : shower_par_ass_id_v) {
-	  const auto& shower_par = shower_par_data.as_vector()[shower_par_id];
-	  //if (shower_par.type!=data::ParticleType_t::kShower) throw larbys("Not a shower particle!");
+	  auto shower_par = shower_par_data.as_vector()[shower_par_id];
+	  shower_par.type=data::ParticleType_t::kShower;
 	  par_data.push_back(shower_par);
 	  AssociateMany(vtx3d_copy,par_data.as_vector().back());
 	}
