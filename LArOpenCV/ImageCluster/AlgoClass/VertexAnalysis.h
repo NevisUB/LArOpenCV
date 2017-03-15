@@ -79,6 +79,9 @@ namespace larocv {
 		size_t required_matches,
 		std::vector<std::vector<std::pair<size_t,size_t> > >& match_vv);
 
+    bool
+    CheckFiducial(const data::Vertex3D& vtx3d);
+    
     const LArPlaneGeo& Geo() { return _geo; }
     
   private:

@@ -399,6 +399,17 @@ namespace larocv {
 
     std::swap(vtx_temp_v,vtx_v);
   }
+
+  bool
+  VertexAnalysis::CheckFiducial(const data::Vertex3D& vtx3d) {
+    
+    if( vtx3d.x < 5.     || vtx3d.x > 251.35 ||
+	vtx3d.y < -111.5 || vtx3d.y > 111.5  ||
+	vtx3d.z < 5.     || vtx3d.z > 1031.8 )
+      return false;
+    
+    return true;
+  }
   
 }
 
