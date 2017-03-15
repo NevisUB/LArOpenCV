@@ -18,7 +18,7 @@ namespace larocv {
 
     _track_vertex_algo_id = kINVALID_ALGO_ID;
     _shower_vertex_algo_id = kINVALID_ALGO_ID;
-	
+
     auto track_vertex_algo_name = pset.get<std::string>("TrackVertex","");
     if (!track_vertex_algo_name.empty()) {
       _track_vertex_algo_id = this->ID(track_vertex_algo_name);
@@ -69,11 +69,12 @@ namespace larocv {
 	
 	auto& comp_data = AlgoData<data::TrackClusterCompoundArray>(_nplanes+plane+1);
 	const auto& track_comp_data = AlgoData<data::TrackClusterCompoundArray>(_track_vertex_algo_id,_nplanes+plane+1);
+	const auto& shower_comp_data = AlgoData<data::TrackClusterCompoundArray>(_shower_vertex_algo_id,_nplanes+plane+1);
 
 	auto track_par_ass_id_v = ass_man.GetManyAss(vtx3d,track_par_data.ID());
 	for(auto track_par_id : track_par_ass_id_v) {
 	  const auto& track_par = track_par_data.as_vector()[track_par_id];
-	  //if (track_par.type!=data::ParticleType_t::kTrack) throw larbys("Not a track particle!");
+	  if (track_par.type!=data::ParticleType_t::kTrack) throw larbys("Not a track particle!");
 	  auto track_comp_id = ass_man.GetOneAss(track_par,track_comp_data.ID());
 	  const auto& track_comp = track_comp_data.as_vector()[track_comp_id];
 	  par_data.push_back(track_par);
@@ -84,10 +85,20 @@ namespace larocv {
 	}
 	auto shower_par_ass_id_v = ass_man.GetManyAss(vtx3d,shower_par_data.ID());	
 	for(auto shower_par_id : shower_par_ass_id_v) {
-	  const auto& shower_par = shower_par_data.as_vector()[shower_par_id];
-	  //if (shower_par.type!=data::ParticleType_t::kShower) throw larbys("Not a shower particle!");
-	  par_data.push_back(shower_par);
-	  AssociateMany(vtx3d_copy,par_data.as_vector().back());
+	  const auto& par = shower_par_data.as_vector()[shower_par_id];
+	  if (par.type==data::ParticleType_t::kShower) {
+	    par_data.push_back(par);
+	    AssociateMany(vtx3d_copy,par_data.as_vector().back());
+	  }
+	  else if (par.type==data::ParticleType_t::kTrack) {
+	    par_data.push_back(par);
+	    auto track_comp_id = ass_man.GetOneAss(par,shower_comp_data.ID());
+	    if (track_comp_id==kINVALID_SIZE) throw larbys("Invalid comp id requested");
+	    const auto& track_comp = shower_comp_data.as_vector()[track_comp_id];
+	    AssociateMany(vtx3d_copy,par_data.as_vector().back());
+	    comp_data.push_back(track_comp);
+	    AssociateOne(par_data.as_vector().back(),comp_data.as_vector().back());
+	  }
 	}
       }
     }

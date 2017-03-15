@@ -72,10 +72,11 @@ namespace larocv {
     _merge_compatible_showers=pset.get<bool>("MergeCompatibleShowers");
     
     Register(new data::Vertex3DArray);
-
     for(size_t planeid=0;planeid<3;++planeid)
       Register(new data::ParticleClusterArray);
-    
+    for(size_t planeid=0;planeid<3;++planeid)
+      Register(new data::TrackClusterCompoundArray);
+
   }
   
   
@@ -123,6 +124,7 @@ namespace larocv {
 	for(size_t plane=0;plane<3;++plane) {
 	  LAROCV_DEBUG() << "On plane " << plane << std::endl;
 	  auto& par_data = AlgoData<data::ParticleClusterArray>(plane+1);
+	  auto& comp_data = AlgoData<data::TrackClusterCompoundArray>(plane+1+3);
 	  const auto& super_ctor_v = super_ctor_vv[plane];
 	  
 	  //get associated shower for this vertex on this plane
@@ -171,6 +173,7 @@ namespace larocv {
 	  
 	  //get associated track particle associated with this vertex, there may be only one
 	  const auto& track_vtx_par_data = AlgoData<data::ParticleClusterArray>(_track_vertex_particle_algo_id,plane);
+	  const auto& track_vtx_comp_data = AlgoData<data::TrackClusterCompoundArray>(_track_vertex_particle_algo_id,plane+3);
 	  
 	  auto track_particle_id = ass_man.GetOneAss(shower_vtx,track_vtx_par_data.ID());
 	  if (track_particle_id == kINVALID_SIZE) {
@@ -216,10 +219,17 @@ namespace larocv {
 	      continue;
 	    }
 	    LAROCV_DEBUG() << "... other track particle index " << other_track_particle_id << std::endl;
-	    auto track_cluster = track_vtx_par_data.as_vector()[other_track_particle_id];
-	    track_cluster.type=data::ParticleType_t::kTrack;
-	    par_data.emplace_back(std::move(track_cluster));
+	    const auto& track_cluster = track_vtx_par_data.as_vector()[other_track_particle_id];
+	    auto track_cluster_copy=track_cluster;
+	    track_cluster_copy.type=data::ParticleType_t::kTrack;
+	    par_data.emplace_back(std::move(track_cluster_copy));
 	    AssociateMany(vtx_data.as_vector().back(),par_data.as_vector().back());
+
+	    auto track_comp_id = ass_man.GetOneAss(track_cluster,track_vtx_comp_data.ID());
+	    auto track_comp = track_vtx_comp_data.as_vector()[track_comp_id];
+	    comp_data.emplace_back(std::move(track_comp));
+	    AssociateOne(par_data.as_vector().back(),comp_data.as_vector().back());
+			 
 	    LAROCV_DEBUG() << "Associated track=>shower vertex id " << vtx_data.as_vector().back().ID()
 			   << " with track particle " << par_data.as_vector().back().ID() << std::endl;
 	  }
@@ -236,10 +246,12 @@ namespace larocv {
 		  
 	for(size_t plane=0;plane<3;++plane) {
 	  const auto& shower_vtx_track_par_data = AlgoData<data::ParticleClusterArray>(_shower_vertex_track_particle_algo_id,plane);
+	  const auto& shower_vtx_track_comp_data = AlgoData<data::TrackClusterCompoundArray>(_shower_vertex_track_particle_algo_id,plane+3);
 	  const auto& shower_vtx_shower_par_data = AlgoData<data::ParticleClusterArray>(_shower_vertex_shower_particle_algo_id,plane);
 
 	  auto& par_data = AlgoData<data::ParticleClusterArray>(plane+1);
-
+	  auto& comp_data = AlgoData<data::TrackClusterCompoundArray>(plane+1+3);
+	  
 	  auto track_particle_ass_id_v = ass_man.GetManyAss(shower_vtx,shower_vtx_track_par_data.ID());
 	  auto shower_particle_ass_id_v = ass_man.GetManyAss(shower_vtx,shower_vtx_shower_par_data.ID());
 	  
@@ -279,10 +291,15 @@ namespace larocv {
 	  }
 	  LAROCV_DEBUG() << "Got " << track_particle_ass_id_v.size() << " associated tracks on plane " << plane << std::endl;
 	  for(auto track_par_ass_id : track_particle_ass_id_v) {
-	    auto track_cluster = shower_vtx_track_par_data.as_vector()[track_par_ass_id];
-	    track_cluster.type=data::ParticleType_t::kTrack;
-	    par_data.emplace_back(std::move(track_cluster));
+	    const auto& track_cluster = shower_vtx_track_par_data.as_vector()[track_par_ass_id];
+	    auto track_cluster_copy=track_cluster;
+	    track_cluster_copy.type=data::ParticleType_t::kTrack;
+	    par_data.emplace_back(std::move(track_cluster_copy));
 	    AssociateMany(vtx_data.as_vector().back(),par_data.as_vector().back());
+	    auto track_comp_id = ass_man.GetOneAss(track_cluster,shower_vtx_track_comp_data.ID());
+	    const auto& track_comp=shower_vtx_track_comp_data.as_vector()[track_comp_id];
+	    comp_data.push_back(track_comp);
+	    AssociateOne(par_data.as_vector().back(),comp_data.as_vector().back());
 	    LAROCV_DEBUG() << "Associated shower vertex id " << vtx_data.as_vector().back().ID()
 			   << " with track particle " << par_data.as_vector().back().ID() << std::endl;
 	  }

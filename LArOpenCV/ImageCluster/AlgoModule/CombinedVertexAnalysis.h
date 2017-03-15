@@ -42,6 +42,7 @@ namespace larocv {
 
     AlgorithmID_t _shower_vertex_algo_id;
     AlgorithmID_t _track_vertex_algo_id;
+    AlgorithmID_t _edge_vertex_algo_id;
 
     size_t _nplanes;
   };
