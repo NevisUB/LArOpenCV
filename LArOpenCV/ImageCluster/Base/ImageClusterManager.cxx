@@ -183,7 +183,7 @@ namespace larocv {
   void ImageClusterManager::Configure(const Config_t& main_cfg)
   {
     LAROCV_DEBUG() << "Start" << std::endl;
-    _profile = main_cfg.get<bool>("Profile");
+    _profile = main_cfg.get<bool>("Profile",true);
 
     this->set_verbosity((msg::Level_t)(main_cfg.get<unsigned short>("Verbosity",(unsigned short)(this->logger().level()))));
     ::larocv::logger::get_shared().set(this->logger().level());
@@ -201,7 +201,7 @@ namespace larocv {
     auto cluster_instance_type_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoType");
     auto cluster_instance_name_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoName");
 
-    _enable_wire_check = main_cfg.get<bool>("EnableWireCheck");
+    _enable_wire_check = main_cfg.get<bool>("EnableWireCheck",true);
 
     if(cluster_instance_type_v.size() != cluster_instance_name_v.size()) {
       LAROCV_CRITICAL() << "Clustering: AlgoType and AlgoName config parameters have different length! "
@@ -284,8 +284,8 @@ namespace larocv {
       _recluster_alg->Configure(main_cfg.get<fcllite::PSet>(_recluster_alg->Name()));
     }
 
-    _use_two_plane  = main_cfg.get<bool>("UseOnlyTwoPlanes");
-    _required_plane = main_cfg.get<int>("RequirePlane");
+    _use_two_plane  = main_cfg.get<bool>("UseOnlyTwoPlanes",false);
+    _required_plane = main_cfg.get<int>("RequirePlane",-1);
 
     if(main_cfg.get<bool>("StoreAlgoData",false)) {
       _tree = new TTree("larocv_tree","");
@@ -587,7 +587,7 @@ namespace larocv {
 
     	    auto const& plane = cinfo.first;
     	    auto const& index = cinfo.second;
-	    if ( plane == _required_plane ) required_plane_found=true;
+	    if ( plane == _required_plane or _required_plane < 0) required_plane_found=true;
             if( _enable_wire_check && plane == lowest_plane ) continue ;
     	    if( !c_per_plane[plane].size() ) continue;
 
