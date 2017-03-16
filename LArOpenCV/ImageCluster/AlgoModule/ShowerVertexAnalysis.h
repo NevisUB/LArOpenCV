@@ -3,6 +3,8 @@
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/ClusterMerge.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 
 /*
   @brief: analyze shower vertex
@@ -15,7 +17,8 @@ namespace larocv {
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
     ShowerVertexAnalysis(const std::string name = "ShowerVertexAnalysis") :
-      ImageAnaBase(name)
+      ImageAnaBase(name),
+      _ClusterMerge()
     {}
     
     /// Default destructor
@@ -39,6 +42,12 @@ namespace larocv {
     bool _PostProcess_(const std::vector<const cv::Mat>& img_v);
 
   private:
+    AlgorithmID_t _scluster_algo_id;
+    AlgorithmID_t _shower_vertex_algo_id;
+
+    ClusterMerge _ClusterMerge;
+    bool _merge;
+    
   };
 
   /**

@@ -13,11 +13,23 @@
 
 namespace larocv {
 
+  cv::Mat
+  BlankImage(const cv::Mat& img,uint val){
+    cv::Mat dst_img(img.size(),img.type(),CV_8UC1);    
+    dst_img.setTo(val);
+    return dst_img;
+  }
+  
   GEO2D_Contour_t
   FindNonZero(const cv::Mat& img) {
     GEO2D_Contour_t pts_v;
     cv::findNonZero(img,pts_v);
     return pts_v;
+  }
+
+  size_t
+  CountNonZero(const cv::Mat& img){
+    return (size_t)cv::countNonZero(img);
   }
   
   double
