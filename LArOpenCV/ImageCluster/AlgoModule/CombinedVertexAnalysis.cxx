@@ -58,6 +58,7 @@ namespace larocv {
       vertex3d_ptr_v.push_back(&vtx3d);
 
     for(const auto& vertex3d_ptr : vertex3d_ptr_v) {
+      
       const auto& vtx3d = *vertex3d_ptr;
       vertex_data.push_back(vtx3d);
       auto& vtx3d_copy = vertex_data.as_vector().back();
@@ -102,7 +103,7 @@ namespace larocv {
 	}
       }
     }
-
+    
     LAROCV_DEBUG() << "Merged " << vertex3d_ptr_v.size() << " verticies" << std::endl;
     
     LAROCV_DEBUG() << "end" << std::endl;

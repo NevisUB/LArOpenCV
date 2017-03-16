@@ -15,12 +15,24 @@ namespace larocv {
 
   void
   ClusterMerge::Configure(const Config_t &pset) {
-    _N        = pset.get<int>("Keep");
+    //_N        = pset.get<int>("Keep");
     _trilen   = pset.get<float>("TriLen");   // in pixels
     _triangle = pset.get<float>("TriAngle"); // in degrees    
   }
 
 
+  GEO2D_Contour_t
+  ClusterMerge::FlashlightMerge(geo2d::Vector<float> startpt,
+				const GEO2D_ContourArray_t& super_ctor_v,
+				const GEO2D_Contour_t& parent_ctor) {
+
+    auto flashlight_v = this->GenerateFlashlights(startpt,super_ctor_v);
+    auto start_index = this->StartIndex(super_ctor_v,parent_ctor);
+    auto merged_ctor = this->MergeFlashlights(flashlight_v,start_index);
+    return merged_ctor;
+    
+  }
+  
   size_t
   ClusterMerge::StartIndex(const GEO2D_ContourArray_t& super_ctor_v,
 			   const GEO2D_Contour_t& parent_ctor) {

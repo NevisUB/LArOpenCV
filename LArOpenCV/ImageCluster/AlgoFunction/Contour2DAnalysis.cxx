@@ -243,7 +243,7 @@ namespace larocv {
     auto masked_img = MaskImage(img,ctor_v,tol,false);
 
     auto result_v = FindContours(masked_img);
-
+    
     LAROCV_SDEBUG() << "... found " << result_v.size() << " contours in mask" << std::endl;
     
     if (!result_v.size()) throw larbys("No contours found in masked image");
