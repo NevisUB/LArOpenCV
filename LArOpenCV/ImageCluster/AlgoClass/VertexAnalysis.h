@@ -31,37 +31,37 @@ namespace larocv {
     void
     MergeNearby(const std::vector<const data::Vertex3D*>& vtx1_v,
 		std::vector<const data::Vertex3D*>& vtx2_v,
-		double dist3d);
+		double dist3d) const;
 
     void
     MergeNearby(std::vector<const data::Vertex3D*>& vtx1_v,
-		double dist3d);
+		double dist3d) const;
     void
     FilterByCrossing(std::vector<const data::Vertex3D*>& vtx_v,
 		     uint nplanes,
-		     uint nxs);
+		     uint nxs) const;
 
     bool
     RequireParticleCount(const std::vector<std::vector<data::ParticleCluster> >& pars_vv,
 			 uint nplanes,
-			 uint nxs);
+			 uint nxs) const;
 
     bool
     RequireParticleCount(const std::vector<std::vector<const data::ParticleCluster*> >& pars_vv,
 			 uint nplanes,
-			 uint nxs);
+			 uint nxs) const;
 
     bool
     RequireCrossing(const data::Vertex3D& vtx3d,
 		    uint nplanes,
-		    uint nxs);
+		    uint nxs) const;
 
     std::vector<std::vector<std::pair<size_t,size_t> > >
     MatchClusters(const std::vector<std::vector<data::ParticleCluster> >& pars_vv,
 		  const std::vector<cv::Mat>& img_v,
 		  float threshold,
 		  size_t required_per_plane,
-		  size_t required_matches);
+		  size_t required_matches) const;
 
     
     std::vector<std::vector<std::pair<size_t,size_t> > >
@@ -69,7 +69,7 @@ namespace larocv {
 		  const std::vector<cv::Mat>& img_v,
 		  float threshold,
 		  size_t required_per_plane,
-		  size_t required_matches);
+		  size_t required_matches) const;
     
     bool
     MatchExists(const std::vector<std::vector<const data::ParticleCluster*> >& pars_ptr_vv,
@@ -77,12 +77,23 @@ namespace larocv {
 		float threshold,
 		size_t required_per_plane,
 		size_t required_matches,
-		std::vector<std::vector<std::pair<size_t,size_t> > >& match_vv);
+		std::vector<std::vector<std::pair<size_t,size_t> > >& match_vv) const;
 
     bool
-    CheckFiducial(const data::Vertex3D& vtx3d);
+    CheckFiducial(const data::Vertex3D& vtx3d) const;
+
+    bool
+    MatchEdge(const data::TrackClusterCompound& track0, size_t plane0,
+	      const data::TrackClusterCompound& track1, size_t plane1,
+	      data::Vertex3D& vertex) const;
     
-    const LArPlaneGeo& Geo() { return _geo; }
+    bool
+    MatchEdge(const data::TrackClusterCompound& track0, size_t plane0,
+	      const data::TrackClusterCompound& track1, size_t plane1,
+	      const data::TrackClusterCompound& track2, size_t plane2,
+	      data::Vertex3D& vertex) const;
+    
+    const LArPlaneGeo& Geo() const { return _geo; }
     
   private:
 

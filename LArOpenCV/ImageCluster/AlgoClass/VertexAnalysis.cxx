@@ -30,7 +30,7 @@ namespace larocv {
   void
   VertexAnalysis::MergeNearby(const std::vector<const data::Vertex3D*>& vtx1_v,
 			      std::vector<const data::Vertex3D*>& vtx2_v,
-			      double dist3d) {
+			      double dist3d) const {
 
     std::set<size_t> rm_vtx2_s;
     for(const auto time_vtx : vtx1_v) {
@@ -51,7 +51,7 @@ namespace larocv {
 
   void
   VertexAnalysis::MergeNearby(std::vector<const data::Vertex3D*>& vtx1_v,
-			      double dist3d) {
+			      double dist3d) const {
     throw larbys("Not implemented");
   }
 
@@ -61,7 +61,7 @@ namespace larocv {
 				const std::vector<cv::Mat>& img_v,
 				float threshold,
 				size_t required_per_plane,
-				size_t required_matches) {
+				size_t required_matches) const {
 
     // For now I have to make a pointer
     std::vector<std::vector<const data::ParticleCluster*> > pars_ptr_vv;
@@ -86,7 +86,7 @@ namespace larocv {
 				const std::vector<cv::Mat>& img_v,
 				float threshold,
 				size_t required_per_plane,
-				size_t required_matches) {
+				size_t required_matches) const {
     
     std::vector<std::vector<std::pair<size_t,size_t> > > match_vv;
     MatchExists(pars_ptr_vv,img_v,threshold,required_per_plane,required_matches,match_vv);
@@ -99,7 +99,7 @@ namespace larocv {
 			      float threshold,
 			      size_t required_per_plane,
 			      size_t required_matches,
-			      std::vector<std::vector<std::pair<size_t,size_t> > >& match_vv) {
+			      std::vector<std::vector<std::pair<size_t,size_t> > >& match_vv) const {
 
 
     std::vector<size_t> seed_v;
@@ -335,9 +335,48 @@ namespace larocv {
   }
 
   bool
+  VertexAnalysis::MatchEdge(const data::TrackClusterCompound& track0, size_t plane0,
+			    const data::TrackClusterCompound& track1, size_t plane1,
+			    data::Vertex3D& vertex) const {
+
+    bool endok;
+    auto end0 = track0.end_pt();
+    auto end1 = track1.end_pt();
+    endok = _geo.YZPoint(end0,plane0,end1,plane1,vertex);
+    return endok;
+  }
+
+  bool
+  VertexAnalysis::MatchEdge(const data::TrackClusterCompound& track0, size_t plane0,
+			    const data::TrackClusterCompound& track1, size_t plane1,
+			    const data::TrackClusterCompound& track2, size_t plane2,
+			    data::Vertex3D& vertex) const {
+    
+    bool endok;
+
+    auto end0 = track0.end_pt();
+    auto end1 = track1.end_pt();
+    auto end2 = track2.end_pt();
+    
+    LAROCV_DEBUG() << "Testing end0 @ " << end0 << " on plane " << plane0 << " & end1 " << end1 << " @ plane " << plane1 << std::endl;
+    endok = _geo.YZPoint(end0,plane0,end1,plane1,vertex);
+    if (!endok) { 
+      LAROCV_DEBUG() << "Testing end0 @ " << end0 << " on plane " << plane0 << " & end2 " << end2 << " @ plane " << plane2 << std::endl;
+      endok = _geo.YZPoint(end0,plane0,end2,plane2,vertex);
+    }
+    if (!endok) {
+      LAROCV_DEBUG() << "Testing end1 @ " << end1 << " on plane " << plane1 << " & end2 " << end2 << " @ plane " << plane2 << std::endl;
+      endok = _geo.YZPoint(end1,plane1,end2,plane2,vertex);
+    }
+    
+    return endok;
+  }
+  
+  
+  bool
   VertexAnalysis::RequireParticleCount(const std::vector<std::vector<data::ParticleCluster> >& pars_vv,
 				       uint nplanes,
-				       uint nxs) {
+				       uint nxs) const {
     // For now I have to make a pointer
     std::vector<std::vector<const data::ParticleCluster*> > pars_ptr_vv;
     pars_ptr_vv.resize(pars_vv.size());
@@ -357,7 +396,7 @@ namespace larocv {
   bool
   VertexAnalysis::RequireParticleCount(const std::vector<std::vector<const data::ParticleCluster*> >& pars_ptr_vv,
 				       uint nplanes,
-				       uint nxs) {
+				       uint nxs) const {
     if (pars_ptr_vv.size()!=3)
       throw larbys("Input particle array should be of size 3");
 
@@ -374,7 +413,7 @@ namespace larocv {
   bool
   VertexAnalysis::RequireCrossing(const data::Vertex3D& vtx3d,
 				  uint nplanes,
-				  uint nxs) {
+				  uint nxs) const {
     uint nplanes_=0;
     for(size_t plane=0;plane<vtx3d.vtx2d_v.size();++plane) {
       const auto& cvtx = vtx3d.cvtx2d_v.at(plane);
@@ -389,7 +428,7 @@ namespace larocv {
   void
   VertexAnalysis::FilterByCrossing(std::vector<const data::Vertex3D*>& vtx_v,
 				   uint nplanes,
-				   uint nxs) {
+				   uint nxs) const {
 
     std::vector<const data::Vertex3D*> vtx_temp_v;
     for(const auto vtx3d : vtx_v) {
@@ -401,7 +440,7 @@ namespace larocv {
   }
 
   bool
-  VertexAnalysis::CheckFiducial(const data::Vertex3D& vtx3d) {
+  VertexAnalysis::CheckFiducial(const data::Vertex3D& vtx3d) const {
     
     if( vtx3d.x < 5.     || vtx3d.x > 251.35 ||
 	vtx3d.y < -111.5 || vtx3d.y > 111.5  ||
