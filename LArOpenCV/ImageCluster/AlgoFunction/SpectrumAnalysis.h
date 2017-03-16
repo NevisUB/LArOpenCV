@@ -2,7 +2,8 @@
 #define __SPECTRUMANALYSIS_H_
 
 #include <vector>
-
+#include <stdlib.h>
+#include <algorithm>
 namespace larocv {
   
   double

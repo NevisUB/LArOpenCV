@@ -33,12 +33,12 @@ namespace larocv {
   }
   
   void LinearTrackFinder::_Process_(const larocv::Cluster2DArray_t& clusters,
-				     const ::cv::Mat& img,
-				     larocv::ImageMeta& meta,
-				     larocv::ROI& roi)
+				    ::cv::Mat& img,
+				    larocv::ImageMeta& meta,
+				    larocv::ROI& roi)
   { _algo.SetPlaneInfo(meta); }
 
-  bool LinearTrackFinder::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  bool LinearTrackFinder::_PostProcess_(std::vector<cv::Mat>& img_v)
   {
 
     if (_algo_id_part != kINVALID_ALGO_ID) {

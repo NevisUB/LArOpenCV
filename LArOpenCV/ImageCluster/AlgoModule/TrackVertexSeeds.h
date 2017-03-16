@@ -36,11 +36,11 @@ namespace larocv {
     void _Configure_(const Config_t &pset);
     
     void _Process_(const Cluster2DArray_t& clusters,
-		   const ::cv::Mat& img,
+		   ::cv::Mat& img,
 		   ImageMeta& meta,
 		   ROI& roi);
 
-    bool _PostProcess_(const std::vector<const cv::Mat>& img_v) { return true; }
+    bool _PostProcess_(std::vector<cv::Mat>& img_v) { return true; }
 
   public:
     const ClusterHIPMIP& ClusterHIPMIPAlgo() { return _ClusterHIPMIP; }

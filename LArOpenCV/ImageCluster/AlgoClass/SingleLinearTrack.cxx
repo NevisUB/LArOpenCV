@@ -78,10 +78,10 @@ namespace larocv {
   }
 
   
-  void SingleLinearTrack::EdgesFromPCAProjection(const cv::Mat& img,
-						  const GEO2D_Contour_t& ctor,
-						  geo2d::Vector<float>& edge1,
-						  geo2d::Vector<float>& edge2) const
+  void SingleLinearTrack::EdgesFromPCAProjection(cv::Mat& img,
+						 const GEO2D_Contour_t& ctor,
+						 geo2d::Vector<float>& edge1,
+						 geo2d::Vector<float>& edge2) const
   {
     //but instead I could fit PCA, project all points on this line, then find edges
     
@@ -172,7 +172,7 @@ namespace larocv {
   }
   
   
-  void SingleLinearTrack::FindEdges(const cv::Mat& img,
+  void SingleLinearTrack::FindEdges(cv::Mat& img,
 				    const GEO2D_Contour_t& ctor,
 				    geo2d::Vector<float>& edge1,
 				    geo2d::Vector<float>& edge2) const
@@ -184,7 +184,7 @@ namespace larocv {
   }
   
   std::vector<larocv::data::LinearTrack2D>
-  SingleLinearTrack::FindLinearTrack2D(const size_t plane, const cv::Mat& img) const
+  SingleLinearTrack::FindLinearTrack2D(const size_t plane, cv::Mat& img) const
   {
     ::cv::Mat thresh_img;
     
@@ -286,7 +286,7 @@ namespace larocv {
   }
 
   std::vector<data::LinearTrack3D>
-  SingleLinearTrack::FindLinearTrack(const std::vector<const cv::Mat>& img_v)
+  SingleLinearTrack::FindLinearTrack(std::vector<cv::Mat>& img_v)
   {
 
     // First find linear track candidates

@@ -51,14 +51,14 @@ namespace larocv {
   }
 
   void ShowerOnTrackEnd::_Process_(const larocv::Cluster2DArray_t& clusters,
-				   const ::cv::Mat& img,
+				   ::cv::Mat& img,
 				   larocv::ImageMeta& meta,
 				   larocv::ROI& roi)
   {
     _geo.ResetPlaneInfo(meta);
   }
   
-  bool ShowerOnTrackEnd::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  bool ShowerOnTrackEnd::_PostProcess_(std::vector<cv::Mat>& img_v)
   {
     LAROCV_DEBUG() << "start" << std::endl;
     auto num_planes = img_v.size();

@@ -71,7 +71,7 @@ namespace larocv {
     /// Execute algorithms to construct clusters + corresponding meta data
     // void Add(const ::cv::Mat& img, const larocv::ImageMeta& meta);
     /// Execute algorithms to construct clusters + corresponding meta data + roi data
-    void Add(const ::cv::Mat& img, const larocv::ImageMeta& meta, const larocv::ROI& roi,
+    void Add(::cv::Mat& img, const larocv::ImageMeta& meta, const larocv::ROI& roi,
 	     ImageSetID_t set_id = kINVALID_IMAGE_SET_ID);
     /// Execute algorithms to construct clusters + corresponding meta data
     bool Process();
@@ -94,11 +94,11 @@ namespace larocv {
     /// Match result getter
     const MatchBookKeeper& BookKeeper() const { return _book_keeper; }
     /// Original input image getter
-    const std::vector<cv::Mat>& InputImages(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID) const;
+    std::vector<cv::Mat>& InputImages(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID);
     /// Original input images writeable
     std::vector<cv::Mat>& InputImagesRW(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID,bool preserve_originals=false);
     /// Return copy of originals
-    const std::vector<cv::Mat>& OriginalInputImages(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID);
+    std::vector<cv::Mat>& OriginalInputImages(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID);
     /// Original image metadata getter
     const std::vector<larocv::ImageMeta>& InputImageMetas(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID) const;
     /// Original image roi getter

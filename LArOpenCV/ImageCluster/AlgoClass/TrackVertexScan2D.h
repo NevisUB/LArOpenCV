@@ -71,11 +71,11 @@ namespace larocv {
 		      const larocv::ImageMeta& meta,
 		      const std::vector<geo2d::Vector<float> >& points);
 
-    void CreateTimeVertex3D(const std::vector<const cv::Mat>& img_v,
+    void CreateTimeVertex3D(std::vector<cv::Mat>& img_v,
 			    std::vector<larocv::data::Vertex3D>& vtx3d_v,
 			    std::vector<std::vector<larocv::data::CircleVertex> >& vtx2d_vv);
 
-    void CreateWireVertex3D(const std::vector<const cv::Mat>& img_v,
+    void CreateWireVertex3D(std::vector<cv::Mat>& img_v,
 			    std::vector<larocv::data::Vertex3D>& vtx3d_v,
 			    std::vector<std::vector<larocv::data::CircleVertex> >& vtx2d_vv);
 
@@ -128,15 +128,15 @@ namespace larocv {
 		   const geo2d::Circle<float> init_circle,
 		   const geo2d::Vector<float> pt_err);
 
-    void XPlaneTimeScan(const std::vector<const cv::Mat>& img_v);
+    void XPlaneTimeScan(std::vector<cv::Mat>& img_v);
     void XPlaneTimeProposal();
-    void TimeVertex3D(const std::vector<const cv::Mat>& img_v,
+    void TimeVertex3D(std::vector<cv::Mat>& img_v,
 		      std::vector<larocv::data::Vertex3D>& vtx3d_v,
 		      std::vector<std::vector<larocv::data::CircleVertex> >& vtx2d_vv);
     
-    void XPlaneWireScan(const std::vector<const cv::Mat>& img_v);
+    void XPlaneWireScan(std::vector<cv::Mat>& img_v);
     void XPlaneWireProposal();
-    void WireVertex3D(const std::vector<const cv::Mat>& img_v,
+    void WireVertex3D(std::vector<cv::Mat>& img_v,
 		      std::vector<larocv::data::Vertex3D>& vtx3d_v,
 		      std::vector<std::vector<larocv::data::CircleVertex> >& vtx2d_vv);
 

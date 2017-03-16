@@ -67,7 +67,7 @@ namespace larocv {
     _book_keeper.Reset();
   }
 
-  const std::vector<cv::Mat>& ImageClusterManager::InputImages(ImageSetID_t set_id) const
+  std::vector<cv::Mat>& ImageClusterManager::InputImages(ImageSetID_t set_id)
   {
     if(_raw_img_vv.empty()) 
       throw larbys("No image available!");
@@ -103,7 +103,7 @@ namespace larocv {
     return _raw_img_vv[set_id];
   }
   
-  const std::vector<cv::Mat>& ImageClusterManager::OriginalInputImages(ImageSetID_t set_id) {
+  std::vector<cv::Mat>& ImageClusterManager::OriginalInputImages(ImageSetID_t set_id) {
     
     if(_copy_img_vv.empty()) 
       throw larbys("No image available!");
@@ -309,7 +309,7 @@ namespace larocv {
     
   }
 
-  void ImageClusterManager::Add(const ::cv::Mat& img, const ImageMeta& meta, const ROI& roi, size_t set_id)
+  void ImageClusterManager::Add( ::cv::Mat& img, const ImageMeta& meta, const ROI& roi, size_t set_id)
   {
     if(set_id == kINVALID_SIZE) set_id = 0;
     LAROCV_INFO() << "Adding an image @ set id " << set_id << std::endl;
@@ -364,7 +364,7 @@ namespace larocv {
 	LAROCV_DEBUG() << "    # roi ....  " << raw_roi_v.size() << "\n";
       
 	auto const& meta = raw_meta_v.at(img_index);
-	auto const& img  = raw_img_v.at(img_index);
+	auto& img  = raw_img_v.at(img_index);
 	//auto      & roi  = raw_roi_v.at(img_index);
 
 	if(meta.num_pixel_row()!=img.rows)
@@ -398,7 +398,7 @@ namespace larocv {
 			  << std::endl;
 	throw larbys();
       }
-      auto const& raw_img_v  = _raw_img_vv[image_set_id];
+      auto      & raw_img_v  = _raw_img_vv[image_set_id];
       auto const& raw_roi_v  = _raw_roi_vv[image_set_id];
       auto const& raw_meta_v = _raw_meta_vv[image_set_id];
 
@@ -412,7 +412,7 @@ namespace larocv {
 	LAROCV_DEBUG() << "  # roi ..... " << raw_roi_v.size() << std::endl;
 	
 	auto const& meta = raw_meta_v[img_index];
-	auto const& img  = raw_img_v[img_index];
+	auto      & img  = raw_img_v[img_index];
 	auto      & roi  = raw_roi_v[img_index];
 
 	// search for the last cluster that processed the same image set
@@ -487,7 +487,7 @@ namespace larocv {
 	}
       }
       if(alg_ptr->Type() != kAlgoCluster) {
-	std::vector<const cv::Mat> img_v;
+	std::vector<cv::Mat> img_v;
 	for(size_t img_index=0; img_index<raw_img_v.size(); ++img_index)
 	  img_v.push_back(raw_img_v[img_index]);
 	good_state = ((ImageAnaBase*)(alg_ptr))->PostProcess(img_v);

@@ -46,7 +46,7 @@ namespace larocv {
   {}
 
   geo2d::VectorArray<float>
-  OneTrackOneShower::ValidShowerPointOnCircle(const ::cv::Mat& img,
+  OneTrackOneShower::ValidShowerPointOnCircle(::cv::Mat& img,
 					      const geo2d::Circle<float>& circle,
 					      const std::vector<geo2d::Vector<float> >& xs_pts) const
   {
@@ -139,7 +139,7 @@ namespace larocv {
   }
   
   std::vector<data::Vertex3D>
-  OneTrackOneShower::ListShowerVertex(const std::vector<const cv::Mat>& img_v,
+  OneTrackOneShower::ListShowerVertex(std::vector<cv::Mat>& img_v,
 				      const std::vector<data::VertexSeed3D>& cand_v) const
   {
     std::vector<data::Vertex3D> res_vtx3d_v;
@@ -164,7 +164,7 @@ namespace larocv {
 	circle.center.y = cand_vtx.vtx2d_v.at(plane).pt.y;
 	cvtx.center.x = circle.center.x;
 	cvtx.center.y = circle.center.y;
-	auto const& img = img_v[plane];
+	auto& img = img_v[plane];
 
 	geo2d::VectorArray<float> xs_pt_v;
 
@@ -244,7 +244,7 @@ namespace larocv {
   }
   
   std::vector<data::Vertex3D>
-  OneTrackOneShower::CreateSingleShower(const std::vector<const cv::Mat>& img_v)
+  OneTrackOneShower::CreateSingleShower(std::vector<cv::Mat>& img_v)
   {
     // Construct a single list of vertex candidates (ltrack=>vtrack=>vedge)
     LAROCV_INFO() << "# Vertex3D after combining all: " << _cand_vertex_v.size() << std::endl;

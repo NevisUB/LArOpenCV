@@ -11,7 +11,7 @@ namespace larocv{
   { }
 
   void EmptyImageAna::_Process_(const Cluster2DArray_t& clusters,
-				const ::cv::Mat& img,
+				::cv::Mat& img,
 				ImageMeta& meta,
 				ROI& roi)
   {  return; }

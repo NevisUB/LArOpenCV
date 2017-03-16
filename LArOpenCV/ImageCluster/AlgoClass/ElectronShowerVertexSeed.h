@@ -40,7 +40,7 @@ namespace larocv {
     // 		      const larocv::data::VertexClusterArray& part,
     // 		      const larocv::data::dQdXProfilerData& dqdx);
 
-    void RegisterSeed(const std::vector<const cv::Mat>& img_v,
+    void RegisterSeed(const std::vector<cv::Mat>& img_v,
 		      const std::vector<data::VertexTrackInfoCollection>& vtxinfo_v);
     
     void RegisterSeed(const larocv::data::LinearTrack3DArray& data);

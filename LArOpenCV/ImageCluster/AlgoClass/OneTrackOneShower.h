@@ -37,7 +37,7 @@ namespace larocv {
     void SetPlaneInfo(const ImageMeta& meta);
 
     std::vector<data::Vertex3D>
-    CreateSingleShower(const std::vector<const cv::Mat>& img_v);
+    CreateSingleShower(std::vector<cv::Mat>& img_v);
 
     void RegisterSeed(const std::vector<data::VertexSeed3D>& seed_v)
     { _cand_vertex_v = seed_v; }
@@ -45,12 +45,12 @@ namespace larocv {
   private:
 
     geo2d::VectorArray<float>
-    ValidShowerPointOnCircle(const ::cv::Mat& img,
+    ValidShowerPointOnCircle(::cv::Mat& img,
 			     const geo2d::Circle<float>& circle,
 			     const std::vector<geo2d::Vector<float> >& xs_pts) const;
 
     std::vector<data::Vertex3D>
-    ListShowerVertex(const std::vector<const cv::Mat>& img_v,
+    ListShowerVertex(std::vector<cv::Mat>& img_v,
 		     const std::vector<data::VertexSeed3D>& cand_v) const;
 
     LArPlaneGeo _geo_algo;

@@ -53,7 +53,7 @@ namespace larocv {
     LAROCV_INFO() << "# Vertex3D from LinearCluster: " << _ltrack_vertex_v.size() << std::endl;
   }
   
-  void ElectronShowerVertexSeed::RegisterSeed(const std::vector<const cv::Mat>& img_v,
+  void ElectronShowerVertexSeed::RegisterSeed(const std::vector<cv::Mat>& img_v,
 					      const std::vector<data::VertexTrackInfoCollection>& vtxinfo_v)
   {
 
