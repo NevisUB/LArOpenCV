@@ -6,7 +6,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include "LArOpenCV/Core/larbys.h"
 #include "Geo2D/Core/Vector.h"
-#include <array>
+#include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
+#include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 
 using larocv::larbys;
 
@@ -19,21 +20,55 @@ namespace larocv {
     _triangle = pset.get<float>("TriAngle"); // in degrees    
   }
 
-  std::vector<std::array<geo2d::Vector<float>,6> >
-  ClusterMerge::GenerateFlashlights(//const GEO2D_Contour_t& parent_ctor,
-				    geo2d::Vector<float> startpt,
+
+  size_t
+  ClusterMerge::StartIndex(const GEO2D_ContourArray_t& super_ctor_v,
+			   const GEO2D_Contour_t& parent_ctor) {
+    auto const super_cluster_id = larocv::FindContainingContour(super_ctor_v, parent_ctor);
+    if (super_cluster_id==kINVALID_SIZE) {
+      LAROCV_CRITICAL() << "Parent contour could not be located in supers" << std::endl;
+      throw larbys();
+    }
+    return super_cluster_id;
+  }
+  
+  GEO2D_Contour_t
+  ClusterMerge::MergeFlashlights(const GEO2D_ContourArray_t& flashlight_v,
+				 size_t start_index) {
+    
+    GEO2D_Contour_t res_ctor;
+    std::set<size_t> overlap_s;
+    overlap_s.insert(start_index);
+    
+    for(size_t flashid=0;flashid<flashlight_v.size();flashid++) {
+      if (flashid==start_index) continue;
+      const auto& thisflash = flashlight_v[flashid];
+      for (auto oid : overlap_s) {
+	if (oid==flashid) continue;
+	const auto& thatflash=flashlight_v[oid];
+	auto overlap = larocv::AreaOverlap(thisflash,thatflash);
+	if (overlap>0) overlap_s.insert(flashid);
+      }
+    }
+
+    res_ctor.reserve(overlap_s.size()*6);
+
+    for (auto oid : overlap_s)
+      for(const auto& pt : flashlight_v[oid])
+	res_ctor.emplace_back(pt);
+    
+    res_ctor = ConvexHull(res_ctor);
+    
+    return res_ctor;
+  }
+  
+  GEO2D_ContourArray_t
+  ClusterMerge::GenerateFlashlights(geo2d::Vector<float> startpt,
 				    const GEO2D_ContourArray_t& super_ctor_v) {
     
     
     // get the associated super contour for this parent contour
-
-    // auto const super_cluster_id = FindContainingContour(super_ctor_v, parent_ctor);
-    // if (super_cluster_id==kINVALID_SIZE) {
-    //   LAROCV_CRITICAL() << "Parent contour could not be located in supers" << std::endl;
-    //   throw larbys();
-    // }
-
-    std::vector<std::array<geo2d::Vector<float>,6> > flashlight_v;
+    GEO2D_ContourArray_t flashlight_v;
     for(size_t superid=0; superid<super_ctor_v.size(); ++superid){
       
       auto& ctor =  super_ctor_v[superid];
@@ -114,7 +149,7 @@ namespace larocv {
       }
       
       //replace the contour with the flashlight
-      std::array<geo2d::Vector<float>,6> flashlight;
+      GEO2D_Contour_t flashlight(6,cv::Point_<int>(kINVALID_INT,kINVALID_INT));
       flashlight[0]=std::move(sbot);
       flashlight[1]=std::move(stop);
       flashlight[2]=std::move(etop);

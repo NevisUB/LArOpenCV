@@ -9,6 +9,13 @@
 
 namespace larocv {
 
+  GEO2D_Contour_t
+  ConvexHull(const GEO2D_Contour_t& ctor) {
+    GEO2D_Contour_t hull_ctor;
+    cv::convexHull(ctor,hull_ctor);
+    return hull_ctor;
+  }
+  
   GEO2D_ContourArray_t
   FindContours(const cv::Mat& img)
   {
@@ -18,8 +25,6 @@ namespace larocv {
     cv::findContours(img_copy,result_v,cv_hierarchy_v,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
     return result_v;
   }
-
-
   
   cv::Mat
   CleanImage(const cv::Mat& img,

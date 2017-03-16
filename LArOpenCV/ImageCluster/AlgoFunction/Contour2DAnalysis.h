@@ -8,6 +8,9 @@
 
 namespace larocv {
 
+  GEO2D_Contour_t
+  ConvexHull(const GEO2D_Contour_t& ctor);
+  
   GEO2D_ContourArray_t
   FindContours(const cv::Mat& img);
 				    
