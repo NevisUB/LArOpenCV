@@ -125,8 +125,8 @@ namespace larlite {
       ev_user = storage->get_data<event_user>("ImageClusterHit");
 
     for (size_t plane = 0; plane < _img_mgr.size(); ++plane) {
-
-      auto const& img  = _img_mgr.img_at(plane);
+      
+      auto      & img  = _img_mgr.img_at(plane);
       auto      & meta = _img_mgr.meta_at(plane);
       auto const& roi  = _img_mgr.roi_at(plane);
 

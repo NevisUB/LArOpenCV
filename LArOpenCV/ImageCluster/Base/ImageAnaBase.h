@@ -46,14 +46,14 @@ namespace larocv {
        @brief wrapper execution method: internally executes _Process_ function (see there for details)
     */
     void Process(const larocv::Cluster2DArray_t& clusters,
-		 const ::cv::Mat& img,
+		 ::cv::Mat& img,
 		 larocv::ImageMeta& meta,
 		 larocv::ROI & roi);
 
     /**
        @brief wrapper execution method: internally executes _PostProcess_ function (see there for details)
      */
-    bool PostProcess(const std::vector<const cv::Mat>& img_v);
+    bool PostProcess(std::vector<cv::Mat>& img_v);
 
   protected:
 
@@ -64,13 +64,13 @@ namespace larocv {
        DESCRIBE ME
      */
     virtual void _Process_(const larocv::Cluster2DArray_t& clusters,
-			   const ::cv::Mat& img,
+			   ::cv::Mat& img,
 			   larocv::ImageMeta& meta,
 			   larocv::ROI& roi) = 0;
     /**
        DESCRIBE ME
      */
-    virtual bool _PostProcess_(const std::vector<const cv::Mat>& img_v) = 0;
+    virtual bool _PostProcess_(std::vector<cv::Mat>& img_v) = 0;
 
   };
   

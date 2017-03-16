@@ -38,10 +38,10 @@ namespace larocv {
 			  const std::vector<geo2d::Vector<float> >& vtx2d_v);
     
     std::vector<data::LinearTrack3D>
-    FindLinearTrack(const std::vector<const cv::Mat>& img_v);
+    FindLinearTrack(std::vector<cv::Mat>& img_v);
 
     void
-    FindEdges(const cv::Mat& img,
+    FindEdges(cv::Mat& img,
 	      const GEO2D_Contour_t& ctor,
 	      geo2d::Vector<float>& edge1,
 	      geo2d::Vector<float>& edge2) const;
@@ -52,14 +52,14 @@ namespace larocv {
 		       geo2d::Vector<float>& edge2) const;
     
     void
-    EdgesFromPCAProjection(const cv::Mat& img,
+    EdgesFromPCAProjection(cv::Mat& img,
 			   const GEO2D_Contour_t& ctor,
 			   geo2d::Vector<float>& edge1,
 			   geo2d::Vector<float>& edge2) const;
     
   public:
     std::vector<larocv::data::LinearTrack2D>
-    FindLinearTrack2D(const size_t plane, const cv::Mat& img) const;
+    FindLinearTrack2D(const size_t plane, cv::Mat& img) const;
 
     void FindLinearTrack(const std::vector<std::vector<larocv::data::LinearTrack2D> >& strack_vv);
 

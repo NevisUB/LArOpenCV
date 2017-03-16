@@ -80,7 +80,7 @@ namespace larocv {
   }
   
   
-  bool ShowerVertexMerger::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  bool ShowerVertexMerger::_PostProcess_(std::vector<cv::Mat>& img_v)
   {
     LAROCV_DEBUG() << "start" << std::endl;
     

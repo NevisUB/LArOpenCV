@@ -930,7 +930,7 @@ namespace larocv{
     _plane_scan_info_v[meta.plane()]._valid_plane = true;
   }
 
-  void TrackVertexScan2D::XPlaneTimeScan(const std::vector<const cv::Mat>& img_v)
+  void TrackVertexScan2D::XPlaneTimeScan(std::vector<cv::Mat>& img_v)
   {
     // Combine 3 plane information and make the best guesses as to which time tick may contain vertex(es)
     // To do this, we loop over time tick over all available planes first
@@ -1137,7 +1137,7 @@ namespace larocv{
     }
   }
 
-  void TrackVertexScan2D::TimeVertex3D(const std::vector<const cv::Mat>& img_v,
+  void TrackVertexScan2D::TimeVertex3D(std::vector<cv::Mat>& img_v,
 				       std::vector<larocv::data::Vertex3D>& vtx3d_v,
 				       std::vector<std::vector<larocv::data::CircleVertex> >& vtx2d_vv)
   {
@@ -1384,7 +1384,7 @@ namespace larocv{
     }
   }
 
-  void TrackVertexScan2D::XPlaneWireScan(const std::vector<const cv::Mat>& img_v)
+  void TrackVertexScan2D::XPlaneWireScan(std::vector<cv::Mat>& img_v)
   {
     // Compute 1D projection score array per plane
     for(size_t plane=0; plane<img_v.size(); ++plane)
@@ -1432,7 +1432,7 @@ namespace larocv{
     }
   }
 
-  void TrackVertexScan2D::WireVertex3D(const std::vector<const cv::Mat>& img_v,
+  void TrackVertexScan2D::WireVertex3D(std::vector<cv::Mat>& img_v,
 				       std::vector<larocv::data::Vertex3D>& vtx3d_v,
 				       std::vector<std::vector<larocv::data::CircleVertex> >& vtx2d_vv)
   {
@@ -1691,7 +1691,7 @@ namespace larocv{
     }
   }
   
-  void TrackVertexScan2D::CreateTimeVertex3D(const std::vector<const cv::Mat>& img_v,
+  void TrackVertexScan2D::CreateTimeVertex3D(std::vector<cv::Mat>& img_v,
 					     std::vector<larocv::data::Vertex3D>& vtx3d_v,
 					     std::vector<std::vector<larocv::data::CircleVertex> >& vtx2d_vv)
   {
@@ -1717,7 +1717,7 @@ namespace larocv{
     TimeVertex3D(img_v,vtx3d_v,vtx2d_vv);
   }
 
-  void TrackVertexScan2D::CreateWireVertex3D(const std::vector<const cv::Mat>& img_v,
+  void TrackVertexScan2D::CreateWireVertex3D(std::vector<cv::Mat>& img_v,
 					     std::vector<larocv::data::Vertex3D>& vtx3d_v,
 					     std::vector<std::vector<larocv::data::CircleVertex> >& vtx2d_vv)
   {

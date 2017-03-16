@@ -23,7 +23,7 @@ namespace larocv {
   }
 
   void ImageAnaBase::Process(const larocv::Cluster2DArray_t& clusters,
-			     const ::cv::Mat& img,
+			     ::cv::Mat& img,
 			     larocv::ImageMeta& meta,
 			     larocv::ROI& roi)
   {
@@ -38,7 +38,7 @@ namespace larocv {
     return;
   }
 
-  bool ImageAnaBase::PostProcess(const std::vector<const cv::Mat>& img_v)
+  bool ImageAnaBase::PostProcess(std::vector<cv::Mat>& img_v)
   {
     if(!Profile()) {
       return this->_PostProcess_(img_v);

@@ -42,7 +42,7 @@ namespace larocv {
     Register(new data::VertexSeed3DArray);
   }
 
-  bool ShowerVertexSeeds::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  bool ShowerVertexSeeds::_PostProcess_(std::vector<cv::Mat>& img_v)
   {
 
     std::vector<const data::ParticleClusterArray*> super_cluster_v;

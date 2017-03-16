@@ -54,7 +54,7 @@ namespace larocv {
   }
 
   void ShowerVertexEstimate::_Process_(const larocv::Cluster2DArray_t& clusters,
-				       const ::cv::Mat& img,
+				       ::cv::Mat& img,
 				       larocv::ImageMeta& meta,
 				       larocv::ROI& roi)
   {
@@ -63,7 +63,7 @@ namespace larocv {
   }
 
 
-  bool ShowerVertexEstimate::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  bool ShowerVertexEstimate::_PostProcess_(std::vector<cv::Mat>& img_v)
   {
 
     auto const& seed_v = AlgoData<data::VertexSeed3DArray>(_algo_id_vertex_seed,0);

@@ -51,7 +51,7 @@ namespace larocv {
   }
   
   
-  bool TrackVertexAnalysis::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  bool TrackVertexAnalysis::_PostProcess_(std::vector<cv::Mat>& img_v)
   {
     const auto& track_vtx_data = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
     

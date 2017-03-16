@@ -24,7 +24,7 @@ namespace larocv {
   }
 
   void TrackVertexEstimate::_Process_(const larocv::Cluster2DArray_t& clusters,
-				      const ::cv::Mat& img,
+				      ::cv::Mat& img,
 				      larocv::ImageMeta& meta,
 				      larocv::ROI& roi)
   {
@@ -41,7 +41,7 @@ namespace larocv {
   }
 
 
-  bool TrackVertexEstimate::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  bool TrackVertexEstimate::_PostProcess_(std::vector<cv::Mat>& img_v)
   {
     std::vector<data::Vertex3D> vtx3d_v;
     std::vector<std::vector<data::CircleVertex> > vtx2d_vv;

@@ -42,7 +42,7 @@ namespace larocv {
     
   }
   
-  bool CombinedVertexAnalysis::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  bool CombinedVertexAnalysis::_PostProcess_(std::vector<cv::Mat>& img_v)
   {
     LAROCV_DEBUG() << "start" << std::endl;
     auto& ass_man = AssManager();

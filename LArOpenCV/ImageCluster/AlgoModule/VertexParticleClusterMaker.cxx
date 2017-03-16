@@ -46,9 +46,9 @@ namespace larocv {
   }
 
   void VertexParticleClusterMaker::_Process_(const larocv::Cluster2DArray_t& clusters,
-				       const ::cv::Mat& img,
-				       larocv::ImageMeta& meta,
-				       larocv::ROI& roi)
+					     ::cv::Mat& img,
+					     larocv::ImageMeta& meta,
+					     larocv::ROI& roi)
   {
     auto const plane = meta.plane();
 
@@ -153,7 +153,7 @@ namespace larocv {
   }
   
   
-  bool VertexParticleClusterMaker::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  bool VertexParticleClusterMaker::_PostProcess_(std::vector<cv::Mat>& img_v)
   {
     return true;
   } 

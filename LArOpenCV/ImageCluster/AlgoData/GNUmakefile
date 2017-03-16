@@ -14,7 +14,7 @@ OBJECTS = $(SOURCES:.cxx=.o)
 INCFLAGS  = -I.                       #Include itself
 INCFLAGS += -I$(LAROPENCV_BASEDIR)
 INCFLAGS += -I$(GEO2D_BASEDIR)
-
+INCFLAGS += -I$(OPENCV_INCDIR)
 # platform-specific options
 OSNAME          = $(shell uname -s)
 HOST            = $(shell uname -n)

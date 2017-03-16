@@ -41,7 +41,7 @@ namespace larocv {
     
   }
   
-  bool ShowerVertexAnalysis::_PostProcess_(const std::vector<const cv::Mat>& img_v)
+  bool ShowerVertexAnalysis::_PostProcess_(std::vector<cv::Mat>& img_v)
   {
     auto& ass_man = AssManager();
     auto& vertex_data = AlgoData<data::Vertex3DArray>(0);
