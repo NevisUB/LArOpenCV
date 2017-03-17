@@ -15,8 +15,10 @@ namespace larocv {
   
   void ShowerVertexAnalysis::_Configure_(const Config_t &pset) {
 
-    _merge  = pset.get<bool>("Merge");
     
+    _merge  = pset.get<bool>("Merge");
+    _input_adc_img = pset.get<bool>("InputIsADCImage");
+      
     auto shower_vertex_algo_name = pset.get<std::string>("ShowerVertex","");
     if (!shower_vertex_algo_name.empty()) {
       _shower_vertex_algo_id = this->ID(shower_vertex_algo_name);
@@ -24,11 +26,18 @@ namespace larocv {
 	throw larbys("Given ShowerVertex name is INVALID!");
     }
 
-    auto scluster_algo_name = pset.get<std::string>("SuperClusterAlgo");
+    auto scluster_algo_name = pset.get<std::string>("ShowerSuperClusterAlgo");
     if (!scluster_algo_name.empty()) {
       _scluster_algo_id = this->ID(scluster_algo_name);
       if (_scluster_algo_id==kINVALID_ALGO_ID)
-	throw larbys("Given SuperClusterAlgo name is INVALID!");
+	throw larbys("Given ShowerSuperClusterAlgo name is INVALID!");
+    }
+
+    auto acluster_algo_name = pset.get<std::string>("ADCSuperClusterAlgo");
+    if (!acluster_algo_name.empty()) {
+      _acluster_algo_id = this->ID(acluster_algo_name);
+      if (_acluster_algo_id==kINVALID_ALGO_ID)
+	throw larbys("Given ADCSuperClusterAlgo name is INVALID!");
     }
 
     _ClusterMerge.Configure(pset.get<Config_t>("ClusterMerge"));
@@ -47,13 +56,20 @@ namespace larocv {
     auto& vertex_data = AlgoData<data::Vertex3DArray>(0);
     const auto& shower_vertex_data = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);    
     std::vector<GEO2D_ContourArray_t> super_ctor_vv;
+    std::vector<GEO2D_ContourArray_t> adc_ctor_vv;
     super_ctor_vv.resize(3);
+    adc_ctor_vv.resize(3);
     for(size_t plane=0;plane<3;++plane) {
       const auto& super_cluster_v = AlgoData<data::ParticleClusterArray>(_scluster_algo_id,plane).as_vector();
+      const auto& adc_cluster_v = AlgoData<data::ParticleClusterArray>(_acluster_algo_id,plane).as_vector();
       auto& super_ctor_v=super_ctor_vv[plane];
+      auto& adc_ctor_v=adc_ctor_vv[plane];
       super_ctor_v.reserve(super_cluster_v.size());
+      adc_ctor_v.reserve(adc_cluster_v.size());
       for(const auto& super_cluster : super_cluster_v)
 	super_ctor_v.emplace_back(super_cluster._ctor);
+      for(const auto& adc_cluster : adc_cluster_v)
+	adc_ctor_v.emplace_back(adc_cluster._ctor);
     }
     
     for(const auto& vtx3d : shower_vertex_data.as_vector()) {
@@ -62,6 +78,8 @@ namespace larocv {
       
       for(size_t plane=0;plane<3;++plane) {
 	const auto& super_ctor_v = super_ctor_vv[plane];
+	const auto& adc_ctor_v = adc_ctor_vv[plane];
+	
 	auto& par_data = AlgoData<data::ParticleClusterArray>(plane+1);
 	const auto& shower_par_data = AlgoData<data::ParticleClusterArray>(_shower_vertex_algo_id,plane+1);
 
@@ -74,7 +92,16 @@ namespace larocv {
 	  if (par.type==data::ParticleType_t::kShower) {
 	    auto merged_par = par;
 	    if (_merge) {
-	      auto merged_ctor = _ClusterMerge.FlashlightMerge(vtx3d.vtx2d_v[plane].pt,super_ctor_v,par._ctor);
+
+	      GEO2D_Contour_t merged_ctor;
+	      if (_input_adc_img)
+		merged_ctor = _ClusterMerge.FlashlightMerge(vtx3d.vtx2d_v[plane].pt,super_ctor_v,par._ctor);
+	      else
+		merged_ctor = _ClusterMerge.FlashlightMerge(vtx3d.vtx2d_v[plane].pt,
+							    super_ctor_v,
+							    adc_ctor_v,
+							    par._ctor);
+	      
 	      merged_ctor = FindNonZero(MaskImage(img_v[plane],merged_ctor,3,false)); // add some padding
 	      merged_ctor = MergeByMask(merged_ctor,par._ctor,BlankImage(img_v[plane]));
 	      merged_ctor = ConvexHull(merged_ctor);

@@ -2,12 +2,12 @@
 #define __CLUSTERMERGE_CXX__
 
 #include "ClusterMerge.h"
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include "LArOpenCV/Core/larbys.h"
 #include "Geo2D/Core/Vector.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
 
 using larocv::larbys;
 
@@ -27,12 +27,32 @@ namespace larocv {
 				const GEO2D_Contour_t& parent_ctor) {
 
     auto flashlight_v = this->GenerateFlashlights(startpt,super_ctor_v);
-    auto start_index = this->StartIndex(super_ctor_v,parent_ctor);
-    auto merged_ctor = this->MergeFlashlights(flashlight_v,start_index);
+    auto start_index  = this->StartIndex(super_ctor_v,parent_ctor);
+    auto merged_ctor  = this->MergeFlashlights(flashlight_v,start_index);
     return merged_ctor;
     
   }
-  
+
+  GEO2D_Contour_t
+  ClusterMerge::FlashlightMerge(geo2d::Vector<float> startpt,
+				const GEO2D_ContourArray_t& super_ctor_v,
+				const GEO2D_ContourArray_t& exclude_ctor_v,
+				const GEO2D_Contour_t& parent_ctor) {
+    
+    auto super_flashlight_v   = this->GenerateFlashlights(startpt,super_ctor_v);
+    auto exclude_flashlight_v = this->GenerateFlashlights(startpt,exclude_ctor_v);
+    auto start_super_index    = this->StartIndex(super_ctor_v,parent_ctor);
+    auto start_exclude_index  = this->StartIndex(exclude_ctor_v,parent_ctor);
+
+    for(size_t flashid=0;flashid<exclude_flashlight_v.size();++flashid) {
+      if (flashid==start_exclude_index) continue;
+      auto& flash = exclude_flashlight_v[flashid];
+      super_flashlight_v.emplace_back(std::move(flash));
+    }
+    auto merged_ctor = this->MergeFlashlights(super_flashlight_v,start_super_index);
+    return merged_ctor;
+  }
+
   size_t
   ClusterMerge::StartIndex(const GEO2D_ContourArray_t& super_ctor_v,
 			   const GEO2D_Contour_t& parent_ctor) {
@@ -45,9 +65,9 @@ namespace larocv {
   }
   
   GEO2D_Contour_t
-  ClusterMerge::MergeFlashlights(const GEO2D_ContourArray_t& flashlight_v,
+  ClusterMerge::MergeFlashlights(const GEO2D_ContourArray_t& flashlight_v, 
 				 size_t start_index) {
-    
+				 
     GEO2D_Contour_t res_ctor;
     std::set<size_t> overlap_s;
     overlap_s.insert(start_index);

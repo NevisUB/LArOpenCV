@@ -22,9 +22,9 @@ namespace larocv {
     
     DefectBreaker() :
       laropencv_base("DefectBreaker"),
-      _min_defect_size    (larocv::kINVALID_INT),
-      _hull_edge_pts_split(larocv::kINVALID_INT),
-      _n_allowed_breaks   (larocv::kINVALID_INT)
+      _min_defect_size    (kINVALID_INT),
+      _hull_edge_pts_split(kINVALID_INT),
+      _n_allowed_breaks   (kINVALID_INT)
     { }
     
     ~DefectBreaker(){}
