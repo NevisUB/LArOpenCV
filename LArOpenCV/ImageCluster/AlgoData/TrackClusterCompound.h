@@ -20,7 +20,7 @@ namespace larocv {
       friend class TrackClusterCompound;
     public:
       AtomicContour()
-	: GEO2D_Contour_t(), _atomic_id(kINVALID_SIZE) { clear(); }
+      : GEO2D_Contour_t(), _atomic_id(kINVALID_SIZE) { clear(); }
       AtomicContour(size_t atomic_id)
 	: GEO2D_Contour_t(), _atomic_id(atomic_id) { clear(); }
       AtomicContour(const GEO2D_Contour_t& ctor,size_t atomic_id)

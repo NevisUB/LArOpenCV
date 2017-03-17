@@ -378,7 +378,10 @@ namespace larocv {
     
     if ( rect.x > img.cols - w ) rect.x = img.cols - w;
     if ( rect.y > img.rows - h ) rect.y = img.rows - h;
-    
+
+    //if ( rect.x < 0 )   { rect.x = 0; rect.width  = img.cols; }
+    //if ( rect.y < 0 )   { rect.y = 0; rect.height = img.rows; }
+
   }
   
   cv::Mat
