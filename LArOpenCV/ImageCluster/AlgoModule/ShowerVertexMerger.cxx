@@ -68,7 +68,6 @@ namespace larocv {
 	throw larbys("Given ShowerSuperClusterAlgo name is INVALID!");
     }
 
-
     _merge_compatible_showers=pset.get<bool>("MergeCompatibleShowers");
     
     Register(new data::Vertex3DArray);
@@ -124,7 +123,7 @@ namespace larocv {
 	for(size_t plane=0;plane<3;++plane) {
 	  LAROCV_DEBUG() << "On plane " << plane << std::endl;
 	  auto& par_data = AlgoData<data::ParticleClusterArray>(plane+1);
-	  auto& comp_data = AlgoData<data::TrackClusterCompoundArray>(plane+1+3);
+	  auto& comp_data = AlgoData<data::TrackClusterCompoundArray>(plane+3+1);
 	  const auto& super_ctor_v = super_ctor_vv[plane];
 	  
 	  //get associated shower for this vertex on this plane

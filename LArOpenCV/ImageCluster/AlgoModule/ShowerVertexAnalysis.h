@@ -44,6 +44,7 @@ namespace larocv {
   private:
     AlgorithmID_t _scluster_algo_id;
     AlgorithmID_t _shower_vertex_algo_id;
+    AlgorithmID_t _track_vertex_algo_id;
     AlgorithmID_t _acluster_algo_id;
     
     ClusterMerge _ClusterMerge;

@@ -2,9 +2,7 @@
 #define __COMBINEDVERTEXANALYSIS_CXX__
 
 #include "CombinedVertexAnalysis.h"
-#include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
-#include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
-#include "LArOpenCV/ImageCluster/AlgoData/TrackClusterCompound.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 
 namespace larocv {
 
@@ -18,11 +16,20 @@ namespace larocv {
 
     _track_vertex_algo_id = kINVALID_ALGO_ID;
     _shower_vertex_algo_id = kINVALID_ALGO_ID;
-
+    
+    _remove_superseded = pset.get<bool>("RemoveSuperseded");
+    
     auto track_vertex_algo_name = pset.get<std::string>("TrackVertex","");
     if (!track_vertex_algo_name.empty()) {
       _track_vertex_algo_id = this->ID(track_vertex_algo_name);
       if (_track_vertex_algo_id==kINVALID_ALGO_ID)
+	throw larbys("Given TrackVertex name is INVALID!");
+    }
+
+    auto track_vertex_filter_algo_name = pset.get<std::string>("TrackVertexFiltered","");
+    if (!track_vertex_filter_algo_name.empty()) {
+      _track_vertex_filter_algo_id = this->ID(track_vertex_filter_algo_name);
+      if (_track_vertex_filter_algo_id==kINVALID_ALGO_ID)
 	throw larbys("Given TrackVertex name is INVALID!");
     }
 
@@ -49,14 +56,57 @@ namespace larocv {
     auto& vertex_data = AlgoData<data::Vertex3DArray>(0);
     const auto& shower_vertex_data = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);
     const auto& track_vertex_data = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
-
-    std::vector<const data::Vertex3D*> vertex3d_ptr_v;
-    for(const auto& vtx3d : shower_vertex_data.as_vector())
-      vertex3d_ptr_v.push_back(&vtx3d);
+    const auto& track_vertex_filter_data = AlgoData<data::Vertex3DArray>(_track_vertex_filter_algo_id,0);
     
-    for(const auto& vtx3d : track_vertex_data.as_vector())
+    std::vector<const data::Vertex3D*> vertex3d_ptr_v;
+    std::vector<const data::Vertex3D*> vertex3d_temp_ptr_v;
+    std::vector<const data::Vertex3D*> ignore_ptr_v;
+
+    LAROCV_DEBUG() << "Observing " << shower_vertex_data.as_vector().size() << " shower verticies" << std::endl;
+    for(const auto& vtx3d : shower_vertex_data.as_vector()) {
       vertex3d_ptr_v.push_back(&vtx3d);
 
+      if(_remove_superseded) {
+	if (vtx3d.type==data::VertexType_t::kEndOfTrack) {
+	  auto ass_vtx_id = ass_man.GetOneAss(vtx3d,track_vertex_data.ID());
+	  if (ass_vtx_id==kINVALID_SIZE) {
+	    LAROCV_CRITICAL()<<"Unassociated end-of-track vertex"<<std::endl;
+	    throw larbys();
+	  }
+	  LAROCV_DEBUG() << "... igoring " << &(track_vertex_data.as_vector()[ass_vtx_id]) << std::endl;
+	  ignore_ptr_v.push_back(&(track_vertex_data.as_vector()[ass_vtx_id]));
+	} // end type
+      } // end superseded
+    } //end shower vtx
+    
+    LAROCV_DEBUG() << "Ignoring " << ignore_ptr_v.size() << " track verticies" << std::endl;
+    LAROCV_DEBUG() << "Observing " << track_vertex_data.as_vector().size() << " unfiltered track verticies" << std::endl;
+    for(const auto& vtx3d : track_vertex_data.as_vector()) {
+      if(_remove_superseded) {
+	if(std::find(ignore_ptr_v.begin(),ignore_ptr_v.end(),&vtx3d)!=ignore_ptr_v.end()) {
+	  LAROCV_DEBUG() << "Found associated track vertex @ " << &vtx3d << " supersede. SKIP" << std::endl;
+	  continue;
+	}
+      }
+      vertex3d_temp_ptr_v.push_back(&vtx3d);
+    }
+    // remove the ones not filtered
+    LAROCV_DEBUG() << "Comparing " << vertex3d_temp_ptr_v.size() <<  " unfiltered tracks to " << track_vertex_filter_data.as_vector().size() << " filtered tracks" << std::endl;
+    for(const auto& vtx3df : track_vertex_filter_data.as_vector()) {
+      bool exists=false;
+      for(const auto& vtx3d_ptr : vertex3d_temp_ptr_v) {
+	if (Equals(vtx3df,*vtx3d_ptr))
+	  { exists=true; break; }
+      }
+      if(!exists) continue;
+      
+      vertex3d_ptr_v.push_back(&vtx3df);
+    }
+    LAROCV_DEBUG() << "Added " << shower_vertex_data.as_vector().size()
+		   << " showers & ignored  " << ignore_ptr_v.size()
+		   << " unfiltered tracks & compared " << track_vertex_filter_data.as_vector().size()
+		   << " filtered tracks leaving " << vertex3d_ptr_v.size() << " verticies" << std::endl;
+    
     for(const auto& vertex3d_ptr : vertex3d_ptr_v) {
       
       const auto& vtx3d = *vertex3d_ptr;
@@ -65,11 +115,11 @@ namespace larocv {
       
       for(size_t plane=0;plane<_nplanes;++plane) {
 	auto& par_data = AlgoData<data::ParticleClusterArray>(plane+1);
-	const auto& track_par_data = AlgoData<data::ParticleClusterArray>(_track_vertex_algo_id,plane+1);
+	const auto& track_par_data = AlgoData<data::ParticleClusterArray>(_track_vertex_filter_algo_id,plane+1);
 	const auto& shower_par_data = AlgoData<data::ParticleClusterArray>(_shower_vertex_algo_id,plane+1);
 	
 	auto& comp_data = AlgoData<data::TrackClusterCompoundArray>(_nplanes+plane+1);
-	const auto& track_comp_data = AlgoData<data::TrackClusterCompoundArray>(_track_vertex_algo_id,_nplanes+plane+1);
+	const auto& track_comp_data = AlgoData<data::TrackClusterCompoundArray>(_track_vertex_filter_algo_id,_nplanes+plane+1);
 	const auto& shower_comp_data = AlgoData<data::TrackClusterCompoundArray>(_shower_vertex_algo_id,_nplanes+plane+1);
 
 	auto track_par_ass_id_v = ass_man.GetManyAss(vtx3d,track_par_data.ID());

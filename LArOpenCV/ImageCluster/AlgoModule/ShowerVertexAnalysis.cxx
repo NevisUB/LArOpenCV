@@ -26,6 +26,13 @@ namespace larocv {
 	throw larbys("Given ShowerVertex name is INVALID!");
     }
 
+    auto track_vertex_algo_name = pset.get<std::string>("TrackVertex","");
+    if (!track_vertex_algo_name.empty()) {
+      _track_vertex_algo_id = this->ID(track_vertex_algo_name);
+      if (_track_vertex_algo_id==kINVALID_ALGO_ID)
+	throw larbys("Given TrackVertex name is INVALID!");
+    }
+
     auto scluster_algo_name = pset.get<std::string>("ShowerSuperClusterAlgo");
     if (!scluster_algo_name.empty()) {
       _scluster_algo_id = this->ID(scluster_algo_name);
@@ -39,7 +46,8 @@ namespace larocv {
       if (_acluster_algo_id==kINVALID_ALGO_ID)
 	throw larbys("Given ADCSuperClusterAlgo name is INVALID!");
     }
-
+    
+    
     _ClusterMerge.Configure(pset.get<Config_t>("ClusterMerge"));
     
     Register(new data::Vertex3DArray);
@@ -54,7 +62,8 @@ namespace larocv {
   {
     auto& ass_man = AssManager();
     auto& vertex_data = AlgoData<data::Vertex3DArray>(0);
-    const auto& shower_vertex_data = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);    
+    const auto& shower_vertex_data = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);
+    const auto& track_vertex_data  = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);    
     std::vector<GEO2D_ContourArray_t> super_ctor_vv;
     std::vector<GEO2D_ContourArray_t> adc_ctor_vv;
     super_ctor_vv.resize(3);
@@ -75,6 +84,14 @@ namespace larocv {
     for(const auto& vtx3d : shower_vertex_data.as_vector()) {
       vertex_data.push_back(vtx3d);
       auto& vtx3d_copy = vertex_data.as_vector().back();
+      if (vtx3d.type==data::VertexType_t::kEndOfTrack) {
+	auto ass_vtx_id = ass_man.GetOneAss(vtx3d,track_vertex_data.ID());
+	if (ass_vtx_id==kINVALID_SIZE) {
+	  LAROCV_CRITICAL()<<"Unassociated end-of-track vertex"<<std::endl;
+	  throw larbys();
+	}
+	AssociateOne(vtx3d_copy,track_vertex_data.as_vector()[ass_vtx_id]);
+      }
       
       for(size_t plane=0;plane<3;++plane) {
 	const auto& super_ctor_v = super_ctor_vv[plane];

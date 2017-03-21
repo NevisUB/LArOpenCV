@@ -156,7 +156,22 @@ namespace larocv {
 		       std::pow(vtx1.y-vtx2.y,2)+
 		       std::pow(vtx1.z-vtx2.z,2));
     }
-    
+
+    bool
+    Equals(const Vertex3D& vtx1, const Vertex3D& vtx2) {
+      if(vtx1.x          != vtx2.x)          return false;
+      if(vtx1.y          != vtx2.y)          return false;
+      if(vtx1.z          != vtx2.z)          return false;
+      if(vtx1.type       != vtx2.type)       return false;
+      if(vtx1.num_planes != vtx2.num_planes) return false;
+
+      if (vtx1.vtx2d_v.size()!=vtx2.vtx2d_v.size()) return false;
+
+      for(size_t plane=0;plane<vtx1.vtx2d_v.size();++plane)
+	if (vtx1.vtx2d_v[plane].pt!=vtx2.vtx2d_v[plane].pt) return false;
+
+      return true;
+    }
   }
 }
 #endif
