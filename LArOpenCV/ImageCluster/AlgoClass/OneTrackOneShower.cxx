@@ -120,6 +120,8 @@ namespace larocv {
       // now check coordinates registered
       size_t valid_px_count=0;
       for(auto const& pt : check_pts) {
+	if (pt.x<0         or pt.y<0)         continue;
+	if (pt.x>=img.cols or pt.y>=img.rows) continue;
 	if( ((float)(img.at<uchar>(pt.y,pt.x))) > _pi_threshold )
 	  ++valid_px_count;
       }
