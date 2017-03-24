@@ -21,6 +21,7 @@ namespace larocv {
   VertexAnalysis::Configure(const Config_t &pset)
   {}
 
+
   void
   VertexAnalysis::ResetPlaneInfo(const larocv::ImageMeta& meta)
   {
@@ -333,6 +334,63 @@ namespace larocv {
     LAROCV_DEBUG() << "return" << std::endl;
     return true;
   }
+
+
+  
+  bool
+  VertexAnalysis::MatchEdge(const std::array<const data::TrackClusterCompound*,3>& tcluster_arr,
+			    data::Vertex3D& vertex) const {
+    short ntracks=0;
+    for(auto tcluster_ptr : tcluster_arr)
+      if(tcluster_ptr)
+	ntracks++;
+
+    if (ntracks<2) {
+      LAROCV_WARNING() << "Provided number of tracks less than 2" << std::endl;
+      return false;
+    }
+    
+    if (ntracks==2) {
+      size_t plane0=kINVALID_SIZE;
+      size_t plane1=kINVALID_SIZE;
+
+      for(size_t plane=0;plane<3;++plane) {
+	if(tcluster_arr[plane]) {
+	  if(plane0==kINVALID_SIZE) {
+	    plane0=plane;
+	  }
+	  else if(plane1==kINVALID_SIZE) {
+	    plane1=plane;
+	  }
+	}
+      }
+      
+      if (plane0==kINVALID_SIZE) throw larbys("Logic error plane0");
+      if (plane1==kINVALID_SIZE) throw larbys("Logic error plane1");
+      if (plane0==plane1)        throw larbys("Logic error plane0 and plane1");
+
+      auto& track0 = *(tcluster_arr[plane0]);
+      auto& track1 = *(tcluster_arr[plane1]);
+      
+      auto endok = MatchEdge(track0,plane0,track1,plane1,vertex);
+      return endok;
+    }
+    else if (ntracks==3) {
+      auto& track0  = *(tcluster_arr[0]);
+      auto& track1  = *(tcluster_arr[1]);
+      auto& track2  = *(tcluster_arr[2]);
+      size_t plane0 = 0;
+      size_t plane1 = 1;
+      size_t plane2 = 2;
+      
+      auto endok = MatchEdge(track0,plane0,track1,plane1,track2,plane2,vertex);
+      return endok;
+    }
+
+    throw larbys("Logic error");
+    return false;
+  }
+  
 
   bool
   VertexAnalysis::MatchEdge(const data::TrackClusterCompound& track0, size_t plane0,

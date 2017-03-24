@@ -5,6 +5,7 @@
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
 #include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
+#include <array>
 
 /*
   @brief: XXX
@@ -81,6 +82,10 @@ namespace larocv {
 
     bool
     CheckFiducial(const data::Vertex3D& vtx3d) const;
+
+    bool
+    MatchEdge(const std::array<const data::TrackClusterCompound*,3>& tcluster_arr,
+	      data::Vertex3D& vertex) const;
 
     bool
     MatchEdge(const data::TrackClusterCompound& track0, size_t plane0,
