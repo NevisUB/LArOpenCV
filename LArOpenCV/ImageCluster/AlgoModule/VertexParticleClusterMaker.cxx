@@ -33,7 +33,9 @@ namespace larocv {
 
     _create_compound   = pset.get<bool>("CreateCompound",false);
     _min_particle_size = pset.get<uint>("MinParticleContourSize",3);
-
+    _particle_type = (data::ParticleType_t)pset.get<uint>("ParticleType");
+    _compute_dqdx = false;
+    
     for(size_t plane=0; plane<3; ++plane)
       Register(new data::ParticleClusterArray);
 
@@ -42,6 +44,8 @@ namespace larocv {
       _DefectBreaker.Configure(pset.get<Config_t>("DefectBreaker"));
       for(size_t plane=0; plane<3; ++plane)
 	Register(new data::TrackClusterCompoundArray);
+
+      _compute_dqdx = pset.get<bool>("CalculatedQdX",false);
     }
   }
 
@@ -112,8 +116,9 @@ namespace larocv {
 	}
 	
 	data::ParticleCluster cluster;
+	cluster.type = _particle_type;
 	cluster._ctor = std::move(contour);
-	  
+
 	// Store
 	par_data.emplace_back(std::move(cluster));
 	// Create one-to-many association
@@ -137,10 +142,19 @@ namespace larocv {
 	  }
 	  // set the atomic order
 	  cluscomp.set_atomic_order(ordered_atom_id_v);
-	  // Get the farthest edge
+	  // get the farthest edge
 	  auto& last_start_end = atom_edges_v.at(ordered_atom_id_v.back());
-	  // Set the edge
+	  // set the edge
 	  cluscomp.set_end_pt(last_start_end.second);
+	  if(_compute_dqdx) {
+	    for (auto& atomic : cluscomp){
+	      auto pca = CalcPCA(atomic);
+	      auto dqdx = _AtomicAnalysis.AtomdQdX(img, atomic, pca, atomic.start_pt(), atomic.end_pt());
+	      atomic.set_dqdx(dqdx);
+	      atomic.set_pca(pca);
+	      LAROCV_DEBUG() << "... calculated dqdx " << dqdx.size() << std::endl;
+	    }//end this atomic
+	  }
 	  // Store
 	  auto& compound_v = AlgoData<data::TrackClusterCompoundArray>(3+plane);
 	  compound_v.emplace_back(std::move(cluscomp));

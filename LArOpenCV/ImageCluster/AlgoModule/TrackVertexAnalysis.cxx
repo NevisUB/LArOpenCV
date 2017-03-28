@@ -41,8 +41,6 @@ namespace larocv {
     _required_xs = pset.get<uint>("RequiredXs",2);
 
     
-    _compute_dqdx = pset.get<bool>("CalculatedQdX",false);
-
     Register(new data::Vertex3DArray);
     for(short pid=0;pid<3;++pid)
       Register(new data::ParticleClusterArray);
@@ -93,6 +91,7 @@ namespace larocv {
     auto& vtx_data  = AlgoData<data::Vertex3DArray>(0);
 
     auto& assman = AssManager();
+
     for(auto& vtx3d_ : vtx_v){
       LAROCV_DEBUG() << "On vtx3d: " << vtx3d_ << std::endl;
       
@@ -103,46 +102,25 @@ namespace larocv {
       //get reference to the last element
       auto& vtx3d = vtx_data.as_vector().back();
       
-      for (uint plane_id=0; plane_id<img_v.size(); plane_id++){
+      for (size_t plane_id=0; plane_id<img_v.size(); plane_id++){
 	LAROCV_DEBUG()<<"... plane"<<plane_id<<std::endl;
 	  
-	//get this ParticleClusterArray data
 	auto& particle_data = AlgoData<data::ParticleClusterArray>(1+plane_id);
-	  
-	//get this TrackClusterCompoundArray data
 	auto& compound_data = AlgoData<data::TrackClusterCompoundArray>(1+plane_id+3);
 	  
-	//get previous ParticleClusterArray data
-	const auto& particle_cluster_data = AlgoData<data::ParticleClusterArray>(_track_particle_algo_id,plane_id);
 
-	//get previous TrackClusterCompoundArray data
+	const auto& particle_cluster_data = AlgoData<data::ParticleClusterArray>(_track_particle_algo_id,plane_id);
 	const auto& track_cluster_data = AlgoData<data::TrackClusterCompoundArray>(_track_particle_algo_id,3+plane_id);
 	  
-	//ask ass man for particle clusters related to this vertex
 	auto par_ass_idx_v = assman.GetManyAss(*vtx3d_, particle_cluster_data.ID());
 	  
 	LAROCV_DEBUG() << "... found " << par_ass_idx_v.size() << " associated track cluster compounds" << std::endl;
 	for (auto particle_id : par_ass_idx_v){
-	  //get this particle
-	  const auto& particle_ = particle_cluster_data.as_vector()[particle_id];
-	  //get associated atomics to this particle
+	  const auto particle_ = particle_cluster_data.as_vector()[particle_id];
 	  auto comp_id = assman.GetOneAss(particle_,track_cluster_data.ID());
-	  //get associated compound
-	  const auto& compound_ = track_cluster_data.as_vector()[comp_id];
-	  //copy this particle, change the type to track
+	  auto compound = track_cluster_data.as_vector()[comp_id];
 	  auto particle = particle_;
-	  particle.type=data::ParticleType_t::kTrack;
-	  //copy this compound, no type specifier
-	  auto compound = compound_;
-	  if(_compute_dqdx) {
-	    for (auto& atomic : compound){
-	      auto pca = CalcPCA(atomic);
-	      auto dqdx = _atomicanalysis.AtomdQdX(img_v[plane_id], atomic, pca, atomic.start_pt(), atomic.end_pt());
-	      atomic.set_dqdx(dqdx);
-	      LAROCV_DEBUG() << "... calculated dqdx " << dqdx.size() << std::endl;
-	    }//end this atomic
-	  }
-	  //associate
+	  
 	  compound_data.emplace_back(std::move(compound));
 	  AssociateMany(vtx3d,compound_data.as_vector().back());
 	  

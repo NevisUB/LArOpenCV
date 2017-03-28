@@ -127,9 +127,9 @@ namespace larocv {
 	  const auto& track_par = track_par_data.as_vector()[track_par_id];
 	  if (track_par.type!=data::ParticleType_t::kTrack) throw larbys("Not a track particle!");
 	  auto track_comp_id = ass_man.GetOneAss(track_par,track_comp_data.ID());
-	  const auto& track_comp = track_comp_data.as_vector()[track_comp_id];
+	  auto track_comp = track_comp_data.as_vector()[track_comp_id];
 	  par_data.push_back(track_par);
-	  comp_data.push_back(track_comp);
+	  comp_data.emplace_back(std::move(track_comp));
 	  AssociateOne(par_data.as_vector().back(),comp_data.as_vector().back());
 	  AssociateMany(vtx3d_copy,par_data.as_vector().back());
 	  AssociateMany(vtx3d_copy,comp_data.as_vector().back());

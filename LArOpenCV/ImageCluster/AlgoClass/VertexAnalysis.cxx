@@ -21,7 +21,11 @@ namespace larocv {
   VertexAnalysis::Configure(const Config_t &pset)
   {}
 
-
+  void
+  VertexAnalysis::ResetGeo() {
+    _geo.Reset();
+  }
+  
   void
   VertexAnalysis::ResetPlaneInfo(const larocv::ImageMeta& meta)
   {

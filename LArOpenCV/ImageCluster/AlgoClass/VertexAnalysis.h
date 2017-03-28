@@ -27,6 +27,9 @@ namespace larocv {
     void Configure(const Config_t &pset);
 
     void
+    ResetGeo();
+    
+    void
     ResetPlaneInfo(const larocv::ImageMeta& meta);
     
     void

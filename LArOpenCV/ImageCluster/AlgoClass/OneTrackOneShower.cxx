@@ -20,7 +20,7 @@ namespace larocv {
     auto this_verbosity = (msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level())));
     this->set_verbosity(this_verbosity);
       
-    _pi_threshold = 5;
+    _pi_threshold = pset.get<float>("PiThreshold",5);
     _circle_default_radius = pset.get<float>("CircleDefaultRadius",10);
 
     _grad_circle = pset.get<bool> ("GraduateCircle",false);
@@ -172,11 +172,17 @@ namespace larocv {
 
 	if (_grad_circle) {
 	  LAROCV_DEBUG() << "Graduating circle @ " << circle.center << std::endl;
-	  auto xs_pt_vv = QPointArrayOnCircleArray(img,circle.center,_grad_circle_rad_v);
+	  auto xs_pt_vv = QPointArrayOnCircleArray(img,circle.center,_grad_circle_rad_v,_pi_threshold);
 	  
+	  for(size_t rad_id=0;rad_id<xs_pt_vv.size();++rad_id) {
+	    circle.radius = _grad_circle_rad_v[rad_id];
+	    auto& xs_pt_v_ = xs_pt_vv[rad_id];
+	    LAROCV_DEBUG() << rad_id << ") @ r=" << circle.radius << " found " << xs_pt_v_.size() << std::endl;
+	  }
+
 	  if (xs_pt_vv.size() != _grad_circle_rad_v.size())
 	    throw larbys("Returned QPoint array size does not match radius size");
-
+	  
 	  //keep track of 2*pi*(r+1) number of pixels (over estimate the circumference of largest circle)
 	  std::vector<size_t> xs_count_v((int)2*4*_grad_circle_max,0);
 	  
@@ -276,10 +282,14 @@ namespace larocv {
 		       << " ... # crossing points = " << cvtx2d.xs_v.size() << std::endl;
 	num_xs_v[plane] = cvtx2d.xs_v.size();
 	if (_require_unique) {
-	  if(cvtx2d.xs_v.size() == 1) ++num_plane_unique_xs;
+	  if(cvtx2d.xs_v.size() == 1) {
+	    ++num_plane_unique_xs;
+	  }
 	}
 	else {
-	  if(cvtx2d.xs_v.size()) ++num_plane_unique_xs;
+	  if(cvtx2d.xs_v.size()) {
+	    ++num_plane_unique_xs;
+	  }
 	}
 	    
       }
