@@ -22,7 +22,7 @@
 #pragma link C++ class larocv::OneTrackOneShower+;
 #pragma link C++ class larocv::VertexAnalysis+;
 #pragma link C++ class larocv::ClusterMerge+;
-
+#pragma link C++ class larocv::VertexScan3D+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
 

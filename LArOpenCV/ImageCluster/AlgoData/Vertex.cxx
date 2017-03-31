@@ -14,10 +14,15 @@ namespace larocv {
       radius   = -1;
       xs_v.clear();
       dtheta_v.clear();
+      weight = -1;
     }
     
     float CircleVertex::sum_dtheta() const
     { float res=0; for(auto const& d : dtheta_v) res += d; return res; }
+
+    double Vertex3D::dist(const Vertex3D& pt) const
+    { return sqrt(pow(x-pt.x,2)+pow(y-pt.y,2)+pow(z-pt.z,2)); }
+    
   }
 }
 #endif

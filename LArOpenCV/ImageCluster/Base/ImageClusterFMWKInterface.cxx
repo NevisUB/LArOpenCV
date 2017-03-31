@@ -60,5 +60,12 @@ namespace larocv {
     return (tick * tpc_clock.TickPeriod()) * drift_velocity;
   }
 
+  double Cm2TriggerTick(double x)
+  {
+    static auto tpc_clock = larutil::TimeService::GetME()->TPCClock();
+    static auto drift_velocity = larutil::LArProperties::GetME()->DriftVelocity();
+    return x / drift_velocity / tpc_clock.TickPeriod();
+  }
+
 }
 #endif

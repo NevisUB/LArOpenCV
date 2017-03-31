@@ -61,6 +61,7 @@ namespace larocv {
       float radius;                       ///< 2D radius inspected around the vertex
       std::vector<larocv::data::PointPCA> xs_v; ///< List of charge deposit point on the circumference
       std::vector<float> dtheta_v;        ///< List of dtheta = angle between center=>cs vs. PCA @ xs
+      float weight;                       ///< A floating point "score", an indicator for how good this 2D vertex is
       
       /// Attribute clear method
       void Clear();
@@ -90,7 +91,8 @@ namespace larocv {
       /// attribute clear method
       void _Clear_()
       { vtx2d_v.clear(); cvtx2d_v.clear(); x = y = z = kINVALID_DOUBLE; num_planes=0; type=VertexType_t::kUnknown;}
-      
+      /// distance calculator
+      double dist(const Vertex3D& pt) const;
       /// Plane-wise 2D vertex point
       std::vector<larocv::data::Vertex2D> vtx2d_v;
       /// Plane-wise 2D circle vertex point

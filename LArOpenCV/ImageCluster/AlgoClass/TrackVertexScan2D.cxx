@@ -1200,8 +1200,8 @@ namespace larocv{
 	  //auto const  weight1 = circle1.sum_dtheta();
 	  auto const  weight1 = CircleWeight(circle1);
 	  double y, z;
-	  size_t wire0 = (size_t)(_geo.y2wire(circle0.center.y,seed0_plane)+0.5);
-	  size_t wire1 = (size_t)(_geo.y2wire(circle1.center.y,seed1_plane)+0.5);
+	  size_t wire0 = (size_t)(_geo.row2wire(circle0.center.y,seed0_plane)+0.5);
+	  size_t wire1 = (size_t)(_geo.row2wire(circle1.center.y,seed1_plane)+0.5);
 	  /*
 	  LAROCV_DEBUG() << "Intersection pt1 ... plane " << seed0_plane
 			 << " circle center @ " << circle0.center
@@ -1234,7 +1234,7 @@ namespace larocv{
 	      auto const& circle2 = check_data._circle_scan_v[circle2_idx];
 	      //auto const  weight2 = circle2.sum_dtheta();
 	      auto const  weight2 = CircleWeight(circle2);
-	      float dist = std::fabs(_geo.y2wire(circle2.center.y,check_plane) - approx_wire2 );
+	      float dist = std::fabs(_geo.row2wire(circle2.center.y,check_plane) - approx_wire2 );
 	      if(dist < dist_min) {
 		dist_min = dist;
 		closest_circle2_idx = circle2_idx;
@@ -1285,8 +1285,8 @@ namespace larocv{
 	auto const& circle0 = seed0_data._circle_scan_v[circle0_idx];
 	auto const& circle1 = seed1_data._circle_scan_v[circle1_idx];
 	double y,z;
-	size_t wire0 = (size_t)(_geo.y2wire(circle0.center.y,seed0_plane) + 0.5);
-	size_t wire1 = (size_t)(_geo.y2wire(circle1.center.y,seed1_plane) + 0.5);
+	size_t wire0 = (size_t)(_geo.row2wire(circle0.center.y,seed0_plane) + 0.5);
+	size_t wire1 = (size_t)(_geo.row2wire(circle1.center.y,seed1_plane) + 0.5);
 	larocv::IntersectionPoint(wire0,seed0_plane,wire1,seed1_plane,y,z);
 	// Check if this vertex can be taken as a unique one w/o neighbors
 	bool neighbor=false;
@@ -1312,7 +1312,7 @@ namespace larocv{
 	data::Vertex3D vtx3d;
 	vtx3d.y = y;
 	vtx3d.z = z;
-	vtx3d.x = _geo.x2cm(circle0.center.x,seed0_plane);
+	vtx3d.x = _geo.col2cm(circle0.center.x,seed0_plane);
 	
 	vtx3d.num_planes = nplanes;
 	vtx3d.vtx2d_v.resize(img_v.size());
@@ -1330,7 +1330,7 @@ namespace larocv{
 	for(size_t plane=0; plane<img_v.size(); ++plane) {	  
 	  size_t closest_idx = kINVALID_SIZE;
 	  float  approx_wire = larocv::WireCoordinate(y,z,plane);
-	  float  approx_y = _geo.wire2y(approx_wire,plane);
+	  float  approx_y = _geo.wire2row(approx_wire,plane);
 	  float  dist_min = 1e9;
 	  auto const& plane_data = _plane_scan_info_v[plane];
 	  float  closest_dtheta = -1;
@@ -1475,7 +1475,7 @@ namespace larocv{
 	  //auto const& score1  = wire_binned_score1_v[score_idx1];
 	  float  min_wire1    = this->WireBinMin(seed_plane1);
 	  float  wire1        = min_wire1 + score_idx1;
-	  size_t raw_wire1    = (size_t)(_geo.y2wire(wire1,seed_plane1) + 0.5);
+	  size_t raw_wire1    = (size_t)(_geo.row2wire(wire1,seed_plane1) + 0.5);
 	  auto const wire2_range = larocv::OverlapWireRange(raw_wire1, seed_plane1, seed_plane2);
 
 	  LAROCV_DEBUG() << "Inspecting plane A=" << seed_plane1
@@ -1489,7 +1489,7 @@ namespace larocv{
 	    //auto const& score2 = wire_binned_score2_v[score_idx2];
 	    float  min_wire2   = this->WireBinMin(seed_plane2);
 	    float  wire2       = min_wire2 + score_idx2;
-	    size_t raw_wire2   = (size_t)(_geo.y2wire(wire2,seed_plane2) + 0.5);
+	    size_t raw_wire2   = (size_t)(_geo.row2wire(wire2,seed_plane2) + 0.5);
 	    
 	    // check if two wires could overlap
 	    if( raw_wire2 < (wire2_range.first  - _xplane_wire_resolution) ||
@@ -1562,8 +1562,8 @@ namespace larocv{
 		}
 		// At this point we claim a solid candidate for >= 2 planes
 		// Construct solid wire range respecting circle1
-		size_t circle1_wire    = (size_t)(_geo.y2wire(circle1.center.y,seed_plane1)+0.5);
-		size_t circle2_wire    = (size_t)(_geo.y2wire(circle2.center.y,seed_plane2)+0.5);
+		size_t circle1_wire    = (size_t)(_geo.row2wire(circle1.center.y,seed_plane1)+0.5);
+		size_t circle2_wire    = (size_t)(_geo.row2wire(circle2.center.y,seed_plane2)+0.5);
 		auto const wire2_range = larocv::OverlapWireRange(circle1_wire, seed_plane1, seed_plane2);
 		if(circle2_wire < wire2_range.first ) circle2_wire = wire2_range.first;
 		if(circle2_wire > wire2_range.second) circle2_wire = wire2_range.second;
@@ -1602,7 +1602,7 @@ namespace larocv{
 		data::Vertex3D vtx3d;
 		vtx3d.y = y;
 		vtx3d.z = z;
-		vtx3d.x = _geo.x2cm(circle1.center.x,seed_plane1);
+		vtx3d.x = _geo.col2cm(circle1.center.x,seed_plane1);
 		vtx3d.num_planes = 2;
 		vtx3d.vtx2d_v.resize(img_v.size());
 		vtx3d.vtx2d_v[seed_plane1].pt    = circle1.center;
@@ -1619,7 +1619,7 @@ namespace larocv{
 		for(size_t plane=0; plane<img_v.size(); ++plane) {
 		  size_t closest_idx = kINVALID_SIZE;
 		  float  approx_wire = larocv::WireCoordinate(y,z,plane);
-		  float  approx_y = _geo.wire2y(approx_wire,plane);
+		  float  approx_y = _geo.wire2row(approx_wire,plane);
 		  float  dist_min = 1e9;
 		  auto const& plane_data = _plane_scan_info_v[plane];
 		  auto const& circle_v   = plane_data._circle_scan_v;

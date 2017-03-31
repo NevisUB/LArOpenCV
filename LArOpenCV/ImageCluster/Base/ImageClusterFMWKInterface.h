@@ -35,5 +35,7 @@ namespace larocv {
 		 double& phi, double& theta);
   
   double TriggerTick2Cm(double tick);
+
+  double Cm2TriggerTick(double x);
 }
 #endif

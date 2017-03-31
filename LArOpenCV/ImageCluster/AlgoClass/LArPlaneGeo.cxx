@@ -18,7 +18,6 @@ namespace larocv {
     _tick_offset_v[0] = 0.;
     _tick_offset_v[1] = 4.54;
     _tick_offset_v[2] = 7.78;
-  
     //_tick_offset_v[1] = 0.;
     //_tick_offset_v[2] = 0.;
 
@@ -32,6 +31,8 @@ namespace larocv {
     _origin_v.clear();
     _wire_comp_factor_v.resize(_num_planes,1);
     _time_comp_factor_v.resize(_num_planes,1);
+    _num_cols_v.resize(_num_planes,0);
+    _num_rows_v.resize(_num_planes,0);
     _origin_v.resize(_num_planes);
   }
 
@@ -60,6 +61,9 @@ namespace larocv {
     
     _origin_v.at(meta.plane()).x = meta.origin().x;
     _origin_v.at(meta.plane()).y = meta.origin().y;
+
+    _num_cols_v.at(meta.plane()) = meta.num_pixel_column();
+    _num_rows_v.at(meta.plane()) = meta.num_pixel_row();
   }
 
   float LArPlaneGeo::tick_offset(const size_t plane) const
@@ -68,19 +72,48 @@ namespace larocv {
   float LArPlaneGeo::x_offset(const size_t plane) const
   { return _tick_offset_v.at(plane) / _time_comp_factor_v.at(plane); }
 
-  float LArPlaneGeo::y2wire(float y, const size_t plane) const
+  float LArPlaneGeo::x2col(float x, size_t plane) const
+  { 
+    auto tick = Cm2TriggerTick(x) + _trigger_tick;
+    float min_x = _origin_v.at(plane).x;
+    float max_x = min_x + _num_cols_v[plane] * _time_comp_factor_v[plane];
+
+    if(tick < min_x || max_x < tick) {
+      LAROCV_CRITICAL() << "3D X position " << x << " = tick " << tick
+      << " out of bound " << min_x << " => " << max_x << std::endl;
+      throw larbys();
+    }
+
+    return (tick - min_x) / _time_comp_factor_v[plane];
+  }
+
+  float LArPlaneGeo::yz2row(float y, float z, size_t plane) const
+  {
+    auto const wire = WireCoordinate(y,z,plane);
+    auto const& min_y = _origin_v.at(plane).y;
+    auto const& max_y = min_y + _num_rows_v[plane] * _wire_comp_factor_v[plane];
+    if(wire < min_y || max_y < wire) {
+      LAROCV_CRITICAL() << "3D (Y,Z) = (" << y << "," << z << ")"
+      << " corresponds to wire " << wire << " on plane " << plane 
+      << " ... out of bound " << min_y << " => " << max_y << std::endl;
+      throw larbys();
+    }
+    return (wire - min_y) / _wire_comp_factor_v[plane];
+  }
+
+  float LArPlaneGeo::row2wire(float y, const size_t plane) const
   { return (y * _wire_comp_factor_v.at(plane) + _origin_v.at(plane).y); }
 
-  float LArPlaneGeo::x2tick(float x, const size_t plane) const
+  float LArPlaneGeo::col2tick(float x, const size_t plane) const
   { return (x * _time_comp_factor_v.at(plane) + _origin_v.at(plane).x); }
 
-  float LArPlaneGeo::x2cm  (float x, const size_t plane) const
-  { return larocv::TriggerTick2Cm(x2tick(x,plane) - _trigger_tick); }
+  float LArPlaneGeo::col2cm  (float x, const size_t plane) const
+  { return larocv::TriggerTick2Cm(col2tick(x,plane) - _trigger_tick); }
 
-  float LArPlaneGeo::wire2y(float wire, const size_t plane) const
+  float LArPlaneGeo::wire2row(float wire, const size_t plane) const
   { return (wire - _origin_v.at(plane).y) / _wire_comp_factor_v.at(plane); }
 
-  float LArPlaneGeo::tick2x(float tick, const size_t plane) const
+  float LArPlaneGeo::tick2col(float tick, const size_t plane) const
   { return (tick - _origin_v.at(plane).x) / _time_comp_factor_v.at(plane); }
 
   bool LArPlaneGeo::YZPoint(const geo2d::Vector<float>& pt0, const size_t plane0,
@@ -91,8 +124,8 @@ namespace larocv {
     
     if(std::fabs(pt0.x - pt1.x) > _xplane_tick_resolution) return false;
     
-    auto wire0 = y2wire(pt0.y, plane0);
-    auto wire1 = y2wire(pt1.y, plane1);
+    auto wire0 = row2wire(pt0.y, plane0);
+    auto wire1 = row2wire(pt1.y, plane1);
     
     std::pair<double,double> wire1_range(kINVALID_DOUBLE,kINVALID_DOUBLE);
     try {
@@ -123,11 +156,12 @@ namespace larocv {
 			 << "@ ("<<result.y<<","<<result.z<<") plane " << plane << std::endl;
 	return false;
       }
-      vtx2d.y = wire2y(wire,plane);
+      vtx2d.y = wire2row(wire,plane);
       vtx2d.x = (pt0.x + pt1.x)/2.;
     }
     return true;
   }
+  
   bool LArPlaneGeo::YZPoint(const geo2d::Vector<float>& pt0, const size_t plane0,
 			    const geo2d::Vector<float>& pt1, const size_t plane1) const
   {
