@@ -10,8 +10,10 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ class larocv::AlgoFunctionLoader+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
 
 
 
