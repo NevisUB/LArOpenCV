@@ -19,4 +19,4 @@ echo $me
 
 export LAROPENCV_BASEDIR=$me
 export LAROPENCV_IMAGECLUSTERDIR=$me/ImageCluster
-
+export PYTHONPATH=$PYTHONPATH:$LAROPENCV_BASEDIR/python
