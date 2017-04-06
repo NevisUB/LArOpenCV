@@ -9,6 +9,7 @@
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/SpectrumAnalysis.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 
 namespace larocv {
 
@@ -22,7 +23,12 @@ namespace larocv {
       
     _pi_threshold = pset.get<float>("PiThreshold",5);
     _circle_default_radius = pset.get<float>("CircleDefaultRadius",10);
+    _use_seed_radius = pset.get<bool>("UseSeedRadius",false);
+    _refine_qpoint = pset.get<bool>("RefineQPoint",false);
 
+    if(_refine_qpoint)
+      _refine_qpoint_maskout = pset.get<float>("RefineQPointMaskout");
+      
     _grad_circle = pset.get<bool> ("GraduateCircle",false);
     if (_grad_circle) {
       _grad_circle_min = pset.get<float>("GraduateCircleMin");
@@ -38,7 +44,7 @@ namespace larocv {
     _num_planes = 3;
 
     _valid_xs_npx = pset.get<size_t>("ValidXsNpx",1);
-
+    _path_exists_check = pset.get<bool>("PathExistsCheck",false);
     _geo_algo.Configure(pset.get<Config_t>("LArPlaneGeo"));
   }
 
@@ -50,6 +56,29 @@ namespace larocv {
 					      const geo2d::Circle<float>& circle,
 					      const std::vector<geo2d::Vector<float> >& xs_pts) const
   {
+
+    if(_path_exists_check) {
+      LAROCV_DEBUG() << "User opted to check path existence" << std::endl;
+      geo2d::VectorArray<float> res_v;
+      for(auto const& xs_pt : xs_pts) {
+	//2 pixel tolerance outside the circle
+	float _pi_thr=10.0;
+	float _pi_tol=2.0;
+	float _d_thresh=5.0;
+	uint  _min_ctor_size=2;
+	auto pathexists = PathExists(MaskImage(img,circle,_pi_tol,false),
+				     circle.center,  // pt1
+				     xs_pt,          // pt2
+				     _d_thresh,      // threshold pt to contour distance
+				     _pi_thr,        // pixel intensity threshold
+				     _min_ctor_size);// minimum contour size
+	if (pathexists)
+	  res_v.push_back(xs_pt);
+      }
+      LAROCV_DEBUG() << "... " << xs_pts.size() << " crossing points reduced to " << res_v.size() << std::endl;
+      return res_v;
+    }
+    
     // require significant # pixels to have a charge when drawing a line from the center to the xs point
     geo2d::VectorArray<float> res_v;
     std::vector<geo2d::Vector<int> > check_pts;
@@ -161,11 +190,16 @@ namespace larocv {
       cvtx_v.resize(_num_planes);
       for(size_t plane=0; plane<img_v.size(); ++plane) {
 	auto& cvtx = cvtx_v[plane];
-	cvtx.radius = _circle_default_radius;
-	circle.center.x = cand_vtx.vtx2d_v.at(plane).pt.x;
-	circle.center.y = cand_vtx.vtx2d_v.at(plane).pt.y;
+
+	circle.center.x = cand_vtx.vtx2d_v.at(plane).x;
+	circle.center.y = cand_vtx.vtx2d_v.at(plane).y;
+	circle.radius   = _use_seed_radius ? cand_vtx.vtx2d_v.at(plane).radius : circle.radius;
+	if (circle.radius==kINVALID_FLOAT) circle.radius=_circle_default_radius;
+	
 	cvtx.center.x = circle.center.x;
 	cvtx.center.y = circle.center.y;
+	cvtx.radius   = circle.radius;
+		
 	auto& img = img_v[plane];
 
 	geo2d::VectorArray<float> xs_pt_v;
@@ -218,12 +252,18 @@ namespace larocv {
 	  }
 	} else {
 	  xs_pt_v = QPointOnCircle(img,circle,_pi_threshold);
+
+	  if(_refine_qpoint && !xs_pt_v.empty())
+	    xs_pt_v = QPointOnCircleRefine(img,circle,xs_pt_v,_refine_qpoint_maskout);
+	    
 	  LAROCV_INFO() << "Inspecting plane " << plane
 			<< " ... " << xs_pt_v.size()
 			<< " crossing points on circle @ " << circle.center
 			<< " w/ rad " << circle.radius << std::endl;
+	  
 	  xs_pt_v = this->ValidShowerPointOnCircle(img, circle, xs_pt_v);
 	}
+
 	
 	for(auto const& xs_pt : xs_pt_v) {
 	  LAROCV_DEBUG() << "Determining PCA @ " << xs_pt << std::endl;
@@ -243,7 +283,7 @@ namespace larocv {
       vtx3d.x = cand_vtx.x;
       vtx3d.y = cand_vtx.y;
       vtx3d.z = cand_vtx.z;
-      vtx3d.vtx2d_v = cand_vtx.vtx2d_v;
+      vtx3d.vtx2d_v = Seed2Vertex(cand_vtx.vtx2d_v);
       vtx3d.cvtx2d_v = cvtx_v;
       vtx3d.type=data::VertexType_t::kShower;
       res_vtx3d_v.emplace_back(std::move(vtx3d));

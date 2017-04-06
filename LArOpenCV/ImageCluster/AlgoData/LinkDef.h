@@ -39,6 +39,8 @@
 #pragma link C++ class larocv::data::TrackClusterCompoundArray+;
 #pragma link C++ class std::vector<larocv::data::TrackClusterCompoundArray>+;
 
+#pragma link C++ enum  larocv::data::ParticleType_t+;
+
 #pragma link C++ class larocv::data::ParticleCluster+;
 #pragma link C++ class std::vector<larocv::data::ParticleCluster>+;
 #pragma link C++ class std::vector<std::vector<larocv::data::ParticleCluster> >+;

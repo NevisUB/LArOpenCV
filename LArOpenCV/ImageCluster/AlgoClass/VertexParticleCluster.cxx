@@ -404,7 +404,7 @@ namespace larocv {
 	cv::imwrite(std::string(ss2.str()).c_str(), rot_img);
       }
       
-      cv::Mat rot_polarimg, sb_img;
+      cv::Mat sb_img;
       
       // Cluster per xs-point found in Refine2DVertex
       const float max_radius_range = 1.5;
@@ -412,13 +412,9 @@ namespace larocv {
 
       LAROCV_DEBUG() << "Set max_radius: " << max_radius << std::endl;
       
-      cv::threshold(rot_img,rot_img,_pi_threshold,255,CV_THRESH_BINARY);
+      rot_img = Threshold(rot_img,_pi_threshold,255);
       
-      cv::linearPolar(rot_img,        //input
-		      rot_polarimg,   //output
-		      ref_vtx_copy,
-		      max_radius,
-		      cv::WARP_FILL_OUTLIERS); //seems like it has to set
+      auto rot_polarimg = LinearPolar(rot_img,ref_vtx_copy,max_radius);
 
       auto kernel = cv::getStructuringElement(cv::MORPH_RECT,
 					      cv::Size(20,2));

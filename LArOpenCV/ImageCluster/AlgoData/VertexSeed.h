@@ -24,14 +24,26 @@ namespace larocv {
     {
     public:
       VertexSeed2D() { Clear(); }
-      VertexSeed2D(const geo2d::Vector<float>& pt) { this->x=pt.x; this->y=pt.y; }
+      VertexSeed2D(const geo2d::Vector<float>& pt)
+      { this->x=pt.x; this->y=pt.y; radius=kINVALID_FLOAT;}
+      VertexSeed2D(const geo2d::Vector<float>& pt,float rad)
+      { this->x=pt.x; this->y=pt.y; radius=rad;}
+      VertexSeed2D(const geo2d::Circle<float>& circle)
+      { this->x=circle.center.x; this->y=circle.center.y; radius=circle.radius;}
+      VertexSeed2D(const Vertex2D& vtx2d)
+      { this->x = vtx2d.pt.x; this->y = vtx2d.pt.y; radius=kINVALID_FLOAT; }
+      
       ~VertexSeed2D(){}
-
+      
       SeedType_t type;
+      float radius;
       
     protected:
       void _Clear_()
-      { this->x=kINVALID_FLOAT; this->y=kINVALID_FLOAT; type=SeedType_t::kUnknown; }
+      { this->x=kINVALID_FLOAT; this->y=kINVALID_FLOAT; type=SeedType_t::kUnknown; radius=kINVALID_FLOAT;}
+      
+      geo2d::Circle<float> as_circle()
+      { return geo2d::Circle<float>(this->x,this->y,radius); }
       
     };
     
@@ -39,24 +51,16 @@ namespace larocv {
     class VertexSeed3D : public AlgoDataArrayElementBase {
     public:
       VertexSeed3D() { Clear(); }
-      VertexSeed3D(const Vertex3D& vtx3d)
-      { vtx2d_v = vtx3d.vtx2d_v; x = vtx3d.x; y = vtx3d.y; z = vtx3d.z; }
+      VertexSeed3D(const Vertex3D& vtx3d);
+      VertexSeed3D(const VertexSeed3D& vtxseed3d);
       ~VertexSeed3D(){}
       
       /// Plane-wise 2D vertex point
-      std::vector<larocv::data::Vertex2D> vtx2d_v;
+      std::vector<VertexSeed2D> vtx2d_v;
       /// 3D vertex location
       double x, y, z;
       SeedType_t type;
 
-      // inline bool operator==(const VertexSeed3D& lhs,const VertexSeed3D& rhs) {
-      // 	if ( lhs.x != rhs.x ) return false;
-      // 	if ( lhs.y != rhs.y ) return false;
-      // 	if ( lhs.z != rhs.z ) return false;
-      // 	if ( lhs.type != rhs.type ) return false;
-      // 	return true;
-      // }
-      
     protected:
       /// attribute clear method
       void _Clear_()

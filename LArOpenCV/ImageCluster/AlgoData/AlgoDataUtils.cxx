@@ -172,6 +172,33 @@ namespace larocv {
 
       return true;
     }
+    
+    std::vector<Vertex2D>
+    Seed2Vertex(const std::vector<VertexSeed2D>& svtx2d_v) {
+      std::vector<Vertex2D> res;
+      res.reserve(svtx2d_v.size());
+      for(const auto& svtx2d : svtx2d_v)
+	res.emplace_back(Seed2Vertex(svtx2d));
+      return res;
+    }
+
+    Vertex2D
+    Seed2Vertex(const VertexSeed2D& svtx2d) {
+      Vertex2D res;
+      res.pt.x = svtx2d.x;
+      res.pt.y = svtx2d.y;
+      return res;
+    }
+      
+    Vertex3D
+    Seed2Vertex(const VertexSeed3D& svtx3d) {
+      Vertex3D res;
+      res.vtx2d_v = Seed2Vertex(svtx3d.vtx2d_v);
+      res.x = svtx3d.x;
+      res.y = svtx3d.y;
+      res.z = svtx3d.z;
+      return res;
+    }
   }
 }
 #endif

@@ -10,6 +10,7 @@
 #include "Contour2DAnalysis.h"
 #include "SpectrumAnalysis.h"
 #include <set>
+#include <cmath>
 
 namespace larocv {
 
@@ -18,6 +19,15 @@ namespace larocv {
     cv::Mat dst_img(img.size(),img.type(),CV_8UC1);    
     dst_img.setTo(val);
     return dst_img;
+  }
+
+  cv::Mat
+  LinearPolar(const cv::Mat& img,
+	      geo2d::Vector<float> pt,
+	      float radius) {
+    cv::Mat res;
+    cv::linearPolar(img, res, pt, radius, ::cv::WARP_FILL_OUTLIERS);
+    return res;
   }
   
   GEO2D_Contour_t
@@ -77,8 +87,7 @@ namespace larocv {
 		 const float pi_threshold,
 		 const float supression)
   {
-    cv::Mat polarimg;
-    cv::linearPolar(img, polarimg, circle.center, circle.radius*2, ::cv::WARP_FILL_OUTLIERS);
+    auto polarimg = LinearPolar(img,circle.center,circle.radius*2);
     
     size_t col = (size_t)(polarimg.cols / 2);
     return RadialIntersections(polarimg,circle,col,pi_threshold,supression);
@@ -110,8 +119,7 @@ namespace larocv {
     else max_radi += (max_radi - min_radi);
     
     // Find crossing point
-    cv::Mat polarimg;
-    cv::linearPolar(img, polarimg, center, max_radi, ::cv::WARP_FILL_OUTLIERS);
+    auto polarimg = LinearPolar(img, center, max_radi);
 
     std::vector<size_t> col_v(radius_v.size(),0);
     for(size_t r_idx=0; r_idx<radius_v.size(); ++r_idx) {
@@ -406,5 +414,203 @@ namespace larocv {
   }
 
 
+  bool
+  PathExists(const cv::Mat& img,
+	     const geo2d::Vector<float>& pt1,
+	     const geo2d::Vector<float>& pt2,
+	     float dthresh,
+	     float pithresh,
+	     uint  min_ctor_size) {
+    
+    bool DEBUG = false;
+    if (DEBUG) {
+      static int num1=0;
+      std::stringstream ss;
+      ss << "img_"<<num1<<"_0_p1_"<<pt1.x<<"_"<<pt1.y<<"_p2_"<<pt2.x<<"_"<<pt2.y<<".png";
+      cv::imwrite(ss.str(),Threshold(img,10,255));
+      num1+=1;
+      std::cout << "Wrote: " << ss.str() << std::endl;
+    }
+    
+    GEO2D_ContourArray_t ctor_v;
+    if (pithresh>0.0)
+      ctor_v = FindContours(Threshold(img,pithresh,255),min_ctor_size);
+    else
+      ctor_v = FindContours(img);
+
+    if (DEBUG) {
+      std::stringstream ss;
+      static int num2=0;
+      auto img_copy = BlankImage(img,0);
+      cv::Scalar color(255);
+      cv::drawContours(img_copy,ctor_v,-1,color);
+      ss.str("");
+      ss << "img_"<<num2<<"_1_p1_"<<pt1.x<<"_"<<pt1.y<<"_p2_"<<pt2.x<<"_"<<pt2.y<<".png";
+      cv::imwrite(ss.str(),img_copy);
+      num2+=1;
+      std::cout << "Wrote: " << ss.str() << std::endl;
+    }
+    
+    LAROCV_SDEBUG()<<"p1 ("<<pt1.x<<","<<pt1.y<<") & p2("<<pt2.x<<","<<pt2.y<<")"<<std::endl;
+    
+    double d1,d2;
+    d1=d2=kINVALID_DOUBLE;
+    auto id1 = FindContainingContour(ctor_v,pt1,d1);
+    auto id2 = FindContainingContour(ctor_v,pt2,d2);
+    
+    if(id1==kINVALID_SIZE or d1==kINVALID_DOUBLE) {
+      LAROCV_SDEBUG() << "Point 1 unassociated to contours in image!" << std::endl;
+      return false;
+    }
+    
+    if(id2==kINVALID_SIZE or d2==kINVALID_DOUBLE) {
+      LAROCV_SDEBUG() << "Point 2 unassociated to contours in image!" << std::endl;
+      return false;
+    }    
+
+    LAROCV_SDEBUG() << Pt2PtDistance(ctor_v[id1],ctor_v[id2]) << std::endl;
+    LAROCV_SDEBUG() << "d1... " << d1 << " d2... " << d2 << std::endl;
+    d1=std::abs(d1);
+    if (d1 > dthresh) {
+      LAROCV_SDEBUG() << "Point1 too far from any contour" << std::endl;
+      return false;
+    }
+
+    d2=std::abs(d2);
+    if (d2 > dthresh) {
+      LAROCV_SDEBUG() << "Point2 too far from any contour" << std::endl;
+      return false;
+    }
+
+    if (id1!=id2) {
+      LAROCV_SDEBUG() << "Gap exists between two input points" << std::endl;
+      return false;
+    }
+    
+    return true;
+  }
+
+  float
+  CircleDensity(const cv::Mat& img,
+		const geo2d::Circle<float>& circle) {
+    auto white_img = BlankImage(img,255);
+    CircleDensity(img,white_img,circle);
+  }
+  
+  float
+  CircleDensity(const cv::Mat& img,
+		const cv::Mat& white_img,
+		const geo2d::Circle<float>& circle) {
+    float res = 0.0;
+    auto sze = CountNonZero(white_img,circle,0);
+    auto npx = CountNonZero(img      ,circle,0);
+    if (npx) res = (float) npx / (float) sze;
+    return res;
+  }
+  
+  bool
+  ChargeBlobCircleEstimate(const cv::Mat& img,
+			   const geo2d::Vector<float>& center,
+			   geo2d::Circle<float>& res,
+			   float thresh,
+			   float start_rad,
+			   float end_rad,
+			   float step) {
+
+    res.center=geo2d::Vector<float>(kINVALID_FLOAT,kINVALID_FLOAT);
+    res.radius=kINVALID_FLOAT;
+    
+    auto npx_start = CountNonZero(img,geo2d::Circle<float>(center,start_rad),0);
+    if (!npx_start) {
+      LAROCV_SDEBUG() << "Found no charge blob here @ " << center << " rad " << start_rad << std::endl;
+      return false;
+    }
+    
+    std::vector<float> rad_v,cratio_v;
+    
+    auto white_img = BlankImage(img,255);
+    
+    for(auto this_rad=start_rad; this_rad <= end_rad; this_rad+=step) {
+
+      geo2d::Circle<float> this_circle(center,this_rad);
+      
+      auto cratio = CircleDensity(img,white_img,this_circle);
+
+      rad_v.push_back(this_rad);
+      cratio_v.push_back(cratio);
+    }
+
+    
+    for(size_t radid=0;radid<rad_v.size();++radid) {
+      auto cratio = cratio_v[radid];
+      
+      LAROCV_SDEBUG() << radid << ") @ center " << center << " rad " << rad_v[radid]
+		      << " den " << cratio << std::endl;
+
+      if (cratio>thresh) continue;
+      
+      res.center = center;
+      res.radius = rad_v[radid];
+      
+      return true;
+    }
+
+    res.center=geo2d::Vector<float>(kINVALID_FLOAT,kINVALID_FLOAT);
+    res.radius=kINVALID_FLOAT;
+    return false;
+  }
+
+  geo2d::VectorArray<float>
+  QPointOnCircleRefine(const cv::Mat& img,
+		       const geo2d::Circle<float>& circle,
+		       const geo2d::VectorArray<float>& xs_v,
+		       const float mask_inner) {
+
+    geo2d::VectorArray<float> res_v;
+    res_v.reserve(xs_v.size());
+    
+    auto mask_img = MaskImage(img,circle,0,false);
+    mask_img = MaskImage(mask_img,geo2d::Circle<float>(circle.center,mask_inner),0,true);
+    auto ctor_v = FindContours(mask_img);
+
+    std::vector<geo2d::VectorArray<float> > xs_ctor_vv;
+    xs_ctor_vv.resize(ctor_v.size());
+    for(auto& xs_ctor_v : xs_ctor_vv) xs_ctor_v.reserve(xs_v.size());
+	  
+    for(const auto& xs : xs_v) {
+      auto id = FindContainingContour(ctor_v,xs);
+      if (id==kINVALID_SIZE)
+	res_v.push_back(xs);
+      else
+	xs_ctor_vv.at(id).push_back(xs);
+    }
+
+    for(const auto& xs_ctor_v : xs_ctor_vv) {
+      if (xs_ctor_v.empty())
+	continue;
+      else if (xs_ctor_v.size()==1)
+	res_v.push_back(xs_ctor_v.front());
+      else {
+	auto xs = geo2d::AngularAverage(circle,xs_ctor_v);
+	res_v.push_back(xs);
+      }
+    }
+    
+    return res_v;
+  }
+
+  geo2d::VectorArray<float>
+  QPointOnCircleRefine(const cv::Mat& img,
+		       const geo2d::Circle<float>& circle,
+		       const float mask_inner,
+		       const float pi_threshold,
+		       const float supression) {
+    
+    auto xs_v = QPointOnCircle(img,circle,pi_threshold,supression);
+    return QPointOnCircleRefine(img,circle,xs_v,mask_inner);
+  }
+
+  
+  
 }
 #endif

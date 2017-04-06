@@ -48,7 +48,6 @@ namespace larocv {
       if(_algo_id_track_vertex_particle_cluster==kINVALID_ALGO_ID)
 	throw larbys("You specified an invalid TrackVertexParticleCluster algorithm name");
     }
-
     
     Register(new data::Vertex3DArray);
   }
@@ -81,7 +80,7 @@ namespace larocv {
 
     if (_algo_id_shower_track_vertex!=kINVALID_ALGO_ID and _algo_id_track_vertex_estimate != kINVALID_ALGO_ID) {
       auto& ass_man = AssManager();
-
+      
       const auto& track_vertex_v = AlgoData<data::Vertex3DArray>(_algo_id_track_vertex_estimate,0);
       const auto& shower_track_v = AlgoData<data::Vertex3DArray>(_algo_id_shower_track_vertex,0);
       

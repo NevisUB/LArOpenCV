@@ -434,8 +434,7 @@ namespace larocv{
     double dtheta_sum = 0;
     if(_use_polar_spread) {
       // Estimate a polar y-spread as am easure of "dtheta"
-      ::cv::Mat local_polarimg;
-      ::cv::linearPolar(img, local_polarimg, pt, _radius+10., ::cv::WARP_FILL_OUTLIERS);
+      auto local_polarimg = LinearPolar(img, pt, _radius+10.);
       for(auto const& xs_pt : xs_pts) {
 	float angle = geo2d::angle(pt,xs_pt);
 	float radius_frac_min = (_radius - 2.) / (_radius+10.);

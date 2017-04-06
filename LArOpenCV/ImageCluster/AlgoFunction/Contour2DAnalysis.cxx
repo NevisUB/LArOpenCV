@@ -25,7 +25,23 @@ namespace larocv {
     cv::findContours(img_copy,result_v,cv_hierarchy_v,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
     return result_v;
   }
-  
+
+
+  GEO2D_ContourArray_t
+  FindContours(const cv::Mat& img,uint min_pix)
+  {
+    auto ctor_v = FindContours(img);
+    GEO2D_ContourArray_t res_v;
+    res_v.reserve(ctor_v.size());
+    
+    for(auto& ctor : ctor_v) {
+      if (CountNonZero(img,ctor,0) < min_pix) continue;
+      res_v.emplace_back(std::move(ctor));
+    }
+    
+    return res_v;
+  }
+    
   cv::Mat
   CleanImage(const cv::Mat& img,
 	     const GEO2D_ContourArray_t& veto_ctor_v,
@@ -119,6 +135,13 @@ namespace larocv {
     return cv::countNonZero(MaskImage(img,ctor,tol,false));
   }
 
+  uint
+  CountNonZero(const cv::Mat& img,
+	       const geo2d::Circle<float>& circle,
+	       uint tol){
+    return cv::countNonZero(MaskImage(img,circle,tol,false));
+  }
+  
   double Pt2PtDistance(const geo2d::Vector<float>& pt,
 		       const GEO2D_Contour_t& ctor)
   {
@@ -382,6 +405,17 @@ namespace larocv {
     return res;
   }
 
+  size_t
+  FindContainingContour(const GEO2D_ContourArray_t& contour_v,
+			const geo2d::Vector<float>& pt,
+			double& distance) {
+    distance=kINVALID_SIZE;
+    auto idx = FindContainingContour(contour_v,pt);
+    if (idx==kINVALID_SIZE) return kINVALID_SIZE;
+    distance = (double)cv::pointPolygonTest(contour_v.at(idx),pt,true);
+    return idx;
+  }
+  
   size_t
   FindContainingContour(const GEO2D_ContourArray_t& contour_v,
 			const geo2d::Vector<float>& pt)
