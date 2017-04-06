@@ -318,8 +318,7 @@ namespace larocv {
 			     float EPS) {
 
 
-    GEO2D_Contour_t pts_v;
-    findNonZero(img, pts_v);
+    auto pts_v = FindNonZero(img);
     
     if(pts_v.size() < 2) {
       LAROCV_SWARNING() << "PCA approx cannot be made (# points " << pts_v.size() << " < 2)" << std::endl;
