@@ -41,6 +41,12 @@ namespace larocv {
 
     void RegisterSeed(const std::vector<data::VertexSeed3D>& seed_v)
     { _cand_vertex_v = seed_v; }
+
+    void
+    ValidateCircleVertex(cv::Mat& img,data::CircleVertex& cvtx) const;
+
+    const float circle_default_size() const
+    { return _circle_default_radius; }
     
   private:
 

@@ -36,11 +36,11 @@ namespace larocv {
     data::CircleVertex CreateCircleVertex(cv::Mat img,
                                           const data::VertexSeed3D& vtx3d,
                                           const size_t plane) const;
-
+    
     larocv::data::Vertex3D
     RegionScan3D(const larocv::data::VertexSeed3D& center,
                  std::vector<cv::Mat> image_v,
-                 size_t num_qpt=0 ) const;
+                 size_t num_xspt=0 ) const;
 
     const larocv::LArPlaneGeo& geo() const { return _geo; }
 
@@ -56,6 +56,7 @@ namespace larocv {
     float _pi_threshold;
     float _angle_supression;
     size_t _pca_box_size;
+    
   private:
 
     data::CircleVertex RadialScan2D(const cv::Mat& img, const geo2d::Vector<float>& pt) const;

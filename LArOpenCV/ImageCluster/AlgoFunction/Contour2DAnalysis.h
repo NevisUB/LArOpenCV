@@ -126,6 +126,11 @@ namespace larocv {
   double
   CircumferenceAngularSum(const GEO2D_Contour_t& ctor,
 			  bool isclosed=false);
+
+  void
+  FindEdges(const GEO2D_Contour_t& ctor,
+	    geo2d::Vector<float>& edge1,
+	    geo2d::Vector<float>& edge2);
   
 }
 #endif

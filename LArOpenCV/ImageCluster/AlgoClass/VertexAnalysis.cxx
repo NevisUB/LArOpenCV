@@ -55,12 +55,64 @@ namespace larocv {
   }
 
   void
-  VertexAnalysis::MergeNearby(std::vector<const data::Vertex3D*>& vtx1_v,
+  VertexAnalysis::MergeNearby(std::vector<data::Vertex3D>& vtx_v,
 			      double dist3d) const {
-    throw larbys("Not implemented");
+
+    std::vector<data::Vertex3D> vtx_tmp_v = vtx_v;
+    std::vector<data::Vertex3D> vtx_res_v;
+    
+    std::vector<bool> merged_v;
+    float min_dist;
+    size_t closeid;
+    bool close;
+    
+    for(;;) {
+
+      close = false;
+      
+      merged_v.resize(vtx_tmp_v.size(),false);
+      vtx_res_v.reserve(vtx_tmp_v.size());
+			
+      for(size_t v1=0;v1<vtx_tmp_v.size();++v1) {
+	if (merged_v[v1]) continue;
+	const auto& vtx1 = vtx_tmp_v[v1];
+	min_dist=kINVALID_FLOAT;
+	closeid =kINVALID_SIZE;
+	for(size_t v2=v1+1;v2<vtx_tmp_v.size();++v2) {
+	  if (merged_v[v2]) continue;
+	  const auto& vtx2 = vtx_tmp_v[v2];
+	  auto dist = data::Distance(vtx1,vtx2);
+	  if (dist < min_dist) {
+	    min_dist = dist;
+	    closeid  = v2;
+	  }
+	}
+
+	if (min_dist > dist3d) continue;
+
+	close = true;
+
+	if (min_dist==kINVALID_FLOAT)throw larbys("logic error");
+	if (closeid ==kINVALID_SIZE) throw larbys("logic error");
+	  
+	merged_v[v1]      = true;
+	merged_v[closeid] = true;
+	vtx_res_v.emplace_back(AverageVertex(vtx1,vtx_tmp_v[closeid]));
+      }
+
+      for(size_t vtxid=0;vtxid<merged_v.size();++vtxid) {
+	if (merged_v[vtxid]) continue;
+	vtx_res_v.emplace_back(std::move(vtx_tmp_v[vtxid]));
+      }
+      
+      std::swap(vtx_tmp_v,vtx_res_v);
+      vtx_res_v.clear();
+      if(!close) break;
+    }
+    
+    std::swap(vtx_tmp_v,vtx_v);
   }
-
-
+  
   std::vector<std::vector<std::pair<size_t,size_t> > >
   VertexAnalysis::MatchClusters(const std::vector<std::vector<data::ParticleCluster> >& pars_vv,
 				const std::vector<cv::Mat>& img_v,
@@ -511,6 +563,37 @@ namespace larocv {
     
     return true;
   }
+
+  data::Vertex3D
+  VertexAnalysis::AverageVertex(const data::Vertex3D& vtx1, const data::Vertex3D& vtx2) const {
+    data::Vertex3D res;
+    res.x = (vtx1.x + vtx2.x)/2.0;
+    res.y = (vtx1.y + vtx2.y)/2.0;
+    res.z = (vtx1.z + vtx2.z)/2.0;
+      
+    res.type = vtx1.type;
+    return res;
+  }
+  
+  bool
+  VertexAnalysis::UpdatePlanePosition(data::Vertex3D& vtx, const LArPlaneGeo& geo) const {
+
+    vtx.vtx2d_v.clear();
+    vtx.vtx2d_v.resize(3);
+    for(size_t plane=0; plane<3; ++plane) {
+      auto& vtx2d = vtx.vtx2d_v[plane].pt;
+      vtx2d.x = geo.x2col (vtx.x,plane);
+      vtx2d.y = geo.yz2row(vtx.y,vtx.z,plane);
+    }
+    
+    return true;
+  }
+
+  bool
+  VertexAnalysis::UpdatePlanePosition(data::Vertex3D& vtx) const {
+    return UpdatePlanePosition(vtx,_geo);
+  }
+  
   
 }
 

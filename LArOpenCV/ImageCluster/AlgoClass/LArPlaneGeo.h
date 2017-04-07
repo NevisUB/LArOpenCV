@@ -42,11 +42,13 @@ namespace larocv {
     float col2cm  (float x, const size_t plane) const;
     float wire2row(float wire, const size_t plane) const;
     float tick2col(float tick, const size_t plane) const;
-    bool  YZPoint(const geo2d::Vector<float>& pt0, const size_t plane0,
-		  const geo2d::Vector<float>& pt1, const size_t plane1,
-		  larocv::data::Vertex3D& result) const;
-    bool  YZPoint(const geo2d::Vector<float>& pt0, const size_t plane0,
-		  const geo2d::Vector<float>& pt1, const size_t plane1) const;
+
+    bool YZPoint(const geo2d::Vector<float>& pt0, const size_t plane0,
+		 const geo2d::Vector<float>& pt1, const size_t plane1,
+		 larocv::data::Vertex3D& result) const;
+    
+    bool YZPoint(const geo2d::Vector<float>& pt0, const size_t plane0,
+		 const geo2d::Vector<float>& pt1, const size_t plane1) const;
 
     float  _xplane_tick_resolution;
     size_t _num_planes;

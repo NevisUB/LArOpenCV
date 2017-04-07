@@ -27,13 +27,16 @@ namespace larocv {
 						      const data::VertexSeed3D& vtx3d,
 						      const size_t plane) const
   {
-    LAROCV_INFO() << "Plane " << plane << " (" << vtx3d.x << "," << vtx3d.y << "," << vtx3d.z << ")" << std::endl;
+    //LAROCV_INFO() << "Plane " << plane << " (" << vtx3d.x << "," << vtx3d.y << "," << vtx3d.z << ")" << std::endl;
     static geo2d::Vector<float> temp_vtx2d;
     temp_vtx2d.x = _geo.x2col(vtx3d.x, plane);
     temp_vtx2d.y = _geo.yz2row(vtx3d.y, vtx3d.z, plane);
     //if( ((float)(img.at<unsigned char>((size_t)(row+0.5),(size_t)(col+0.5)))) < _pi_threshold )
     //	continue;
     auto res = RadialScan2D(img, temp_vtx2d);
+    // LAROCV_INFO() << "Plane " << plane
+    // 		  << " (" << temp_vtx2d.x << "," << temp_vtx2d.y << ")"
+    // 		  << " xs: " << res.xs_v.size() << std::endl;
     if(res.weight<0) {
       res.center = temp_vtx2d;
       res.radius = _min_radius;
@@ -48,22 +51,22 @@ namespace larocv {
     double dtheta_sigma = 1. / cvtx.radius * 180 / M_PI ;
     dtheta_sigma = sqrt(pow(dtheta_sigma, 2) * cvtx.xs_v.size());
 
+    if (dtheta_sum > dtheta_sigma) return dtheta_sum;
+
+    if (cvtx.xs_v.size() < 2) return dtheta_sigma;
+    
     // special handling for 2-crossing 180 degree guy
     if (cvtx.xs_v.size() == 2) {
       auto center_line0 = geo2d::Line<float>(cvtx.xs_v[0].pt, cvtx.xs_v[0].pt - cvtx.center);
       auto center_line1 = geo2d::Line<float>(cvtx.xs_v[1].pt, cvtx.xs_v[1].pt - cvtx.center);
       auto dtheta = fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
-      LAROCV_DEBUG() << "... handling dtheta @ " << dtheta << std::endl;
+      // LAROCV_DEBUG() << "... handling dtheta @ " << dtheta << std::endl;
       //if(dtheta < dtheta_sigma) { return -1; }
       if (dtheta < 10) {
-	LAROCV_DEBUG() << "& failed" << std::endl;
+	// LAROCV_DEBUG() << "& failed" << std::endl;
 	return -1;
       }
     }
-
-    if (dtheta_sum > dtheta_sigma) return dtheta_sum;
-
-    if (cvtx.xs_v.size() < 2) return dtheta_sigma;
 
     // if dtheta better than resolution, then compute weight differently
     std::set<double> theta_loc_s;
@@ -81,7 +84,7 @@ namespace larocv {
 	if (rel_pt.x < 0 && rel_pt.y <= 0) theta_loc += 180;
 	if (rel_pt.x > 0 && rel_pt.y <= 0) theta_loc = 360 - theta_loc;
       }
-      //std::cout<<"("<<xs.pt.x<<","<<xs.pt.y<<") = ("<<rel_pt.x<<","<<rel_pt.y<<") ... @ " << theta_loc<<std::endl;
+      LAROCV_DEBUG()<<"("<<xs.pt.x<<","<<xs.pt.y<<") = ("<<rel_pt.x<<","<<rel_pt.y<<") ... @ " << theta_loc<<std::endl;
       theta_loc_s.insert(theta_loc);
     }
 
@@ -96,7 +99,7 @@ namespace larocv {
     }
     weight /= (double)(theta_loc_v.size() - 1);
     weight *= dtheta_sigma;
-    //std::cout<<cvtx.radius<<" ... "<<dtheta_sigma << " ... " << cvtx.xs_v.size() << " ... " << theta_loc_s.size() << " ... " << theta_loc_v.size() << " ... " << weight << std::endl;
+    LAROCV_DEBUG()<<cvtx.radius<<" ... "<<dtheta_sigma << " ... " << cvtx.xs_v.size() << " ... " << theta_loc_s.size() << " ... " << theta_loc_v.size() << " ... " << weight << std::endl;
 
     return weight;
   }
@@ -114,6 +117,9 @@ namespace larocv {
 
     //apply 2 degrees angular supression
     auto const temp_xs_vv = QPointArrayOnCircleArray(img, pt, radius_v, _pi_threshold, _angle_supression);
+    // for (size_t r_idx = 0; r_idx < radius_v.size(); ++r_idx) 
+    //   LAROCV_DEBUG() << r_idx << ") rad " << radius_v[r_idx] << " sz " << temp_xs_vv[r_idx].size() << std::endl;
+    
     double min_weight = 1.e9;
     data::CircleVertex temp_res;
     for (size_t r_idx = 0; r_idx < radius_v.size(); ++r_idx) {
@@ -132,25 +138,26 @@ namespace larocv {
       for (size_t xs_idx = 0; xs_idx < temp_xs_v.size(); ++xs_idx) {
 	auto const& xs_pt = temp_xs_v[xs_idx];
 	// Line that connects center to xs
-	try {
+	// try {
 	  auto local_pca   = SquarePCA(img, xs_pt, _pca_box_size, _pca_box_size);
 	  auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
 	  // Alternative (and probably better/faster): compute y spread in polar coordinate
-	  LAROCV_DEBUG() << "Radius " << radius << " Line ID " << xs_idx << " found xs " << xs_pt
-			 << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
+	  // LAROCV_DEBUG() << "Radius " << radius << " Line ID " << xs_idx << " found xs " << xs_pt
+	  // 		 << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
 	  xs_v.push_back(data::PointPCA(xs_pt, local_pca));
 	  dtheta_v.push_back(fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)));
-	} catch (const larbys& err) {
-	  continue;
-	}
+	// } catch (const larbys& err) {
+	//   continue;
+	// }
       }
 
-      temp_res.radius = radius;
-      temp_res.xs_v   = xs_v;
+      temp_res.radius   = radius;
+      temp_res.xs_v     = xs_v;
       temp_res.dtheta_v = dtheta_v;
 
       temp_res.weight = CircleWeight(temp_res);
-      LAROCV_INFO() << "CircleWeight: " << temp_res.weight << std::endl;
+	
+      // LAROCV_INFO() << "CircleWeight: " << temp_res.weight << std::endl;
       if (temp_res.weight < 0) {
 	continue;
       }
@@ -160,12 +167,12 @@ namespace larocv {
 	res = temp_res;
 	continue;
       }
-
+      
       // if this (new) radius has more crossing point, that means we started to
       // cross something else other than particle trajectory from the circle's center
       // then we break
       if (temp_res.xs_v.size() != xs_v.size()) {
-	LAROCV_DEBUG() << "Breaking @ radius = " << radius << " (not included) since # crossing point increased!" << std::endl;
+	// LAROCV_DEBUG() << "Breaking @ radius = " << radius << " (not included) since # crossing point increased!" << std::endl;
 	break;
       }
 
@@ -181,8 +188,8 @@ namespace larocv {
       auto const& xs_pt     = res.xs_v[xs_idx].pt;
       auto const& dtheta    = res.dtheta_v[xs_idx];
       auto center_line      = geo2d::Line<float>(xs_pt, xs_pt - res.center);
-      LAROCV_INFO() << "Radius " << res.radius << " Line ID " << xs_idx << " found xs " << xs_pt
-		    << " dtheta " << dtheta << std::endl;
+      // LAROCV_INFO() << "Radius " << res.radius << " Line ID " << xs_idx << " found xs " << xs_pt
+      // 		    << " dtheta " << dtheta << std::endl;
     }
 
     return res;
@@ -233,8 +240,6 @@ namespace larocv {
 	trial_vtx3d.y = y_v[step_y];
 	for (size_t step_z = 0; step_z < nstep_z; ++step_z) {
 	  trial_vtx3d.z = z_v[step_z];
-	  LAROCV_INFO() << "Inspecting (x,y,z)=(" 
-			<< trial_vtx3d.x << "," << trial_vtx3d.y << "," << trial_vtx3d.z << ")" << std::endl;
 
 	  std::vector<larocv::data::CircleVertex> circle_v;
 	  circle_v.resize(_geo._num_planes);
@@ -246,11 +251,11 @@ namespace larocv {
 	      auto const& xs_pts = circle_v[plane].xs_v;
 	      if (xs_pts.size() >= num_xspt_count_v.size()) num_xspt_count_v.resize(xs_pts.size() + 1);
 	      num_xspt_count_v[xs_pts.size()] += 1;
-	      LAROCV_INFO() << "    Plane " << plane << " Radius " << circle_v[plane].radius
-			    << " ... " << circle_v[plane].xs_v.size() << " crossing points" << std::endl;
+	      // LAROCV_INFO() << "    Plane " << plane << " Radius " << circle_v[plane].radius
+	      // 		    << " ... " << circle_v[plane].xs_v.size() << " crossing points" << std::endl;
 	    }
 	  }catch(const larbys&){
-	    LAROCV_INFO() << "Failed to create CircleVertex... skipping this point!" << std::endl;
+	    // LAROCV_INFO() << "Failed to create CircleVertex... skipping this point!" << std::endl;
 	    continue;
 	  }
 
@@ -268,6 +273,9 @@ namespace larocv {
 	  // If num_xspt == 0, or it's not valid, skip this point
 	  if (!num_xspt || num_xspt_count_v.size() <= num_xspt || num_xspt_count_v[num_xspt] < 2) continue;
 
+	  // LAROCV_INFO() << "Accepted pt (x,y,z)=(" 
+	  //    		<< trial_vtx3d.x << "," << trial_vtx3d.y << "," << trial_vtx3d.z << ")" << std::endl;
+	  
 	  double weight1 = 1.e9;
 	  double weight2 = 1.e9;
 	  for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
@@ -277,7 +285,7 @@ namespace larocv {
 	    if (weight < weight1) weight1 = weight;
 	    else if (weight < weight2) weight2 = weight;
 	  }
-	  if (best_weight < (weight1 * weight2) ) {
+	  if ((weight1 * weight2) < best_weight) {
 	    best_weight  = weight1 * weight2;
 	    res.x = vtx3d.x;
 	    res.y = vtx3d.y;
@@ -293,9 +301,9 @@ namespace larocv {
 	      res.vtx2d_v[plane].score = res.cvtx2d_v[plane].sum_dtheta();
 	    }
 	  }
-	}
-      }
-    }
+	} //zstep
+      } //ystep
+    } //xstep
 
     return res;
   }

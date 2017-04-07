@@ -525,6 +525,42 @@ namespace larocv {
     return angle_sum / weight_sum;
   }
   
+  void
+  FindEdges(const GEO2D_Contour_t& ctor,
+	    geo2d::Vector<float>& edge1,
+	    geo2d::Vector<float>& edge2)
+  {
+    // cheap trick assuming this is a linear, linear track cluster
+    geo2d::Vector<float> mean_pt, ctor_pt;
+    mean_pt.x = mean_pt.y = 0.;
+    for(auto const& pt : ctor) { mean_pt.x += pt.x; mean_pt.y += pt.y; }
+    mean_pt.x /= (double)(ctor.size());
+    mean_pt.y /= (double)(ctor.size());
+    // find the furthest point from the mean (x,y)
+    double dist_max=0;
+    double dist;
+    for(auto const& pt : ctor) {
+      ctor_pt.x = pt.x;
+      ctor_pt.y = pt.y;
+      dist = geo2d::dist(mean_pt,ctor_pt);
+      if(dist > dist_max) {
+	edge1 = pt;
+	dist_max = dist;
+      }
+    }
+    // find the furthest point from edge1
+    dist_max=0;
+    for(auto const& pt : ctor) {
+      ctor_pt.x = pt.x;
+      ctor_pt.y = pt.y;
+      dist = geo2d::dist(edge1,ctor_pt);
+      if(dist > dist_max) {
+	edge2 = pt;
+	dist_max = dist;
+      }
+    }
+  }
 
+  
 }
 #endif

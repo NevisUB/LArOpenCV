@@ -197,8 +197,10 @@ namespace larocv {
       res.x = svtx3d.x;
       res.y = svtx3d.y;
       res.z = svtx3d.z;
+      res.type = VertexType_t::kUnknown;
       return res;
     }
+
   }
 }
 #endif

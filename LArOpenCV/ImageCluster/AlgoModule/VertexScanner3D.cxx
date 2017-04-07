@@ -111,11 +111,8 @@ namespace larocv {
       dtheta_sum /= (double)num_good_plane;
       LAROCV_DEBUG() << "Registering vertex seed type="<<(uint)cand_vtx3d.type
 		     <<" @ ("<<vtx3d.x<<","<<vtx3d.y<<","<<vtx3d.z<<")"<<std::endl;
-      
-      data::VertexSeed3D seed;
-      seed.x = vtx3d.x;
-      seed.y = vtx3d.y;
-      seed.z = vtx3d.z;
+
+      data::VertexSeed3D seed(vtx3d);
       seed.type = cand_vtx3d.type;
       seed_cands_m.emplace(dtheta_sum, seed);
       _vtx3d_cands_v.emplace_back(std::move(vtx3d));
@@ -164,16 +161,13 @@ namespace larocv {
     }
     if (num_valid_planes < 2) {
       LAROCV_INFO() << "Seed @ (x,y,z) = ("
-                    << vtx3d.x << "," << vtx3d.y << "," << vtx3d.z << ") skipped..." << std::endl;
+                    << vtx3d.x << "," << vtx3d.y << "," << vtx3d.z << ") skipped... (< 2 valid planes)" << std::endl;
       return;
     }
     LAROCV_INFO() << "Seed @ (x,y,z) = ("
                   << vtx3d.x << "," << vtx3d.y << "," << vtx3d.z << ") REGISTERED..." << std::endl;
 
-    data::VertexSeed3D seed;
-    seed.x = vtx3d.x;
-    seed.y = vtx3d.y;
-    seed.z = vtx3d.z;
+    data::VertexSeed3D seed(vtx3d);
     seed.type = type;
     _seed_cands_v.push_back(seed);
     return;
@@ -193,7 +187,7 @@ namespace larocv {
       for (size_t plane_id = 0; plane_id < good_plane_v.size(); ++plane_id)
         good_plane_v[plane_id] = false;
 
-      // Get useful attrivute references
+      // Get useful attribute references
       auto const& particle_vv = vtxinfo.particle_vv;
       auto const& compound_vv = vtxinfo.compound_vv;
 

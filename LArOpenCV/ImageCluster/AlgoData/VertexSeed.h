@@ -9,7 +9,7 @@
 namespace larocv {
   namespace data {
 
-    enum class SeedType_t {
+    enum class SeedType_t : unsigned {
       kUnknown,
 	kDefect,
 	kPCA,
@@ -25,22 +25,29 @@ namespace larocv {
     public:
       VertexSeed2D() { Clear(); }
       VertexSeed2D(const geo2d::Vector<float>& pt)
-      { this->x=pt.x; this->y=pt.y; radius=kINVALID_FLOAT;}
+      { this->x=pt.x; this->y=pt.y; radius=kINVALID_FLOAT; score=kINVALID_FLOAT;}
       VertexSeed2D(const geo2d::Vector<float>& pt,float rad)
-      { this->x=pt.x; this->y=pt.y; radius=rad;}
+      { this->x=pt.x; this->y=pt.y; radius=rad; score=kINVALID_FLOAT;}
       VertexSeed2D(const geo2d::Circle<float>& circle)
-      { this->x=circle.center.x; this->y=circle.center.y; radius=circle.radius;}
+      { this->x=circle.center.x; this->y=circle.center.y; radius=circle.radius; score=kINVALID_FLOAT;}
       VertexSeed2D(const Vertex2D& vtx2d)
-      { this->x = vtx2d.pt.x; this->y = vtx2d.pt.y; radius=kINVALID_FLOAT; }
+      { this->x = vtx2d.pt.x; this->y = vtx2d.pt.y; radius=kINVALID_FLOAT; score=vtx2d.score; }
       
       ~VertexSeed2D(){}
       
       SeedType_t type;
       float radius;
+      float score;
       
     protected:
-      void _Clear_()
-      { this->x=kINVALID_FLOAT; this->y=kINVALID_FLOAT; type=SeedType_t::kUnknown; radius=kINVALID_FLOAT;}
+
+      void _Clear_() {
+	this->x=kINVALID_FLOAT;
+	this->y=kINVALID_FLOAT;
+	type=SeedType_t::kUnknown;
+	radius=kINVALID_FLOAT;
+	score=kINVALID_FLOAT;
+      }
       
       geo2d::Circle<float> as_circle()
       { return geo2d::Circle<float>(this->x,this->y,radius); }
@@ -60,7 +67,7 @@ namespace larocv {
       /// 3D vertex location
       double x, y, z;
       SeedType_t type;
-
+      
     protected:
       /// attribute clear method
       void _Clear_()
