@@ -104,11 +104,13 @@ namespace larocv {
       
       size_t num_good_plane=0;
       double dtheta_sum=0;
+
       for(auto const& cvtx2d : vtx3d.cvtx2d_v) {
         if(cvtx2d.xs_v.size()<2) continue;
         num_good_plane++;
         dtheta_sum += cvtx2d.sum_dtheta();
       }
+      
       if(num_good_plane<2) continue;
       dtheta_sum /= (double)num_good_plane;
       LAROCV_DEBUG() << "Registering vertex seed type="<<(uint)cand_vtx3d.type
@@ -117,10 +119,20 @@ namespace larocv {
       data::VertexSeed3D seed(vtx3d);
       seed.type = data::SeedType_t::kEdge;
 
-      for(size_t plane=0;plane<3;++plane) {
+      bool _require_3planes_charge=true;
+      float _allowed_radius=5;
+      uint nvalid=0;
+      for(size_t plane=0;plane<3;++plane)  {
+	auto pt= seed.vtx2d_v[plane];
 	LAROCV_DEBUG() << plane << ") @ " << seed.vtx2d_v[plane] << std::endl;
+	if(_require_3planes_charge) {
+	  auto npx = CountNonZero(img_v[plane],geo2d::Circle<float>(pt,_allowed_radius));
+	  if(npx) nvalid++;
+	}
       }
-
+      
+      if(_require_3planes_charge && nvalid!=3) continue;
+      
       vertex3dseedarr.emplace_back(std::move(seed));
       LAROCV_DEBUG() << "AlgoData size @ " << vertex3dseedarr.as_vector().size() << std::endl;
     } // end candidate vertex seed

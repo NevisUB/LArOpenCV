@@ -34,7 +34,8 @@ namespace larocv {
     }
     
     _min_time_wire_3d = pset.get<double>("MinTimeWireDistance3D",3.0); //cm
-    
+
+    _filter_by_xs  = pset.get<bool>("RequireXs",false);
     //number of planes to have... 
     _required_xs_planes = pset.get<uint>("RequiredXsPlanes",2);
     //... this many crossing points
@@ -75,13 +76,14 @@ namespace larocv {
 		   << " [time] " << time_vtx_v.size() << std::endl;
     
     // Filter vertex to required number of crossing points
-    _vertexana.FilterByCrossing(time_vtx_v,_required_xs_planes,_required_xs);
-    _vertexana.FilterByCrossing(wire_vtx_v,_required_xs_planes,_required_xs);
+    if (_filter_by_xs) {
+      _vertexana.FilterByCrossing(time_vtx_v,_required_xs_planes,_required_xs);
+      _vertexana.FilterByCrossing(wire_vtx_v,_required_xs_planes,_required_xs);
     
-    LAROCV_DEBUG() << "Required " << _required_xs << " on atleast " << _required_xs_planes << "... "
-		   << "[wire] " << wire_vtx_v.size()
-		   << " [time] " << time_vtx_v.size() << std::endl;
-    
+      LAROCV_DEBUG() << "Required " << _required_xs << " on atleast " << _required_xs_planes << "... "
+		     << "[wire] " << wire_vtx_v.size()
+		     << " [time] " << time_vtx_v.size() << std::endl;
+    }
 
     for (const auto vtx: wire_vtx_v)
       vtx_v.push_back(vtx);

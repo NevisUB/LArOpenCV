@@ -13,9 +13,9 @@ namespace larocv {
   {
     _SuperClusterer.set_verbosity(this->logger().level());
     _SuperClusterer.Configure(pset.get<Config_t>("SuperClusterer"));
-    Register(new data::ParticleClusterArray); // plane 0
-    Register(new data::ParticleClusterArray); // plane 1
-    Register(new data::ParticleClusterArray); // plane 2
+
+    for(size_t plane=0;plane<3;++plane)
+      Register(new data::ParticleClusterArray); // plane X
   }
 
   void SuperClusterMaker::_Process_(const Cluster2DArray_t& clusters,
@@ -37,9 +37,7 @@ namespace larocv {
 
     LAROCV_DEBUG() << "Found " << par_v.as_vector().size()
 		   << " super particles on plane " << meta.plane() << std::endl;
-    
   }
-  
 
 }
 #endif
