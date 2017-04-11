@@ -460,7 +460,7 @@ namespace larocv {
   CircleDensity(const cv::Mat& img,
 		const geo2d::Circle<float>& circle) {
     auto white_img = BlankImage(img,255);
-    CircleDensity(img,white_img,circle);
+    return CircleDensity(img,white_img,circle);
   }
   
   float
