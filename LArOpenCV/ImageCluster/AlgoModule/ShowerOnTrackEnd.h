@@ -3,7 +3,8 @@
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
-#include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/VertexAnalysis.h"
+
 /*
   @brief: estimate the shower vertex point using shower seeds
 */
@@ -16,7 +17,7 @@ namespace larocv {
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
     ShowerOnTrackEnd(const std::string name = "ShowerOnTrackEnd") :
       ImageAnaBase(name),
-      _geo()
+      _VertexAnalysis()
     {}
     
     /// Default destructor
@@ -42,7 +43,7 @@ namespace larocv {
   private:
     size_t _vertex3d_id;
     size_t _compound_id;
-    LArPlaneGeo _geo;    
+    VertexAnalysis _VertexAnalysis;
     double _overlap_fraction;
     double _circle_default_radius;
     uint _pca_size;

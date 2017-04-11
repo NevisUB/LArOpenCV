@@ -32,11 +32,12 @@ namespace larocv {
     { _geo.ResetPlaneInfo(meta); }
 
     void Configure(const Config_t &pset);
-
-    data::CircleVertex CreateCircleVertex(cv::Mat img,
-                                          const data::VertexSeed3D& vtx3d,
-                                          const size_t plane) const;
     
+    bool CreateCircleVertex(cv::Mat img,
+			    const data::VertexSeed3D& vtx3d,
+			    const size_t plane,
+			    data::CircleVertex& cvtx) const;
+
     larocv::data::Vertex3D
     RegionScan3D(const larocv::data::VertexSeed3D& center,
                  std::vector<cv::Mat> image_v,

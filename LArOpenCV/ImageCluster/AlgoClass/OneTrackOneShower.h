@@ -48,16 +48,17 @@ namespace larocv {
     const float circle_default_size() const
     { return _circle_default_radius; }
     
+
+    std::vector<data::Vertex3D>
+    ListShowerVertex(std::vector<cv::Mat>& img_v,
+		     const std::vector<data::VertexSeed3D>& cand_v) const;
+    
   private:
 
     geo2d::VectorArray<float>
     ValidShowerPointOnCircle(::cv::Mat& img,
 			     const geo2d::Circle<float>& circle,
 			     const std::vector<geo2d::Vector<float> >& xs_pts) const;
-
-    std::vector<data::Vertex3D>
-    ListShowerVertex(std::vector<cv::Mat>& img_v,
-		     const std::vector<data::VertexSeed3D>& cand_v) const;
 
     LArPlaneGeo _geo_algo;
     

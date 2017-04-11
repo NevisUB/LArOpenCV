@@ -118,7 +118,8 @@ namespace larocv {
 				const std::vector<cv::Mat>& img_v,
 				float threshold,
 				size_t required_per_plane,
-				size_t required_matches) const {
+				size_t required_matches,
+				bool check_type) const {
 
     // For now I have to make a pointer
     std::vector<std::vector<const data::ParticleCluster*> > pars_ptr_vv;
@@ -134,7 +135,7 @@ namespace larocv {
     }
 
 
-    return MatchClusters(pars_ptr_vv,img_v,threshold,required_per_plane,required_matches);
+    return MatchClusters(pars_ptr_vv,img_v,threshold,required_per_plane,required_matches,check_type);
     
   }
 				
@@ -143,10 +144,11 @@ namespace larocv {
 				const std::vector<cv::Mat>& img_v,
 				float threshold,
 				size_t required_per_plane,
-				size_t required_matches) const {
+				size_t required_matches,
+				bool check_type) const {
     
     std::vector<std::vector<std::pair<size_t,size_t> > > match_vv;
-    MatchExists(pars_ptr_vv,img_v,threshold,required_per_plane,required_matches,match_vv);
+    MatchExists(pars_ptr_vv,img_v,threshold,required_per_plane,required_matches,match_vv,check_type);
     return match_vv;
   }
   
@@ -156,7 +158,8 @@ namespace larocv {
 			      float threshold,
 			      size_t required_per_plane,
 			      size_t required_matches,
-			      std::vector<std::vector<std::pair<size_t,size_t> > >& match_vv) const {
+			      std::vector<std::vector<std::pair<size_t,size_t> > >& match_vv,
+			      bool check_type) const {
 
 
     std::vector<size_t> seed_v;
@@ -213,7 +216,7 @@ namespace larocv {
 	auto type1 = particle_ptr_v[id1]->type;
 
 	// require the same type of particle to be matched
-	if (type0!=type1) continue;
+	if (check_type && type0!=type1) continue;
 	
 	LAROCV_DEBUG() << "... accepted" << std::endl;
 	

@@ -4,6 +4,7 @@
 #include <set>
 #include "VertexScan3D.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
+#include <array>
 
 namespace larocv {
 
@@ -20,17 +21,35 @@ namespace larocv {
     _pi_threshold = pset.get<float>("PIThreshold");
     _angle_supression = pset.get<float>("AngleSupression");
     _pca_box_size = pset.get<float>("PCABoxSize");
-    //    	throw larbys();
   }
 
-  data::CircleVertex VertexScan3D::CreateCircleVertex(cv::Mat img,
-						      const data::VertexSeed3D& vtx3d,
-						      const size_t plane) const
+  bool VertexScan3D::CreateCircleVertex(cv::Mat img,
+					const data::VertexSeed3D& vtx3d,
+					const size_t plane,
+					data::CircleVertex& cvtx) const
   {
     //LAROCV_INFO() << "Plane " << plane << " (" << vtx3d.x << "," << vtx3d.y << "," << vtx3d.z << ")" << std::endl;
     static geo2d::Vector<float> temp_vtx2d;
-    temp_vtx2d.x = _geo.x2col(vtx3d.x, plane);
-    temp_vtx2d.y = _geo.yz2row(vtx3d.y, vtx3d.z, plane);
+    try {
+      auto x = _geo.x2col(vtx3d.x, plane);
+      auto y = _geo.yz2row(vtx3d.y, vtx3d.z, plane);
+
+      if (x >= img.cols or x < 0) 
+	return false;
+
+      if (y >= img.rows or y < 0)
+	return false;
+	
+      if (!img.at<uchar>(y,x))
+	return false;
+      
+      temp_vtx2d.x = x;
+      temp_vtx2d.y = y;
+    }
+    catch(const larbys& err) {
+      LAROCV_WARNING() << "Projected point outside image boundary" << std::endl;
+      return false;
+    }
     //if( ((float)(img.at<unsigned char>((size_t)(row+0.5),(size_t)(col+0.5)))) < _pi_threshold )
     //	continue;
     auto res = RadialScan2D(img, temp_vtx2d);
@@ -41,7 +60,8 @@ namespace larocv {
       res.center = temp_vtx2d;
       res.radius = _min_radius;
     }
-    return res;
+    std::swap(res,cvtx);
+    return true;
   }
 
   double VertexScan3D::CircleWeight(const larocv::data::CircleVertex& cvtx) const
@@ -232,6 +252,7 @@ namespace larocv {
     static data::Vertex3D trial_vtx3d;
     geo2d::Vector<float> temp_vtx2d;
     std::vector<size_t> num_xspt_count_v;
+    std::array<bool,3> valid_v;
     double best_weight = 1.e9;
 
     for (size_t step_x = 0; step_x < nstep_x; ++step_x) {
@@ -243,22 +264,30 @@ namespace larocv {
 
 	  std::vector<larocv::data::CircleVertex> circle_v;
 	  circle_v.resize(_geo._num_planes);
-
+	  
 	  for (auto &v : num_xspt_count_v) v = 0;
-	  try {
-	    for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
-	      circle_v[plane] = CreateCircleVertex(image_v[plane], trial_vtx3d, plane);
-	      auto const& xs_pts = circle_v[plane].xs_v;
-	      if (xs_pts.size() >= num_xspt_count_v.size()) num_xspt_count_v.resize(xs_pts.size() + 1);
-	      num_xspt_count_v[xs_pts.size()] += 1;
-	      // LAROCV_INFO() << "    Plane " << plane << " Radius " << circle_v[plane].radius
-	      // 		    << " ... " << circle_v[plane].xs_v.size() << " crossing points" << std::endl;
-	    }
-	  }catch(const larbys&){
-	    // LAROCV_INFO() << "Failed to create CircleVertex... skipping this point!" << std::endl;
-	    continue;
+	  for (auto &v : valid_v) v = false;
+	  short valid_ctr=0;
+	  
+	  for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
+	    
+	    auto& cvtx = circle_v[plane];
+	    auto res = CreateCircleVertex(image_v[plane], trial_vtx3d, plane, cvtx);
+	    valid_v[plane] = res;
+	    if(!res) continue;
+	    valid_ctr++;
+	    auto const& xs_pts = cvtx.xs_v;
+	    if (xs_pts.size() >= num_xspt_count_v.size())
+	      num_xspt_count_v.resize(xs_pts.size() + 1);
+	    
+	    num_xspt_count_v[xs_pts.size()] += 1;
+	    // LAROCV_INFO() << "    Plane " << plane << " Radius " << circle_v[plane].radius
+	    //               << " ... " << circle_v[plane].xs_v.size() << " crossing points" << std::endl;
 	  }
-
+	  
+	  if (valid_ctr<2)
+	    continue;
+	  
 	  // Decide which plane to use
 	  if (!num_xspt) {
 	    size_t num_valid_plane = 0;
@@ -274,26 +303,30 @@ namespace larocv {
 	  if (!num_xspt || num_xspt_count_v.size() <= num_xspt || num_xspt_count_v[num_xspt] < 2) continue;
 
 	  // LAROCV_INFO() << "Accepted pt (x,y,z)=(" 
-	  //    		<< trial_vtx3d.x << "," << trial_vtx3d.y << "," << trial_vtx3d.z << ")" << std::endl;
+	  //    	   << trial_vtx3d.x << "," << trial_vtx3d.y << "," << trial_vtx3d.z << ")" << std::endl;
 	  
-	  double weight1 = 1.e9;
-	  double weight2 = 1.e9;
+	  double weight1, weight2;
+	  weight1 = weight2 = 1.e9;
+	  
 	  for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
+	    if(!valid_v[plane]) continue;
 	    auto const& circle = circle_v[plane];
 	    if (circle.xs_v.size() != num_xspt) continue;
 	    auto weight = CircleWeight(circle);
 	    if (weight < weight1) weight1 = weight;
 	    else if (weight < weight2) weight2 = weight;
 	  }
+	  
 	  if ((weight1 * weight2) < best_weight) {
 	    best_weight  = weight1 * weight2;
 	    res.x = vtx3d.x;
 	    res.y = vtx3d.y;
 	    res.z = vtx3d.z;
-	    res.num_planes = _geo._num_planes;
+	    res.num_planes = valid_ctr;
 	    res.cvtx2d_v = circle_v;
 	    res.vtx2d_v.resize(_geo._num_planes);
 	    for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
+	      if(!valid_v[plane]) continue;
 	      auto col = _geo.x2col(x_v[step_x], plane);
 	      auto row = _geo.yz2row(y_v[step_y], z_v[step_z], plane);
 	      res.vtx2d_v[plane].pt.x = col;

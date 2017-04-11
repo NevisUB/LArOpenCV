@@ -93,10 +93,11 @@ namespace larocv {
     auto const& min_y = _origin_v.at(plane).y;
     auto const& max_y = min_y + _num_rows_v[plane] * _wire_comp_factor_v[plane];
     if(wire < min_y || max_y < wire) {
-      LAROCV_CRITICAL() << "3D (Y,Z) = (" << y << "," << z << ")"
-      << " corresponds to wire " << wire << " on plane " << plane 
-      << " ... out of bound " << min_y << " => " << max_y << std::endl;
-      throw larbys();
+      std::stringstream ss;
+      ss << "3D (Y,Z) = (" << y << "," << z << ")"
+	 << " corresponds to wire " << wire << " on plane " << plane 
+	 << " ... out of bound " << min_y << " => " << max_y << std::endl;
+      throw larbys(ss.str());
     }
     return (wire - min_y) / _wire_comp_factor_v[plane];
   }

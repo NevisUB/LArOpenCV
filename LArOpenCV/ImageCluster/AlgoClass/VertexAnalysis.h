@@ -66,15 +66,17 @@ namespace larocv {
 		  const std::vector<cv::Mat>& img_v,
 		  float threshold,
 		  size_t required_per_plane,
-		  size_t required_matches) const;
-
+		  size_t required_matches,
+		  bool check_type=true) const;
+    
     
     std::vector<std::vector<std::pair<size_t,size_t> > >
     MatchClusters(const std::vector<std::vector<const data::ParticleCluster* > >& pars_ptr_vv,
 		  const std::vector<cv::Mat>& img_v,
 		  float threshold,
 		  size_t required_per_plane,
-		  size_t required_matches) const;
+		  size_t required_matches,
+		  bool check_type=true) const;
     
     bool
     MatchExists(const std::vector<std::vector<const data::ParticleCluster*> >& pars_ptr_vv,
@@ -82,7 +84,8 @@ namespace larocv {
 		float threshold,
 		size_t required_per_plane,
 		size_t required_matches,
-		std::vector<std::vector<std::pair<size_t,size_t> > >& match_vv) const;
+		std::vector<std::vector<std::pair<size_t,size_t> > >& match_vv,
+		bool check_type=true) const;
 
     bool
     CheckFiducial(const data::Vertex3D& vtx3d) const;

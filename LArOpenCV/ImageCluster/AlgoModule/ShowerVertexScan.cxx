@@ -30,7 +30,22 @@ namespace larocv {
       }
     }
 
+    _require_3planes_charge=pset.get<bool>("Require3PlanesCharge");
+
+    if(_require_3planes_charge)
+      _allowed_radius=pset.get<float>("SearchRadiusSize");//5      
+
     Register(new data::VertexSeed3DArray);
+  }
+
+  void ShowerVertexScan::_Process_(const larocv::Cluster2DArray_t& clusters,
+				   ::cv::Mat& img,
+				   larocv::ImageMeta& meta,
+				   larocv::ROI& roi)
+  {
+    _geo.ResetPlaneInfo(meta);
+    _vtxana.ResetPlaneInfo(meta);
+    _VertexScan3D.SetPlaneInfo(meta);
   }
   
   bool ShowerVertexScan::_PostProcess_(std::vector<cv::Mat>& img_v) {
@@ -83,27 +98,31 @@ namespace larocv {
 	
       } //plane1
     } //plane0
-
-
+    
     LAROCV_DEBUG() << "Merging nearby start @ " << cand_vtx_v.size() << std::endl;
-    bool _merge_nearby=true;
+    bool _merge_nearby = true;
     if(_merge_nearby)
       _vtxana.MergeNearby(cand_vtx_v,3);
     
     LAROCV_DEBUG() << "& end with " << cand_vtx_v.size() << std::endl;
 
-
     auto& vertex3dseedarr = AlgoData<data::VertexSeed3DArray>(0);
     
     for(auto& cand_vtx3d : cand_vtx_v) {
 
-      _vtxana.UpdatePlanePosition(cand_vtx3d,_geo);
+      try {
+	_vtxana.UpdatePlanePosition(cand_vtx3d,_geo);
+      }
+      catch(const larbys& err) {
+	LAROCV_WARNING() << "Predicted vertex has 2D point outside image" << std::endl;
+	continue;
+      }
       
       auto cand_vtx = data::Seed2Vertex(cand_vtx3d);
       auto vtx3d    = _VertexScan3D.RegionScan3D(cand_vtx, img_v);
       
-      size_t num_good_plane=0;
-      double dtheta_sum=0;
+      size_t num_good_plane = 0;
+      double dtheta_sum = 0;
 
       for(auto const& cvtx2d : vtx3d.cvtx2d_v) {
         if(cvtx2d.xs_v.size()<2) continue;
@@ -119,9 +138,7 @@ namespace larocv {
       data::VertexSeed3D seed(vtx3d);
       seed.type = data::SeedType_t::kEdge;
 
-      bool _require_3planes_charge=true;
-      float _allowed_radius=5;
-      uint nvalid=0;
+      uint  nvalid=0;
       for(size_t plane=0;plane<3;++plane)  {
 	auto pt= seed.vtx2d_v[plane];
 	LAROCV_DEBUG() << plane << ") @ " << seed.vtx2d_v[plane] << std::endl;
@@ -139,6 +156,5 @@ namespace larocv {
     
     return true;
   }
-
 }
 #endif

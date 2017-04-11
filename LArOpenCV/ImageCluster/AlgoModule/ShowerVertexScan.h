@@ -36,23 +36,22 @@ namespace larocv {
     void _Process_(const larocv::Cluster2DArray_t& clusters,
 		   ::cv::Mat& img,
 		   larocv::ImageMeta& meta,
-		   larocv::ROI& roi)
-    {
-      _geo.ResetPlaneInfo(meta);
-      _vtxana.ResetPlaneInfo(meta);
-      _VertexScan3D.SetPlaneInfo(meta);
-    }
+		   larocv::ROI& roi);
 
     
     bool _PostProcess_(std::vector<cv::Mat>& img_v);
 
   private:
-    float _threshold;
     AlgorithmID_t _seed_id;
 
     LArPlaneGeo _geo;
     VertexAnalysis _vtxana;
     VertexScan3D  _VertexScan3D;
+
+    float _threshold;
+    bool _require_3planes_charge;
+    float _allowed_radius;
+
     
   };
 

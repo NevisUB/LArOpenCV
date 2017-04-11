@@ -220,6 +220,7 @@ namespace larocv {
     } // vertex
     return res_vtx3d_v;
   }
+  
   void
   OneTrackOneShower::ValidateCircleVertex(cv::Mat& img,
 					  data::CircleVertex& cvtx) const {
@@ -334,10 +335,8 @@ namespace larocv {
 	LAROCV_DEBUG() << "  2D vertex @ " << cvtx2d.center
 		       << " ... # crossing points = " << cvtx2d.xs_v.size() << std::endl;
 	num_xs_v[plane] = cvtx2d.xs_v.size();
-	if (_require_unique) {
-	  if(cvtx2d.xs_v.size() == 1) {
-	    ++num_plane_unique_xs;
-	  }
+	if(_require_unique && cvtx2d.xs_v.size() == 1) {
+	  ++num_plane_unique_xs;
 	}
 	else {
 	  if(cvtx2d.xs_v.size()) {

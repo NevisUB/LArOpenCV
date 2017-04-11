@@ -36,11 +36,11 @@ namespace larocv {
     _min_time_wire_3d = pset.get<double>("MinTimeWireDistance3D",3.0); //cm
 
     _filter_by_xs  = pset.get<bool>("RequireXs",false);
-    //number of planes to have... 
-    _required_xs_planes = pset.get<uint>("RequiredXsPlanes",2);
-    //... this many crossing points
-    _required_xs = pset.get<uint>("RequiredXs",2);
 
+    if (_filter_by_xs) {
+      _required_xs_planes = pset.get<uint>("RequiredXsPlanes");
+      _required_xs        = pset.get<uint>("RequiredXs");
+    }
     
     Register(new data::Vertex3DArray);
     for(short pid=0;pid<3;++pid)
@@ -90,11 +90,11 @@ namespace larocv {
     for (const auto vtx: time_vtx_v)
       vtx_v.push_back(vtx);
 
-    auto& vtx_data  = AlgoData<data::Vertex3DArray>(0);
+    auto& vtx_data = AlgoData<data::Vertex3DArray>(0);
 
     auto& assman = AssManager();
 
-    for(auto& vtx3d_ : vtx_v){
+    for(auto& vtx3d_ : vtx_v) {
       LAROCV_DEBUG() << "On vtx3d: " << vtx3d_ << std::endl;
       
       //copy this vertex
@@ -109,7 +109,6 @@ namespace larocv {
 	  
 	auto& particle_data = AlgoData<data::ParticleClusterArray>(1+plane_id);
 	auto& compound_data = AlgoData<data::TrackClusterCompoundArray>(1+plane_id+3);
-	  
 
 	const auto& particle_cluster_data = AlgoData<data::ParticleClusterArray>(_track_particle_algo_id,plane_id);
 	const auto& track_cluster_data = AlgoData<data::TrackClusterCompoundArray>(_track_particle_algo_id,3+plane_id);
@@ -130,6 +129,7 @@ namespace larocv {
 	  AssociateOne(particle_data.as_vector().back(),compound_data.as_vector().back());
 	  
 	  AssociateMany(vtx3d,particle_data.as_vector().back());
+	  
 	}//end this compound
       }//end this plane
     }//end this Vertex3D

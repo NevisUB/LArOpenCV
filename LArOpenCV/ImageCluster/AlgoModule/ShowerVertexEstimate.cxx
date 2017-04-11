@@ -2,8 +2,7 @@
 #define __SHOWERVERTEXESTIMATE_CXX__
 
 #include "ShowerVertexEstimate.h"
-#include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
-#include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 
 namespace larocv {
 
@@ -24,7 +23,14 @@ namespace larocv {
       if(_algo_id_vertex_seed==kINVALID_ALGO_ID)
 	throw larbys("You specified an invalid ShowerVertexSeed algorithm name");
     }
-
+    auto algo_name_vertex_scan_seed = pset.get<std::string>("ShowerVertexScanSeed","");
+    _algo_id_vertex_scan_seed = this->ID( algo_name_vertex_scan_seed );
+    if (!algo_name_vertex_scan_seed.empty()) {
+      _algo_id_vertex_scan_seed = this->ID( algo_name_vertex_scan_seed );
+      if(_algo_id_vertex_scan_seed==kINVALID_ALGO_ID)
+	throw larbys("You specified an invalid ShowerVertexSeed algorithm name");
+    }
+    
     auto algo_name_shower_from_track_vertex = pset.get<std::string>("ShowerOnTrackEnd","");
     _algo_id_shower_track_vertex=kINVALID_ALGO_ID;
     if (!algo_name_shower_from_track_vertex.empty()) {
@@ -48,6 +54,7 @@ namespace larocv {
       if(_algo_id_track_vertex_particle_cluster==kINVALID_ALGO_ID)
 	throw larbys("You specified an invalid TrackVertexParticleCluster algorithm name");
     }
+
     
     Register(new data::Vertex3DArray);
   }
@@ -70,12 +77,21 @@ namespace larocv {
     auto& data = AlgoData<data::Vertex3DArray>(0);
 
     _OneTrackOneShower.RegisterSeed(seed_v.as_vector());
-
+    
     auto vtx3d_v = _OneTrackOneShower.CreateSingleShower(img_v);
     
     LAROCV_DEBUG() << "Found " << vtx3d_v.size() << " single shower vertex" << std::endl;
     for(size_t i=0; i<vtx3d_v.size(); ++i) {
       data.emplace_back(std::move(vtx3d_v[i]));
+    }
+
+    if(_algo_id_vertex_scan_seed != kINVALID_ALGO_ID) {
+      auto const& scan_seed_v = AlgoData<data::VertexSeed3DArray>(_algo_id_vertex_scan_seed,0);
+      auto res_v = _OneTrackOneShower.ListShowerVertex(img_v,scan_seed_v.as_vector());
+      for(auto res : res_v) {
+	res.type= data::VertexType_t::kShower;
+	data.emplace_back(std::move(res));
+      }
     }
 
     if (_algo_id_shower_track_vertex!=kINVALID_ALGO_ID and _algo_id_track_vertex_estimate != kINVALID_ALGO_ID) {
@@ -96,9 +112,13 @@ namespace larocv {
 
 	for(size_t plane=0;plane<3;++plane) {
 	  const auto& track_par_v = AlgoData<data::ParticleClusterArray>(_algo_id_track_vertex_particle_cluster,plane);
+	  const auto& comp_par_v  = AlgoData<data::TrackClusterCompoundArray>(_algo_id_track_vertex_particle_cluster,plane+3);
 	  auto par_ass_id = ass_man.GetOneAss(vtx3d,track_par_v.ID());
-	  if (par_ass_id==kINVALID_SIZE) continue;
+	  if (par_ass_id==kINVALID_SIZE) continue; 
 	  AssociateOne(data.as_vector().back(),track_par_v.as_vector()[par_ass_id]);
+	  auto comp_ass_id = ass_man.GetOneAss(track_par_v.as_vector()[par_ass_id],comp_par_v.ID());
+	  if(comp_ass_id==kINVALID_SIZE) throw larbys("No compound associated");
+	  AssociateOne(data.as_vector().back(),comp_par_v.as_vector()[comp_ass_id]);
 	}
       }
     }    
