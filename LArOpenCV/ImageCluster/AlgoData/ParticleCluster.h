@@ -14,13 +14,13 @@ namespace larocv {
        @brief A cluster associated with a vertex and hence represents a particle
     */
 
-    enum class ParticleType_t : unsigned
+    enum ParticleType_t
     { kUnknown=0,kTrack,kShower};
-
     
     class ParticleCluster : public AlgoDataArrayElementBase {
     public:
-      ParticleCluster(){ _Clear_(); }
+      ParticleCluster() : AlgoDataArrayElementBase()
+      { Clear(); }
       ~ParticleCluster() {}
       
       void _Clear_() { _ctor.clear(); type=ParticleType_t::kUnknown; }

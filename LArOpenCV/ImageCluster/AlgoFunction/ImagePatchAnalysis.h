@@ -12,6 +12,11 @@ namespace larocv {
 
   cv::Mat
   BlankImage(const cv::Mat& img,uint val=255);
+
+  cv::Mat
+  LinearPolar(const cv::Mat& img,
+	      geo2d::Vector<float> pt,
+	      float radius);
   
   GEO2D_Contour_t
   FindNonZero(const cv::Mat& img);
@@ -37,14 +42,13 @@ namespace larocv {
 		 const geo2d::Circle<float>& circle,
 		 const float pi_threshold=0.1,
 		 const float supression=0);
-
+  
   std::vector<geo2d::VectorArray<float> >
   QPointArrayOnCircleArray(const ::cv::Mat& img,
 			   const geo2d::Vector<float>& center,
 			   const std::vector<float>& radius_v,
 			   const float pi_threshold=0.1,
 			   const float supression=0);
-
   
   geo2d::VectorArray<float>
   RadialIntersections(const ::cv::Mat& polarimg,
@@ -52,7 +56,6 @@ namespace larocv {
 		      const size_t col,
 		      const float pi_threshold,
 		      const float supression=0);
-
 
   geo2d::Vector<float>
   MeanPixel(const cv::Mat& img,
@@ -87,6 +90,45 @@ namespace larocv {
 	    const cv::Rect& rec,
 	    int tol=0,
 	    bool maskout=true);
+
+  bool
+  PathExists(const cv::Mat& img,
+	     const geo2d::Vector<float>& pt1,
+	     const geo2d::Vector<float>& pt2,
+	     float dthresh=5.0,
+	     float pthresh=0.0,
+	     uint  min_ctor_size=0.0);
+  float
+  CircleDensity(const cv::Mat& img,
+		const geo2d::Circle<float>& circle);
+  
+  float
+  CircleDensity(const cv::Mat& img,
+		const cv::Mat& white_img,
+		const geo2d::Circle<float>& circle);
+  
+  bool
+  ChargeBlobCircleEstimate(const cv::Mat& img,
+			   const geo2d::Vector<float>& center,
+			   geo2d::Circle<float>& res,
+			   float thresh,
+			   float start_rad,
+			   float end_rad,
+			   float step);
+
+  geo2d::VectorArray<float>
+  QPointOnCircleRefine(const cv::Mat& img,
+		       const geo2d::Circle<float>& circle,
+		       const geo2d::VectorArray<float>& xs_v,
+		       const float mask_inner);
+
+
+  geo2d::VectorArray<float>
+  QPointOnCircleRefine(const cv::Mat& img,
+		       const geo2d::Circle<float>& circle,
+		       const float mask_inner,
+		       const float pi_threshold,
+		       const float supression);
 
   
 }

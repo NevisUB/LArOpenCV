@@ -312,7 +312,7 @@ namespace larocv {
     many_plane_cand_vvv.resize(_num_planes);
     two_plane_cand_vvv.resize(_num_planes);
     for(auto& many_plane_cand_vv : many_plane_cand_vvv) many_plane_cand_vv.resize(_num_planes);
-    for(auto& two_plane_cand_vv : two_plane_cand_vvv) two_plane_cand_vv.resize(_num_planes);
+    for(auto& two_plane_cand_vv  : two_plane_cand_vvv ) two_plane_cand_vv.resize (_num_planes);
     
     // loop over all possible plane combinations on which we loop over all possible cluster combinations
     for(size_t seed1_idx=0; seed1_idx<_seed_plane_v.size(); ++seed1_idx) {

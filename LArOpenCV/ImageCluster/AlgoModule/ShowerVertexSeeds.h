@@ -52,6 +52,7 @@ namespace larocv {
     AlgorithmID_t _linear_track_id;
     AlgorithmID_t _compound_id;
     ElectronShowerVertexSeed _ElectronShowerVertexSeed;
+    
   };
 
   /**

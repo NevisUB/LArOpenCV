@@ -38,7 +38,7 @@ namespace larocv {
 
   void LArPlaneGeo::Configure(const Config_t &pset)
   {
-    this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
+    this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity",2)));
     _xplane_tick_resolution=pset.get<float>("XPlaneTickResolution",3);
     _trigger_tick=pset.get<float>("TriggerTick",3200);
     
@@ -68,7 +68,7 @@ namespace larocv {
 
   float LArPlaneGeo::tick_offset(const size_t plane) const
   { return _tick_offset_v.at(plane); }
-
+  
   float LArPlaneGeo::x_offset(const size_t plane) const
   { return _tick_offset_v.at(plane) / _time_comp_factor_v.at(plane); }
 
@@ -116,13 +116,18 @@ namespace larocv {
   float LArPlaneGeo::tick2col(float tick, const size_t plane) const
   { return (tick - _origin_v.at(plane).x) / _time_comp_factor_v.at(plane); }
 
+
+  
   bool LArPlaneGeo::YZPoint(const geo2d::Vector<float>& pt0, const size_t plane0,
 			    const geo2d::Vector<float>& pt1, const size_t plane1,
 			    larocv::data::Vertex3D& result) const
   {
     result.Clear();
     
-    if(std::fabs(pt0.x - pt1.x) > _xplane_tick_resolution) return false;
+    if(std::fabs(pt0.x - pt1.x) > _xplane_tick_resolution) {
+      LAROCV_DEBUG() << "tick diff " << std::fabs(pt0.x - pt1.x) << " > " << _xplane_tick_resolution << std::endl;
+      return false;
+    }
     
     auto wire0 = row2wire(pt0.y, plane0);
     auto wire1 = row2wire(pt1.y, plane1);
@@ -136,7 +141,10 @@ namespace larocv {
       return false;
     }
     
-    if(wire1 < wire1_range.first || wire1_range.second < wire1) return false;
+    if(wire1 < wire1_range.first || wire1_range.second < wire1) {
+      LAROCV_DEBUG()<<"wire "<<wire1<<"<"<<wire1_range.first<<" or "<<wire1<<">"<<wire1_range.second<<std::endl;
+      return false;
+    }
 
     larocv::IntersectionPoint((size_t)(wire0+0.5), plane0, (size_t)(wire1+0.5), plane1, result.y, result.z);
 

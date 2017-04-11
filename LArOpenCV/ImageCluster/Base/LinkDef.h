@@ -21,6 +21,9 @@
 #pragma link C++ class larocv::ImageClusterManager+;
 #pragma link C++ class larocv::ImageClusterViewer+;
 
+#pragma link C++ class geo2d::Vector<int>+;
+#pragma link C++ class std::vector<geo2d::Vector<int> >+;
+#pragma link C++ class std::vector<std::vector<geo2d::Vector<int> > >+;
 #pragma link C++ class larocv::Cluster2D+;
 
 #pragma link C++ namespace larocv::data+;

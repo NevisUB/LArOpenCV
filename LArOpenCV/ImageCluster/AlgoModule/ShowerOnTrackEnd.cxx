@@ -60,6 +60,7 @@ namespace larocv {
   
   bool ShowerOnTrackEnd::_PostProcess_(std::vector<cv::Mat>& img_v)
   {
+    
     LAROCV_DEBUG() << "start" << std::endl;
     auto num_planes = img_v.size();
     auto& ass_man = AssManager();
@@ -261,7 +262,6 @@ namespace larocv {
 	    }
 	    
 	  }
-	  
 	  
 	  LAROCV_DEBUG() << "Got highest scores for both chosen pair (" << high0 << "," << high1 << ")" << std::endl;
 	  LAROCV_DEBUG() << high0 << " in pair (" << highest_pair_0[0] << "," << highest_pair_0[1] << ") w/ score " << highest_score_0 << std::endl;

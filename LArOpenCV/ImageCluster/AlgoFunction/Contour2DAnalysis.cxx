@@ -6,6 +6,7 @@
 #include "opencv2/imgproc.hpp"
 #include <opencv2/opencv.hpp>
 #include "LArOpenCV/Core/larbys.h"
+#include "ImagePatchAnalysis.h"
 
 namespace larocv {
 
@@ -25,7 +26,23 @@ namespace larocv {
     cv::findContours(img_copy,result_v,cv_hierarchy_v,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
     return result_v;
   }
-  
+
+
+  GEO2D_ContourArray_t
+  FindContours(const cv::Mat& img,uint min_pix)
+  {
+    auto ctor_v = FindContours(img);
+    GEO2D_ContourArray_t res_v;
+    res_v.reserve(ctor_v.size());
+    
+    for(auto& ctor : ctor_v) {
+      if (CountNonZero(img,ctor,0) < min_pix) continue;
+      res_v.emplace_back(std::move(ctor));
+    }
+    
+    return res_v;
+  }
+    
   cv::Mat
   CleanImage(const cv::Mat& img,
 	     const GEO2D_ContourArray_t& veto_ctor_v,
@@ -119,6 +136,13 @@ namespace larocv {
     return cv::countNonZero(MaskImage(img,ctor,tol,false));
   }
 
+  uint
+  CountNonZero(const cv::Mat& img,
+	       const geo2d::Circle<float>& circle,
+	       uint tol){
+    return cv::countNonZero(MaskImage(img,circle,tol,false));
+  }
+  
   double Pt2PtDistance(const geo2d::Vector<float>& pt,
 		       const GEO2D_Contour_t& ctor)
   {
@@ -295,8 +319,7 @@ namespace larocv {
 			     float EPS) {
 
 
-    GEO2D_Contour_t pts_v;
-    findNonZero(img, pts_v);
+    auto pts_v = FindNonZero(img);
     
     if(pts_v.size() < 2) {
       LAROCV_SWARNING() << "PCA approx cannot be made (# points " << pts_v.size() << " < 2)" << std::endl;
@@ -382,6 +405,17 @@ namespace larocv {
     return res;
   }
 
+  size_t
+  FindContainingContour(const GEO2D_ContourArray_t& contour_v,
+			const geo2d::Vector<float>& pt,
+			double& distance) {
+    distance=kINVALID_SIZE;
+    auto idx = FindContainingContour(contour_v,pt);
+    if (idx==kINVALID_SIZE) return kINVALID_SIZE;
+    distance = (double)cv::pointPolygonTest(contour_v.at(idx),pt,true);
+    return idx;
+  }
+  
   size_t
   FindContainingContour(const GEO2D_ContourArray_t& contour_v,
 			const geo2d::Vector<float>& pt)
@@ -491,6 +525,42 @@ namespace larocv {
     return angle_sum / weight_sum;
   }
   
+  void
+  FindEdges(const GEO2D_Contour_t& ctor,
+	    geo2d::Vector<float>& edge1,
+	    geo2d::Vector<float>& edge2)
+  {
+    // cheap trick assuming this is a linear, linear track cluster
+    geo2d::Vector<float> mean_pt, ctor_pt;
+    mean_pt.x = mean_pt.y = 0.;
+    for(auto const& pt : ctor) { mean_pt.x += pt.x; mean_pt.y += pt.y; }
+    mean_pt.x /= (double)(ctor.size());
+    mean_pt.y /= (double)(ctor.size());
+    // find the furthest point from the mean (x,y)
+    double dist_max=0;
+    double dist;
+    for(auto const& pt : ctor) {
+      ctor_pt.x = pt.x;
+      ctor_pt.y = pt.y;
+      dist = geo2d::dist(mean_pt,ctor_pt);
+      if(dist > dist_max) {
+	edge1 = pt;
+	dist_max = dist;
+      }
+    }
+    // find the furthest point from edge1
+    dist_max=0;
+    for(auto const& pt : ctor) {
+      ctor_pt.x = pt.x;
+      ctor_pt.y = pt.y;
+      dist = geo2d::dist(edge1,ctor_pt);
+      if(dist > dist_max) {
+	edge2 = pt;
+	dist_max = dist;
+      }
+    }
+  }
 
+  
 }
 #endif

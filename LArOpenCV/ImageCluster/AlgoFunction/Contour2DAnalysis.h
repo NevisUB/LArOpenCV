@@ -13,13 +13,15 @@ namespace larocv {
   
   GEO2D_ContourArray_t
   FindContours(const cv::Mat& img);
-				    
+
+  GEO2D_ContourArray_t
+  FindContours(const cv::Mat& img,
+	       uint min_pix);
   
   cv::Mat
   CleanImage(const cv::Mat& img,
 	     const GEO2D_ContourArray_t& veto_ctor_v,
 	     float pi_threshold=0);
-
 
   cv::Mat
   MaskImage(const cv::Mat& img,
@@ -42,6 +44,10 @@ namespace larocv {
   uint
   CountNonZero(const cv::Mat& img,
 	       const GEO2D_Contour_t& ctor,
+	       uint tol=0);
+  uint
+  CountNonZero(const cv::Mat& img,
+	       const geo2d::Circle<float>& circle,
 	       uint tol=0);
   
   double
@@ -97,6 +103,11 @@ namespace larocv {
   size_t
   FindContainingContour(const GEO2D_ContourArray_t& contour_v,
 			const GEO2D_Contour_t& ctr);
+
+  size_t
+  FindContainingContour(const GEO2D_ContourArray_t& contour_v,
+			const geo2d::Vector<float>& pt,
+			double& distance);
   
   size_t
   FindContainingContour(const GEO2D_ContourArray_t& contour_v,
@@ -115,6 +126,11 @@ namespace larocv {
   double
   CircumferenceAngularSum(const GEO2D_Contour_t& ctor,
 			  bool isclosed=false);
+
+  void
+  FindEdges(const GEO2D_Contour_t& ctor,
+	    geo2d::Vector<float>& edge1,
+	    geo2d::Vector<float>& edge2);
   
 }
 #endif

@@ -4,10 +4,10 @@
 #include "LArOpenCV/Core/laropencv_base.h"
 #include "LArOpenCV/ImageCluster/AlgoData/VertexSeed.h"
 #include "LArPlaneGeo.h"
-/*
-@brief: given an angular range [_angle_lo,_angle_hi) determine if given angle is in range
-*/
 
+/*
+@brief: scan 3D space for compatible pixels
+*/
 
 namespace larocv {
 
@@ -17,7 +17,8 @@ namespace larocv {
 
     /// Default constructor
     VertexScan3D() : laropencv_base("VertexScan3D")
-    { _geo._num_planes = 3;
+    {
+      _geo._num_planes = 3;
       _geo._trigger_tick = 3200;
       _geo._xplane_tick_resolution = 2;
       _dx = _dy = _dz = 3.0;
@@ -35,12 +36,11 @@ namespace larocv {
     data::CircleVertex CreateCircleVertex(cv::Mat img,
                                           const data::VertexSeed3D& vtx3d,
                                           const size_t plane) const;
-
+    
     larocv::data::Vertex3D
-
     RegionScan3D(const larocv::data::VertexSeed3D& center,
                  std::vector<cv::Mat> image_v,
-                 size_t num_qpt=0 ) const;
+                 size_t num_xspt=0 ) const;
 
     const larocv::LArPlaneGeo& geo() const { return _geo; }
 
@@ -56,6 +56,7 @@ namespace larocv {
     float _pi_threshold;
     float _angle_supression;
     size_t _pca_box_size;
+    
   private:
 
     data::CircleVertex RadialScan2D(const cv::Mat& img, const geo2d::Vector<float>& pt) const;

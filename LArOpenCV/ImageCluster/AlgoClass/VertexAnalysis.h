@@ -38,8 +38,9 @@ namespace larocv {
 		double dist3d) const;
 
     void
-    MergeNearby(std::vector<const data::Vertex3D*>& vtx1_v,
+    MergeNearby(std::vector<data::Vertex3D>& vtx_v,
 		double dist3d) const;
+    
     void
     FilterByCrossing(std::vector<const data::Vertex3D*>& vtx_v,
 		     uint nplanes,
@@ -102,6 +103,16 @@ namespace larocv {
 	      data::Vertex3D& vertex) const;
     
     const LArPlaneGeo& Geo() const { return _geo; }
+
+
+    data::Vertex3D
+    AverageVertex(const data::Vertex3D& vtx1, const data::Vertex3D& vtx2) const;
+    
+    bool
+    UpdatePlanePosition(data::Vertex3D& vtx,const LArPlaneGeo& geo) const;
+
+    bool
+    UpdatePlanePosition(data::Vertex3D& vtx) const;
     
   private:
 

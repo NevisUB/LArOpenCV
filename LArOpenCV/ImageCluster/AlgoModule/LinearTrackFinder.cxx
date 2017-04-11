@@ -9,8 +9,6 @@
 #include "LArOpenCV/ImageCluster/AlgoData/LinearTrack.h"
 #include <map>
 #include <array>
-//#include <typeinfo>
-
 
 namespace larocv {
 
@@ -28,7 +26,7 @@ namespace larocv {
 
     if(!algo_name_part.empty())
       _algo_id_part = this->ID( algo_name_part );
-
+    
     Register(new data::LinearTrack3DArray);
   }
   
@@ -54,7 +52,7 @@ namespace larocv {
 
       // Register to SingleLinearTrack algorithm to search for an independent (separated) single track
       for(size_t plane=0; plane<vtx2d_vv.size(); ++plane)
-
+	
 	_algo.RegisterVertex2D(plane,vtx2d_vv[plane]);
     }
     

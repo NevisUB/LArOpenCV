@@ -47,6 +47,7 @@ namespace larocv {
     AlgorithmID_t _track_vertex_algo_id;
     AlgorithmID_t _track_particle_algo_id;
     float _min_time_wire_3d;
+    bool _filter_by_xs;
     uint _required_xs_planes;
     uint _required_xs;
     bool _compute_dqdx;
