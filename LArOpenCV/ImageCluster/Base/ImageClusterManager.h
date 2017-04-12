@@ -18,6 +18,7 @@
 #include "ImageAnaBase.h"
 #include "AlgoDataManager.h"
 #include <TTree.h>
+
 namespace larocv {
   /**
      \class ImageClusterManager
@@ -74,8 +75,6 @@ namespace larocv {
     void Report() const;
     /// Original input image getter
     std::vector<cv::Mat>& InputImages(ImageSetID_t set_id=ImageSetID_t::kImageSetUnknown);
-    /// Original input images writeable
-    std::vector<cv::Mat>& InputImagesRW(ImageSetID_t set_id=ImageSetID_t::kImageSetUnknown,bool preserve_originals=false);
     /// Return copy of originals
     std::vector<cv::Mat>& OriginalInputImages(ImageSetID_t set_id=ImageSetID_t::kImageSetUnknown);
     /// Original image metadata getter

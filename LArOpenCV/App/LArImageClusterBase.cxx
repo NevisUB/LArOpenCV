@@ -57,8 +57,6 @@ namespace larlite {
 
     _alg_mgr.Configure(cfg_mgr.Config().get_pset(_alg_mgr.Name()));
 
-    _alg_mgr.MatchPlaneWeights() = _plane_weights;
-    
     return true;
   }
 
@@ -192,6 +190,7 @@ namespace larlite {
 
   void LArImageClusterBase::store_clusters(storage_manager* storage)
   {
+    /*
     ++_num_stored;
 
     if (_num_clusters == 0) {
@@ -368,7 +367,7 @@ namespace larlite {
       }
 
     }
-
+    */
     return;
   }
 

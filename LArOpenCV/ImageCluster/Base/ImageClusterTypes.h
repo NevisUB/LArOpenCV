@@ -32,6 +32,8 @@ namespace larocv {
     kImageSetWire,    ///< wire waveform image
     kImageSetTrack,   ///< track image
     kImageSetShower,  ///< shower image
+    kImageSetThruMu,  ///< thrumu image
+    kImageSetStopMu,  ///< stopmu image
     kImageSetUnknown  ///< unspecified (always keep it @ end of enum)
   };
   typedef size_t ImageID_t;

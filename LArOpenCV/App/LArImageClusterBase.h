@@ -18,7 +18,6 @@
 #include "Analysis/ana_base.h"
 #include "LArOpenCV/Core/ImageManager.h"
 #include "LArOpenCV/ImageCluster/Base/ImageClusterManager.h"
-#include "LArOpenCV/ImageCluster/Base/ImageClusterViewer.h"
 
 namespace larlite {
 
