@@ -15,7 +15,6 @@
 #define ALGODATABASE_H
 
 #include "ImageClusterTypes.h"
-#include "AlgoDataBase.h"
 #include <iostream>
 namespace larocv {
 

@@ -84,7 +84,9 @@ namespace larocv {
 
     if(_algo_id_vertex_scan_seed != kINVALID_ALGO_ID) {
       auto const& scan_seed_v = AlgoData<data::VertexSeed3DArray>(_algo_id_vertex_scan_seed,0);
+      LAROCV_DEBUG() << "Given " << scan_seed_v.as_vector().size() << " shower scanned seeds" << std::endl;
       auto res_v = _OneTrackOneShower.ListShowerVertex(img_v,scan_seed_v.as_vector());
+      LAROCV_DEBUG() << "and " << res_v.size() << " returned" << std::endl;
       for(auto res : res_v) {
 	res.type= data::VertexType_t::kShower;
 	data.emplace_back(std::move(res));
