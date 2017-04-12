@@ -55,11 +55,13 @@ namespace larocv {
   {
     LAROCV_DEBUG() << "start" << std::endl;
 
-    auto img_v = ImageArray();
+    auto trk_img_v = ImageArray(ImageSetID_t::kImageSetTrack);
+    auto shr_img_v = ImageArray(ImageSetID_t::kImageSetShower);
+    
     for(auto const& meta : MetaArray())
       _VertexAnalysis.ResetPlaneInfo(meta);
       
-    auto num_planes = img_v.size();
+    auto num_planes = shr_img_v.size();
     auto& ass_man = AssManager();
     
     // my 3d vertex
@@ -104,7 +106,7 @@ namespace larocv {
 	  geo2d::Circle<float> circle;
 	  circle.radius = _circle_default_radius;
 	  circle.center = compound.end_pt();
-	  auto const& img = img_v[plane];
+	  auto const& img = shr_img_v[plane];
 	  auto xs_pt_v = QPointOnCircle(img,circle,10);
 
 	  if (xs_pt_v.empty()) continue;
@@ -120,18 +122,7 @@ namespace larocv {
       
       if (n_valid_planes < 2) continue;
 
-      std::vector<cv::Mat> track_img_v;
-      track_img_v.resize(img_v.size());
-
-      for(size_t plane=0; plane<img_v.size(); ++plane) {
-	auto& track_img = track_img_v[plane];
-	track_img =  BlankImage(img_v[plane],0);
-	for(const auto& par_ptr : pars_ptr_vv.at(plane)) {
-	  track_img += MaskImage(BlankImage(img_v[plane],255),par_ptr->_ctor,0,false);
-	}
-      }
-
-      auto match_vv = _VertexAnalysis.MatchClusters(pars_ptr_vv,track_img_v,_overlap_fraction,1,1,false);
+      auto match_vv = _VertexAnalysis.MatchClusters(pars_ptr_vv,trk_img_v,_overlap_fraction,1,1,false);
 
       LAROCV_DEBUG() << "Found " << match_vv.size() << " matches" << std::endl;
       if (match_vv.size()!=1) {
@@ -163,7 +154,7 @@ namespace larocv {
 	cvtx.center = comp.end_pt();
 	cvtx.radius = _circle_default_radius;
 	auto circle = geo2d::Circle<float>(cvtx.center,cvtx.radius);
-	auto xs_v = QPointOnCircle(img_v[plane_id],circle,10);
+	auto xs_v = QPointOnCircle(shr_img_v[plane_id],circle,10);
 	auto& ppca_v = cvtx.xs_v;
 	for(auto & xs : xs_v) {
 	  data::PointPCA ppca;

@@ -17,75 +17,65 @@ namespace larocv {
     _OneTrackOneShower.set_verbosity(this->logger().level());
     _OneTrackOneShower.Configure(pset.get<Config_t>("OneTrackOneShower"));
     
-    _threshold = pset.get<float>("Threshold");
-    auto name_seed = pset.get<std::string>("EdgeSeedProducer","");
-    _seed_id=kINVALID_ALGO_ID;
-    if (!name_seed.empty()) {
-      _seed_id = this->ID(name_seed);
-      if (_seed_id == kINVALID_ALGO_ID) {
-	LAROCV_CRITICAL() << "Seed ID algorithm name does not exist!" << std::endl;
-	throw larbys();
-      }
-    }
-
     for(short plane=0;plane<3;++plane)
       Register(new data::VertexSeed2DArray);
   }
   
   void ShowerPlaneSeeds::_Process_()
   {
-    auto img_v  = ImageArray();
+
+    auto track_img_v   = ImageArray(ImageSetID_t::kImageSetTrack);
+    auto shower_img_v  = ImageArray(ImageSetID_t::kImageSetShower);
+
+    assert(track_img_v.size() == shower_img_v.size());
+    auto nplanes = track_img_v.size();
+      
     auto meta_v = MetaArray();
+    
     for(auto const& meta : meta_v)
       _OneTrackOneShower.SetPlaneInfo(meta);
 
-    for(size_t img_idx=0; img_idx<img_v.size(); ++img_idx) {
-      
-      auto& img  = img_v[img_idx];
-      auto const& meta = meta_v[img_idx];
-    
-      auto& vertexseed2darray = AlgoData<data::VertexSeed2DArray>(meta.plane());
-      
-      if (_seed_id == kINVALID_ALGO_ID) {
-	LAROCV_DEBUG() << "No input seed given, determine track edges" << std::endl;
-	auto thresh_img = Threshold(img,_threshold,255);
-	auto ctor_v     = FindContours(thresh_img);
+    for(size_t img_idx=0; img_idx<nplanes; ++img_idx) {
+
+      auto& vertexseed2darray = AlgoData<data::VertexSeed2DArray>(img_idx);
+
+      auto& track_img  = track_img_v[img_idx];
+      auto& shower_img = shower_img_v[img_idx];
+
+      std::vector<data::VertexSeed2D> vertexseed_v;
+
+      LAROCV_DEBUG() << "No input seed given, determine track edges" << std::endl;
+      auto thresh_img = Threshold(track_img,_threshold,255);
+      auto ctor_v     = FindContours(thresh_img);
 	
-	for(const auto& ctor : ctor_v) {
-	  geo2d::Vector<float> edge1(kINVALID_FLOAT,kINVALID_FLOAT);
-	  auto edge2 = edge1;
+      for(const auto& ctor : ctor_v) {
+	geo2d::Vector<float> edge1(kINVALID_FLOAT,kINVALID_FLOAT);
+	auto edge2 = edge1;
 	  
-	  FindEdges(ctor,edge1,edge2);
+	FindEdges(ctor,edge1,edge2);
 	  
-	  if (edge1.x!=kINVALID_FLOAT && edge1.y!=kINVALID_FLOAT)
-	    vertexseed2darray.emplace_back(std::move(edge1));
+	if (edge1.x!=kINVALID_FLOAT && edge1.y!=kINVALID_FLOAT)
+	  vertexseed_v.emplace_back(std::move(edge1));
 	  
-	  if (edge1.x!=kINVALID_FLOAT && edge1.y!=kINVALID_FLOAT)
-	    vertexseed2darray.emplace_back(std::move(edge2));
+	if (edge1.x!=kINVALID_FLOAT && edge1.y!=kINVALID_FLOAT)
+	  vertexseed_v.emplace_back(std::move(edge2));
 	  
-	}
-	LAROCV_DEBUG() << "Saved " << vertexseed2darray.as_vector().size() << " 2D seeds" << std::endl;
-	return;
-      } 
+      }
+      LAROCV_DEBUG() << "Saved " << vertexseed_v.size() << " 2D seeds" << std::endl;
       
       LAROCV_DEBUG() << "Track input seeds given, filtering on shower image" << std::endl;
       
-      const auto& seed_data_arr = AlgoData<data::VertexSeed2DArray>(_seed_id,meta.plane());
-      const auto& seed_data_v   = seed_data_arr.as_vector();
-      
-      LAROCV_DEBUG() << "Got " << seed_data_v.size() << " 2D track edge seeds" << std::endl;
-      
       uint ix=0;
       
-      for(const auto& seed_ : seed_data_v) {
+      for(const auto& seed_ : vertexseed_v) {
 	auto seed = seed_;
 	data::CircleVertex cvtx;
 	cvtx.center.x = seed.x;
 	cvtx.center.y = seed.y;
 	cvtx.radius   = _OneTrackOneShower.circle_default_size();
 	seed.radius   = cvtx.radius;
-	
-	_OneTrackOneShower.ValidateCircleVertex(img,cvtx);
+
+	_OneTrackOneShower.ValidateCircleVertex(shower_img,cvtx);
 	LAROCV_DEBUG() << ix << ") @ (" << seed.x << "," << seed.y << ") xs ..." << cvtx.xs_v.size() << std::endl;
 	ix++;
 	
@@ -94,8 +84,8 @@ namespace larocv {
 	LAROCV_DEBUG() << "... saved" << std::endl;
 	
 	vertexseed2darray.emplace_back(std::move(seed));
-      }
-    }
+      }// end seed filter
+    }// end plane
     
   }
 }

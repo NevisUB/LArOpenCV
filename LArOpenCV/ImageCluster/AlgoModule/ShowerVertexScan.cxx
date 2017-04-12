@@ -42,9 +42,10 @@ namespace larocv {
   { return true; }
 
   void ShowerVertexScan::_Process_() {
-
+    
     auto img_v  = ImageArray();
     auto meta_v = MetaArray();
+    
     for(auto const& meta : meta_v) {
       _geo.ResetPlaneInfo(meta);
       _vtxana.ResetPlaneInfo(meta);
