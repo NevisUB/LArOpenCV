@@ -48,18 +48,17 @@ namespace larocv {
     Register(new data::Vertex3DArray);
   }
 
-  void ShowerOnTrackEnd::_Process_(const larocv::Cluster2DArray_t& clusters,
-				   ::cv::Mat& img,
-				   larocv::ImageMeta& meta,
-				   larocv::ROI& roi)
+  bool ShowerOnTrackEnd::_PostProcess_() const
+  { return true; }
+
+  void ShowerOnTrackEnd::_Process_()
   {
-    _VertexAnalysis.ResetPlaneInfo(meta);
-  }
-  
-  bool ShowerOnTrackEnd::_PostProcess_(std::vector<cv::Mat>& img_v)
-  {
-    
     LAROCV_DEBUG() << "start" << std::endl;
+
+    auto img_v = ImageArray();
+    for(auto const& meta : MetaArray())
+      _VertexAnalysis.ResetPlaneInfo(meta);
+      
     auto num_planes = img_v.size();
     auto& ass_man = AssManager();
     
@@ -199,7 +198,6 @@ namespace larocv {
     
     LAROCV_DEBUG() << "Inferred " << vertex3d_v.as_vector().size() << " vertices" << std::endl;
     LAROCV_DEBUG() << "end" << std::endl;
-    return true;
   }
   
 }

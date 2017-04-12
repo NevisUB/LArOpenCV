@@ -33,9 +33,14 @@ namespace larocv {
   }
   
   void VertexSeedResize::Finalize(TFile*) { }
+
+  bool VertexSeedResize::_PostProcess_() const
+  { return true; }
   
-  bool VertexSeedResize::_PostProcess_(std::vector<cv::Mat>& img_v)
+  void VertexSeedResize::_Process_()
   {
+
+    auto img_v = ImageArray();
 
     const auto& seed_array = AlgoData<data::VertexSeed3DArray>(_vertexseed_id,0);
     const auto& seed_v = seed_array.as_vector();
@@ -69,7 +74,6 @@ namespace larocv {
       data.emplace_back(std::move(vtx3d));
     }
     
-    return true;
   }
   
 }

@@ -23,26 +23,28 @@ namespace larocv {
     Register(new data::Vertex3DArray);
   }
 
-  void TrackVertexEstimate::_Process_(const larocv::Cluster2DArray_t& clusters,
-				      ::cv::Mat& img,
-				      larocv::ImageMeta& meta,
-				      larocv::ROI& roi)
+  bool TrackVertexEstimate::_PostProcess_() const
+  { return true; }
+  
+  void TrackVertexEstimate::_Process_()
   {
+    auto img_v = ImageArray();
+    auto const& meta_v = MetaArray();
 
-    const auto& vertex_seeds_v = AlgoData<data::VertexSeed2DArray>(_vertex_seed_algo_id,meta.plane());
-    std::vector<geo2d::Vector<float> > seeds_v;    
-    for(const auto& seed : vertex_seeds_v.as_vector())
-      seeds_v.emplace_back(seed);
-    
-    LAROCV_DEBUG() << "Scanning " << seeds_v.size() << " seeds on plane " << meta.plane() << std::endl;
-    _algo.AnalyzePlane(img,meta,seeds_v); //vertex_seeds_v.as_vector() --> why this failed here?
-    
-    return;
-  }
+    for(size_t img_idx=0; img_idx<img_v.size(); ++img_idx) {
 
+      auto& img = img_v[img_idx];
+      auto const& meta = meta_v.at(img_idx);
 
-  bool TrackVertexEstimate::_PostProcess_(std::vector<cv::Mat>& img_v)
-  {
+      const auto& vertex_seeds_v = AlgoData<data::VertexSeed2DArray>(_vertex_seed_algo_id,meta.plane());
+      std::vector<geo2d::Vector<float> > seeds_v;    
+      for(const auto& seed : vertex_seeds_v.as_vector())
+	seeds_v.emplace_back(seed);
+      
+      LAROCV_DEBUG() << "Scanning " << seeds_v.size() << " seeds on plane " << meta.plane() << std::endl;
+      _algo.AnalyzePlane(img,meta,seeds_v); //vertex_seeds_v.as_vector() --> why this failed here?
+    }
+
     std::vector<data::Vertex3D> vtx3d_v;
     std::vector<std::vector<data::CircleVertex> > vtx2d_vv;
     _algo.CreateTimeVertex3D(img_v,vtx3d_v,vtx2d_vv);
@@ -75,7 +77,6 @@ namespace larocv {
       LAROCV_DEBUG() << "... id " << vtx.ID() << std::endl;
     
     Reset();
-    return true;
   }
   
 }

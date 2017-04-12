@@ -68,7 +68,7 @@ namespace larocv {
     AlgorithmID_t ID(const std::string& name="") const;
 
     /// ImageSet ID accessor
-    ImageSetID_t ImageSetID() const;
+    ImageSetID_t DefaultImageSetID() const;
 
     /// Profile flag setter
     void Profile(bool doit) { _profile = doit; }
@@ -123,6 +123,15 @@ namespace larocv {
     /// Association storage method to create many-to-many association
     void AssociateMany(const data::AlgoDataArrayElementBase& obj_a, const data::AlgoDataArrayElementBase& obj_b)
     { _dataman_ptr->AssociateMany(obj_a,obj_b); }
+
+    /// Access method for a set of images (by id)
+    std::vector<cv::Mat> ImageArray(ImageSetID_t image_id=ImageSetID_t::kImageSetUnknown) const;
+
+    /// Access method for a set of meta associated with images (by id)
+    const std::vector<larocv::ImageMeta>& MetaArray(ImageSetID_t image_id=ImageSetID_t::kImageSetUnknown) const;
+
+    /// Access method for a set of ROI associated with images (by id)
+    const std::vector<larocv::ROI>& ROIArray(ImageSetID_t image_id=ImageSetID_t::kImageSetUnknown) const;
     
   protected:
 
@@ -147,6 +156,16 @@ namespace larocv {
     bool _profile;       ///< measure process time if profile flag is on
 
     data::AlgoDataManager* _dataman_ptr; ///< pointer collection to AlgoDataManager
+
+    void SetData(const std::vector<std::vector<cv::Mat> >& image_vv,
+		 const std::vector<std::vector<larocv::ImageMeta> >& meta_vv,
+		 const std::vector<std::vector<larocv::ROI> >& roi_vv);
+
+    std::vector<std::vector<cv::Mat> >           _image_vv;  ///< image data container
+
+    std::vector<std::vector<larocv::ImageMeta> > _meta_vv; ///< meta data container
+    
+    std::vector<std::vector<larocv::ROI> >       _roi_vv; ///< ROI data container
 
   };
 

@@ -18,25 +18,34 @@ namespace larocv {
       Register(new data::ParticleClusterArray); // plane X
   }
 
-  void SuperClusterMaker::_Process_(const Cluster2DArray_t& clusters,
-				    ::cv::Mat& img,
-				    ImageMeta& meta,
-				    ROI& roi)
+  bool SuperClusterMaker::_PostProcess_() const
+  { return true; }
+  
+  void SuperClusterMaker::_Process_() 
   {
-    auto& par_v = AlgoData<data::ParticleClusterArray>(meta.plane());
+    auto img_v = ImageArray();
+    auto const& meta_v = MetaArray();
+
+    for(size_t img_idx=0; img_idx<img_v.size(); ++img_idx) {
+
+      auto& img = img_v[img_idx];
+      auto const& meta = meta_v.at(img_idx);
     
-    GEO2D_ContourArray_t ctor_v;
-
-    _SuperClusterer.CreateSuperCluster(img,ctor_v);
-
-    for(auto& ctor : ctor_v) {
-      data::ParticleCluster pc;
-      pc._ctor=std::move(ctor);
-      par_v.emplace_back(std::move(pc));
+      auto& par_v = AlgoData<data::ParticleClusterArray>(meta.plane());
+      
+      GEO2D_ContourArray_t ctor_v;
+      
+      _SuperClusterer.CreateSuperCluster(img,ctor_v);
+      
+      for(auto& ctor : ctor_v) {
+	data::ParticleCluster pc;
+	pc._ctor=std::move(ctor);
+	par_v.emplace_back(std::move(pc));
+      }
+      
+      LAROCV_DEBUG() << "Found " << par_v.as_vector().size()
+		     << " super particles on plane " << meta.plane() << std::endl;
     }
-
-    LAROCV_DEBUG() << "Found " << par_v.as_vector().size()
-		   << " super particles on plane " << meta.plane() << std::endl;
   }
 
 }

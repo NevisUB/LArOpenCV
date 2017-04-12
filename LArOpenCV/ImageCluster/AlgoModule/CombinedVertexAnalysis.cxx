@@ -49,9 +49,12 @@ namespace larocv {
     
   }
   
-  bool CombinedVertexAnalysis::_PostProcess_(std::vector<cv::Mat>& img_v)
+  void CombinedVertexAnalysis::_Process_()
   {
     LAROCV_DEBUG() << "start" << std::endl;
+
+    auto const img_v = ImageArray();
+    
     auto& ass_man = AssManager();
     auto& vertex_data = AlgoData<data::Vertex3DArray>(0);
     const auto& shower_vertex_data = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);
@@ -157,8 +160,10 @@ namespace larocv {
     LAROCV_DEBUG() << "Merged " << vertex3d_ptr_v.size() << " verticies" << std::endl;
     
     LAROCV_DEBUG() << "end" << std::endl;
-    return true;
   }
+
+  bool CombinedVertexAnalysis::_PostProcess_() const
+  { return true; }
    
 }
 #endif

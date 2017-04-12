@@ -42,8 +42,14 @@ namespace larocv {
     Register(new data::VertexSeed3DArray);
   }
 
-  bool ShowerVertexSeeds::_PostProcess_(std::vector<cv::Mat>& img_v)
+  bool ShowerVertexSeeds::_PostProcess_() const
+  { return true; }
+  
+  void ShowerVertexSeeds::_Process_()
   {
+    auto img_v = ImageArray();
+    for(auto const& meta : MetaArray())
+      _ElectronShowerVertexSeed.SetPlaneInfo(meta);
 
     std::vector<const data::ParticleClusterArray*> super_cluster_v;
     std::vector<const data::ParticleClusterArray*> part_cluster_v;
@@ -88,7 +94,7 @@ namespace larocv {
     for(size_t i=0; i<vtx3d_seed_v.size(); ++i)  {
       data.emplace_back(std::move(vtx3d_seed_v[i]));
     }
-    return true;
+
   }
   
 }

@@ -77,11 +77,15 @@ namespace larocv {
       Register(new data::TrackClusterCompoundArray);
 
   }
+
+  bool ShowerVertexMerger::_PostProcess_() const
+  { return true; }
   
-  
-  bool ShowerVertexMerger::_PostProcess_(std::vector<cv::Mat>& img_v)
+  void ShowerVertexMerger::_Process_()
   {
     LAROCV_DEBUG() << "start" << std::endl;
+
+    auto img_v = ImageArray();
     
     //track and shower vertex
     const auto& track_vtx_data = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
@@ -305,12 +309,10 @@ namespace larocv {
 	} // end this plane
       }
     }
-    
 
     LAROCV_DEBUG() << "end" << std::endl;
-    return true;
   }
-   
+
 }
 #endif
 

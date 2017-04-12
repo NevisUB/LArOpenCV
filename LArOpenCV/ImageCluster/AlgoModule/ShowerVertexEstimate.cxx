@@ -59,18 +59,15 @@ namespace larocv {
     Register(new data::Vertex3DArray);
   }
 
-  void ShowerVertexEstimate::_Process_(const larocv::Cluster2DArray_t& clusters,
-				       ::cv::Mat& img,
-				       larocv::ImageMeta& meta,
-				       larocv::ROI& roi)
-  {
-    _OneTrackOneShower.SetPlaneInfo(meta);
-    return;
-  }
+  bool ShowerVertexEstimate::_PostProcess_() const
+  { return true; }
 
-
-  bool ShowerVertexEstimate::_PostProcess_(std::vector<cv::Mat>& img_v)
+  void ShowerVertexEstimate::_Process_()
   {
+    auto img_v  = ImageArray();
+    auto meta_v = MetaArray();
+    for(auto const& meta : meta_v)
+      _OneTrackOneShower.SetPlaneInfo(meta);
 
     auto const& seed_v = AlgoData<data::VertexSeed3DArray>(_algo_id_vertex_seed,0);
     
@@ -122,8 +119,6 @@ namespace larocv {
 	}
       }
     }    
-    
-    return true;
   }
   
   

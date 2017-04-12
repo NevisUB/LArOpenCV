@@ -57,9 +57,15 @@ namespace larocv {
       Register(new data::TrackClusterCompoundArray);
     
   }
+
+  bool ShowerVertexAnalysis::_PostProcess_() const
+  { return true; }
   
-  bool ShowerVertexAnalysis::_PostProcess_(std::vector<cv::Mat>& img_v)
+  void ShowerVertexAnalysis::_Process_() 
   {
+
+    auto img_v = ImageArray();
+    
     auto& ass_man = AssManager();
     auto& vertex_data = AlgoData<data::Vertex3DArray>(0);
     const auto& shower_vertex_data = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);
@@ -146,8 +152,6 @@ namespace larocv {
 	}	
       }
     }
-    
-    return true;
   }
    
 }

@@ -24,7 +24,7 @@ namespace larocv {
   GEO2D_Contour_t
   ClusterMerge::FlashlightMerge(geo2d::Vector<float> startpt,
 				const GEO2D_ContourArray_t& super_ctor_v,
-				const GEO2D_Contour_t& parent_ctor) {
+				const GEO2D_Contour_t& parent_ctor) const {
 
     auto flashlight_v = this->GenerateFlashlights(startpt,super_ctor_v);
     auto start_index  = this->StartIndex(super_ctor_v,parent_ctor);
@@ -37,7 +37,7 @@ namespace larocv {
   ClusterMerge::FlashlightMerge(geo2d::Vector<float> startpt,
 				const GEO2D_ContourArray_t& super_ctor_v,
 				const GEO2D_ContourArray_t& exclude_ctor_v,
-				const GEO2D_Contour_t& parent_ctor) {
+				const GEO2D_Contour_t& parent_ctor) const {
     
     auto super_flashlight_v   = this->GenerateFlashlights(startpt,super_ctor_v);
     auto exclude_flashlight_v = this->GenerateFlashlights(startpt,exclude_ctor_v);
@@ -55,7 +55,7 @@ namespace larocv {
 
   size_t
   ClusterMerge::StartIndex(const GEO2D_ContourArray_t& super_ctor_v,
-			   const GEO2D_Contour_t& parent_ctor) {
+			   const GEO2D_Contour_t& parent_ctor) const {
     auto const super_cluster_id = larocv::FindContainingContour(super_ctor_v, parent_ctor);
     if (super_cluster_id==kINVALID_SIZE) {
       LAROCV_CRITICAL() << "Parent contour could not be located in supers" << std::endl;
@@ -66,7 +66,7 @@ namespace larocv {
   
   GEO2D_Contour_t
   ClusterMerge::MergeFlashlights(const GEO2D_ContourArray_t& flashlight_v, 
-				 size_t start_index) {
+				 size_t start_index) const {
 				 
     GEO2D_Contour_t res_ctor;
     std::set<size_t> overlap_s;
@@ -96,9 +96,8 @@ namespace larocv {
   
   GEO2D_ContourArray_t
   ClusterMerge::GenerateFlashlights(geo2d::Vector<float> startpt,
-				    const GEO2D_ContourArray_t& super_ctor_v) {
-    
-    
+				    const GEO2D_ContourArray_t& super_ctor_v) const
+  {
     // get the associated super contour for this parent contour
     GEO2D_ContourArray_t flashlight_v;
     for(size_t superid=0; superid<super_ctor_v.size(); ++superid){

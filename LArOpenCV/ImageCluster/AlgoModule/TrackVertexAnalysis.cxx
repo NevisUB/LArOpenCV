@@ -48,10 +48,15 @@ namespace larocv {
     for(short pid=0;pid<3;++pid)
       Register(new data::TrackClusterCompoundArray);
   }
+
+  bool TrackVertexAnalysis::_PostProcess_() const
+  { return true; }
   
-  
-  bool TrackVertexAnalysis::_PostProcess_(std::vector<cv::Mat>& img_v)
+  void TrackVertexAnalysis::_Process_()
   {
+
+    auto img_v = ImageArray();
+    
     const auto& track_vtx_data = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
     
     std::vector<const data::Vertex3D*> wire_vtx_v;
@@ -133,8 +138,6 @@ namespace larocv {
 	}//end this compound
       }//end this plane
     }//end this Vertex3D
-    
-    return true;
   }
    
 }

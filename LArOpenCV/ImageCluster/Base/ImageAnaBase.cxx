@@ -22,30 +22,27 @@ namespace larocv {
     LAROCV_DEBUG() << "end" << std::endl;
   }
 
-  void ImageAnaBase::Process(const larocv::Cluster2DArray_t& clusters,
-			     ::cv::Mat& img,
-			     larocv::ImageMeta& meta,
-			     larocv::ROI& roi)
+  void ImageAnaBase::Process()
   {
     if(!Profile()) {
-      this->_Process_(clusters,img,meta,roi);
+      this->_Process_();
       return;
     }
     _watch.Start();
-    this->_Process_(clusters,img,meta,roi);
+    this->_Process_();
     _proc_time += _watch.WallTime();
     ++_proc_count;
     return;
   }
 
-  bool ImageAnaBase::PostProcess(std::vector<cv::Mat>& img_v)
+  bool ImageAnaBase::PostProcess()
   {
     if(!Profile()) {
-      return this->_PostProcess_(img_v);
+      return this->_PostProcess_();
     }
     bool state=true;
     _watch.Start();
-    state = this->_PostProcess_(img_v);
+    state = this->_PostProcess_();
     _proc_time += _watch.WallTime();
     ++_proc_count;
     return state;

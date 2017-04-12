@@ -23,24 +23,24 @@ namespace larocv {
     GEO2D_Contour_t
     FlashlightMerge(geo2d::Vector<float> startpt,
 		    const GEO2D_ContourArray_t& super_ctor_v,
-		    const GEO2D_Contour_t& parent_ctor);
+		    const GEO2D_Contour_t& parent_ctor) const;
     GEO2D_Contour_t
     FlashlightMerge(geo2d::Vector<float> startpt,
 		    const GEO2D_ContourArray_t& super_ctor_v,
 		    const GEO2D_ContourArray_t& exclude_ctor_v,
-		    const GEO2D_Contour_t& parent_ctor);
+		    const GEO2D_Contour_t& parent_ctor) const;
     
     GEO2D_ContourArray_t
     GenerateFlashlights(geo2d::Vector<float> startpt,
-			const GEO2D_ContourArray_t& super_ctor_v);
+			const GEO2D_ContourArray_t& super_ctor_v) const;
     
     size_t
     StartIndex(const GEO2D_ContourArray_t& super_ctor_v,
-	       const GEO2D_Contour_t& parent_ctor);
+	       const GEO2D_Contour_t& parent_ctor) const;
     
     GEO2D_Contour_t
     MergeFlashlights(const GEO2D_ContourArray_t& flashlight_v,
-		     size_t start_index);
+		     size_t start_index) const;
     
     int _N;
     float _trilen;

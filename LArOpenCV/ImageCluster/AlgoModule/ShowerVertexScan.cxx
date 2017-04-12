@@ -38,18 +38,19 @@ namespace larocv {
     Register(new data::VertexSeed3DArray);
   }
 
-  void ShowerVertexScan::_Process_(const larocv::Cluster2DArray_t& clusters,
-				   ::cv::Mat& img,
-				   larocv::ImageMeta& meta,
-				   larocv::ROI& roi)
-  {
-    _geo.ResetPlaneInfo(meta);
-    _vtxana.ResetPlaneInfo(meta);
-    _VertexScan3D.SetPlaneInfo(meta);
-  }
-  
-  bool ShowerVertexScan::_PostProcess_(std::vector<cv::Mat>& img_v) {
+  bool ShowerVertexScan::_PostProcess_() const
+  { return true; }
 
+  void ShowerVertexScan::_Process_() {
+
+    auto img_v  = ImageArray();
+    auto meta_v = MetaArray();
+    for(auto const& meta : meta_v) {
+      _geo.ResetPlaneInfo(meta);
+      _vtxana.ResetPlaneInfo(meta);
+      _VertexScan3D.SetPlaneInfo(meta);
+    }
+    
     auto nplanes = img_v.size();
 
     std::vector<std::vector<const data::VertexSeed2D*> > seed_vv;
@@ -154,7 +155,6 @@ namespace larocv {
       LAROCV_DEBUG() << "AlgoData size @ " << vertex3dseedarr.as_vector().size() << std::endl;
     } // end candidate vertex seed
     
-    return true;
   }
 }
 #endif

@@ -30,15 +30,15 @@ namespace larocv {
     Register(new data::LinearTrack3DArray);
   }
   
-  void LinearTrackFinder::_Process_(const larocv::Cluster2DArray_t& clusters,
-				    ::cv::Mat& img,
-				    larocv::ImageMeta& meta,
-				    larocv::ROI& roi)
-  { _algo.SetPlaneInfo(meta); }
+  bool LinearTrackFinder::_PostProcess_() const
+  {return true;}
 
-  bool LinearTrackFinder::_PostProcess_(std::vector<cv::Mat>& img_v)
+  void LinearTrackFinder::_Process_()
   {
-
+    auto img_v = ImageArray();
+    for(auto const& meta : MetaArray())
+      _algo.SetPlaneInfo(meta);
+    
     if (_algo_id_part != kINVALID_ALGO_ID) {
       // Get a list of vertx already found in the image
       auto const& vtx3d_v = AlgoData<data::Vertex3DArray> ( _algo_id_part, 0 );
@@ -65,7 +65,6 @@ namespace larocv {
     for(size_t idx=0; idx<ltrack_v.size(); ++idx)
       data.emplace_back(std::move(ltrack_v[idx]));
 
-    return true;
   }
 
 }

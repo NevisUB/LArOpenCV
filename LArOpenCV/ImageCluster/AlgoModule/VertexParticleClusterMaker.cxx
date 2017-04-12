@@ -49,117 +49,123 @@ namespace larocv {
     }
   }
 
-  void VertexParticleClusterMaker::_Process_(const larocv::Cluster2DArray_t& clusters,
-					     ::cv::Mat& img,
-					     larocv::ImageMeta& meta,
-					     larocv::ROI& roi)
+  void VertexParticleClusterMaker::_Process_()
   {
-    auto const plane = meta.plane();
+    auto img_v = ImageArray();
+    auto const& meta_v = MetaArray();
 
-    // Algorithm data
-    auto& par_data = AlgoData<data::ParticleClusterArray>(plane);
-    const auto& vtx_data_v = AlgoData<data::Vertex3DArray>(_vertex_estimate_algo_id,0).as_vector();
+    for(size_t img_idx=0; img_idx<img_v.size(); ++img_idx) {
 
-    LAROCV_DEBUG() << "Got " << vtx_data_v.size() << " vertices" << std::endl;
-
-    // Run clustering for this plane & store
-    const auto& super_cluster_v = AlgoData<data::ParticleClusterArray>(_super_cluster_algo_id,plane).as_vector();
-
-    LAROCV_DEBUG() << "Got " << super_cluster_v.size() << " super clusters on plane " << plane << std::endl;
+      auto& img = img_v[img_idx];
+      auto const& meta = meta_v.at(img_idx);
     
-    for(size_t vtx_id = 0; vtx_id < vtx_data_v.size(); ++vtx_id) {
+      auto const plane = meta.plane();
       
-      const auto& vtx3d = vtx_data_v[vtx_id];
-      const auto& circle_vtx = vtx3d.cvtx2d_v.at(plane);
-
-      LAROCV_DEBUG() << "Vertex ID " << vtx_id << " plane " << plane
-		     << " CircleVertex @ " << circle_vtx.center << " w/ R = " << circle_vtx.radius << std::endl;
-
-      if (circle_vtx.radius<=0) {
-	LAROCV_DEBUG() << "This circle vertex is invalid, skip!" << std::endl;
-	continue;
-      }
+      // Algorithm data
+      auto& par_data = AlgoData<data::ParticleClusterArray>(plane);
+      const auto& vtx_data_v = AlgoData<data::Vertex3DArray>(_vertex_estimate_algo_id,0).as_vector();
       
-      // Find corresponding super cluster, currently have to make a copy
-      GEO2D_ContourArray_t super_ctor_v;
-      super_ctor_v.reserve(super_cluster_v.size());
-      for(const auto& super_cluster : super_cluster_v) {
-	LAROCV_DEBUG() << "... setting " << super_cluster._ctor.size() << std::endl;
-	  super_ctor_v.emplace_back(super_cluster._ctor);
-      }
-      auto const super_cluster_id = FindContainingContour(super_ctor_v, circle_vtx.center);
+      LAROCV_DEBUG() << "Got " << vtx_data_v.size() << " vertices" << std::endl;
       
-      if(super_cluster_id == kINVALID_SIZE) {
-	LAROCV_WARNING() << "Skipping Vertex ID " << vtx_id << " on plane " << plane << " as no super-cluster found..." << std::endl;
-	continue;
-      }
-
-      //this vertex is associated to this cluster
-      LAROCV_DEBUG() << "Associating vertex " << vtx_id
-		     << " with super cluster " << super_cluster_id
-		     << std::endl;
-
-      AssociateOne(vtx3d,super_cluster_v[super_cluster_id]); 
+      // Run clustering for this plane & store
+      const auto& super_cluster_v = AlgoData<data::ParticleClusterArray>(_super_cluster_algo_id,plane).as_vector();
       
-      // Create contours from the vertex point
-      auto contour_v = _VertexParticleCluster.CreateParticleCluster(img,circle_vtx,super_cluster_v[super_cluster_id]);
+      LAROCV_DEBUG() << "Got " << super_cluster_v.size() << " super clusters on plane " << plane << std::endl;
       
-      LAROCV_DEBUG() << "Found " << contour_v.size() << " contours for vertex id " << vtx_id << std::endl;
-      
-      for(size_t cidx=0; cidx<contour_v.size(); ++cidx) {
-	auto& contour = contour_v[cidx];
-	LAROCV_DEBUG() << "On contour: " << cidx << "... size: " << contour.size() << std::endl;
+      for(size_t vtx_id = 0; vtx_id < vtx_data_v.size(); ++vtx_id) {
 	
-	if (contour.size() < _min_particle_size) {
-	  LAROCV_DEBUG() << "... size of this contour too small. Skip!" << std::endl;
+	const auto& vtx3d = vtx_data_v[vtx_id];
+	const auto& circle_vtx = vtx3d.cvtx2d_v.at(plane);
+	
+	LAROCV_DEBUG() << "Vertex ID " << vtx_id << " plane " << plane
+		       << " CircleVertex @ " << circle_vtx.center << " w/ R = " << circle_vtx.radius << std::endl;
+	
+	if (circle_vtx.radius<=0) {
+	  LAROCV_DEBUG() << "This circle vertex is invalid, skip!" << std::endl;
 	  continue;
 	}
 	
-	data::ParticleCluster cluster;
-	cluster.type = _particle_type;
-	cluster._ctor = std::move(contour);
+	// Find corresponding super cluster, currently have to make a copy
+	GEO2D_ContourArray_t super_ctor_v;
+	super_ctor_v.reserve(super_cluster_v.size());
+	for(const auto& super_cluster : super_cluster_v) {
+	  LAROCV_DEBUG() << "... setting " << super_cluster._ctor.size() << std::endl;
+	  super_ctor_v.emplace_back(super_cluster._ctor);
+	}
+	auto const super_cluster_id = FindContainingContour(super_ctor_v, circle_vtx.center);
+	
+	if(super_cluster_id == kINVALID_SIZE) {
+	  LAROCV_WARNING() << "Skipping Vertex ID " << vtx_id << " on plane " << plane << " as no super-cluster found..." << std::endl;
+	  continue;
+	}
 
-	// Store
-	par_data.emplace_back(std::move(cluster));
-	// Create one-to-many association
-	AssociateMany(vtx3d,par_data.as_vector().back());
-
-	// if defect is requested, let's make here
-	if(_create_compound) {
-	  auto& particle = par_data.as_vector().back();
-	  // Create cluster compound
-	  auto cluscomp = _DefectBreaker.BreakContour(particle._ctor);
-	  // Order the atomics
-	  auto const ordered_atom_id_v = _AtomicAnalysis.OrderAtoms(cluscomp,circle_vtx.center);
-	  // Determine edges
-	  auto atom_edges_v = _AtomicAnalysis.AtomsEdge(cluscomp, circle_vtx.center, ordered_atom_id_v);
-	  // set start and end point per atomic
-	  for(auto atom_id : ordered_atom_id_v) {
-	    auto& atom = cluscomp.get_atomic(atom_id);
-	    auto& start_end = atom_edges_v[atom_id];
-	    atom.set_start(start_end.first);
-	    atom.set_end(start_end.second);
+	//this vertex is associated to this cluster
+	LAROCV_DEBUG() << "Associating vertex " << vtx_id
+		       << " with super cluster " << super_cluster_id
+		       << std::endl;
+	
+	AssociateOne(vtx3d,super_cluster_v[super_cluster_id]); 
+	
+	// Create contours from the vertex point
+	auto contour_v = _VertexParticleCluster.CreateParticleCluster(img,circle_vtx,super_cluster_v[super_cluster_id]);
+	
+	LAROCV_DEBUG() << "Found " << contour_v.size() << " contours for vertex id " << vtx_id << std::endl;
+	
+	for(size_t cidx=0; cidx<contour_v.size(); ++cidx) {
+	  auto& contour = contour_v[cidx];
+	  LAROCV_DEBUG() << "On contour: " << cidx << "... size: " << contour.size() << std::endl;
+	  
+	  if (contour.size() < _min_particle_size) {
+	    LAROCV_DEBUG() << "... size of this contour too small. Skip!" << std::endl;
+	    continue;
 	  }
-	  // set the atomic order
-	  cluscomp.set_atomic_order(ordered_atom_id_v);
-	  // get the farthest edge
-	  auto& last_start_end = atom_edges_v.at(ordered_atom_id_v.back());
-	  // set the edge
-	  cluscomp.set_end_pt(last_start_end.second);
-	  if(_compute_dqdx) {
-	    for (auto& atomic : cluscomp){
-	      auto pca = CalcPCA(atomic);
-	      auto dqdx = _AtomicAnalysis.AtomdQdX(img, atomic, pca, atomic.start_pt(), atomic.end_pt());
-	      atomic.set_dqdx(dqdx);
-	      atomic.set_pca(pca);
-	      LAROCV_DEBUG() << "... calculated dqdx " << dqdx.size() << std::endl;
-	    }//end this atomic
-	  }
+	  
+	  data::ParticleCluster cluster;
+	  cluster.type = _particle_type;
+	  cluster._ctor = std::move(contour);
+	  
 	  // Store
-	  auto& compound_v = AlgoData<data::TrackClusterCompoundArray>(3+plane);
-	  compound_v.emplace_back(std::move(cluscomp));
-	  AssociateMany(vtx3d,compound_v.as_vector().back());
-	  AssociateOne(particle,compound_v.as_vector().back());
+	  par_data.emplace_back(std::move(cluster));
+	  // Create one-to-many association
+	  AssociateMany(vtx3d,par_data.as_vector().back());
+	  
+	  // if defect is requested, let's make here
+	  if(_create_compound) {
+	    auto& particle = par_data.as_vector().back();
+	    // Create cluster compound
+	    auto cluscomp = _DefectBreaker.BreakContour(particle._ctor);
+	    // Order the atomics
+	    auto const ordered_atom_id_v = _AtomicAnalysis.OrderAtoms(cluscomp,circle_vtx.center);
+	    // Determine edges
+	    auto atom_edges_v = _AtomicAnalysis.AtomsEdge(cluscomp, circle_vtx.center, ordered_atom_id_v);
+	    // set start and end point per atomic
+	    for(auto atom_id : ordered_atom_id_v) {
+	      auto& atom = cluscomp.get_atomic(atom_id);
+	      auto& start_end = atom_edges_v[atom_id];
+	      atom.set_start(start_end.first);
+	      atom.set_end(start_end.second);
+	    }
+	    // set the atomic order
+	    cluscomp.set_atomic_order(ordered_atom_id_v);
+	    // get the farthest edge
+	    auto& last_start_end = atom_edges_v.at(ordered_atom_id_v.back());
+	    // set the edge
+	    cluscomp.set_end_pt(last_start_end.second);
+	    if(_compute_dqdx) {
+	      for (auto& atomic : cluscomp){
+		auto pca = CalcPCA(atomic);
+		auto dqdx = _AtomicAnalysis.AtomdQdX(img, atomic, pca, atomic.start_pt(), atomic.end_pt());
+		atomic.set_dqdx(dqdx);
+		atomic.set_pca(pca);
+		LAROCV_DEBUG() << "... calculated dqdx " << dqdx.size() << std::endl;
+	      }//end this atomic
+	    }
+	    // Store
+	    auto& compound_v = AlgoData<data::TrackClusterCompoundArray>(3+plane);
+	    compound_v.emplace_back(std::move(cluscomp));
+	    AssociateMany(vtx3d,compound_v.as_vector().back());
+	    AssociateOne(particle,compound_v.as_vector().back());
+	  }
 	}
       }
     }
@@ -167,10 +173,8 @@ namespace larocv {
   }
   
   
-  bool VertexParticleClusterMaker::_PostProcess_(std::vector<cv::Mat>& img_v)
-  {
-    return true;
-  } 
+  bool VertexParticleClusterMaker::_PostProcess_() const
+  { return true; }
   
 }
 #endif

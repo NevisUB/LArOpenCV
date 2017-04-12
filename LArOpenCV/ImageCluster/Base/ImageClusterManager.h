@@ -15,12 +15,7 @@
 #define __IMAGECLUSTERMANAGER_H__
 
 #include <iostream>
-#include "ClusterAlgoBase.h"
 #include "ImageAnaBase.h"
-#include "MatchAlgoBase.h"
-#include "ReClusterAlgoBase.h"
-#include "ImageClusterViewer.h"
-#include "MatchBookKeeper.h"
 #include "AlgoDataManager.h"
 #include <TTree.h>
 namespace larocv {
@@ -62,49 +57,31 @@ namespace larocv {
     const ImageClusterBase* GetClusterAlg(const std::string name) const;
     /// Clustering algorithm ID getter via unique identifier (string name)
     AlgorithmID_t GetClusterAlgID(const std::string name) const;
-    /// Matching agorithm getter
-    const MatchAlgoBase* GetMatchAlg() const;
-    /// ReClustering algorithm getter
-    const ReClusterAlgoBase* GetReClusterAlg() const;
     /// Read-in configuration object & enforce configurations to algorithms
     void Configure(const Config_t& main_cfg);
-    /// Execute algorithms to construct clusters + corresponding meta data
-    // void Add(const ::cv::Mat& img, const larocv::ImageMeta& meta);
-    /// Execute algorithms to construct clusters + corresponding meta data + roi data
+    /// Add image data for executing LArOpenCV modules
     void Add(::cv::Mat& img, const larocv::ImageMeta& meta, const larocv::ROI& roi,
-	     ImageSetID_t set_id = kINVALID_IMAGE_SET_ID);
+	     ImageSetID_t set_id = ImageSetID_t::kImageSetUnknown);
     /// Execute algorithms to construct clusters + corresponding meta data
     bool Process();
     /// Finalize after multiple Process call
     void Finalize(TFile* file=nullptr);
-    /// Accessor to total number of clusters
-    size_t NumClusters(const AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
     /// Accessor to a specific meta data constructed by an algorithm (via algorithm id)
     const ImageMeta& MetaData(const ImageID_t img_id, const AlgorithmID_t alg_id) const;
     /// Accessor to a specific roi data constructed by an algorithm (via algorithm id)
     const ROI& ROIData(const ImageID_t img_id, const AlgorithmID_t alg_id) const;
-    /// Accessor to a specific cluster constructed by an algorithm (via algorithm + cluster id)
-    const Cluster2D& Cluster(const ClusterID_t cluster_id, const AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
-    /// Accessor to a set of clusters constructed by an algorithm (via algorithm id)
-    const Cluster2DArray_t& Clusters(const ImageID_t img_id, const AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
-    /// For a specified algorithm, find a cluster that contains coordinate (x,y). By default "last algorithm" is used.
-    ClusterID_t ClusterID(const double x, const double y, size_t plane, AlgorithmID_t alg_id=kINVALID_ALGO_ID) const;
     /// Report process summary
     void Report() const;
-    /// Match result getter
-    const MatchBookKeeper& BookKeeper() const { return _book_keeper; }
     /// Original input image getter
-    std::vector<cv::Mat>& InputImages(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID);
+    std::vector<cv::Mat>& InputImages(ImageSetID_t set_id=ImageSetID_t::kImageSetUnknown);
     /// Original input images writeable
-    std::vector<cv::Mat>& InputImagesRW(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID,bool preserve_originals=false);
+    std::vector<cv::Mat>& InputImagesRW(ImageSetID_t set_id=ImageSetID_t::kImageSetUnknown,bool preserve_originals=false);
     /// Return copy of originals
-    std::vector<cv::Mat>& OriginalInputImages(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID);
+    std::vector<cv::Mat>& OriginalInputImages(ImageSetID_t set_id=ImageSetID_t::kImageSetUnknown);
     /// Original image metadata getter
-    const std::vector<larocv::ImageMeta>& InputImageMetas(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID) const;
+    const std::vector<larocv::ImageMeta>& InputImageMetas(ImageSetID_t set_id=ImageSetID_t::kImageSetUnknown) const;
     /// Original image roi getter
-    const std::vector<larocv::ROI>& InputROIs(ImageSetID_t set_id=kINVALID_IMAGE_SET_ID) const;
-    /// Plane weights getter and setter
-    std::vector<float>& MatchPlaneWeights() { return _match_plane_weights; }
+    const std::vector<larocv::ROI>& InputROIs(ImageSetID_t set_id=ImageSetID_t::kImageSetUnknown) const;
     /// Algorithm data manager accessor
     const data::AlgoDataManager& DataManager() const { return _algo_dataman; }
   private:
@@ -114,10 +91,6 @@ namespace larocv {
     bool _configured;
     /// Array of clustering algorithms to be executed
     std::vector<larocv::ImageClusterBase*> _cluster_alg_v;
-    /// Array of matching algorithms to be executed
-    larocv::MatchAlgoBase* _match_alg;
-    /// Array of re-clustering algorithms to be executed
-    larocv::ReClusterAlgoBase* _recluster_alg;
     /// Map of clustering algorithm instance name to ID
     std::map<std::string,larocv::AlgorithmID_t> _cluster_alg_m;
     /// Array of images
@@ -128,12 +101,6 @@ namespace larocv {
     std::vector<std::vector<larocv::ImageMeta> > _raw_meta_vv;
     /// Array of roidata 
     std::vector<std::vector<larocv::ROI> > _raw_roi_vv;
-    /// Array of resulting clusters per algorithm per image (outer index = algorithm, inner index = image)
-    std::vector<std::vector<larocv::Cluster2DArray_t> > _clusters_vv;
-    /// Array of meta data: one per algorithm per image (outer index = algorithm, inner index = image)
-    std::vector<std::vector<larocv::ImageMeta> > _meta_vv;
-    /// Array of roi data: one per algorithm per image (outer index = algorithm, inner index = image)
-    std::vector<std::vector<larocv::ROI> > _roi_vv;
     /// Boolean flag to measure process time + report
     bool _profile;
     /// Boolean flag to enable filter mode
@@ -146,12 +113,6 @@ namespace larocv {
     double _process_time;
     /// Boolean to stop & show image at the end of process
     bool _show_image;
-    /// Viewer instance
-    ImageClusterViewer _viewer;
-    /// MatchBookKeeper
-    MatchBookKeeper _book_keeper;
-    /// MatchPlaneWeights
-    std::vector<float> _match_plane_weights;
     /// Switch for dead wire check
     bool _enable_wire_check ;
     /// Algorithm data container

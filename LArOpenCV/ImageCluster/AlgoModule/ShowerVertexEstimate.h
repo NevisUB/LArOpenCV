@@ -32,12 +32,9 @@ namespace larocv {
 
     void _Configure_(const Config_t &pset);
     
-    void _Process_(const larocv::Cluster2DArray_t& clusters,
-		   ::cv::Mat& img,
-		   larocv::ImageMeta& meta,
-		   larocv::ROI& roi);
+    void _Process_();
 
-    bool _PostProcess_(std::vector<cv::Mat>& img_v);
+    bool _PostProcess_() const;
 
   private:
     OneTrackOneShower _OneTrackOneShower;

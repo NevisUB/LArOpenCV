@@ -37,13 +37,9 @@ namespace larocv {
     /// Inherited class configuration method
     void _Configure_(const Config_t &pset);
     
-    void _Process_(const Cluster2DArray_t& clusters,
-		   ::cv::Mat& img,
-		   ImageMeta& meta,
-		   ROI& roi)
-    { _ElectronShowerVertexSeed.SetPlaneInfo(meta); }
+    void _Process_();
 
-    bool _PostProcess_(std::vector<cv::Mat>& img_v);
+    bool _PostProcess_() const;
     
   private:
 
