@@ -59,7 +59,6 @@ namespace larocv {
       vertex3d_v.emplace_back(std::move(vtx3d));
     }
 
-
     vtx3d_v.clear();
     vtx2d_vv.clear();
     _algo.CreateWireVertex3D(img_v,vtx3d_v,vtx2d_vv);

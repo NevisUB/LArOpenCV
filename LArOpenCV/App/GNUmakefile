@@ -31,20 +31,11 @@ LDFLAGS += $(shell larlite-config --libs)
 LDFLAGS += $(shell python-config --ldflags)
 LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc
 LDFLAGS += -L$(LARLITE_LIBDIR)
-
 LDFLAGS += -lLArOpenCV_ImageClusterBase
-LDFLAGS += -lLArOpenCV_ImageClusterCluster
-# LDFLAGS += -lLArOpenCV_ImageClusterDirection
-# LDFLAGS += -lLArOpenCV_ImageClusterUtil
-# LDFLAGS += -lLArOpenCV_ImageClusterMatch
-# LDFLAGS += -lLArOpenCV_ImageClusterMerge
-# LDFLAGS += -lLArOpenCV_ImageClusterFilter
-#LDFLAGS += -lLArOpenCV_ImageClusterReCluster
-# LDFLAGS += -lLArOpenCV_ImageClusterStartPoint
-# LDFLAGS += -lLArOpenCV_ImageClusterDebug
-
-LDFLAGS += -lLArOpenCV_Utils -lLArOpenCV_Core -lRecoTool_ClusterRecoUtil
-LDFLAGS += -L$(GEO2D_LIBDIR) -lGeo2D_Core
+LDFLAGS += -lLArOpenCV_Core
+LDFLAGS += -lRecoTool_ClusterRecoUtil
+LDFLAGS += -L$(GEO2D_LIBDIR)
+LDFLAGS += -lGeo2D_Core
 
 # call kernel specific compiler setup
 include $(LARLITE_BASEDIR)/Makefile/Makefile.${OSNAME}

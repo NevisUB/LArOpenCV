@@ -4,6 +4,7 @@
 #include "TrackVertexSeeds.h"
 #include "LArOpenCV/ImageCluster/AlgoData/VertexSeed.h"
 #include "LArOpenCV/ImageCluster/AlgoData/TrackClusterCompound.h"
+#include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 
 namespace larocv {
 
@@ -28,18 +29,6 @@ namespace larocv {
 
   }
 
-  GEO2D_ContourArray_t combine_ctor_arrs(const GEO2D_ContourArray_t& ctor_arr_1,
-					 const GEO2D_ContourArray_t& ctor_arr_2)
-  {
-    GEO2D_ContourArray_t ctors;
-    ctors.reserve(ctor_arr_1.size() + ctor_arr_2.size());
-
-    ctors.insert( ctors.end(), ctor_arr_1.begin(), ctor_arr_1.end());
-    ctors.insert( ctors.end(), ctor_arr_2.begin(), ctor_arr_2.end());
-    
-    return ctors;
-  }
-  
   void TrackVertexSeeds::_Process_()
   {
     auto img_v = ImageArray();
@@ -61,8 +50,7 @@ namespace larocv {
 		     << " MIPS" << std::endl;
       
       // Merge the hips and the mips into a single array of contours
-      // --> yes we can rethink the return of IsolateHIPMIP....
-      auto ctor_arr_v = combine_ctor_arrs(hip_mip_p.first,hip_mip_p.second);
+      auto ctor_arr_v = AddContourArrays(hip_mip_p.first,hip_mip_p.second);
       
       LAROCV_DEBUG() << "Combined: " << ctor_arr_v.size() << std::endl;
       

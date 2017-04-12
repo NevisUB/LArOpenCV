@@ -23,7 +23,7 @@
 #include "LArOpenCV/Core/ImageMeta.h"
 #include "LArOpenCV/Core/ROI.h"
 #include "LArOpenCV/Core/laropencv_base.h"
-#include "LArOpenCV/Utils/Watch.h"
+#include "Watch.h"
 #include "ImageClusterTypes.h"
 #include "AlgoDataManager.h"
 

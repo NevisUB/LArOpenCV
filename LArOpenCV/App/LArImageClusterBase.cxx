@@ -5,16 +5,14 @@
 #include "LArUtil/Geometry.h"
 #include "BasicTool/FhiclLite/ConfigManager.h"
 
-#include "DataFormat/rawdigit.h"
-#include "DataFormat/hit.h"
-#include "DataFormat/cluster.h"
-
-//#include "DataFormat/PiZeroROI.h"
-
-#include "DataFormat/user_info.h"
-#include "DataFormat/event_ass.h"
-#include "DataFormat/vertex.h"
-#include "DataFormat/pfpart.h"
+// #include "DataFormat/rawdigit.h"
+// #include "DataFormat/hit.h"
+// #include "DataFormat/cluster.h"
+// #include "DataFormat/PiZeroROI.h"
+// #include "DataFormat/user_info.h"
+// #include "DataFormat/event_ass.h"
+// #include "DataFormat/vertex.h"
+// #include "DataFormat/pfpart.h"
 
 namespace larlite {
 
@@ -61,7 +59,7 @@ namespace larlite {
   }
 
   bool LArImageClusterBase::analyze(storage_manager* storage) {
-    
+    /*
     //std::cout<<"\n\nOn event: "<<_event <<std::endl ;
     _event++ ;
 
@@ -151,8 +149,9 @@ namespace larlite {
     storage->set_id(storage->run_id(), storage->subrun_id(), storage->event_id());
 
     //AnalyzeImageCluster(storage);
-
+    */
     return true;
+
   }
 
   void LArImageClusterBase::Report() const {

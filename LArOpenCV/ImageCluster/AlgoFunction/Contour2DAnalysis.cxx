@@ -561,6 +561,16 @@ namespace larocv {
     }
   }
 
+  GEO2D_ContourArray_t AddContourArrays(const GEO2D_ContourArray_t& ctor_arr_1,
+					const GEO2D_ContourArray_t& ctor_arr_2) {
+    GEO2D_ContourArray_t ctors;
+    ctors.reserve(ctor_arr_1.size() + ctor_arr_2.size());
+    
+    ctors.insert( ctors.end(), ctor_arr_1.begin(), ctor_arr_1.end());
+    ctors.insert( ctors.end(), ctor_arr_2.begin(), ctor_arr_2.end());
+    
+    return ctors;
+  }
   
 }
 #endif

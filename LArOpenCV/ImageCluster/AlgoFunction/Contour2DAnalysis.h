@@ -131,6 +131,10 @@ namespace larocv {
   FindEdges(const GEO2D_Contour_t& ctor,
 	    geo2d::Vector<float>& edge1,
 	    geo2d::Vector<float>& edge2);
+
+  GEO2D_ContourArray_t
+  AddContourArrays(const GEO2D_ContourArray_t& ctor_arr_1,
+		   const GEO2D_ContourArray_t& ctor_arr_2);
   
 }
 #endif
