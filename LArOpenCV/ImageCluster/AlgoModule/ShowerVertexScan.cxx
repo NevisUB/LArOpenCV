@@ -13,13 +13,19 @@ namespace larocv {
   
   void ShowerVertexScan::_Configure_(const Config_t &pset)
   {
+    //
+    // Prepare algorithms via config
+    //
 
+    // LArPlaneGeo, and image space to real space helping class
     _geo.set_verbosity(this->logger().level());
     _geo.Configure(pset.get<Config_t>("LArPlaneGeo"));
-    
+
+    // VertexScan3D -- 3D search for candidate vertices
     _VertexScan3D.set_verbosity(this->logger().level());
     _VertexScan3D.Configure(pset.get<Config_t>("VertexScan3D"));
-    
+
+    // 2D edge producer module
     auto name_seed = pset.get<std::string>("EdgeSeedProducer");
     _seed_id=kINVALID_ALGO_ID;
     if (!name_seed.empty()) {
@@ -30,8 +36,14 @@ namespace larocv {
       }
     }
 
-    _require_3planes_charge=pset.get<bool>("Require3PlanesCharge");
+    // Merge very nearby candidate vertices
+    _merge_nearby = pset.get<bool>("MergeNearby",true);
+    if(_merge_nearby) 
+      _merge_distance = pset.get<float>("MergeDistance",3);
 
+    // Optionally require 3 planes charge in vicinity of projected vertex location
+    _require_3planes_charge=pset.get<bool>("Require3PlanesCharge");
+    
     if(_require_3planes_charge)
       _allowed_radius=pset.get<float>("SearchRadiusSize");//5      
 
@@ -42,10 +54,14 @@ namespace larocv {
   { return true; }
 
   void ShowerVertexScan::_Process_() {
-    
+
+    //
+    // 0) Prep
+    //
     auto img_v  = ImageArray();
     auto meta_v = MetaArray();
-    
+
+    // Inform algorithms of image information (will change per ROI processed)
     for(auto const& meta : meta_v) {
       _geo.ResetPlaneInfo(meta);
       _vtxana.ResetPlaneInfo(meta);
@@ -58,18 +74,27 @@ namespace larocv {
     seed_vv.resize(nplanes);
 		   
     for(size_t plane=0;plane<nplanes;++plane) {
+
+      // Access AlgoData vertex seeds from previous algorithm
       const auto& vertexseed2darray = AlgoData<data::VertexSeed2DArray>(_seed_id,plane);
       const auto& vertexseed2d_v = vertexseed2darray.as_vector();
       
       auto& seed_v = seed_vv[plane];
       seed_v.reserve(vertexseed2d_v.size());
-      
+
+      // Insert a pointer to this seed into vector
       for(const auto& vertexseed2d : vertexseed2d_v) {
 	seed_v.push_back(&vertexseed2d);
       }
       LAROCV_DEBUG() << "Got " << seed_v.size() << " seed @ plane " << plane << std::endl;
     }
 
+
+    
+    //
+    // 1) Compute pairwire 3D verticies with a generous time allowance
+    //
+    
     std::vector<data::Vertex3D> cand_vtx_v;
     
     for(size_t plane0=0;plane0<nplanes;++plane0) {
@@ -84,7 +109,7 @@ namespace larocv {
 	    
 	    data::Vertex3D vtx;
 	    auto res = _geo.YZPoint(*seed0,plane0,*seed1,plane1,vtx);
-	    
+	    // could vertex be made?
 	    if(!res) continue;
 
 	    cand_vtx_v.emplace_back(std::move(vtx));
@@ -100,32 +125,42 @@ namespace larocv {
 	
       } //plane1
     } //plane0
+
+
+    
+    //
+    // 2) Merging prodecure for verticies within given 3D range
+    //
     
     LAROCV_DEBUG() << "Merging nearby start @ " << cand_vtx_v.size() << std::endl;
-    bool _merge_nearby = true;
-    if(_merge_nearby)
-      _vtxana.MergeNearby(cand_vtx_v,3);
-    
+    if(_merge_nearby) _vtxana.MergeNearby(cand_vtx_v,_merge_distance);
     LAROCV_DEBUG() << "& end with " << cand_vtx_v.size() << std::endl;
 
+    //
+    // 3) Scan for a 3D vertex @ candidate seeds
+    //
     auto& vertex3dseedarr = AlgoData<data::VertexSeed3DArray>(0);
     
     for(auto& cand_vtx3d : cand_vtx_v) {
 
+      // For this 3D candidate seed, fill the 2D projection (VertexSeed3D::vtx2d_v)
       try {
 	_vtxana.UpdatePlanePosition(cand_vtx3d,_geo);
       }
       catch(const larbys& err) {
 	LAROCV_WARNING() << "Predicted vertex has 2D point outside image" << std::endl;
+	// Skip this candidate if the projected point is outside the image
 	continue;
       }
-      
+
+      // Scan 3D region centered @ this vertex seed
       auto cand_vtx = data::Seed2Vertex(cand_vtx3d);
       auto vtx3d    = _VertexScan3D.RegionScan3D(cand_vtx, img_v);
       
       size_t num_good_plane = 0;
       double dtheta_sum = 0;
 
+      // Require atleast 1 crossing point on 2 planes
       for(auto const& cvtx2d : vtx3d.cvtx2d_v) {
         if(cvtx2d.xs_v.size()<2) continue;
         num_good_plane++;
@@ -136,26 +171,27 @@ namespace larocv {
       dtheta_sum /= (double)num_good_plane;
       LAROCV_DEBUG() << "Registering vertex seed type="<<(uint)cand_vtx3d.type
 		     << " @ ("<<vtx3d.x<<","<<vtx3d.y<<","<<vtx3d.z<<")"<<std::endl;
-      
+
+      // Create a edge type vertex seed
       data::VertexSeed3D seed(vtx3d);
       seed.type = data::SeedType_t::kEdge;
 
-      uint  nvalid=0;
-      for(size_t plane=0;plane<3;++plane)  {
-	auto pt= seed.vtx2d_v[plane];
-	LAROCV_DEBUG() << plane << ") @ " << seed.vtx2d_v[plane] << std::endl;
-	if(_require_3planes_charge) {
+      // Optional: require there to be some charge in vincinity of projected vertex on 3 planes
+      uint nvalid=0;
+      if(_require_3planes_charge) {
+	for(size_t plane=0;plane<3;++plane)  {
+	  auto pt= seed.vtx2d_v[plane];
+	  LAROCV_DEBUG() << plane << ") @ " << seed.vtx2d_v[plane] << std::endl;
 	  auto npx = CountNonZero(img_v[plane],geo2d::Circle<float>(pt,_allowed_radius));
 	  if(npx) nvalid++;
 	}
+	if(nvalid!=3) continue;
       }
       
-      if(_require_3planes_charge && nvalid!=3) continue;
-      
+      // Move seed into the output
       vertex3dseedarr.emplace_back(std::move(seed));
       LAROCV_DEBUG() << "AlgoData size @ " << vertex3dseedarr.as_vector().size() << std::endl;
     } // end candidate vertex seed
-    
   }
 }
 #endif

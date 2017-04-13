@@ -45,9 +45,12 @@ namespace larocv {
     VertexScan3D  _VertexScan3D;
 
     float _threshold;
-    bool _require_3planes_charge;
     float _allowed_radius;
+    float _merge_distance;
+    bool _require_3planes_charge;
+    bool _merge_nearby;
 
+    
     
   };
 

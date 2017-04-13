@@ -30,7 +30,9 @@ namespace larocv {
       /// Associated score, definition is algorithm dependent
       float score;
     };
-    
+
+    enum class PointPCAType_t : unsigned
+    { kUnknown, kTrack, kShower };
     /*
       \class PointPCA
       @brief Represent a line (actually not PCA...) approximated using PCA at a particular point
@@ -45,7 +47,9 @@ namespace larocv {
       geo2d::Vector<float> pt;   ///< point around which PCA approximation is made
       geo2d::Line<float>   line; ///< long PCA axis of the neighboring pixels 
     };
-    
+
+    enum class CircleVertexType_t : unsigned
+    { kUnknown, kTrack, kShower, kBoth };
     /**
        \class CircleVertex
        @brief Vertex estimated by Refine2DVertex and its family (carries extra information about vertex)

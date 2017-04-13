@@ -14,14 +14,18 @@ namespace larocv {
   void TrackVertexSeeds::_Configure_(const Config_t &pset)
   {
     
+    // Set algo configure, get the producer names for track vertex seeds.
     _ClusterHIPMIP.Configure(pset.get<Config_t>("ClusterHIPMIP"));
     _DefectBreaker.Configure(pset.get<Config_t>("DefectBreaker"));
     _PCACrossing.Configure(pset.get<Config_t>("PCACrossing"));
 
+    // Create a container for VertexSeed2DArray algorithm data
     for(size_t plane=0; plane<3; ++plane) {
       LAROCV_DEBUG() << "Registering VertexSeed2DArray on plane " << plane << std::endl;
       Register(new data::VertexSeed2DArray);
     }
+
+    // Create a container for TrackClusterCompondArray algorithm data
     for(size_t plane=0; plane<3; ++plane) {
       LAROCV_DEBUG() << "Registering TrackClusterCompoundArray on plane " << plane << std::endl;
       Register(new data::TrackClusterCompoundArray);
@@ -31,6 +35,7 @@ namespace larocv {
 
   void TrackVertexSeeds::_Process_()
   {
+    // Read the track images (configured in cfg file)
     auto img_v = ImageArray();
     auto const& meta_v = MetaArray();
 
@@ -42,7 +47,7 @@ namespace larocv {
       auto& vertex_seeds_v = AlgoData<data::VertexSeed2DArray>(meta.plane());
       auto& track_cluster_v = AlgoData<data::TrackClusterCompoundArray>(meta.plane()+3);
       
-      // Cluster the HIPS and MIPS
+      // Cluster the HIPS and MIPS into seperate contours
       auto hip_mip_p = _ClusterHIPMIP.IsolateHIPMIP(img,meta.plane());
       
       LAROCV_DEBUG() << "Isolated " << hip_mip_p.first.size()
@@ -57,31 +62,42 @@ namespace larocv {
       std::vector<geo2d::Line<float> > line_v;
       line_v.reserve(ctor_arr_v.size()*3);
       
-      // loop over ctors in this plane    
+      // Loop over ctors in this plane    
       for (const auto& ctor : ctor_arr_v) {
 	LAROCV_DEBUG() << "Analyzing contour of size " << ctor.size() << std::endl;
 	
-	// split ctor and create a cluster compound (has defects, atomics, start/end pt)
+	// Split ctor and create a cluster compound (has defects, atomics, start/end pt)
 	auto cluscomp = _DefectBreaker.BreakContour(ctor);
 	
 	LAROCV_DEBUG() << "I split this contour into " << cluscomp.size() << " atomics" << std::endl;
 	LAROCV_DEBUG() << "Found " << cluscomp.get_defects().size() << " defects for seeds" << std::endl;
-	
-	// generate seeds from PCA
+
+	// Generate seeds from PCA
 	for(auto & pca : _PCACrossing.ComputePCALines(cluscomp))
 	  line_v.emplace_back(std::move(pca));
 	
+	//
+	//0)Track Vertex Seeds from Defect Point
+	//
+
+	// Find defect point in HIP and MIP contours 
 	LAROCV_DEBUG() << "Inserting " << cluscomp.get_defects().size() << " defects" << std::endl;
 	for(const auto& ctor_defect : cluscomp.get_defects()) {
 	  LAROCV_DEBUG() << "..." << ctor_defect._pt_defect << std::endl;
 	  data::VertexSeed2D seed(ctor_defect._pt_defect);
 	  seed.type=data::SeedType_t::kDefect;
+	  // Store defect point as track vertex seeds
 	  vertex_seeds_v.emplace_back(std::move(seed));
 	}
-	
+	// Store defected contours
 	track_cluster_v.emplace_back(std::move(cluscomp));
       }
+
+      //
+      //1)Track Vertex Seeds from PCA
+      //
       
+      // Find crossing points of PCA lines and store as track vertex seeds
       LAROCV_DEBUG() << "Generated " << line_v.size() << " pca lines" << std::endl;
       for ( const auto& pca_seed : _PCACrossing.ComputeIntersections(line_v,img) ) {
 	data::VertexSeed2D seed(pca_seed);

@@ -41,12 +41,12 @@ namespace larocv {
       _required_xs_planes = pset.get<uint>("RequiredXsPlanes");
       _required_xs        = pset.get<uint>("RequiredXs");
     }
-    
+
+
     Register(new data::Vertex3DArray);
-    for(short pid=0;pid<3;++pid)
-      Register(new data::ParticleClusterArray);
-    for(short pid=0;pid<3;++pid)
-      Register(new data::TrackClusterCompoundArray);
+    for(short pid=0;pid<3;++pid) Register(new data::ParticleClusterArray);
+    for(short pid=0;pid<3;++pid) Register(new data::TrackClusterCompoundArray);
+    
   }
 
   bool TrackVertexAnalysis::_PostProcess_() const
@@ -55,10 +55,14 @@ namespace larocv {
   void TrackVertexAnalysis::_Process_()
   {
 
+    //
+    // 0) Prep
+    //
     auto img_v = ImageArray();
     
     const auto& track_vtx_data = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
-    
+
+    // Separate out wire and time vertex to parse them separately
     std::vector<const data::Vertex3D*> wire_vtx_v;
     std::vector<const data::Vertex3D*> time_vtx_v;
     std::vector<const data::Vertex3D*> vtx_v;
@@ -73,6 +77,10 @@ namespace larocv {
 		   << "[wire] " << wire_vtx_v.size()
 		   << " [time] " << time_vtx_v.size() << std::endl;
 
+    //
+    // 1) Analyze wire and time vertex relationship
+    //
+    
     // Merge nearbys wire vertex with time vertex
     _vertexana.MergeNearby(time_vtx_v,wire_vtx_v,_min_time_wire_3d);
 
@@ -80,7 +88,7 @@ namespace larocv {
 		   << "[wire] " << wire_vtx_v.size()
 		   << " [time] " << time_vtx_v.size() << std::endl;
     
-    // Filter vertex to required number of crossing points
+    // Option: Filter vertex to required number of crossing points (not currently used)
     if (_filter_by_xs) {
       _vertexana.FilterByCrossing(time_vtx_v,_required_xs_planes,_required_xs);
       _vertexana.FilterByCrossing(wire_vtx_v,_required_xs_planes,_required_xs);
@@ -90,11 +98,16 @@ namespace larocv {
 		     << " [time] " << time_vtx_v.size() << std::endl;
     }
 
+    // Recombine the wire and time vertex
     for (const auto vtx: wire_vtx_v)
       vtx_v.push_back(vtx);
     for (const auto vtx: time_vtx_v)
       vtx_v.push_back(vtx);
 
+    //
+    // 2) Write to the output, copy all associations
+    //
+    
     auto& vtx_data = AlgoData<data::Vertex3DArray>(0);
 
     auto& assman = AssManager();
@@ -122,17 +135,14 @@ namespace larocv {
 	  
 	LAROCV_DEBUG() << "... found " << par_ass_idx_v.size() << " associated track cluster compounds" << std::endl;
 	for (auto particle_id : par_ass_idx_v){
-	  const auto particle_ = particle_cluster_data.as_vector()[particle_id];
+	  const auto& particle_ = particle_cluster_data.as_vector()[particle_id];
 	  auto comp_id = assman.GetOneAss(particle_,track_cluster_data.ID());
-	  auto compound = track_cluster_data.as_vector()[comp_id];
-	  auto particle = particle_;
+	  const auto& compound = track_cluster_data.as_vector()[comp_id];
+	  particle_data.push_back(particle_);
+	  compound_data.push_back(std::move(compound));
 	  
-	  compound_data.emplace_back(std::move(compound));
-	  AssociateMany(vtx3d,compound_data.as_vector().back());
-	  
-	  particle_data.emplace_back(std::move(particle));
 	  AssociateOne(particle_data.as_vector().back(),compound_data.as_vector().back());
-	  
+	  AssociateMany(vtx3d,compound_data.as_vector().back());
 	  AssociateMany(vtx3d,particle_data.as_vector().back());
 	  
 	}//end this compound

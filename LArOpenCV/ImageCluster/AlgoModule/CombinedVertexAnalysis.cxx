@@ -5,7 +5,7 @@
 #include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 
 namespace larocv {
-
+  
   /// Global larocv::CombinedVertexAnalysisFactory to register AlgoFactory
   static CombinedVertexAnalysisFactory __global_CombinedVertexAnalysisFactory__;
 
@@ -14,9 +14,14 @@ namespace larocv {
   
   void CombinedVertexAnalysis::_Configure_(const Config_t &pset) {
 
+    //
+    // Prepare algorithms via config
+    //
+    
     _track_vertex_algo_id = kINVALID_ALGO_ID;
     _shower_vertex_algo_id = kINVALID_ALGO_ID;
-    
+
+    // Optionally replace wire or time vertex if we find a shower at track end point
     _remove_superseded = pset.get<bool>("RemoveSuperseded");
     
     auto track_vertex_algo_name = pset.get<std::string>("TrackVertex","");
@@ -25,7 +30,7 @@ namespace larocv {
       if (_track_vertex_algo_id==kINVALID_ALGO_ID)
 	throw larbys("Given TrackVertex name is INVALID!");
     }
-
+    
     auto track_vertex_filter_algo_name = pset.get<std::string>("TrackVertexFiltered","");
     if (!track_vertex_filter_algo_name.empty()) {
       _track_vertex_filter_algo_id = this->ID(track_vertex_filter_algo_name);
@@ -39,13 +44,11 @@ namespace larocv {
       if (_shower_vertex_algo_id==kINVALID_ALGO_ID)
 	throw larbys("Given ShowerVertex name is INVALID!");
     }
-
+    
     _nplanes=3;
     Register(new data::Vertex3DArray);
-    for(size_t planeid=0;planeid<_nplanes;++planeid)
-      Register(new data::ParticleClusterArray);
-    for(size_t planeid=0;planeid<_nplanes;++planeid)
-      Register(new data::TrackClusterCompoundArray);
+    for(size_t plane=0;plane<_nplanes;++plane) Register(new data::ParticleClusterArray);
+    for(size_t plane=0;plane<_nplanes;++plane) Register(new data::TrackClusterCompoundArray);
     
   }
   
@@ -53,19 +56,27 @@ namespace larocv {
   {
     LAROCV_DEBUG() << "start" << std::endl;
 
-    auto const img_v = ImageArray();
+    //
+    // 0) Prep
+    //
     
+    auto const img_v = ImageArray();
+
+    // Get the assman
     auto& ass_man = AssManager();
     auto& vertex_data = AlgoData<data::Vertex3DArray>(0);
-    const auto& shower_vertex_data = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);
-    const auto& track_vertex_data = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
+    const auto& shower_vertex_data       = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);
+    const auto& track_vertex_data        = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
     const auto& track_vertex_filter_data = AlgoData<data::Vertex3DArray>(_track_vertex_filter_algo_id,0);
     
-    std::vector<const data::Vertex3D*> vertex3d_ptr_v;
-    std::vector<const data::Vertex3D*> vertex3d_temp_ptr_v;
-    std::vector<const data::Vertex3D*> ignore_ptr_v;
+    std::vector<const data::Vertex3D*> vertex3d_ptr_v, vertex3d_temp_ptr_v, ignore_ptr_v;
 
-    LAROCV_DEBUG() << "Observing " << shower_vertex_data.as_vector().size() << " shower verticies" << std::endl;
+    //
+    // 1) If we found a shower at the end of a vertices' particle track, then remove this vertex
+    //    since it's duplicated
+    //
+
+    // Take a look at the shower vertices, make the associated track vertex as ignored
     for(const auto& vtx3d : shower_vertex_data.as_vector()) {
       vertex3d_ptr_v.push_back(&vtx3d);
 
@@ -76,7 +87,6 @@ namespace larocv {
 	    LAROCV_CRITICAL()<<"Unassociated end-of-track vertex"<<std::endl;
 	    throw larbys();
 	  }
-	  LAROCV_DEBUG() << "... igoring " << &(track_vertex_data.as_vector()[ass_vtx_id]) << std::endl;
 	  ignore_ptr_v.push_back(&(track_vertex_data.as_vector()[ass_vtx_id]));
 	} // end type
       } // end superseded
@@ -84,6 +94,8 @@ namespace larocv {
     
     LAROCV_DEBUG() << "Ignoring " << ignore_ptr_v.size() << " track verticies" << std::endl;
     LAROCV_DEBUG() << "Observing " << track_vertex_data.as_vector().size() << " unfiltered track verticies" << std::endl;
+
+    // Take a look at all track vertices, ignore the ones that are superseded
     for(const auto& vtx3d : track_vertex_data.as_vector()) {
       if(_remove_superseded) {
 	if(std::find(ignore_ptr_v.begin(),ignore_ptr_v.end(),&vtx3d)!=ignore_ptr_v.end()) {
@@ -93,8 +105,21 @@ namespace larocv {
       }
       vertex3d_temp_ptr_v.push_back(&vtx3d);
     }
-    // remove the ones not filtered
-    LAROCV_DEBUG() << "Comparing " << vertex3d_temp_ptr_v.size() <<  " unfiltered tracks to " << track_vertex_filter_data.as_vector().size() << " filtered tracks" << std::endl;
+
+    //
+    // 2) We have vertices coming from three places, we should fix this.
+    //    *) The first set of vertices comes from TrackVertexFilter -- which analyzes
+    //       the relationship between wire and time vertex
+    //       WHY? -- We filtered some unimportant vertices away
+    //    *) The second set of vertices comes from the ShowerVertexMerger module -- which 
+    //       contains shower-on-track-end vertices
+    //       WHY? -- We searched for a shower at the end of these track vertices
+    //    *) The third set of vertices comes from TrackVertexEstimate module -- which contains
+    //       numu candidate vertices
+    //       WHY? -- The association between shower-on-track-end vertex exists here
+
+
+    // For each filtered vertex, check if there is an equivalent track vertex, if not, move on
     for(const auto& vtx3df : track_vertex_filter_data.as_vector()) {
       bool exists=false;
       for(const auto& vtx3d_ptr : vertex3d_temp_ptr_v) {
@@ -109,7 +134,13 @@ namespace larocv {
 		   << " showers & ignored  " << ignore_ptr_v.size()
 		   << " unfiltered tracks & compared " << track_vertex_filter_data.as_vector().size()
 		   << " filtered tracks leaving " << vertex3d_ptr_v.size() << " verticies" << std::endl;
+
+
+    //
+    // 3) Organize the resulting algo data
+    //
     
+    // For all verticies, lets organize the algo data
     for(const auto& vertex3d_ptr : vertex3d_ptr_v) {
       
       const auto& vtx3d = *vertex3d_ptr;
@@ -117,26 +148,35 @@ namespace larocv {
       auto& vtx3d_copy = vertex_data.as_vector().back();
       
       for(size_t plane=0;plane<_nplanes;++plane) {
+	// This modules AlgoData
 	auto& par_data = AlgoData<data::ParticleClusterArray>(plane+1);
-	const auto& track_par_data = AlgoData<data::ParticleClusterArray>(_track_vertex_filter_algo_id,plane+1);
-	const auto& shower_par_data = AlgoData<data::ParticleClusterArray>(_shower_vertex_algo_id,plane+1);
-	
 	auto& comp_data = AlgoData<data::TrackClusterCompoundArray>(_nplanes+plane+1);
-	const auto& track_comp_data = AlgoData<data::TrackClusterCompoundArray>(_track_vertex_filter_algo_id,_nplanes+plane+1);
-	const auto& shower_comp_data = AlgoData<data::TrackClusterCompoundArray>(_shower_vertex_algo_id,_nplanes+plane+1);
 
+	// Input algo data
+	const auto& track_par_data   = AlgoData<data::ParticleClusterArray>(_track_vertex_filter_algo_id,plane+1);
+	const auto& shower_par_data  = AlgoData<data::ParticleClusterArray>(_shower_vertex_algo_id      ,plane+1);
+	const auto& track_comp_data  = AlgoData<data::TrackClusterCompoundArray>(_track_vertex_filter_algo_id,_nplanes+plane+1);
+	const auto& shower_comp_data = AlgoData<data::TrackClusterCompoundArray>(_shower_vertex_algo_id      ,_nplanes+plane+1);
+
+	// Get the associated track particles to this vertex, copy them to this algo data
 	auto track_par_ass_id_v = ass_man.GetManyAss(vtx3d,track_par_data.ID());
 	for(auto track_par_id : track_par_ass_id_v) {
 	  const auto& track_par = track_par_data.as_vector()[track_par_id];
 	  if (track_par.type!=data::ParticleType_t::kTrack) throw larbys("Not a track particle!");
 	  auto track_comp_id = ass_man.GetOneAss(track_par,track_comp_data.ID());
-	  auto track_comp = track_comp_data.as_vector()[track_comp_id];
+	  const auto& track_comp    = track_comp_data.as_vector()[track_comp_id];
+	  
 	  par_data.push_back(track_par);
-	  comp_data.emplace_back(std::move(track_comp));
+	  comp_data.push_back(track_comp);
+	  // Associate one particle to one track cluster compound
 	  AssociateOne(par_data.as_vector().back(),comp_data.as_vector().back());
+	  // Associate this particle (one of many) to this vertex
 	  AssociateMany(vtx3d_copy,par_data.as_vector().back());
+	  // Associate this compound (one of many) to this vertex
 	  AssociateMany(vtx3d_copy,comp_data.as_vector().back());
 	}
+
+	// Get the associated shower particles to this vertex, copy them to this algo data
 	auto shower_par_ass_id_v = ass_man.GetManyAss(vtx3d,shower_par_data.ID());	
 	for(auto shower_par_id : shower_par_ass_id_v) {
 	  const auto& par = shower_par_data.as_vector()[shower_par_id];
@@ -158,7 +198,6 @@ namespace larocv {
     }
     
     LAROCV_DEBUG() << "Merged " << vertex3d_ptr_v.size() << " verticies" << std::endl;
-    
     LAROCV_DEBUG() << "end" << std::endl;
   }
 

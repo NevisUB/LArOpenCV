@@ -12,6 +12,10 @@ namespace larocv {
   
   void VertexSeedResize::_Configure_(const Config_t &pset)
   {
+    //
+    // Prepare algorithms via config
+    //
+    
     auto name_seed = pset.get<std::string>("VertexSeedName");
 
     if (!name_seed.empty()) {
@@ -21,7 +25,7 @@ namespace larocv {
         throw larbys();
       }
     }
-
+    
     _slogger_level = logger::get_shared().level();
     
     _thresh   = pset.get<float>("DensityThreshold",0.7);
@@ -40,12 +44,20 @@ namespace larocv {
   void VertexSeedResize::_Process_()
   {
 
+    //
+    // 0) Prep
+    //
+    
     auto img_v = ImageArray();
 
     const auto& seed_array = AlgoData<data::VertexSeed3DArray>(_vertexseed_id,0);
     const auto& seed_v = seed_array.as_vector();
     
     auto& data = AlgoData<data::VertexSeed3DArray>(0);
+
+    //
+    // 1) Determine the appropriate circle size at the projected vertex
+    //
     
     // For each seed, estimate the best radius to use from the ADC image
     for(const auto& seed : seed_v) {
