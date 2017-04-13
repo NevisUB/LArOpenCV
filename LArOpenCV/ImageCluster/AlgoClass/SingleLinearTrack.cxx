@@ -16,41 +16,63 @@ namespace larocv {
   
   void SingleLinearTrack::Configure(const Config_t &pset)
   {
+    //
+    // AlgoClass configuration
+    //
+
+    // Minimum contour size (number of ctor point)
     _min_size_track_ctor = pset.get<size_t>("TrackContourSizeMin");
+
+    // Minimum track size
     _min_length_track_ctor = pset.get<float>("TrackContourLengthMin");
-    
-    _pi_threshold = 10;
+
+    // Pi threshold for the image
+    _pi_threshold = pset.get<float>("PiThreshold",10);
+
+    // Seed plane for determine ordering
     _seed_plane_v = pset.get<std::vector<size_t> >("SeedPlane");
-    
+
+    // Determine track edges using mean falue, if false, then use the PCA method
     _edges_from_mean = pset.get<bool>("EdgesFromMean",true);
+
+    // Break tracks into linear tracks using defect breaker
     _break_linear_tracks = pset.get<bool>("BreakLinearTracks",false);
     if (_break_linear_tracks)
       _DefectBreaker.Configure(pset.get<Config_t>("DefectBreaker"));
-    
+
+    // Confirm user is not requesting a seed plane that is out of bounds
     for(auto const& plane : _seed_plane_v) {
       if(plane >= _seed_plane_v.size()) {
 	LAROCV_CRITICAL() << "Seed plane " << plane << " exceeds # planes " << _seed_plane_v.size() << std::endl;
 	throw larbys();
       }
     }
+
+    // Minimum distance between 2D neighbors to call a strack used
     _minimum_neighbor_distance = 5.0;
+
+    // Distance between edge and linear track to call an edge associated
     _min_compat_dist = 5;
+
+    // Number of input images and planes
     _num_planes = 3;
 
+    // Configuration for Class which helps image coordinates to real coordinates conversion
     _geo.Configure(pset.get<Config_t>("LArPlaneGeo"));
   }
-  
+
+  // Find edges by looking for the two point farthest away from the mean value
   void SingleLinearTrack::EdgesFromMeanValue(const GEO2D_Contour_t& ctor,
-					      geo2d::Vector<float>& edge1,
-					      geo2d::Vector<float>& edge2) const
+					     geo2d::Vector<float>& edge1,
+					     geo2d::Vector<float>& edge2) const
   {
-    // cheap trick assuming this is a linear, linear track cluster
+    // Cheap trick assuming this is a linear (as in straight), linear track cluster
     geo2d::Vector<float> mean_pt, ctor_pt;
     mean_pt.x = mean_pt.y = 0.;
     for(auto const& pt : ctor) { mean_pt.x += pt.x; mean_pt.y += pt.y; }
     mean_pt.x /= (double)(ctor.size());
     mean_pt.y /= (double)(ctor.size());
-    // find the furthest point from the mean (x,y)
+    // Find the furthest point from the mean (x,y)
     double dist_max=0;
     double dist;
     for(auto const& pt : ctor) {
@@ -62,7 +84,7 @@ namespace larocv {
 	dist_max = dist;
       }
     }
-    // find the furthest point from edge1
+    // Find the furthest point from edge1
     dist_max=0;
     for(auto const& pt : ctor) {
       ctor_pt.x = pt.x;
@@ -73,29 +95,31 @@ namespace larocv {
 	dist_max = dist;
       }
     }
-    // set edge1 time < edge2 time
-    if(edge2.x < edge1.x) std::swap(edge1,edge2);
+    // Set edge1 time < edge2 time
+    if(edge2.x < edge1.x)
+      std::swap(edge1,edge2);
   }
-
   
+
+  // Find edges by projecting all points onto a line
   void SingleLinearTrack::EdgesFromPCAProjection(cv::Mat& img,
 						 const GEO2D_Contour_t& ctor,
 						 geo2d::Vector<float>& edge1,
 						 geo2d::Vector<float>& edge2) const
   {
-    //but instead I could fit PCA, project all points on this line, then find edges
     
-    // make a contour from points inside contour
+    // Make a contour from points inside contour
     GEO2D_Contour_t nonzero_pts, inside_pts;
-    // crop image so we don't have to loop over all points
+
+    // Crop image so we don't have to loop over all points
     cv::Rect brect = cv::boundingRect( cv::Mat(ctor) );
     cv::Mat crop_img = img(brect);
 
-    // get nonzero pixels
+    // Get nonzero pixels
     findNonZero(crop_img, nonzero_pts);
     inside_pts.reserve(nonzero_pts.size());
 
-    // check nonzero pixels inside contour or on edge with 1 pixel tolerance;
+    // Check nonzero pixels inside contour or on edge with 1 pixel tolerance;
     for(auto& nz_pt : nonzero_pts) {
       nz_pt += brect.tl();
       auto dist = cv::pointPolygonTest(ctor, nz_pt, true);
@@ -108,20 +132,20 @@ namespace larocv {
       return;
     }
     
-    //calc PCA line
+    // Calc PCA line
     geo2d::Line<float> pca_line;
     bool valid_pca = true;
     try {
       pca_line = CalcPCA(inside_pts);
     } catch(geo2d::spoon) {
-      //pca line gave infinite slope
+      // PCA line is infinite
       valid_pca=false;
     }
 
     std::vector<geo2d::Vector<float> > proj_pts;
     proj_pts.reserve(inside_pts.size());
     
-    //for each X point, find corresponding projected Y point
+    // For each X point, find corresponding projected Y point
     for(const auto& pt : inside_pts) {
       geo2d::Vector<float> proj_pt = pt;
       
@@ -133,7 +157,7 @@ namespace larocv {
 
     geo2d::Vector<float> edge1_p,edge2_p;
 
-    //find the two points farthest away from each other
+    // Find the two points farthest away from each other
     float max_dist=-1.0;
     for(uint pt_id1 = 0; pt_id1 < proj_pts.size(); ++pt_id1) {
       for(uint pt_id2 = pt_id1+1; pt_id2 < proj_pts.size(); ++pt_id2) {
@@ -146,11 +170,9 @@ namespace larocv {
       }
     }
     
-    //find the closest non zero point from contour to the projected point
-    //this is so the edge point is an non-zero pixel point
-    
+    // Find the closest non zero point from contour to the projected point
+    // this is so the edge point is an non-zero pixel point
     float min_dist_e1(9e6),min_dist_e2(9e6);
-    
     for(auto const& pt : inside_pts) {
 
       auto dist_e1 = geo2d::dist(edge1_p,geo2d::Vector<float>(pt));
@@ -168,49 +190,49 @@ namespace larocv {
       
     }
     // set edge1 time < edge2 time
-    if(edge2.x < edge1.x) std::swap(edge1,edge2);    
+    if(edge2.x < edge1.x)
+      std::swap(edge1,edge2);    
   }
   
-  
+  // Find edges of given contour -- either edges from mean, or using PCA projection
   void SingleLinearTrack::FindEdges(cv::Mat& img,
 				    const GEO2D_Contour_t& ctor,
 				    geo2d::Vector<float>& edge1,
 				    geo2d::Vector<float>& edge2) const
   {
-    if (_edges_from_mean)
-      EdgesFromMeanValue(ctor,edge1,edge2);
-    else
-      EdgesFromPCAProjection(img,ctor,edge1,edge2);      
+    if (_edges_from_mean) EdgesFromMeanValue(ctor,edge1,edge2);
+    else                  EdgesFromPCAProjection(img,ctor,edge1,edge2);      
   }
-  
+
+  // Find 2D linear track on specified plane with a given image
   std::vector<larocv::data::LinearTrack2D>
   SingleLinearTrack::FindLinearTrack2D(const size_t plane, cv::Mat& img) const
   {
-    ::cv::Mat thresh_img;
+    cv::Mat thresh_img;
     
-    //Dilate
-    auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,::cv::Size(2,2));
+    // Dilate
+    auto kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE,::cv::Size(2,2));
     cv::dilate(img,thresh_img,kernel,::cv::Point(-1,-1),1);
     
-    //Blur
+    // Blur
     cv::blur(thresh_img,thresh_img,::cv::Size(2,2));
     
     thresh_img = Threshold(thresh_img, _pi_threshold, 1);
-
+    
     auto parent_ctor_v = FindContours(thresh_img);
-
+    
     GEO2D_ContourArray_t parent_ctor_temp_v;
     parent_ctor_temp_v.reserve(parent_ctor_v.size());
     
-    // optionally break contours
+    // Optionally break contours into linear tracks
     if ( _break_linear_tracks )  {
       LAROCV_DEBUG() << "Broke " << parent_ctor_v.size() << " linear tracks..." << std::endl;
-
+      
       for (auto& ctor : parent_ctor_v) {
-	// if contour is larger than size 2
+	// If contour is larger than size 2
 	if (ctor.size() > 2) {
 	  LAROCV_DEBUG() << "... ctor size " << ctor.size() << std::endl;
-	  //attempt breaking
+	  // Attempt breaking
 	  auto ctor_v  = _DefectBreaker.SplitContour(ctor);
 	  LAROCV_DEBUG() << "... broken into " << ctor_v.size() << std::endl;
 	  for(auto& ctor : ctor_v) {
@@ -218,52 +240,48 @@ namespace larocv {
 	    parent_ctor_temp_v.emplace_back(std::move(ctor));
 	  }
 
-	  //this contour was broken into two, keep the original contour
-	  if (ctor_v.size()>1) {
+	  // This contour was broken into two, keep the original contour
+	  if (ctor_v.size() > 1) {
 	    LAROCV_DEBUG() << "... keeping original contour size " << ctor.size() << std::endl;
 	    parent_ctor_temp_v.emplace_back(ctor);
 	  }
 	  
 	}
-	// too small to break, put it in anyways
+	// Too small to break, put it in anyways
 	else  {
-	  LAROCV_DEBUG() << "Too small! saving contour of size " << ctor.size() << std::endl;
+	  LAROCV_DEBUG() << "Too small, saving contour of size " << ctor.size() << std::endl;
 	  parent_ctor_temp_v.emplace_back(std::move(ctor));
 	}
-
+	
       }
       
       LAROCV_DEBUG() << "... into " << parent_ctor_temp_v.size() << " tracks." << std::endl;
       std::swap(parent_ctor_temp_v,parent_ctor_v);
-    }
+    } // End breaking incoming contours into straight segments
     
     LAROCV_INFO() << "Plane " << plane << " found " << parent_ctor_v.size() << " LinearTrack2D candidates..." << std::endl;
     std::vector<larocv::data::LinearTrack2D> result_v;
     for(auto const& ctor : parent_ctor_v) {
-      bool used=false;
+      bool used = false;
       geo2d::Vector<float> edge1, edge2;
       LAROCV_DEBUG() << "Searching edges" << std::endl;
-      FindEdges(thresh_img,ctor,edge1,edge2);
-      if(ctor.size() < _min_size_track_ctor && geo2d::dist(edge1,edge2) < _min_length_track_ctor) { // ||
+      this->FindEdges(thresh_img, ctor, edge1, edge2);
+      if(ctor.size() < _min_size_track_ctor and geo2d::dist(edge1,edge2) < _min_length_track_ctor) {
 	LAROCV_DEBUG() << "Ignoring too-small contour @ size = " << ctor.size()
 		       << " and length " << geo2d::dist(edge1,edge2) << std::endl;
 	continue;
       }
       LAROCV_DEBUG() << "Found edge1 " << edge1 << "... edge2: " << edge2 << std::endl;
-      // check if this contour is a part of clustered interaction
+      // Check if this contour is a part of clustered interaction
       if ( plane < _registered_vtx2d_vv.size() ) {
 	for(auto const& vtx2d : _registered_vtx2d_vv.at(plane)) {
-	  auto dist = ::cv::pointPolygonTest(ctor, vtx2d, true);
+	  auto dist = cv::pointPolygonTest(ctor, vtx2d, true);
 	  if(dist>=0) { used = true; break; }
 	  dist *= -1.;
 	  if(dist < _minimum_neighbor_distance) { used = true; break; }
 	}
       }
-      // if(used) {
-      // 	LAROCV_DEBUG() << "Ignoring contour too-close to an alredy-found vertex" << std::endl;
-      // 	continue;
-      // }
-
+      
       // Found a linear track candidate ... compute edge points
       larocv::data::LinearTrack2D strack;
       strack.ctor  = ctor;
@@ -278,81 +296,87 @@ namespace larocv {
     return result_v;
   }
 
+  // Register list of 2D points as 2D vertices
   void SingleLinearTrack::RegisterVertex2D(const size_t plane,
-					    const std::vector<geo2d::Vector<float> >& vtx2d_v)
+					   const std::vector<geo2d::Vector<float> >& vtx2d_v)
   {
     _registered_vtx2d_vv.resize(plane+1);
     _registered_vtx2d_vv[plane] = vtx2d_v;
   }
 
+  // Find single linear tracks in 3 planes image
   std::vector<data::LinearTrack3D>
   SingleLinearTrack::FindLinearTrack(std::vector<cv::Mat>& img_v)
   {
-
+    
     // First find linear track candidates
     std::vector<std::vector<larocv::data::LinearTrack2D> > strack_vv(img_v.size());
     for(size_t plane=0; plane<img_v.size(); ++plane) {
       strack_vv[plane] = FindLinearTrack2D(plane,img_v[plane]);
       LAROCV_INFO() << "Plane " << plane << " found " << strack_vv[plane].size() << " LinearTrack2D..." << std::endl;
     }
-
+    
     if(_seed_plane_v.size() != strack_vv.size()) {
       LAROCV_CRITICAL() << "# seed plane != # LineartTrack2D collection size!" << std::endl;
       throw larbys();
     }
 
+    // Per plane list of used edge indices
     std::vector<std::vector<bool> > used_vv;
     for(auto const& strack_v : strack_vv) {
       std::vector<bool> used_v(strack_v.size(),false);
-      used_vv.push_back(used_v);
+      used_vv.emplace_back(used_v);
     }
 
-    std::vector<std::vector<std::vector<std::array<size_t,3> > > > many_plane_cand_vvv;    
+    std::vector<std::vector<std::vector<std::array<size_t,3> > > > many_plane_cand_vvv;
     std::vector<std::vector<std::vector<std::array<size_t,3> > > > two_plane_cand_vvv;
     many_plane_cand_vvv.resize(_num_planes);
     two_plane_cand_vvv.resize(_num_planes);
     for(auto& many_plane_cand_vv : many_plane_cand_vvv) many_plane_cand_vv.resize(_num_planes);
     for(auto& two_plane_cand_vv  : two_plane_cand_vvv ) two_plane_cand_vv.resize (_num_planes);
     
-    // loop over all possible plane combinations on which we loop over all possible cluster combinations
+    // Loop over all possible plane combinations, on which we loop over all possible cluster combinations
     for(size_t seed1_idx=0; seed1_idx<_seed_plane_v.size(); ++seed1_idx) {
 
       auto const& seed1_plane = _seed_plane_v[seed1_idx];
       auto const& strack1_v   = strack_vv[seed1_plane];
-      auto&       used1_v     = used_vv[seed1_plane];
+      auto &      used1_v     = used_vv[seed1_plane];
       
       for(size_t seed2_idx=seed1_idx+1; seed2_idx<_seed_plane_v.size(); ++seed2_idx) {
 
 	auto const& seed2_plane = _seed_plane_v[seed2_idx];
 	auto const& strack2_v   = strack_vv[seed2_plane];
-	auto&       used2_v     = used_vv[seed2_plane];
+	auto &      used2_v     = used_vv[seed2_plane];
 
 	LAROCV_INFO() << "Inspecting LinearTrack using plane " << seed1_plane << " and " << seed2_plane << std::endl;
 
 	std::multimap<double,std::array<size_t,3> > score_map;
 	
-	// loop over possible combinations of strack1 and strack2
+	// Loop over possible combinations of strack1 and strack2
 	for(size_t strack1_idx=0; strack1_idx<strack1_v.size(); ++strack1_idx) {
 
 	  if(used1_v[strack1_idx]) continue;
 	  auto const& strack1 = strack1_v[strack1_idx];
 	  
 	  for(size_t strack2_idx=0; strack2_idx<strack2_v.size(); ++strack2_idx) {
-
+	    
 	    if(used2_v[strack2_idx]) continue;
 	    auto const& strack2 = strack2_v[strack2_idx];
 
 	    // Find possible combinations
 	    larocv::data::Vertex3D cand11, cand22, cand12, cand21;
-	    bool cand11_ok, cand22_ok, cand12_ok, cand21_ok;
-	    cand11_ok = _geo.YZPoint(strack1.edge1, seed1_plane, strack2.edge1, seed2_plane, cand11);
-	    cand12_ok = _geo.YZPoint(strack1.edge1, seed1_plane, strack2.edge2, seed2_plane, cand12);
-	    cand21_ok = _geo.YZPoint(strack1.edge2, seed1_plane, strack2.edge1, seed2_plane, cand21);
-	    cand22_ok = _geo.YZPoint(strack1.edge2, seed1_plane, strack2.edge2, seed2_plane, cand22);
-	    LAROCV_DEBUG()<< "pt "<<strack1.edge1<<" @ plane "<<seed1_plane<<" & pt "<<strack2.edge1<<" @ plane "<<seed2_plane<<" is "<<cand11_ok<<std::endl;
-	    LAROCV_DEBUG()<< "pt "<<strack1.edge1<<" @ plane "<<seed1_plane<<" & pt "<<strack2.edge2<<" @ plane "<<seed2_plane<<" is "<<cand12_ok<<std::endl;
-	    LAROCV_DEBUG()<< "pt "<<strack1.edge2<<" @ plane "<<seed1_plane<<" & pt "<<strack2.edge1<<" @ plane "<<seed2_plane<<" is "<<cand21_ok<<std::endl;
-	    LAROCV_DEBUG()<< "pt "<<strack1.edge2<<" @ plane "<<seed1_plane<<" & pt "<<strack2.edge2<<" @ plane "<<seed2_plane<<" is "<<cand22_ok<<std::endl;
+	    auto cand11_ok = _geo.YZPoint(strack1.edge1, seed1_plane, strack2.edge1, seed2_plane, cand11);
+	    auto cand12_ok = _geo.YZPoint(strack1.edge1, seed1_plane, strack2.edge2, seed2_plane, cand12);
+	    auto cand21_ok = _geo.YZPoint(strack1.edge2, seed1_plane, strack2.edge1, seed2_plane, cand21);
+	    auto cand22_ok = _geo.YZPoint(strack1.edge2, seed1_plane, strack2.edge2, seed2_plane, cand22);
+	    LAROCV_DEBUG()<< "pt "<<strack1.edge1<<" @ plane "<<seed1_plane
+			  <<" & pt "<<strack2.edge1<<" @ plane "<<seed2_plane<<" is "<<cand11_ok<<std::endl;
+	    LAROCV_DEBUG()<< "pt "<<strack1.edge1<<" @ plane "<<seed1_plane
+			  <<" & pt "<<strack2.edge2<<" @ plane "<<seed2_plane<<" is "<<cand12_ok<<std::endl;
+	    LAROCV_DEBUG()<< "pt "<<strack1.edge2<<" @ plane "<<seed1_plane
+			  <<" & pt "<<strack2.edge1<<" @ plane "<<seed2_plane<<" is "<<cand21_ok<<std::endl;
+	    LAROCV_DEBUG()<< "pt "<<strack1.edge2<<" @ plane "<<seed1_plane
+			  <<" & pt "<<strack2.edge2<<" @ plane "<<seed2_plane<<" is "<<cand22_ok<<std::endl;
 	    if(!cand11_ok && !cand12_ok && !cand21_ok && !cand22_ok) continue;
 
 	    LAROCV_DEBUG() << "LinearTrack2D pair " << strack1_idx << " and " << strack2_idx
@@ -363,33 +387,40 @@ namespace larocv {
 			   << (cand22_ok ? 1 : 0) << ")"
 			   << std::endl;
 
-	    if (cand11_ok) cand11.type=data::VertexType_t::kEdge;
-	    if (cand12_ok) cand12.type=data::VertexType_t::kEdge;
-	    if (cand21_ok) cand21.type=data::VertexType_t::kEdge;
-	    if (cand22_ok) cand22.type=data::VertexType_t::kEdge;
+	    if (cand11_ok) cand11.type = data::VertexType_t::kEdge;
+	    if (cand12_ok) cand12.type = data::VertexType_t::kEdge;
+	    if (cand21_ok) cand21.type = data::VertexType_t::kEdge;
+	    if (cand22_ok) cand22.type = data::VertexType_t::kEdge;
 	    
 	    // Loop over other planes and find possible combination strack
 	    std::array<double,4> sum_min_dist_v;
 	    std::array<size_t,4> num_good_plane_v;
 	    for(size_t cand_idx=0; cand_idx<4; ++cand_idx) {
-	      sum_min_dist_v[cand_idx] = 1e9;
+	      sum_min_dist_v[cand_idx] = kINVALID_DOUBLE;
 	      num_good_plane_v[cand_idx] = 0;
 	    }
+	    
 	    std::vector<std::array<size_t,4> > strack_idx_vv;
+
+	    // For the given two planes on which the linear tracks lie
 	    for(size_t plane=0; plane<_num_planes; ++plane) {
 	      
 	      if(plane == seed1_plane || plane == seed2_plane) continue;
 	      LAROCV_DEBUG() << "Examine plane " << plane << std::endl;
-	      // Loop over linear track on this plane, find the best representative strack
+
 	      auto const& strack_v = strack_vv[plane];
 	      std::array<double,4> min_dist_v;
 	      std::array<size_t,4> strack_idx_v;
 	      for(size_t cand_idx=0; cand_idx<4; ++cand_idx) {
-		min_dist_v[cand_idx] = 1e9;
+		min_dist_v[cand_idx] = kINVALID_DOUBLE;
 		strack_idx_v[cand_idx] = kINVALID_SIZE;
+
 	      }
 	      double dist=0;
 	      LAROCV_DEBUG() << "... found " << strack_v.size() << " tracks" << std::endl;
+
+	      // Loop over linear track on this plane, find the best representative strack
+	      // that matches this edge
 	      for(size_t strack_idx=0; strack_idx < strack_v.size(); ++strack_idx) {
 		if(used_vv[plane][strack_idx]) continue;
 		auto const& strack = strack_v[strack_idx];
@@ -423,16 +454,14 @@ namespace larocv {
 		  dist = geo2d::dist(edge22, strack.edge2);
 		  if(dist < min_dist_v[3] && dist < _min_compat_dist) { min_dist_v[3] = dist; strack_idx_v[3] = strack_idx; }
 		}
-	      } // end strack
+	      } // end checking all stracks
+	      
 	      for(size_t cand_idx=0; cand_idx<4; ++cand_idx) {
-		
 		if(strack_idx_v[cand_idx] == kINVALID_SIZE) continue;
-
-		if(sum_min_dist_v[cand_idx]== 1e9)
+		if(sum_min_dist_v[cand_idx]== kINVALID_DOUBLE)
 		  sum_min_dist_v[cand_idx]  = min_dist_v[cand_idx];
 		else
 		  sum_min_dist_v[cand_idx] += min_dist_v[cand_idx];
-		
 		num_good_plane_v[cand_idx] += 1;
 	      }
 	      strack_idx_vv.push_back(strack_idx_v);
@@ -440,7 +469,7 @@ namespace larocv {
 	    
 	    // Now let's make a decision on 4 candidate cases by minimizing average distance between projection and edge
 	    size_t best_cand_idx = kINVALID_SIZE;
-	    double min_dist=1e9;
+	    double min_dist=kINVALID_DOUBLE;
 	    for(size_t cand_idx=0; cand_idx<4; ++cand_idx) {
 	      if(num_good_plane_v[cand_idx] == 0) continue;
 	      double dist = sum_min_dist_v[cand_idx] / num_good_plane_v[cand_idx];
@@ -458,7 +487,6 @@ namespace larocv {
 	      if(cand11_ok && cand22_ok) best_cand_idx = 0;
 	      else if(cand12_ok && cand21_ok) best_cand_idx = 1;
 	      else if(cand11_ok) best_cand_idx = 0;
-	      //if(cand11_ok) best_cand_idx = 0;
 	      else if(cand22_ok) best_cand_idx = 3;
 	      else if(cand12_ok) best_cand_idx = 1;
 	      else if(cand21_ok) best_cand_idx = 2;
@@ -593,13 +621,25 @@ namespace larocv {
 	      auto& sedge = single_edge_v[strack_id];
 	      LAROCV_DEBUG() << "... is unused" << std::endl;
 	      dist = geo2d::dist(edge2d, strack_v[strack_id].edge1);
-	      if(dist < min_dist && dist < _min_compat_dist) { min_dist = dist; best_strack_id = strack_id; swap_edges = false; sedge = strack_v[strack_id].edge1; }
+	      if(dist < min_dist && dist < _min_compat_dist) {
+		min_dist       = dist;
+		best_strack_id = strack_id;
+		swap_edges     = false;
+		sedge          = strack_v[strack_id].edge1;
+	      }
 	      LAROCV_DEBUG() << "compared edge " << strack_v[strack_id].edge1 << " to " << edge2d << std::endl;
-	      LAROCV_DEBUG() << "... found dist " << dist << " & min_dist " << min_dist << " & best_strack_id " << best_strack_id << " & swap " << swap_edges << std::endl;
+	      LAROCV_DEBUG() << "... found dist " << dist << " & min_dist " << min_dist
+			     << " & best_strack_id " << best_strack_id << " & swap " << swap_edges << std::endl;
 	      dist = geo2d::dist(edge2d, strack_v[strack_id].edge2);
-	      if(dist < min_dist && dist < _min_compat_dist) { min_dist = dist; best_strack_id = strack_id; swap_edges = true;  sedge = strack_v[strack_id].edge2; }
+	      if(dist < min_dist && dist < _min_compat_dist) {
+		min_dist       = dist;
+		best_strack_id = strack_id;
+		swap_edges     = true;
+		sedge          = strack_v[strack_id].edge2;
+	      }
 	      LAROCV_DEBUG() << "compared edge " << strack_v[strack_id].edge2 << " to " << edge2d << std::endl;
-	      LAROCV_DEBUG() << "... found dist " << dist << " & min_dist " << min_dist << " & best_strack_id " << best_strack_id << " & swap " << swap_edges << std::endl;
+	      LAROCV_DEBUG() << "... found dist " << dist << " & min_dist " << min_dist
+			     << " & best_strack_id " << best_strack_id << " & swap " << swap_edges << std::endl;
 	    }
 	    
 	    if(best_strack_id == kINVALID_SIZE) continue;
@@ -705,9 +745,19 @@ namespace larocv {
 	      if(used_vv[plane][strack_id]) continue;
 	      auto& sedge = single_edge_v[strack_id];
 	      dist = geo2d::dist(edge2d, strack_v[strack_id].edge1);
-	      if(dist < min_dist && dist < _min_compat_dist) { min_dist = dist; best_strack_id = strack_id; swap_edges = false; sedge=strack_v[strack_id].edge1; }
+	      if(dist < min_dist && dist < _min_compat_dist) {
+		min_dist       = dist;
+		best_strack_id = strack_id;
+		swap_edges     = false;
+		sedge          = strack_v[strack_id].edge1;
+	      }
 	      dist = geo2d::dist(edge2d, strack_v[strack_id].edge2);
-	      if(dist < min_dist && dist < _min_compat_dist) { min_dist = dist; best_strack_id = strack_id; swap_edges = true;  sedge=strack_v[strack_id].edge2; }
+	      if(dist < min_dist && dist < _min_compat_dist) {
+		min_dist       = dist;
+		best_strack_id = strack_id;
+		swap_edges     = true;
+		sedge          = strack_v[strack_id].edge2;
+	      }
 	    }
 	    
 	    if(best_strack_id == kINVALID_SIZE) continue;
@@ -745,14 +795,14 @@ namespace larocv {
       for(size_t plane1=0;plane1<res.get_clusters().size();++plane1) {
 	for(size_t plane2=plane1+1;plane2<res.get_clusters().size();++plane2) {
 	  std::array<bool,3> used_planes{{false,false,false}};
-	  used_planes[plane1]=true;
-	  used_planes[plane2]=true;
+	  used_planes[plane1] = true;
+	  used_planes[plane2] = true;
 	  auto& strack1 = res.get_clusters()[plane1];
 	  auto& strack2 = res.get_clusters()[plane2];
-	  auto* t1e1=&strack1.edge1;
-	  auto* t1e2=&strack1.edge2;
-	  auto* t2e1=&strack2.edge1;
-	  auto* t2e2=&strack2.edge2;
+	  auto* t1e1 = &strack1.edge1;
+	  auto* t1e2 = &strack1.edge2;
+	  auto* t2e1 = &strack2.edge1;
+	  auto* t2e2 = &strack2.edge2;
 	  if (!used_edges_v.empty()) {
 	    if(std::find(used_edges_v.begin(), used_edges_v.end(), *t1e1) != used_edges_v.end()) t1e1=nullptr;
 	    if(std::find(used_edges_v.begin(), used_edges_v.end(), *t1e2) != used_edges_v.end()) t1e2=nullptr;
@@ -764,10 +814,10 @@ namespace larocv {
 	    LAROCV_DEBUG() << "...skip..." << std::endl;
 	    continue;
 	  }
-	  bool edge1121_ok=false;
-	  bool edge1122_ok=false;
-	  bool edge1221_ok=false;
-	  bool edge1222_ok=false;
+	  bool edge1121_ok = false;
+	  bool edge1122_ok = false;
+	  bool edge1221_ok = false;
+	  bool edge1222_ok = false;
 	    
 	  if (t1e1 && t2e1)
 	    edge1121_ok = _geo.YZPoint(strack1.edge1, plane1, strack2.edge1, plane2);

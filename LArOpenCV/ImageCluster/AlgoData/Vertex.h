@@ -78,14 +78,8 @@ namespace larocv {
     };
 
 
-    enum class VertexType_t : unsigned {
-      kUnknown,
-	kTime,
-	kWire,
-	kShower,
-	kEndOfTrack,
-	kEdge
-	};
+    enum class VertexType_t : unsigned 
+    { kUnknown, kTime, kWire,	kShower, kEndOfTrack, kEdge };
     
     /**
        \class Vertex3D
