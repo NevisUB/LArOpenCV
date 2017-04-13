@@ -386,30 +386,31 @@ namespace larocv{
 
     return res_spread;
   }
-
+  
+  ///Find small contours and veto them
   std::vector<std::vector<geo2d::Vector<int> > >
   TrackVertexScan2D::VertexVetoRegion(const ::cv::Mat& img)
   {
-    // threshold
+    // Threshold image initializer
     cv::Mat thresh_img;
+    // Set all pixel values = 1 if above _pi_threshold value
     ::cv::threshold(img,thresh_img,_pi_threshold,1,CV_THRESH_BINARY);
-    // find contours
+    // Find contours
     GEO2D_ContourArray_t ctor_v;
     std::vector<::cv::Vec4i> cv_hierarchy_v;
     ::cv::findContours(thresh_img, ctor_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-    // select too-small contours
+    // Select too-small contours
     GEO2D_ContourArray_t res_v;
     res_v.reserve(ctor_v.size());
     geo2d::Vector<float> edge1, edge2;
     for(auto const& ctor : ctor_v) {
-      //rectangle area
+      // Rectangle area
       auto rrect = cv::minAreaRect(ctor);
       auto rrect_area = rrect.size.area();
-      //contour length
+      // Contour length
       FindEdges(ctor,edge1,edge2);
       auto length = geo2d::dist(edge1,edge2);
-      if(length < _min_contour_length ||
-	 rrect_area < _min_contour_rect_area) {
+      if(length < _min_contour_length || rrect_area < _min_contour_rect_area) {
 	res_v.push_back(ctor);
       }
     }
@@ -621,19 +622,19 @@ namespace larocv{
     
     LAROCV_DEBUG() << "PlaneScan running on plane " << plane
 		   << " @ point " << init_circle.center << std::endl;
-
+    
     auto& scan_marker = _scan_marker_v[plane];
     auto& plane_data  = _plane_scan_info_v[plane];
     auto& init_vtx_v  = plane_data._init_vtx_v;
     auto& scan_rect_v = plane_data._scan_rect_v;    
     auto& circle_scan_v = plane_data._circle_scan_v;
-
+    
     // Initialize variables for this scan
     init_vtx_v.resize(init_vtx_v.size()+1);
     auto& init_vtx   = init_vtx_v.back();
-
+    
     init_vtx.center = init_circle.center;
-
+    
     // Create another circle with 1/2 radius
     auto half_circle = init_circle;
     half_circle.radius *= 0.5;
@@ -642,7 +643,7 @@ namespace larocv{
     geo2d::VectorArray<float> temp1_xs_v, temp2_xs_v;
     std::vector<geo2d::Line<float>   > temp1_pca_v, temp2_pca_v;
 
-    // Find valid PCAs per xs point 
+    // Find valid PCAs[user-defined box size] per xs point from vertex circle
     for(auto const& pt : QPointOnCircle(img,init_circle,_pi_threshold,_circle_vertex_supression)) {
       try{
 	auto const line = SquarePCA(img,pt,_pca_box_size,_pca_box_size);
@@ -652,8 +653,7 @@ namespace larocv{
 	continue;
       }
     }
-    
-    // Find valid PCAs per xs point 
+    // Find valid PCAs[user-defined box size] per xs point from vertex circle w/ half radius 
     for(auto const& pt : QPointOnCircle(img,half_circle,_pi_threshold,_circle_vertex_supression)) {
       try{
 	auto const line = SquarePCA(img,pt,_pca_box_size,_pca_box_size);
@@ -664,7 +664,7 @@ namespace larocv{
       }
     }
 
-    // If # xs points are larger in one of two, pick that one.
+    // If # xs points are larger in one of two (1 and 1/2 radius), pick that one.
     // Else pick a larger circle (likely have a better angle estimate)
     if(temp1_xs_v.size() == temp2_xs_v.size()) {
       init_vtx.xs_v.clear();
@@ -686,11 +686,9 @@ namespace larocv{
 				  init_vtx.center.y + _global_bound_size);
     geo2d::Vector<float> bottom_right(init_vtx.center.x + _global_bound_size,
 				      init_vtx.center.y - _global_bound_size);
-    
-    
+        
     geo2d::Rect bbox(top_left, bottom_right);
-
-	      
+    
     scan_rect_v.push_back(bbox);
 
     LAROCV_DEBUG() << "Plane " << plane << " scanning bbox:" << bbox << std::endl;
@@ -810,7 +808,7 @@ namespace larocv{
 	}
 	*/	
 	// Increment the step and continue or break
-	step_pt += dir/2.;	
+	step_pt += dir/2.0;	
       }
     }
     return res;
@@ -876,6 +874,7 @@ namespace larocv{
 				       const larocv::ImageMeta& meta,
 				       const std::vector<geo2d::Vector<float> >& points)
   {
+    // Set parameters using LArPlaneGeo [the origin points, # cols, # rows etc
     _geo.ResetPlaneInfo(meta);
     _veto_ctor_vv.resize(meta.plane()+1);
     
@@ -892,12 +891,15 @@ namespace larocv{
 
     bool found=false;
     geo2d::Circle<float> circle;
-
-    // logic to avoid too-close neighbor search
+    
+    //
+    // Logic to avoid too-close neighbor search
+    //  
     std::vector<geo2d::Circle<float> > used_circle_v;
+    
     for(auto const& pt : points) {
-      // check if this point is close to what is scanned before, if so then skip
-      // "close" is defined by checking if this point is included within the radius of previous circle
+      // Check if this point is close to what is scanned before, if so then skip
+      // "Close" is defined by checking if this point is included within the radius of previous circle
       bool used = false;
       double dist = 0;
       for(auto const& used_circle : used_circle_v) {
@@ -910,12 +912,16 @@ namespace larocv{
       LAROCV_DEBUG() << "Scanning Defect point: " << pt << std::endl;
       circle.center = pt;
       circle.radius = _radius;
+      // Prepare image
       cv::Mat src_img;
       if(_clean_image) {
+	// Find too small contours to be removed
 	_veto_ctor_vv[meta.plane()] = VertexVetoRegion(img);
+	// Remove all pixels in these veto regions
 	src_img = CleanImage(img,_veto_ctor_vv[meta.plane()],_pi_threshold);
       }
       else src_img = img;
+      
       found = PlaneScan(src_img,meta.plane(),circle,pt_err) || found;
       circle.radius = 1;
       used_circle_v.push_back(circle);
@@ -928,7 +934,7 @@ namespace larocv{
     
     _plane_scan_info_v[meta.plane()]._valid_plane = true;
   }
-
+  
   void TrackVertexScan2D::XPlaneTimeScan(std::vector<cv::Mat>& img_v)
   {
     // Combine 3 plane information and make the best guesses as to which time tick may contain vertex(es)
@@ -1735,7 +1741,7 @@ namespace larocv{
     _xplane_wire_min_v.resize(img_v.size());
     _xplane_wire_max_v.resize(img_v.size());
     _wire_binned_score_vv.resize(img_v.size());
-    _wire_binned_score_mean_vv.resize(img_v.size());
+     _wire_binned_score_mean_vv.resize(img_v.size());
     _wire_binned_score_minidx_vv.resize(img_v.size());
     _wire_binned_score_minrange_vv.resize(img_v.size());
 

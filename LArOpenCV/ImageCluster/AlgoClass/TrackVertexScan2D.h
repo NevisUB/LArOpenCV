@@ -26,7 +26,7 @@ namespace larocv {
     bool _valid_plane;
     /// initial vertex guesses provided by preceeding algorithms
     std::vector<larocv::data::CircleVertex> _init_vtx_v;
-    /// an array of suare box used to scan circles for vtx search
+    /// an array of square box used to scan circles for vtx search
     std::vector< geo2d::Rect >  _scan_rect_v;
     /// an array of CircleVertex scanned for searching true vtx 
     std::vector< larocv::data::CircleVertex > _circle_scan_v; 
