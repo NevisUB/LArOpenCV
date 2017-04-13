@@ -89,6 +89,18 @@ namespace larocv {
       LAROCV_DEBUG() << "and " << res_v.size() << " returned" << std::endl;
       for(auto res : res_v) {
 	res.type= data::VertexType_t::kShower;
+
+	for(size_t plane=0; plane<3; ++plane) {
+	  auto& cvtx = res.cvtx2d_v.at(plane);
+	  LAROCV_DEBUG() << "Plane : " << plane << " center @ " << cvtx.center << " & rad " << cvtx.radius << std::endl;
+	  LAROCV_DEBUG() << "There are " << cvtx.xs_v.size() << " crossing points" << std::endl;
+	  for(auto ppca : cvtx.xs_v) {
+	    LAROCV_DEBUG() << "pt @ " << ppca.pt << std::endl;
+	    LAROCV_DEBUG() << "line @ " << ppca.line.pt << " @ dir " << ppca.line.dir << std::endl;
+	  }
+	}
+	
+	
 	data.emplace_back(std::move(res));
       }
     }

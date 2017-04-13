@@ -114,7 +114,7 @@ namespace larocv {
 	  LAROCV_WARNING() << "Skipping Vertex ID " << vtx_id << " on plane " << plane << " as no super-cluster found..." << std::endl;
 	  continue;
 	}
-
+	
 	//this vertex is associated to this cluster
 	LAROCV_DEBUG() << "Associating vertex " << vtx_id << " with super cluster " << super_cluster_id << std::endl;
 	AssociateOne(vtx3d,super_cluster_v[super_cluster_id]); 
