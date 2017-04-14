@@ -92,16 +92,16 @@ namespace larocv {
 						 super_cluster_v,
 						 part_cluster_v,
 						 comp_cluster_v);
+      _ElectronShowerVertexSeed.RegisterSeed(img_v,input_vtxinfo_v);
     }
     
     LAROCV_INFO() << "input_vtxinfo_v size " << input_vtxinfo_v.size() << std::endl;
 
-    // Get 3D seeds from linear tracks
-    auto const& input_linear_track_v = AlgoData<data::LinearTrack3DArray>(_linear_track_id,0);
-
-    // Register both seeds to seed estimation algorithm
-    _ElectronShowerVertexSeed.RegisterSeed(img_v,input_vtxinfo_v);
-    _ElectronShowerVertexSeed.RegisterSeed(input_linear_track_v);
+    if(_linear_track_id!=kINVALID_ALGO_ID) {
+      // Get 3D seeds from linear tracks
+      auto const& input_linear_track_v = AlgoData<data::LinearTrack3DArray>(_linear_track_id,0);
+      _ElectronShowerVertexSeed.RegisterSeed(input_linear_track_v);
+    }
 
     // Return valid seeds
     auto vtx3d_seed_v = _ElectronShowerVertexSeed.CreateSeed();

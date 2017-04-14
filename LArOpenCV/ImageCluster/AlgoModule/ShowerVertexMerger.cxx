@@ -252,7 +252,7 @@ namespace larocv {
 	AssociateOne(vtx_data.as_vector().back(),track_vtx);
 	
 	for(size_t plane=0; plane < 3; ++plane) {
-
+	  
 	  auto& par_data  = AlgoData<data::ParticleClusterArray>(plane+1);
 	  auto& par_v     = pars_vv[plane];
 	  auto par_offset = par_data.as_vector().size();

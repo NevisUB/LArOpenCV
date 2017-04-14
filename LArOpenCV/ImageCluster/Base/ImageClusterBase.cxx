@@ -22,7 +22,8 @@ namespace larocv {
 
   AlgorithmID_t ImageClusterBase::ID(const std::string& name) const
   {
-    if(name.empty()) return _id;
+    //if(name.empty()) return _id;
+    if(name.empty()) return kINVALID_ALGO_ID;
     if(name == _name) return _id;
     if(!_dataman_ptr) {
       LAROCV_CRITICAL() << "No AlgoDataManager instance (cannot search name=>id map)" << std::endl;
