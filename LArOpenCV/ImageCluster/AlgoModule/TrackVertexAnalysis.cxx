@@ -32,6 +32,8 @@ namespace larocv {
       if (_track_particle_algo_id==kINVALID_ALGO_ID)
 	throw larbys("Given VertexParticleClusterMaker name is INVALID!");
     }
+
+    _filter_wire_time_vtx = pset.get<bool>("FilterWireTimeVertex");
     
     _min_time_wire_3d = pset.get<double>("MinTimeWireDistance3D",3.0); //cm
 
@@ -43,6 +45,7 @@ namespace larocv {
     }
 
 
+    
     Register(new data::Vertex3DArray);
     for(short pid=0;pid<3;++pid) Register(new data::ParticleClusterArray);
     for(short pid=0;pid<3;++pid) Register(new data::TrackClusterCompoundArray);
@@ -66,7 +69,7 @@ namespace larocv {
     std::vector<const data::Vertex3D*> wire_vtx_v;
     std::vector<const data::Vertex3D*> time_vtx_v;
     std::vector<const data::Vertex3D*> vtx_v;
-    
+
     for(const auto& vtx3d : track_vtx_data.as_vector()) {
       if (vtx3d.type==data::VertexType_t::kTime) time_vtx_v.push_back(&vtx3d);
       else if (vtx3d.type==data::VertexType_t::kWire) wire_vtx_v.push_back(&vtx3d);
@@ -80,14 +83,15 @@ namespace larocv {
     //
     // 1) Analyze wire and time vertex relationship
     //
-    
-    // Merge nearbys wire vertex with time vertex
-    _vertexana.MergeNearby(time_vtx_v,wire_vtx_v,_min_time_wire_3d);
 
-    LAROCV_DEBUG() << "Merged wire w/ time vertex... "
-		   << "[wire] " << wire_vtx_v.size()
-		   << " [time] " << time_vtx_v.size() << std::endl;
-    
+    if(_filter_wire_time_vtx) {
+      // Merge nearbys wire vertex with time vertex
+      _vertexana.MergeNearby(time_vtx_v,wire_vtx_v,_min_time_wire_3d);
+
+      LAROCV_DEBUG() << "Merged wire w/ time vertex... "
+		     << "[wire] " << wire_vtx_v.size()
+		     << " [time] " << time_vtx_v.size() << std::endl;
+    }
     // Option: Filter vertex to required number of crossing points (not currently used)
     if (_filter_by_xs) {
       _vertexana.FilterByCrossing(time_vtx_v,_required_xs_planes,_required_xs);

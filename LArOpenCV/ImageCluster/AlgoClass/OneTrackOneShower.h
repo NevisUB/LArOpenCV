@@ -115,7 +115,7 @@ namespace larocv {
     // Pixel intensity threshold for the image
     float _pi_thr;
     // Pixel tolerance (thickness of circle) to maskout
-    float _pi_tol
+    float _pi_tol;
     // Distance threshold between point and contour to claim contour is "inside"
     float _d_thresh;
     
