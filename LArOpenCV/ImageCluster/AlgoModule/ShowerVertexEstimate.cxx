@@ -105,8 +105,6 @@ namespace larocv {
 	    LAROCV_DEBUG() << "line @ " << ppca.line.pt << " @ dir " << ppca.line.dir << std::endl;
 	  }
 	}
-	
-	
 	data.emplace_back(std::move(res));
       }
     }

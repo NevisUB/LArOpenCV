@@ -99,6 +99,11 @@ namespace larocv {
 	if (xs.pt.y > 0) theta_loc = 90.;
 	else theta_loc = 270.;
       } else {
+	auto arg = std::fabs(rel_pt.x) / cvtx.radius;
+	if (arg>1) {
+	  LAROCV_CRITICAL() << "argument : " << std::fabs(rel_pt.x) << "/" << cvtx.radius << std::endl;
+	  throw larbys("arc cosine logic error");
+	}
 	theta_loc = acos(std::fabs(rel_pt.x) / cvtx.radius) * 180 / M_PI;
 	if (rel_pt.x < 0 && rel_pt.y > 0) theta_loc = 180 - theta_loc;
 	if (rel_pt.x < 0 && rel_pt.y <= 0) theta_loc += 180;
