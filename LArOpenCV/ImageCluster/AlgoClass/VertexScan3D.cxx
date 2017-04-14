@@ -99,12 +99,22 @@ namespace larocv {
 	if (xs.pt.y > 0) theta_loc = 90.;
 	else theta_loc = 270.;
       } else {
-	auto arg = std::fabs(rel_pt.x) / cvtx.radius;
-	if (arg>1) {
-	  LAROCV_CRITICAL() << "argument : " << std::fabs(rel_pt.x) << "/" << cvtx.radius << std::endl;
-	  throw larbys("arc cosine logic error");
+	float numerator = std::fabs(rel_pt.x);
+	float denominator = cvtx.radius;
+	float arg = numerator / denominator;
+	assert(denominator>0);
+
+	if (arg > 1) {
+	  //make sure we aren't making a huge error...
+	  if (std::fabs(arg - 1) > 0.001) throw larbys("logic error");
+	  int arg_i = std::floor(arg);
+	  arg = (float) arg_i;
 	}
-	theta_loc = acos(std::fabs(rel_pt.x) / cvtx.radius) * 180 / M_PI;
+
+	theta_loc = acos(arg) * 180 / M_PI;
+	//Dumb isnan check;
+	assert(theta_loc == theta_loc);
+	
 	if (rel_pt.x < 0 && rel_pt.y > 0) theta_loc = 180 - theta_loc;
 	if (rel_pt.x < 0 && rel_pt.y <= 0) theta_loc += 180;
 	if (rel_pt.x > 0 && rel_pt.y <= 0) theta_loc = 360 - theta_loc;
@@ -171,11 +181,12 @@ namespace larocv {
 	  // 		 << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
 	  xs_v.push_back(data::PointPCA(xs_pt, local_pca));
 	  dtheta_v.push_back(fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)));
-	// } catch (const larbys& err) {
+	  // } catch (const larbys& err) {
 	//   continue;
 	// }
       }
 
+      temp_res.center   = pt;
       temp_res.radius   = radius;
       temp_res.xs_v     = xs_v;
       temp_res.dtheta_v = dtheta_v;
