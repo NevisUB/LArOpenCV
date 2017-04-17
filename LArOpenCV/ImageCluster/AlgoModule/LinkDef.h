@@ -24,6 +24,7 @@
 #pragma link C++ class larocv::VerteSeedResize+;
 #pragma link C++ class larocv::ShowerPlaneSeeds+;
 #pragma link C++ class larocv::ShowerVertexScan+;
+#pragma link C++ class larocv::ShapeAnalysis+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

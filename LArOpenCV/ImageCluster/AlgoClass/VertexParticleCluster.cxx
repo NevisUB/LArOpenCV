@@ -19,8 +19,8 @@ namespace larocv {
   {
     set_verbosity(msg::kNORMAL);
     _prange.set_verbosity(msg::kNORMAL);
-    _dilation_size = 2;
-    _dilation_iter = 1;
+    // _dilation_size = 2;
+    // _dilation_iter = 1;
     _blur_size     = 2;
     _theta_hi      = 5;
     _theta_lo      = 5;

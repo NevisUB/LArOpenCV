@@ -10,10 +10,16 @@ namespace larocv {
   enum class ChunkType_t { kUnknown, kTrack, kShower };
   
   struct PixelChunk {
-    PixelChunk()  { Reset(); }
+    PixelChunk() { Reset(); }
+    PixelChunk(const GEO2D_Contour_t& contour)
+    { BasicFill(contour); }
+    PixelChunk(const GEO2D_Contour_t& contour, cv::Mat& adc_img, float threshold=0.0)
+    { BasicImageFill(contour,adc_img,threshold); }
+    PixelChunk(const GEO2D_Contour_t& contour, cv::Mat& adc_img, cv::Mat& trk_img, cv::Mat& shr_img, float threshold=0.0)
+    { AdvancedImageFill(contour,adc_img,trk_img,shr_img,threshold); }
     ~PixelChunk() {}
     
-    larocv::GEO2D_Contour_t ctor;
+    GEO2D_Contour_t ctor;
     geo2d::Vector<float> edge1;
     geo2d::Vector<float> edge2;
     float length;

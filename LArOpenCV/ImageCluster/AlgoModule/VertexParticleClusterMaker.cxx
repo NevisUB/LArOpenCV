@@ -19,7 +19,6 @@ namespace larocv {
     // Prepare algorithms via config
     //
 
-    // Class to great atomic contours (TrackClusterCompound) from ParticleCluster
     _DefectBreaker.Configure(pset.get<Config_t>("DefectBreaker"));
 
     // Class to cluster particles in 2D
@@ -182,7 +181,6 @@ namespace larocv {
     } // end this plane
     return;
   }
-  
   
   bool VertexParticleClusterMaker::_PostProcess_() const
   { return true; }
