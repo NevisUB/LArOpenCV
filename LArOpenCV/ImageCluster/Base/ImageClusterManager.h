@@ -52,6 +52,8 @@ namespace larocv {
     void Reset();
     /// Clears data
     void ClearData();
+    /// Accessor to a list of algorithms
+    std::vector<std::string> GetClusterAlgNames() const;
     /// Algorithm getter via unique identifier (AlgorithmID_t)
     const ImageClusterBase* GetClusterAlg(const AlgorithmID_t id) const;
     /// Algorithm getter via unique identifier (string name)

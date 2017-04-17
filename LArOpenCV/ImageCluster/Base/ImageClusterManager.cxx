@@ -56,6 +56,14 @@ namespace larocv {
     _raw_roi_vv.clear();
   }
 
+  std::vector<std::string> ImageClusterManager::GetClusterAlgNames() const
+  {
+    std::vector<std::string> name_v;
+    for(auto const& ptr : _cluster_alg_v)
+      name_v.push_back(ptr->Name());
+    return name_v;
+  }
+
   std::vector<cv::Mat>& ImageClusterManager::InputImages(ImageSetID_t set_id)
   {
     if(_copy_img_vv.empty()) 
