@@ -26,6 +26,8 @@ namespace larocv {
   static const float  kINVALID_FLOAT   = std::numeric_limits<float>::max();
   /// Used as an invalid value identifier for double
   static const double kINVALID_DOUBLE  = std::numeric_limits<double>::max();
+  /// Used as an invalid value identifier for double
+  static const unsigned int kINVALID_UINT  = std::numeric_limits<unsigned int>::max();
 
   /// Namespace for larocv message related types
   

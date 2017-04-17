@@ -8,6 +8,15 @@
 
 namespace larocv {
 
+  cv::RotatedRect
+  MinAreaRect(const GEO2D_Contour_t& ctor);
+
+  double
+  ArcLength(const GEO2D_Contour_t& ctor, bool closed=false);
+
+  double
+  ContourArea(const GEO2D_Contour_t& ctor,bool oriented=false);
+  
   GEO2D_Contour_t
   ConvexHull(const GEO2D_Contour_t& ctor);
   

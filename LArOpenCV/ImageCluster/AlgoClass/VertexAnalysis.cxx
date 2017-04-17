@@ -596,6 +596,23 @@ namespace larocv {
   VertexAnalysis::UpdatePlanePosition(data::Vertex3D& vtx) const {
     return UpdatePlanePosition(vtx,_geo);
   }
+
+  bool
+  VertexAnalysis::UpdatePlanePosition(data::Vertex3D& vtx, const LArPlaneGeo& geo, size_t plane) const {
+
+    if (vtx.vtx2d_v.size() <= plane)
+      vtx.vtx2d_v.resize(plane+1);
+
+    if (vtx.vtx2d_v.size() > 3) throw larbys("Resize error");
+    
+    auto& vtx2d = vtx.vtx2d_v.at(plane).pt;
+    vtx2d.x = geo.x2col (vtx.x,plane);
+    vtx2d.y = geo.yz2row(vtx.y,vtx.z,plane);
+    
+    return true;
+  }
+
+  
   
   
 }

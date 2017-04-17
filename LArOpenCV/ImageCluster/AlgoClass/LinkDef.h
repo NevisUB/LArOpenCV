@@ -23,6 +23,9 @@
 #pragma link C++ class larocv::VertexAnalysis+;
 #pragma link C++ class larocv::ClusterMerge+;
 #pragma link C++ class larocv::VertexScan3D+;
+#pragma link C++ struct larocv::PixelChunk+;
+#pragma link C++ enum class larocv::ChunkType_t+;
+
 //ADD_NEW_CLASS ... do not change this line
 #endif
 

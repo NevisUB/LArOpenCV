@@ -107,7 +107,6 @@ namespace larocv {
     
     const LArPlaneGeo& Geo() const { return _geo; }
 
-
     data::Vertex3D
     AverageVertex(const data::Vertex3D& vtx1, const data::Vertex3D& vtx2) const;
     
@@ -116,6 +115,9 @@ namespace larocv {
 
     bool
     UpdatePlanePosition(data::Vertex3D& vtx) const;
+
+    bool
+    UpdatePlanePosition(data::Vertex3D& vtx, const LArPlaneGeo& geo, size_t plane) const;
     
   private:
 

@@ -88,8 +88,6 @@ namespace larocv {
       }
       LAROCV_DEBUG() << "Got " << seed_v.size() << " seed @ plane " << plane << std::endl;
     }
-
-
     
     //
     // 1) Compute pairwire 3D verticies with a generous time allowance
@@ -125,13 +123,13 @@ namespace larocv {
       } //plane1
     } //plane0
 
-    
     //
     // 2) Scan for a 3D vertex @ candidate seeds
     //
-    std::vector<VertexSeed3D> vertex3dseed_v;
+    std::vector<data::VertexSeed3D> vertex3dseed_v;
     
     for(auto& cand_vtx3d : cand_vtx_v) {
+
       // For this 3D candidate seed, fill the 2D projection (VertexSeed3D::vtx2d_v)
       try {
 	_vtxana.UpdatePlanePosition(cand_vtx3d,_geo);
@@ -152,7 +150,7 @@ namespace larocv {
       int plane = -1;
       // Require atleast 2 crossing point on 2 planes (using ADC image)
       for(auto const& cvtx2d : vtx3d.cvtx2d_v) {
-	plane=+1;
+	plane = +1;
 	LAROCV_DEBUG() << "Found " << cvtx2d.xs_v.size() << " xs on plane " << plane << std::endl;
         if(cvtx2d.xs_v.size()<2) continue;
 	LAROCV_DEBUG() << "... accepted" << std::endl;
@@ -160,7 +158,7 @@ namespace larocv {
         dtheta_sum += cvtx2d.sum_dtheta();
       }
       
-      if(num_good_plane<2) {
+      if(num_good_plane < 2) {
 	LAROCV_DEBUG() << "Num good plane < 2, SKIP!!" << std::endl;
 	continue;
       }
@@ -191,7 +189,7 @@ namespace larocv {
       
       // Move seed into the output
       vertex3dseed_v.emplace_back(std::move(seed));
-      LAROCV_DEBUG() << "AlgoData size @ " << vertex3dseedarr.as_vector().size() << std::endl;
+      LAROCV_DEBUG() << "AlgoData size @ " << vertex3dseed_v.size() << std::endl;
     } // end candidate vertex seed
 
 
@@ -207,7 +205,7 @@ namespace larocv {
 
     auto& vertex3dseedarr = AlgoData<data::VertexSeed3DArray>(0);
     for(auto& vertex3dseed : vertex3dseed_v)
-      vertex3dseedarr.emplace_back(std::move(seed));
+      vertex3dseedarr.emplace_back(std::move(vertex3dseed));
     
   }
 }

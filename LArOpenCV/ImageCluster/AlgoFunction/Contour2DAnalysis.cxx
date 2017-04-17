@@ -10,6 +10,21 @@
 
 namespace larocv {
 
+  cv::RotatedRect
+  MinAreaRect(const GEO2D_Contour_t& ctor) {
+    return cv::minAreaRect(ctor);
+  }
+
+  double
+  ArcLength(const GEO2D_Contour_t& ctor, bool closed) {
+    return cv::arcLength(ctor,closed);
+  }
+
+  double
+  ContourArea(const GEO2D_Contour_t& ctor,bool oriented) {
+    return cv::contourArea(ctor,oriented);
+  }
+  
   GEO2D_Contour_t
   ConvexHull(const GEO2D_Contour_t& ctor) {
     GEO2D_Contour_t hull_ctor;
