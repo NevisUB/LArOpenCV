@@ -51,6 +51,9 @@ namespace larocv {
 
       /// Clear data method
       void ClearData();
+
+      /// Get a list of algorithm names
+      const std::vector<std::string>& Names() const;
       
       /// Algorithm ID getter from name (slow search)
       AlgorithmID_t ID (const std::string& name) const;

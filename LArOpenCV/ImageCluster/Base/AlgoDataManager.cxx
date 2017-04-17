@@ -17,6 +17,9 @@ namespace larocv {
       , _data_v()
     {}
 
+    const std::vector<std::string>& AlgoDataManager::Names() const
+    { return _name_v; }
+
     void AlgoDataManager::Register(const AlgorithmID_t algo_id, const std::string name)
     {
       LAROCV_INFO() << "Request to register an algorithm " << name << " with ID = " << algo_id<< std::endl;
