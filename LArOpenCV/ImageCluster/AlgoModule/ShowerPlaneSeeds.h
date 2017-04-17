@@ -37,7 +37,6 @@ namespace larocv {
   private:
     
     float _threshold;
-    AlgorithmID_t _seed_id;
     OneTrackOneShower _OneTrackOneShower;
     
   };

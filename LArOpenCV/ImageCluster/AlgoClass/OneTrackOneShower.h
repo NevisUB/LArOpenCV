@@ -84,8 +84,6 @@ namespace larocv {
     size_t _num_planes;
     // Pixel intensity threshold for image
     float  _pi_threshold;
-    // Cross plane tick resolution to allow possible 3D vertex creation from 2, 2D points
-    float  _xplane_tick_resolution;
 
     // Array of shower vertices after scanning vertex seed
     std::vector<data::Vertex3D> _shower_vtx3d_v;

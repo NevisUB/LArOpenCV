@@ -47,7 +47,7 @@ namespace larocv {
       temp_vtx2d.y = y;
     }
     catch(const larbys& err) {
-      LAROCV_WARNING() << "Projected point outside image boundary" << std::endl;
+      //LAROCV_WARNING() << "Projected point outside image boundary" << std::endl;
       return false;
     }
     //if( ((float)(img.at<unsigned char>((size_t)(row+0.5),(size_t)(col+0.5)))) < _pi_threshold )
@@ -222,7 +222,7 @@ namespace larocv {
 
     for (size_t xs_idx = 0; xs_idx < res.xs_v.size(); ++xs_idx) {
       auto const& xs_pt     = res.xs_v[xs_idx].pt;
-      auto const& dtheta    = res.dtheta_v[xs_idx];
+      //auto const& dtheta    = res.dtheta_v[xs_idx];
       auto center_line      = geo2d::Line<float>(xs_pt, xs_pt - res.center);
       // LAROCV_INFO() << "Radius " << res.radius << " Line ID " << xs_idx << " found xs " << xs_pt
       // 		    << " dtheta " << dtheta << std::endl;
@@ -248,7 +248,6 @@ namespace larocv {
     size_t nstep_y = (_dy * 2 / _step_size) + 1;
     size_t nstep_z = (_dz * 2 / _step_size) + 1;
 
-    float min_x = vtx3d.x - _dx;
     // construct possible coordinate array
     std::vector<float> x_v(nstep_x, 0.);
     std::vector<float> y_v(nstep_y, 0.);
