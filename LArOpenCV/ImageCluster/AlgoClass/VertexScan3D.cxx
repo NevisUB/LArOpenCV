@@ -47,7 +47,7 @@ namespace larocv {
       temp_vtx2d.y = y;
     }
     catch(const larbys& err) {
-      LAROCV_WARNING() << "Projected point outside image boundary" << std::endl;
+      //LAROCV_WARNING() << "Projected point outside image boundary" << std::endl;
       return false;
     }
     //if( ((float)(img.at<unsigned char>((size_t)(row+0.5),(size_t)(col+0.5)))) < _pi_threshold )
@@ -99,7 +99,22 @@ namespace larocv {
 	if (xs.pt.y > 0) theta_loc = 90.;
 	else theta_loc = 270.;
       } else {
-	theta_loc = acos(std::fabs(rel_pt.x) / cvtx.radius) * 180 / M_PI;
+	float numerator = std::fabs(rel_pt.x);
+	float denominator = cvtx.radius;
+	float arg = numerator / denominator;
+	assert(denominator>0);
+
+	if (arg > 1) {
+	  //make sure we aren't making a huge error...
+	  if (std::fabs(arg - 1) > 0.001) throw larbys("logic error");
+	  int arg_i = std::floor(arg);
+	  arg = (float) arg_i;
+	}
+
+	theta_loc = acos(arg) * 180 / M_PI;
+	//Dumb isnan check;
+	assert(theta_loc == theta_loc);
+	
 	if (rel_pt.x < 0 && rel_pt.y > 0) theta_loc = 180 - theta_loc;
 	if (rel_pt.x < 0 && rel_pt.y <= 0) theta_loc += 180;
 	if (rel_pt.x > 0 && rel_pt.y <= 0) theta_loc = 360 - theta_loc;
@@ -166,11 +181,12 @@ namespace larocv {
 	  // 		 << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
 	  xs_v.push_back(data::PointPCA(xs_pt, local_pca));
 	  dtheta_v.push_back(fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)));
-	// } catch (const larbys& err) {
+	  // } catch (const larbys& err) {
 	//   continue;
 	// }
       }
 
+      temp_res.center   = pt;
       temp_res.radius   = radius;
       temp_res.xs_v     = xs_v;
       temp_res.dtheta_v = dtheta_v;
@@ -206,7 +222,7 @@ namespace larocv {
 
     for (size_t xs_idx = 0; xs_idx < res.xs_v.size(); ++xs_idx) {
       auto const& xs_pt     = res.xs_v[xs_idx].pt;
-      auto const& dtheta    = res.dtheta_v[xs_idx];
+      //auto const& dtheta    = res.dtheta_v[xs_idx];
       auto center_line      = geo2d::Line<float>(xs_pt, xs_pt - res.center);
       // LAROCV_INFO() << "Radius " << res.radius << " Line ID " << xs_idx << " found xs " << xs_pt
       // 		    << " dtheta " << dtheta << std::endl;
@@ -232,7 +248,6 @@ namespace larocv {
     size_t nstep_y = (_dy * 2 / _step_size) + 1;
     size_t nstep_z = (_dz * 2 / _step_size) + 1;
 
-    float min_x = vtx3d.x - _dx;
     // construct possible coordinate array
     std::vector<float> x_v(nstep_x, 0.);
     std::vector<float> y_v(nstep_y, 0.);

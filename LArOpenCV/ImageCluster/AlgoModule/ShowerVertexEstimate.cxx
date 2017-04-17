@@ -15,14 +15,19 @@ namespace larocv {
   void ShowerVertexEstimate::_Configure_(const Config_t &pset) {
     _OneTrackOneShower.set_verbosity(this->logger().level());
     _OneTrackOneShower.Configure(pset.get<Config_t>("OneTrackOneShower"));
-    
+
+
     auto algo_name_vertex_seed = pset.get<std::string>("ShowerVertexSeed","");
+    std::cout << "Got algo name vertex seed " << algo_name_vertex_seed << std::endl;
+	
     _algo_id_vertex_seed = this->ID( algo_name_vertex_seed );
     if (!algo_name_vertex_seed.empty()) {
       _algo_id_vertex_seed = this->ID( algo_name_vertex_seed );
       if(_algo_id_vertex_seed==kINVALID_ALGO_ID)
 	throw larbys("You specified an invalid ShowerVertexSeed algorithm name");
     }
+    std::cout << "... this ID " << _algo_id_vertex_seed << std::endl;
+    
     auto algo_name_vertex_scan_seed = pset.get<std::string>("ShowerVertexScanSeed","");
     _algo_id_vertex_scan_seed = this->ID( algo_name_vertex_scan_seed );
     if (!algo_name_vertex_scan_seed.empty()) {
@@ -69,11 +74,12 @@ namespace larocv {
     for(auto const& meta : meta_v)
       _OneTrackOneShower.SetPlaneInfo(meta);
 
-    auto const& seed_v = AlgoData<data::VertexSeed3DArray>(_algo_id_vertex_seed,0);
-    
-    auto& data = AlgoData<data::Vertex3DArray>(0);
+    if(_algo_id_vertex_seed!=kINVALID_ALGO_ID) {
+      auto const& seed_v = AlgoData<data::VertexSeed3DArray>(_algo_id_vertex_seed,0);
+      _OneTrackOneShower.RegisterSeed(seed_v.as_vector());
+    }
 
-    _OneTrackOneShower.RegisterSeed(seed_v.as_vector());
+    auto& data = AlgoData<data::Vertex3DArray>(0);
     
     auto vtx3d_v = _OneTrackOneShower.CreateSingleShower(img_v);
     
@@ -99,8 +105,6 @@ namespace larocv {
 	    LAROCV_DEBUG() << "line @ " << ppca.line.pt << " @ dir " << ppca.line.dir << std::endl;
 	  }
 	}
-	
-	
 	data.emplace_back(std::move(res));
       }
     }

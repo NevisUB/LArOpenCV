@@ -122,27 +122,16 @@ namespace larocv {
 
 	  } //seed1
 	} //seed0
-	
       } //plane1
     } //plane0
 
-
     
     //
-    // 2) Merging prodecure for verticies within given 3D range
+    // 2) Scan for a 3D vertex @ candidate seeds
     //
-    
-    LAROCV_DEBUG() << "Merging nearby start @ " << cand_vtx_v.size() << std::endl;
-    if(_merge_nearby) _vtxana.MergeNearby(cand_vtx_v,_merge_distance);
-    LAROCV_DEBUG() << "& end with " << cand_vtx_v.size() << std::endl;
-
-    //
-    // 3) Scan for a 3D vertex @ candidate seeds
-    //
-    auto& vertex3dseedarr = AlgoData<data::VertexSeed3DArray>(0);
+    std::vector<VertexSeed3D> vertex3dseed_v;
     
     for(auto& cand_vtx3d : cand_vtx_v) {
-
       // For this 3D candidate seed, fill the 2D projection (VertexSeed3D::vtx2d_v)
       try {
 	_vtxana.UpdatePlanePosition(cand_vtx3d,_geo);
@@ -160,14 +149,21 @@ namespace larocv {
       size_t num_good_plane = 0;
       double dtheta_sum = 0;
 
-      // Require atleast 1 crossing point on 2 planes
+      int plane = -1;
+      // Require atleast 2 crossing point on 2 planes (using ADC image)
       for(auto const& cvtx2d : vtx3d.cvtx2d_v) {
+	plane=+1;
+	LAROCV_DEBUG() << "Found " << cvtx2d.xs_v.size() << " xs on plane " << plane << std::endl;
         if(cvtx2d.xs_v.size()<2) continue;
+	LAROCV_DEBUG() << "... accepted" << std::endl;
         num_good_plane++;
         dtheta_sum += cvtx2d.sum_dtheta();
       }
       
-      if(num_good_plane<2) continue;
+      if(num_good_plane<2) {
+	LAROCV_DEBUG() << "Num good plane < 2, SKIP!!" << std::endl;
+	continue;
+      }
       dtheta_sum /= (double)num_good_plane;
       LAROCV_DEBUG() << "Registering vertex seed type="<<(uint)cand_vtx3d.type
 		     << " @ ("<<vtx3d.x<<","<<vtx3d.y<<","<<vtx3d.z<<")"<<std::endl;
@@ -179,19 +175,40 @@ namespace larocv {
       // Optional: require there to be some charge in vincinity of projected vertex on 3 planes
       uint nvalid=0;
       if(_require_3planes_charge) {
+	LAROCV_DEBUG() << "Requiring 3 planes charge in circle... " << std::endl;
 	for(size_t plane=0;plane<3;++plane)  {
 	  auto pt= seed.vtx2d_v[plane];
-	  LAROCV_DEBUG() << plane << ") @ " << seed.vtx2d_v[plane] << std::endl;
+	  LAROCV_DEBUG() << "@ " << pt << " rad " << _allowed_radius << std::endl;
 	  auto npx = CountNonZero(img_v[plane],geo2d::Circle<float>(pt,_allowed_radius));
+	  LAROCV_DEBUG() << plane << ") @ " << seed.vtx2d_v[plane] << " see " << npx << " inside" << std::endl;
 	  if(npx) nvalid++;
 	}
-	if(nvalid!=3) continue;
+	if(nvalid!=3) {
+	  LAROCV_DEBUG() << "... invalid, SKIP!!" << std::endl;
+	  continue;
+	}
       }
       
       // Move seed into the output
-      vertex3dseedarr.emplace_back(std::move(seed));
+      vertex3dseed_v.emplace_back(std::move(seed));
       LAROCV_DEBUG() << "AlgoData size @ " << vertex3dseedarr.as_vector().size() << std::endl;
     } // end candidate vertex seed
+
+
+    //
+    // 3) Merging prodecure for verticies within given 3D range
+    //
+
+    /*
+    LAROCV_DEBUG() << "Merging nearby start @ " << cand_vtx_v.size() << std::endl;
+    if(_merge_nearby) _vtxana.MergeNearby(cand_vtx_v,_merge_distance);
+    LAROCV_DEBUG() << "& end with " << cand_vtx_v.size() << std::endl;
+    */
+
+    auto& vertex3dseedarr = AlgoData<data::VertexSeed3DArray>(0);
+    for(auto& vertex3dseed : vertex3dseed_v)
+      vertex3dseedarr.emplace_back(std::move(seed));
+    
   }
 }
 #endif

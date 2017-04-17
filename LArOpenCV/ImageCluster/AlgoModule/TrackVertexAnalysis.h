@@ -47,8 +47,7 @@ namespace larocv {
     bool _filter_by_xs;
     uint _required_xs_planes;
     uint _required_xs;
-    bool _compute_dqdx;
-    
+    bool _filter_wire_time_vtx;
   };
 
   /**

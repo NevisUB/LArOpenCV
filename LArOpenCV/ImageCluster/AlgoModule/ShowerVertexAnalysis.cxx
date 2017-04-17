@@ -53,10 +53,8 @@ namespace larocv {
     
     // Create containers for data
     Register(new data::Vertex3DArray);
-    for(size_t planeid=0;planeid<3;++planeid)
-      Register(new data::ParticleClusterArray);
-    for(size_t planeid=0;planeid<3;++planeid)
-      Register(new data::TrackClusterCompoundArray);
+    for(size_t plane=0;plane<3;++plane) Register(new data::ParticleClusterArray);
+    for(size_t plane=0;plane<3;++plane) Register(new data::TrackClusterCompoundArray);
     
   }
 

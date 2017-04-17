@@ -44,7 +44,6 @@ namespace larocv {
     VertexAnalysis _vtxana;
     VertexScan3D  _VertexScan3D;
 
-    float _threshold;
     float _allowed_radius;
     float _merge_distance;
     bool _require_3planes_charge;

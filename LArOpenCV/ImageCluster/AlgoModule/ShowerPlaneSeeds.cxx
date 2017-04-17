@@ -13,6 +13,8 @@ namespace larocv {
   
   void ShowerPlaneSeeds::_Configure_(const Config_t &pset)
   {
+
+    _threshold = pset.get<float>("Threshold");
     // Set algo verbosity
     _OneTrackOneShower.set_verbosity(this->logger().level());
     // Get algo config
@@ -60,7 +62,7 @@ namespace larocv {
       LAROCV_DEBUG() << "No input seed given, determine track edges" << std::endl;
       auto thresh_img = Threshold(track_img,_threshold,255); // threshold
       auto ctor_v     = FindContours(thresh_img); // and find contours
-
+      LAROCV_DEBUG() << "Found " << ctor_v.size() << " contours in track img (thresh:"<<_threshold<<")"<<std::endl;
       // Loop over contours and find 2 edge points
       // they are 2D track edge points == shower/track vertex candidate (to be filled in vertexseed_v)
       for(const auto& ctor : ctor_v) {
@@ -70,16 +72,19 @@ namespace larocv {
 	FindEdges(ctor,edge1,edge2);
 
 	// register edge 1 to a 2D seed container if valid
-	if (edge1.x!=kINVALID_FLOAT && edge1.y!=kINVALID_FLOAT)
+	if (edge1.x!=kINVALID_FLOAT && edge1.y!=kINVALID_FLOAT) {
+	  LAROCV_DEBUG() << "Edge identified @ " << edge1 << std::endl;
 	  vertexseed_v.emplace_back(std::move(edge1));
+	}
 
 	// register edge 2 to a 2D seed container if valid	  
-	if (edge2.x!=kINVALID_FLOAT && edge2.y!=kINVALID_FLOAT)
+	if (edge2.x!=kINVALID_FLOAT && edge2.y!=kINVALID_FLOAT) {
+	  LAROCV_DEBUG() << "Edge identified @ " << edge2 << std::endl;
 	  vertexseed_v.emplace_back(std::move(edge2));
+	}
 	  
       }
-      LAROCV_DEBUG() << "Saved " << vertexseed_v.size() << " 2D seeds" << std::endl;
-      
+      LAROCV_DEBUG() << "Saved " << vertexseed_v.size() << " 2D seeds from track edge points" << std::endl;
       LAROCV_DEBUG() << "Track input seeds given, filtering on shower image" << std::endl;
       
       uint ix=0;
@@ -108,8 +113,10 @@ namespace larocv {
 	// Reaching here means condition satisfied: move to output data rep
 	vertexseed2darray.emplace_back(std::move(seed));
       }// end seed filter
+    LAROCV_DEBUG() << "Determined " << vertexseed2darray.as_vector().size() << " vertex seeds" << std::endl;
     }// end plane
-    
+
+
   }
 }
 #endif

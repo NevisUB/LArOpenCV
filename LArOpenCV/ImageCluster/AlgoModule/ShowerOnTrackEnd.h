@@ -43,7 +43,6 @@ namespace larocv {
     VertexAnalysis _VertexAnalysis;
     double _overlap_fraction;
     double _circle_default_radius;
-    uint _pca_size;
   };
 
   /**
