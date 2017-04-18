@@ -2,15 +2,12 @@
 #define __VERTEXPARTICLECLUSTER_CXX__
 
 #include "VertexParticleCluster.h"
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include "LArOpenCV/Core/larbys.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
-#ifdef UNIT_TEST
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/ndarrayobject.h>
-#endif
+#include <sstream>
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 
 namespace larocv {
 
@@ -19,9 +16,6 @@ namespace larocv {
   {
     set_verbosity(msg::kNORMAL);
     _prange.set_verbosity(msg::kNORMAL);
-    // _dilation_size = 2;
-    // _dilation_iter = 1;
-    _blur_size     = 2;
     _theta_hi      = 5;
     _theta_lo      = 5;
     _pi_threshold  = 10;
@@ -40,9 +34,6 @@ namespace larocv {
   {
     std::stringstream ss;
     ss << "Configuration parameter dump..." << std::endl
-       << "    _dilation_size  = " << _dilation_size << std::endl
-       << "    _dilation_iter  = " << _dilation_iter << std::endl
-       << "    _blur_size      = " << _blur_size      << std::endl
        << "    _theta_hi       = " << _theta_hi       << std::endl
        << "    _theta_lo       = " << _theta_lo       << std::endl
        << "    _pi_threshold   = " << _pi_threshold   << std::endl
@@ -60,23 +51,21 @@ namespace larocv {
   {
     this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
     _prange.set_verbosity(logger().level());
-    //_dilation_size = pset.get<int>("DilationSize",2);
-    //_dilation_iter = pset.get<int>("DilationIter",1);
-    //_blur_size     = pset.get<int>("BlurSize",2);
     
-    _theta_hi = pset.get<int>("ThetaHi",10);
-    _theta_lo = pset.get<int>("ThetaLo",10);
-    _pi_threshold = pset.get<unsigned short>("PIThreshold",10);
-    _use_theta_half_angle       = pset.get<bool>("UseHalfAngle",true);
-    _use_xs_radius_threshold    = pset.get<bool>("UseXsRadiusMinDist",false);
-    _contour_dist_threshold     = pset.get<float>("ContourMinDist",5);
-    _refine_polar_cluster       = pset.get<bool>("RefinePolarCluster",true);
-    _refine_cartesian_cluster   = pset.get<bool>("RefineCartesianCluster",true);
-    _mask_fraction_radius       = pset.get<float>("MaskFractionRadius",-1.);
-    _mask_min_radius            = pset.get<float>("MaskMinRadius",3);
-    _merge_by_mask              = pset.get<bool>("MergeByMask",true);
-    _refine_cartesian_thickness = pset.get<uint>("RefineCartesianThickness",2);
-    _reset_xs                   = pset.get<bool>("ResetXs",false);
+    _theta_hi                   = pset.get<int>   ("ThetaHi",10);
+    _theta_lo                   = pset.get<int>   ("ThetaLo",10);
+    _pi_threshold               = pset.get<ushort>("PIThreshold",10);
+    _use_theta_half_angle       = pset.get<bool>  ("UseHalfAngle",true);
+    _use_xs_radius_threshold    = pset.get<bool>  ("UseXsRadiusMinDist",false);
+    _contour_dist_threshold     = pset.get<float> ("ContourMinDist",5);
+    _refine_polar_cluster       = pset.get<bool>  ("RefinePolarCluster",true);
+    _refine_cartesian_cluster   = pset.get<bool>  ("RefineCartesianCluster",true);
+    _mask_fraction_radius       = pset.get<float> ("MaskFractionRadius",-1.);
+    _mask_min_radius            = pset.get<float> ("MaskMinRadius",3);
+    _merge_by_mask              = pset.get<bool>  ("MergeByMask",true);
+    _refine_cartesian_thickness = pset.get<uint>  ("RefineCartesianThickness",2);
+    _reset_xs                   = pset.get<bool>  ("ResetXs",false);
+    
     if (_reset_xs) {
       _reset_fixed_rad = pset.get<bool>("ResetXsFixedRad",true);
       _reset_fixed_rad_size = pset.get<float>("ResetXsFixedRadSize",10);
@@ -111,14 +100,6 @@ namespace larocv {
       ss0 << "thresh_plane_input.png";
       cv::imwrite(std::string(ss0.str()).c_str(), thresh_img);
     }
-    
-    /*
-    // Using dilate/blur/threshold for super cluster
-    ::cv::Mat blur_img;
-    auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,::cv::Size(_dilation_size,_dilation_size));
-    ::cv::dilate(thresh_img,blur_img,kernel,::cv::Point(-1,-1),_dilation_iter);
-    ::cv::blur(blur_img,blur_img,::cv::Size(_blur_size,_blur_size));
-    */
     
     // Create seed clusters
     LAROCV_DEBUG() << "Masking region @ " << cvtx2d.center << " rad: " << cvtx2d.radius << std::endl;

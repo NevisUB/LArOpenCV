@@ -20,8 +20,7 @@ namespace larocv {
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
     VertexParticleClusterMaker(const std::string name = "VertexParticleClusterMaker") :
-      ImageAnaBase(name),
-      _AtomicAnalysis()
+      ImageAnaBase(name)
     {}
     
     /// Default destructor
@@ -42,18 +41,13 @@ namespace larocv {
 
   private:
     VertexParticleCluster _VertexParticleCluster;
-    
-    AlgorithmID_t _vertex_estimate_algo_id;
-    AlgorithmID_t _super_cluster_algo_id;
-    unsigned short _pi_threshold;
-    uint _min_particle_size;
-    float _contour_pad;
 
-    bool _create_compound;
-    DefectBreaker _DefectBreaker;
-    AtomicAnalysis _AtomicAnalysis;
-    bool _compute_dqdx;
-    data::ParticleType_t _particle_type;
+    AlgorithmID_t _track_vertex_estimate_algo_id;
+    AlgorithmID_t _shower_vertex_estimate_algo_id;
+    AlgorithmID_t _super_cluster_algo_id;
+    
+    float _pi_threshold;
+    
   };
 
   /**
