@@ -11,16 +11,20 @@ namespace larocv {
   void VertexScan3D::Configure(const Config_t &pset)
   {
     this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
+
     _dx = pset.get<float>("dX");
     _dy = pset.get<float>("dY");
     _dz = pset.get<float>("dZ");
-    _step_size = pset.get<float>("SizeStep3D");
+
+    _step_size   = pset.get<float>("SizeStep3D");
     _step_radius = pset.get<float>("SizeStep2D");
-    _min_radius = pset.get<float>("MinRadius2D");
-    _max_radius = pset.get<float>("MaxRadius2D");
-    _pi_threshold = pset.get<float>("PIThreshold");
+    _min_radius  = pset.get<float>("MinRadius2D");
+    _max_radius  = pset.get<float>("MaxRadius2D");
+    
+    _pi_threshold     = pset.get<float>("PIThreshold");
     _angle_supression = pset.get<float>("AngleSupression");
-    _pca_box_size = pset.get<float>("PCABoxSize");
+    _pca_box_size     = pset.get<float>("PCABoxSize");
+    
   }
 
   bool VertexScan3D::CreateCircleVertex(cv::Mat img,
@@ -47,7 +51,6 @@ namespace larocv {
       temp_vtx2d.y = y;
     }
     catch(const larbys& err) {
-      //LAROCV_WARNING() << "Projected point outside image boundary" << std::endl;
       return false;
     }
     //if( ((float)(img.at<unsigned char>((size_t)(row+0.5),(size_t)(col+0.5)))) < _pi_threshold )
@@ -56,7 +59,7 @@ namespace larocv {
     // LAROCV_INFO() << "Plane " << plane
     // 		  << " (" << temp_vtx2d.x << "," << temp_vtx2d.y << ")"
     // 		  << " xs: " << res.xs_v.size() << std::endl;
-    if(res.weight<0) {
+    if(res.weight < 0) {
       res.center = temp_vtx2d;
       res.radius = _min_radius;
     }
@@ -150,12 +153,10 @@ namespace larocv {
     for (float radius = _min_radius; radius <= _max_radius; radius += _step_radius)
       radius_v.push_back(radius);
 
-    //apply 2 degrees angular supression
+    // apply 2 degrees angular supression
     auto const temp_xs_vv = QPointArrayOnCircleArray(img, pt, radius_v, _pi_threshold, _angle_supression);
-    // for (size_t r_idx = 0; r_idx < radius_v.size(); ++r_idx) 
-    //   LAROCV_DEBUG() << r_idx << ") rad " << radius_v[r_idx] << " sz " << temp_xs_vv[r_idx].size() << std::endl;
     
-    double min_weight = 1.e9;
+    double min_weight = kINVALID_DOUBLE;
     data::CircleVertex temp_res;
     for (size_t r_idx = 0; r_idx < radius_v.size(); ++r_idx) {
 
@@ -182,8 +183,8 @@ namespace larocv {
 	  xs_v.push_back(data::PointPCA(xs_pt, local_pca));
 	  dtheta_v.push_back(fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)));
 	  // } catch (const larbys& err) {
-	//   continue;
-	// }
+	  //   continue;
+	  // }
       }
 
       temp_res.center   = pt;
@@ -193,10 +194,8 @@ namespace larocv {
 
       temp_res.weight = CircleWeight(temp_res);
 	
-      // LAROCV_INFO() << "CircleWeight: " << temp_res.weight << std::endl;
-      if (temp_res.weight < 0) {
-	continue;
-      }
+      LAROCV_DEBUG() << "CircleWeight: " << temp_res.weight << std::endl;
+      if (temp_res.weight < 0)  continue;
 
       // if this is the 1st loop, set the result
       if (res.xs_v.empty()) {
@@ -263,12 +262,12 @@ namespace larocv {
 		  << "    Scan X " << vtx3d.x - _dx << " => " << vtx3d.x + _dx << " in " << nstep_x << " steps" << std::endl
 		  << "    Scan Y " << vtx3d.y - _dy << " => " << vtx3d.y + _dy << " in " << nstep_y << " steps" << std::endl
 		  << "    Scan Z " << vtx3d.z - _dz << " => " << vtx3d.z + _dz << " in " << nstep_z << " steps" << std::endl;
-
+    
     static data::Vertex3D trial_vtx3d;
     geo2d::Vector<float> temp_vtx2d;
     std::vector<size_t> num_xspt_count_v;
     std::array<bool,3> valid_v;
-    double best_weight = 1.e9;
+    double best_weight = kINVALID_DOUBLE;
 
     for (size_t step_x = 0; step_x < nstep_x; ++step_x) {
       trial_vtx3d.x = x_v[step_x];
@@ -321,7 +320,7 @@ namespace larocv {
 	  //    	   << trial_vtx3d.x << "," << trial_vtx3d.y << "," << trial_vtx3d.z << ")" << std::endl;
 	  
 	  double weight1, weight2;
-	  weight1 = weight2 = 1.e9;
+	  weight1 = weight2 = kINVALID_DOUBLE;
 	  
 	  for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
 	    if(!valid_v[plane]) continue;

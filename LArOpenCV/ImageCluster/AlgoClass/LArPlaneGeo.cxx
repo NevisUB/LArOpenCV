@@ -79,8 +79,12 @@ namespace larocv {
     float max_x = min_x + _num_cols_v[plane] * _time_comp_factor_v[plane];
 
     if(tick < min_x || max_x < tick) {
-      LAROCV_CRITICAL() << "3D X position " << x << " = tick " << tick
-      << " out of bound " << min_x << " => " << max_x << std::endl;
+      /*
+      std::stringstream ss;
+      ss << "3D X position " << x << " = tick " << tick
+	 << " out of bound " << min_x << " => " << max_x << std::endl;
+      throw larbys(ss.str());
+      */
       throw larbys();
     }
 
@@ -93,11 +97,14 @@ namespace larocv {
     auto const& min_y = _origin_v.at(plane).y;
     auto const& max_y = min_y + _num_rows_v[plane] * _wire_comp_factor_v[plane];
     if(wire < min_y || max_y < wire) {
+      /*
       std::stringstream ss;
       ss << "3D (Y,Z) = (" << y << "," << z << ")"
 	 << " corresponds to wire " << wire << " on plane " << plane 
 	 << " ... out of bound " << min_y << " => " << max_y << std::endl;
       throw larbys(ss.str());
+      */
+      throw larbys();
     }
     return (wire - min_y) / _wire_comp_factor_v[plane];
   }
@@ -183,13 +190,18 @@ namespace larocv {
 			     const geo2d::VectorArray<float>& pts1_v, const size_t plane1,
 			     bool overcover) const
   {
+
+    if (pts0_v.empty()) return 0.0;
+    if (pts1_v.empty()) return 0.0;
     
-    //get the smallest set of points
+    // Get the smallest set of points
     const geo2d::VectorArray<float>* max_pts_v=nullptr;
     const geo2d::VectorArray<float>* min_pts_v=nullptr;
+
     size_t min_plane=kINVALID_SIZE;
     size_t max_plane=kINVALID_SIZE;
-    if (pts0_v.size()>=pts1_v.size()) {
+    
+    if (pts0_v.size() >= pts1_v.size()) {
       max_pts_v = &pts0_v;
       min_pts_v = &pts1_v;
       max_plane = plane0;

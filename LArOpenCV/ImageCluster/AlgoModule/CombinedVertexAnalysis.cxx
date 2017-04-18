@@ -95,6 +95,11 @@ namespace larocv {
 	  // auto track_comp_id = ass_man.GetOneAss(track_par,track_comp_data.ID());
 	  // const auto& track_comp    = track_comp_data.as_vector()[track_comp_id];
 	  track_par.type=data::ParticleType_t::kShower;
+	  LAROCV_DEBUG() << "Inserting particle @ plane " << plane << " sz " << track_par._ctor.size() << std::endl;
+	  if(track_par._ctor.empty()) {
+	    LAROCV_DEBUG() << "... not inserting" << std::endl;
+	    continue;
+	  }
 	  this_par_data.push_back(track_par);
 	  // comp_data.push_back(track_comp);
 	  // Associate one particle to one track cluster compound

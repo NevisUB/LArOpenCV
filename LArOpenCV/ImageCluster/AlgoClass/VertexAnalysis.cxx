@@ -19,7 +19,9 @@ namespace larocv {
 
   void
   VertexAnalysis::Configure(const Config_t &pset)
-  {}
+  {
+    this->set_verbosity((msg::Level_t)pset.get<int>("Verbosity"));
+  }
 
   void
   VertexAnalysis::ResetGeo() {
@@ -165,8 +167,10 @@ namespace larocv {
     std::vector<size_t> seed_v;
     seed_v.resize(3);
 
-    for(size_t planeid=0;planeid<3;++planeid)
-      seed_v[planeid]=pars_ptr_vv[planeid].size();
+    for(size_t plane = 0; plane < 3; ++plane) {
+      seed_v[plane] = pars_ptr_vv[plane].size();
+      LAROCV_DEBUG() << seed_v[plane] << " particle on plane " << plane << std::endl;
+    }
 
     MatchBookKeeper _MatchBookKeeper;
     _MatchBookKeeper.Reset();
@@ -177,23 +181,25 @@ namespace larocv {
     clusters_per_plane_vv.resize(3);
 
     size_t offset=0;
-    for(size_t planeid=0;planeid<3;++planeid) {
-      auto& clusters_per_plane_v = clusters_per_plane_vv[planeid];
-      const auto& pars_v = pars_ptr_vv[planeid];
-      for(size_t parid=0;parid<pars_v.size();++parid) {
+    for(size_t plane=0;plane<3;++plane) {
+      auto& clusters_per_plane_v = clusters_per_plane_vv[plane];
+      const auto& pars_v = pars_ptr_vv[plane];
+      LAROCV_DEBUG() << " @ plane " << plane << " see " << pars_v.size() << " particles (offset:"<<offset<<")"<< std::endl;
+      for(size_t parid=0; parid<pars_v.size(); ++parid) {
+	const auto& par = pars_v[parid];
 	clusters_per_plane_v.push_back(parid+offset);
-	particle_ptr_v.push_back(pars_v[parid]);
-	particle_id_to_plane_v.emplace_back(planeid,parid);
+	particle_ptr_v.push_back(par);
+	particle_id_to_plane_v.emplace_back(plane,parid);
       }
-      offset+=pars_v.size();
+      offset += pars_v.size();
     }
     	
     auto comb_vv = PlaneClusterCombinations(seed_v);
     LAROCV_DEBUG()<<"----> Calculated " << comb_vv.size() << " combinations" << std::endl;
     
     for(const auto& comb_v : comb_vv) {
-      LAROCV_DEBUG() << "======" << std::endl;
-
+      LAROCV_DEBUG() << "comb size... "<< comb_v.size() << std::endl;
+      
       if (comb_v.size()==2) {
 
 	auto plane0=comb_v[0].first;
@@ -206,7 +212,7 @@ namespace larocv {
 	auto cid1=comb_v[1].second;
 
 	LAROCV_DEBUG() << "["<<plane0<<","<<cid0<<"] & "
-		       << "["<<plane1<<","<<cid1<<"]"<<std::endl;
+		  << "["<<plane1<<","<<cid1<<"]"<<std::endl;
 	
 	auto id0 = clusters_per_plane_vv[plane0][cid0];
 	auto id1 = clusters_per_plane_vv[plane1][cid1];
@@ -224,8 +230,9 @@ namespace larocv {
 	const auto& ctor0 = particle_ptr_v[id0]->_ctor;
 	const auto& ctor1 = particle_ptr_v[id1]->_ctor;
 
-	if (ctor0.empty()) throw larbys("Contour 0 @ undefined?");
-	if (ctor1.empty()) throw larbys("Contour 1 @ undefined?");
+	if (ctor0.empty()) throw larbys();
+	if (ctor1.empty()) throw larbys();
+
 
 	std::vector<size_t> pair_v(2,kINVALID_SIZE);
 
@@ -235,7 +242,7 @@ namespace larocv {
 	auto nzero0_i = FindNonZero(img0);
 	auto nzero1_i = FindNonZero(img1);
 	
-	//cast to float
+	// cast to float
 	geo2d::VectorArray<float> nzero0_f;
 	nzero0_f.reserve(nzero0_i.size());
 
@@ -251,7 +258,7 @@ namespace larocv {
 	auto overlap = _geo.Overlap(nzero0_f,plane0,nzero1_f,plane1,false);
 	LAROCV_DEBUG() << "overlap " << overlap << std::endl;
 	
-	if (overlap<threshold) continue;
+	if (overlap < threshold) continue;
 
 	std::vector<uint> match_v(2,kINVALID_INT);
 	match_v[0]=id0;
@@ -498,9 +505,9 @@ namespace larocv {
     std::vector<std::vector<const data::ParticleCluster*> > pars_ptr_vv;
     pars_ptr_vv.resize(pars_vv.size());
     
-    for(size_t planeid=0;planeid<pars_vv.size();++planeid) {
-      auto& pars_v     = pars_vv[planeid];
-      auto& pars_ptr_v = pars_ptr_vv[planeid];
+    for(size_t plane=0;plane<pars_vv.size();++plane) {
+      auto& pars_v     = pars_vv[plane];
+      auto& pars_ptr_v = pars_ptr_vv[plane];
       pars_ptr_v.reserve(pars_v.size());
       
       for(const auto& par : pars_v)
@@ -518,8 +525,8 @@ namespace larocv {
       throw larbys("Input particle array should be of size 3");
 
     uint valid_planes=0;
-    for(size_t planeid=0;planeid<3;++planeid)
-      if (pars_ptr_vv[planeid].size()==nxs)
+    for(size_t plane=0;plane<3;++plane)
+      if (pars_ptr_vv[plane].size()==nxs)
 	valid_planes++;
 
     if (valid_planes<nplanes) return false;
