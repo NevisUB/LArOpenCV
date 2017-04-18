@@ -38,7 +38,7 @@ namespace larocv {
     bool _PostProcess_() const;
 
   private:
-    AlgorithmID_t _seed_id;
+
     AlgorithmID_t _vertex_estimate_algo_id;
     
     LArPlaneGeo _geo;
