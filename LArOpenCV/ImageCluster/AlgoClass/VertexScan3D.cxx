@@ -12,7 +12,7 @@ namespace larocv {
   {
     this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
     LAROCV_DEBUG() << "Set verbosity of VertexScan3D @ " << (ushort)this->logger().level() << std::endl;
-    this->set_verbosity((msg::Level_t)0);
+    //this->set_verbosity((msg::Level_t)0);
     _dx = pset.get<float>("dX");
     _dy = pset.get<float>("dY");
     _dz = pset.get<float>("dZ");
