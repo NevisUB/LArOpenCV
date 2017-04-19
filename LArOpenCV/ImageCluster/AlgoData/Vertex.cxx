@@ -19,6 +19,9 @@ namespace larocv {
     
     float CircleVertex::sum_dtheta() const
     { float res=0; for(auto const& d : dtheta_v) res += d; return res; }
+    
+    float CircleVertex::mean_dtheta() const
+    { float res=0; for(auto const& d : dtheta_v) res += d; return (res / (float) dtheta_v.size()) ; }
 
     double Vertex3D::dist(const Vertex3D& pt) const
     { return sqrt(pow(x-pt.x,2)+pow(y-pt.y,2)+pow(z-pt.z,2)); }

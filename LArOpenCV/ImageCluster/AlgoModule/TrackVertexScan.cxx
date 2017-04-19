@@ -29,7 +29,6 @@ namespace larocv {
     auto const vtx_algo_name = pset.get<std::string>("VertexEstimateAlgo");
     _vertex_estimate_algo_id = this->ID(vtx_algo_name);
     
-
     // Merge very nearby candidate vertices
     _merge_nearby = pset.get<bool>("MergeNearby",true);
     if(_merge_nearby) 
@@ -39,8 +38,8 @@ namespace larocv {
     _require_3planes_charge=pset.get<bool>("Require3PlanesCharge");
     
     if(_require_3planes_charge)
-      _allowed_radius=pset.get<float>("SearchRadiusSize");//5      
-
+      _allowed_radius=pset.get<float>("SearchRadiusSize"); //5
+    
     Register(new data::Vertex3DArray);
   }
 
@@ -71,26 +70,39 @@ namespace larocv {
     // 1) Scan for a 3D vertex @ candidate seeds
     //
     std::vector<data::Vertex3D> vertex3d_v;
-    
-    for(auto& cand_vtx3d : cand_vtx_v) {
-      
+    LAROCV_DEBUG() << "See " << cand_vtx_v.size() << " 3D candidate track vertices" << std::endl;
+    //for(auto& cand_vtx3d : cand_vtx_v) {
+    for(size_t vertex_id=0; vertex_id<cand_vtx_v.size();++vertex_id) {
+      const auto& cand_vtx3d = cand_vtx_v[vertex_id];
+      LAROCV_DEBUG() << "Vertex " << vertex_id << std::endl;
+      LAROCV_DEBUG() << "OLD estimate @ (x,y,z)=("<<cand_vtx3d.x<<","<<cand_vtx3d.y<<","<<cand_vtx3d.z<<")"<<std::endl;
+      for(ushort plane=0;plane<3;++plane) {
+	const auto& vtx2d = cand_vtx3d.vtx2d_v.at(plane);
+	LAROCV_DEBUG() << plane << ") (x,y)=(" << vtx2d.pt.x << "," << vtx2d.pt.y << ")" << std::endl;
+      }
+	
       // Scan 3D region centered @ this vertex seed
       auto vtx3d    = _VertexScan3D.RegionScan3D(data::VertexSeed3D(cand_vtx3d), img_v);
       
+      LAROCV_DEBUG() << "NEW estimate @ (x,y,z)=("<<vtx3d.x<<","<<vtx3d.y<<","<<vtx3d.z<<")"<<std::endl;
+      for(ushort plane=0;plane<3;++plane) {
+	const auto& vtx2d = vtx3d.vtx2d_v.at(plane);
+	LAROCV_DEBUG() << plane << ") (x,y)=(" << vtx2d.pt.x << "," << vtx2d.pt.y << ")" << std::endl;
+      }
       size_t num_good_plane = 0;
       double dtheta_sum = 0;
 
       int plane = -1;
       // Require atleast 2 crossing point on 2 planes (using ADC image)
       for(auto const& cvtx2d : vtx3d.cvtx2d_v) {
-	plane = +1;
+	plane += 1;
 	LAROCV_DEBUG() << "Found " << cvtx2d.xs_v.size() << " xs on plane " << plane << std::endl;
         if(cvtx2d.xs_v.size()<2) continue;
 	LAROCV_DEBUG() << "... accepted" << std::endl;
         num_good_plane++;
         dtheta_sum += cvtx2d.sum_dtheta();
       }
-      
+
       if(num_good_plane < 2) {
 	LAROCV_DEBUG() << "Num good plane < 2, SKIP!!" << std::endl;
 	continue;

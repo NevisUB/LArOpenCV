@@ -71,6 +71,8 @@ namespace larocv {
       void Clear();
       /// Sum of dtheta_v
       float sum_dtheta() const;
+      /// Mean of dtheta_v
+      float mean_dtheta() const;
       
       geo2d::Circle<float> as_circle()
       { return geo2d::Circle<float>(center,radius); }
