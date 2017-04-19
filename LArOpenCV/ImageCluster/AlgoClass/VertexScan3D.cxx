@@ -317,8 +317,8 @@ namespace larocv {
 	  if (!num_xspt || num_xspt_count_v.size() <= num_xspt || num_xspt_count_v[num_xspt] < 2) continue;
 	  
 	  LAROCV_DEBUG() << "Enough valid planes, calculating weight (num_xspt="<<num_xspt<<")"<<std::endl;
-	  double weight1, weight2;
-	  weight1 = weight2 = kINVALID_DOUBLE;
+	  // double weight1, weight2;
+	  // weight1 = weight2 = kINVALID_DOUBLE;
 	  std::array<double,3> weight_v;
 	  for(auto& w : weight_v) w=kINVALID_DOUBLE;
 	  
