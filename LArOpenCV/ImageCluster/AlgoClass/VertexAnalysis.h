@@ -118,6 +118,9 @@ namespace larocv {
 
     bool
     UpdatePlanePosition(data::Vertex3D& vtx, const LArPlaneGeo& geo, size_t plane) const;
+
+    bool
+    UpdatePlanePosition(data::Vertex3D& vtx, const LArPlaneGeo& geo, std::vector<bool>& selection) const;
     
   private:
 
