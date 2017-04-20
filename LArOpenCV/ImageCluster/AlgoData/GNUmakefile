@@ -20,7 +20,7 @@ OSNAME          = $(shell uname -s)
 HOST            = $(shell uname -n)
 OSNAMEMODE      = $(OSNAME)
 
-LDFLAGS += -L$(LARLITE_LIBDIR) -lLArOpenCV_Core -lLArOpenCV_ImageClusterBase -lRecoTool_ClusterRecoUtil -lRecoTool_ClusterRecoUtilAlg
+LDFLAGS += -L$(LARLITE_LIBDIR) -lLArOpenCV_Core -lLArOpenCV_ImageClusterBase 
 LDFLAGS += -L$(GEO2D_LIBDIR) -lGeo2D_Core
 
 # call kernel specific compiler setup
