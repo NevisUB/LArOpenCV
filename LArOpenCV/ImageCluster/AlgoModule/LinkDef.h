@@ -25,6 +25,8 @@
 #pragma link C++ class larocv::ShowerPlaneSeeds+;
 #pragma link C++ class larocv::ShowerVertexScan+;
 #pragma link C++ class larocv::ShapeAnalysis+;
+#pragma link C++ class larocv::EmptyAlgoModule+;
+#pragma link C++ class larocv::TrumpExample+:
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
