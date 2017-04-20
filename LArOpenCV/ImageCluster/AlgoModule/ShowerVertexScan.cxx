@@ -124,24 +124,28 @@ namespace larocv {
     for(auto& cand_vtx3d : cand_vtx_v) {
 
       // For this 3D candidate seed, check how many planes have vertices still in the image after projection
-      std::vector<bool> selection;
-      _vtxana.UpdatePlanePosition(cand_vtx3d,_geo,selection);
+      std::array<bool,3> in_image_v;
+      _vtxana.UpdatePlanePosition(cand_vtx3d,_geo,in_image_v);
 
-      int in_image_counter = 0;
-
-      for (auto each : selection )  if (each)in_image_counter +=1;
-
-      
-      if (in_image_counter<2) continue;
+      ushort in_image_ctr=0;
+      for (auto each : in_image_v){
+	if (each) {
+	  in_image_ctr++;
+	}
+      }
+      if (in_image_ctr < 2) {
+	// Atleast 2 planes have 3D vertex outside ROI, pass
+	continue;
+      }
       
       // Scan 3D region centered @ this vertex seed
       auto vtx3d    = _VertexScan3D.RegionScan3D(data::VertexSeed3D(cand_vtx3d), img_v);
-      
+
+
+      // Require atleast 2 crossing point on 2 planes (using ADC image)
       size_t num_good_plane = 0;
       double dtheta_sum = 0;
-
       int plane = -1;
-      // Require atleast 2 crossing point on 2 planes (using ADC image)
       for(auto const& cvtx2d : vtx3d.cvtx2d_v) {
 	plane += 1;
 	LAROCV_DEBUG() << "Found " << cvtx2d.xs_v.size() << " xs on plane " << plane << std::endl;

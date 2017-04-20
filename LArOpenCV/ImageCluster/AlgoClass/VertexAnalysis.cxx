@@ -621,21 +621,19 @@ namespace larocv {
 
   
   bool
-  VertexAnalysis::UpdatePlanePosition(data::Vertex3D& vtx, const LArPlaneGeo& geo, std::vector<bool>& selection) const {
+  VertexAnalysis::UpdatePlanePosition(data::Vertex3D& vtx, const LArPlaneGeo& geo, std::array<bool,3>& in_image_v) const {
 
-    selection.clear();
-    selection.resize(3);
     vtx.vtx2d_v.clear();
     vtx.vtx2d_v.resize(3);
     for(size_t plane=0; plane<3; ++plane) {
       auto& vtx2d = vtx.vtx2d_v[plane].pt;
-      selection[plane] =  true;
+      in_image_v[plane] = true;
       try{ 
 	vtx2d.x = geo.x2col (vtx.x,plane);
 	vtx2d.y = geo.yz2row(vtx.y,vtx.z,plane);
       }
       catch(const larbys& err){
-	selection[plane] = false;
+	in_image_v[plane] = false;
 	continue;
       }
     }

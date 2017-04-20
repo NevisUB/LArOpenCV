@@ -120,7 +120,7 @@ namespace larocv {
     UpdatePlanePosition(data::Vertex3D& vtx, const LArPlaneGeo& geo, size_t plane) const;
 
     bool
-    UpdatePlanePosition(data::Vertex3D& vtx, const LArPlaneGeo& geo, std::vector<bool>& selection) const;
+    UpdatePlanePosition(data::Vertex3D& vtx, const LArPlaneGeo& geo, std::array<bool,3>& in_image_v) const;
     
   private:
 

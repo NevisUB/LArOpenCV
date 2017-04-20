@@ -513,7 +513,7 @@ namespace larocv {
       int id0=id1-1;
       int id2=id1+1;
 
-      if(id0 < 0)     id0 = last_id-1;
+      if(id0 < 0) id0 = last_id-1;
       if(id2 >= last_id) id2 = 0;
       
       geo2d::Vector<float> pt0(ctor[id0]);
@@ -528,8 +528,8 @@ namespace larocv {
       auto pt21 = pt2-pt1;
 
       //for now use this
-      double angle = std::acos(pt21.dot(pt10) / (geo2d::length(pt10) * geo2d::length(pt21))); 
-      angle*=rad2deg;
+      double angle = std::acos( pt21.dot(pt10) / (geo2d::length(pt10) * geo2d::length(pt21))); 
+      angle *= rad2deg;
 
       angle_sum += angle / d21;
       weight_sum += 1/d21;

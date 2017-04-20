@@ -15,6 +15,20 @@
 namespace larocv {
 
   cv::Mat
+  Flip(const cv::Mat& img, int flipCode) {
+    cv::Mat dst_img(img.size(),img.type(),CV_8UC1);
+    cv::flip(img,dst_img,flipCode);
+    return dst_img;
+  }
+  
+  cv::Mat
+  Transpose(const cv::Mat& img) {
+    cv::Mat dst_img(img.size(),img.type(),CV_8UC1);    
+    cv::transpose(img,dst_img);
+    return dst_img;
+  }
+  
+  cv::Mat
   BlankImage(const cv::Mat& img,uint val){
     cv::Mat dst_img(img.size(),img.type(),CV_8UC1);    
     dst_img.setTo(val);

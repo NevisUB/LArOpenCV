@@ -35,6 +35,7 @@ namespace larocv {
     double sigma_pixel_dist;
     double angular_sum;
     ChunkType_t type;
+
     
     void BasicFill(const GEO2D_Contour_t& contour);
     void BasicImageFill(const GEO2D_Contour_t& contour, cv::Mat& adc_img, float threshold=0.0);
@@ -59,6 +60,13 @@ namespace larocv {
       type       = ChunkType_t::kUnknown;
     }
 
+
+    // PreProcessor Only Related (for backward compatibility)
+    geo2d::Line<float> overallPCA;
+    geo2d::Line<float> edge1PCA;
+    geo2d::Line<float> edge2PCA;
+    bool ignore;
+    bool straight;
     
   };
 

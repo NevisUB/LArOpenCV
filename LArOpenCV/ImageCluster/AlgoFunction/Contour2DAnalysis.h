@@ -8,8 +8,7 @@
 
 namespace larocv {
 
-  cv::RotatedRect
-  MinAreaRect(const GEO2D_Contour_t& ctor);
+  cv::RotatedRect MinAreaRect(const GEO2D_Contour_t& ctor);
 
   double
   ArcLength(const GEO2D_Contour_t& ctor, bool closed=false);

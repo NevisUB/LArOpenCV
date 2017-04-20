@@ -43,7 +43,6 @@ namespace larocv {
 	throw larbys("Given ParticleCluster name is INVALID!");
     }
     
-    
     _nplanes=3;
     Register(new data::Vertex3DArray);
     for(size_t plane=0;plane<_nplanes;++plane) Register(new data::ParticleClusterArray);
@@ -64,8 +63,8 @@ namespace larocv {
     // Get the assman
     auto& ass_man = AssManager();
     auto& vertex_data = AlgoData<data::Vertex3DArray>(0);
-    const auto& shower_vertex_data       = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);
-    const auto& track_vertex_data        = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
+    const auto& shower_vertex_data = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);
+    const auto& track_vertex_data  = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
     
     std::vector<const data::Vertex3D*> vertex3d_v;
     for(const auto& vtx : shower_vertex_data.as_vector()) vertex3d_v.push_back(&vtx);
@@ -90,46 +89,28 @@ namespace larocv {
 	// Get the associated track particles to this vertex, copy them to this algo data
 	auto par_ass_id_v = ass_man.GetManyAss(vtx3d,par_data.ID());
 	for(auto par_id : par_ass_id_v) {
-	  auto track_par = par_data.as_vector().at(par_id);
-	  // if (track_par.type!=data::ParticleType_t::kTrack) throw larbys("Not a track particle!");
-	  // auto track_comp_id = ass_man.GetOneAss(track_par,track_comp_data.ID());
-	  // const auto& track_comp    = track_comp_data.as_vector()[track_comp_id];
-	  track_par.type=data::ParticleType_t::kShower;
-	  LAROCV_DEBUG() << "Inserting particle @ plane " << plane << " sz " << track_par._ctor.size() << std::endl;
-	  if(track_par._ctor.empty()) {
+	  auto par = par_data.as_vector().at(par_id);
+	  /*
+	    if (track_par.type!=data::ParticleType_t::kTrack) throw larbys("Not a track particle!");
+	    auto track_comp_id = ass_man.GetOneAss(track_par,track_comp_data.ID());
+	    const auto& track_comp    = track_comp_data.as_vector()[track_comp_id];
+	  */
+	  // All particles are shower type at the moment until we look at the relative pixel fractions
+	  par.type = data::ParticleType_t::kShower;
+	  LAROCV_DEBUG() << "Inserting particle @ plane " << plane << " sz " << par._ctor.size() << std::endl;
+	  if(par._ctor.empty()) {
 	    LAROCV_DEBUG() << "... not inserting" << std::endl;
 	    continue;
 	  }
-	  this_par_data.push_back(track_par);
-	  // comp_data.push_back(track_comp);
-	  // Associate one particle to one track cluster compound
-	  // AssociateOne(par_data.as_vector().back(),comp_data.as_vector().back());
-	  // Associate this particle (one of many) to this vertex
+	  this_par_data.push_back(par);
 	  AssociateMany(vtx3d_copy,this_par_data.as_vector().back());
-	  // Associate this compound (one of many) to this vertex
-	  // AssociateMany(vtx3d_copy,comp_data.as_vector().back());
-	}
-
-	/*
-	// Get the associated shower particles to this vertex, copy them to this algo data
-	auto shower_par_ass_id_v = ass_man.GetManyAss(vtx3d,shower_par_data.ID());	
-	for(auto shower_par_id : shower_par_ass_id_v) {
-	  const auto& par = shower_par_data.as_vector()[shower_par_id];
-	  if (par.type==data::ParticleType_t::kShower) {
-	    par_data.push_back(par);
-	    AssociateMany(vtx3d_copy,par_data.as_vector().back());
-	  }
-	  else if (par.type==data::ParticleType_t::kTrack) {
-	    par_data.push_back(par);
-	    auto track_comp_id = ass_man.GetOneAss(par,shower_comp_data.ID());
-	    if (track_comp_id==kINVALID_SIZE) throw larbys("Invalid comp id requested");
-	    const auto& track_comp = shower_comp_data.as_vector()[track_comp_id];
-	    AssociateMany(vtx3d_copy,par_data.as_vector().back());
+	  /*
 	    comp_data.push_back(track_comp);
 	    AssociateOne(par_data.as_vector().back(),comp_data.as_vector().back());
-	  }
+	    AssociateMany(vtx3d_copy,comp_data.as_vector().back());
+	  */
 	}
-	*/
+
       } // end this plane
     } // end this vertex
     
