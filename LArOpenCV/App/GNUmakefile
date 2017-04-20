@@ -33,7 +33,6 @@ LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_highgui -lopencv_imgcodecs 
 LDFLAGS += -L$(LARLITE_LIBDIR)
 LDFLAGS += -lLArOpenCV_ImageClusterBase
 LDFLAGS += -lLArOpenCV_Core
-LDFLAGS += -lRecoTool_ClusterRecoUtil
 LDFLAGS += -L$(GEO2D_LIBDIR)
 LDFLAGS += -lGeo2D_Core
 
