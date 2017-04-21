@@ -34,10 +34,15 @@ namespace larocv {
     void Configure(const Config_t &pset);
     
     bool CreateCircleVertex(cv::Mat img,
-			    const data::VertexSeed3D& vtx3d,
-			    const size_t plane,
+			   const data::VertexSeed3D& vtx3d,
+			    const geo2d::Vector<float>& plane_pt,
 			    data::CircleVertex& cvtx) const;
-
+    
+    bool SetPlanePoint(cv::Mat img,
+		       const data::VertexSeed3D& vtx3d,
+		       const size_t plane,
+		       geo2d::Vector<float>& plane_pt) const;
+    
     larocv::data::Vertex3D
     RegionScan3D(const larocv::data::VertexSeed3D& center,
                  std::vector<cv::Mat> image_v,

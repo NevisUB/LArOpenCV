@@ -120,7 +120,11 @@ namespace larocv {
     // 2) Scan for a 3D vertex @ candidate seeds
     //
     std::vector<data::Vertex3D> vertex3d_v;
-    
+    std::vector<cv::Mat> img_thresh_v;
+    img_thresh_v.reserve(3);
+    for(auto& im : img_v)
+      img_thresh_v.emplace_back(larocv::Threshold(im,10,255));
+      
     for(auto& cand_vtx3d : cand_vtx_v) {
 
       // For this 3D candidate seed, check how many planes have vertices still in the image after projection
@@ -139,9 +143,8 @@ namespace larocv {
       }
       
       // Scan 3D region centered @ this vertex seed
-      auto vtx3d    = _VertexScan3D.RegionScan3D(data::VertexSeed3D(cand_vtx3d), img_v);
-
-
+      auto vtx3d    = _VertexScan3D.RegionScan3D(data::VertexSeed3D(cand_vtx3d), img_thresh_v);
+      
       // Require atleast 2 crossing point on 2 planes (using ADC image)
       size_t num_good_plane = 0;
       double dtheta_sum = 0;
@@ -169,7 +172,7 @@ namespace larocv {
 	LAROCV_DEBUG() << "Requiring 3 planes charge in circle... " << std::endl;
 	for(size_t plane=0;plane<3;++plane)  {
 	  auto vtx2d= vtx3d.vtx2d_v[plane];
-	  auto npx = CountNonZero(img_v[plane],geo2d::Circle<float>(vtx2d.pt,_allowed_radius));
+	  auto npx = CountNonZero(img_thresh_v[plane],geo2d::Circle<float>(vtx2d.pt,_allowed_radius));
 	  LAROCV_DEBUG() << "@ (" << vtx2d.pt.x << "," << vtx2d.pt.y
 			 << ") w/ rad " << _allowed_radius
 			 << " see " << npx << " nonzero pixels" << std::endl;

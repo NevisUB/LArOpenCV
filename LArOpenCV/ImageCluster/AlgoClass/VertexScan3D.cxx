@@ -28,43 +28,40 @@ namespace larocv {
     
   }
 
-  bool VertexScan3D::CreateCircleVertex(cv::Mat img,
-					const data::VertexSeed3D& vtx3d,
-					const size_t plane,
-					data::CircleVertex& cvtx) const
-  {
-    static geo2d::Vector<float> temp_vtx2d;
+  bool VertexScan3D::SetPlanePoint(cv::Mat img,
+				  const data::VertexSeed3D& vtx3d,
+				  const size_t plane,
+				  geo2d::Vector<float>& plane_pt) const {
+
     try {
       auto x = _geo.x2col(vtx3d.x, plane);
       auto y = _geo.yz2row(vtx3d.y, vtx3d.z, plane);
 
 
-      if (x >= img.cols or x < 0) {
-	//LAROCV_DEBUG() << "... x out of col bound" << std::endl;
-	return false;
-      }
-
-      if (y >= img.rows or y < 0) {
-	//LAROCV_DEBUG() << "... y out of row bound" << std::endl;
-	return false;
-      }
-	
-      if (!img.at<uchar>(y,x)) {
-	//LAROCV_DEBUG() << "... no charge here" << std::endl;
-	return false;
-      }
+      if (x >= img.cols or x < 0) return false;
+      if (y >= img.rows or y < 0) return false;
       
-      temp_vtx2d.x = x;
-      temp_vtx2d.y = y;
+      if (!img.at<uchar>(y,x)) return false;
+            
+      plane_pt.x = x;
+      plane_pt.y = y;
     }
     catch(const larbys& err) {
-      //LAROCV_DEBUG() << "bad... " << err.what() << std::endl;
       return false;
     }
-    auto res = RadialScan2D(img, temp_vtx2d);
-    LAROCV_DEBUG() << "found xs " << res.xs_v.size() << " weight " << res.weight << " @ " << temp_vtx2d << std::endl;
+
+    return true;
+  }
+
+  
+  bool VertexScan3D::CreateCircleVertex(cv::Mat img,
+					const data::VertexSeed3D& vtx3d,
+					const geo2d::Vector<float>& plane_pt,
+					data::CircleVertex& cvtx) const
+  {
+    auto res = RadialScan2D(img, plane_pt);
     if(res.weight < 0) {
-      res.center = temp_vtx2d;
+      res.center = plane_pt;
       res.radius = _min_radius;
     }
     std::swap(res,cvtx);
@@ -178,7 +175,7 @@ namespace larocv {
       for (size_t xs_idx = 0; xs_idx < temp_xs_v.size(); ++xs_idx) {
 	auto const& xs_pt = temp_xs_v[xs_idx];
 	// Line that connects center to xs
-	// try {
+	try {
 	  auto local_pca   = SquarePCA(img, xs_pt, _pca_box_size, _pca_box_size);
 	  auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
 	  // Alternative (and probably better/faster): compute y spread in polar coordinate
@@ -186,9 +183,9 @@ namespace larocv {
 	  // 		 << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
 	  xs_v.push_back(data::PointPCA(xs_pt, local_pca));
 	  dtheta_v.push_back(fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)));
-	  // } catch (const larbys& err) {
-	  //   continue;
-	  // }
+	} catch (const larbys& err) {
+	  continue;
+	}
       }
 
       temp_res.center   = pt;
@@ -261,9 +258,12 @@ namespace larocv {
 		  << "    Scan Z " << vtx3d.z - _dz << " => " << vtx3d.z + _dz << " in " << nstep_z << " steps" << std::endl;
     
     static data::Vertex3D trial_vtx3d;
-    geo2d::Vector<float> temp_vtx2d;
+
     std::vector<size_t> num_xspt_count_v;
+    std::array<geo2d::Vector<float>,3> plane_pt_v;
     std::array<bool,3> valid_v;
+    geo2d::Vector<float> invalid_pt(kINVALID_FLOAT,kINVALID_FLOAT);
+    
     double best_weight = kINVALID_DOUBLE;
 
     for (size_t step_x = 0; step_x < nstep_x; ++step_x) {
@@ -273,35 +273,37 @@ namespace larocv {
 	for (size_t step_z = 0; step_z < nstep_z; ++step_z) {
 	  trial_vtx3d.z = z_v[step_z];
 
+
+
 	  std::vector<larocv::data::CircleVertex> circle_v;
 	  circle_v.resize(_geo._num_planes);
 	  
 	  for (auto &v : num_xspt_count_v) v = 0;
-	  for (auto &v : valid_v) v = false;
-	  short valid_ctr=0;
-
+	  for (auto &v : plane_pt_v)       v = invalid_pt;
+	  for (auto &v : valid_v)          v = false;
+	  short valid_ctr = 0;
+	  
 	  for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
+	    if(!SetPlanePoint(image_v.at(plane), trial_vtx3d, plane, plane_pt_v[plane])) continue;
+	       valid_v[plane]=true;
+	       valid_ctr++;
+	  }
+	  
+	  if (valid_ctr < 2) continue;
+
+	  LAROCV_DEBUG() << "("<<trial_vtx3d.x<<","<<trial_vtx3d.y<<","<<trial_vtx3d.z<<")"<<std::endl;
+	  
+	  for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
+	    if (!valid_v[plane]) continue;
 	    auto& cvtx = circle_v[plane];
-	    LAROCV_DEBUG() << "@ plane " << plane << std::endl;
-	    auto res = CreateCircleVertex(image_v[plane], trial_vtx3d, plane, cvtx);
-	    LAROCV_DEBUG() << "... res " << res << std::endl;
-	    valid_v[plane] = res;
-	    if(!res) continue;
-	    valid_ctr++;
+	    const auto& plane_pt = plane_pt_v[plane];
+	    auto res = CreateCircleVertex(image_v[plane], trial_vtx3d, plane_pt,cvtx);
 	    auto const& xs_pts = cvtx.xs_v;
 	    if (xs_pts.size() >= num_xspt_count_v.size())
 	      num_xspt_count_v.resize(xs_pts.size() + 1);
-	    
 	    num_xspt_count_v[xs_pts.size()] += 1;
-	    LAROCV_INFO() << "on plane " << plane << " @ rad " << circle_v[plane].radius
-	                  << " ... " << circle_v[plane].xs_v.size() << " xs" << std::endl;
 	  }
-	  
-	  if (valid_ctr < 2) {
-	    LAROCV_DEBUG() << "Not enough valid planes, skip" << std::endl;
-	    continue;
-	  }
-
+	    
 	  // Decide which plane to use
 	  if (!num_xspt) {
 	    size_t num_valid_plane = 0;
@@ -316,7 +318,7 @@ namespace larocv {
 	  // If num_xspt == 0, or it's not valid, skip this point
 	  if (!num_xspt || num_xspt_count_v.size() <= num_xspt || num_xspt_count_v[num_xspt] < 2) continue;
 	  
-	  LAROCV_DEBUG() << "Enough valid planes, calculating weight (num_xspt="<<num_xspt<<")"<<std::endl;
+	  LAROCV_DEBUG() << "--> Enough valid planes, calculating weight (num_xspt="<<num_xspt<<")"<<std::endl;
 	  // double weight1, weight2;
 	  // weight1 = weight2 = kINVALID_DOUBLE;
 	  std::array<double,3> weight_v;
@@ -354,9 +356,10 @@ namespace larocv {
 	      res.vtx2d_v[plane].score = res.cvtx2d_v[plane].sum_dtheta();
 	    }
 	  }
-	} //zstep
-      } //ystep
-    } //xstep
+	  
+	} // zstep
+      } // ystep
+    } // xstep
 
     return res;
   }
