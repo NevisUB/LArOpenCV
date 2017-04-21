@@ -70,6 +70,12 @@ namespace larocv {
     // 1) Scan for a 3D vertex @ candidate seeds
     //
     std::vector<data::Vertex3D> vertex3d_v;
+
+    std::vector<cv::Mat> img_thresh_v;
+    img_thresh_v.reserve(3);
+    for(auto& im : img_v)
+      img_thresh_v.emplace_back(larocv::Threshold(im,10,255));
+    
     LAROCV_DEBUG() << "See " << cand_vtx_v.size() << " 3D candidate track vertices" << std::endl;
     //for(auto& cand_vtx3d : cand_vtx_v) {
     for(size_t vertex_id=0; vertex_id<cand_vtx_v.size();++vertex_id) {
@@ -82,7 +88,7 @@ namespace larocv {
       }
 	
       // Scan 3D region centered @ this vertex seed
-      auto vtx3d    = _VertexScan3D.RegionScan3D(data::VertexSeed3D(cand_vtx3d), img_v);
+      auto vtx3d    = _VertexScan3D.RegionScan3D(data::VertexSeed3D(cand_vtx3d), img_thresh_v);
       
       LAROCV_DEBUG() << "NEW estimate @ (x,y,z)=("<<vtx3d.x<<","<<vtx3d.y<<","<<vtx3d.z<<")"<<std::endl;
       for(ushort plane=0;plane<3;++plane) {
@@ -117,7 +123,7 @@ namespace larocv {
 	LAROCV_DEBUG() << "Requiring 3 planes charge in circle... " << std::endl;
 	for(size_t plane=0;plane<3;++plane)  {
 	  auto vtx2d= vtx3d.vtx2d_v[plane];
-	  auto npx = CountNonZero(img_v[plane],geo2d::Circle<float>(vtx2d.pt,_allowed_radius));
+	  auto npx = CountNonZero(img_thresh_v[plane],geo2d::Circle<float>(vtx2d.pt,_allowed_radius));
 	  LAROCV_DEBUG() << "@ (" << vtx2d.pt.x << "," << vtx2d.pt.y
 			 << ") w/ rad " << _allowed_radius
 			 << " see " << npx << " nonzero pixels" << std::endl;

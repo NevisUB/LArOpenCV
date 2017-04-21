@@ -162,10 +162,15 @@ namespace larocv {
     for (size_t r_idx = 0; r_idx < radius_v.size(); ++r_idx) {
 
       auto const& radius    = radius_v[r_idx];
-      auto const& temp_xs_v = temp_xs_vv[r_idx];
+      auto temp_xs_v = temp_xs_vv[r_idx];
 
       if (temp_xs_v.empty()) continue;
 
+      /*
+      temp_xs_v = QPointOnCircleRefine(img,geo2d::Circle<float>(pt,radius),temp_xs_v,3);
+      if (temp_xs_v.empty()) throw larbys();
+      */
+      
       std::vector<data::PointPCA> xs_v;
       std::vector<float> dtheta_v;
       xs_v.reserve(temp_xs_v.size());
@@ -178,16 +183,14 @@ namespace larocv {
 	try {
 	  auto local_pca   = SquarePCA(img, xs_pt, _pca_box_size, _pca_box_size);
 	  auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
-	  // Alternative (and probably better/faster): compute y spread in polar coordinate
-	  // LAROCV_DEBUG() << "Radius " << radius << " Line ID " << xs_idx << " found xs " << xs_pt
-	  // 		 << " dtheta " << fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)) << std::endl;
 	  xs_v.push_back(data::PointPCA(xs_pt, local_pca));
 	  dtheta_v.push_back(fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)));
 	} catch (const larbys& err) {
 	  continue;
 	}
       }
-
+      
+      if (dtheta_v.empty()) continue;
       temp_res.center   = pt;
       temp_res.radius   = radius;
       temp_res.xs_v     = xs_v;
@@ -316,9 +319,12 @@ namespace larocv {
 	  }
 
 	  // If num_xspt == 0, or it's not valid, skip this point
-	  if (!num_xspt || num_xspt_count_v.size() <= num_xspt || num_xspt_count_v[num_xspt] < 2) continue;
+	  if (!num_xspt || num_xspt_count_v.size() <= num_xspt || num_xspt_count_v[num_xspt] < 2) {
+	    LAROCV_DEBUG() << "skip" << std::endl;
+	    continue;
+	  }
 	  
-	  LAROCV_DEBUG() << "--> Enough valid planes, calculating weight (num_xspt="<<num_xspt<<")"<<std::endl;
+	  LAROCV_DEBUG() << "Enough valid planes, calculating weight (num_xspt="<<num_xspt<<")"<<std::endl;
 	  // double weight1, weight2;
 	  // weight1 = weight2 = kINVALID_DOUBLE;
 	  std::array<double,3> weight_v;

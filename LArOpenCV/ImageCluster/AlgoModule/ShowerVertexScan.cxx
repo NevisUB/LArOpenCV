@@ -132,16 +132,14 @@ namespace larocv {
       _vtxana.UpdatePlanePosition(cand_vtx3d,_geo,in_image_v);
 
       ushort in_image_ctr=0;
-      for (auto each : in_image_v){
+      for (auto each : in_image_v) {
 	if (each) {
 	  in_image_ctr++;
 	}
       }
-      if (in_image_ctr < 2) {
-	// Atleast 2 planes have 3D vertex outside ROI, pass
-	continue;
-      }
-      
+
+      if (in_image_ctr < 2) continue;
+
       // Scan 3D region centered @ this vertex seed
       auto vtx3d    = _VertexScan3D.RegionScan3D(data::VertexSeed3D(cand_vtx3d), img_thresh_v);
       
