@@ -82,19 +82,15 @@ namespace larocv {
       const auto& cand_vtx3d = cand_vtx_v[vertex_id];
       LAROCV_DEBUG() << "Vertex " << vertex_id << std::endl;
       LAROCV_DEBUG() << "OLD estimate @ (x,y,z)=("<<cand_vtx3d.x<<","<<cand_vtx3d.y<<","<<cand_vtx3d.z<<")"<<std::endl;
-      for(ushort plane=0;plane<3;++plane) {
+
+      for(size_t plane=0;plane<3;++plane) {
 	const auto& vtx2d = cand_vtx3d.vtx2d_v.at(plane);
 	LAROCV_DEBUG() << plane << ") (x,y)=(" << vtx2d.pt.x << "," << vtx2d.pt.y << ")" << std::endl;
       }
 	
       // Scan 3D region centered @ this vertex seed
-      auto vtx3d    = _VertexScan3D.RegionScan3D(data::VertexSeed3D(cand_vtx3d), img_thresh_v);
+      auto vtx3d  = _VertexScan3D.RegionScan3D(data::VertexSeed3D(cand_vtx3d), img_thresh_v);
       
-      LAROCV_DEBUG() << "NEW estimate @ (x,y,z)=("<<vtx3d.x<<","<<vtx3d.y<<","<<vtx3d.z<<")"<<std::endl;
-      for(ushort plane=0;plane<3;++plane) {
-	const auto& vtx2d = vtx3d.vtx2d_v.at(plane);
-	LAROCV_DEBUG() << plane << ") (x,y)=(" << vtx2d.pt.x << "," << vtx2d.pt.y << ")" << std::endl;
-      }
       size_t num_good_plane = 0;
       double dtheta_sum = 0;
 
