@@ -34,6 +34,8 @@ namespace larlite {
     _t_window_max = pset.get<float>("WindowTMax");
     _t_window_min = pset.get<float>("WindowTMin");
 
+    _max_pxl_intensity = pset.get<bool>("MaxPixelIntensity");
+
     _debug = pset.get<bool>("Debug");
 
     _plane_weights = pset.get<std::vector<float>>("MatchPlaneWeights");
@@ -159,7 +161,7 @@ namespace larlite {
 	  nticks = tick_range.second - tick_range.first + 2;
 	  nwires = wire_range.second - wire_range.first + 2;
 	}
-      }
+      }// if make ROI
       
       ::larocv::ImageMeta meta((double)nwires, (double)nticks, nwires, nticks,
 			       wire_range.first, tick_range.first, plane);
@@ -174,7 +176,7 @@ namespace larlite {
       else 
 	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,roi);
 	
-    }   
+    }// for all planes
 
     for (auto const& h : *ev_hit) {
 
@@ -206,8 +208,12 @@ namespace larlite {
       if (charge >= 255.) charge = 255.;
       if (charge < 0.) charge = 0.;
 
-      mat.at<unsigned char>(x, y) = (unsigned char)((int)charge);
-    }
+      if (_max_pxl_intensity)
+	mat.at<unsigned char>(x, y) = 255;
+      else
+	mat.at<unsigned char>(x, y) = (unsigned char)((int)charge);
+      
+    }// for all hits
 
     // normalize the tick range
     if (_pool_time_tick > 1) {
@@ -218,8 +224,7 @@ namespace larlite {
 	auto& meta = _img_mgr.meta_at(plane);
 	//auto& roi  = _img_mgr.roi_at(plane);
 
-	::cv::Mat pooled(img.rows, img.cols / _pool_time_tick + 1, CV_8UC1,
-			 cvScalar(0.));
+	::cv::Mat pooled(img.rows, img.cols / _pool_time_tick + 1, CV_8UC1, cvScalar(0.));
 	
 	for (int row = 0; row < img.rows; ++row) {
 	  uchar* p = img.ptr(row);

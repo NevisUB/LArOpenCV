@@ -1,0 +1,224 @@
+#ifndef __POLARMERGE_CXX__
+#define __POLARMERGE_CXX__
+
+#include "PolarMerge.h"
+#include "PCAUtilities.h"
+
+namespace larocv{
+
+  void PolarMerge::_Configure_(const ::fcllite::PSet &pset)
+  { }
+
+  Cluster2DArray_t PolarMerge::_Process_(const larocv::Cluster2DArray_t& clusters,
+					 const ::cv::Mat& img,
+					 larocv::ImageMeta& meta, larocv::ROI& roi)
+  {
+
+    Cluster2DArray_t out_clusters;
+
+    // pair links cluster index to pair of ( NHits, angle )
+    // vector has 3 elements, one per plane
+    // object will hold cluster angle for cluster with largest number of hits per plane
+    std::pair< size_t, std::pair<size_t, double> > gamma_00(std::make_pair( 0, std::make_pair( 0, 0.) ) );
+    std::pair< size_t, std::pair<size_t, double> > gamma_01(std::make_pair( 0, std::make_pair( 0, 0.) ) );
+
+    // map linking cluster index and angle
+    std::map<size_t, double> clus_angle_map;
+
+    //get the vertex
+    auto pi0st = roi.roivtx_in_image(meta);
+    
+    // per plane, keep track of clusters with most hits
+    // and their angle value.
+    
+    for (size_t idx = 0; idx < clusters.size(); idx++) {
+
+      auto const& cluster = clusters.at(idx);
+      
+      Point2D e_vec_first,e_vec_second,e_center;
+      double  e_val_first,e_val_second;
+
+      auto clus_hits = cluster._insideHits;
+
+      for (auto& hit : clus_hits){
+	hit.x -= pi0st.x;
+	hit.y -= pi0st.y;
+      }
+
+      pca_line(clus_hits,
+	       e_vec_first,e_vec_second,
+	       e_val_first,e_val_second,
+	       e_center);
+
+      double angle = atan2(e_vec_second.y,e_vec_second.x) * 180. / 3.14;
+      double frac  = e_val_first / (e_val_first + e_val_second);
+      int    plane = cluster.PlaneID();
+      int    nhits = cluster._numHits();
+
+      clus_angle_map[idx] = angle;
+
+      std::cout << "New cluster @ Plane " << plane
+		<< "\t Nhits = " << nhits
+		<< "\t PCA dir = " << angle
+		<< "\t PCA frac = " << frac
+		<< std::endl << std::endl;
+
+      if (frac < 0.6) continue;
+
+      if ( nhits > gamma_00.second.first ) {
+	gamma_00.second.first  = nhits; // update # of hits for largest cluster in plane
+	gamma_00.second.second = angle; // update direction from PCA for largest cluster in plane
+	gamma_00.first         = idx;   // update index
+      }
+
+      if ( (nhits > gamma_01.second.first) && ( fabs(angle-gamma_00.second.second) > 15) && (gamma_00.second.second != 0) ) {
+	gamma_01.second.first  = nhits; // update # of hits for largest cluster in plane
+	gamma_01.second.second = angle; // update direction from PCA for largest cluster in plane
+	gamma_01.first         = idx;   // update index
+      }
+      
+    }// for all input clusters
+    
+    std::cout << " gamma00 has " << gamma_00.second.first << " hits"
+	      << " and " << gamma_00.second.second << " angle" << std::endl;
+    
+    std::cout << " gamma01 has " << gamma_01.second.first << " hits"
+	      << " and " << gamma_01.second.second << " angle" << std::endl;
+    
+    if (gamma_00.second.second == 0) return out_clusters;
+
+    // "big" cluster 00
+    auto gammacluster_00 = clusters.at( gamma_00.first );
+    auto gammaangle_00   = gamma_00.second.second;
+
+    // "big" cluster 01
+    auto gammacluster_01 = clusters.at( gamma_01.first );
+    auto gammaangle_01   = gamma_01.second.second;
+
+    // loop through indices. which to merge?
+    // keep track in a vector
+    std::vector<size_t> indices_to_merge_00;
+    std::vector<size_t> indices_to_merge_01;
+    
+    for (auto const& clus : clus_angle_map) {
+
+      auto clus_idx   = clus.first;
+      auto clus_angle = clus.second;
+      auto cluster    = clusters.at(clus_idx);
+
+      // don't merge cluster with itself!
+      if ( (clus.first == gamma_00.first) || (clus.first == gamma_01.first) ) continue;
+
+      // find cluster with respect to which angle is smaller
+      double angle_small = fabs(clus_angle - gammaangle_00);
+      double angle_large = fabs(clus_angle - gammaangle_01);
+      int merge_with = 0; // which gamma to merge with? [0 -> 00, 1 -> 01]
+      // flip if we got it wrong
+      if (angle_small > angle_large){
+	angle_small = fabs(clus_angle - gammaangle_01);
+	angle_large = fabs(clus_angle - gammaangle_00);
+	merge_with = 1;
+      }
+
+      // NOTE
+      // below IF statements are not correct
+      // when gammaangle_01 is undefined the angle_large requirement may cause
+      // merging not to happen when it really should
+      
+      if (merge_with == 0){
+	if ( (angle_small < 20) and (gammaangle_00 != 0) and (angle_large > 40) )
+	  indices_to_merge_00.push_back( clus_idx );
+      }
+
+      if (merge_with == 1){
+	if ( (angle_small < 20) and (gammaangle_01 != 0) and (angle_large > 40) )
+	  indices_to_merge_01.push_back( clus_idx );
+      }
+      
+    }// for all clusters
+
+    std::cout << "identified " << indices_to_merge_00.size() << " clusters to merge with gamma00" << std::endl;
+    std::cout << "identified " << indices_to_merge_01.size() << " clusters to merge with gamma01" << std::endl;
+    
+    // make contour to include points from both clusters
+    std::vector<::cv::Point> overall_ctor_00;
+    std::vector<::cv::Point> overall_ctor_01;
+    
+    // add it's hits to new contour
+    for (auto& pt : gammacluster_00._insideHits) overall_ctor_00.emplace_back(pt);
+    for (auto& pt : gammacluster_01._insideHits) overall_ctor_01.emplace_back(pt);
+
+    // loop throguh secondary clusters to be merged
+    for (auto& merge_idx : indices_to_merge_00) {
+      auto cluster = clusters.at(merge_idx);
+      // add points from new cluster
+      for (auto& pt : cluster._insideHits) overall_ctor_00.emplace_back(pt);
+    }// for all clusters to be merged
+
+    // loop throguh secondary clusters to be merged
+    for (auto& merge_idx : indices_to_merge_01) {
+      auto cluster = clusters.at(merge_idx);
+      // add points from new cluster
+      for (auto& pt : cluster._insideHits) overall_ctor_01.emplace_back(pt);
+    }// for all clusters to be merged
+
+    //make a new hull, give it some space
+    std::vector<int> hullpts_00;
+    hullpts_00.reserve(overall_ctor_00.size());
+    //calculate the hull
+    ::cv::convexHull(overall_ctor_00, hullpts_00);
+    //make a new cluster
+    Cluster2D outcluster_00;
+    //with a contour of fixed size...
+    outcluster_00._contour.resize(hullpts_00.size());
+    //fill the contour with hull points!
+    for(unsigned u=0;u<hullpts_00.size();++u) 
+      outcluster_00._contour[u] = overall_ctor_00[ hullpts_00[u] ];
+    outcluster_00.copy_params(gammacluster_00);
+    out_clusters.emplace_back(outcluster_00);
+
+    //make a new hull, give it some space
+    std::vector<int> hullpts_01;
+    hullpts_01.reserve(overall_ctor_01.size());
+    //calculate the hull
+    ::cv::convexHull(overall_ctor_01, hullpts_01);
+    //make a new cluster
+    Cluster2D outcluster_01;
+    //with a contour of fixed size...
+    outcluster_01._contour.resize(hullpts_01.size());
+    //fill the contour with hull points!
+    for(unsigned u=0;u<hullpts_01.size();++u) 
+      outcluster_01._contour[u] = overall_ctor_01[ hullpts_01[u] ];
+    outcluster_01.copy_params(gammacluster_01);
+    out_clusters.emplace_back(outcluster_01);
+
+    for (size_t i=0; i < clusters.size(); i++) {
+
+      if ( (i == gamma_00.first) || (i == gamma_01.first) )
+	continue;
+
+      bool used = false;
+      for (auto idx : indices_to_merge_00) {
+	if (idx == i) {
+	  used = true;
+	  break;
+	}
+      }
+      for (auto idx : indices_to_merge_01) {
+	if (idx == i) {
+	  used = true;
+	  break;
+	}
+      }
+      
+      if (used == false)
+	out_clusters.emplace_back( clusters.at(i) );
+    }// for all input clusters
+    
+    std::cout << "about to return..." << std::endl;
+    
+    return out_clusters;
+  }
+
+}
+#endif

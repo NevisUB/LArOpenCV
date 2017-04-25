@@ -7,7 +7,9 @@ namespace larocv {
 
 
   void FillClusterParams::_Configure_(const ::fcllite::PSet &pset)
-  {}
+  {
+    _carthesian = pset.get<bool>("Carthesian");
+  }
 
   larocv::Cluster2DArray_t FillClusterParams::_Process_(const larocv::Cluster2DArray_t& clusters,
 							const ::cv::Mat& img,
@@ -67,26 +69,46 @@ namespace larocv {
        
       }
 
-    //std::cout<<"Number of locations! "<<all_locations.size()<<std::endl; 
+    // determine necessary quantities to convert
+    // from polar to carthesian coordinates
+    auto pi0st = roi.roivtx_in_image(meta);
+    auto roib1 = roi.roibounds_in_image(meta,0);
+    auto roib2 = roi.roibounds_in_image(meta,2);
+    auto radx = std::abs(roib1.x - roib2.x);
+    auto rady = std::abs(roib1.y - roib2.y);
+    float rows = img.rows;
+    float cols = img.cols;
+    double rad = radx;
 
     for( const auto& loc: all_locations ) {
 
+      ::cv::Point pt(loc.x,loc.y);
+
+      if (_carthesian) {
+	float r = loc.x;
+	float t = loc.y;
+	r = (r / cols) * rad;
+	t = (t / rows) * 360.0 * 3.14159 / 180.0;
+	pt.x = (int) r * std::cos(t) + pi0st.x;
+	pt.y = (int) r * std::sin(t) + pi0st.y;
+      }
+
       for( size_t i = 0; i < oclusters.size(); i++ ) {
           
-          if ( ::cv::pointPolygonTest(oclusters[i]._contour,loc,false) < 0 ) 
+          if ( ::cv::pointPolygonTest(oclusters[i]._contour,pt,false) < 0 ) 
             continue;
 	
 	  if( first_fill )
 	    meta.add_location(loc) ;
 
-          oclusters[i]._insideHits.emplace_back(loc.x, loc.y);
+          oclusters[i]._insideHits.emplace_back(pt.x, pt.y);
           oclusters[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);
 
           // When point is found in contour, no others are checked; avoids double counting
           // Requires SimpleCuts to the alg chain after this; may have clusters with 0 hits
           break;
-        }   
-      }
+      }   
+    }
 
      // for( size_t i = 0; i < oclusters.size(); i++ ) 
      //   std::cout<<"Number of hits "<<oclusters[i]._insideHits.size()<<std::endl ;

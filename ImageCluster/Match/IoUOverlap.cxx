@@ -9,11 +9,15 @@ namespace larocv{
   {
   _iou_score = pset.get<float> ("IOUScore");
   _hit_ratio = pset.get<float> ("HitRatio");
+  _debug     = pset.get<bool>  ("Debug");
   }
   
   double IoUOverlap::_Process_(const larocv::Cluster2DPtrArray_t& clusters, const std::vector<double>& vtx)
   {
-        
+
+
+    if (_debug)
+      std::cout << "Matching " << clusters.size() << " clusters" << std::endl;
 
     double t_min_abs = 9600; // smallest start point of the 3
     double t_max_abs = 0;    // largest start point of the three
@@ -26,6 +30,8 @@ namespace larocv{
       double min(0.0), max(0.0);
       
       getMinMaxTime(c,min,max);
+
+      if (_debug) std::cout << "cluster bounds [ " << min << ", " << max << "]" << std::endl;
       
       if ( min < t_min_abs )
 	t_min_abs = min;
@@ -39,8 +45,7 @@ namespace larocv{
       if ( c->_insideHits.size() < min_hits )
         min_hits = c->_insideHits.size();
 
-    }
-
+    }// for all clusters
 
     if (clusters.size() < 2) return -1;
 
@@ -48,10 +53,15 @@ namespace larocv{
     bool overlap = true;
 
     double t_min_common(0.0), t_max_common(0.0);
-
+  
     getMinMaxTime(clusters[0],t_min_common,t_max_common);
 
     for (size_t i=1; i < clusters.size(); i++){
+
+      if (_debug)
+	std::cout << "PLANES " << clusters[0]->PlaneID()
+		  << " AND " << clusters[i]->PlaneID()
+		  << std::endl;
 
       double t_min(0.0), t_max(0.0); // min and max for current cluster
       getMinMaxTime(clusters[i],t_min,t_max);
@@ -75,19 +85,21 @@ namespace larocv{
     // If one cluster has < 10% of the hits of the other cluster, ignore this pair
     double hit_frac = min_hits / max_hits;
 
-    if (overlap == false || hit_frac < _hit_ratio ) return -1;
-
     // calculate overlap
-
     double iou = (t_max_common - t_min_common) / (t_max_abs - t_min_abs);
 
-    //std::cout<<"Overlap is: "<<iou<<", "<<min_hits<<", "<<max_hits<<std::endl ;
-    //for (size_t i=0; i < clusters.size(); i++)
-    //  std::cout<<"Plane: "<<clusters[i]->PlaneID()<<", Hits: "<<clusters[i]->_numHits() <<std::endl ;
+    if (_debug)
+      std::cout << "Cluster hit fraction : " << hit_frac
+		<< "\t overlap : " << iou
+		<< std::endl << std::endl;
+
+    if (overlap == false || hit_frac < _hit_ratio ) return -1;
 
     if ( iou < _iou_score ) return -1;
 
-
+    if (_debug)
+      std::cout << "Match with score : " << iou << std::endl << std::endl;
+    
     return iou;
   }
   
@@ -97,10 +109,15 @@ namespace larocv{
     auto const& hits = cluster->_insideHits;
     
     min = 9600;
-    max = 0;
+    max = -9600;
     
     for (auto const& hit : hits){
+
+      if (hit.x < 0) continue;
+
       auto t = _pixel_y(cluster,hit.x);
+
+      //auto t = hit.y;
       
       if (t > max) max = t;
       if (t < min) min = t;
@@ -113,7 +130,7 @@ namespace larocv{
   double IoUOverlap::_pixel_y(const Cluster2D* cluster,size_t pix) {
     auto const& px_h   = cluster->PixelHeight();
     auto const& origin = cluster->Origin();
-    
+
     return (pix+0.5)*px_h + origin.y;
   }
   

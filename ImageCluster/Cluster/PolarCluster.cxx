@@ -2,12 +2,15 @@
 #define __POLARCLUSTER_CXX__
 
 #include "PolarCluster.h"
+#include <stdio.h>
 
 namespace larocv {
 
 
   void PolarCluster::_Configure_(const ::fcllite::PSet &pset)
   {
+
+    _ctr = 0;
 
     _dilation_size = pset.get<int>("DilationSize");
     _dilation_iter = pset.get<int>("DilationIterations");
@@ -37,49 +40,83 @@ namespace larocv {
     auto roib1 = roi.roibounds_in_image(meta,0);
     auto roib2 = roi.roibounds_in_image(meta,2);
 
-    auto radx = std::abs(roib1.x - roib2.x);
-    auto rady = std::abs(roib1.y - roib2.y);
+    auto radx = std::fabs(roib1.x - roib2.x);
+    auto rady = std::fabs(roib1.y - roib2.y);
+
+    //std::cout << "corners : (" << roib1.x << ", " << roib1.y << " )" << std::endl;
+    //std::cout << "corners : (" << roib2.x << ", " << roib2.y << " )" << std::endl;
+    //std::cout << "IMG x width : " << radx << " y width : " << rady << std::endl;
+    //std::cout << "pi0 coord : " << pi0st.x << ", " << pi0st.y << std::endl;
 
     double rad = radx;
+
+    //std::ostringstream imgname;
+    //imgname << "img_" << _ctr << ".jpg";
+
+    std::vector<int> imgparams;
+    imgparams.push_back( CV_IMWRITE_JPEG_QUALITY );
+    imgparams.push_back( 100 );
+
+    std::vector<::cv::Point> all_locations;
+    ::cv::findNonZero(img, all_locations);
+    //std::cout << "nonzero : " << all_locations.size() << std::endl;
     
+    //::cv::imwrite(imgname.str(),img,imgparams);
+
     ::cv::linearPolar(img,        //input
-		      polarimg,   //output
+		      img,   //output
 		      ::cv::Point2f(pi0st.x,pi0st.y), //center point
 		      rad, //radius
 		      ::cv::WARP_FILL_OUTLIERS); //seems like it has to set
 
+    //::cv::findNonZero(img, all_locations);
+    //std::cout << "nonzero : " << all_locations.size() << std::endl;
+    //std::cout << std::endl;
     
+    //std::ostringstream polarimgname;
+    //polarimgname << "img_polar_" << _ctr << ".jpg";
+    
+    _ctr += 1;
+
+    //Blur
+    ::cv::blur(img,img,
+	       ::cv::Size(_blur_size_r,_blur_size_t));
+
     //Dilate
     auto kernel = ::cv::getStructuringElement(cv::MORPH_ELLIPSE,
 					      ::cv::Size(_dilation_size,_dilation_size));
-    ::cv::dilate(polarimg,sb_img,
+    ::cv::dilate(img,img,
 		 kernel,::cv::Point(-1,-1),_dilation_iter);
     
-    //Blur
-    ::cv::blur(sb_img,sb_img,
-	       ::cv::Size(_blur_size_r,_blur_size_t));
 
+
+    
+    //::cv::imwrite(polarimgname.str(),img,imgparams);
+    
     //Threshold
-    auto t_value = ::cv::threshold(sb_img,
-				   sb_img,
+    auto t_value = ::cv::threshold(img,
+				   img,
 				   _thresh,
 				   _thresh_maxval,
 				   CV_THRESH_BINARY); //return type is "threshold value?"
+
     (void) t_value;
-    
+
+
+
     //Contour finding
     ContourArray_t ctor_v;    
     std::vector<::cv::Vec4i> cv_hierarchy_v;
     ctor_v.clear(); cv_hierarchy_v.clear();
     
-    ::cv::findContours(sb_img,ctor_v,cv_hierarchy_v,
+    ::cv::findContours(img,ctor_v,cv_hierarchy_v,
 		       CV_RETR_EXTERNAL,
 		       CV_CHAIN_APPROX_SIMPLE);
-
+    
     //Fill some cluster parameters 
     Cluster2DArray_t result_v;
     result_v.reserve(ctor_v.size());
-
+    
     ::larocv::Cluster2D new_clus ;
 
     LAROCV_DEBUG((*this)) << "Found " << ctor_v.size() << " contours\n";

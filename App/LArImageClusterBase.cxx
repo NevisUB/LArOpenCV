@@ -227,8 +227,10 @@ namespace larlite {
       
       auto const& h = (*ev_hit)[hindex];
 
-      if ( _hit_removal && (h.GoodnessOfFit() < 0) )
+      if ( _hit_removal && (h.GoodnessOfFit() < 0) ) {
+	_num_unclustered_hits += 1;
 	continue;
+      }
 
       auto const& wid = h.WireID();
 

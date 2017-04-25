@@ -14,23 +14,25 @@ namespace larocv {
 					     larocv::ImageMeta& meta, larocv::ROI& roi)
   {
 
-    Cluster2DArray_t oclusters = clusters;
+    Cluster2DArray_t oclusters;
 
-    for(auto& ocluster : oclusters) {
+    for(auto& cluster : clusters) {
 
       float d = 0;
       int idx = -1;
       
-      for(unsigned i=0;i<ocluster._insideHits.size();++i){
-	auto& ihit = ocluster._insideHits[i];
-	float dd = dist(ihit,ocluster._startPt);
+      for(unsigned i=0;i<cluster._insideHits.size();++i){
+	auto& ihit = cluster._insideHits[i];
+	float dd = dist(ihit,cluster._startPt);
 	if ( dd > d )
 	  { d = dd; idx = i; }
       }
-      if (idx < 0) throw larbys("why");
+      if (idx < 0) continue;//throw larbys("why (SimpleEndPoint)");
+
+      oclusters.push_back(cluster);
       
-      ocluster._endPt = Point2D(ocluster._insideHits[idx].x,
-				ocluster._insideHits[idx].y);
+      oclusters.back()._endPt = Point2D(cluster._insideHits[idx].x,
+					cluster._insideHits[idx].y);
     }
 
     return oclusters;

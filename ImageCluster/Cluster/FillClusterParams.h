@@ -24,6 +24,9 @@ namespace larocv {
     void Finalize(TFile*) {}
     
   protected:
+
+    // carthesian coordinate conversion?
+    bool _carthesian;
     
     /// Inherited class configuration method
     void _Configure_(const ::fcllite::PSet &pset);
@@ -51,6 +54,8 @@ namespace larocv {
   };
   /// Global larocv::FillClusterParamsFactory to register ClusterAlgoFactory
   static FillClusterParamsFactory __global_FillClusterParamsFactory__;
+
+
   
 }
 #endif

@@ -1,30 +1,25 @@
-//by vic
-
-#ifndef __POLARCLUSTER_H__
-#define __POLARCLUSTER_H__
+#ifndef __NUVERTEX_H__
+#define __NUVERTEX_H__
 
 #include "ClusterAlgoBase.h"
 #include "ClusterAlgoFactory.h"
 
 namespace larocv {
  
-  class PolarCluster : public larocv::ClusterAlgoBase {
+  class NuVertex : public larocv::ClusterAlgoBase {
     
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
-    PolarCluster(const std::string name = "PolarCluster") :
+    NuVertex(const std::string name = "NuVertex") :
       ClusterAlgoBase(name),
-      _dilation_size ( 5 ),
-      _dilation_iter ( 2 ),
-      _blur_size_r   ( 5 ),
-      _blur_size_t   ( 5 ),
-      _thresh        ( 1 ),
-      _thresh_maxval (255)
+      _block_size    ( 5 ),
+      _aperture_size ( 2 ),
+      _harris_k      ( 5 )
     {}
     
     /// Default destructor
-    virtual ~PolarCluster(){}
+    virtual ~NuVertex(){}
 
     /// Finalize after process
     void Finalize(TFile*) {}
@@ -43,6 +38,11 @@ namespace larocv {
     
   private:
 
+    int _block_size;
+    int _aperture_size;
+    double _harris_k;
+    double _threshold;
+
     int _dilation_size;
     int _dilation_iter;
 
@@ -51,24 +51,24 @@ namespace larocv {
     
     float _thresh;
     float _thresh_maxval;
-    
+
   };
 
   /**
-     \class larocv::PolarClusterFactory
-     \brief A concrete factory class for larocv::PolarCluster
+     \class larocv::NuVertexFactory
+     \brief A concrete factory class for larocv::NuVertex
    */
-  class PolarClusterFactory : public ClusterAlgoFactoryBase {
+  class NuVertexFactory : public ClusterAlgoFactoryBase {
   public:
     /// ctor
-    PolarClusterFactory() { ClusterAlgoFactory::get().add_factory("PolarCluster",this); }
+    NuVertexFactory() { ClusterAlgoFactory::get().add_factory("NuVertex",this); }
     /// dtor
-    ~PolarClusterFactory() {}
+    ~NuVertexFactory() {}
     /// create method
-    ClusterAlgoBase* create(const std::string instance_name) { return new PolarCluster(instance_name); }
+    ClusterAlgoBase* create(const std::string instance_name) { return new NuVertex(instance_name); }
   };
-  /// Global larocv::PolarClusterFactory to register ClusterAlgoFactory
-  static PolarClusterFactory __global_PolarClusterFactory__;
+  /// Global larocv::NuVertexFactory to register ClusterAlgoFactory
+  static NuVertexFactory __global_NuVertexFactory__;
   
 }
 #endif

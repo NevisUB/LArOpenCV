@@ -51,6 +51,7 @@ namespace larocv {
     void getMinMaxTime(const Cluster2D* cluster, double& min, double& max);
     float _iou_score ;
     float _hit_ratio ;
+    bool  _debug;
   };
   
   /**

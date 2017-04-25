@@ -42,6 +42,7 @@ namespace larlite {
       , _time_offset(800)
       , _t_window_max(6399.)
       , _t_window_min(0.)
+      , _max_pxl_intensity(true)
     {}
 
     /// Default destructor
@@ -68,6 +69,8 @@ namespace larlite {
     float _roi_buffer_t;
 
     //std::string _vtx_producer;
+
+    bool _max_pxl_intensity;
 
     bool _make_roi;
     float _time_offset ;

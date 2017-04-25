@@ -22,7 +22,9 @@
 #include "ImageCluster/StartPoint/SimpleEndPoint.h"
 #include "ImageCluster/Filter/CheckAlignment.h"
 #include "ImageCluster/Filter/CheckWires.h"
+#include "ImageCluster/Filter/SelectTwoPhotons.h"
 #include "ImageCluster/Debug/ClusterWriteOut.h"
+#include "ImageCluster/Util/NuVertex.h"
 
 #include "ImageCluster/Match/IoUOverlap.h"
 
