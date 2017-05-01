@@ -62,7 +62,7 @@ namespace larocv {
     float _pi_threshold;
     float _angle_supression;
     size_t _pca_box_size;
-    
+    bool _use_circle_weight;
   private:
 
     data::CircleVertex RadialScan2D(const cv::Mat& img, const geo2d::Vector<float>& pt) const;

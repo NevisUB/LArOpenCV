@@ -25,6 +25,7 @@ namespace larocv {
     _pi_threshold     = pset.get<float>("PIThreshold");
     _angle_supression = pset.get<float>("AngleSupression");
     _pca_box_size     = pset.get<float>("PCABoxSize");
+    _use_circle_weight= pset.get<bool>("CircleWeight",true);
     
   }
 
@@ -196,8 +197,11 @@ namespace larocv {
       temp_res.xs_v     = xs_v;
       temp_res.dtheta_v = dtheta_v;
 
-      temp_res.weight = CircleWeight(temp_res);
-	
+      if (_use_circle_weight)
+	temp_res.weight = CircleWeight(temp_res);
+      else
+	temp_res.weight = temp_res.mean_dtheta();
+      
       LAROCV_DEBUG() << "CircleWeight: " << temp_res.weight << " @ pt " << pt << " rad " << radius << " w " << xs_v.size() << " xs " << std::endl;
       if (temp_res.weight < 0)  continue;
 
@@ -334,8 +338,13 @@ namespace larocv {
 	    if(!valid_v[plane]) continue;
 	    auto const& circle = circle_v[plane];
 	    if (circle.xs_v.size() != num_xspt) continue;
-	    auto weight = CircleWeight(circle);
-	    weight_v[plane] = weight;
+
+	    double weight = 0.0;
+	    if (_use_circle_weight)
+	      weight_v[plane] = CircleWeight(circle);
+	    else
+	      weight_v[plane] = circle.mean_dtheta();
+
 	    // if (weight < weight1) weight1 = weight;
 	    // else if (weight < weight2) weight2 = weight;
 	  }

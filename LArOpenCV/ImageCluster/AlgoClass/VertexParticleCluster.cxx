@@ -67,8 +67,12 @@ namespace larocv {
     _reset_xs                   = pset.get<bool>  ("ResetXs",false);
     
     if (_reset_xs) {
-      _reset_fixed_rad = pset.get<bool>("ResetXsFixedRad",true);
+      _reset_fixed_rad      = pset.get<bool>("ResetXsFixedRad",true);
       _reset_fixed_rad_size = pset.get<float>("ResetXsFixedRadSize",10);
+      _refine_xs            = pset.get<bool>("ResetXsRefineXs",true);
+      if (_refine_xs) {
+	_refine_mask_inner  = pset.get<float>("ResetXsRefineXsInnerR",3);
+      }
     }
 
   }
@@ -116,9 +120,16 @@ namespace larocv {
       }
       cvtx2d.xs_v.clear();
       if (_reset_fixed_rad) {
-	mask_region.radius=_reset_fixed_rad_size;
-	for(auto& xs : QPointOnCircle(img,mask_region,10))
+	mask_region.radius = _reset_fixed_rad_size;
+	auto xs_v = QPointOnCircle(img,mask_region,10);
+	
+	if(_refine_xs)
+	  xs_v = QPointOnCircleRefine(img,mask_region,xs_v,_refine_mask_inner);
+	
+	for(auto& xs : xs_v) {
 	  cvtx2d.xs_v.emplace_back(xs,geo2d::Line<float>());
+	}
+	
       }
       else {
 	auto xs_vv = QPointArrayOnCircleArray(img,cvtx2d.center,{5,6,7,8,9,10},10,0);
@@ -126,12 +137,13 @@ namespace larocv {
 		       << " @ radii 5->10 " << std::endl;
 	//get the largest radii with non-zero crossings
 	size_t largest_id=kINVALID_SIZE;
-	for(size_t xs_vid=0;xs_vid<xs_vv.size();++xs_vid) {
+	for(size_t xs_vid=0; xs_vid < xs_vv.size(); ++xs_vid) {
 	  if (xs_vv[xs_vid].empty()) continue;
-	  largest_id=xs_vid;
+	  largest_id = xs_vid;
 	}
-	for(auto& xs : xs_vv[largest_id])
+	for(auto& xs : xs_vv[largest_id]) {
 	  cvtx2d.xs_v.emplace_back(xs,geo2d::Line<float>());
+	}
       }
       
       if(this->logger().level() == ::larocv::msg::kDEBUG) {
@@ -198,7 +210,7 @@ namespace larocv {
 
     float contour_dist_threshold = _contour_dist_threshold;
     if(_use_xs_radius_threshold)
-      contour_dist_threshold=cvtx2d.radius;
+      contour_dist_threshold = cvtx2d.radius;
     
     for(size_t xs_idx=0; xs_idx < cvtx2d.xs_v.size(); ++xs_idx) {
       auto const& xs_pt = cvtx2d.xs_v[xs_idx].pt;

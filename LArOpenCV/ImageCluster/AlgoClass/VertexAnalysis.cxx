@@ -121,7 +121,8 @@ namespace larocv {
 				float threshold,
 				size_t required_per_plane,
 				size_t required_matches,
-				bool check_type) const {
+				bool check_type,
+				bool weight_by_size) const {
 
     // For now I have to make a pointer
     std::vector<std::vector<const data::ParticleCluster*> > pars_ptr_vv;
@@ -137,7 +138,7 @@ namespace larocv {
     }
 
 
-    return MatchClusters(pars_ptr_vv,img_v,threshold,required_per_plane,required_matches,check_type);
+    return MatchClusters(pars_ptr_vv,img_v,threshold,required_per_plane,required_matches,check_type,weight_by_size);
     
   }
 				
@@ -147,10 +148,11 @@ namespace larocv {
 				float threshold,
 				size_t required_per_plane,
 				size_t required_matches,
-				bool check_type) const {
+				bool check_type,
+				bool weight_by_size) const {
     
     std::vector<std::vector<std::pair<size_t,size_t> > > match_vv;
-    MatchExists(pars_ptr_vv,img_v,threshold,required_per_plane,required_matches,match_vv,check_type);
+    MatchExists(pars_ptr_vv,img_v,threshold,required_per_plane,required_matches,match_vv,check_type,weight_by_size);
     return match_vv;
   }
   
@@ -161,7 +163,8 @@ namespace larocv {
 			      size_t required_per_plane,
 			      size_t required_matches,
 			      std::vector<std::vector<std::pair<size_t,size_t> > >& match_vv,
-			      bool check_type) const {
+			      bool check_type,
+			      bool weight_by_size) const {
 
 
     std::vector<size_t> seed_v;
@@ -222,7 +225,7 @@ namespace larocv {
 	auto type1 = particle_ptr_v[id1]->type;
 
 	// require the same type of particle to be matched
-	if (check_type && type0!=type1) continue;
+	if (check_type && (type0!=type1)) continue;
 	
 	LAROCV_DEBUG() << "... accepted" << std::endl;
 	
@@ -258,11 +261,22 @@ namespace larocv {
 	auto overlap = _geo.Overlap(nzero0_f,plane0,nzero1_f,plane1,false);
 	LAROCV_DEBUG() << "overlap " << overlap << std::endl;
 	
+
 	if (overlap < threshold) continue;
 
+	if (weight_by_size) {
+	  float num   = std::min(nzero0_f.size(),nzero1_f.size());
+	  float denom = std::max(nzero0_f.size(),nzero1_f.size());
+
+	  if (denom == 0) continue;
+	  
+	  overlap *= num/denom;
+	}
+	
+	
 	std::vector<uint> match_v(2,kINVALID_INT);
-	match_v[0]=id0;
-	match_v[1]=id1;
+	match_v[0] = id0;
+	match_v[1] = id1;
 	
 	LAROCV_DEBUG() << "id... 0: " << id0
 		       << " 1: " << id1 << std::endl;
@@ -270,17 +284,17 @@ namespace larocv {
       }
       else if (comb_v.size()==3) {
 	
-	auto plane0=comb_v[0].first;
-	auto plane1=comb_v[1].first;
-	auto plane2=comb_v[2].first;
+	auto plane0 = comb_v[0].first;
+	auto plane1 = comb_v[1].first;
+	auto plane2 = comb_v[2].first;
 
 	if (clusters_per_plane_vv[plane0].size()<required_per_plane) continue;
 	if (clusters_per_plane_vv[plane1].size()<required_per_plane) continue;
 	if (clusters_per_plane_vv[plane2].size()<required_per_plane) continue;
 	
-	auto cid0=comb_v[0].second;
-	auto cid1=comb_v[1].second;
-	auto cid2=comb_v[2].second;
+	auto cid0 = comb_v[0].second;
+	auto cid1 = comb_v[1].second;
+	auto cid2 = comb_v[2].second;
 	
 	LAROCV_DEBUG() << "["<<plane0<<","<<cid0<<"] & "
 		       << "["<<plane1<<","<<cid1<<"] & "
@@ -296,9 +310,9 @@ namespace larocv {
 	auto type1 = particle_ptr_v[id1]->type;
 	auto type2 = particle_ptr_v[id2]->type;
 
-	if (type0!=type1) continue;
-	if (type0!=type2) continue;
-	if (type1!=type2) continue;
+	if (check_type & (type0 != type1)) continue;
+	if (check_type & (type0 != type2)) continue;
+	if (check_type & (type1 != type2)) continue;
 
 	LAROCV_DEBUG() << "... accepted" << std::endl;
 	
@@ -346,16 +360,39 @@ namespace larocv {
 
 	ushort invalid_overlap_count=0;
 	
-	if (overlap01<threshold) invalid_overlap_count+=1;
-	if (overlap02<threshold) invalid_overlap_count+=1;
-	if (overlap12<threshold) invalid_overlap_count+=1;
+	if (overlap01 < threshold) invalid_overlap_count+=1;
+	if (overlap02 < threshold) invalid_overlap_count+=1;
+	if (overlap12 < threshold) invalid_overlap_count+=1;
 	
 	if (invalid_overlap_count >= 2){
 	  LAROCV_DEBUG() << "Invalid overlap" << std::endl;
 	  continue;
 	}
+
+	if (weight_by_size) {
+	  
+	  float num01   = std::min(nzero0_f.size(),nzero1_f.size());
+	  float num02   = std::min(nzero0_f.size(),nzero2_f.size());
+	  float num12   = std::min(nzero1_f.size(),nzero2_f.size());
+	  
+	  float denom01 = std::max(nzero0_f.size(),nzero1_f.size());
+	  float denom02 = std::max(nzero0_f.size(),nzero2_f.size());
+	  float denom12 = std::max(nzero1_f.size(),nzero2_f.size());
+
+	  
+	  if (denom01 > 0) overlap01 *= num01/denom01;
+	  else overlap01 = 0.0;
+
+	  if (denom02 > 0) overlap02 *= num02/denom02;
+	  else overlap02 = 0.0;
+	  
+	  if (denom12 > 0) overlap12 *= num12/denom12;
+	  else overlap12 = 0.0;
+			  
+	}
 	
-	auto overlap = overlap01+overlap02+overlap12;
+
+	auto overlap = overlap01 + overlap02 + overlap12;
 	
 	LAROCV_DEBUG() << "o01: " << overlap01
 		       << " o02: " << overlap02

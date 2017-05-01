@@ -10,6 +10,27 @@
 
 namespace larocv {
 
+  bool
+  PointPolygonTest(const GEO2D_Contour_t& ctor,
+		   const geo2d::Vector<float>& pt) {
+
+    static double dist;
+    return PointPolygonTest(ctor,pt,dist);
+  }
+  
+  bool
+  PointPolygonTest(const GEO2D_Contour_t& ctor,
+		   const geo2d::Vector<float>& pt,
+		   double& dist) {
+    dist = cv::pointPolygonTest(ctor,pt,true);
+    if (dist >= 0)
+      return true;
+
+    dist *= -1;
+    return false;
+  }
+
+  
   cv::RotatedRect
   MinAreaRect(const GEO2D_Contour_t& ctor) {
     return cv::minAreaRect(ctor);

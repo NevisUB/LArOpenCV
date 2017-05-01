@@ -8,7 +8,17 @@
 
 namespace larocv {
 
-  cv::RotatedRect MinAreaRect(const GEO2D_Contour_t& ctor);
+  bool
+  PointPolygonTest(const GEO2D_Contour_t& ctor,
+		   const geo2d::Vector<float>& pt);
+
+  bool
+  PointPolygonTest(const GEO2D_Contour_t& ctor,
+		   const geo2d::Vector<float>& pt,
+		   double& dist);
+  
+  cv::RotatedRect
+  MinAreaRect(const GEO2D_Contour_t& ctor);
 
   double
   ArcLength(const GEO2D_Contour_t& ctor, bool closed=false);

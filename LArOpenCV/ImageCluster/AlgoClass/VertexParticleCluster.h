@@ -68,10 +68,17 @@ namespace larocv {
 
     bool   _use_theta_half_angle;
     double _contour_dist_threshold;
+
+    // Use the crossing point radius as a distance threshold
     bool _use_xs_radius_threshold;
+
+    // Reset the crossing point
     bool _reset_xs;
     bool _reset_fixed_rad;
     float _reset_fixed_rad_size;
+    bool _refine_xs;
+    float _refine_mask_inner;
+
     
   private:
 
