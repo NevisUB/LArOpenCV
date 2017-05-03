@@ -11,8 +11,8 @@ namespace larocv {
   void VertexScan3D::Configure(const Config_t &pset)
   {
     this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
-    LAROCV_DEBUG() << "Set verbosity of VertexScan3D @ " << (ushort)this->logger().level() << std::endl;
-    //this->set_verbosity((msg::Level_t)0);
+    std::cout << "Set verbosity of VertexScan3D @ " << (ushort)this->logger().level() << std::endl;
+    
     _dx = pset.get<float>("dX");
     _dy = pset.get<float>("dY");
     _dz = pset.get<float>("dZ");
@@ -22,10 +22,11 @@ namespace larocv {
     _min_radius  = pset.get<float>("MinRadius2D");
     _max_radius  = pset.get<float>("MaxRadius2D");
     
-    _pi_threshold     = pset.get<float>("PIThreshold");
-    _angle_supression = pset.get<float>("AngleSupression");
-    _pca_box_size     = pset.get<float>("PCABoxSize");
-    _use_circle_weight= pset.get<bool>("CircleWeight",true);
+    _pi_threshold      = pset.get<float>("PIThreshold");
+    _angle_supression  = pset.get<float>("AngleSupression");
+    _pca_box_size      = pset.get<float>("PCABoxSize");
+    _use_circle_weight = pset.get<bool>("CircleWeight",true);
+    _prohibit_one_xs   = pset.get<bool>("ProhibitOneXs",false);
     
   }
 
@@ -85,10 +86,10 @@ namespace larocv {
       auto center_line0 = geo2d::Line<float>(cvtx.xs_v[0].pt, cvtx.xs_v[0].pt - cvtx.center);
       auto center_line1 = geo2d::Line<float>(cvtx.xs_v[1].pt, cvtx.xs_v[1].pt - cvtx.center);
       auto dtheta = fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
-      // LAROCV_DEBUG() << "... handling dtheta @ " << dtheta << std::endl;
+      // std::cout << "... handling dtheta @ " << dtheta << std::endl;
       //if(dtheta < dtheta_sigma) { return -1; }
       if (dtheta < 10) {
-	// LAROCV_DEBUG() << "& failed" << std::endl;
+	// std::cout << "& failed" << std::endl;
 	return -1;
       }
     }
@@ -124,7 +125,7 @@ namespace larocv {
 	if (rel_pt.x < 0 && rel_pt.y <= 0) theta_loc += 180;
 	if (rel_pt.x > 0 && rel_pt.y <= 0) theta_loc = 360 - theta_loc;
       }
-      LAROCV_DEBUG()<<"("<<xs.pt.x<<","<<xs.pt.y<<") = ("<<rel_pt.x<<","<<rel_pt.y<<") ... @ " << theta_loc<<std::endl;
+      std::cout<<"("<<xs.pt.x<<","<<xs.pt.y<<") = ("<<rel_pt.x<<","<<rel_pt.y<<") ... @ " << theta_loc<<std::endl;
       theta_loc_s.insert(theta_loc);
     }
 
@@ -139,7 +140,7 @@ namespace larocv {
     }
     weight /= (double)(theta_loc_v.size() - 1);
     weight *= dtheta_sigma;
-    LAROCV_DEBUG()<<cvtx.radius<<" ... "<<dtheta_sigma << " ... " << cvtx.xs_v.size() << " ... " << theta_loc_s.size() << " ... " << theta_loc_v.size() << " ... " << weight << std::endl;
+    std::cout<<cvtx.radius<<" ... "<<dtheta_sigma << " ... " << cvtx.xs_v.size() << " ... " << theta_loc_s.size() << " ... " << theta_loc_v.size() << " ... " << weight << std::endl;
 
     return weight;
   }
@@ -164,9 +165,10 @@ namespace larocv {
 
       auto const& radius    = radius_v[r_idx];
       auto temp_xs_v = temp_xs_vv[r_idx];
-
+      
       if (temp_xs_v.empty()) continue;
-
+      if (_prohibit_one_xs && temp_xs_v.size()==1) continue;
+      
       /*
       temp_xs_v = QPointOnCircleRefine(img,geo2d::Circle<float>(pt,radius),temp_xs_v,3);
       if (temp_xs_v.empty()) throw larbys();
@@ -202,7 +204,7 @@ namespace larocv {
       else
 	temp_res.weight = temp_res.mean_dtheta();
       
-      LAROCV_DEBUG() << "CircleWeight: " << temp_res.weight << " @ pt " << pt << " rad " << radius << " w " << xs_v.size() << " xs " << std::endl;
+      std::cout << "CircleWeight: " << temp_res.weight << " @ pt " << pt << " rad " << radius << " w " << xs_v.size() << " xs " << std::endl;
       if (temp_res.weight < 0)  continue;
 
       // if this is the 1st loop, set the result
@@ -216,7 +218,7 @@ namespace larocv {
       // cross something else other than particle trajectory from the circle's center
       // then we break
       if (temp_res.xs_v.size() != xs_v.size()) {
-	LAROCV_DEBUG() << "Breaking @ radius = " << radius << " (not included) since # crossing point increased!" << std::endl;
+	std::cout << "Breaking @ radius = " << radius << " (not included) since # crossing point increased!" << std::endl;
 	break;
       }
 
@@ -224,7 +226,7 @@ namespace larocv {
       if (temp_res.weight < min_weight) {
 	min_weight = temp_res.weight;
 	res = temp_res;
-	LAROCV_DEBUG() << "... set min weight to " << min_weight << std::endl;
+	std::cout << "... set min weight to " << min_weight << std::endl;
       }
     }
 
@@ -280,14 +282,12 @@ namespace larocv {
 	for (size_t step_z = 0; step_z < nstep_z; ++step_z) {
 	  trial_vtx3d.z = z_v[step_z];
 
-
-
 	  std::vector<larocv::data::CircleVertex> circle_v;
 	  circle_v.resize(_geo._num_planes);
 	  
-	  for (auto &v : num_xspt_count_v) v = 0;
-	  for (auto &v : plane_pt_v)       v = invalid_pt;
-	  for (auto &v : valid_v)          v = false;
+	  for (auto& v : num_xspt_count_v) v = 0;
+	  for (auto& v : plane_pt_v)       v = invalid_pt;
+	  for (auto& v : valid_v)          v = false;
 	  short valid_ctr = 0;
 	  
 	  for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
@@ -298,7 +298,7 @@ namespace larocv {
 	  
 	  if (valid_ctr < 2) continue;
 
-	  LAROCV_DEBUG() << "("<<trial_vtx3d.x<<","<<trial_vtx3d.y<<","<<trial_vtx3d.z<<")"<<std::endl;
+	  std::cout << "("<<trial_vtx3d.x<<","<<trial_vtx3d.y<<","<<trial_vtx3d.z<<")"<<std::endl;
 	  
 	  for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
 	    if (!valid_v[plane]) continue;
@@ -324,11 +324,11 @@ namespace larocv {
 
 	  // If num_xspt == 0, or it's not valid, skip this point
 	  if (!num_xspt || num_xspt_count_v.size() <= num_xspt || num_xspt_count_v[num_xspt] < 2) {
-	    LAROCV_DEBUG() << "skip" << std::endl;
+	    std::cout << "skip" << std::endl;
 	    continue;
 	  }
-	  
-	  LAROCV_DEBUG() << "Enough valid planes, calculating weight (num_xspt="<<num_xspt<<")"<<std::endl;
+
+	  std::cout << "Enough valid planes, calculating weight (num_xspt="<<num_xspt<<")"<<std::endl;
 	  // double weight1, weight2;
 	  // weight1 = weight2 = kINVALID_DOUBLE;
 	  std::array<double,3> weight_v;
@@ -352,9 +352,9 @@ namespace larocv {
 	  auto weight1 = weight_v[0];
 	  auto weight2 = weight_v[1];
 	  
-	  LAROCV_DEBUG() << "Comparing (w1,w2)=("<<weight1<<","<<weight2<<") to best " << best_weight << std::endl;
+	  std::cout << "Comparing (w1,w2)=("<<weight1<<","<<weight2<<") to best " << best_weight << std::endl;
 	  if ((weight1 * weight2) < best_weight) {
-	    LAROCV_DEBUG() << "... accepted" << std::endl;
+	    std::cout << "... accepted" << std::endl;
 	    best_weight  = weight1 * weight2;
 	    res.x = vtx3d.x;
 	    res.y = vtx3d.y;

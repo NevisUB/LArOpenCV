@@ -39,7 +39,8 @@ namespace larocv {
 
   private:
     AlgorithmID_t _seed_id;
-
+    AlgorithmID_t _adc_super_cluster_algo;
+    
     LArPlaneGeo _geo;
     VertexAnalysis _vtxana;
     VertexScan3D  _VertexScan3D;
@@ -49,7 +50,7 @@ namespace larocv {
     bool _require_3planes_charge;
     bool _merge_nearby;
 
-    
+
     
   };
 

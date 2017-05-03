@@ -5,6 +5,7 @@
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoData/VertexSeed.h"
+#include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
 
 namespace larocv {
 
@@ -36,6 +37,17 @@ namespace larocv {
       }
     }
 
+    // ADC super cluster modules
+    auto name_adc_super_cluster = pset.get<std::string>("ADCSuperCluster");
+    _adc_super_cluster_algo = kINVALID_ALGO_ID;
+    if(!name_adc_super_cluster.empty()) {
+      _adc_super_cluster_algo = this->ID(name_adc_super_cluster);
+      if(_adc_super_cluster_algo == kINVALID_ALGO_ID) {
+	LAROCV_CRITICAL() << "ADC super cluster algo does not exists!" << std::endl;
+	throw larbys();
+      }
+    }
+    
     // Merge very nearby candidate vertices
     _merge_nearby = pset.get<bool>("MergeNearby",true);
     if(_merge_nearby) 
@@ -61,6 +73,17 @@ namespace larocv {
     auto img_v  = ImageArray();
     auto meta_v = MetaArray();
 
+
+    std::vector<std::vector<GEO2D_Contour_t> > super_ctor_vv;
+    super_ctor_vv.resize(3);
+    for(size_t plane=0; plane < 3; ++plane) {
+      const auto& adc_super_par_v = AlgoData<data::ParticleClusterArray>(_adc_super_cluster_algo,plane).as_vector();
+      auto& super_ctor_v = super_ctor_vv[plane];
+      super_ctor_v.reserve(adc_super_par_v.size());
+      for(const auto& adc_super_par : adc_super_par_v)
+	super_ctor_v.push_back(adc_super_par._ctor);
+    }
+    
     // Inform algorithms of image information (will change per ROI processed)
     for(auto const& meta : meta_v) {
       _geo.ResetPlaneInfo(meta);
@@ -107,6 +130,7 @@ namespace larocv {
 	    
 	    data::Vertex3D vtx;
 	    auto res = _geo.YZPoint(*seed0,plane0,*seed1,plane1,vtx);
+
 	    // could vertex be made?
 	    if(!res) continue;
 
@@ -141,30 +165,35 @@ namespace larocv {
       if (in_image_ctr < 2) continue;
 
       // Scan 3D region centered @ this vertex seed
-      auto vtx3d    = _VertexScan3D.RegionScan3D(data::VertexSeed3D(cand_vtx3d), img_thresh_v);
-      
+      auto vtx3d  = _VertexScan3D.RegionScan3D(data::VertexSeed3D(cand_vtx3d), img_thresh_v);
+
+      //
       // Require atleast 2 crossing point on 2 planes (using ADC image)
+      //
       size_t num_good_plane = 0;
-      double dtheta_sum = 0;
+      double weight_sum = 0;
       int plane = -1;
       for(auto const& cvtx2d : vtx3d.cvtx2d_v) {
 	plane += 1;
 	LAROCV_DEBUG() << "Found " << cvtx2d.xs_v.size() << " xs on plane " << plane << std::endl;
-        if(cvtx2d.xs_v.size()<2) continue;
+        if(cvtx2d.xs_v.size() < 2) continue;
 	LAROCV_DEBUG() << "... accepted" << std::endl;
         num_good_plane++;
-        dtheta_sum += cvtx2d.sum_dtheta();
+        weight_sum += cvtx2d.weight;
       }
       
       if(num_good_plane < 2) {
 	LAROCV_DEBUG() << "Num good plane < 2, SKIP!!" << std::endl;
 	continue;
       }
-      dtheta_sum /= (double)num_good_plane;
+
+      weight_sum /= (double) num_good_plane;
       LAROCV_DEBUG() << "Registering vertex seed type="<<(uint)cand_vtx3d.type
 		     << " @ ("<<vtx3d.x<<","<<vtx3d.y<<","<<vtx3d.z<<")"<<std::endl;
 
+      //
       // Optional: require there to be some charge in vincinity of projected vertex on 3 planes
+      //
       uint nvalid=0;
       if(_require_3planes_charge) {
 	LAROCV_DEBUG() << "Requiring 3 planes charge in circle... " << std::endl;
@@ -188,9 +217,24 @@ namespace larocv {
     } // end candidate vertex seed
     
     auto& vertex3darr = AlgoData<data::Vertex3DArray>(0);
-    for(auto& vertex3d : vertex3d_v)
+    for(auto& vertex3d : vertex3d_v) {
       vertex3darr.emplace_back(std::move(vertex3d));
-    
+      const auto& vtx3d = vertex3darr.as_vector().back();
+	
+      for(size_t plane=0; plane<3; ++plane) {
+	const auto& super_ctor_v = super_ctor_vv[plane];
+	const auto& cvtx = vtx3d.cvtx2d_v[plane];
+
+	if (cvtx.weight < 0) continue;
+
+	auto ctor_id = FindContainingContour(super_ctor_v,cvtx.center);
+	if (ctor_id == kINVALID_SIZE) throw larbys("Unknown super contour but @ nonzero pixel");
+
+	const auto& adc_par_v = AlgoData<data::ParticleClusterArray>(_adc_super_cluster_algo,plane).as_vector();
+	const auto& adc_par = adc_par_v.at(ctor_id);
+	AssociateOne(vtx3d,adc_par);
+      }
+    }
   }
 }
 #endif

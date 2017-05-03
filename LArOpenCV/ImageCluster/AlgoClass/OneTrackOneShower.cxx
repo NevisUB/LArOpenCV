@@ -258,60 +258,42 @@ namespace larocv {
   OneTrackOneShower::ValidateCircleVertex(cv::Mat& img,
 					  data::CircleVertex& cvtx) const {
     
-    geo2d::VectorArray<float> xs_pt_v;
+    geo2d::VectorArray<float> res_xs_pt_v;
 
-    // Determine crossing points by changing the circle size, and taking the mode number
-    // of crossing points
+    // Determine crossing points by changing the circle size, scan until the number
+    // of crossing points increases
     if (_grad_circle) {
       LAROCV_DEBUG() << "Graduating circle @ " << cvtx.center << std::endl;
       auto xs_pt_vv = QPointArrayOnCircleArray(img,cvtx.center,_grad_circle_rad_v,_pi_threshold);
       
       for(size_t rad_id=0;rad_id<xs_pt_vv.size();++rad_id) {
 	cvtx.radius = _grad_circle_rad_v[rad_id];
-	auto& xs_pt_v_ = xs_pt_vv[rad_id];
-	LAROCV_DEBUG() << rad_id << ") @ r=" << cvtx.radius << " found " << xs_pt_v_.size() << std::endl;
-      }
-      
-      if (xs_pt_vv.size() != _grad_circle_rad_v.size())
-	throw larbys("Returned QPoint array size does not match radius size");
-      
-      //keep track of 2*pi*(r+1) number of pixels (over estimate the circumference of largest circle)
-      std::vector<size_t> xs_count_v((int)2*4*_grad_circle_max,0);
-      
-      for(size_t rad_id=0;rad_id<xs_pt_vv.size();++rad_id) {
-	cvtx.radius = _grad_circle_rad_v[rad_id];
-	auto& xs_pt_v_ = xs_pt_vv[rad_id];
-	LAROCV_DEBUG() << "Inspect XS " << xs_pt_v_.size() << " @ rad " << cvtx.radius << std::endl;
-	xs_pt_v_ = this->ValidShowerPointOnCircle(img, cvtx.as_circle(), xs_pt_v_);
-	if (xs_pt_v_.size() > xs_count_v.size()) throw larbys("More crossing points than expected max size");
-	xs_count_v[xs_pt_v_.size()]++;
-      }
+	auto& xs_pt_v = xs_pt_vv[rad_id];
+	LAROCV_DEBUG() << "Inspect XS " << xs_pt_v.size() << " @ rad " << cvtx.radius << std::endl;
+	xs_pt_v = this->ValidShowerPointOnCircle(img, cvtx.as_circle(), xs_pt_v);
 
-      // Get the mode number of crossings
-      auto max_iter = std::max_element(xs_count_v.begin()+1,xs_count_v.end());
-      auto mode_xs = std::distance(xs_count_v.begin(), max_iter);
-      if (*max_iter) {
-
-	for(size_t count=0;count<xs_count_v.size();++count)
-	  if(xs_count_v[count]>0)
-	    LAROCV_DEBUG() << "XS: " << count << " is " << xs_count_v[count] << std::endl;
-	    
-	LAROCV_DEBUG() << "Found mode " << mode_xs << std::endl;
-
-	// Get the largest circle with this Xs
-	for(size_t rad_id=0;rad_id<xs_pt_vv.size();++rad_id) {
-	  const auto& xs_pt_v_ = xs_pt_vv[rad_id];
-	  if(xs_pt_v_.size() != mode_xs) continue;
-	  xs_pt_v = xs_pt_v_;
-	  cvtx.radius = _grad_circle_rad_v[rad_id];
-	  LAROCV_DEBUG() << "Set xs pt vector of size " << xs_pt_v.size()
-			 << " @ rad " << _grad_circle_rad_v[rad_id] << std::endl;
+	if(_refine_qpoint && !xs_pt_v.empty()) {
+	  xs_pt_v = QPointOnCircleRefine(img,cvtx.as_circle(),xs_pt_v,_refine_qpoint_maskout);
 	}
       }
-    } else {
+
+      auto last_xs = xs_pt_vv.front().size();
+
+      for(size_t rad_id=0; rad_id < xs_pt_vv.size(); ++rad_id) {
+	const auto& xs_pt_v = xs_pt_vv[rad_id];
+	if (xs_pt_v.empty()) break;
+	if (xs_pt_v.size() > last_xs) break;
+	
+	cvtx.radius = _grad_circle_rad_v[rad_id];
+	res_xs_pt_v = xs_pt_v;
+	last_xs = xs_pt_v.size();
+      }
+      
+    } // end graduate circle
+    else {
       LAROCV_DEBUG() << "Finding crossing points using regular QPoint method" << std::endl;
       
-      xs_pt_v = QPointOnCircle(img,cvtx.as_circle(),_pi_threshold);
+      auto xs_pt_v = QPointOnCircle(img,cvtx.as_circle(),_pi_threshold);
 
       LAROCV_DEBUG() << "... " << xs_pt_v.size() << " xs found" << std::endl;
       if(_refine_qpoint && !xs_pt_v.empty()) {
@@ -322,9 +304,11 @@ namespace larocv {
       
       xs_pt_v = this->ValidShowerPointOnCircle(img, cvtx.as_circle(), xs_pt_v);
       LAROCV_DEBUG() << "... " << xs_pt_v.size() << " xs validated"  << std::endl;
+
+      res_xs_pt_v = xs_pt_v;
     }
 
-    for(auto const& xs_pt : xs_pt_v) {
+    for(auto const& xs_pt : res_xs_pt_v) {
       LAROCV_DEBUG() << "Determining PCA @ " << xs_pt << std::endl;
       data::PointPCA pca_pt;
       pca_pt.pt = xs_pt;
@@ -335,10 +319,10 @@ namespace larocv {
 	LAROCV_WARNING() << "Local pca assignment fails for xs @ " << xs_pt << "... skip!" << std::endl;
 	continue;
       }
-      
       cvtx.xs_v.push_back(pca_pt);
     }
 
+    
   }
 
   // Given an image, use internal vertex seeds to generate true vertices

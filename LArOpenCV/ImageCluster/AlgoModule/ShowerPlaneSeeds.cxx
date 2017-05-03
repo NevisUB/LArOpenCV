@@ -102,14 +102,13 @@ namespace larocv {
 
 	// Inspect the possibility of being shower/track vtx point
 	_OneTrackOneShower.ValidateCircleVertex(shower_img,cvtx);
-	LAROCV_DEBUG() << ix << ") @ (" << seed.x << "," << seed.y << ") xs ..." << cvtx.xs_v.size() << std::endl;
-	ix++;
+	if (cvtx.xs_v.empty()) continue;
 
 	// To be track/shower vtx require only 1 xs point, else ignore
 	if (cvtx.xs_v.size()!=1) continue;
 	
 	LAROCV_DEBUG() << "... saved" << std::endl;
-
+	
 	// Reaching here means condition satisfied: move to output data rep
 	vertexseed2darray.emplace_back(std::move(seed));
       }// end seed filter

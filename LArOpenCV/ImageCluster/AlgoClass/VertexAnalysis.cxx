@@ -166,10 +166,9 @@ namespace larocv {
 			      bool check_type,
 			      bool weight_by_size) const {
 
-
     std::vector<size_t> seed_v;
     seed_v.resize(3);
-
+      
     for(size_t plane = 0; plane < 3; ++plane) {
       seed_v[plane] = pars_ptr_vv[plane].size();
       LAROCV_DEBUG() << seed_v[plane] << " particle on plane " << plane << std::endl;
@@ -211,8 +210,8 @@ namespace larocv {
 	if (clusters_per_plane_vv[plane0].size()<required_per_plane) continue;
 	if (clusters_per_plane_vv[plane1].size()<required_per_plane) continue;
 
-	auto cid0=comb_v[0].second;
-	auto cid1=comb_v[1].second;
+	auto cid0 = comb_v[0].second;
+	auto cid1 = comb_v[1].second;
 
 	LAROCV_DEBUG() << "["<<plane0<<","<<cid0<<"] & "
 		  << "["<<plane1<<","<<cid1<<"]"<<std::endl;
@@ -236,14 +235,21 @@ namespace larocv {
 	if (ctor0.empty()) throw larbys();
 	if (ctor1.empty()) throw larbys();
 
-
 	std::vector<size_t> pair_v(2,kINVALID_SIZE);
+
+	LAROCV_DEBUG() << "ctor size "
+		  << " @ 0: " << ctor0.size()
+		  << " @ 1: " << ctor1.size() << std::endl;
 
 	auto img0 = MaskImage(img_v[plane0],ctor0,0,false);
 	auto img1 = MaskImage(img_v[plane1],ctor1,0,false);
-	
+
 	auto nzero0_i = FindNonZero(img0);
 	auto nzero1_i = FindNonZero(img1);
+
+	LAROCV_DEBUG() << "non zero pts "
+		  << " @ 0: " << nzero0_i.size()
+		  << " @ 1: " << nzero1_i.size() << std::endl;
 	
 	// cast to float
 	geo2d::VectorArray<float> nzero0_f;
@@ -261,7 +267,6 @@ namespace larocv {
 	auto overlap = _geo.Overlap(nzero0_f,plane0,nzero1_f,plane1,false);
 	LAROCV_DEBUG() << "overlap " << overlap << std::endl;
 	
-
 	if (overlap < threshold) continue;
 
 	if (weight_by_size) {
@@ -271,8 +276,7 @@ namespace larocv {
 	  if (denom == 0) continue;
 	  
 	  overlap *= num/denom;
-	}
-	
+	}	
 	
 	std::vector<uint> match_v(2,kINVALID_INT);
 	match_v[0] = id0;
