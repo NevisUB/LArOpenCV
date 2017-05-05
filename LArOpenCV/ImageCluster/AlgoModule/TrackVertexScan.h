@@ -8,7 +8,7 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/VertexScan3D.h"
 
 /*
-  @brief: XYZ
+  @brief: Scan (4x4x4cm^3) cube around 3D reconstructed vertex and minimize the angular metric
 */
 namespace larocv {
  

@@ -153,6 +153,17 @@ namespace larocv {
   GEO2D_ContourArray_t
   AddContourArrays(const GEO2D_ContourArray_t& ctor_arr_1,
 		   const GEO2D_ContourArray_t& ctor_arr_2);
-  
+
+  void
+    ParticleAngle(GEO2D_Contour_t ctor,
+		geo2d::Circle<float> circle,
+		double& pct,
+		double& angle);
+
+  double
+  Getx2vtxmean(GEO2D_Contour_t ctor,
+	       float x2d, 
+	       float y2d, 
+	       double& pct);
 }
 #endif
