@@ -77,7 +77,7 @@ namespace larocv {
       auto& vtx3d_copy = vertex_data.as_vector().back();
       
       for(size_t plane=0;plane<_nplanes;++plane) {
-
+	
 	// This modules AlgoData
 	auto& this_par_data = AlgoData<data::ParticleClusterArray>(plane+1);
 	// auto& this_comp_data = AlgoData<data::TrackClusterCompoundArray>(_nplanes+plane+1);

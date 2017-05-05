@@ -136,6 +136,15 @@ namespace larocv {
 		       const float pi_threshold,
 		       const float supression);
 
+
+  bool
+  Contained(const cv::Mat& img,
+	    const geo2d::Vector<float>& pt);
+
+  geo2d::Vector<float>
+  EstimateMidPoint(const cv::Mat& img,
+		   const geo2d::Vector<float>& pt);
+
   
 }
 #endif

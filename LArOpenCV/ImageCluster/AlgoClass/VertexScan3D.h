@@ -64,6 +64,7 @@ namespace larocv {
     size_t _pca_box_size;
     bool _use_circle_weight;
     bool _prohibit_one_xs;
+    double _dtheta_cut;
     
   private:
 

@@ -11,6 +11,7 @@
 #include "SpectrumAnalysis.h"
 #include <set>
 #include <cmath>
+#include <array>
 
 namespace larocv {
 
@@ -590,7 +591,70 @@ namespace larocv {
     return QPointOnCircleRefine(img,circle,xs_v,mask_inner);
   }
 
-  
+  bool
+  Contained(const cv::Mat& img,
+	    const geo2d::Vector<float>& pt) {
+
+    if (pt.x >= img.cols) return false;
+    if (pt.y >= img.rows) return false;
+    if (pt.x < 0) return false;
+    if (pt.y < 0) return false;
+
+    return true;
+  }
+
+  geo2d::Vector<float>
+  EstimateMidPoint(const cv::Mat& img,
+		   const geo2d::Vector<float>& pt) {
+    
+    geo2d::Vector<float> res;
+
+    std::array<geo2d::VectorArray<float>,4> cross_vv;
+    std::array<geo2d::Vector<float>,4> dir_v;
+    dir_v[0] = geo2d::Vector<float>( 1,  0);
+    dir_v[1] = geo2d::Vector<float>( 0,  1);
+    dir_v[2] = geo2d::Vector<float>(-1,  0);
+    dir_v[3] = geo2d::Vector<float>( 0, -1);
+      
+    for(size_t dir_id=0; dir_id<4; ++dir_id) {
+      auto& cross_v = cross_vv[dir_id];
+	
+      auto dir = dir_v[dir_id];
+      auto dir_pt = pt;
+      int dir_ctr = 0;
+      
+      uint px = kINVALID_UINT;
+
+      while(px and Contained(img,dir_pt)) {
+	cross_v.push_back(dir_pt);
+	px = (uint) img.at<uchar>(dir_pt.y,dir_pt.x);
+	dir_ctr += 1;
+	dir_pt = pt + dir_ctr * dir;
+      }
+    }
+    
+    size_t min_dir_id = kINVALID_SIZE;
+    size_t min_size = kINVALID_SIZE;
+    for(size_t dir_id=0;dir_id<4;++dir_id) {
+      const auto& cross_v = cross_vv[dir_id];
+      if (cross_v.empty()) throw larbys("Cross should have initial pt");
+      if (cross_v.size() == 1) continue;
+      if (cross_v.size() < min_size) {
+	min_size = cross_v.size();
+	min_dir_id = dir_id;
+      }
+    }
+
+    if (min_dir_id == kINVALID_SIZE)
+      return pt;
+      
+    // get the mid point
+    size_t mid_id = std::ceil((float) min_size / (float) 2.0);
+
+    res = cross_vv.at(min_dir_id).at(mid_id);
+      
+    return res;
+  }
   
 }
 #endif

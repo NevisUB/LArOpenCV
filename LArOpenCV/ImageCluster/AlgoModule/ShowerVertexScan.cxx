@@ -148,7 +148,8 @@ namespace larocv {
     img_thresh_v.reserve(3);
     for(auto& im : img_v)
       img_thresh_v.emplace_back(larocv::Threshold(im,10,255));
-      
+
+    size_t acc_vtx = 0;
     for(auto& cand_vtx3d : cand_vtx_v) {
 
       // For this 3D candidate seed, check how many planes have vertices still in the image after projection
@@ -171,7 +172,6 @@ namespace larocv {
       // Require atleast 2 crossing point on 2 planes (using ADC image)
       //
       size_t num_good_plane = 0;
-      double weight_sum = 0;
       int plane = -1;
       for(auto const& cvtx2d : vtx3d.cvtx2d_v) {
 	plane += 1;
@@ -179,7 +179,6 @@ namespace larocv {
         if(cvtx2d.xs_v.size() < 2) continue;
 	LAROCV_DEBUG() << "... accepted" << std::endl;
         num_good_plane++;
-        weight_sum += cvtx2d.weight;
       }
       
       if(num_good_plane < 2) {
@@ -187,7 +186,6 @@ namespace larocv {
 	continue;
       }
 
-      weight_sum /= (double) num_good_plane;
       LAROCV_DEBUG() << "Registering vertex seed type="<<(uint)cand_vtx3d.type
 		     << " @ ("<<vtx3d.x<<","<<vtx3d.y<<","<<vtx3d.z<<")"<<std::endl;
 
@@ -205,12 +203,12 @@ namespace larocv {
 			 << " see " << npx << " nonzero pixels" << std::endl;
 	  if(npx) nvalid++;
 	}
-	if(nvalid!=3) {
+	if(nvalid != 3) {
 	  LAROCV_DEBUG() << "... invalid, SKIP!" << std::endl;
 	  continue;
 	}
       }
-      
+
       // Move seed into the output
       vertex3d_v.emplace_back(std::move(vtx3d));
       LAROCV_DEBUG() << "AlgoData size @ " << vertex3d_v.size() << std::endl;

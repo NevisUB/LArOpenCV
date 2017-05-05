@@ -101,7 +101,7 @@ namespace larocv {
 	LAROCV_DEBUG() << "Found " << cvtx2d.xs_v.size() << " xs on plane " << plane << std::endl;
         if(cvtx2d.xs_v.size()<2) continue;
 	LAROCV_DEBUG() << "... accepted" << std::endl;
-        num_good_plane++;
+	num_good_plane++;
         dtheta_sum += cvtx2d.sum_dtheta();
       }
 
@@ -112,7 +112,10 @@ namespace larocv {
       dtheta_sum /= (double)num_good_plane;
       LAROCV_DEBUG() << "Registering vertex seed type="<<(uint)cand_vtx3d.type
 		     << " @ ("<<vtx3d.x<<","<<vtx3d.y<<","<<vtx3d.z<<")"<<std::endl;
-
+      for(size_t plane=0;plane<3;++plane)  {
+	LAROCV_DEBUG() << plane << ") @ ("<<vtx3d.vtx2d_v[plane].pt.x << "," << vtx3d.vtx2d_v[plane].pt.y << ")" << std::endl;
+      }
+      
       // Optional: require there to be some charge in vincinity of projected vertex on 3 planes
       uint nvalid=0;
       if(_require_3planes_charge) {
