@@ -7,6 +7,7 @@
 #include <opencv2/opencv.hpp>
 #include "LArOpenCV/Core/larbys.h"
 #include "ImagePatchAnalysis.h"
+#define PI 3.1415926
 
 namespace larocv {
 
@@ -606,6 +607,40 @@ namespace larocv {
     ctors.insert( ctors.end(), ctor_arr_2.begin(), ctor_arr_2.end());
     
     return ctors;
+  }
+  
+  void ParticleAngle(GEO2D_Contour_t ctor, geo2d::Circle<float> circle, double& pct, double& angle){
+    angle = -9999;
+    pct = -9999;
+    float vtx2d_x =  circle.center.x;
+    float vtx2d_y =  circle.center.y;
+    
+    auto mean = Getx2vtxmean(ctor, vtx2d_x, vtx2d_y, pct );
+    auto dir = CalcPCA(ctor).dir;
+    if (dir.x == 0 && dir.y >0) angle = 90;
+    if (dir.x == 0 && dir.y <0) angle = 270;
+    if (dir.y == 0 && dir.x >0) angle = 0;
+    if (dir.y == 0 && dir.x <0) angle = 180;
+    if(dir.x!=0 ) {
+      angle = atan( dir.y/dir.x )*180/PI;
+      if (mean < 0) angle = angle +180;
+    }
+  }
+
+  double Getx2vtxmean(GEO2D_Contour_t ctor, float x2d, float y2d, double& pct)
+  {
+    double ctr_pos = 0.0;
+    double ctr_neg = 0.0;
+    double sum = 0;
+    double mean = -999;
+    for(size_t idx= 0;idx < ctor.size(); ++idx){
+      sum += ctor[idx].x - x2d;
+      if (ctor[idx].x - x2d > 0) ctr_pos++;
+      if (ctor[idx].x - x2d < 0) ctr_neg++;
+    }
+    pct = std::abs(ctr_pos - ctr_neg)/ctor.size();
+    if (ctor.size()>0) mean = sum / ctor.size();
+    return mean;
   }
   
 }
