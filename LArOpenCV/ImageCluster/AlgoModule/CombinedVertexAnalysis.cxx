@@ -20,6 +20,7 @@ namespace larocv {
     
     _track_vertex_algo_id = kINVALID_ALGO_ID;
     _shower_vertex_algo_id = kINVALID_ALGO_ID;
+    _particle_cluster_algo_id = kINVALID_ALGO_ID;
     
     auto track_vertex_algo_name = pset.get<std::string>("TrackVertexEstimateAlgo","");
     if (!track_vertex_algo_name.empty()) {
@@ -63,15 +64,22 @@ namespace larocv {
     // Get the assman
     auto& ass_man = AssManager();
     auto& vertex_data = AlgoData<data::Vertex3DArray>(0);
-    const auto& shower_vertex_data = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);
-    const auto& track_vertex_data  = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
-    
+
     std::vector<const data::Vertex3D*> vertex3d_v;
-    for(const auto& vtx : shower_vertex_data.as_vector()) vertex3d_v.push_back(&vtx);
-    for(const auto& vtx : track_vertex_data.as_vector())  vertex3d_v.push_back(&vtx);
+
+    if (_shower_vertex_algo_id!=kINVALID_ALGO_ID) {
+      const auto& shower_vertex_data = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);
+      for(const auto& vtx : shower_vertex_data.as_vector()) vertex3d_v.push_back(&vtx);
+    }
+
+    if (_track_vertex_algo_id!=kINVALID_ALGO_ID) {
+      const auto& track_vertex_data  = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
+      for(const auto& vtx : track_vertex_data.as_vector())  vertex3d_v.push_back(&vtx);
+    }
+
     
     for(const auto& vertex3d_ptr : vertex3d_v) {
-      
+
       const auto& vtx3d = *vertex3d_ptr;
       vertex_data.push_back(vtx3d);
       auto& vtx3d_copy = vertex_data.as_vector().back();

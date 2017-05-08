@@ -76,7 +76,7 @@ namespace larocv {
       throw larbys();
     }
 
-    return _copy_img_vv[(int)set_id];
+    return _copy_img_vv.at((int)set_id);
   }
 
   std::vector<cv::Mat>& ImageClusterManager::OriginalInputImages(ImageSetID_t set_id) {
