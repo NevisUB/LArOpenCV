@@ -1,10 +1,12 @@
 #ifndef __VERTEXSCAN3D_H__
 #define __VERTEXSCAN3D_H__
 
-#include <set>
 #include "VertexScan3D.h"
+#include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
+#include <set>
 #include <array>
+
 
 namespace larocv {
 
@@ -23,14 +25,20 @@ namespace larocv {
     _pi_threshold      = pset.get<float>("PIThreshold");
     _angle_supression  = pset.get<float>("AngleSupression");
     _pca_box_size      = pset.get<float>("PCABoxSize");
-    _use_circle_weight = pset.get<bool>("CircleWeight",true);
-    _prohibit_one_xs   = pset.get<bool>("ProhibitOneXs",false);
+    _use_circle_weight = pset.get<bool> ("CircleWeight",true);
+    _prohibit_one_xs   = pset.get<bool> ("ProhibitOneXs",false);
     _dtheta_cut        = pset.get<float>("dThetaCut",10);
+    _merge_voxels      = pset.get<bool> ("MergeVoxels",false);
+
+    
+    _require_3planes_charge = pset.get<bool>("Require3PlanesCharge",false);
+    if(_require_3planes_charge)
+      _allowed_radius = pset.get<float>("AllowedRadius",0.0);
   }
 
   bool VertexScan3D::SetPlanePoint(cv::Mat img,
-				  const data::VertexSeed3D& vtx3d,
-				  const size_t plane,
+				   const data::VertexSeed3D& vtx3d,
+				   const size_t plane,
 				   geo2d::Vector<float>& plane_pt) const {
 
     
@@ -84,7 +92,7 @@ namespace larocv {
     return true;
   }
 
-  double VertexScan3D::CircleWeight(const larocv::data::CircleVertex& cvtx) const
+  double VertexScan3D::CircleWeight(const data::CircleVertex& cvtx) const
   {
     double dtheta_sum = cvtx.sum_dtheta();
     // check angular resolution
@@ -106,7 +114,7 @@ namespace larocv {
       if(_check_stability) {
 	auto mid_pt = EstimateMidPoint(img,cvtx.center);
 	if (mid_pt != cvtx.center) {
-	  auto xs_v = larocv::QPointOnCircle(img,geo2d::Circle<float>(mid_pt,cvtx.radius));
+	  auto xs_v = QPointOnCircle(img,geo2d::Circle<float>(mid_pt,cvtx.radius));
 	  if (xs_v.size() == 2) {
 	    auto cl0 = geo2d::Line<float>(xs_v[0], xs_v[0] - mid_pt);
 	    auto cl1 = geo2d::Line<float>(xs_v[1], xs_v[1] - mid_pt);
@@ -258,41 +266,157 @@ namespace larocv {
     return res;
   }
 
-  larocv::data::Vertex3D
-  VertexScan3D::RegionScan3D(const larocv::data::VertexSeed3D& vtx3d,
-			     std::vector<cv::Mat> image_v,
-			     size_t num_xspt) const
-  {
-    larocv::data::Vertex3D res;
-
-    if (image_v.size() > _geo._num_planes) {
-      LAROCV_CRITICAL() << "Provided image array length " << image_v.size()
-			<< " exceeds # planes " << _geo._num_planes << std::endl;
-      throw larbys();
-    }
+  void
+  VertexScan3D::RegisterRegions(const std::vector<data::Vertex3D>& vtx3d_v) {
 
     size_t nstep_x = (_dx * 2 / _step_size) + 1;
     size_t nstep_y = (_dy * 2 / _step_size) + 1;
     size_t nstep_z = (_dz * 2 / _step_size) + 1;
 
-    // construct possible coordinate array
-    std::vector<float> x_v(nstep_x, 0.);
-    std::vector<float> y_v(nstep_y, 0.);
-    std::vector<float> z_v(nstep_z, 0.);
-    for (size_t i = 0; i < nstep_x; ++i)
-      { x_v[i] = vtx3d.x - _dx + _step_size * i; }
-    for (size_t i = 0; i < nstep_y; ++i)
-      { y_v[i] = vtx3d.y - _dy + _step_size * i; }
-    for (size_t i = 0; i < nstep_z; ++i)
-      { z_v[i] = vtx3d.z - _dz + _step_size * i; }
-    LAROCV_INFO() << "Start 3D scan around vertex (x,y,z)=(" 
-		  << vtx3d.x << "," << vtx3d.y << "," << vtx3d.z << ")" << std::endl
-		  << "    Scan X " << vtx3d.x - _dx << " => " << vtx3d.x + _dx << " in " << nstep_x << " steps" << std::endl
-		  << "    Scan Y " << vtx3d.y - _dy << " => " << vtx3d.y + _dy << " in " << nstep_y << " steps" << std::endl
-		  << "    Scan Z " << vtx3d.z - _dz << " => " << vtx3d.z + _dz << " in " << nstep_z << " steps" << std::endl;
+    std::vector<Voxel> voxel_v;
     
-    static data::Vertex3D trial_vtx3d;
+    for(const auto& vtx3d : vtx3d_v) {
+    
+      // construct possible coordinate array
+      std::vector<float> x_v(nstep_x, 0.);
+      std::vector<float> y_v(nstep_y, 0.);
+      std::vector<float> z_v(nstep_z, 0.);
+      for (size_t i = 0; i < nstep_x; ++i)
+	{ x_v[i] = vtx3d.x - _dx + _step_size * i; }
+      for (size_t i = 0; i < nstep_y; ++i)
+	{ y_v[i] = vtx3d.y - _dy + _step_size * i; }
+      for (size_t i = 0; i < nstep_z; ++i)
+	{ z_v[i] = vtx3d.z - _dz + _step_size * i; }
 
+      Voxel voxel;
+      voxel.x_v = std::move(x_v);
+      voxel.y_v = std::move(y_v);
+      voxel.z_v = std::move(z_v);
+
+      voxel_v.emplace_back(voxel);
+    }
+    
+    if (_merge_voxels) MergeVoxels(voxel_v);
+
+    _voxel_v = std::move(voxel_v);
+  }
+
+
+  void
+  VertexScan3D::MergeVoxels(std::vector<Voxel>& voxel_v) {
+
+    bool merged = true;
+    while(merged) {
+      
+      std::vector<Voxel> voxel_tmp_v;
+      voxel_tmp_v.reserve(voxel_v.size());
+
+      std::vector<bool> used_v(voxel_v.size(),false);
+
+      merged = false;
+      
+      for(size_t vid1=0; vid1<voxel_v.size(); ++vid1) {
+	if (used_v[vid1]) continue;
+	for(size_t vid2=vid1+1; vid2<voxel_v.size(); ++vid2) {
+	  if (used_v[vid2]) continue;
+
+	  auto& voxel1 = voxel_v[vid1];
+	  auto& voxel2 = voxel_v[vid2];
+
+	  if(!voxel1.Overlap(voxel2)) continue;
+
+	  auto voxel = voxel1.Merge(voxel2);
+
+	  voxel_tmp_v.emplace_back(std::move(voxel));
+	  used_v[vid1] = true;
+	  used_v[vid2] = true;
+	  merged = true;
+	}
+      }	    
+
+      for(size_t vid=0;vid<voxel_v.size();++vid) {
+	if (used_v[vid]) continue;
+	voxel_tmp_v.emplace_back(std::move(voxel_v[vid]));
+      }
+
+      std::swap(voxel_v,voxel_tmp_v);
+    }
+    
+  }
+  
+  
+  std::vector<data::Vertex3D> 
+  VertexScan3D::RegionScan3D(const std::vector<cv::Mat>& image_v) const
+  {
+    
+    LAROCV_DEBUG() << "See " << _voxel_v.size() << " registered regions" << std::endl;
+    std::vector<data::Vertex3D> vtx3d_v;
+    vtx3d_v.reserve(_voxel_v.size());
+    
+    for(size_t region_id=0; region_id<_voxel_v.size();++region_id) {
+      const auto& voxel = _voxel_v[region_id];
+
+      LAROCV_DEBUG() << "Region ID " << region_id << std::endl;
+
+      auto vtx3d = ScanRegion(voxel,image_v);
+
+      size_t num_good_plane = 0;
+      int plane = -1;
+      
+      // Require atleast 2 crossing point on 2 planes (using ADC image)
+      for(auto const& cvtx2d : vtx3d.cvtx2d_v) {
+	plane += 1;
+	LAROCV_DEBUG() << "Found " << cvtx2d.xs_v.size() << " xs on plane " << plane << std::endl;
+        if(cvtx2d.xs_v.size()<2) continue;
+	LAROCV_DEBUG() << "... accepted" << std::endl;
+	num_good_plane++;
+      }
+
+      if(num_good_plane < 2) {
+	LAROCV_DEBUG() << "Num good plane < 2, SKIP!!" << std::endl;
+	continue;
+      }
+      
+      // Optional: require there to be some charge in vincinity of projected vertex on 3 planes
+      uint nvalid=0;
+      if(_require_3planes_charge) {
+	LAROCV_DEBUG() << "Requiring 3 planes charge in circle... " << std::endl;
+	for(size_t plane=0; plane<3; ++plane)  {
+	  auto vtx2d= vtx3d.vtx2d_v[plane];
+	  auto npx = CountNonZero(image_v[plane],geo2d::Circle<float>(vtx2d.pt,_allowed_radius));
+	  LAROCV_DEBUG() << "@ (" << vtx2d.pt.x << "," << vtx2d.pt.y
+			 << ") w/ rad " << _allowed_radius
+			 << " see " << npx << " nonzero pixels" << std::endl;
+	  if(npx) nvalid++;
+	}
+	if(nvalid!=3) {
+	  LAROCV_DEBUG() << "... invalid, SKIP!" << std::endl;
+	  continue;
+	}
+      }
+      
+      // Move seed into the output
+      vtx3d_v.emplace_back(std::move(vtx3d));
+    } // end candidate vertex seed
+
+
+    return vtx3d_v;
+  }
+
+  
+  data::Vertex3D
+  VertexScan3D::ScanRegion(const Voxel& voxel,
+			   const std::vector<cv::Mat>& image_v,
+			   size_t num_xspt) const {
+    data::Vertex3D res;
+    
+    if (image_v.size() > _geo._num_planes) {
+      LAROCV_CRITICAL() << "Provided image array length " << image_v.size()
+			<< " exceeds # planes " << _geo._num_planes << std::endl;
+      throw larbys();
+    }
+    static data::Vertex3D trial_vtx3d;
+    
     std::vector<size_t> num_xspt_count_v;
     std::array<geo2d::Vector<float>,3> plane_pt_v;
     std::array<bool,3> valid_v;
@@ -300,14 +424,13 @@ namespace larocv {
     
     double best_weight = kINVALID_DOUBLE;
 
-    for (size_t step_x = 0; step_x < nstep_x; ++step_x) {
-      trial_vtx3d.x = x_v[step_x];
-      for (size_t step_y = 0; step_y < nstep_y; ++step_y) {
-	trial_vtx3d.y = y_v[step_y];
-	for (size_t step_z = 0; step_z < nstep_z; ++step_z) {
-	  trial_vtx3d.z = z_v[step_z];
+    for (size_t step_x = 0; step_x < voxel.nx(); ++step_x) {
+      for (size_t step_y = 0; step_y < voxel.ny(); ++step_y) {
+	for (size_t step_z = 0; step_z < voxel.nz(); ++step_z) {
 
-	  std::vector<larocv::data::CircleVertex> circle_v;
+	  trial_vtx3d = voxel.pt(step_x,step_y,step_z);
+	    
+	  std::vector<data::CircleVertex> circle_v;
 	  circle_v.resize(_geo._num_planes);
 	  
 	  for (auto& v : num_xspt_count_v) v = 0;
@@ -378,8 +501,8 @@ namespace larocv {
 	    res.vtx2d_v.resize(_geo._num_planes);
 	    for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
 	      if(!valid_v[plane]) continue;
-	      auto col = _geo.x2col(x_v[step_x], plane);
-	      auto row = _geo.yz2row(y_v[step_y], z_v[step_z], plane);
+	      auto col = _geo.x2col(res.x, plane);
+	      auto row = _geo.yz2row(res.y, res.z, plane);
 	      res.vtx2d_v[plane].pt.x = col;
 	      res.vtx2d_v[plane].pt.y = row;
 	      res.vtx2d_v[plane].score = res.cvtx2d_v[plane].sum_dtheta();
