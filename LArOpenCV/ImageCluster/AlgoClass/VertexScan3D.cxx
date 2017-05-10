@@ -30,7 +30,6 @@ namespace larocv {
     _dtheta_cut        = pset.get<float>("dThetaCut",10);
     _merge_voxels      = pset.get<bool> ("MergeVoxels",false);
 
-    
     _require_3planes_charge = pset.get<bool>("Require3PlanesCharge",false);
     if(_require_3planes_charge)
       _allowed_radius = pset.get<float>("AllowedRadius",0.0);
@@ -273,7 +272,8 @@ namespace larocv {
     size_t nstep_y = (_dy * 2 / _step_size) + 1;
     size_t nstep_z = (_dz * 2 / _step_size) + 1;
 
-    std::vector<Voxel> voxel_v;
+    auto& voxel_vv = _voxel_vv;
+    voxel_vv.clear();
     
     for(const auto& vtx3d : vtx3d_v) {
     
@@ -293,72 +293,78 @@ namespace larocv {
       voxel.y_v = std::move(y_v);
       voxel.z_v = std::move(z_v);
 
-      voxel_v.emplace_back(voxel);
+      voxel_vv.emplace_back(std::move(voxel));
     }
-    
-    if (_merge_voxels) MergeVoxels(voxel_v);
 
-    _voxel_v = std::move(voxel_v);
+    size_t nbefore = voxel_vv.size();
+    LAROCV_DEBUG() << "Merging " << voxel_vv.size() << " voxels" << std::endl;
+    if (_merge_voxels) MergeVoxels(voxel_vv);
+    LAROCV_DEBUG() << "... into " << voxel_vv.size() << std::endl;
+
+    size_t nafter = 0;
+    for(const auto& v : voxel_vv) nafter += v.size(); 
+    
+    assert(nafter == nbefore);
+    
   }
 
-
   void
-  VertexScan3D::MergeVoxels(std::vector<Voxel>& voxel_v) {
-
+  VertexScan3D::MergeVoxels(std::vector<VoxelArray>& voxel_vv) {
+    
     bool merged = true;
     while(merged) {
       
-      std::vector<Voxel> voxel_tmp_v;
-      voxel_tmp_v.reserve(voxel_v.size());
+      std::vector<VoxelArray> voxel_tmp_vv;
+      voxel_tmp_vv.reserve(voxel_vv.size());
 
-      std::vector<bool> used_v(voxel_v.size(),false);
+      std::vector<bool> used_v(voxel_vv.size(),false);
 
       merged = false;
       
-      for(size_t vid1=0; vid1<voxel_v.size(); ++vid1) {
+      for(size_t vid1=0; vid1<voxel_vv.size(); ++vid1) {
 	if (used_v[vid1]) continue;
-	for(size_t vid2=vid1+1; vid2<voxel_v.size(); ++vid2) {
+	for(size_t vid2=vid1+1; vid2<voxel_vv.size(); ++vid2) {
 	  if (used_v[vid2]) continue;
 
-	  auto& voxel1 = voxel_v[vid1];
-	  auto& voxel2 = voxel_v[vid2];
+	  auto& voxel1_v = voxel_vv[vid1];
+	  auto& voxel2_v = voxel_vv[vid2];
 
-	  if(!voxel1.Overlap(voxel2)) continue;
+	  if(!voxel1_v.Overlap(voxel2_v)) continue;
 
-	  auto voxel = voxel1.Merge(voxel2);
-
-	  voxel_tmp_v.emplace_back(std::move(voxel));
+	  auto voxel_merged_v = voxel1_v.Merge(voxel2_v);
+	  voxel_tmp_vv.emplace_back(std::move(voxel_merged_v));
+	    
 	  used_v[vid1] = true;
 	  used_v[vid2] = true;
 	  merged = true;
+	  break;
 	}
       }	    
 
-      for(size_t vid=0;vid<voxel_v.size();++vid) {
+      for(size_t vid=0; vid<voxel_vv.size(); ++vid) {
 	if (used_v[vid]) continue;
-	voxel_tmp_v.emplace_back(std::move(voxel_v[vid]));
+	voxel_tmp_vv.emplace_back(std::move(voxel_vv[vid]));
       }
 
-      std::swap(voxel_v,voxel_tmp_v);
+      std::swap(voxel_vv,voxel_tmp_vv);
     }
     
   }
-  
   
   std::vector<data::Vertex3D> 
   VertexScan3D::RegionScan3D(const std::vector<cv::Mat>& image_v) const
   {
     
-    LAROCV_DEBUG() << "See " << _voxel_v.size() << " registered regions" << std::endl;
+    LAROCV_DEBUG() << "See " << _voxel_vv.size() << " registered regions" << std::endl;
     std::vector<data::Vertex3D> vtx3d_v;
-    vtx3d_v.reserve(_voxel_v.size());
+    vtx3d_v.reserve(_voxel_vv.size());
     
-    for(size_t region_id=0; region_id<_voxel_v.size();++region_id) {
-      const auto& voxel = _voxel_v[region_id];
+    for(size_t region_id=0; region_id<_voxel_vv.size();++region_id) {
+      const auto& voxel_v = _voxel_vv[region_id];
 
-      LAROCV_DEBUG() << "Region ID " << region_id << std::endl;
+      LAROCV_DEBUG() << "Region ID " << region_id << " sz " << voxel_v.size() << std::endl;
 
-      auto vtx3d = ScanRegion(voxel,image_v);
+      auto vtx3d = ScanRegion(voxel_v,image_v);
 
       size_t num_good_plane = 0;
       int plane = -1;
@@ -405,7 +411,7 @@ namespace larocv {
 
   
   data::Vertex3D
-  VertexScan3D::ScanRegion(const Voxel& voxel,
+  VertexScan3D::ScanRegion(const VoxelArray& voxel_v,
 			   const std::vector<cv::Mat>& image_v,
 			   size_t num_xspt) const {
     data::Vertex3D res;
@@ -424,95 +430,102 @@ namespace larocv {
     
     double best_weight = kINVALID_DOUBLE;
 
-    for (size_t step_x = 0; step_x < voxel.nx(); ++step_x) {
-      for (size_t step_y = 0; step_y < voxel.ny(); ++step_y) {
-	for (size_t step_z = 0; step_z < voxel.nz(); ++step_z) {
-
-	  trial_vtx3d = voxel.pt(step_x,step_y,step_z);
+    LAROCV_DEBUG() << "Scanning (" << voxel_v.nx() << "," << voxel_v.ny() << "," << voxel_v.nz() << ") region sz " << voxel_v.size() << std::endl;
+    for(const auto& voxel : voxel_v.as_vector()) {
+      LAROCV_DEBUG() << "... @ (" << voxel.nx() << "," << voxel.ny() << "," << voxel.nz() << ")" << std::endl;
+      LAROCV_DEBUG() << "("<<voxel.min_x()<<","<<voxel.min_y()<<","<<voxel.min_z()<<") => ("<<voxel.max_x()<<","<<voxel.max_y()<<","<<voxel.max_z()<<")"<<std::endl;
+      for (size_t step_x = 0; step_x < voxel.nx(); ++step_x) {
+	for (size_t step_y = 0; step_y < voxel.ny(); ++step_y) {
+	  for (size_t step_z = 0; step_z < voxel.nz(); ++step_z) {
 	    
-	  std::vector<data::CircleVertex> circle_v;
-	  circle_v.resize(_geo._num_planes);
+	    trial_vtx3d.x = voxel.x_v[step_x];
+	    trial_vtx3d.y = voxel.y_v[step_y];
+	    trial_vtx3d.z = voxel.z_v[step_z];
 	  
-	  for (auto& v : num_xspt_count_v) v = 0;
-	  for (auto& v : plane_pt_v)       v = invalid_pt;
-	  for (auto& v : valid_v)          v = false;
-	  short valid_ctr = 0;
+	    for (auto& v : plane_pt_v)       v = invalid_pt;
+	    for (auto& v : valid_v)          v = false;
+	    short valid_ctr = 0;
 	  
-	  for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
-	    if(!SetPlanePoint(image_v.at(plane), trial_vtx3d, plane, plane_pt_v[plane])) continue;
-	       valid_v[plane] = true;
-	       valid_ctr++;
-	  }
-	  
-	  if (valid_ctr < 2) continue;
-	  
-	  for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
-	    if (!valid_v[plane]) continue;
-	    auto& cvtx = circle_v[plane];
-	    const auto& plane_pt = plane_pt_v[plane];
-	    auto res = CreateCircleVertex(image_v[plane], trial_vtx3d, plane_pt,cvtx);
-	    auto const& xs_pts = cvtx.xs_v;
-	    if (xs_pts.size() >= num_xspt_count_v.size())
-	      num_xspt_count_v.resize(xs_pts.size() + 1);
-	    num_xspt_count_v[xs_pts.size()] += 1;
-	  }
-	    
-	  // Decide which plane to use
-	  if (!num_xspt) {
-	    size_t num_valid_plane = 0;
-	    for (size_t num_xspt_idx = 0; num_xspt_idx < num_xspt_count_v.size(); ++num_xspt_idx) {
-	      if (num_xspt_count_v[num_xspt_idx] < 2) continue;
-	      if (num_xspt_count_v[num_xspt_idx] < num_valid_plane) continue;
-	      num_valid_plane = num_xspt_count_v[num_xspt_idx];
-	      num_xspt = num_xspt_idx;
+	    for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
+	      if(!SetPlanePoint(image_v[plane], trial_vtx3d, plane, plane_pt_v[plane])) continue;
+	      valid_v[plane] = true;
+	      valid_ctr++;
 	    }
-	  }
-
-	  // If num_xspt == 0, or it's not valid, skip this point
-	  if (!num_xspt || num_xspt_count_v.size() <= num_xspt || num_xspt_count_v[num_xspt] < 2) {
-	    continue;
-	  }
-
-	  std::array<double,3> weight_v;
-	  for(auto& w : weight_v) w=kINVALID_DOUBLE;
 	  
-	  for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
-	    if(!valid_v[plane]) continue;
-	    auto const& circle = circle_v[plane];
-	    if (circle.xs_v.size() != num_xspt) continue;
+	    if (valid_ctr < 2) continue;
 
-	    double weight = 0.0;
-	    if (_use_circle_weight)
-	      weight_v[plane] = CircleWeight(circle);
-	    else
-	      weight_v[plane] = circle.mean_dtheta();
-	  }
-	  std::sort(std::begin(weight_v), std::end(weight_v));
-	  auto weight1 = weight_v[0];
-	  auto weight2 = weight_v[1];
+	    std::vector<data::CircleVertex> circle_v;
+	    circle_v.resize(_geo._num_planes);
+
+	    for (auto& v : num_xspt_count_v) v = 0;
+	    
+	    for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
+	      if (!valid_v[plane]) continue;
+	      auto& cvtx = circle_v[plane];
+	      const auto& plane_pt = plane_pt_v[plane];
+	      auto res = CreateCircleVertex(image_v[plane], trial_vtx3d, plane_pt,cvtx);
+	      auto const& xs_pts = cvtx.xs_v;
+	      if (xs_pts.size() >= num_xspt_count_v.size())
+		num_xspt_count_v.resize(xs_pts.size() + 1);
+	      num_xspt_count_v[xs_pts.size()] += 1;
+	    }
+	    
+	    // Decide which plane to use
+	    if (!num_xspt) {
+	      size_t num_valid_plane = 0;
+	      for (size_t num_xspt_idx = 0; num_xspt_idx < num_xspt_count_v.size(); ++num_xspt_idx) {
+		if (num_xspt_count_v[num_xspt_idx] < 2) continue;
+		if (num_xspt_count_v[num_xspt_idx] < num_valid_plane) continue;
+		num_valid_plane = num_xspt_count_v[num_xspt_idx];
+		num_xspt = num_xspt_idx;
+	      }
+	    }
+
+	    // If num_xspt == 0, or it's not valid, skip this point
+	    if (!num_xspt || num_xspt_count_v.size() <= num_xspt || num_xspt_count_v[num_xspt] < 2) {
+	      continue;
+	    }
+
+	    std::array<double,3> weight_v;
+	    for(auto& w : weight_v) w=kINVALID_DOUBLE;
 	  
-	  if ((weight1 * weight2) < best_weight) {
-	    best_weight  = weight1 * weight2;
-	    res.x = trial_vtx3d.x;
-	    res.y = trial_vtx3d.y;
-	    res.z = trial_vtx3d.z;
-	    res.num_planes = valid_ctr;
-	    res.cvtx2d_v = circle_v;
-	    res.vtx2d_v.resize(_geo._num_planes);
 	    for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
 	      if(!valid_v[plane]) continue;
-	      auto col = _geo.x2col(res.x, plane);
-	      auto row = _geo.yz2row(res.y, res.z, plane);
-	      res.vtx2d_v[plane].pt.x = col;
-	      res.vtx2d_v[plane].pt.y = row;
-	      res.vtx2d_v[plane].score = res.cvtx2d_v[plane].sum_dtheta();
-	    }
-	  }
-	  
-	} // zstep
-      } // ystep
-    } // xstep
+	      auto const& circle = circle_v[plane];
+	      if (circle.xs_v.size() != num_xspt) continue;
 
+	      double weight = 0.0;
+	      if (_use_circle_weight)
+		weight_v[plane] = CircleWeight(circle);
+	      else
+		weight_v[plane] = circle.mean_dtheta();
+	    }
+	    std::sort(std::begin(weight_v), std::end(weight_v));
+	    auto weight1 = weight_v[0];
+	    auto weight2 = weight_v[1];
+	  
+	    if ((weight1 * weight2) < best_weight) {
+	      best_weight  = weight1 * weight2;
+	      res.x = trial_vtx3d.x;
+	      res.y = trial_vtx3d.y;
+	      res.z = trial_vtx3d.z;
+	      res.num_planes = valid_ctr;
+	      res.cvtx2d_v = circle_v;
+	      res.vtx2d_v.resize(_geo._num_planes);
+	      for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
+		if(!valid_v[plane]) continue;
+		auto col = _geo.x2col(res.x, plane);
+		auto row = _geo.yz2row(res.y, res.z, plane);
+		res.vtx2d_v[plane].pt.x = col;
+		res.vtx2d_v[plane].pt.y = row;
+		res.vtx2d_v[plane].score = res.cvtx2d_v[plane].sum_dtheta();
+	      }
+	    }
+	  
+	  } // zstep
+	} // ystep
+      } // xstep
+    } // end this voxel
     return res;
   }
 

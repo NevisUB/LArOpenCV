@@ -46,6 +46,9 @@ namespace larocv {
       /// Registration of algorithm specific data
       void Register(const AlgorithmID_t id, AlgoDataBase* data);
       
+      /// Registration of algorithm data storate ttree (optional)
+      void Register(TTree* tree, std::vector<AlgorithmID_t> store_algo_id_v);
+	
       /// Registration of algorithm data storage ttree (optional)
       void Register(TTree* tree);
 

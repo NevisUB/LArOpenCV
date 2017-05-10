@@ -29,13 +29,14 @@ namespace larocv {
     
     void _Process_();
     
-    bool _PostProcess_() const
-    { return true; }
+    bool _PostProcess_() const;
 
   private:
 
     AlgorithmID_t _combined_id;
-    
+    AlgorithmID_t _particle_id;
+
+    size_t _nparticles;
   };
 
   class ShapeAnalysisFactory : public AlgoFactoryBase {

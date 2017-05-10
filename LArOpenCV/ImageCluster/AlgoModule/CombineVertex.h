@@ -1,5 +1,5 @@
-#ifndef __COMBINEDVERTEXANALYSIS_H__
-#define __COMBINEDVERTEXANALYSIS_H__
+#ifndef __COMBINEVERTEX_H__
+#define __COMBINEVERTEX_H__
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
@@ -9,17 +9,17 @@
 */
 namespace larocv {
  
-  class CombinedVertexAnalysis : public larocv::ImageAnaBase {
+  class CombineVertex : public larocv::ImageAnaBase {
     
   public:
     
     /// Default constructor: Name is used to identify a configuration parameter set via larocv::ImageClusterManager
-    CombinedVertexAnalysis(const std::string name = "CombinedVertexAnalysis") :
+    CombineVertex(const std::string name = "CombineVertex") :
       ImageAnaBase(name)
     {}
     
     /// Default destructor
-    ~CombinedVertexAnalysis(){}
+    ~CombineVertex(){}
     
     void Reset();
 
@@ -44,17 +44,17 @@ namespace larocv {
   };
   
   /**
-     \class larocv::CombinedVertexAnalysisFactory
-     \brief A concrete factory class for larocv::CombinedVertexAnalysis
+     \class larocv::CombineVertexFactory
+     \brief A concrete factory class for larocv::CombineVertex
    */
-  class CombinedVertexAnalysisFactory : public AlgoFactoryBase {
+  class CombineVertexFactory : public AlgoFactoryBase {
   public:
     /// ctor
-    CombinedVertexAnalysisFactory() { AlgoFactory::get().add_factory("CombinedVertexAnalysis",this); }
+    CombineVertexFactory() { AlgoFactory::get().add_factory("CombineVertex",this); }
     /// dtor
-    ~CombinedVertexAnalysisFactory() {}
+    ~CombineVertexFactory() {}
     /// create method
-    ImageClusterBase* create(const std::string instance_name) { return new CombinedVertexAnalysis(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new CombineVertex(instance_name); }
   };
   
 }
