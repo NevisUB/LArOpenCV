@@ -42,9 +42,9 @@ namespace larocv {
     
     /// Default constructor: width, height, and origin coordinate won't be modifiable 
     ImageMeta(const double width=0., const double height=0.,
-        const size_t width_npixel=0., const size_t height_npixel=0,
-        const double origin_x=0., const double origin_y=0.,
-        const size_t plane=::larocv::kINVALID_SIZE)
+	      const size_t width_npixel=0., const size_t height_npixel=0,
+	      const double origin_x=0., const double origin_y=0.,
+	      const size_t plane=::larocv::kINVALID_SIZE)
       : _origin(origin_x,origin_y)
       , _width(width)
       , _height(height)
@@ -98,10 +98,7 @@ namespace larocv {
 
     void set_debug(bool d) { _debug = d; }
     const bool debug() const { return _debug; }
-
-    //void set_ev_user(::larlite::event_user* ui) { EVUSERINFO = ui; }
-    //::larlite::event_user* ev_user() { return EVUSERINFO; } //all caps to remind you this is a global instance
-
+    
     void set_roi_cropped(bool d) { _roi_cropped = d; }
     const bool roi_cropped() const { return _roi_cropped; }
 

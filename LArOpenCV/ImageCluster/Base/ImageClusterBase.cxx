@@ -13,6 +13,10 @@ namespace larocv {
     ,_name(name)
     ,_profile(true)
     ,_dataman_ptr(nullptr)
+    ,_run(kINVALID_UINT)
+    ,_subrun(kINVALID_UINT)
+    ,_event(kINVALID_UINT)
+    ,_entry(kINVALID_UINT)
   {
     LAROCV_DEBUG() << "Constructed" << std::endl;
   }
@@ -99,6 +103,20 @@ namespace larocv {
     tree->Branch("subrun" , &_dataman_ptr->_subrun , "subrun/i");
     tree->Branch("event"  , &_dataman_ptr->_event  , "event/i");
     tree->Branch("entry"  , &_dataman_ptr->_entry  , "entry/i");
+  }
+
+  bool ImageClusterBase::NextEvent() {
+    if (_run    == _dataman_ptr->_run    and
+	_subrun == _dataman_ptr->_subrun and
+	_event  == _dataman_ptr->_event  and
+	_entry  == _dataman_ptr->_entry) return false;
+
+    _run    = _dataman_ptr->_run;
+    _subrun = _dataman_ptr->_subrun;
+    _event  = _dataman_ptr->_event;
+    _entry  = _dataman_ptr->_entry;
+    
+    return true;
   }
   
 }

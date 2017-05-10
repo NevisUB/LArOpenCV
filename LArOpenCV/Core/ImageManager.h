@@ -46,7 +46,7 @@ namespace larocv  {
     void push_back(const ::cv::Mat& img, const larocv::ImageMeta& meta);
     /// Regist image + meta + roi 
     void push_back(const ::cv::Mat& img, const larocv::ImageMeta& meta, const larocv::ROI& roi);
-    /// Register image + meta + roi via move
+    /// Register image + meta via move
     void emplace_back(::cv::Mat&& img, larocv::ImageMeta&& meta);
     /// Image getter
     ::cv::Mat& img_at(size_t index=0);

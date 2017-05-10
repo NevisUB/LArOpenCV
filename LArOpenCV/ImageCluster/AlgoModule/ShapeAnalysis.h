@@ -39,9 +39,12 @@ namespace larocv {
     AlgorithmID_t _particle_id;
 
     TTree* _tree;
+
+    int _roid;
     int _vtxid;
     int _nparticles;
-
+    
+    std::vector<int>   _nplanes_v;
     std::vector<float> _length_v;
     std::vector<float> _width_v;
     std::vector<float> _perimeter_v;

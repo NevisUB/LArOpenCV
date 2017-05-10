@@ -49,9 +49,11 @@ namespace larocv {
 
     _tree = new TTree("ShapeAnalysis","");
     AttachIDs(_tree);
+    _tree->Branch("roid"       , &_roid      , "roid/I");
     _tree->Branch("vtxid"      , &_vtxid     , "vtxid/I");
     _tree->Branch("nparticles" , &_nparticles, "nparticles/I");
-    
+
+    _tree->Branch("nplanes_v"         , &_nplanes_v);
     _tree->Branch("length_v"          , &_length_v);
     _tree->Branch("width_v"           , &_width_v);
     _tree->Branch("perimeter_v"       , &_perimeter_v);
@@ -63,9 +65,11 @@ namespace larocv {
     _tree->Branch("sigma_pixel_dist_v", &_sigma_pixel_dist_v);
     _tree->Branch("angular_sum_v"     , &_angular_sum_v);
 
+    _roid = 0;
   }
 
   void ShapeAnalysis::Clear() {
+    _nplanes_v.clear();
     _length_v.clear();
     _width_v.clear();
     _perimeter_v.clear();
@@ -90,27 +94,27 @@ namespace larocv {
     // Get the particle clusters from the previous module, go vertex-by-vertex
     const auto& vtx3d_arr = AlgoData<data::Vertex3DArray>(_combined_id,0);
     const auto& vtx3d_v = vtx3d_arr.as_vector();
-
+    
     const auto& particle_arr = AlgoData<data::ParticleArray>(_particle_id,0);
     const auto& particle_v = particle_arr.as_vector();
       
     for(size_t vtxid = 0; vtxid < vtx3d_v.size(); ++vtxid) {
       const auto& vtx3d = vtx3d_v[vtxid];
-
+      
       _vtxid = vtxid;
-
+      
       Clear();
       
       auto par_id_v = ass_man.GetManyAss(vtx3d,particle_arr.ID());
       if (par_id_v.empty()) continue;
-
+      
       for(auto par_id : par_id_v) {
 	const auto& par = particle_v[par_id];
 	
-	float length = 0.0;
-	float width = 0.0;
+	float length    = 0.0;
+	float width     = 0.0;
 	float perimeter = 0.0;
-	float area = 0.0;
+	float area  = 0.0;
 	float npixel = 0.0;
 	float track_frac = 0.0;
 	float shower_frac = 0.0;
@@ -118,27 +122,30 @@ namespace larocv {
 	float sigma_pixel_dist = 0.0;
 	float angular_sum = 0.0;
 
+	int nplanes = 0;
 	for(size_t plane=0; plane<3; ++plane) {
 
 	  const auto& pcluster = par._par_v[plane];
 	  const auto& pctor = pcluster._ctor;
 	  if (pctor.empty()) continue;
+
+	  nplanes += 1;
 	  
 	  auto& adc_img    = adc_img_v[plane];
 	  auto& track_img  = track_img_v[plane];
 	  auto& shower_img = shower_img_v[plane];
 	    
 	  PixelChunk pchunk(pctor,adc_img,track_img,shower_img);
-	  length      += pchunk.length;
-	  width       += pchunk.width;
-	  perimeter   += pchunk.perimeter;
-	  area        += pchunk.area;
-	  npixel      += pchunk.npixel;
-	  track_frac  += pchunk.track_frac;
-	  shower_frac += pchunk.shower_frac;
-	  mean_pixel_dist += pchunk.mean_pixel_dist;
-	  sigma_pixel_dist+= pchunk.sigma_pixel_dist;
-	  angular_sum     += pchunk.angular_sum;
+	  length           += pchunk.length;
+	  width            += pchunk.width;
+	  perimeter        += pchunk.perimeter;
+	  area             += pchunk.area;
+	  npixel           += pchunk.npixel;
+	  track_frac       += pchunk.track_frac;
+	  shower_frac      += pchunk.shower_frac;
+	  mean_pixel_dist  += pchunk.mean_pixel_dist;
+	  sigma_pixel_dist += pchunk.sigma_pixel_dist;
+	  angular_sum      += pchunk.angular_sum;
 	}
 
 	_length_v.push_back(length);
@@ -151,12 +158,16 @@ namespace larocv {
 	_mean_pixel_dist_v.push_back(mean_pixel_dist);
 	_sigma_pixel_dist_v.push_back(sigma_pixel_dist);
 	_angular_sum_v.push_back(angular_sum);
-	
+	_nplanes_v.push_back(nplanes);
       }
       _nparticles = par_id_v.size();
 
       _tree->Fill();
     } // end this vertex
+
+    _roid += 1;
+
+    if(NextEvent()) _roid=0;
   }
 
   /*

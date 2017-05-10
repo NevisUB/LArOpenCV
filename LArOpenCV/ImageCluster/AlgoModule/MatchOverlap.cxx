@@ -130,10 +130,11 @@ namespace larocv {
 	  const auto& par = pcluster_v[plane];
 	  if(!par) continue;
 	  AssociateMany(*par,particle_data.as_vector().back());
-	}
+	}	
       }
-    } // end this vertex
-    
+      
+    } // end this vertex    
   } // end process
+  
 }
 #endif
