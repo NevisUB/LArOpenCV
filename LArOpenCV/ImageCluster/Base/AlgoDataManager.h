@@ -82,6 +82,12 @@ namespace larocv {
       /// Access to const ref of association manager
       const AlgoDataAssManager& AssManager() const { return _ass_man; }
 
+      /// Public RSEE
+      uint _run;
+      uint _subrun;
+      uint _event;
+      uint _entry;
+
     private:
       bool   _tree_attached;
       TTree* _tree;
@@ -89,6 +95,7 @@ namespace larocv {
       std::vector<data::AlgoDataBase*> _data_v;
       std::vector<std::string> _name_v;
       AlgoDataAssManager _ass_man;
+      
     };
   }
 }

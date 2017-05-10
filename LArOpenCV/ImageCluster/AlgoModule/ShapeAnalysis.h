@@ -14,12 +14,14 @@ namespace larocv {
   public:
     
     ShapeAnalysis(const std::string name = "ShapeAnalysis") :
-      ImageAnaBase(name)
+      ImageAnaBase(name),
+      _tree(nullptr)
     {}
     
     virtual ~ShapeAnalysis(){}
     
-    void Finalize(TFile*) {}
+    void Finalize(TFile* fout)
+    { fout->cd(); _tree->Write(); }
 
   protected:
 
@@ -30,13 +32,29 @@ namespace larocv {
     void _Process_();
     
     bool _PostProcess_() const;
-
+    
   private:
 
     AlgorithmID_t _combined_id;
     AlgorithmID_t _particle_id;
 
-    size_t _nparticles;
+    TTree* _tree;
+    int _vtxid;
+    int _nparticles;
+
+    std::vector<float> _length_v;
+    std::vector<float> _width_v;
+    std::vector<float> _perimeter_v;
+    std::vector<float> _area_v;
+    std::vector<float> _npixel_v;
+    std::vector<float> _track_frac_v;
+    std::vector<float> _shower_frac_v;
+    std::vector<float> _mean_pixel_dist_v;
+    std::vector<float> _sigma_pixel_dist_v;
+    std::vector<float> _angular_sum_v;
+
+    void Clear();
+    
   };
 
   class ShapeAnalysisFactory : public AlgoFactoryBase {

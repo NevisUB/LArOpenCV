@@ -93,6 +93,13 @@ namespace larocv {
     }
     return _roi_vv[(int)image_id];
   }
+
+  void ImageClusterBase::AttachIDs(TTree* tree) {
+    tree->Branch("run"    , &_dataman_ptr->_run    , "run/i");
+    tree->Branch("subrun" , &_dataman_ptr->_subrun , "subrun/i");
+    tree->Branch("event"  , &_dataman_ptr->_event  , "event/i");
+    tree->Branch("entry"  , &_dataman_ptr->_entry  , "entry/i");
+  }
   
 }
 

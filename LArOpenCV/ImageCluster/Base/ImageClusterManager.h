@@ -44,8 +44,6 @@ namespace larocv {
     /// Default destructor
     ~ImageClusterManager(){}
 
-    void Test();
-
     /// Name accessor, used to identify a block of configuration parameters via fhicl
     const std::string& Name() const { return _name; }
     /// Clears attributes except for _name
@@ -85,6 +83,10 @@ namespace larocv {
     const std::vector<ROI>& InputROIs(ImageSetID_t set_id=ImageSetID_t::kImageSetUnknown) const;
     /// Algorithm data manager accessor
     const data::AlgoDataManager& DataManager() const { return _algo_dataman; }
+    /// Rune, SubRun, Event, & Entry  Setter
+    void SetRSEE(uint run, uint subrun, uint event, uint entry)
+    { _algo_dataman._run=run; _algo_dataman._subrun=subrun; _algo_dataman._event=event; _algo_dataman._entry=entry; }
+    
   private:
     /// Name identifier: used to fetch a block of configuration parameters
     std::string _name;
@@ -114,16 +116,11 @@ namespace larocv {
     size_t _process_count;
     /// Process time (cumulative)
     double _process_time;
-    /// Boolean to stop & show image at the end of process
-    bool _show_image;
-    /// Switch for dead wire check
-    bool _enable_wire_check ;
     /// Algorithm data container
     data::AlgoDataManager _algo_dataman;
     /// Algorithm data storage TTree
     TTree* _tree;
-    int _required_plane;
-    bool _use_two_plane;
+    
   };
 }
 #endif

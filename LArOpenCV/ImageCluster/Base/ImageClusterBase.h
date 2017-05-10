@@ -132,6 +132,9 @@ namespace larocv {
 
     /// Access method for a set of ROI associated with images (by id)
     const std::vector<larocv::ROI>& ROIArray(ImageSetID_t image_id=ImageSetID_t::kImageSetUnknown) const;
+
+    /// Attach RSEE
+    void AttachIDs(TTree* tree);
     
   protected:
 
