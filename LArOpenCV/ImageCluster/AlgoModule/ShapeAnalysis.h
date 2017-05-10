@@ -43,6 +43,10 @@ namespace larocv {
     int _roid;
     int _vtxid;
     int _nparticles;
+
+    double _x;
+    double _y;
+    double _z;
     
     std::vector<int>   _nplanes_v;
     std::vector<float> _length_v;

@@ -51,6 +51,9 @@ namespace larocv {
     AttachIDs(_tree);
     _tree->Branch("roid"       , &_roid      , "roid/I");
     _tree->Branch("vtxid"      , &_vtxid     , "vtxid/I");
+    _tree->Branch("x"          , &_x         , "x/D");
+    _tree->Branch("y"          , &_y         , "y/D");
+    _tree->Branch("z"          , &_z         , "z/D");
     _tree->Branch("nparticles" , &_nparticles, "nparticles/I");
 
     _tree->Branch("nplanes_v"         , &_nplanes_v);
@@ -83,7 +86,9 @@ namespace larocv {
   }
   
   void ShapeAnalysis::_Process_() {
-
+    
+    if(NextEvent()) _roid=0;
+    
     auto& ass_man = AssManager();
     
     // Get images
@@ -97,16 +102,21 @@ namespace larocv {
     
     const auto& particle_arr = AlgoData<data::ParticleArray>(_particle_id,0);
     const auto& particle_v = particle_arr.as_vector();
-      
+
+    _vtxid = -1;
     for(size_t vtxid = 0; vtxid < vtx3d_v.size(); ++vtxid) {
       const auto& vtx3d = vtx3d_v[vtxid];
       
-      _vtxid = vtxid;
-      
-      Clear();
-      
       auto par_id_v = ass_man.GetManyAss(vtx3d,particle_arr.ID());
       if (par_id_v.empty()) continue;
+
+      _x = vtx3d.x;
+      _y = vtx3d.y;
+      _z = vtx3d.z;
+      
+      Clear();
+
+      _vtxid += 1;
       
       for(auto par_id : par_id_v) {
 	const auto& par = particle_v[par_id];
@@ -166,8 +176,6 @@ namespace larocv {
     } // end this vertex
 
     _roid += 1;
-
-    if(NextEvent()) _roid=0;
   }
 
   /*
