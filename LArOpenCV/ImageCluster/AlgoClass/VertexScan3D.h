@@ -4,6 +4,7 @@
 #include "LArOpenCV/Core/laropencv_base.h"
 #include "LArOpenCV/ImageCluster/AlgoData/VertexSeed.h"
 #include "LArPlaneGeo.h"
+#include "Voxel.h"
 
 /*
 @brief: scan 3D space for compatible pixels
@@ -43,14 +44,15 @@ namespace larocv {
 		       const size_t plane,
 		       geo2d::Vector<float>& plane_pt) const;
     
-    larocv::data::Vertex3D
-    RegionScan3D(const larocv::data::VertexSeed3D& center,
-                 std::vector<cv::Mat> image_v,
-                 size_t num_xspt=0 ) const;
-
     const larocv::LArPlaneGeo& geo() const { return _geo; }
 
     size_t num_planes() const { return _geo._num_planes; }
+
+    void RegisterRegions(const std::vector<data::Vertex3D>& vtx3d_v);
+    
+    data::Vertex3D ScanRegion(const VoxelArray& voxel, const std::vector<cv::Mat>& image_v, size_t num_xspt=0) const;
+    
+    std::vector<data::Vertex3D> RegionScan3D(const std::vector<cv::Mat>& image_v) const;
 
     float _dx;
     float _dy;
@@ -65,6 +67,9 @@ namespace larocv {
     bool _use_circle_weight;
     bool _prohibit_one_xs;
     double _dtheta_cut;
+    bool _merge_voxels;
+    bool _require_3planes_charge;
+    float _allowed_radius;
     
   private:
 
@@ -72,7 +77,12 @@ namespace larocv {
 
     double CircleWeight(const larocv::data::CircleVertex& cvtx) const;
 
+    void MergeVoxels(std::vector<VoxelArray>& voxel_v);
+
     larocv::LArPlaneGeo _geo;
+
+    std::vector<VoxelArray> _voxel_vv;
+    
   };
 }
 

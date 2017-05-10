@@ -21,7 +21,7 @@
 #pragma link C++ class larocv::ShowerVertexMerger+;
 #pragma link C++ class larocv::TrackVertexAnalysis+;
 #pragma link C++ class larocv::ShowerVertexAnalysis+;
-#pragma link C++ class larocv::CombinedVertexAnalysis+;
+#pragma link C++ class larocv::CombineVertex+;
 #pragma link C++ class larocv::VerteSeedResize+;
 #pragma link C++ class larocv::ShowerPlaneSeeds+;
 #pragma link C++ class larocv::ShowerVertexScan+;
@@ -30,6 +30,7 @@
 #pragma link C++ class larocv::TrumpExample+;
 #pragma link C++ class larocv::AngleAnalysis+;
 #pragma link C++ class larocv::dQdsAnalysis+;
+#pragma link C++ class larocv::MatchOverlap+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

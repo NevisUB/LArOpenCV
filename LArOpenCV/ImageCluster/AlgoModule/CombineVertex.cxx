@@ -1,18 +1,18 @@
-#ifndef __COMBINEDVERTEXANALYSIS_CXX__
-#define __COMBINEDVERTEXANALYSIS_CXX__
+#ifndef __COMBINEVERTEX_CXX__
+#define __COMBINEVERTEX_CXX__
 
-#include "CombinedVertexAnalysis.h"
+#include "CombineVertex.h"
 #include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 
 namespace larocv {
   
-  /// Global larocv::CombinedVertexAnalysisFactory to register AlgoFactory
-  static CombinedVertexAnalysisFactory __global_CombinedVertexAnalysisFactory__;
+  /// Global larocv::CombineVertexFactory to register AlgoFactory
+  static CombineVertexFactory __global_CombineVertexFactory__;
 
-  void CombinedVertexAnalysis::Reset()
+  void CombineVertex::Reset()
   {}
   
-  void CombinedVertexAnalysis::_Configure_(const Config_t &pset) {
+  void CombineVertex::_Configure_(const Config_t &pset) {
 
     //
     // Prepare algorithms via config
@@ -28,7 +28,6 @@ namespace larocv {
       if (_track_vertex_algo_id==kINVALID_ALGO_ID)
 	throw larbys("Given TrackVertex name is INVALID!");
     }
-    
 
     auto shower_vertex_algo_name = pset.get<std::string>("ShowerVertexEstimateAlgo","");
     if (!shower_vertex_algo_name.empty()) {
@@ -48,10 +47,9 @@ namespace larocv {
     Register(new data::Vertex3DArray);
     for(size_t plane=0;plane<_nplanes;++plane) Register(new data::ParticleClusterArray);
     for(size_t plane=0;plane<_nplanes;++plane) Register(new data::TrackClusterCompoundArray);
-    
   }
   
-  void CombinedVertexAnalysis::_Process_()
+  void CombineVertex::_Process_()
   {
     LAROCV_DEBUG() << "start" << std::endl;
 
@@ -77,7 +75,6 @@ namespace larocv {
       for(const auto& vtx : track_vertex_data.as_vector())  vertex3d_v.push_back(&vtx);
     }
 
-    
     for(const auto& vertex3d_ptr : vertex3d_v) {
 
       const auto& vtx3d = *vertex3d_ptr;
@@ -88,21 +85,15 @@ namespace larocv {
 	
 	// This modules AlgoData
 	auto& this_par_data = AlgoData<data::ParticleClusterArray>(plane+1);
-	// auto& this_comp_data = AlgoData<data::TrackClusterCompoundArray>(_nplanes+plane+1);
-	
+
 	// Input algo data
 	const auto& par_data   = AlgoData<data::ParticleClusterArray>(_particle_cluster_algo_id,plane);
-	//const auto& track_comp_data  = AlgoData<data::TrackClusterCompoundArray>(_particle_cluster_algo_id,_nplanes+plane+1);
 
 	// Get the associated track particles to this vertex, copy them to this algo data
 	auto par_ass_id_v = ass_man.GetManyAss(vtx3d,par_data.ID());
 	for(auto par_id : par_ass_id_v) {
 	  auto par = par_data.as_vector().at(par_id);
-	  /*
-	    if (track_par.type!=data::ParticleType_t::kTrack) throw larbys("Not a track particle!");
-	    auto track_comp_id = ass_man.GetOneAss(track_par,track_comp_data.ID());
-	    const auto& track_comp    = track_comp_data.as_vector()[track_comp_id];
-	  */
+
 	  // All particles are shower type at the moment until we look at the relative pixel fractions
 	  par.type = data::ParticleType_t::kShower;
 	  LAROCV_DEBUG() << "Inserting particle @ plane " << plane << " sz " << par._ctor.size() << std::endl;
@@ -112,11 +103,6 @@ namespace larocv {
 	  }
 	  this_par_data.push_back(par);
 	  AssociateMany(vtx3d_copy,this_par_data.as_vector().back());
-	  /*
-	    comp_data.push_back(track_comp);
-	    AssociateOne(par_data.as_vector().back(),comp_data.as_vector().back());
-	    AssociateMany(vtx3d_copy,comp_data.as_vector().back());
-	  */
 	}
 
       } // end this plane
@@ -125,8 +111,8 @@ namespace larocv {
     LAROCV_DEBUG() << "Merged " << vertex3d_v.size() << " verticies" << std::endl;
     LAROCV_DEBUG() << "end" << std::endl;
   }
-
-  bool CombinedVertexAnalysis::_PostProcess_() const
+  
+  bool CombineVertex::_PostProcess_() const
   { return true; }
    
 }

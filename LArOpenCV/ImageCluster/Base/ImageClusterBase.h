@@ -132,6 +132,12 @@ namespace larocv {
 
     /// Access method for a set of ROI associated with images (by id)
     const std::vector<larocv::ROI>& ROIArray(ImageSetID_t image_id=ImageSetID_t::kImageSetUnknown) const;
+
+    /// Attach RSEE
+    void AttachIDs(TTree* tree);
+
+    /// Next event marker
+    bool NextEvent();
     
   protected:
 
@@ -167,6 +173,11 @@ namespace larocv {
     
     std::vector<std::vector<larocv::ROI> >       _roi_vv; ///< ROI data container
 
+    uint _run;    ///< a copy of the current run number
+    uint _subrun; ///< a copy of the current subrun number
+    uint _event;  ///< a copy of the current event number
+    uint _entry;  ///< a copy of the current entry number
+    
   };
 
 }

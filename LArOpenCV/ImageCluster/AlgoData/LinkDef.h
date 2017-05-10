@@ -46,6 +46,13 @@
 #pragma link C++ class larocv::data::ParticleClusterArray+;
 #pragma link C++ class std::vector<larocv::data::ParticleClusterArray>+;
 
+#pragma link C++ class larocv::data::Particle+;
+#pragma link C++ class std::vector<larocv::data::Particle>+;
+#pragma link C++ class std::vector<std::vector<larocv::data::Particle> >+;
+#pragma link C++ class std::vector<std::vector<std::vector<larocv::data::Particle> > >+;
+#pragma link C++ class larocv::data::ParticleArray+;
+#pragma link C++ class std::vector<larocv::data::ParticleArray>+;
+
 #pragma link C++ class larocv::data::VertexSeed2D+;
 #pragma link C++ class std::vector<larocv::data::VertexSeed2D>+;
 
@@ -71,11 +78,15 @@
 
 #pragma link C++ class larocv::data::AlgoDataArrayTemplate<larocv::data::Vertex3D>+;
 #pragma link C++ class larocv::data::AlgoDataArrayTemplate<larocv::data::ParticleCluster>+;
+#pragma link C++ class larocv::data::AlgoDataArrayTemplate<larocv::data::Particle>+;
 #pragma link C++ class larocv::data::AlgoDataArrayTemplate<larocv::data::TrackClusterCompound>+;
 
 #pragma link C++ class std::vector<larocv::data::AlgoDataArrayTemplate<larocv::data::Vertex3D> >+;
 #pragma link C++ class std::vector<larocv::data::AlgoDataArrayTemplate<larocv::data::ParticleCluster> >+;
+#pragma link C++ class std::vector<larocv::data::AlgoDataArrayTemplate<larocv::data::Particle> >+;
 #pragma link C++ class std::vector<larocv::data::AlgoDataArrayTemplate<larocv::data::TrackClusterCompound> >+;
+
+#pragma link C++ struct larocv::data::VertexTrackInfoCollection+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

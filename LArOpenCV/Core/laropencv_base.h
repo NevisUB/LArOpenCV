@@ -49,7 +49,7 @@ namespace larocv {
     
   private:
     
-    larocv::logger *_logger;   ///< logger
+    larocv::logger *_logger;   //! do not serialize to ROOT file
     
   };
 }

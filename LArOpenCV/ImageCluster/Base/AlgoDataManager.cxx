@@ -6,7 +6,6 @@
 #include <sstream>
 
 namespace larocv {
-
   namespace data {
     
     AlgoDataManager::AlgoDataManager()
@@ -84,22 +83,47 @@ namespace larocv {
 	data->Clear();
       _ass_man.ClearData();
     }
+
+    void AlgoDataManager::Register(TTree* tree, std::vector<AlgorithmID_t> store_algo_id_v) {
+      if (store_algo_id_v.empty()) {
+	LAROCV_DEBUG() << "Empty algo id vector, register & store all modules" << std::endl;
+	Register(tree);
+	return;
+      }
+
+      _tree = tree;
+      
+      for(auto algo_id : store_algo_id_v) {
+	for(size_t data_id=0; data_id<_data_id_map[algo_id].size(); ++data_id) {
+	  std::stringstream ss;
+	  ss << "algo_" << algo_id
+	     << "_" << _name_v.at(algo_id).c_str()
+	     << "_data_" << data_id << "_branch";
+	  std::string name(ss.str());
+	  _tree->Branch(name.c_str(),&(_data_v.at(_data_id_map.at(algo_id).at(data_id))));
+	}
+      }
+      _tree->Branch("AssMan",&_ass_man);
+      _tree_attached = true;
+    }
     
     void AlgoDataManager::Register(TTree* tree)
     {
       _tree = tree;
+
       for(size_t algo_id=0; algo_id<_data_id_map.size(); ++algo_id) {
 	for(size_t data_id=0; data_id<_data_id_map[algo_id].size(); ++data_id) {
 	  std::stringstream ss;
-	  ss << "algo" << algo_id
+	  ss << "algo_" << algo_id
 	     << "_" << _name_v[algo_id].c_str()
-	     << "_data" << data_id << "_branch" << std::endl;
+	     << "_data" << data_id << "_branch";
 	  
 	  std::string name(ss.str());
 	  _tree->Branch(name.c_str(),&(_data_v[_data_id_map[algo_id][data_id]]));
 	}
+	_tree->Branch("AssMan",&_ass_man);
+	_tree_attached = true;
       }
-      _tree_attached = true;
     }
     
     AlgoDataID_t AlgoDataManager::AlgoDataID(const AlgorithmID_t algo_id, const Index_t index) const
@@ -184,4 +208,5 @@ namespace larocv {
 
   }
 }
+
 #endif

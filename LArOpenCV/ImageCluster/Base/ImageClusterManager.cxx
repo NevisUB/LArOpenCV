@@ -5,8 +5,6 @@
 #include "ImageClusterManager.h"
 #include "LArOpenCV/Core/larbys.h"
 #include "AlgoFactory.h"
-//#include "MatchAlgoFactory.h"
-//#include "ReClusterAlgoFactory.h"
 #include "BaseUtil.h"
 
 namespace larocv {
@@ -44,10 +42,10 @@ namespace larocv {
   void ImageClusterManager::Finalize(TFile* file)
   {
     if(file && _tree) {file->cd(); _tree->Write();}
-    for(auto& alg : _cluster_alg_v   ) alg->Finalize(file);
+    for(auto& alg : _cluster_alg_v) alg->Finalize(file);
     _configured = false;
   }
-
+  
   void ImageClusterManager::ClearData()
   {
     _raw_img_vv.clear();
@@ -94,7 +92,7 @@ namespace larocv {
     return _raw_img_vv[(int)set_id];
   }
   
-  const std::vector<larocv::ImageMeta>& ImageClusterManager::InputImageMetas(ImageSetID_t set_id) const
+  const std::vector<ImageMeta>& ImageClusterManager::InputImageMetas(ImageSetID_t set_id) const
   {
     if(_raw_meta_vv.empty()) 
       throw larbys("No image available!");
@@ -109,7 +107,7 @@ namespace larocv {
     return _raw_meta_vv[(int)set_id];
   }
 
-  const std::vector<larocv::ROI>& ImageClusterManager::InputROIs(ImageSetID_t set_id) const
+  const std::vector<ROI>& ImageClusterManager::InputROIs(ImageSetID_t set_id) const
   {
     if(_raw_roi_vv.empty()) 
       throw larbys("No image available!");
@@ -148,30 +146,24 @@ namespace larocv {
     _profile = main_cfg.get<bool>("Profile",true);
 
     this->set_verbosity((msg::Level_t)(main_cfg.get<unsigned short>("Verbosity",(unsigned short)(this->logger().level()))));
-    ::larocv::logger::get_shared().set(this->logger().level());
-
-    _show_image = main_cfg.get<bool>("ShowImage",false);
-
-    if(_show_image) {
-      throw larbys("Display option is currently not supported after implementation of multi image-set processing... contact authors if needed!");
-    }
+    logger::get_shared().set(this->logger().level());
 
     _filter = main_cfg.get<bool>("EnableFilter",false);
     
     auto cluster_instance_type_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoType");
     auto cluster_instance_name_v = main_cfg.get<std::vector<std::string> >("ClusterAlgoName");
 
-    _enable_wire_check = main_cfg.get<bool>("EnableWireCheck",true);
-
+    auto store_cluster_instance_name_v = main_cfg.get<std::vector<std::string> >("StoreAlgoName",{});
+						   
     if(cluster_instance_type_v.size() != cluster_instance_name_v.size()) {
       LAROCV_CRITICAL() << "Clustering: AlgoType and AlgoName config parameters have different length! "
-			      << "(" << cluster_instance_type_v.size() << " vs. " << cluster_instance_name_v.size() << ")" << std::endl;
+			<< "(" << cluster_instance_type_v.size() << " vs. " << cluster_instance_name_v.size() << ")" << std::endl;
       throw larbys();
     }
 
     _cluster_alg_v.clear();
     _cluster_alg_m.clear();
-
+    
     for(size_t i=0; i<cluster_instance_type_v.size(); ++i) {
       auto const& name = cluster_instance_name_v[i];
       auto const& type = cluster_instance_type_v[i];
@@ -186,10 +178,6 @@ namespace larocv {
       case kAlgoImageAna:
 	LAROCV_INFO() << "Instantiated ImageAna algorithm type " << type
 		      << " w/ name " << name << " @ " << ptr << std::endl;
-	break;
-      case kAlgoCluster:
-	LAROCV_INFO() << "Instantiated AlgoCluster algorithm type " << type
-		      << " w/ name " << name << " @ " << ptr << std::endl;	
 	break;
       default:
 	LAROCV_CRITICAL() << "Cannot register type " << type
@@ -208,12 +196,23 @@ namespace larocv {
       ptr->Configure(main_cfg.get_pset(ptr->Name()));
     }
 
-    _use_two_plane  = main_cfg.get<bool>("UseOnlyTwoPlanes",false);
-    _required_plane = main_cfg.get<int>("RequirePlane",-1);
-
+    LAROCV_INFO() << "Selecting AlgoData to store" << std::endl;
+    _store_cluster_alg_id_v.clear();
+    _store_cluster_alg_id_v.reserve(store_cluster_instance_name_v.size());
+    for(const auto& name : store_cluster_instance_name_v) {
+      if(_cluster_alg_m.find(name) == _cluster_alg_m.end()) {
+	LAROCV_CRITICAL() << "Unable to store unknown cluster algo name: " << name << std::endl;	
+	throw larbys();
+      }
+      auto algo_id = _cluster_alg_m[name];
+      LAROCV_DEBUG() << "Selected algo " << name << " @ id " << algo_id << std::endl;
+      _store_cluster_alg_id_v.push_back(algo_id);
+    }
+    
     if(main_cfg.get<bool>("StoreAlgoData",false)) {
       _tree = new TTree("larocv_tree","");
-      _algo_dataman.Register(_tree);
+      LAROCV_DEBUG() << "Registering larocv_tree" << std::endl;
+      _algo_dataman.Register(_tree,_store_cluster_alg_id_v);
     }
     
     _configured=true;
@@ -281,7 +280,6 @@ namespace larocv {
       
 	auto const& meta = raw_meta_v.at(img_index);
 	auto& img  = copy_img_v.at(img_index);
-	//auto      & roi  = raw_roi_v.at(img_index);
 
 	if(meta.num_pixel_row()!=img.rows)
 	  throw larbys("Provided metadata has incorrect # horizontal pixels w.r.t. image!");
@@ -307,7 +305,7 @@ namespace larocv {
       
       auto& alg_ptr    = _cluster_alg_v[alg_index];
       if(!alg_ptr) throw larbys("Invalid algorithm pointer!");
-
+      
       if(alg_ptr->Type() == kAlgoImageAna)
 	((ImageAnaBase*)alg_ptr)->Process();
       else
@@ -329,28 +327,12 @@ namespace larocv {
 	LAROCV_WARNING() << "Break state assigned by algorithm " << alg_ptr->Name() << " (ID=" << alg_ptr->ID() << ")" << std::endl;
 	break;
       }
-
     }
 
     if(_tree) _tree->Fill();
     
     LAROCV_DEBUG() << "end" << std::endl;
     return true;
-  }
-
-  void ImageClusterManager::Test()
-  {
-    std::vector<size_t> seed_v;
-    seed_v.push_back(3);
-    seed_v.push_back(3);
-    seed_v.push_back(3);
-    auto result = PlaneClusterCombinations(seed_v);
-    for(size_t i=0;i<result.size(); ++i) {
-      std::cout<<"Index: "<<i<<" ";
-      for(size_t j=0; j<result[i].size(); ++j)
-	std::cout<<"("<<result[i][j].first<<","<<result[i][j].second<<") ";
-      std::cout<<std::endl;
-    }
   }
 }
 #endif

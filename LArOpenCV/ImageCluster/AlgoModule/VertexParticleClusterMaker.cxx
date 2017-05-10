@@ -144,6 +144,7 @@ namespace larocv {
 	} // end this particle cluster
       } // end input vertex
 
+      LAROCV_DEBUG() << std::endl;
     } // end this plane
     return;
   }

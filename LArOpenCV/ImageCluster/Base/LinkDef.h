@@ -9,20 +9,13 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class larocv::Contour_t+;
-#pragma link C++ class larocv::ContourArray_t+;
-#pragma link C++ class larocv::ImageClusterBase+;
 #pragma link C++ class larocv::ImageAnaBase+;
-
+#pragma link C++ class larocv::ImageClusterBase+;
 #pragma link C++ class larocv::AlgoFactory+;
-
 #pragma link C++ class larocv::ImageClusterManager+;
-#pragma link C++ class larocv::ImageClusterViewer+;
 
-#pragma link C++ class geo2d::Vector<int>+;
 #pragma link C++ class std::vector<geo2d::Vector<int> >+;
 #pragma link C++ class std::vector<std::vector<geo2d::Vector<int> > >+;
-#pragma link C++ class larocv::Cluster2D+;
 
 #pragma link C++ namespace larocv::data+;
 #pragma link C++ class larocv::data::AlgoDataBase+;

@@ -47,17 +47,6 @@ namespace larocv {
 	throw larbys();
       }
     }
-    
-    // Merge very nearby candidate vertices
-    _merge_nearby = pset.get<bool>("MergeNearby",true);
-    if(_merge_nearby) 
-      _merge_distance = pset.get<float>("MergeDistance",3);
-
-    // Optionally require 3 planes charge in vicinity of projected vertex location
-    _require_3planes_charge=pset.get<bool>("Require3PlanesCharge");
-    
-    if(_require_3planes_charge)
-      _allowed_radius=pset.get<float>("SearchRadiusSize");//5      
 
     Register(new data::Vertex3DArray);
   }
@@ -72,7 +61,6 @@ namespace larocv {
     //
     auto img_v  = ImageArray();
     auto meta_v = MetaArray();
-
 
     std::vector<std::vector<GEO2D_Contour_t> > super_ctor_vv;
     super_ctor_vv.resize(3);
@@ -143,76 +131,13 @@ namespace larocv {
     //
     // 2) Scan for a 3D vertex @ candidate seeds
     //
-    std::vector<data::Vertex3D> vertex3d_v;
     std::vector<cv::Mat> img_thresh_v;
     img_thresh_v.reserve(3);
     for(auto& im : img_v)
       img_thresh_v.emplace_back(larocv::Threshold(im,10,255));
 
-    size_t acc_vtx = 0;
-    for(auto& cand_vtx3d : cand_vtx_v) {
-
-      // For this 3D candidate seed, check how many planes have vertices still in the image after projection
-      std::array<bool,3> in_image_v;
-      _vtxana.UpdatePlanePosition(cand_vtx3d,_geo,in_image_v);
-
-      ushort in_image_ctr=0;
-      for (auto each : in_image_v) {
-	if (each) {
-	  in_image_ctr++;
-	}
-      }
-
-      if (in_image_ctr < 2) continue;
-
-      // Scan 3D region centered @ this vertex seed
-      auto vtx3d  = _VertexScan3D.RegionScan3D(data::VertexSeed3D(cand_vtx3d), img_thresh_v);
-
-      //
-      // Require atleast 2 crossing point on 2 planes (using ADC image)
-      //
-      size_t num_good_plane = 0;
-      int plane = -1;
-      for(auto const& cvtx2d : vtx3d.cvtx2d_v) {
-	plane += 1;
-	LAROCV_DEBUG() << "Found " << cvtx2d.xs_v.size() << " xs on plane " << plane << std::endl;
-        if(cvtx2d.xs_v.size() < 2) continue;
-	LAROCV_DEBUG() << "... accepted" << std::endl;
-        num_good_plane++;
-      }
-      
-      if(num_good_plane < 2) {
-	LAROCV_DEBUG() << "Num good plane < 2, SKIP!!" << std::endl;
-	continue;
-      }
-
-      LAROCV_DEBUG() << "Registering vertex seed type="<<(uint)cand_vtx3d.type
-		     << " @ ("<<vtx3d.x<<","<<vtx3d.y<<","<<vtx3d.z<<")"<<std::endl;
-
-      //
-      // Optional: require there to be some charge in vincinity of projected vertex on 3 planes
-      //
-      uint nvalid=0;
-      if(_require_3planes_charge) {
-	LAROCV_DEBUG() << "Requiring 3 planes charge in circle... " << std::endl;
-	for(size_t plane=0;plane<3;++plane)  {
-	  auto vtx2d= vtx3d.vtx2d_v[plane];
-	  auto npx = CountNonZero(img_thresh_v[plane],geo2d::Circle<float>(vtx2d.pt,_allowed_radius));
-	  LAROCV_DEBUG() << "@ (" << vtx2d.pt.x << "," << vtx2d.pt.y
-			 << ") w/ rad " << _allowed_radius
-			 << " see " << npx << " nonzero pixels" << std::endl;
-	  if(npx) nvalid++;
-	}
-	if(nvalid != 3) {
-	  LAROCV_DEBUG() << "... invalid, SKIP!" << std::endl;
-	  continue;
-	}
-      }
-
-      // Move seed into the output
-      vertex3d_v.emplace_back(std::move(vtx3d));
-      LAROCV_DEBUG() << "AlgoData size @ " << vertex3d_v.size() << std::endl;
-    } // end candidate vertex seed
+    _VertexScan3D.RegisterRegions(cand_vtx_v);
+    auto vertex3d_v = _VertexScan3D.RegionScan3D(img_thresh_v);
     
     auto& vertex3darr = AlgoData<data::Vertex3DArray>(0);
     for(auto& vertex3d : vertex3d_v) {
