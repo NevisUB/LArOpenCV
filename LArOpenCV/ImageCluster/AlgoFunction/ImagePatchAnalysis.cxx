@@ -394,7 +394,6 @@ namespace larocv {
     return dst_img;
   }
 
-
   bool
   PathExists(const cv::Mat& img,
 	     const geo2d::Vector<float>& pt1,
