@@ -54,6 +54,21 @@ namespace larocv {
     _tree->Branch("sigma_pixel_dist_v", &_sigma_pixel_dist_v);
     _tree->Branch("angular_sum_v"     , &_angular_sum_v);
 
+    _tree->Branch("track_par_max_id"   , &_track_par_max_id   , "track_par_max_id/I");
+    _tree->Branch("shower_par_max_id"  , &_shower_par_max_id  , "shower_par_max_id/I");
+    _tree->Branch("track_par_max_frac" , &_track_par_max_frac , "track_par_max_frac/F");
+    _tree->Branch("shower_par_max_frac", &_shower_par_max_frac, "shower_par_max_frac/F");
+
+    _tree->Branch("par1_type", &_par1_type, "par1_type/I");
+    _tree->Branch("par2_type", &_par2_type, "par2_type/I");
+    _tree->Branch("par1_frac", &_par1_frac, "par1_frac/F");
+    _tree->Branch("par2_frac", &_par2_frac, "par2_frac/F");
+
+    _tree->Branch("track_par_max_id"   , &_track_par_max_id   , "track_par_max_id/I");
+    _tree->Branch("shower_par_max_id"  , &_shower_par_max_id  , "shower_par_max_id/I");
+    _tree->Branch("track_par_max_frac" , &_track_par_max_frac , "track_par_max_frac/F");
+    _tree->Branch("shower_par_max_frac", &_shower_par_max_frac, "shower_par_max_frac/F");
+      
     _roid = 0;
   }
 
@@ -103,7 +118,7 @@ namespace larocv {
       Clear();
 
       _vtxid += 1;
-      
+
       for(auto par_id : par_id_v) {
 	const auto& par = particle_v[par_id];
 	
@@ -142,7 +157,7 @@ namespace larocv {
 	  mean_pixel_dist  += pchunk.mean_pixel_dist;
 	  sigma_pixel_dist += pchunk.sigma_pixel_dist;
 	  angular_sum      += pchunk.angular_sum;
-	}
+	} // end plane
 
 	_length_v.push_back(length);
 	_width_v.push_back(width);
@@ -155,9 +170,48 @@ namespace larocv {
 	_sigma_pixel_dist_v.push_back(sigma_pixel_dist);
 	_angular_sum_v.push_back(angular_sum);
 	_nplanes_v.push_back(nplanes);
-      }
+	
+      } // end particle
       _nparticles = par_id_v.size();
 
+      auto track_iter  = std::max_element(_track_frac_v.begin(),_track_frac_v.end());
+      auto shower_iter = std::max_element(_shower_frac_v.begin(),_shower_frac_v.end());
+
+      if (track_iter  == _track_frac_v.end())  throw larbys("Bad Track found");
+      if (shower_iter == _shower_frac_v.end()) throw larbys("Bad Shower found");
+      
+      _track_par_max_id  = track_iter - _track_frac_v.begin();
+      _shower_par_max_id = shower_iter - _shower_frac_v.begin();
+      
+      _track_par_max_frac = *track_iter;
+      _shower_par_max_frac = *shower_iter;
+
+      std::vector<int> par_type_v(_nparticles,-1.0 * kINVALID_INT);
+      std::vector<float> par_frac_v(_nparticles,-1.0 * kINVALID_FLOAT);
+
+      for(size_t parid=0; parid< _nparticles; parid++) {
+	auto& par_type = par_type_v[parid];
+	auto& par_frac = par_frac_v[parid];
+
+	auto track_frac  = _track_frac_v[parid];
+	auto shower_frac = _shower_frac_v[parid];
+
+	if (track_frac >= shower_frac) {
+	  par_type = 1;
+	  par_frac = track_frac;
+	}
+	else {
+	  par_type = 2;
+	  par_frac = shower_frac;
+	}
+      }
+
+      _par1_type = par_type_v.front();
+      _par2_type = par_type_v.back();
+
+      _par1_frac = par_frac_v.front();
+      _par2_frac = par_frac_v.back();
+      
       _tree->Fill();
     } // end this vertex
 

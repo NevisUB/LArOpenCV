@@ -60,8 +60,18 @@ namespace larocv {
     std::vector<float> _sigma_pixel_dist_v;
     std::vector<float> _angular_sum_v;
 
-    void Clear();
+    int _track_par_max_id;
+    int _shower_par_max_id;
+    float _track_par_max_frac;
+    float _shower_par_max_frac;
+
+    int _par1_type;
+    int _par2_type;
+    float _par1_frac;
+    float _par2_frac;
+
     
+    void Clear();
   };
 
   class ShapeAnalysisFactory : public AlgoFactoryBase {
