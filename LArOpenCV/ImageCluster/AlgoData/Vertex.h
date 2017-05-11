@@ -45,7 +45,7 @@ namespace larocv {
 	: pt(in_pt), line(in_line)
       {}
       geo2d::Vector<float> pt;   ///< point around which PCA approximation is made
-      geo2d::Line<float>   line; ///< long PCA axis of the neighboring pixels 
+      geo2d::Line<float>   line; ///< long PCA axis of the neighboring pixels
     };
 
     enum class CircleVertexType_t : unsigned
@@ -74,9 +74,9 @@ namespace larocv {
       /// Mean of dtheta_v
       float mean_dtheta() const;
       
-      geo2d::Circle<float> as_circle()
+      geo2d::Circle<float> as_circle() const
       { return geo2d::Circle<float>(center,radius); }
-      
+
     };
 
 

@@ -33,20 +33,6 @@ namespace larocv {
       }
     }
 
-    /*
-      _DefectBreaker.Configure(pset.get<Config_t>("DefectBreaker"));
-      _create_compound   = pset.get<bool>("CreateCompound",false);
-      _min_particle_size = pset.get<uint>("MinParticleContourSize",3);
-      if(_create_compound) {
-      _DefectBreaker.set_verbosity(this->logger().level());
-      _DefectBreaker.Configure(pset.get<Config_t>("DefectBreaker"));
-      for(size_t plane=0; plane<3; ++plane)
-      Register(new data::TrackClusterCompoundArray);
-
-      _compute_dqdx = pset.get<bool>("CalculatedQdX",false);
-      }
-    */
-
     _tree = new TTree("ShapeAnalysis","");
     AttachIDs(_tree);
     _tree->Branch("roid"       , &_roid      , "roid/I");
@@ -178,46 +164,5 @@ namespace larocv {
     _roid += 1;
   }
 
-  /*
-    if(_create_compound) {
-    auto& particle = par_data.as_vector().back();
-    // Create cluster compound, order the atomics, determine atomic edges
-    auto cluscomp = _DefectBreaker.BreakContour(particle._ctor);
-    const auto ordered_atom_id_v = _AtomicAnalysis.OrderAtoms(cluscomp,circle_vtx.center);
-    auto atom_edges_v = _AtomicAnalysis.AtomsEdge(cluscomp, circle_vtx.center, ordered_atom_id_v);
-
-    for(auto atom_id : ordered_atom_id_v) {
-    auto& atom = cluscomp.get_atomic(atom_id);
-    auto& start_end = atom_edges_v[atom_id];
-    atom.set_start(start_end.first);
-    atom.set_end(start_end.second);
-    }
-    // set the atomic order, get the farthest edge, set the end point
-    cluscomp.set_atomic_order(ordered_atom_id_v);
-    auto& last_start_end = atom_edges_v.at(ordered_atom_id_v.back());
-    cluscomp.set_end_pt(last_start_end.second);
-	    
-    if(_compute_dqdx) {
-    for (auto& atomic : cluscomp){
-    auto pca = CalcPCA(atomic);
-    auto dqdx = _AtomicAnalysis.AtomdQdX(img, atomic, pca, atomic.start_pt(), atomic.end_pt());
-    atomic.set_dqdx(dqdx);
-    atomic.set_pca(pca);
-    LAROCV_DEBUG() << "... calculated dqdx " << dqdx.size() << std::endl;
-    }
-    }
-	    
-    // Store, ans associate TrackClusterCompound to ParticleCluster, and to Vertex3D
-    auto& compound_v = AlgoData<data::TrackClusterCompoundArray>(3+plane);
-    compound_v.emplace_back(std::move(cluscomp));
-    AssociateMany(vtx3d,compound_v.as_vector().back());
-    AssociateOne(particle,compound_v.as_vector().back());
-    }
-  */
-
-  bool ShapeAnalysis::_PostProcess_() const {
-
-    return true;
-  }
 }
 #endif

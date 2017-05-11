@@ -31,7 +31,7 @@ namespace larocv {
     
     void _Process_();
     
-    bool _PostProcess_() const;
+    bool _PostProcess_() const { return true; }
     
   private:
 
