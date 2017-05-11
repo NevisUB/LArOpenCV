@@ -14,12 +14,16 @@ namespace larocv {
   public:
     
     AngleAnalysis(const std::string name = "AngleAnalysis") :
-      ImageAnaBase(name)
-    {}
+      ImageAnaBase(name),
+      _tree(nullptr)
+      {}
     
     virtual ~AngleAnalysis(){}
     
-    void Finalize(TFile*) {}
+    void Finalize(TFile* fout) {
+      fout->cd();
+      _tree->Write();
+    }
 
     void Reset() {}
 
@@ -33,9 +37,29 @@ namespace larocv {
 
   private:
 
-    int _nplanes;
+    void Clear();
     
+    int _nplanes;
+    int _pixels_number;
+    double _angle_cut;
     AlgorithmID_t _combined_vertex_analysis_algo_id;
+    
+    TTree* _tree;
+
+    int _roid;
+    int _vtxid;
+    int _nparticles;
+    
+    double _x;
+    double _y;
+    double _z;
+
+    double _anglediff;
+    double _anglediff_mean;
+    double _anglediff_210;
+    std::vector<double> _anglediff_v;//Per plane
+    std::vector<double> _angle_particles;
+    int _straightness;
   };
 
   class AngleAnalysisFactory : public AlgoFactoryBase {

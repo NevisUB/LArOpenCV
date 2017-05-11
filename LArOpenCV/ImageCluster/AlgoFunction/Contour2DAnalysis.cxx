@@ -598,6 +598,27 @@ namespace larocv {
     }
   }
 
+  void
+  FindEdge(const GEO2D_Contour_t& ctor,
+	   geo2d::Vector<float> edge1,
+	   geo2d::Vector<float>& edge2)
+  {
+    // find the furthest point from edge1
+    geo2d::Vector<float> ctor_pt;
+    double dist_max=0;
+    double dist;
+    for(auto const& pt : ctor) {
+      ctor_pt.x = pt.x;
+      ctor_pt.y = pt.y;
+      dist = geo2d::dist(edge1,ctor_pt);
+      if(dist > dist_max) {
+	edge2 = pt;
+	dist_max = dist;
+      }
+    }
+  }
+  
+  
   GEO2D_ContourArray_t AddContourArrays(const GEO2D_ContourArray_t& ctor_arr_1,
 					const GEO2D_ContourArray_t& ctor_arr_2) {
     GEO2D_ContourArray_t ctors;

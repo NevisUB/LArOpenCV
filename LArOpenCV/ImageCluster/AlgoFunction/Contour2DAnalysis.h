@@ -149,15 +149,20 @@ namespace larocv {
   FindEdges(const GEO2D_Contour_t& ctor,
 	    geo2d::Vector<float>& edge1,
 	    geo2d::Vector<float>& edge2);
-
+  
+  void
+  FindEdge(const GEO2D_Contour_t& ctor,
+	   geo2d::Vector<float> edge1,
+	   geo2d::Vector<float>& edge2);
+  
   GEO2D_ContourArray_t
   AddContourArrays(const GEO2D_ContourArray_t& ctor_arr_1,
 		   const GEO2D_ContourArray_t& ctor_arr_2);
-
+  
   void
-    ParticleAngle(GEO2D_Contour_t ctor,
+  ParticleAngle(GEO2D_Contour_t ctor,
 		geo2d::Circle<float> circle,
-		double& pct,
+		  double& pct,
 		double& angle);
 
   double
