@@ -83,10 +83,8 @@ namespace larocv {
       Clear();
       
       _vtxid = vertex_id;
-      bool show = false;
-      //if(show)std::cout<<"====>>>>Angle Analysis Starts<<<<====="<<std::endl;
-      if(show)std::cout<<"====>>>>Angle Analysis Starts<<<<====="<<std::endl;
-      if(show)std::cout<<"============================================>>>>>>>>vertex id  "<<vertex_id<<std::endl;
+      //std::cout<<"====>>>>Angle Analysis Starts<<<<====="<<std::endl;
+      //std::cout<<"============================================>>>>>>>>vertex id  "<<vertex_id<<std::endl;
       const auto& vertex3d = vertex_data_v[vertex_id];
       
       _x = vertex3d->x;
@@ -94,10 +92,9 @@ namespace larocv {
       _z = vertex3d->z;
       
       for(size_t plane =0; plane <=2; ++plane){
-	if(show)std::cout<<"====>>>>Plane "<<plane<<"<<<<====="<<std::endl;
+	//std::cout<<"====>>>>Plane "<<plane<<"<<<<====="<<std::endl;
 	const auto& circle_vertex = vertex3d->cvtx2d_v.at(plane);
-	const auto& xs_pts = circle_vertex.xs_v;
-	//if(show)std::cout<<"[from vertex scan] size of xs"<<xs_pts.size()<<std::endl;	
+	//std::cout<<"[from vertex scan] size of xs"<<xs_pts.size()<<std::endl;	
 	
 	// Input algo data
 	const auto& par_data = AlgoData<data::ParticleClusterArray>(_combined_vertex_analysis_algo_id,plane+1);
@@ -109,8 +106,9 @@ namespace larocv {
 	double angle1 =-9999.0;
 	int pid = 0 ;
 	for(auto par_id : par_ass_id_v) {
-	  if(show)std::cout<<">>>Particle ID "<<par_id<<std::endl;
+	  //std::cout<<">>>Particle ID "<<par_id<<std::endl;
 	  auto par = par_data.as_vector().at(par_id);
+
 	  cv::Mat masked_ctor_start;
 	  masked_ctor_start = MaskImage(img_v[plane],par._ctor,0,false); 	
 	  //masked_ctor = MaskImage(masked_ctor,circle,0,false); 	
@@ -127,8 +125,8 @@ namespace larocv {
 	  //float max_radius = pow((pow(start_point.x-end_point.x,2)+pow(start_point.y-end_point.y,2)),0.5);
 	  
 	  float max_radius = 100 ;
-	  if(show)std::cout<<"max_radius is"<<max_radius<<std::endl;
-
+	  //std::cout<<"max_radius is"<<max_radius<<std::endl;
+	  
 	  int r_size = int(max_radius/1.);
 	  
 	  std::vector<float> radius_v;
@@ -136,16 +134,19 @@ namespace larocv {
 	  radius_v.resize(r_size, circle_vertex.radius);
 	  
 	  for(int ridx = 0; ridx < r_size ; ++ridx) radius_v[ridx] += ridx;
-	  //for(int ridx = 0; ridx < r_size ; ++ridx) if(show)std::cout<<raidus_v[ridx]<<std::endl;
+	  //for(int ridx = 0; ridx < r_size ; ++ridx) //std::cout<<radius_v[ridx];
 	  double angle;
 	  double pct;
+	  geo2d::Circle<float> circle;
 	  
 	  for(int ridx = 0; ridx < r_size ; ++ridx){
-	    if(show) if(show)std::cout<<"Scanning radius at "<<ridx<<" with value = "<<radius_v[ridx]<<" ";
+	    //std::cout<<"Scanning radius at "<<ridx<<" with value = "<<radius_v[ridx];
 	    geo2d::Circle<float> circle_this;
 	    circle_this.radius = radius_v[ridx];
+	    //std::cout<<" radius this"<<radius_v[ridx];
 	    circle_this.center = circle_vertex.center;
-	    
+	    //std::cout<<" centerX this"<<circle_vertex.center.x<<" centerY this"<<circle_vertex.center.y<<std::endl;
+
 	    double angle_this; // Angle of this particle
 	    double pct_this; // pct is actually Δpct meaning the difference of 
 	    // percentages of pixel on two sides of the vertex and take the difference. 
@@ -153,7 +154,7 @@ namespace larocv {
 	    cv::Mat masked_ctor_this;
 	    masked_ctor_this = MaskImage(masked_ctor_start,circle_this,0,false); 	
 	    if ( FindNonZero(masked_ctor_this).size() <_pixels_number ) continue;
-	    if(show)std::cout<<"size of this circle is "<<FindNonZero(masked_ctor_this).size()<<std::endl;
+	    //std::cout<<"size of this circle is "<<FindNonZero(masked_ctor_this).size()<<std::endl;
 	    auto masked_ctor_this_img = FindNonZero(masked_ctor_this);
 	    float pi_threshold = 10;
 	    float supression = 0;
@@ -161,16 +162,17 @@ namespace larocv {
 	    
 	    //input{[particle_image, circle(providing vtx), pct[double],angle[double]}
 	    ParticleAngle(masked_ctor_this_img, circle_this, pct_this, angle_this );
-	    if(show)std::cout<<" angle_this "<<angle_this;
+	    //std::cout<<" angle_this "<<angle_this;
 	    if ( ridx == 0 ) continue; 
 	    if ( xs_v_this.size() == 0 ) {
 	      angle =  angle_this;
 	      pct = pct_this;
+	      circle = circle_this;
 	      break;
 	    }
 	    
 	    float resolution_last = 360 / (2 * PI * radius_v[ridx-1]);
-	    if(show)std::cout<<"resolution is "<<resolution_last<<std::endl;
+	    //std::cout<<"resolution is "<<resolution_last<<std::endl;
 	    
 	    masked_ctor_start = MaskImage(img_v[plane],par._ctor,0,false); 	
 	    masked_ctor_start = Threshold(masked_ctor_start, 10, 255);
@@ -179,37 +181,44 @@ namespace larocv {
 	    circle_last.radius = radius_v[ridx-1];
 	    circle_last.center = circle_vertex.center;
 	    
+	    //std::cout<<"radius last"<<radius_v[ridx-1];
+	    circle_this.center = circle_vertex.center;
+	    //std::cout<<"centerX last"<<circle_vertex.center.x<<" centerY last"<<circle_vertex.center.y<<std::endl;
+
 	    double angle_last;
 	    double pct_last;	    
 	    cv::Mat masked_ctor_last;
 	    masked_ctor_last = MaskImage(masked_ctor_start,circle_last,0,false);
 	    if ( FindNonZero(masked_ctor_last).size() <_pixels_number ) continue;
-	    if(show)std::cout<<"size of last circle is "<<FindNonZero(masked_ctor_last).size()<<std::endl;
+	    //std::cout<<"size of last circle is "<<FindNonZero(masked_ctor_last).size()<<std::endl;
 	    auto masked_ctor_last_img = FindNonZero(masked_ctor_last);
 	    ParticleAngle(masked_ctor_last_img, circle_last, pct_last, angle_last );
-	    if(show)std::cout<<" angle_last "<<angle_last<<std::endl;
+	    //std::cout<<" angle_last "<<angle_last<<std::endl;
+	    circle = circle_last;
+	    angle =  angle_last;
+	    pct = pct_last;
+	  
 	    if (std::abs(angle_last-angle_this) > resolution_last){
 	      angle =  angle_last;
 	      pct = pct_last;
 	      break;
-	    }
-	    angle =  angle_last;
-	    pct = pct_last;
+	   }
 	  }
 	  if(pid == 0) angle0 = angle;
 	  if(pid == 1) angle1 = angle;
 	  par._angle = angle;
+	  par._circle = circle;
 	  this_par_data.push_back(par);
 	  AssociateMany(*vertex3d,this_par_data.as_vector().back());
 	  
-	  if(show)std::cout<<"pct   is "<<pct<<std::endl;
-	  if(show)std::cout<<"angle is "<<angle<<std::endl;
+	  //std::cout<<"pct   is "<<pct<<std::endl;
+	  //std::cout<<"angle is "<<angle<<std::endl;
 	  _angle_particles.push_back(angle);
-	  if(show)std::cout<<"PID "<<pid<<"has angle "<<angle<<std::endl;
+	  //std::cout<<"PID "<<pid<<"has angle "<<angle<<std::endl;
 	  ++pid;
 	}
-	if(show)std::cout<<"angle0 "<<angle0<<std::endl;
-	if(show)std::cout<<"angle1 "<<angle1<<std::endl;
+	//std::cout<<"angle0 "<<angle0<<std::endl;
+	//std::cout<<"angle1 "<<angle1<<std::endl;
 	double anglediff = -9999; 
 	if (angle0 > -9999 && angle1 > -9999) {
 	  anglediff = std::abs(angle0-angle1);
@@ -218,9 +227,9 @@ namespace larocv {
 	  _anglediff_v[plane] = anglediff;
 	}
 	if (anglediff > _angle_cut) _straightness++;
-	if(show)std::cout<<"angle diff "<<anglediff<<std::endl;
+	//std::cout<<"angle diff "<<anglediff<<std::endl;
       }
-      for (auto shit: _anglediff_v) if(show)std::cout<<"anglediff"<<shit<<std::endl;
+      for (auto shit: _anglediff_v) //std::cout<<"anglediff"<<shit<<std::endl;
       
       //if (_straightness>=2) _anglediff = *std::max_element(std::begin(_anglediff_v), std::end(_anglediff_v)); 
       _tree->Fill();
