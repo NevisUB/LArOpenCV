@@ -630,13 +630,16 @@ namespace larocv {
     return ctors;
   }
   
-  void ParticleAngle(GEO2D_Contour_t ctor, geo2d::Circle<float> circle, double& pct, double& angle){
+  void ParticleAngle(GEO2D_Contour_t ctor_origin, 
+		     GEO2D_Contour_t ctor, 
+		     geo2d::Circle<float> circle, 
+		     double& pct, double& angle){
     angle = -9999;
     pct = -9999;
     float vtx2d_x =  circle.center.x;
     float vtx2d_y =  circle.center.y;
     
-    auto mean = Getx2vtxmean(ctor, vtx2d_x, vtx2d_y, pct );
+    auto mean = Getx2vtxmean(ctor_origin, vtx2d_x, vtx2d_y, pct );
     auto dir = CalcPCA(ctor).dir;
     if (dir.x == 0 && dir.y >0) angle = 90;
     if (dir.x == 0 && dir.y <0) angle = 270;

@@ -116,12 +116,12 @@ namespace larocv {
 	  
 	  if ( FindNonZero(masked_ctor_start).size() <2 ) continue;
 	  
-	  auto thisatom = FindNonZero(masked_ctor_start);
+	  auto masked_ctor_start_img = FindNonZero(masked_ctor_start);
 	  
 	  auto start_point = circle_vertex.center;
 	  
 	  //geo2d::Vector<float> end_point;
-	  //FindEdge(thisatom, start_point, end_point);
+	  //FindEdge(masked_ctor_start_img, start_point, end_point);
 	  //float max_radius = pow((pow(start_point.x-end_point.x,2)+pow(start_point.y-end_point.y,2)),0.5);
 	  
 	  float max_radius = 100 ;
@@ -138,6 +138,10 @@ namespace larocv {
 	  double angle;
 	  double pct;
 	  geo2d::Circle<float> circle;
+	  double angle_this; // Angle calculated with current radius
+	  double angle_last; // Angle calculated with previous radius
+	  geo2d::Circle<float> circle_last;
+	  double pct_last;
 	  
 	  for(int ridx = 0; ridx < r_size ; ++ridx){
 	    //std::cout<<"Scanning radius at "<<ridx<<" with value = "<<radius_v[ridx];
@@ -145,9 +149,9 @@ namespace larocv {
 	    circle_this.radius = radius_v[ridx];
 	    //std::cout<<" radius this"<<radius_v[ridx];
 	    circle_this.center = circle_vertex.center;
-	    //std::cout<<" centerX this"<<circle_vertex.center.x<<" centerY this"<<circle_vertex.center.y<<std::endl;
+	    //std::cout<<" centerX this "<<circle_vertex.center.x<<" centerY this "<<circle_vertex.center.y<<std::endl;
 
-	    double angle_this; // Angle of this particle
+
 	    double pct_this; // pct is actually Δpct meaning the difference of 
 	    // percentages of pixel on two sides of the vertex and take the difference. 
 	    // In this way we check if angle is in [0,180] or [180,360]
@@ -161,23 +165,38 @@ namespace larocv {
 	    auto xs_v_this = QPointOnCircle(masked_ctor_this, circle_this, pi_threshold, supression);
 	    
 	    //input{[particle_image, circle(providing vtx), pct[double],angle[double]}
-	    ParticleAngle(masked_ctor_this_img, circle_this, pct_this, angle_this );
+	    ParticleAngle(masked_ctor_start_img, masked_ctor_this_img, circle_this, pct_this, angle_this );
 	    //std::cout<<" angle_this "<<angle_this;
-	    if ( ridx == 0 ) continue; 
-	    if ( xs_v_this.size() == 0 ) {
+
+	    if ( xs_v_this.size() == 0  && ridx == 0) {
 	      angle =  angle_this;
 	      pct = pct_this;
 	      circle = circle_this;
 	      break;
 	    }
+
+	    if ( xs_v_this.size() == 0 && ridx > 1 ) {
+	      angle =  angle_last;
+	      pct = pct_last;
+	      circle = circle_last;
+	      break;
+	    }
 	    
+	    if ( xs_v_this.size() == 2 && ridx > 1 ) {
+	      angle =  angle_last;
+	      pct = pct_last;
+	      circle = circle_last;
+	      break;
+	    }
+	    
+	    if ( ridx == 0 ) continue; 
 	    float resolution_last = 360 / (2 * PI * radius_v[ridx-1]);
 	    //std::cout<<"resolution is "<<resolution_last<<std::endl;
 	    
 	    masked_ctor_start = MaskImage(img_v[plane],par._ctor,0,false); 	
 	    masked_ctor_start = Threshold(masked_ctor_start, 10, 255);
 	    
-	    geo2d::Circle<float> circle_last;
+	    
 	    circle_last.radius = radius_v[ridx-1];
 	    circle_last.center = circle_vertex.center;
 	    
@@ -185,14 +204,12 @@ namespace larocv {
 	    circle_this.center = circle_vertex.center;
 	    //std::cout<<"centerX last"<<circle_vertex.center.x<<" centerY last"<<circle_vertex.center.y<<std::endl;
 
-	    double angle_last;
-	    double pct_last;	    
 	    cv::Mat masked_ctor_last;
 	    masked_ctor_last = MaskImage(masked_ctor_start,circle_last,0,false);
 	    if ( FindNonZero(masked_ctor_last).size() <_pixels_number ) continue;
 	    //std::cout<<"size of last circle is "<<FindNonZero(masked_ctor_last).size()<<std::endl;
 	    auto masked_ctor_last_img = FindNonZero(masked_ctor_last);
-	    ParticleAngle(masked_ctor_last_img, circle_last, pct_last, angle_last );
+	    ParticleAngle(masked_ctor_start_img, masked_ctor_last_img, circle_last, pct_last, angle_last );
 	    //std::cout<<" angle_last "<<angle_last<<std::endl;
 	    circle = circle_last;
 	    angle =  angle_last;
@@ -201,7 +218,9 @@ namespace larocv {
 	    if (std::abs(angle_last-angle_this) > resolution_last){
 	      angle =  angle_last;
 	      pct = pct_last;
-	      break;
+	      angle_last+=1;
+	      angle_last = (int)angle_last;
+	      if (angle_last != 270 && angle_last !=90 )break;
 	   }
 	  }
 	  if(pid == 0) angle0 = angle;
@@ -229,11 +248,12 @@ namespace larocv {
 	if (anglediff > _angle_cut) _straightness++;
 	//std::cout<<"angle diff "<<anglediff<<std::endl;
       }
-      for (auto shit: _anglediff_v) //std::cout<<"anglediff"<<shit<<std::endl;
-      
+      //for (auto shit: _anglediff_v) //std::cout<<"anglediff"<<shit<<std::endl;
+	
       //if (_straightness>=2) _anglediff = *std::max_element(std::begin(_anglediff_v), std::end(_anglediff_v)); 
       _tree->Fill();
     }//loop of vertex   
+    _roid += 1;
   }
 }
 #endif
