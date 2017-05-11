@@ -27,9 +27,14 @@ namespace larocv {
       ~ParticleCluster() {}
       
       void _Clear_() { _ctor.clear(); type=ParticleType_t::kUnknown; }
+      
+      void Clear();
+      
       GEO2D_Contour_t _ctor; ///< contour to define a cluster
       ParticleType_t type;
       double _angle;
+
+      std::vector<float> _vertex_dqds;
       
     };
 

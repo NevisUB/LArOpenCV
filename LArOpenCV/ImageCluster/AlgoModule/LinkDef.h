@@ -29,6 +29,7 @@
 #pragma link C++ class larocv::EmptyAlgoModule+;
 #pragma link C++ class larocv::TrumpExample+;
 #pragma link C++ class larocv::AngleAnalysis+;
+#pragma link C++ class larocv::dQdsAnalysis+;
 #pragma link C++ class larocv::MatchOverlap+;
 
 //ADD_NEW_CLASS ... do not change this line
