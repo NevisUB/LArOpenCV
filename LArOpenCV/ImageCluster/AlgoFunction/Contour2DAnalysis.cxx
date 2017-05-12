@@ -115,10 +115,11 @@ namespace larocv {
 		    bool  maskout)
 
   {
-    cv::Mat dst_img(img.size(),img.type(),CV_8UC1);
-    cv::Mat mask = cv::Mat(img.size(), img.type(), CV_8UC1);
-    // LAROCV_SDEBUG() << "Creating a mask for image (rows,cols) = (" << img.rows << "," << img.cols << ")"
-    // 		    << " with " << veto_ctor_v .size() << " contours" << std::endl;
+    //cv::Mat dst_img(img.size(),img.type(),CV_8UC1);
+    //cv::Mat mask = cv::Mat(img.size(), img.type(), CV_8UC1);
+
+    cv::Mat dst_img(img.size(),img.type());
+    cv::Mat mask = cv::Mat(img.size(), img.type());
     
     cv::drawContours(mask, veto_ctor_v, -1, cv::Scalar(255), -1, cv::LINE_8); // fill inside
     if (tol > 0) 
@@ -138,10 +139,11 @@ namespace larocv {
 		    int  tol,
 		    bool  maskout)
   {
-    cv::Mat dst_img(img.size(),img.type(), CV_8UC1);
-    cv::Mat mask = cv::Mat(img.size(),img.type(),CV_8UC1);
-    // LAROCV_SDEBUG() << "Creating a mask for image (rows,cols) = (" << img.rows << "," << img.cols << ")"
-    // 		    << " with a circle mask @ " << c.center << " radius " << c.radius << std::endl;
+    // cv::Mat dst_img(img.size(),img.type(), CV_8UC1);
+    // cv::Mat mask = cv::Mat(img.size(),img.type(),CV_8UC1);
+
+    cv::Mat dst_img(img.size(),img.type());
+    cv::Mat mask = cv::Mat(img.size(), img.type());
 
     cv::circle(mask, // output
 	       cv::Point( (int)(c.center.x+0.5),(int(c.center.y+0.5))), // center
