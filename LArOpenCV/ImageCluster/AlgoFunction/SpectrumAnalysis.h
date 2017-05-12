@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <algorithm>
 namespace larocv {
+
+  float
+  VectorMean(const std::vector<float>& v);
   
   double
   Mean(const std::vector<float>& array,

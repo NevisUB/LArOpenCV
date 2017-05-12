@@ -156,6 +156,8 @@ namespace larocv {
 	  //for(int ridx = 0; ridx < r_size ; ++ridx) //std::cout<<radius_v[ridx];
 	  double angle;
 	  double pct;
+	  geo2d::Vector<float> end_point;
+	  geo2d::Vector<float> end_point_last;
 	  geo2d::Circle<float> circle;
 	  double angle_this; // Angle calculated with current radius
 	  double angle_last; // Angle calculated with previous radius
@@ -198,6 +200,7 @@ namespace larocv {
 	      angle =  angle_last;
 	      pct = pct_last;
 	      circle = circle_last;
+	      end_point = end_point_last;
 	      break;
 	    }
 	    
@@ -205,6 +208,7 @@ namespace larocv {
 	      angle =  angle_last;
 	      pct = pct_last;
 	      circle = circle_last;
+	      end_point = end_point_last;
 	      break;
 	    }
 	    
@@ -222,7 +226,13 @@ namespace larocv {
 	    //std::cout<<"radius last"<<radius_v[ridx-1];
 	    circle_this.center = circle_vertex.center;
 	    //std::cout<<"centerX last"<<circle_vertex.center.x<<" centerY last"<<circle_vertex.center.y<<std::endl;
-
+	    
+	    auto xs_v_last = QPointOnCircle(masked_ctor_this, circle_this, pi_threshold, supression);
+	    if (xs_v_last.size()==1) {
+	      end_point_last = xs_v_last[0]; 
+	      end_point = end_point_last;
+	    }
+	    
 	    cv::Mat masked_ctor_last;
 	    masked_ctor_last = MaskImage(masked_ctor_start,circle_last,0,false);
 	    if ( FindNonZero(masked_ctor_last).size() <_pixels_number ) continue;
@@ -246,6 +256,8 @@ namespace larocv {
 	  if(pid == 1) angle1 = angle;
 	  par._angle = angle;
 	  par._circle = circle;
+	  par._end_point = end_point;
+	  //std::cout<<"end point X is "<<end_point.x<<std::endl;
 	  this_par_data.push_back(par);
 	  AssociateMany(*vertex3d,this_par_data.as_vector().back());
 	  

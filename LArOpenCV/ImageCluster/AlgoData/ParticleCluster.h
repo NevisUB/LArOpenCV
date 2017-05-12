@@ -6,6 +6,7 @@
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
 #include "Geo2D/Core/Circle.h"
 #include "Geo2D/Core/Line.h"
+#include "Geo2D/Core/Vector.h"
 #include <array>
 
 /*
@@ -28,16 +29,18 @@ namespace larocv {
       { Clear(); }
       ~ParticleCluster() {}
       
-      void _Clear_() { _ctor.clear(); type=ParticleType_t::kUnknown; _vertex_dqds.clear(); }
+      void _Clear_() { _ctor.clear(); type=ParticleType_t::kUnknown; _vertex_dqds.clear(); _end_point.x =-9999; _end_point.y = -9999; }
       
       GEO2D_Contour_t _ctor; ///< contour to define a cluster
       ParticleType_t type;
       double _angle;
+
       geo2d::Circle<float> _circle;
       geo2d::Line<float> _pca;
       
       std::vector<float> _vertex_dqds;
-      
+      float _dqds_mean;
+      geo2d::Vector<float> _end_point;//last scanned radius from angleanalysis      
     };
 
     /**

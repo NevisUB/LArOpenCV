@@ -8,6 +8,16 @@
 
 namespace larocv {
 
+  float
+  VectorMean(const std::vector<float>& v)
+  {
+    double sum = std::accumulate(v.begin(), v.end(), 0.0);
+    double mean = sum / (float) v.size();
+    
+    return mean;
+  }
+  
+
 
   double
   Mean(const std::vector<float>& array,
