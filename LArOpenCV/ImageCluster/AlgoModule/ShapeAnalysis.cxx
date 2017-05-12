@@ -63,11 +63,6 @@ namespace larocv {
     _tree->Branch("par2_type", &_par2_type, "par2_type/I");
     _tree->Branch("par1_frac", &_par1_frac, "par1_frac/F");
     _tree->Branch("par2_frac", &_par2_frac, "par2_frac/F");
-
-    _tree->Branch("track_par_max_id"   , &_track_par_max_id   , "track_par_max_id/I");
-    _tree->Branch("shower_par_max_id"  , &_shower_par_max_id  , "shower_par_max_id/I");
-    _tree->Branch("track_par_max_frac" , &_track_par_max_frac , "track_par_max_frac/F");
-    _tree->Branch("shower_par_max_frac", &_shower_par_max_frac, "shower_par_max_frac/F");
       
     _roid = 0;
   }
