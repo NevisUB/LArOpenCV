@@ -118,8 +118,8 @@ namespace larocv {
     //cv::Mat dst_img(img.size(),img.type(),CV_8UC1);
     //cv::Mat mask = cv::Mat(img.size(), img.type(), CV_8UC1);
 
-    cv::Mat dst_img(img.size(),img.type());
-    cv::Mat mask = cv::Mat(img.size(), img.type());
+    cv::Mat dst_img(img.size(),img.type(),cv::Scalar(0));
+    cv::Mat mask(img.size(), img.type(),cv::Scalar(0));
     
     cv::drawContours(mask, veto_ctor_v, -1, cv::Scalar(255), -1, cv::LINE_8); // fill inside
     if (tol > 0) 
@@ -142,8 +142,8 @@ namespace larocv {
     // cv::Mat dst_img(img.size(),img.type(), CV_8UC1);
     // cv::Mat mask = cv::Mat(img.size(),img.type(),CV_8UC1);
 
-    cv::Mat dst_img(img.size(),img.type());
-    cv::Mat mask = cv::Mat(img.size(), img.type());
+    cv::Mat dst_img(img.size(),img.type(),cv::Scalar(0));
+    cv::Mat mask(img.size(), img.type(),cv::Scalar(0));
 
     cv::circle(mask, // output
 	       cv::Point( (int)(c.center.x+0.5),(int(c.center.y+0.5))), // center
