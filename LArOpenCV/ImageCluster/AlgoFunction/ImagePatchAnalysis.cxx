@@ -17,21 +17,21 @@ namespace larocv {
 
   cv::Mat
   Flip(const cv::Mat& img, int flipCode) {
-    cv::Mat dst_img(img.size(),img.type(),CV_8UC1);
+    cv::Mat dst_img(img.size(),img.type(),cv::Scalar(0));
     cv::flip(img,dst_img,flipCode);
     return dst_img;
   }
   
   cv::Mat
   Transpose(const cv::Mat& img) {
-    cv::Mat dst_img(img.size(),img.type(),CV_8UC1);    
+    cv::Mat dst_img(img.size(),img.type(),cv::Scalar(0));
     cv::transpose(img,dst_img);
     return dst_img;
   }
   
   cv::Mat
   BlankImage(const cv::Mat& img,uint val){
-    cv::Mat dst_img(img.size(),img.type(),CV_8UC1);    
+    cv::Mat dst_img(img.size(),img.type(),cv::Scalar(0));    
     dst_img.setTo(val);
     return dst_img;
   }
@@ -378,8 +378,8 @@ namespace larocv {
 	    const cv::Rect& rec,
 	    int tol, bool maskout) {
     
-    cv::Mat dst_img(img.size(),img.type(), CV_8UC1);
-    cv::Mat mask = cv::Mat(img.size(),img.type(),CV_8UC1);
+    cv::Mat dst_img(img.size(),img.type(), cv::Scalar(0));
+    cv::Mat mask(img.size(),img.type(), cv::Scalar(0));
     LAROCV_SDEBUG() << "Creating a mask for image (rows,cols) = (" << img.rows << "," << img.cols << ")"
 		    << " with are rect mask @ (" << rec.x << "," << rec.y << ") "
 		    << "w/ width " << rec.width << " height " << rec.height << std::endl;
