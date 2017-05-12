@@ -418,13 +418,6 @@ namespace larocv {
     res = MaskImage(res,ctr0,0,false);
     res = MaskImage(res,ctr1,0,false);
 
-    // cv::Mat img0(rows,cols,CV_8UC1,cv::Scalar(0));
-    // cv::drawContours(img0, ctr0, -1, cv::Scalar(255), 1, cv::LINE_8);
-    // cv::Mat img1(rows,cols,CV_8UC1,cv::Scalar(0));
-    // cv::drawContours(img1, ctr1, -1, cv::Scalar(255), 1, cv::LINE_8);
-    // cv::Mat res;
-    // cv::bitwise_and(img0,img1,res);
-
     return cv::countNonZero(res);
   }
 
