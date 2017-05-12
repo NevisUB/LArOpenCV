@@ -43,6 +43,7 @@ namespace larocv {
     int _pixels_number;
     double _angle_cut;
     AlgorithmID_t _combined_vertex_analysis_algo_id;
+    AlgorithmID_t _particle_id;
     
     TTree* _tree;
 

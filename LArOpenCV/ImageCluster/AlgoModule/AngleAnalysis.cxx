@@ -27,6 +27,17 @@ namespace larocv {
       if (_combined_vertex_analysis_algo_id==kINVALID_ALGO_ID)
 	throw larbys("Given ParticleCluster name is INVALID!");
     }
+
+    
+    auto name_particle = pset.get<std::string>("ParticleProducer");
+    _particle_id=kINVALID_ALGO_ID;
+    if (!name_particle.empty()) {
+      _particle_id = this->ID(name_particle);
+      if (_particle_id == kINVALID_ALGO_ID) {
+	LAROCV_CRITICAL() << "Seed ID algorithm name does not exist!" << std::endl;
+	throw larbys();
+      }
+    }
     
     _pixels_number = pset.get<int>("PixelsNumber");
     _angle_cut = pset.get<int>("AngleCut");
@@ -91,15 +102,22 @@ namespace larocv {
       _y = vertex3d->y;
       _z = vertex3d->z;
       
+      const auto& particle_arr = AlgoData<data::ParticleArray>(_particle_id,0);
+      const auto& particle_v = particle_arr.as_vector();
+      auto par_ass_id_v = ass_man.GetManyAss(*vertex3d,particle_arr.ID());
+      if(par_ass_id_v.size()==0) continue;
+      _nparticles = par_ass_id_v.size();
+      
       for(size_t plane =0; plane <=2; ++plane){
 	//std::cout<<"====>>>>Plane "<<plane<<"<<<<====="<<std::endl;
 	const auto& circle_vertex = vertex3d->cvtx2d_v.at(plane);
 	//std::cout<<"[from vertex scan] size of xs"<<xs_pts.size()<<std::endl;	
 	
 	// Input algo data
-	const auto& par_data = AlgoData<data::ParticleClusterArray>(_combined_vertex_analysis_algo_id,plane+1);
-	auto par_ass_id_v = ass_man.GetManyAss(*vertex3d,par_data.ID());
-	_nparticles = par_ass_id_v.size();
+	
+	//const auto& par_data = AlgoData<data::ParticleClusterArray>(_combined_vertex_analysis_algo_id,plane+1);
+	//auto par_ass_id_v = ass_man.GetManyAss(*vertex3d,par_data.ID());
+	
 	auto& this_par_data = AlgoData<data::ParticleClusterArray>(plane);
 	
 	double angle0 =-9999.0;
@@ -107,8 +125,9 @@ namespace larocv {
 	int pid = 0 ;
 	for(auto par_id : par_ass_id_v) {
 	  //std::cout<<">>>Particle ID "<<par_id<<std::endl;
-	  auto par = par_data.as_vector().at(par_id);
-
+	  //auto par = par_data.as_vector().at(par_id);
+	  auto par = particle_v[par_id]._par_v[plane];
+	  if(par._ctor.empty()) continue;
 	  cv::Mat masked_ctor_start;
 	  masked_ctor_start = MaskImage(img_v[plane],par._ctor,0,false); 	
 	  //masked_ctor = MaskImage(masked_ctor,circle,0,false); 	
