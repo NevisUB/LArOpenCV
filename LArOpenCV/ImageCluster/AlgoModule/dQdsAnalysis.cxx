@@ -96,10 +96,16 @@ namespace larocv {
     
     for(size_t vertex_id = 0; vertex_id < vertex_data_v.size(); ++vertex_id) {
       Clear();
-      
-      if(show)std::cout<<"====>>>>Angle Analysis Starts<<<<====="<<std::endl;
-      const auto& vertex3d = vertex_data_v[vertex_id];
 
+      _vtxid  =vertex_id;
+      
+      if(show)std::cout<<"====>>>>dQds Analysis Starts<<<<====="<<std::endl;
+      
+      const auto& vertex3d = vertex_data_v[vertex_id];
+      _x = vertex3d->x;
+      _y = vertex3d->y;
+      _z = vertex3d->z;
+      
       for(size_t plane =0; plane <=2; ++plane){
 	if(show)std::cout<<"====>>>>Plane "<<plane<<"<<<<====="<<std::endl;
 	const auto& circle_vertex = vertex3d->cvtx2d_v.at(plane);
@@ -112,7 +118,7 @@ namespace larocv {
 	// Input algo data
 	const auto& par_data = AlgoData<data::ParticleClusterArray>(_angle_analysis_algo_id,plane);
 	auto par_ass_id_v = ass_man.GetManyAss(*vertex3d,par_data.ID());
-	
+       	if(par_ass_id_v.empty()) continue;
 	auto& this_par_data = AlgoData<data::ParticleClusterArray>(plane);
 	
 	float dqds_mean_0 =-9999.0;
