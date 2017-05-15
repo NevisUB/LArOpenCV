@@ -4,8 +4,8 @@ LArImageHit: {
 
   Profile: true
   StoreOriginalImage: false
-  Producer: hit02 
-  HitRemoval: false 
+  Producer: gaushit #hit02 
+  UseHitRemoval: true 
 
   # LArImageHit config
   PoolTimeTick: 6 
@@ -16,14 +16,14 @@ LArImageHit: {
   MakeROI: true
   CropROI: false
   
-  ROIBufferW : 100
-  ROIBufferT : 100
+  ROIBufferW : 108
+  ROIBufferT : 108
   
   Q2Gray: 10
   QMin: 5
 
   TimeOffset : 800
-  WindowTMax : 6399 #9599MC #6399Data
+  WindowTMax : 9599 #9599MC #6399Data
   WindowTMin : 0
 
   MatchPlaneWeights : [1,1,1] #plane 0,1,2
@@ -34,9 +34,9 @@ ImageClusterManager: {
   Verbosity: 2
   Profile:   true
 
-  # Old chain
-  #ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleCuts,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
-  #ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,fm,fcp2,sc2,sep,ca,cwires,cwo]
+  # Hold this chain
+  #ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,UpdateMeta,FlashlightMerge,FillClusterParams,SimpleCuts,VertexInHull,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
+  #ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,um,fm,fcp2,sc2,vih2,sep,ca,cwires,cwo]
 
   ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,UpdateMeta,FlashlightMerge,FillClusterParams,SimpleCuts,VertexInHull,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
   ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,um,fm,fcp2,sc2,vih2,sep,ca,cwires,cwo]
