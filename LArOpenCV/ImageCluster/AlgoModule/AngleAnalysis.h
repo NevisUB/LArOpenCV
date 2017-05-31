@@ -38,9 +38,9 @@ namespace larocv {
   private:
 
     void Clear();
-    
     int _nplanes;
     int _pixels_number;
+    int _unity;
     double _angle_cut;
     AlgorithmID_t _combined_vertex_analysis_algo_id;
     AlgorithmID_t _particle_id;
@@ -56,8 +56,9 @@ namespace larocv {
     double _z;
 
     double _anglediff;
-    double _anglediff_mean;
-    double _anglediff_210;
+    double _anglediff_straight;
+    double _anglediff_max;
+    
     std::vector<double> _anglediff_v;//Per plane
     std::vector<double> _angle_particles;
     int _straightness;

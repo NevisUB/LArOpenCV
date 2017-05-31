@@ -20,7 +20,6 @@ namespace larocv {
     // Prepare Algo Configs
     //
     _combined_vertex_analysis_algo_id = kINVALID_ALGO_ID;
-    
     // Input from CombinedVertexAnalysisAlgo
     auto combined_vertex_analysis_algo_name = pset.get<std::string>("CombinedVertexAnalysisAlgo","");
     if (!combined_vertex_analysis_algo_name.empty()) {
@@ -30,7 +29,6 @@ namespace larocv {
     }
 
     _angle_analysis_algo_id = kINVALID_ALGO_ID;
-    
     // Input from AngleAnalysisAlgo
     auto angle_analysis_algo_name = pset.get<std::string>("AngleAnalysisAlgo","");
     if (!angle_analysis_algo_name.empty()) {
@@ -44,9 +42,7 @@ namespace larocv {
     //
     _AtomicAnalysis.Configure(pset.get<Config_t>("AtomicAnalysis"));
     //
-    //Atomic :{garbyage: a}
-    //
-
+    
     _tree = new TTree("dQdSAnalysis","");
     AttachIDs(_tree);
     _tree->Branch("roid"        , &_roid      , "roid/I");
@@ -59,8 +55,6 @@ namespace larocv {
 
     _roid = 0;
     
-    
-
     // Register 3 particle arrays, 1 per plane
     _nplanes = 3;
     for(size_t plane=0;plane<_nplanes;++plane) Register(new data::ParticleClusterArray);
@@ -82,12 +76,11 @@ namespace larocv {
     
     auto img_v  = ImageArray();
     auto meta_v = MetaArray();
-   // Get the Ass Man
+   // Get the Ass Manager
     auto& ass_man = AssManager();
     
     // Get the vertex from pervious modules
     std::vector<const data::Vertex3D*> vertex_data_v;
-    
     if(_combined_vertex_analysis_algo_id!=kINVALID_ALGO_ID) {
       const auto& input_vertex_data_v  = AlgoData<data::Vertex3DArray>(_combined_vertex_analysis_algo_id,0).as_vector();
       for(const auto& vtx : input_vertex_data_v)

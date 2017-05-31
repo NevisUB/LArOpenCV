@@ -170,5 +170,10 @@ namespace larocv {
 	       float x2d, 
 	       float y2d, 
 	       double& pct);
+  double
+  Gety2vtxmean(GEO2D_Contour_t ctor,
+	       float x2d, 
+	       float y2d, 
+	       double& pct);
 }
 #endif
