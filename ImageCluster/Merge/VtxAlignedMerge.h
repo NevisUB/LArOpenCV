@@ -50,6 +50,9 @@ namespace larocv {
     // as separate photons
     double _min_gammagamma_oangle;
 
+    // iteratively merge untill no clusters have been merged
+    bool _merge_till_converge;
+    
     /// Configuration method
     void _Configure_(const ::fcllite::PSet &pset);
 

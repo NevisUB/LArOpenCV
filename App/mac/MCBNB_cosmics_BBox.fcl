@@ -10,11 +10,11 @@ LArImageHit: {
   # LArImageHit config
   PoolTimeTick: 6 
   
-  VertexProducer: numuCC_vertex #mcvertex#numuCC_vertex 
+  VertexProducer: mcvertex #numuCC_vertex  #mcvertex #numuCC_vertex 
   Debug: true
 
   MakeROI: true
-  CropROI: false
+  CropROI: true
   
   ROIBufferW : 100
   ROIBufferT : 100
@@ -23,10 +23,12 @@ LArImageHit: {
   QMin: 5
 
   TimeOffset : 800
-  WindowTMax : 6399 #9599MC #6399Data
+  WindowTMax : 9599 #MC #6399Data
   WindowTMin : 0
 
   MatchPlaneWeights : [1,1,1] #plane 0,1,2
+
+  MaxPixelIntensity : true
 
 }
 ImageClusterManager: {
@@ -34,8 +36,11 @@ ImageClusterManager: {
   Verbosity: 2
   Profile:   true
 
-  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,UpdateMeta,FlashlightMerge,FillClusterParams,SimpleCuts,VertexInHull,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
-  ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,um,fm,fcp2,sc2,vih2,sep,ca,cwires,cwo]
+  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,UpdateMeta,VtxAlignedMerge,FillClusterParams,SimpleCuts,VertexInHull,SimpleEndPoint,ClusterWriteOut]#,CheckAlignment,CheckWires,ClusterWriteOut]
+  ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,um,vam,fcp2,sc2,vih2,sep,cwo]#ca,cwires,cwo]
+
+  #ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,UpdateMeta,FlashlightMerge,FillClusterParams,SimpleCuts,VertexInHull,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
+  #ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,um,fm,fcp2,sc2,vih2,sep,ca,cwires,cwo]
 
   ShowImage: false
 
@@ -61,9 +66,14 @@ ImageClusterManager: {
 
  um : {}
 
+ vam : {
+     Debug: true
+     }	
+
  iouo : {
    IOUScore: 0.25
    HitRatio: 0.2
+   Debug: false
  }
 
  ca : {
@@ -72,14 +82,12 @@ ImageClusterManager: {
    UseStartEnd: 1 #else use direction of first flashlight
   }
   sc2 : {
-
-   MinHits : 10
+   MinHits : 100
    MinArea : -1
    MinPerimieter : -1
    MinCharge :-1
    MinLength : -1
    MinWidth : -1
-
   }
 
   cwires : {
@@ -92,12 +100,16 @@ ImageClusterManager: {
 
  fm : {
    Keep : 100
-   TriAngle : 20
+   TriAngle : 5
    TriLen : 50
   }
 
-  fcp1: {}
-  fcp2: {}
+  fcp1: {
+  	Carthesian : true
+  	}
+  fcp2: {
+  	Carthesian : false
+  	}
 
  vih : {}
  vih2 : {}
@@ -123,14 +135,12 @@ ImageClusterManager: {
   pcao: { }
 
   sc : {
-
-   MinHits : 10
+   MinHits : 20
    MinArea : -1
    MinPerimieter : -1
    MinCharge :-1
    MinLength : -1
    MinWidth : -1
-   
   }
 
   cwo : {
@@ -157,15 +167,13 @@ ImageClusterManager: {
   }
 
  pc : {
-
    Verbosity: 2
-   DilationSize : 5#10
-   DilationIterations : 2
-   BlurSizeR : 10 #25
-   BlurSizeT : 5
+   DilationSize : 3#10
+   DilationIterations : 3
+   BlurSizeR : 3
+   BlurSizeT : 2
    Thresh : 1
    ThreshMaxVal : 255
-   
   }
 
    mto : { 

@@ -28,7 +28,7 @@ LDFLAGS += $(shell recotool-config --libs)
 LDFLAGS += $(shell larlite-config --libs)
 LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc
 LDFLAGS += -L$(LARLITE_LIBDIR) -lLArOpenCV_Core -lLArOpenCV_Utils -lRecoTool_ClusterRecoUtil -lRecoTool_ClusterRecoUtilAlg
-LDFLAGS += -lLArOpenCV_ImageClusterCluster -lLArOpenCV_ImageClusterFilter -lLArOpenCV_ImageClusterStartPoint -lLArOpenCV_ImageClusterDirection -lLArOpenCV_ImageClusterDebug -lLArOpenCV_ImageClusterMatch -lLArOpenCV_ImageClusterMerge -lLArOpenCV_ImageClusterUtil
+#LDFLAGS += -lLArOpenCV_ImageClusterCluster -lLArOpenCV_ImageClusterFilter -lLArOpenCV_ImageClusterStartPoint -lLArOpenCV_ImageClusterDirection -lLArOpenCV_ImageClusterDebug -lLArOpenCV_ImageClusterMatch -lLArOpenCV_ImageClusterMerge -lLArOpenCV_ImageClusterUtil
 
 # call kernel specific compiler setup
 include $(LARLITE_BASEDIR)/Makefile/Makefile.${OSNAME}
