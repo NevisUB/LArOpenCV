@@ -15,7 +15,6 @@
 #pragma link C++ class larocv::PCAUtilities+;
 #pragma link C++ class larocv::PID+;
 #pragma link C++ class larocv::StatUtilities+;
-#pragma link C++ class larocv::Linearity+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
