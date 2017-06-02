@@ -74,6 +74,13 @@ larocv::Cluster2DArray_t GetStartPoint::_Process_(const larocv::Cluster2DArray_t
      cluster._startPt = larocv::Point2D(start.t / geomHelper->TimeToCm() , start.w / geomHelper->WireToCm());
      cluster._endPt = larocv::Point2D(end.t / geomHelper->TimeToCm() , end.w / geomHelper->WireToCm());
 
+     float dx = cluster._endPt.x - cluster._startPt.x ;
+     float dy = cluster._endPt.y - cluster._startPt.y ;
+     float mag = std::sqrt(dx*dx+dy*dy);
+
+     cluster.reco.dir = Point2D(dx/mag,dy/mag);
+     cluster._eigenVecFirst = cluster.reco.dir;
+
      std::vector<std::pair<float, float> > vertices;
     
      //std::cout<<"Poly size: "<<poly.Size()<<std::endl ;

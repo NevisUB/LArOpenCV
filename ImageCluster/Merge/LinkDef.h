@@ -15,6 +15,7 @@
 #pragma link C++ class larocv::NearestConeCluster+;
 #pragma link C++ class larocv::SatelliteMerge+;
 #pragma link C++ class larocv::FlashlightMerge+;
+#pragma link C++ class larocv::MergeAll+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

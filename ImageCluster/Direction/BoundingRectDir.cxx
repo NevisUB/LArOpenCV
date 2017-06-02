@@ -18,13 +18,14 @@ namespace larocv{
       
       //get the verticies for the bounding rectangle
       auto& verts = ocluster._minAreaRect;
+      if ( !verts.size() ) continue ;
 
       float d=-1;
       short idx1 = -1;
       short idx2 = -1;
       
       //get the two indicies of the vertex for the longest side
-      for(short i=0;i<3;++i) {
+      for(short i=0;i<verts.size()-1;++i) {
 	auto& p1 = verts[i];
 	auto& p2 = verts[i+1];
 

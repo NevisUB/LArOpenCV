@@ -155,6 +155,9 @@ namespace larocv {
     /// 2D vertex point
     Point2D _vertex_2D;
 
+    /// Cluster distance to vertex
+    float _dist_to_vtx ;
+
   private:
 
     ClusterID_t _cluster_id;

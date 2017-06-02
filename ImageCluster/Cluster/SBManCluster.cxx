@@ -94,6 +94,11 @@ namespace larocv {
         ::cv::drawContours( drawing , ctor_v, i, color, 2, 8, ::cv::noArray(), 0, ::cv::Point() );
       }
 
+     auto pi0st = roi.roivtx_in_image(meta);
+      std::cout<<"pi0st.x: "<<pi0st.x<<", "<<pi0st.y <<std::endl ;
+     ::cv::Mat src(16,16,CV_8UC1,cvScalar(255)); // 20x20
+     src.copyTo(drawing.rowRange(pi0st.y - 8,pi0st.y + 8).colRange(pi0st.x - 8,pi0st.x + 8)); 
+
      ::cv::imshow( "Contours", drawing);
      ::cv::setMouseCallback("Contours",&onMouse,NULL );
    
@@ -238,6 +243,7 @@ namespace larocv {
      Contour_t all_locations;
      ::cv::findNonZero(drawing, all_locations); // get the non zero points
 
+     //std::cout<<"NUMBER OF REsULTS : "<<result_v.size()<<", "<<all_locations.size()<<std::endl ;
      for( const auto& loc: all_locations ) {
        for( size_t i = 0; i < result_v.size(); i++ ) {
 
@@ -279,6 +285,7 @@ namespace larocv {
          auto st = ( 0.5 + result_v[i]._startPt.x ) * meta.pixel_height() + meta.origin().y;
          auto sw = ( 0.5 + result_v[i]._startPt.y ) * meta.pixel_width() + meta.origin().x;
 
+         std::cout<<"0) NHits: "<<result_v[i]._insideHits.size()<<std::endl ;
          std::cout<<"1) Hit adjusted start is: "<<result_v[i]._startPt.x<<", "<<result_v[i]._startPt.y <<std::endl ;
          std::cout<<"start time and wire  "<<st<<", "<<sw <<std::endl;
        }
@@ -303,9 +310,10 @@ namespace larocv {
           break;
 
         case  CV_EVENT_LBUTTONUP    :
-          std::cout<<"Setting end point!: "<<x<<", "<<y<<std::endl ;
+          //std::cout<<"Setting end point!: "<<x<<", "<<y<<std::endl ;
           end_temp.x=x;
           end_temp.y=y;
+	  std::cout<<"Setting time/wire!: "<< ( 0.5 + end_temp.x ) * pix_h + o_y<<", "<<( 0.5 + end_temp.y ) * pix_w + o_x<<std::endl;
           break;
          
         case  CV_EVENT_RBUTTONDOWN  :

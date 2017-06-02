@@ -76,7 +76,7 @@ namespace larlite {
 
     bool _crop_w_roi;
 
-    bool _hit_removal ;
+    //bool _hit_removal ;
     
   };
 }

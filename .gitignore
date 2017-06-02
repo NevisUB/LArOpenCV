@@ -25,3 +25,6 @@ laropencv_doc/
 \#*\#
 LArOpenCV_ImageCluster*cxx
 *.ipynb_checkpoints
+mac/*
+ImageCluster/mac/*
+pizeroroi
