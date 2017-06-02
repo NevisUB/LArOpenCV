@@ -93,6 +93,8 @@ namespace larlite {
     std::vector<float> _plane_weights;
 
     int _event ;
+    bool _hit_removal ;
+
   };
 }
 #endif

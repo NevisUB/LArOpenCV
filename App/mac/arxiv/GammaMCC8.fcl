@@ -1,0 +1,162 @@
+LArImageHit: {
+  Verbosity: 2
+  # LArImageClusterBase config
+
+  Profile: true
+  StoreOriginalImage: false
+  Producer: hit02 
+
+  # LArImageHit config
+  PoolTimeTick: 6 
+  
+  VertexProducer: mcvertex#numuCC_vertex 
+  Debug: true
+
+  MakeROI: true 
+  CropROI: false
+  
+  ROIBufferW : 100
+  ROIBufferT : 100
+  
+  Q2Gray: 10
+  QMin: 5
+
+  TimeOffset : 800
+  WindowTMax : 9599# 6399
+  WindowTMin : 0
+
+  MatchPlaneWeights : [1,1,1] #plane 0,1,2
+
+}
+ImageClusterManager: {
+
+  Verbosity: 2
+  Profile:   true
+
+  # Old chain
+
+  #ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,MergeAll,BoundingRectDir,BoundRectStart,ROIParameters]
+  #ClusterAlgoName: [pc,fcp1,sc,ma,brd,brs,roip] 
+
+  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,UpdateMeta,FlashlightMerge,FillClusterParams,SimpleCuts,VertexInHull,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
+  ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,um,fm,fcp2,sc2,vih2,sep,ca,cwires,cwo]
+
+  ShowImage: false
+
+  MatchAlgoType: "IoUOverlap"
+  MatchAlgoName: "iouo"
+
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
+  EnableWireCheck : true
+  UseOnlyTwoPlanes : 1
+  RequirePlane : 2
+
+ ImageClusterViewer: {
+
+   Verbosity: 2
+   Width:  800
+   Height: 800
+   MinContourArea: 0
+   
+ }
+
+ rp : {}
+
+ roip : {}
+
+   brs : {
+
+    UseROIVertex: true
+    CutBadReco : 1
+    NDivWidth : 2
+
+  }
+  brd : {}
+
+
+ iouo : { 
+   IOUScore: 0.25
+   HitRatio: 0.2 
+        }
+
+  fr : { 
+    Verbosity : 2 
+       }
+
+ ma : {} 
+
+  fcp1: {}
+  fcp2: {}
+
+ sbc : {
+   Verbosity: 2
+   DilationSize : 5
+   DilationIterations : 2
+   BlurSize : 5
+   Thresh : 1
+   ThreshMaxVal : 255
+  }
+
+  sc : {
+
+   MinHits : 10 
+   MinArea : -1
+   MinPerimieter : -1
+   MinCharge :-1
+   MinLength : -1
+   MinWidth : -1
+   
+  }
+
+ pc : {
+
+   Verbosity: 2
+   DilationSize : 5#10
+   DilationIterations : 2
+   BlurSizeR : 10 #25
+   BlurSizeT : 5
+   Thresh : 1
+   ThreshMaxVal : 255
+   
+  }
+
+
+   vih : {}
+   vih2 : {}
+
+   um : {}
+
+   fm : { 
+     Keep : 100 
+     TriAngle : 20
+     TriLen : 50
+    }
+
+  sc2 : { 
+
+   MinHits : 10
+   MinArea : -1
+   MinPerimieter : -1
+   MinCharge :-1 
+   MinLength : -1
+   MinWidth : -1
+
+  }
+
+  cwires : { 
+   DeadWirePath : "dead_wires.fcl"
+  }
+
+ sep : {}
+
+ca : {
+   RatioCut : 0.71
+   MinDist  : 12.
+   UseStartEnd: 1 #else use direction of first flashlight
+  }
+  cwo : {
+  Verbosity : 2
+  }
+
+}

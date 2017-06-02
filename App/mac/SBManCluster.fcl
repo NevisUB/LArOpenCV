@@ -1,0 +1,79 @@
+LArImageHit: {
+  Verbosity: 2
+  # LArImageClusterBase config
+
+  Profile: true
+  StoreOriginalImage: false
+  Producer: gaushit #hit02 
+  UseHitRemoval: true 
+
+  # LArImageHit config
+  PoolTimeTick: 0 
+  
+  VertexProducer: numuCC_vertex #mcvertex#numuCC_vertex 
+  Debug: true
+
+  MakeROI: true
+  CropROI: true #false
+  
+  ROIBufferW : 108
+  ROIBufferT : 108
+  
+  Q2Gray: 10
+  QMin: 5
+
+  TimeOffset : 800
+  WindowTMax : 6399 #9599 #9599MC #6399Data
+  WindowTMin : 0
+
+  MatchPlaneWeights : [1,1,1] #plane 0,1,2
+
+}
+ImageClusterManager: {
+
+  Verbosity: 2
+  Profile:   true
+
+  # Hold this chain
+  ClusterAlgoType: [SBManCluster]
+  ClusterAlgoName: [sbc]
+
+  ShowImage: false
+
+  MatchAlgoType: "IoUOverlap"
+  MatchAlgoName: "iouo"
+
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
+  EnableWireCheck : false 
+  UseOnlyTwoPlanes : 1
+  RequirePlane : 2
+
+ ImageClusterViewer: {
+
+   Verbosity: 2
+   Width:  800
+   Height: 800
+   MinContourArea: 0
+   
+ }
+ 
+ iouo : {
+   IOUScore: 0.25
+   HitRatio: 0.01 #0.2
+ }
+
+ sbc:{
+
+   Verbosity: 1
+   DilationSize : 5 
+   DilationIterations : 2 
+   BlurSize : 5 
+   Thresh : 1 
+   ThreshMaxVal : 255 
+
+  }
+
+
+
+}

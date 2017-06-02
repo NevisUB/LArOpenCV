@@ -126,6 +126,7 @@ namespace larlite {
 
     for (size_t plane = 0; plane < _img_mgr.size(); ++plane) {
 
+
       auto const& img  = _img_mgr.img_at(plane);
       auto      & meta = _img_mgr.meta_at(plane);
       auto const& roi  = _img_mgr.roi_at(plane);
@@ -224,6 +225,8 @@ namespace larlite {
     for (size_t hindex = 0; hindex < ev_hit->size(); ++hindex) {
       
       auto const& h = (*ev_hit)[hindex];
+
+      if ( h.GoodnessOfFit() < 0 && _hit_removal )  continue;
 
       auto const& wid = h.WireID();
 
