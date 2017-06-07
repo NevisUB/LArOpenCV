@@ -91,14 +91,14 @@ namespace larocv {
       for(const auto& vtx : input_vertex_data_v)
 	vertex_data_v.push_back(&vtx);
     }
-    
+
+    _vtxid = -1;
     for(size_t vertex_id = 0; vertex_id < vertex_data_v.size(); ++vertex_id) {
       
       Clear();
 
-      _vtxid = vertex_id;
-      //std::cout<<"====>>>>Angle Analysis Starts<<<<====="<<std::endl;
-      //std::cout<<"============================================>>>>>>>>vertex id  "<<vertex_id<<std::endl;
+      LAROCV_DEBUG() << "====>>>>Angle Analysis Starts<<<<====="<<std::endl;
+      LAROCV_DEBUG() << "============================================>>>>>>>>vertex id  "<<vertex_id<<std::endl;
       const auto& vertex3d = vertex_data_v[vertex_id];
       
       _x = vertex3d->x;
@@ -111,6 +111,8 @@ namespace larocv {
       
       if(par_ass_id_v.size()==0) continue;
       _nparticles = par_ass_id_v.size();
+
+      _vtxid += 1;
       
       for(size_t plane =0; plane <=2; ++plane){
 	//std::cout<<"====>>>>Plane "<<plane<<"<<<<====="<<std::endl;
@@ -139,7 +141,7 @@ namespace larocv {
 	  //masked_ctor = MaskImage(masked_ctor,circle,0,false); 	
 	  masked_ctor_start = Threshold(masked_ctor_start, 10, 255);
 	  
-	  if ( FindNonZero(masked_ctor_start).size() <2 ) continue;
+	  if ( FindNonZero(masked_ctor_start).size() < 2 ) continue;
 	  
 	  auto masked_ctor_start_img = FindNonZero(masked_ctor_start);
 	  
@@ -310,6 +312,8 @@ namespace larocv {
       //if (_straightness>=2) _anglediff = *std::max_element(std::begin(_anglediff_v), std::end(_anglediff_v)); 
       _tree->Fill();
     }//loop of vertex   
+
+
     _roid += 1;
   }
 }
