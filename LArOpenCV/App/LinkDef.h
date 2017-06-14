@@ -10,8 +10,8 @@
 #pragma link off all functions;
 
 //#pragma link C++ class larlite::LArImageMaker+;
-#pragma link C++ class larlite::LArImageWire+;
-#pragma link C++ class larlite::LArImageHit+;
+//#pragma link C++ class larlite::LArImageWire+;
+//#pragma link C++ class larlite::LArImageHit+;
 #pragma link C++ class larlite::LArImageClusterBase+;
 //#pragma link C++ class larlite::LArDownImage+;
 //#pragma link C++ class larlite::MCGetter+;

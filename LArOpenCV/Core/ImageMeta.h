@@ -44,14 +44,11 @@ namespace larocv {
     ImageMeta(const double width=0., const double height=0.,
 	      const size_t width_npixel=0., const size_t height_npixel=0,
 	      const double origin_x=0., const double origin_y=0.,
-	      const size_t plane=::larocv::kINVALID_SIZE)
+	      const size_t plane=kINVALID_SIZE)
       : _origin(origin_x,origin_y)
       , _width(width)
       , _height(height)
       , _plane(plane)
-      , _debug(false)
-      , _roi_cropped(false)
-      , _score(100.)
     {
       if( width  < 0. ) throw larbys("Width must be a positive floating point!");
       if( height < 0. ) throw larbys("Height must be a positive floating point!");
@@ -93,16 +90,6 @@ namespace larocv {
     double XtoTimeTick(double x) const { return  ( (x + 0.5 ) * pixel_height() ) + _origin.y ; }
     /// convert from y variable to Wire
     double YtoWire(double y) const { return ( (y + 0.5)* pixel_width() ) + _origin.x ; }
-
-    float score() const { return _score; }
-
-    void set_debug(bool d) { _debug = d; }
-    const bool debug() const { return _debug; }
-    
-    void set_roi_cropped(bool d) { _roi_cropped = d; }
-    const bool roi_cropped() const { return _roi_cropped; }
-
-    void set_score(float the_score) { _score = the_score ; }
     
    protected:
 
@@ -113,13 +100,6 @@ namespace larocv {
     size_t _height_npixel;     ///< # of pixels in vertical axis
     size_t _plane;             ///< unique plane ID number
 
-    bool _debug;
-
-    bool _roi_cropped;
-
-    // Score per plane that represents ROI overlap with dead wires
-    float _score ;
-    
   };
 
 }

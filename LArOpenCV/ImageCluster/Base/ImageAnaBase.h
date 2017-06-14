@@ -83,7 +83,6 @@ namespace larocv {
 
     std::vector<std::vector<cv::Mat> >           _image_vv;
     std::vector<std::vector<larocv::ImageMeta> > _meta_vv;
-    std::vector<std::vector<larocv::ROI> >       _roi_vv;
     
   };
   

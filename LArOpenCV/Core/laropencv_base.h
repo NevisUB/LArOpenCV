@@ -1,17 +1,3 @@
-/**
- * \file laropencv_base.h
- *
- * \ingroup Core
- * 
- * \brief Class definition file of laropencv_base
- *
- * @author Kazu - Nevis 2015
- */
-
-/** \addtogroup Core
-
-    @{*/
-
 #ifndef __LAROPENCV_BASE_H__
 #define __LAROPENCV_BASE_H__
 

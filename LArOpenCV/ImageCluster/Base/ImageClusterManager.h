@@ -61,16 +61,13 @@ namespace larocv {
     /// Read-in configuration object & enforce configurations to algorithms
     void Configure(const Config_t& main_cfg);
     /// Add image data for executing LArOpenCV modules
-    void Add(::cv::Mat& img, const ImageMeta& meta, const ROI& roi,
-	     ImageSetID_t set_id = ImageSetID_t::kImageSetUnknown);
+    void Add(::cv::Mat& img, const ImageMeta& meta, ImageSetID_t set_id = ImageSetID_t::kImageSetUnknown);
     /// Execute algorithms to construct clusters + corresponding meta data
     bool Process();
     /// Finalize after multiple Process call
     void Finalize(TFile* file=nullptr);
     /// Accessor to a specific meta data constructed by an algorithm (via algorithm id)
     const ImageMeta& MetaData(const ImageID_t img_id, const AlgorithmID_t alg_id) const;
-    /// Accessor to a specific roi data constructed by an algorithm (via algorithm id)
-    const ROI& ROIData(const ImageID_t img_id, const AlgorithmID_t alg_id) const;
     /// Report process summary
     void Report() const;
     /// Original input image getter
@@ -79,8 +76,6 @@ namespace larocv {
     std::vector<cv::Mat>& OriginalInputImages(ImageSetID_t set_id=ImageSetID_t::kImageSetUnknown);
     /// Original image metadata getter
     const std::vector<ImageMeta>& InputImageMetas(ImageSetID_t set_id=ImageSetID_t::kImageSetUnknown) const;
-    /// Original image roi getter
-    const std::vector<ROI>& InputROIs(ImageSetID_t set_id=ImageSetID_t::kImageSetUnknown) const;
     /// Algorithm data manager accessor
     const data::AlgoDataManager& DataManager() const { return _algo_dataman; }
     /// Rune, SubRun, Event, & Entry  Setter
@@ -104,8 +99,6 @@ namespace larocv {
     std::vector<std::vector<cv::Mat> > _copy_img_vv;
     /// Array of metadata
     std::vector<std::vector<ImageMeta> > _raw_meta_vv;
-    /// Array of roidata 
-    std::vector<std::vector<ROI> > _raw_roi_vv;
     /// Boolean flag to measure process time + report
     bool _profile;
     /// Boolean flag to enable filter mode

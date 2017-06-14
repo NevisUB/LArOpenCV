@@ -18,7 +18,6 @@ INCFLAGS += $(shell recotool-config --includes)
 INCFLAGS += -I$(LARLITE_USERDEVDIR)
 INCFLAGS += -I$(LAROPENCV_BASEDIR)
 INCFLAGS += -I$(OPENCV_INCDIR)
-INCFLAGS += -I$(GEO2D_BASEDIR)
 
 # platform-specific options
 OSNAME          = $(shell uname -s)
@@ -33,8 +32,6 @@ LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_highgui -lopencv_imgcodecs 
 LDFLAGS += -L$(LARLITE_LIBDIR)
 LDFLAGS += -lLArOpenCV_ImageClusterBase
 LDFLAGS += -lLArOpenCV_Core
-LDFLAGS += -L$(GEO2D_LIBDIR)
-LDFLAGS += -lGeo2D_Core
 
 # call kernel specific compiler setup
 include $(LARLITE_BASEDIR)/Makefile/Makefile.${OSNAME}

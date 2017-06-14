@@ -13,21 +13,10 @@ namespace larocv {
     _meta_v.push_back(meta);
   }
 
-  void ImageManager::push_back(const ::cv::Mat& img, const larocv::ImageMeta& meta, const larocv::ROI& roi)
-  {
-    ::cv::Mat res;
-    img.copyTo(res);
-    
-    _mat_v.push_back(res);
-    _meta_v.push_back(meta);
-    _roi_v.push_back(roi);
-  }
-
   void ImageManager::emplace_back(cv::Mat&& img, larocv::ImageMeta&& meta)
   {
     _mat_v.push_back(std::move(img));
     _meta_v.push_back(std::move(meta));
-    _roi_v.push_back(larocv::ROI());
   }
 
   ::cv::Mat& ImageManager::img_at(size_t index)
@@ -42,14 +31,8 @@ namespace larocv {
     return _meta_v[index];
   }
 
-  ROI& ImageManager::roi_at(size_t index)
-  {
-    if(index >= _roi_v.size()) throw larbys("Requested roi data index exceeds available image count");
-    return _roi_v[index];
-  }
-
   void ImageManager::clear()
-  { _mat_v.clear(); _meta_v.clear(); _roi_v.clear();}
+  { _mat_v.clear(); _meta_v.clear(); }
 
 }
 #endif

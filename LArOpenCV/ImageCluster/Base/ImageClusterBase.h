@@ -21,7 +21,6 @@
 
 #include "ImageClusterFMWKInterface.h"
 #include "LArOpenCV/Core/ImageMeta.h"
-#include "LArOpenCV/Core/ROI.h"
 #include "LArOpenCV/Core/laropencv_base.h"
 #include "Watch.h"
 #include "ImageClusterTypes.h"
@@ -130,9 +129,6 @@ namespace larocv {
     /// Access method for a set of meta associated with images (by id)
     const std::vector<larocv::ImageMeta>& MetaArray(ImageSetID_t image_id=ImageSetID_t::kImageSetUnknown) const;
 
-    /// Access method for a set of ROI associated with images (by id)
-    const std::vector<larocv::ROI>& ROIArray(ImageSetID_t image_id=ImageSetID_t::kImageSetUnknown) const;
-
     /// Attach RSEE
     void AttachIDs(TTree* tree);
 
@@ -164,14 +160,11 @@ namespace larocv {
     data::AlgoDataManager* _dataman_ptr; ///< pointer collection to AlgoDataManager
 
     void SetData(const std::vector<std::vector<cv::Mat> >& image_vv,
-		 const std::vector<std::vector<larocv::ImageMeta> >& meta_vv,
-		 const std::vector<std::vector<larocv::ROI> >& roi_vv);
+		 const std::vector<std::vector<larocv::ImageMeta> >& meta_vv);
 
     std::vector<std::vector<cv::Mat> >           _image_vv;  ///< image data container
 
     std::vector<std::vector<larocv::ImageMeta> > _meta_vv; ///< meta data container
-    
-    std::vector<std::vector<larocv::ROI> >       _roi_vv; ///< ROI data container
 
     uint _run;    ///< a copy of the current run number
     uint _subrun; ///< a copy of the current subrun number

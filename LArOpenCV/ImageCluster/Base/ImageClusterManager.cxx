@@ -32,7 +32,6 @@ namespace larocv {
     _raw_img_vv.clear();
     _copy_img_vv.clear();
     _raw_meta_vv.clear();
-    _raw_roi_vv.clear();
     
     _cluster_alg_m.clear();
     
@@ -51,7 +50,6 @@ namespace larocv {
     _raw_img_vv.clear();
     _copy_img_vv.clear();
     _raw_meta_vv.clear();
-    _raw_roi_vv.clear();
   }
 
   std::vector<std::string> ImageClusterManager::GetClusterAlgNames() const
@@ -105,21 +103,6 @@ namespace larocv {
     }
 
     return _raw_meta_vv[(int)set_id];
-  }
-
-  const std::vector<ROI>& ImageClusterManager::InputROIs(ImageSetID_t set_id) const
-  {
-    if(_raw_roi_vv.empty()) 
-      throw larbys("No image available!");
-
-    if(set_id == ImageSetID_t::kImageSetUnknown)
-      throw larbys("ImageSetID_t::kImageSetUnknown not a valid id");
-    if((int)set_id >= (int)(_raw_roi_vv.size())) {
-      LAROCV_CRITICAL() << "Invalid image set id: " << (int)set_id << std::endl;
-      throw larbys();
-    }
-
-    return _raw_roi_vv[(int)set_id];
   }
 
   const ImageClusterBase* ImageClusterManager::GetClusterAlg(const AlgorithmID_t id) const
@@ -232,7 +215,7 @@ namespace larocv {
     
   }
 
-  void ImageClusterManager::Add( ::cv::Mat& img, const ImageMeta& meta, const ROI& roi, ImageSetID_t set_id)
+  void ImageClusterManager::Add( ::cv::Mat& img, const ImageMeta& meta, ImageSetID_t set_id)
   {
     if(set_id == ImageSetID_t::kImageSetUnknown) {
       LAROCV_CRITICAL() << "kImageSetUnknwon is not a valid ImageSetID_t value" << std::endl;
@@ -243,12 +226,10 @@ namespace larocv {
     _raw_img_vv.resize(set_idx+1);
     _copy_img_vv.resize(set_idx+1);
     _raw_meta_vv.resize(set_idx+1);
-    _raw_roi_vv.resize(set_idx+1);
     
     _raw_img_vv[set_idx].push_back(img);
     _copy_img_vv[set_idx].push_back(img.clone());
     _raw_meta_vv[set_idx].push_back(meta);
-    _raw_roi_vv[set_idx].push_back(roi);
   }
   
   bool ImageClusterManager::Process()
@@ -266,7 +247,6 @@ namespace larocv {
     // Sanity check of image dimensions
     for(size_t set_index=0; set_index < _copy_img_vv.size(); ++set_index) {
       auto const& copy_img_v = _copy_img_vv.at(set_index);
-      auto const& raw_roi_v  = _raw_roi_vv.at(set_index);
       auto const& raw_meta_v = _raw_meta_vv.at(set_index);
       
       LAROCV_DEBUG() << "Pre-Check image set: " << set_index << "\n";
@@ -276,7 +256,6 @@ namespace larocv {
 	LAROCV_DEBUG() << "  Pre-Check image index: " << img_index << "\n";
 	LAROCV_DEBUG() << "    # meta .... " << raw_meta_v.size() << "\n";
 	LAROCV_DEBUG() << "    # image ... " << copy_img_v.size() << "\n";
-	LAROCV_DEBUG() << "    # roi ....  " << raw_roi_v.size() << "\n";
       
 	auto const& meta = raw_meta_v.at(img_index);
 	auto& img  = copy_img_v.at(img_index);
@@ -297,7 +276,7 @@ namespace larocv {
       auto& alg_ptr    = _cluster_alg_v[alg_index];
       if(!alg_ptr) throw larbys("Invalid algorithm pointer!");
       
-      alg_ptr->SetData(_copy_img_vv, _raw_meta_vv, _raw_roi_vv);
+      alg_ptr->SetData(_copy_img_vv, _raw_meta_vv);
 
     }
     
