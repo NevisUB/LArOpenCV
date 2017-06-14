@@ -176,6 +176,7 @@ namespace larlite {
 	
     }   
 
+    int ctr = 0;
     for (auto const& h : *ev_hit) {
 
       auto const& wid = h.WireID();
@@ -198,13 +199,18 @@ namespace larlite {
 
       // skip the hit if it's out of range
       if (y >= nticks || x >= nwires) 
-	continue;
+       continue;
 
       double charge = h.Integral() / _charge_to_gray_scale;
       charge += (double)(mat.at<unsigned char>(x, y));
 
       if (charge >= 255.) charge = 255.;
-      if (charge < 0.) charge = 0.;
+      if (charge < 0.) charge = 0.; 
+      if (charge < 1) charge = 1; 
+
+      if ( wid.Plane == 1 ){
+       ctr ++; 
+      }
 
       mat.at<unsigned char>(x, y) = (unsigned char)((int)charge);
     }
@@ -220,6 +226,9 @@ namespace larlite {
 
 	::cv::Mat pooled(img.rows, img.cols / _pool_time_tick + 1, CV_8UC1,
 			 cvScalar(0.));
+
+	::cv::Mat pooled_meta(img.rows, img.cols / _pool_time_tick + 1, CV_8UC1,
+			 cvScalar(0.));
 	
 	for (int row = 0; row < img.rows; ++row) {
 	  uchar* p = img.ptr(row);
@@ -228,57 +237,33 @@ namespace larlite {
 	    int pp = *p++;
 
 	    auto& ch = pooled.at<uchar>(row, col / _pool_time_tick);
+	    auto& ch_meta = pooled_meta.at<uchar>(row, col / _pool_time_tick);
 
 	    int res = pp + (int)ch;
+
 	    if (res > 255) res = 255;
-	    ch = (uchar)res;
-	  }
+              ch = (uchar)res;
+
+            if ( pp > 0 ) 
+              ch_meta = uchar(int(ch_meta) + 1) ; 
+            
+       	  }
 	}
 
 	// old parameters
 	auto const& wire_range = wire_range_v[plane];
 	auto const& tick_range = tick_range_v[plane];
 
-
 	//copy pooled image into image
 	img = pooled;
 	meta = ::larocv::ImageMeta ((double)pooled.rows, (double)pooled.cols * _pool_time_tick,
 				    pooled.rows, pooled.cols, wire_range.first, tick_range.first, plane);
-	
+
+        meta.add_pool_meta(pooled_meta);
 
 	if (_debug) meta.set_debug(true);
 	if (_crop_w_roi) meta.set_roi_cropped(true);
 	
-	//	if (_make_roi){
-	//
-	//	  auto old_vtx = roi.roivtx();
-	//          auto old_bb  = roi.roibounds();
-	//
-	//	  auto delta_origin_t = (roi.origin().y - tick_range.first) / _pool_time_tick ;
-	//	  auto new_origin_t   = tick_range.first + delta_origin_t ; 
-	//
-	//	  roi = ::larocv::ROI( roi.width(), roi.height() / _pool_time_tick, roi.origin().x, new_origin_t, plane);
-	//
-	//	  auto delta_vtx_t = (old_vtx.y - tick_range.first) / _pool_time_tick ;
-	//	  auto new_vtx_t   = tick_range.first + delta_vtx_t ; 
-	//	
-	//	  roi.setvtx(old_vtx.x, new_vtx_t);
-	//
-	//          std::vector<larocv::Point2D> pool_bounds ;
-	//
-	//          // First entry is always the lower left corner (origin)
-	//          for(size_t b = 0; b < old_bb.size(); b++ ){
-	//
-	//            auto delta_bb_t = (old_bb[b].y - tick_range.first) / _pool_time_tick ;
-	//            auto new_bb_t   = tick_range.first + delta_bb_t ; 
-	//            pool_bounds.emplace_back(old_bb[b].x,new_bb_t);
-	//            std::cout<<pool_bounds[b].x<<", "<<pool_bounds[b].y<<std::endl ;
-	//
-	//            }   
-	//
-	//           roi.setbounds(pool_bounds);
-	//
-	//	}
       }
     }
   }

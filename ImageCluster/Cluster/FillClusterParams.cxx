@@ -43,6 +43,7 @@ namespace larocv {
       ocluster._sumCharge = 0 ;
       ocluster._angle2D   = min_rect.angle;
       ocluster._centerPt  = Point2D(min_rect.center.x,min_rect.center.y);
+      ocluster._num_hits_pool= 0 ;
     }
     
     std::vector<::cv::Point> all_locations;
@@ -59,7 +60,6 @@ namespace larocv {
       }
     else{ 
       all_locations = meta.get_locations(); 
-      
       for( size_t i = 0; i < oclusters.size(); i++ ){
         oclusters[i]._insideHits.clear() ;
         oclusters[i]._sumCharge = 0;
@@ -69,12 +69,16 @@ namespace larocv {
 
     //std::cout<<"Number of locations! "<<all_locations.size()<<std::endl; 
 
+    auto pool_meta = meta.get_pool_meta() ;
+
     for( const auto& loc: all_locations ) {
 
       for( size_t i = 0; i < oclusters.size(); i++ ) {
-          
+
           if ( ::cv::pointPolygonTest(oclusters[i]._contour,loc,false) < 0 ) 
             continue;
+          
+	  oclusters[i]._num_hits_pool += pool_meta.at<uchar>(loc.y, loc.x);
 	
 	  if( first_fill )
 	    meta.add_location(loc) ;
@@ -88,8 +92,12 @@ namespace larocv {
         }   
       }
 
-     // for( size_t i = 0; i < oclusters.size(); i++ ) 
-     //   std::cout<<"Number of hits "<<oclusters[i]._insideHits.size()<<std::endl ;
+      std::cout<<std::endl ;
+
+      //for( size_t i = 0; i < oclusters.size(); i++ ){ 
+      //  if( meta.plane() == 1 && oclusters[i]._num_hits_pool < 20 && oclusters[i]._num_hits_pool > 10)
+      //    std::cout<<"Number of hits "<<oclusters[i]._num_hits_pool<<std::endl ;
+      //}
 
     return oclusters;
   }

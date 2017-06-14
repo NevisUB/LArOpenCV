@@ -20,7 +20,7 @@ LArImageHit: {
   ROIBufferT : 108
   
   Q2Gray: 10
-  QMin: 5
+  QMin: 0 #5
 
   TimeOffset : 800
   WindowTMax : 9599 #9599MC #6399Data
@@ -83,6 +83,8 @@ ImageClusterManager: {
    MinCharge :-1
    MinLength : -1
    MinWidth : -1
+   UsePool: true
+   MinPoolHits : 10
 
   }
 

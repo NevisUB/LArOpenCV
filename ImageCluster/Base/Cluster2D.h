@@ -158,6 +158,9 @@ namespace larocv {
     /// Cluster distance to vertex
     float _dist_to_vtx ;
 
+    // Number of pooling-corrected hits
+    int _num_hits_pool ;
+
   private:
 
     ClusterID_t _cluster_id;
@@ -167,6 +170,7 @@ namespace larocv {
     Point2D _origin;
     double _pixel_width;
     double _pixel_height;
+
     
   };
 

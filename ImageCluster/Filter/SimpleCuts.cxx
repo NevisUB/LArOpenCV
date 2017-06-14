@@ -13,6 +13,8 @@ namespace larocv{
     _min_charge    = pset.get<int>("MinCharge");
     _min_length    = pset.get<float>("MinLength");
     _min_width     = pset.get<float>("MinWidth");
+    _pool          = pset.get<bool>("UsePool");
+    _min_pool_hits = pset.get<int>("MinPoolHits");
 				     
   }
 
@@ -25,12 +27,22 @@ namespace larocv{
 
     for(auto& cluster : clusters) {
 
+      if ( _pool && cluster._num_hits_pool < _min_pool_hits ) continue; 
+
       if (cluster._numHits() < _min_hits)      continue;
       if (cluster._perimeter < _min_area)      continue;
       if (cluster._area      < _min_perimeter) continue;
       if (cluster._sumCharge < _min_charge)    continue;
       if (cluster._length    < _min_length)    continue;
       if (cluster._width     < _min_width)     continue;
+
+      // Debug
+      //if (cluster._numHits() < 20 ){
+      //  std::cout<<"CLUSTER NHITS: "<<cluster._numHits()<<", plane: "<<meta.plane()<<std::endl ;
+      //    for( size_t i = 0; i < cluster._insideHits.size(); i++ ) 
+      //      std::cout<< cluster._insideHits[i].x<<", " <<cluster._insideHits[i].y <<", "; 
+      //   std::cout<<std::endl ;
+      //}
       
       oclusters.emplace_back(cluster);
       

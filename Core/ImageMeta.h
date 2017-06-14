@@ -114,6 +114,11 @@ namespace larocv {
     std::vector<::cv::Point> get_locations() { return _all_locations ; }
 
     void clear_locations() { _all_locations.clear() ; }
+
+    // Adding information about pooling; how many original hits existed for every pixel?
+    void add_pool_meta( const ::cv::Mat& mat ){ _pool_meta = mat ; }
+
+    const ::cv::Mat get_pool_meta() { return _pool_meta ; }
     
    protected:
 
@@ -134,6 +139,9 @@ namespace larocv {
     float _score ;
 
     std::vector<::cv::Point> _all_locations ;
+
+    // Adding info about pooling
+    ::cv::Mat _pool_meta ;
     
   };
 

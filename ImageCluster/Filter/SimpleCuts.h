@@ -35,6 +35,8 @@ namespace larocv {
       ,_min_charge(-1)
       ,_min_length(-1)
       ,_min_width(-1)
+      ,_min_pool_hits(-1)
+      ,_pool(false)
       
     {}    
     
@@ -62,7 +64,11 @@ namespace larocv {
     int _min_charge;
     float _min_length;
     float _min_width;
-    
+
+    // Add option to use pool-correct n hits
+    bool _pool ;
+    int _min_pool_hits ;
+
   };
   
   /**
