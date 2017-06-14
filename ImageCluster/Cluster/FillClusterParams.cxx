@@ -49,13 +49,17 @@ namespace larocv {
     std::vector<::cv::Point> all_locations;
     bool first_fill = false ;
 
+    auto pool_meta = meta.get_pool_meta() ;
+
     // The point of this check is to prevent very small clusters
     // which have been removed by the first SimpleCuts from entering 
     // the potential merging pool.  Without this check, we sometimes see clusters
     // which are decently clustered, but merged with a distant small clump of
     // 2/3 hits during merge stage. This in turn screws up matching.
     if ( !meta.get_locations().size() ){
-      ::cv::findNonZero(img, all_locations); 
+                          
+      ::cv::findNonZero(pool_meta, all_locations); 
+      //::cv::findNonZero(img, all_locations); 
       first_fill = true; 
       }
     else{ 
@@ -64,19 +68,17 @@ namespace larocv {
         oclusters[i]._insideHits.clear() ;
         oclusters[i]._sumCharge = 0;
 	 }
-       
       }
 
-    //std::cout<<"Number of locations! "<<all_locations.size()<<std::endl; 
-
-    auto pool_meta = meta.get_pool_meta() ;
+    //std::cout<<"FillClusterParams Number of locations! "<<all_locations.size()<<std::endl; 
 
     for( const auto& loc: all_locations ) {
-
+      
       for( size_t i = 0; i < oclusters.size(); i++ ) {
 
-          if ( ::cv::pointPolygonTest(oclusters[i]._contour,loc,false) < 0 ) 
+          if ( ::cv::pointPolygonTest(oclusters[i]._contour,loc,false) < 0 ){
             continue;
+	  } 
           
 	  oclusters[i]._num_hits_pool += pool_meta.at<uchar>(loc.y, loc.x);
 	
@@ -92,11 +94,13 @@ namespace larocv {
         }   
       }
 
-      std::cout<<std::endl ;
-
       //for( size_t i = 0; i < oclusters.size(); i++ ){ 
-      //  if( meta.plane() == 1 && oclusters[i]._num_hits_pool < 20 && oclusters[i]._num_hits_pool > 10)
-      //    std::cout<<"Number of hits "<<oclusters[i]._num_hits_pool<<std::endl ;
+      //  if( oclusters[i]._num_hits_pool >= 10 ) 
+      //    std::cout<<"FillClusterParams Number of hits "<<oclusters[i]._num_hits_pool<<", "<<meta.plane()<<std::endl ;
+      //  if( oclusters[i]._num_hits_pool == 19 && meta.plane() == 0){
+      //    for ( auto const & c : oclusters[i]._contour )
+      //      std::cout<<c.x<<", "<<c.y<<",";
+      //  }
       //}
 
     return oclusters;

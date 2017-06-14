@@ -64,7 +64,7 @@ namespace larlite {
 
   bool LArImageClusterBase::analyze(storage_manager* storage) {
     
-    //std::cout<<"\n\nOn event: "<<_event <<std::endl ;
+    std::cout<<"\n\nOn event: "<<_event <<std::endl ;
     _event++ ;
 
     _img_mgr.clear();
@@ -125,7 +125,6 @@ namespace larlite {
       ev_user = storage->get_data<event_user>("ImageClusterHit");
 
     for (size_t plane = 0; plane < _img_mgr.size(); ++plane) {
-
 
       auto const& img  = _img_mgr.img_at(plane);
       auto      & meta = _img_mgr.meta_at(plane);
@@ -218,6 +217,7 @@ namespace larlite {
     // vector to store
     AssSet_t cluster_hit_ass;
     cluster_hit_ass.reserve(_num_clusters);
+    //std::cout<<"LArImageClusterBase, about to store clusters and peace out... "<<std::endl ;
     
     for (auto& ass_unit : temp_cluster_hit_ass)
       ass_unit.reserve(100);
@@ -242,9 +242,15 @@ namespace larlite {
       temp_cluster_hit_ass[cid].push_back(hindex);
       
     }// for all hits
-    
+    int test_id = -1;
     for(auto & temp_cluster_hit_a : temp_cluster_hit_ass) {
+      test_id ++ ;
       if (!temp_cluster_hit_a.size()) continue;
+
+      //if ( temp_cluster_hit_a.size() >= 10 ) { //<= 20){ 
+      //  auto const& im = alg_mgr.Cluster(test_id);
+      //  std::cout<<"ImageCluster hit size: "<<temp_cluster_hit_a.size()<<", "<<im.PlaneID()<<std::endl ;
+      //}
       cluster_hit_ass.emplace_back(temp_cluster_hit_a); // do not std::move it, we need to check nonzero later
     }
     auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");

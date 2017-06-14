@@ -365,6 +365,17 @@ namespace larocv {
 	 }
         }
 
+      
+//      if ( lowest_plane != -1 ){
+//        auto middle_score = lowest_plane == 0 ? meta_per_plane[1][0]->score() : meta_per_plane[0][0]->score() ;
+//
+//        // If the scores are both pretty decent and aren't that different
+//        if (lowest_plane_score > 0.825 && fabs(middle_score - lowest_plane_score) > 0.075) {
+//          lowest_plane_score = 10;
+//          lowest_plane = -1;
+//          }
+//	}
+
       //std::cout<<" lower plane score and plane : "<<lowest_plane_score<<", "<<lowest_plane<<std::endl ;
 
       std::vector<size_t> seed; seed.reserve(c_per_plane.size());
@@ -565,19 +576,26 @@ namespace larocv {
 
       LAROCV_DEBUG((*this))<<"Inspecting a point ("<<x<<","<<y<<") ... ";
     
-      auto pt = ::cv::Point2d((y-origin.y)/meta.pixel_height(), (x-origin.x)/meta.pixel_width()); 
-
+      auto pt = ::cv::Point2d( ((size_t)(y+0.5)-origin.y)/meta.pixel_height(),  (x-origin.x)/meta.pixel_width()); 
+      
       LAROCV_DEBUG((*this)) <<"pt...("<<pt.x<<","<<pt.y<<")"<<std::endl;
       
       for(size_t id=0; id<clusters.size(); ++id) {
 	
 	auto const& c = clusters[id];
+
 	// The contour points are stored as integers, while hits have 3 point precision in x.
 	// Need hit x to be integer for fair comparison.
 	pt.x = int(pt.x);
 	double inside = ::cv::pointPolygonTest(c._contour,pt,false);
-      
+
 	if(inside < 0) continue;
+
+        //if ( meta.plane() == 0 && c._num_hits_pool ==19) { 
+          //std::cout<<pt.x<<", "<<pt.y<<", ";
+	  //for ( auto const & p : c._contour) 
+          //  std::cout<<p.x<<", "<<p.y<<", ";
+	  //}
 
 	result = c.ClusterID();
 

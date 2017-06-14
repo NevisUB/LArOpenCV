@@ -261,6 +261,16 @@ namespace larlite {
 
         meta.add_pool_meta(pooled_meta);
 
+        //if ( plane == 1 ){
+        //  std::vector<::cv::Point> all_locations;
+        //  ::cv::findNonZero(img, all_locations);
+        //  std::cout<<"\n\n\n\nIMAGE LOCS :" <<all_locations.size()<<", "<<ctr<<std::endl ;
+        //  for( const auto& loc: all_locations ) 
+        //     std::cout<<loc.x<<", "<<loc.y<<", ";
+        //} 
+
+
+
 	if (_debug) meta.set_debug(true);
 	if (_crop_w_roi) meta.set_roi_cropped(true);
 	

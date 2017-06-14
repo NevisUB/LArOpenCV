@@ -136,6 +136,9 @@ ImageClusterManager: {
    MinCharge :-1
    MinLength : -1
    MinWidth : -1
+
+   UsePool: true
+   MinPoolHits : 10
    
   }
 
