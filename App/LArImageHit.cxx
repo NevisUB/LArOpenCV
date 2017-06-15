@@ -100,6 +100,11 @@ namespace larlite {
 	tick_range.second = peak_time + 1;
     }
 
+    // We will store the number of hits per pixel (per plane) here; this affects hit comparison 
+    // between mat object and ev_hit data product at later stage. It is preferable
+    // that these 2 numbers match
+    std::vector<::cv::Mat> orig_img_v ; 
+
     for (size_t plane = 0; plane < nplanes; ++plane) {
 
       auto & wire_range = wire_range_v[plane];
@@ -166,7 +171,9 @@ namespace larlite {
       
       if (_debug) meta.set_debug(true);
       if (_crop_w_roi) meta.set_roi_cropped(true);
-      
+
+      orig_img_v.emplace_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)) );
+
       // no matter what we have to send ROI... it can go to the algorithm blank, that's fine
       // If we don't want to use ROI, need to pass blanks
       if (nwires >= 1e10 || nticks >= 1e10)
@@ -176,7 +183,6 @@ namespace larlite {
 	
     }   
 
-    int ctr = 0;
     for (auto const& h : *ev_hit) {
 
       auto const& wid = h.WireID();
@@ -186,6 +192,7 @@ namespace larlite {
       if ( _hit_removal && h.GoodnessOfFit() < 0 ) continue;
 
       auto& mat = _img_mgr.img_at(wid.Plane);
+      auto& orig_mat = orig_img_v.at(wid.Plane);
 
       // continue;
       auto const& wire_range = wire_range_v[wid.Plane];
@@ -201,6 +208,7 @@ namespace larlite {
       if (y >= nticks || x >= nwires) 
        continue;
 
+      // Fill image with charge information
       double charge = h.Integral() / _charge_to_gray_scale;
       charge += (double)(mat.at<unsigned char>(x, y));
 
@@ -208,11 +216,12 @@ namespace larlite {
       if (charge < 0.) charge = 0.; 
       if (charge < 1) charge = 1; 
 
-      if ( wid.Plane == 1 ){
-       ctr ++; 
-      }
-
       mat.at<unsigned char>(x, y) = (unsigned char)((int)charge);
+
+      // Also keep track of the number of hits per pixel 
+      int n = (int)(orig_mat.at<unsigned char>(x, y)) + 1;
+      orig_mat.at<unsigned char>(x, y) = (unsigned char)(n);
+
     }
 
     // normalize the tick range
@@ -223,6 +232,7 @@ namespace larlite {
 	auto& img  = _img_mgr.img_at(plane);
 	auto& meta = _img_mgr.meta_at(plane);
 	//auto& roi  = _img_mgr.roi_at(plane);
+        auto orig_img = orig_img_v.at(plane) ;
 
 	::cv::Mat pooled(img.rows, img.cols / _pool_time_tick + 1, CV_8UC1,
 			 cvScalar(0.));
@@ -232,23 +242,27 @@ namespace larlite {
 	
 	for (int row = 0; row < img.rows; ++row) {
 	  uchar* p = img.ptr(row);
+	  uchar* p_pool = orig_img.ptr(row);
 
 	  for (int col = 0; col < img.cols; ++col) {
 	    int pp = *p++;
+	    int pp_pool = *p_pool++;
 
 	    auto& ch = pooled.at<uchar>(row, col / _pool_time_tick);
-	    auto& ch_meta = pooled_meta.at<uchar>(row, col / _pool_time_tick);
 
 	    int res = pp + (int)ch;
 
 	    if (res > 255) res = 255;
               ch = (uchar)res;
 
-            if ( pp > 0 ) 
-              ch_meta = uchar(int(ch_meta) + 1) ; 
+	    auto& ch_meta = pooled_meta.at<uchar>(row, col / _pool_time_tick);
+
+            if ( pp_pool > 0 ) 
+              ch_meta = uchar(int(ch_meta) + pp_pool); //1) ; 
             
        	  }
 	}
+
 
 	// old parameters
 	auto const& wire_range = wire_range_v[plane];
@@ -260,16 +274,6 @@ namespace larlite {
 				    pooled.rows, pooled.cols, wire_range.first, tick_range.first, plane);
 
         meta.add_pool_meta(pooled_meta);
-
-        //if ( plane == 1 ){
-        //  std::vector<::cv::Point> all_locations;
-        //  ::cv::findNonZero(img, all_locations);
-        //  std::cout<<"\n\n\n\nIMAGE LOCS :" <<all_locations.size()<<", "<<ctr<<std::endl ;
-        //  for( const auto& loc: all_locations ) 
-        //     std::cout<<loc.x<<", "<<loc.y<<", ";
-        //} 
-
-
 
 	if (_debug) meta.set_debug(true);
 	if (_crop_w_roi) meta.set_roi_cropped(true);
