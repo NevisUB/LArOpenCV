@@ -38,8 +38,8 @@ ImageClusterManager: {
   #ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,UpdateMeta,FlashlightMerge,FillClusterParams,SimpleCuts,VertexInHull,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
   #ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,um,fm,fcp2,sc2,vih2,sep,ca,cwires,cwo]
 
-  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,UpdateMeta,FlashlightMerge,FillClusterParams,SimpleCuts,VertexInHull,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
-  ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,um,fm,fcp2,sc2,vih2,sep,ca,cwires,cwo]
+  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,FlashlightMerge,FillClusterParams,SimpleCuts,VertexInHull,SimpleEndPoint,CheckAlignment,CheckWires,ClusterWriteOut]
+  ClusterAlgoName: [pc,fcp1,sc,fr,brd,brs,roip,vih,fm,fcp2,sc2,vih2,sep,ca,cwires,cwo]
 
   ShowImage: false
 
