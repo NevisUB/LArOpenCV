@@ -27,10 +27,10 @@ namespace larocv {
 	throw larbys("Given ParticleCluster name is INVALID!");
     }
     
-    _vertex_algo_offset = kINVALID_SIZE;
+    _vertex_algo_offset           = kINVALID_SIZE;
     _particle_cluster_algo_offset = kINVALID_SIZE;
     
-    _vertex_algo_offset = pset.get<size_t>("VertexAlgoOffset");
+    _vertex_algo_offset           = pset.get<size_t>("VertexAlgoOffset");
     _particle_cluster_algo_offset = pset.get<size_t>("ParticleClusterAlgoOffset");
 
     _match_coverage            = pset.get<float>("MatchCoverage",0.5);

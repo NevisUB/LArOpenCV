@@ -316,5 +316,65 @@ namespace larocv {
 
     _roid += 1;
   }
+
+  void AngleAnalysis::ParticleAngle(GEO2D_Contour_t ctor_origin, 
+				    GEO2D_Contour_t ctor, 
+				    geo2d::Circle<float> circle, 
+				    double& pct, double& angle){
+    
+    float vtx2d_x =  circle.center.x;
+    float vtx2d_y =  circle.center.y;
+    
+    for(size_t idx= 0;idx < ctor.size(); ++idx){
+      ctor[idx].x =  ctor[idx].x- circle.center.x;
+      ctor[idx].y =  ctor[idx].y- circle.center.y;
+    }
+    
+    auto meanx = Getx2vtxmean(ctor_origin, vtx2d_x, vtx2d_y, pct );
+    auto meany = Gety2vtxmean(ctor_origin, vtx2d_x, vtx2d_y, pct );
+    
+    auto dir = CalcPCA(ctor).dir;
+
+    if(meanx * dir.x < 0 || meany* dir.y <0) {dir.x *=-1; dir.y*=-1;}
+    
+    angle = atan2(dir.y, dir.x)*180 / M_PI;
+
+    if (angle < 0) angle += 360;
+
+  }
+
+  double AngleAnalysis::Getx2vtxmean(GEO2D_Contour_t ctor, float x2d, float y2d, double& pct)
+  {
+    double ctr_pos = 0.0;
+    double ctr_neg = 0.0;
+    double sum = 0;
+    double mean = -999;
+    for(size_t idx= 0;idx < ctor.size(); ++idx){
+      sum += ctor[idx].x - x2d;
+      if (ctor[idx].x - x2d > 0) ctr_pos++;
+      if (ctor[idx].x - x2d < 0) ctr_neg++;
+    }
+    pct = std::abs(ctr_pos - ctr_neg)/ctor.size();
+    if (ctor.size()>0) mean = sum / ctor.size();
+    return mean;
+  }
+  
+  double AngleAnalysis::Gety2vtxmean(GEO2D_Contour_t ctor, float x2d, float y2d, double& pct)
+  {
+    double ctr_pos = 0.0;
+    double ctr_neg = 0.0;
+    double sum = 0;
+    double mean = -999;
+    for(size_t idx= 0;idx < ctor.size(); ++idx){
+      sum += ctor[idx].y - y2d;
+      if (ctor[idx].y - y2d > 0) ctr_pos++;
+      if (ctor[idx].y - y2d < 0) ctr_neg++;
+    }
+    pct = std::abs(ctr_pos - ctr_neg)/ctor.size();
+    if (ctor.size()>0) mean = sum / ctor.size();
+    return mean;
+  }  
+
+  
 }
 #endif

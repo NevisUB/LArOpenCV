@@ -29,18 +29,27 @@ namespace larocv {
       { Clear(); }
       ~ParticleCluster() {}
       
-      void _Clear_() { _ctor.clear(); type=ParticleType_t::kUnknown; _vertex_dqds.clear(); _end_point.x =-9999; _end_point.y = -9999; }
+      void _Clear_() {
+	type=ParticleType_t::kUnknown;
+	_ctor.clear();
+	_vertex_dqds.clear();
+	_end_point.x = -9999;
+	_end_point.y = -9999;
+      }
       
+      ParticleType_t type; ///< particle type from enum
       GEO2D_Contour_t _ctor; ///< contour to define a cluster
-      ParticleType_t type;
+      
+      // Ruis stuff
       double _angle;
 
-      geo2d::Circle<float> _circle;
       geo2d::Line<float> _pca;
+      geo2d::Circle<float> _circle;
       
-      std::vector<float> _vertex_dqds;
       float _dqds_mean;
-      geo2d::Vector<float> _end_point;//last scanned radius from angleanalysis      
+      std::vector<float> _vertex_dqds;
+      geo2d::Vector<float> _end_point; // last scanned radius from angleanalysis
+      
     };
 
     /**
@@ -52,16 +61,13 @@ namespace larocv {
       Particle() : AlgoDataArrayElementBase()
       { Clear(); }
       ~Particle() {}
-
       void _Clear_() { type = ParticleType_t::kUnknown; _par_v.clear(); _par_v.resize(3);}
 
-      ParticleType_t type;
+      ParticleType_t type; //< type of particle
       
-      // Particle cluster per plane, can be empty
-      std::vector<ParticleCluster> _par_v;
-
-      // Score
-      float score;
+      std::vector<ParticleCluster> _par_v; ///< Particle cluster per plane, can be empty
+      float score; ///< score
+      
       
     };
     

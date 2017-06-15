@@ -3,9 +3,10 @@
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
+#include "Geo2D/Core/Circle.h"
 
 /*
-  @brief: Calculate Δangle of two coming particles
+  @brief: Calculate dangle of two coming particles
 */
 namespace larocv {
  
@@ -62,6 +63,17 @@ namespace larocv {
     std::vector<double> _anglediff_v;//Per plane
     std::vector<double> _angle_particles;
     int _straightness;
+
+    
+    
+    void ParticleAngle(GEO2D_Contour_t ctor_origin, 
+		       GEO2D_Contour_t ctor, 
+		       geo2d::Circle<float> circle, 
+		       double& pct, double& angle);
+    
+    double Getx2vtxmean(GEO2D_Contour_t ctor, float x2d, float y2d, double& pct);
+    double Gety2vtxmean(GEO2D_Contour_t ctor, float x2d, float y2d, double& pct);
+    
   };
 
   class AngleAnalysisFactory : public AlgoFactoryBase {

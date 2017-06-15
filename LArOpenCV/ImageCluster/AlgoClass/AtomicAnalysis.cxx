@@ -31,7 +31,6 @@ namespace larocv {
     _atomic_contour_pad = pset.get<float>("AtomicContourPad",3.);
     
   }
-
   
   double
   AtomicAnalysis::DistanceAtom2Point(const data::AtomicContour& atom,

@@ -175,10 +175,10 @@ namespace larocv {
       if (track_iter  == _track_frac_v.end())  throw larbys("Bad Track found");
       if (shower_iter == _shower_frac_v.end()) throw larbys("Bad Shower found");
       
-      _track_par_max_id  = track_iter - _track_frac_v.begin();
+      _track_par_max_id  = track_iter  - _track_frac_v.begin();
       _shower_par_max_id = shower_iter - _shower_frac_v.begin();
       
-      _track_par_max_frac = *track_iter;
+      _track_par_max_frac  = *track_iter;
       _shower_par_max_frac = *shower_iter;
 
       std::vector<int> par_type_v(_nparticles,-1.0 * kINVALID_INT);
