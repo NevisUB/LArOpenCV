@@ -1,0 +1,187 @@
+LArImageHit: {
+  Verbosity: 2
+  
+  # LArImageClusterBase config
+  Profile: true
+  StoreOriginalImage: false
+  Producer: gaushit 
+  UseHitRemoval: true
+
+  # LArImageHit config
+  PoolTimeTick: 6 
+  
+  VertexProducer: mcvertex #numuCC_vertex  #mcvertex #numuCC_vertex 
+  Debug: true
+
+  MakeROI: true
+  CropROI: true
+  
+  ROIBufferW : 100
+  ROIBufferT : 100
+  
+  Q2Gray: 10
+  QMin: 5
+
+  TimeOffset : 800
+  WindowTMax : 9599 #MC #6399Data
+  WindowTMin : 0
+
+  MatchPlaneWeights : [1,1,1] #plane 0,1,2
+
+  MaxPixelIntensity : true
+
+}
+ImageClusterManager: {
+
+  Verbosity: 2
+  Profile:   true
+
+  ClusterAlgoType: [PolarCluster,FillClusterParams,SimpleCuts,FilterROI,BoundingRectDir,BoundRectStart,ROIParameters,VertexInHull,UpdateMeta,VtxAlignedMerge,FillClusterParams,SimpleCuts,VertexInHull,SimpleEndPoint,ClusterWriteOut]#,CheckAlignment,CheckWires,ClusterWriteOut]
+  ClusterAlgoName: [polarcluster,fillCP1,simplecuts,filterroi,boundingrectdir,boundingrectstart,roiparameters,vertexinhull,updatemeta,vertexalignedmerge,fillCP2,simplecuts2,vertexinhull2,simpleendpoint,clusterwriteout]#ca,cwires,cwo]
+
+  ShowImage: false
+
+  MatchAlgoType: "IoUOverlap"
+  MatchAlgoName: "iouo"
+
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
+  EnableWireCheck : true
+  UseOnlyTwoPlanes : 1
+  RequirePlane : 2
+
+ ImageClusterViewer: {
+
+   Verbosity: 2
+   Width:  800
+   Height: 800
+   MinContourArea: 0
+   
+ }
+ 
+ cl : {}
+
+ s2p : {}
+
+ updatemeta : {}
+
+ vertexalignedmerge : {
+     Debug: false
+     MaxAngleDiffMerge: 12
+     MinGammaGammaOAngle: 15
+     MergeTillConverge: false #true
+     }	
+
+ iouo : {
+   IOUScore: 0.25
+   HitRatio: 0.2
+   Debug: false
+ }
+
+ ca : {
+   RatioCut : 0.71
+   MinDist  : 12.
+   UseStartEnd: 1 #else use direction of first flashlight
+  }
+  simplecuts2 : {
+   MinHits : 100
+   MinArea : -1
+   MinPerimieter : -1
+   MinCharge :-1
+   MinLength : -1
+   MinWidth : -1
+  }
+
+  cwires : {
+   DeadWirePath : "dead_wires.fcl"
+  }
+
+ boundingrectdir : {}
+
+ simpleendpoint : {}
+
+ fm : {
+   Keep : 100
+   TriAngle : 5
+   TriLen : 50
+  }
+
+  fillCP1: {
+  	Carthesian : true
+  	}
+  fillCP2: {
+  	Carthesian : false
+  	}
+
+ vertexinhull : {}
+ vertexinhull2 : {}
+
+ ac : {
+  MaxDefectSize : 9999
+  HullContourAreaRatio : 0.5
+ }
+
+ filterroi : {
+   Verbosity : 2
+ }
+
+ sbc : {
+   Verbosity: 2
+   DilationSize : 5
+   DilationIterations : 2
+   BlurSize : 5
+   Thresh : 1
+   ThreshMaxVal : 255
+  }
+
+  pcao: { }
+
+  simplecuts : {
+   MinHits : 20
+   MinArea : -1
+   MinPerimieter : -1
+   MinCharge :-1
+   MinLength : -1
+   MinWidth : -1
+  }
+
+  clusterwriteout : {
+  Verbosity : 2
+  }
+
+  rp : {}
+  roiparameters : {}
+
+   boundingrectstart : {
+
+    UseROIVertex: true
+    CutBadReco : 1
+    NDivWidth : 2
+    
+  } 
+
+  hpts: {
+    Rho: 1.0
+    Theta: -1
+    Threshold: 75
+    MinLineLength: 80
+    MaxLineGap: 10
+  }
+
+ polarcluster : {
+   Verbosity: 2
+   DilationSize : 3#10
+   DilationIterations : 3
+   BlurSizeR : 3
+   BlurSizeT : 2
+   Thresh : 1
+   ThreshMaxVal : 255
+  }
+
+   mto : { 
+      RatioCut : 0.001
+      StartTimeCut : 100 
+      RequireThreePlanes : 0 
+   }   
+
+}

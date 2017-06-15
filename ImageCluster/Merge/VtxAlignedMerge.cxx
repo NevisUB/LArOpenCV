@@ -266,7 +266,7 @@ namespace larocv{
       
     }// while merge is true
 
-    std::cout << "IN : " << clusters.size() << "\t OUT : " << out_clusters.size() << std::endl;
+    if (_debug) std::cout << "IN : " << clusters.size() << "\t OUT : " << out_clusters.size() << std::endl;
     
     return out_clusters;
   }

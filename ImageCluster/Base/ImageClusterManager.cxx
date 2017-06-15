@@ -217,8 +217,8 @@ namespace larocv {
     std::cout << "  ================== " << Name() << " Profile Report ==================" << std::endl
 	      << "  # Process call = " << _process_count << " ... Total time = " << _process_time << " [s]" << std::endl;
     for(auto const& ptr : _cluster_alg_v) {
-      std::cout << Form("  \033[93m%-20s\033[00m ... # call %-5zu ... total time %g [s] ... average time %g [s/process]",
-			ptr->Name().c_str(), ptr->ProcessCount(), ptr->ProcessTime(), ptr->ProcessTime() / (double)(ptr->ProcessCount()))
+      std::cout << Form("  \033[93m%-20s\033[00m ... # call %-5zu ... total time %g [s] ... average time %g [ms/process]",
+			ptr->Name().c_str(), ptr->ProcessCount(), ptr->ProcessTime(), 1000. * ptr->ProcessTime() / (double)(ptr->ProcessCount()))
 		<< std::endl;
     }
     

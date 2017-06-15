@@ -1,8 +1,8 @@
 import sys
 
-if len(sys.argv) < 2:
+if len(sys.argv) < 4:
     msg  = '\n'
-    msg += "Usage 1: %s $INPUT_ROOT_FILE(s)\n" % sys.argv[0]
+    msg += "Usage : python %s CONFIG.fcl processname $INPUT_ROOT_FILE(s)\n" % sys.argv[0]
     msg += '\n'
     sys.stderr.write(msg)
     sys.exit(1)
@@ -29,8 +29,11 @@ myunit = fmwk.LArImageHit()
 myunit.set_config(cfg)
 my_proc.add_process(myunit)
 
-#my_proc.run()
-my_proc.run(1,1)
+my_proc.set_data_to_write(fmwk.data.kCluster,    "ImageClusterHit")
+my_proc.set_data_to_write(fmwk.data.kPFParticle, "ImageClusterHit")
+my_proc.set_data_to_write(fmwk.data.kAssociation,"ImageClusterHit")
+
+my_proc.run()
              
 
 sys.exit(0)

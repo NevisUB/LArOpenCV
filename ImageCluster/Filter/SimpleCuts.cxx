@@ -23,7 +23,12 @@ namespace larocv{
 
     Cluster2DArray_t oclusters; oclusters.reserve(clusters.size());
 
+    std::cout << "Simple Cluster Run" << std::endl;
+
     for(auto& cluster : clusters) {
+
+      std::cout << "cluster @ plane " << cluster.PlaneID() << " with "
+		<< cluster._numHits() << "\t hits" << std::endl;
 
       if (cluster._numHits() < _min_hits)      continue;
       if (cluster._area      < _min_area)      continue;
@@ -31,6 +36,8 @@ namespace larocv{
       if (cluster._sumCharge < _min_charge)    continue;
       if (cluster._length    < _min_length)    continue;
       if (cluster._width     < _min_width)     continue;
+
+      std::cout << "kept!" << std::endl << std::endl;
       
       oclusters.emplace_back(cluster);
       
