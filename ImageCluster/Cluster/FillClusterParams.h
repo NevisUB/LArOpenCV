@@ -34,6 +34,9 @@ namespace larocv {
 				      larocv::ROI& roi);
     
   private:
+
+  bool _pool ;
+
   };
 
   /**

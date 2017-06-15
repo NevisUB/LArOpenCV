@@ -25,9 +25,14 @@ namespace larocv{
 
     Cluster2DArray_t oclusters; oclusters.reserve(clusters.size());
 
+    Cluster2DArray_t remove_clus; remove_clus.reserve(clusters.size());
+
     for(auto& cluster : clusters) {
 
-      if ( _pool && cluster._num_hits_pool < _min_pool_hits ) continue; 
+      if ( _pool && cluster._num_hits_pool < _min_pool_hits ){
+        remove_clus.emplace_back(cluster);
+        continue; 
+      }
 
       if (cluster._numHits() < _min_hits)      continue;
       if (cluster._perimeter < _min_area)      continue;
@@ -36,18 +41,59 @@ namespace larocv{
       if (cluster._length    < _min_length)    continue;
       if (cluster._width     < _min_width)     continue;
 
-      // Debug
-      //if (cluster._numHits() < 20 ){
-      //  std::cout<<"CLUSTER NHITS: "<<cluster._numHits()<<", plane: "<<meta.plane()<<std::endl ;
-      //    for( size_t i = 0; i < cluster._insideHits.size(); i++ ) 
-      //      std::cout<< cluster._insideHits[i].x<<", " <<cluster._insideHits[i].y <<", "; 
-      //   std::cout<<std::endl ;
-      //}
-      
       oclusters.emplace_back(cluster);
       
     }    
-    
+
+    // Great! We've filtered. But we don't want to lose the hits associated to small clusters
+    // that overlap with the removed clusters. To solve, we loop through all the hits of removed
+    // clusters, and check whether they fall inside any other contour
+    std::vector<::cv::Point> all_locations;
+
+    for(auto& cluster : remove_clus) {
+      for(auto& loc : cluster._insideHits) 
+         all_locations.emplace_back(::cv::Point(loc.x,loc.y));
+    }
+   
+    ::cv::Mat pool_meta = img;
+
+    if ( _pool )
+      pool_meta = meta.get_pool_meta() ;
+
+    for( const auto& loc: all_locations ) {
+
+      for(auto& cluster : oclusters) {
+
+        if ( ::cv::pointPolygonTest(cluster._contour,loc,false) < 0 ) continue;
+
+        if( _pool )
+          cluster._num_hits_pool += pool_meta.at<uchar>(loc.y, loc.x);
+
+        cluster._insideHits.emplace_back(loc.x, loc.y);
+        cluster._sumCharge += (int) img.at<uchar>(loc.y, loc.x);
+
+        // When point is found in contour, no others are checked; avoids double counting
+        // Requires SimpleCuts to the alg chain after this; may have clusters with 0 hits
+        break;
+      }
+    }
+
+    // Finally, reset the image grid to contain info about only the hits 
+    // left in current clusters (eg, clusters with only 2/3 hits are removed above; 
+    // their hits will no longer make it into the merging pool)
+    // Get remaining locations with meta.get_locations() 
+    meta.clear_locations();
+
+    for(auto& cluster : oclusters) {
+      for(auto const & i : cluster._insideHits )
+        meta.add_location(i);
+    }    
+
+    //for ( auto const & c : oclusters) {
+    //  if ( c._num_hits_pool > 15 && c._num_hits_pool < 70 )
+    //    std::cout<<"SimpleCuts, cluster size: "<<c._num_hits_pool <<", "<<meta.plane()<<std::endl ;
+    //}
+
     return oclusters;
     
   }

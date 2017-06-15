@@ -35,8 +35,8 @@ namespace larocv {
       ,_min_charge(-1)
       ,_min_length(-1)
       ,_min_width(-1)
-      ,_min_pool_hits(-1)
       ,_pool(false)
+      ,_min_pool_hits(-1)
       
     {}    
     

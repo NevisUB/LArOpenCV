@@ -591,12 +591,6 @@ namespace larocv {
 
 	if(inside < 0) continue;
 
-        //if ( meta.plane() == 0 && c._num_hits_pool ==19) { 
-          //std::cout<<pt.x<<", "<<pt.y<<", ";
-	  //for ( auto const & p : c._contour) 
-          //  std::cout<<p.x<<", "<<p.y<<", ";
-	  //}
-
 	result = c.ClusterID();
 
 	break;

@@ -102,8 +102,12 @@ ImageClusterManager: {
    TriLen : 50
   }
 
-  fcp1: {}
-  fcp2: {}
+  fcp1: {
+    UsePool: true
+  }
+  fcp2: {
+    UsePool: true
+  }
 
  vih : {}
  vih2 : {}

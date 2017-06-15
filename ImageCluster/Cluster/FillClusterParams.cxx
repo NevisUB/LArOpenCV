@@ -7,7 +7,10 @@ namespace larocv {
 
 
   void FillClusterParams::_Configure_(const ::fcllite::PSet &pset)
-  {}
+  {
+   _pool = pset.get<bool>("UsePool");
+
+  }
 
   larocv::Cluster2DArray_t FillClusterParams::_Process_(const larocv::Cluster2DArray_t& clusters,
 							const ::cv::Mat& img,
@@ -49,44 +52,49 @@ namespace larocv {
     std::vector<::cv::Point> all_locations;
     bool first_fill = false ;
 
-    auto pool_meta = meta.get_pool_meta() ;
-
-    // The point of this check is to prevent very small clusters
-    // which have been removed by the first SimpleCuts from entering 
-    // the potential merging pool.  Without this check, we sometimes see clusters
-    // which are decently clustered, but merged with a distant small clump of
-    // 2/3 hits during merge stage. This in turn screws up matching.
+    // We store the state of the image (ie, pixels associated with contours
+    // that we want to keep) in the image meta info. If a cluster is removed in a filter at some
+    // point, and FillClusterParams is called again to update, we don't want removed contours' hits
+    // to show up when we're associated pixels to remaining contours.
+    // Without this check, we sometimes see decent clusters combined with a distant small clump of
+    // 2/3 hits whose original contour was removed by SimpleCuts . This in turn screws up matching.
     if ( !meta.get_locations().size() ){
-                          
-      ::cv::findNonZero(pool_meta, all_locations); 
-      //::cv::findNonZero(img, all_locations); 
+      ::cv::findNonZero(img, all_locations); 
       first_fill = true; 
-      }
+    }
     else{ 
       all_locations = meta.get_locations(); 
       for( size_t i = 0; i < oclusters.size(); i++ ){
         oclusters[i]._insideHits.clear() ;
         oclusters[i]._sumCharge = 0;
-	 }
       }
+    }
 
-    //std::cout<<"FillClusterParams Number of locations! "<<all_locations.size()<<std::endl; 
+    // pool_meta is only important if you have pooling enabled.
+    // pool_meta has the same dimensions as the argument "img"; the only difference 
+    // is that pool_meta's grid contains info on how many pixels were combined at the 
+    // pooling stage for each pixel; this prevents number-of-hit info from being lost
+    // when we pool
+    ::cv::Mat pool_meta = img;
+
+    if ( _pool )
+      pool_meta = meta.get_pool_meta() ;
 
     for( const auto& loc: all_locations ) {
       
       for( size_t i = 0; i < oclusters.size(); i++ ) {
 
-          if ( ::cv::pointPolygonTest(oclusters[i]._contour,loc,false) < 0 ){
-            continue;
-	  } 
-          
-	  oclusters[i]._num_hits_pool += pool_meta.at<uchar>(loc.y, loc.x);
-	
-	  if( first_fill )
-	    meta.add_location(loc) ;
+          if ( ::cv::pointPolygonTest(oclusters[i]._contour,loc,false) < 0 ) continue;
+
+	  if( first_fill ) meta.add_location(loc) ;
+
+          if ( _pool )
+	    oclusters[i]._num_hits_pool += pool_meta.at<uchar>(loc.y, loc.x);
 
           oclusters[i]._insideHits.emplace_back(loc.x, loc.y);
           oclusters[i]._sumCharge += (int) img.at<uchar>(loc.y, loc.x);
+
+	  //std::cout<<loc.x<<", "<<loc.y<<", ";
 
           // When point is found in contour, no others are checked; avoids double counting
           // Requires SimpleCuts to the alg chain after this; may have clusters with 0 hits
@@ -97,10 +105,6 @@ namespace larocv {
       //for( size_t i = 0; i < oclusters.size(); i++ ){ 
       //  if( oclusters[i]._num_hits_pool >= 10 ) 
       //    std::cout<<"FillClusterParams Number of hits "<<oclusters[i]._num_hits_pool<<", "<<meta.plane()<<std::endl ;
-      //  if( oclusters[i]._num_hits_pool == 19 && meta.plane() == 0){
-      //    for ( auto const & c : oclusters[i]._contour )
-      //      std::cout<<c.x<<", "<<c.y<<",";
-      //  }
       //}
 
     return oclusters;
