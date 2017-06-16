@@ -22,11 +22,11 @@ namespace larocv {
 		       const Vertex3DArray& vtx3d_v,
 		       std::vector<const ParticleClusterArray*> super_cluster_v = std::vector<const ParticleClusterArray*>(),
 		       std::vector<const ParticleClusterArray*> part_cluster_v  = std::vector<const ParticleClusterArray*>(),
-		       std::vector<const TrackClusterCompoundArray*> compound_v = std::vector<const TrackClusterCompoundArray*>()
-		       );
+		       std::vector<const TrackClusterCompoundArray*> compound_v = std::vector<const TrackClusterCompoundArray*>());
+
     
-    double Distance(const Vertex3D& vtx1, const Vertex3D& vtx2);
-    
+    Vertex3D Difference(const Vertex3D& vtx1, const Vertex3D& vtx2);
+    double Distance(const Vertex3D& vtx1, const Vertex3D& vtx2);    
     bool Equals(const Vertex3D& vtx1, const Vertex3D& vtx2);
 
     std::vector<Vertex2D> Seed2Vertex(const std::vector<VertexSeed2D>& svtx2d_v);

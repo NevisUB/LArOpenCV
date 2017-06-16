@@ -65,7 +65,7 @@ namespace larocv {
     int _straightness;
 
     
-    
+  public:
     void ParticleAngle(GEO2D_Contour_t ctor_origin, 
 		       GEO2D_Contour_t ctor, 
 		       geo2d::Circle<float> circle, 

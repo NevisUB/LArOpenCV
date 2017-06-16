@@ -2,8 +2,7 @@
 #define __MATCHANALYSIS_CXX__
 
 #include "MatchAnalysis.h"
-#include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
-#include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
@@ -81,7 +80,6 @@ namespace larocv {
     _vertex_n_planes_charge = kINVALID_INT;
   }
 
-  
   void MatchAnalysis::_Process_() {
     
     if(NextEvent()) _roid=0;
@@ -270,5 +268,36 @@ namespace larocv {
     _roid += 1;
   }
 
+  // std::pair<float,float> MatchAnalysis::Angle3D(data::Vertex& vtx1,
+  // 						data::Vertex& vtx2) {
+
+  //   auto res_dist = Distance(vtx1,vtx2);
+  //   auto res_vtx  = Difference(vtx1,vtx2);
+    
+  //   if (res_dist == 0) throw larbys("Vertex1 and Vertex2 cannot be the same");
+    
+  //   auto cos = res_vertex.z / res_dist;
+  //   auto tan = res_vertex.y / res_vertex.x;
+
+  //   auto arccos = std::acos(cos);
+  //   auto atan   = std::atan2(tan);
+    
+  //   return std::make_pair(arccos, atan);
+  // }  
+  
+  // std::pair<float,float> MatchAnalysis::Angle3D(const data::Particle& particle,
+  // 						const std::vector<cv::Mat>& img_v) {
+    
+  //   // accumulate some 3D points across matched ParticleClusters
+  //   std::vector<data::Vertex3D> vertex_v;
+
+  //   // get the enclosed
+  //   GEO2D_ContourArray_t ctor_v;
+    
+    
+    
+  //   return ;
+  // }
+  
 }
 #endif

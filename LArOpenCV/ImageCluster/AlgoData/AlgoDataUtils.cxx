@@ -150,6 +150,17 @@ namespace larocv {
       return res_v;
     }
 
+    Vertex3D
+    Difference(const Vertex3D& vtx1, const Vertex3D& vtx2) {
+      Vertex3D res;
+
+      res.x = vtx2.x - vtx1.x;
+      res.y = vtx2.y - vtx1.y;
+      res.z = vtx2.z - vtx1.z;
+      
+      return res;
+    }
+    
     double
     Distance(const Vertex3D& vtx1, const Vertex3D& vtx2) {
       return std::sqrt(std::pow(vtx1.x-vtx2.x,2)+
