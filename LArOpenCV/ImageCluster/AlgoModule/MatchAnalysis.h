@@ -4,7 +4,7 @@
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/DefectBreaker.h"
-#include "LArOpenCV/ImageCLuster/AlgoClass/AtomicAnalysis.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/VertexAnalysis.h"
 
 
