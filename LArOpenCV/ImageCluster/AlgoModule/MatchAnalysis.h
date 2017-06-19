@@ -102,7 +102,9 @@ namespace larocv {
   private:
     // theta and phi
     std::pair<float,float> Angle3D(const data::Vertex3D& vtx1, const data::Vertex3D& vtx2);
-    std::pair<float,float> Angle3D(const data::Particle& particle, const std::vector<cv::Mat>& img_v);
+    std::pair<float,float> Angle3D(const data::Particle& particle,
+				   const std::vector<cv::Mat>& img_v,
+				   const data::Vertex3D& start3d = data::Vertex3D());
 
 
     // for debug

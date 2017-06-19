@@ -327,7 +327,8 @@ namespace larocv {
   }  
   
   std::pair<float,float> MatchAnalysis::Angle3D(const data::Particle& particle,
-  						const std::vector<cv::Mat>& img_v) {
+  						const std::vector<cv::Mat>& img_v,
+						const data::Vertex3D& start3d) {
     
     
     // get the two largest particles clusters
@@ -408,7 +409,33 @@ namespace larocv {
     
     LAROCV_DEBUG() << "PCA @ ("<<mean_v[0]<<","<<mean_v[1]<<","<<mean_v[2]
 		   <<") dir: ("<<eigen_v[0]<<","<<eigen_v[1]<<","<<eigen_v[2]<<")"<<std::endl;
+    
+
+    // check if incoming start point is valid
+    if (start3d.x != kINVALID_DOUBLE) {
+    // determine if we should flip the eigen direction based on the 3D mean position
+      assert(start3d.x != kINVALID_DOUBLE);
+      assert(start3d.y != kINVALID_DOUBLE);
+      assert(start3d.z != kINVALID_DOUBLE);
+
+      std::array<float,3> mean_dir_v;
+      mean_dir_v[0] = mean_v[0] - start3d.x;
+      mean_dir_v[1] = mean_v[1] - start3d.y;
+      mean_dir_v[2] = mean_v[2] - start3d.z;
+      auto mean_dir_len = std::sqrt( mean_dir_v[0] * mean_dir_v[0] +
+				     mean_dir_v[1] * mean_dir_v[1] +
+				     mean_dir_v[2] * mean_dir_v[2] );
+      mean_dir_v[0] /= mean_dir_len;
+      mean_dir_v[1] /= mean_dir_len;
+      mean_dir_v[2] /= mean_dir_len;
+
+      //
+      // implement direction handling
+      //
       
+    }
+      
+    
     auto cos = eigen_v[2] / eigen_len;
     //auto tan = eigen_v[1] / eigen_v[0];
 
@@ -419,7 +446,6 @@ namespace larocv {
     LAROCV_DEBUG() << "deg: theta="<<arccos*180.0/3.14<<" phi="<<arctan*180.0/3.14<<std::endl;
     return std::make_pair(arccos,arctan);
   }
-
 
   void MatchAnalysis::StoreMatchAna() {
     MatchAna match_ana;
