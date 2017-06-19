@@ -79,12 +79,10 @@ namespace larocv {
     float max_x = min_x + _num_cols_v[plane] * _time_comp_factor_v[plane];
 
     if(tick < min_x || max_x < tick) {
-      /*
-      std::stringstream ss;
-      ss << "3D X position " << x << " = tick " << tick
-	 << " out of bound " << min_x << " => " << max_x << std::endl;
-      throw larbys(ss.str());
-      */
+      // std::stringstream ss;
+      // ss << "3D X position " << x << " = tick " << tick
+      // 	 << " out of bound " << min_x << " => " << max_x << std::endl;
+      // throw larbys(ss.str());
       throw larbys();
     }
 
@@ -133,7 +131,7 @@ namespace larocv {
     result.Clear();
     
     if(std::fabs(pt0.x - pt1.x) > _xplane_tick_resolution) {
-      LAROCV_DEBUG() << "tick diff " << std::fabs(pt0.x - pt1.x) << " > " << _xplane_tick_resolution << std::endl;
+      //LAROCV_DEBUG() << "tick diff " << std::fabs(pt0.x - pt1.x) << " > " << _xplane_tick_resolution << std::endl;
       return false;
     }
     
@@ -145,12 +143,12 @@ namespace larocv {
       wire1_range = larocv::OverlapWireRange(wire0, plane0, plane1);
     }
     catch(::larutil::LArUtilException& lare) {
-      LAROCV_WARNING() << lare.what() << "... bad YZ point estimate" << std::endl;
+      //LAROCV_WARNING() << lare.what() << "... bad YZ point estimate" << std::endl;
       return false;
     }
     
     if(wire1 < wire1_range.first || wire1_range.second < wire1) {
-      LAROCV_DEBUG()<<"wire "<<wire1<<"<"<<wire1_range.first<<" or "<<wire1<<">"<<wire1_range.second<<std::endl;
+      //LAROCV_DEBUG()<<"wire "<<wire1<<"<"<<wire1_range.first<<" or "<<wire1<<">"<<wire1_range.second<<std::endl;
       return false;
     }
 
@@ -234,7 +232,7 @@ namespace larocv {
     
     overlap /= (float)min_pts_v->size();
     
-    LAROCV_DEBUG() << "Calculated overlap " << overlap << std::endl;
+    //LAROCV_DEBUG() << "Calculated overlap " << overlap << std::endl;
     return overlap;
   }
   

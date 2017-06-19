@@ -26,7 +26,7 @@ namespace larocv {
       AtomicContour(const GEO2D_Contour_t& ctor,size_t atomic_id)
 	: GEO2D_Contour_t(ctor)
 	, _atomic_id(atomic_id)
-      { clear(); }
+      { _defect_id_v.clear(); _edges_v.clear(); }
       ~AtomicContour(){}
 
       //Always protect existing class members upon assignment

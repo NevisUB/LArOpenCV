@@ -55,6 +55,7 @@ namespace larocv {
     double _z;
 
     bool _break_contours;
+    bool _debug_match_ana;
     
   public:
 
@@ -64,22 +65,49 @@ namespace larocv {
     std::vector<double> _par_end_pt_y_v; // c
     std::vector<double> _par_end_pt_z_v; // c
     std::vector<double> _par_n_planes_charge_v; // c
-    std::vector<double> _par_3d_PCA_theta_estimate_v;
-    std::vector<double> _par_3d_PCA_phi_estimate_v;
-    std::vector<double> _par_3d_segment_theta_estimate_v;
-    std::vector<double> _par_3d_segment_phi_estimate_v;
+    std::vector<double> _par_3d_PCA_theta_estimate_v; // c
+    std::vector<double> _par_3d_PCA_phi_estimate_v; // c
+    std::vector<double> _par_3d_segment_theta_estimate_v; // c
+    std::vector<double> _par_3d_segment_phi_estimate_v; // c
     int _vertex_n_planes_charge; // c
 
+    
+    //
+    // for debug, per vertex storage
+    //
+    struct MatchAna {
+      std::vector<double> par_pixel_ratio_v; 
+      std::vector<int>    par_valid_end_pt_v;
+      std::vector<double> par_end_pt_x_v; 
+      std::vector<double> par_end_pt_y_v; 
+      std::vector<double> par_end_pt_z_v; 
+      std::vector<double> par_n_planes_charge_v; 
+      std::vector<double> par_3d_PCA_theta_estimate_v;
+      std::vector<double> par_3d_PCA_phi_estimate_v; 
+      std::vector<double> par_3d_segment_theta_estimate_v;
+      std::vector<double> par_3d_segment_phi_estimate_v;
+      int vertex_n_planes_charge; 
+    };
+    
+    std::vector<MatchAna> _match_ana_v;
+    
   private:
     void Clear();
 
+  public:
     DefectBreaker _DefectBreaker;
     AtomicAnalysis _AtomicAnalysis;
     VertexAnalysis _VertexAnalysis;
 
+  private:
     // theta and phi
-    // std::pair<float,float> Angle3D(const data::Vertex3D& vtx1, const data::Vertex3D& vtx2);
-    // std::pair<float,float> Angle3D(const data::Particle& particle, const std::vector<cv::Mat>& img_v);
+    std::pair<float,float> Angle3D(const data::Vertex3D& vtx1, const data::Vertex3D& vtx2);
+    std::pair<float,float> Angle3D(const data::Particle& particle, const std::vector<cv::Mat>& img_v);
+
+
+    // for debug
+    void StoreMatchAna();
+    void ClearMatchAna() { _match_ana_v.clear(); }
     
   };
 

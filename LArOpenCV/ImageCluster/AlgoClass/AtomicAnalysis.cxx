@@ -179,9 +179,10 @@ namespace larocv {
       auto const& atom_index = atom_order_v[order_index];
       auto const& atom = atoms.at(atom_index);
       LAROCV_DEBUG() << "Inspecting order " << order_index
-		     << " atom ID " << atom_index << std::endl;
+		     << " atom ID " << atom_index
+		     << " of sz " << atom.size() << std::endl;
       // loop over points to find the end
-      double max_dist = 0;
+      double max_dist = -1.0*kINVALID_DOUBLE;
       for(auto const& ctor_pt : atom) {
 	pt.x = ctor_pt.x;
 	pt.y = ctor_pt.y;

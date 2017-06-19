@@ -121,7 +121,7 @@ namespace larocv {
     
     void TrackClusterCompound::push_back(const AtomicContour& atom)
     {
-      std::vector<AtomicContour>::push_back(atom);
+      this->std::vector<AtomicContour>::push_back(atom);
       this->back()._atomic_id = this->size() - 1;
     }
     
@@ -133,8 +133,10 @@ namespace larocv {
     
     void TrackClusterCompound::emplace_back(AtomicContour&& atom)
     {
-      std::vector<AtomicContour>::emplace_back(std::move(atom));
+      std::cout << "Inserting atom sz " << atom.size() << std::endl;
+      this->std::vector<AtomicContour>::emplace_back(std::move(atom));
       this->back()._atomic_id = this->size() - 1;
+      std::cout << " @ atomic id " << this->back()._atomic_id << std::endl;
     }
     
     void TrackClusterCompound::emplace_back(ContourDefect&& defect)
