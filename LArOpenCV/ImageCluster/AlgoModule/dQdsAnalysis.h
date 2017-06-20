@@ -55,8 +55,12 @@ namespace larocv {
     double _y;
     double _z;
     
-    std::vector<std::vector<std::vector<float>>> _dqds_vvv;//per vtx, per plane, per particle
-    std::vector<float> _dqds_diff_v;
+    std::vector<std::vector<float>> _dqds_0_v;//per vtx, per plane, particle 0
+    std::vector<std::vector<float>> _dqds_1_v;//per vtx, per plane, particle 1
+    std::vector<float> _dqds_diff_v;//diff of mean dqds between particle 0&1
+    std::vector<float> _dqds_ratio_v;//diff of mean dqds between particle 0&1
+
+    float _dqds_scan_thre;
   };
 
   class dQdsAnalysisFactory : public AlgoFactoryBase {
