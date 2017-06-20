@@ -16,6 +16,7 @@
 #pragma link C++ class larocv::SatelliteMerge+;
 #pragma link C++ class larocv::FlashlightMerge+;
 #pragma link C++ class larocv::MergeAll+;
+#pragma link C++ class larocv::InHullMerge+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
