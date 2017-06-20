@@ -103,7 +103,6 @@ namespace larocv {
 				   const data::Vertex3D& start3d);
 
     
-    
   public:
     DefectBreaker _DefectBreaker;
     AtomicAnalysis _AtomicAnalysis;
