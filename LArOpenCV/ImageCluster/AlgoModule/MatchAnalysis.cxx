@@ -2,7 +2,6 @@
 #define __MATCHANALYSIS_CXX__
 
 #include "MatchAnalysis.h"
-#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
@@ -47,11 +46,11 @@ namespace larocv {
   
     _tree = new TTree("MatchAnalysis","");
     AttachIDs(_tree);
-    _tree->Branch("roid"       , &_roid      , "roid/I");
-    _tree->Branch("vtxid"      , &_vtxid     , "vtxid/I");
-    _tree->Branch("x"          , &_x         , "x/D");
-    _tree->Branch("y"          , &_y         , "y/D");
-    _tree->Branch("z"          , &_z         , "z/D");
+    _tree->Branch("roid" , &_roid  , "roid/I");
+    _tree->Branch("vtxid", &_vtxid , "vtxid/I");
+    _tree->Branch("x"    , &_x     , "x/D");
+    _tree->Branch("y"    , &_y     , "y/D");
+    _tree->Branch("z"    , &_z     , "z/D");
 
     _tree->Branch("par_pixel_ratio_v",&_par_pixel_ratio_v);
     _tree->Branch("par_valid_end_pt_v",&_par_valid_end_pt_v);
@@ -281,7 +280,7 @@ namespace larocv {
 	par_3d_PCA_phi_estimate   = kINVALID_DOUBLE;
 	
 	// using the PCA
-	auto pca_angle = Angle3D(par,thresh_img_v);
+	auto pca_angle = Angle3D(par,thresh_img_v,vtx3d);
 	par_3d_PCA_theta_estimate = pca_angle.first;
 	par_3d_PCA_phi_estimate   = pca_angle.second;
 
@@ -306,52 +305,63 @@ namespace larocv {
     _roid += 1;
   }
 
-  std::pair<float,float> MatchAnalysis::Angle3D(const data::Vertex3D& vtx1,
-  						const data::Vertex3D& vtx2) {
 
+  std::pair<float,float> MatchAnalysis::Angle3D(const data::Vertex3D& vtx1,
+						const data::Vertex3D& vtx2) {
+      
     LAROCV_DEBUG() << "Angle 3D from 2 vertex" << std::endl;
     auto res_dist = Distance(vtx1,vtx2);
     auto res_vtx  = Difference(vtx1,vtx2);
-    
+      
     if (res_dist == 0) throw larbys("Vertex1 and Vertex2 cannot be the same");
-    
+      
     auto cos = res_vtx.z / res_dist;
     //auto tan = res_vtx.y / res_vtx.x;
-
+      
     auto arccos = std::acos(cos);
     auto arctan = std::atan2(res_vtx.y,res_vtx.x);
-
+      
     LAROCV_DEBUG() << "rad: theta="<<arccos<<" phi="<<arctan<<std::endl;
     LAROCV_DEBUG() << "deg: theta="<<arccos*180/3.14<<" phi="<<arctan*180/3.14<<std::endl;
     return std::make_pair(arccos,arctan);
   }  
   
   std::pair<float,float> MatchAnalysis::Angle3D(const data::Particle& particle,
-  						const std::vector<cv::Mat>& img_v,
+						const std::vector<cv::Mat>& img_v,
 						const data::Vertex3D& start3d) {
     
     
     // get the two largest particles clusters
-    size_t plane0_sz, plane1_sz;
-    plane0_sz = plane1_sz = kINVALID_SIZE;
+    int plane0_sz, plane1_sz;
+    plane0_sz = plane1_sz = -1.0*kINVALID_INT;
     
     size_t plane0, plane1;
-    plane0 = plane1 = -1.0*kINVALID_SIZE;
-    
+    plane0 = plane1 = kINVALID_SIZE;
+
+    // get the largest
     for(size_t plane=0; plane<particle._par_v.size(); ++plane) {
       const auto& pcluster = particle._par_v[plane];
-      if (plane0_sz > pcluster._ctor.size()) {
-	// store 1
-	plane1 = plane0;
-	plane1_sz = plane0_sz;
-
-	// store 0
+      if (pcluster._ctor.empty()) continue;
+      auto area = ContourArea(pcluster._ctor);
+      if (area > plane0_sz) {
 	plane0 = plane;
-	plane0_sz = pcluster._ctor.size();
+	plane0_sz = area;
       }
     }
 
-    assert(plane0_sz < plane1_sz);
+    // get the second largest
+    for(size_t plane=0; plane<particle._par_v.size(); ++plane) {
+      if (plane==plane0) continue;
+      const auto& pcluster = particle._par_v[plane];
+      if (pcluster._ctor.empty()) continue;
+      auto area = ContourArea(pcluster._ctor);
+      if (area > plane1_sz) {
+	plane1 = plane;
+	plane1_sz = area;
+      }
+    }
+
+    assert(plane0_sz > plane1_sz);
     assert(plane0 != plane1);
     assert(plane0 < particle._par_v.size());
     assert(plane1 < particle._par_v.size());
@@ -413,7 +423,7 @@ namespace larocv {
 
     // check if incoming start point is valid
     if (start3d.x != kINVALID_DOUBLE) {
-    // determine if we should flip the eigen direction based on the 3D mean position
+      // determine if we should flip the eigen direction based on the 3D mean position
       assert(start3d.x != kINVALID_DOUBLE);
       assert(start3d.y != kINVALID_DOUBLE);
       assert(start3d.z != kINVALID_DOUBLE);
@@ -430,9 +440,15 @@ namespace larocv {
       mean_dir_v[2] /= mean_dir_len;
 
       //
-      // implement direction handling
+      // implement direction handling, negative dot product, flip the sign on eigen
       //
-      
+
+      auto dot_product = mean_dir_v[0] * eigen_v[0] + mean_dir_v[1] * eigen_v[1] + mean_dir_v[2] * eigen_v[2];
+      if (dot_product < 0) {
+	eigen_v[0] *= -1;
+	eigen_v[1] *= -1;
+	eigen_v[2] *= -1;
+      }
     }
       
     
@@ -446,7 +462,7 @@ namespace larocv {
     LAROCV_DEBUG() << "deg: theta="<<arccos*180.0/3.14<<" phi="<<arctan*180.0/3.14<<std::endl;
     return std::make_pair(arccos,arctan);
   }
-
+  
   void MatchAnalysis::StoreMatchAna() {
     MatchAna match_ana;
     
@@ -464,6 +480,8 @@ namespace larocv {
     
     _match_ana_v.emplace_back(std::move(match_ana));
   }
+
+    
   
 }
 #endif
