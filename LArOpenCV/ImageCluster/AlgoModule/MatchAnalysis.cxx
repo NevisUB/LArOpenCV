@@ -281,7 +281,7 @@ namespace larocv {
 	par_3d_PCA_phi_estimate   = kINVALID_DOUBLE;
 	
 	// using the PCA
-	auto pca_angle = Angle3D(par,thresh_img_v);
+	auto pca_angle = Angle3D(par,thresh_img_v,vtx3d);
 	par_3d_PCA_theta_estimate = pca_angle.first;
 	par_3d_PCA_phi_estimate   = pca_angle.second;
 
@@ -306,28 +306,29 @@ namespace larocv {
     _roid += 1;
   }
 
-  std::pair<float,float> MatchAnalysis::Angle3D(const data::Vertex3D& vtx1,
-  						const data::Vertex3D& vtx2) {
 
-    LAROCV_DEBUG() << "Angle 3D from 2 vertex" << std::endl;
-    auto res_dist = Distance(vtx1,vtx2);
-    auto res_vtx  = Difference(vtx1,vtx2);
-    
-    if (res_dist == 0) throw larbys("Vertex1 and Vertex2 cannot be the same");
-    
-    auto cos = res_vtx.z / res_dist;
-    //auto tan = res_vtx.y / res_vtx.x;
-
-    auto arccos = std::acos(cos);
-    auto arctan = std::atan2(res_vtx.y,res_vtx.x);
-
-    LAROCV_DEBUG() << "rad: theta="<<arccos<<" phi="<<arctan<<std::endl;
-    LAROCV_DEBUG() << "deg: theta="<<arccos*180/3.14<<" phi="<<arctan*180/3.14<<std::endl;
-    return std::make_pair(arccos,arctan);
+    std::pair<float,float> MatchAnalysis::Angle3D(const data::Vertex3D& vtx1,
+						  const data::Vertex3D& vtx2) {
+      
+      LAROCV_DEBUG() << "Angle 3D from 2 vertex" << std::endl;
+      auto res_dist = Distance(vtx1,vtx2);
+      auto res_vtx  = Difference(vtx1,vtx2);
+      
+      if (res_dist == 0) throw larbys("Vertex1 and Vertex2 cannot be the same");
+      
+      auto cos = res_vtx.z / res_dist;
+      //auto tan = res_vtx.y / res_vtx.x;
+      
+      auto arccos = std::acos(cos);
+      auto arctan = std::atan2(res_vtx.y,res_vtx.x);
+      
+      LAROCV_DEBUG() << "rad: theta="<<arccos<<" phi="<<arctan<<std::endl;
+      LAROCV_DEBUG() << "deg: theta="<<arccos*180/3.14<<" phi="<<arctan*180/3.14<<std::endl;
+      return std::make_pair(arccos,arctan);
   }  
   
   std::pair<float,float> MatchAnalysis::Angle3D(const data::Particle& particle,
-  						const std::vector<cv::Mat>& img_v,
+						const std::vector<cv::Mat>& img_v,
 						const data::Vertex3D& start3d) {
     
     
@@ -430,9 +431,15 @@ namespace larocv {
       mean_dir_v[2] /= mean_dir_len;
 
       //
-      // implement direction handling
+      // implement direction handling, negative dot product, flip the sign on eigen
       //
-      
+
+      auto dot_product = mean_dir_v[0] * eigen_v[0] + mean_dir_v[1] * eigen_v[1] + mean_dir_v[2] * eigen_v[2];
+      if (dot_product < 0) {
+	eigen_v[0] *= -1;
+	eigen_v[1] *= -1;
+	eigen_v[2] *= -1;
+      }
     }
       
     
@@ -446,7 +453,7 @@ namespace larocv {
     LAROCV_DEBUG() << "deg: theta="<<arccos*180.0/3.14<<" phi="<<arctan*180.0/3.14<<std::endl;
     return std::make_pair(arccos,arctan);
   }
-
+  
   void MatchAnalysis::StoreMatchAna() {
     MatchAna match_ana;
     
@@ -464,6 +471,8 @@ namespace larocv {
     
     _match_ana_v.emplace_back(std::move(match_ana));
   }
+
+    
   
 }
 #endif
