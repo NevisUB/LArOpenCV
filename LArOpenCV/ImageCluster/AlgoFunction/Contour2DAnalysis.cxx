@@ -338,7 +338,7 @@ namespace larocv {
 			     float EPS) {
     
     if(ctor.size() < 2) {
-      LAROCV_SWARNING() << "PCA approx cannot be made (# points " << ctor.size() << " < 2)" << std::endl;
+      //LAROCV_SWARNING() << "PCA approx cannot be made (# points " << ctor.size() << " < 2)" << std::endl;
       throw larbys();
     }
     
@@ -360,7 +360,7 @@ namespace larocv {
     auto pts_v = FindNonZero(img);
     
     if(pts_v.size() < 2) {
-      LAROCV_SWARNING() << "PCA approx cannot be made (# points " << pts_v.size() << " < 2)" << std::endl;
+      //LAROCV_SWARNING() << "PCA approx cannot be made (# points " << pts_v.size() << " < 2)" << std::endl;
       throw larbys();
     }
     

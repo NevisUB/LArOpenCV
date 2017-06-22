@@ -265,7 +265,7 @@ namespace larocv {
   {
     // Make a better guess
     ::cv::Rect rect(center.x - range_x, center.y - range_y, range_x*2+1,range_y*2+1);
-    ::larocv::CorrectEdgeRectangle(img,rect,range_x*2+1,range_y*2+1);
+    CorrectEdgeRectangle(img,rect,range_x*2+1,range_y*2+1);
     
     LAROCV_SDEBUG() << "rows cols " << img.rows
 		    << "," << img.cols << " and rect " << rect << std::endl;
@@ -298,12 +298,13 @@ namespace larocv {
 			       geo2d::Vector<float> pt,
 			       float width, float height)
   {
+
     LAROCV_SDEBUG() << "SquarePCA @ pt " << pt << " width " << width << " height " << height << std::endl;
     cv::Rect rect(pt.x-width, pt.y-height, 2*width+1, 2*height+1);
     LAROCV_SDEBUG() << "set rect @ " << rect << std::endl;
     CorrectEdgeRectangle(img,rect,2*width+1,2*height+1);
     LAROCV_SDEBUG() << "corrected rect @ " << rect << std::endl;
-	
+
     auto small_img = cv::Mat(img,rect);
     cv::Mat thresh_small_img;
     cv::threshold(small_img,thresh_small_img,1,255,0);
@@ -362,15 +363,14 @@ namespace larocv {
   {
 
     //make it edge aware
-    if ( rect.x < 0 ) rect.x = 0;
-    if ( rect.y < 0 ) rect.y = 0;
-    
     if ( rect.x > img.cols - w ) rect.x = img.cols - w;
     if ( rect.y > img.rows - h ) rect.y = img.rows - h;
 
-    //if ( rect.x < 0 )   { rect.x = 0; rect.width  = img.cols; }
-    //if ( rect.y < 0 )   { rect.y = 0; rect.height = img.rows; }
+    if ( rect.x < 0 ) rect.x = 0;
+    if ( rect.y < 0 ) rect.y = 0;
 
+    if ( rect.width  >= img.cols ) rect.width  = img.cols - 1;
+    if ( rect.height >= img.rows ) rect.height = img.rows - 1;
   }
   
   cv::Mat
