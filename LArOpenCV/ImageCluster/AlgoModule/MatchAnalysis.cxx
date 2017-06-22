@@ -79,6 +79,7 @@ namespace larocv {
     _par_3d_segment_theta_estimate_v.clear();
     _par_3d_segment_phi_estimate_v.clear();
     _vertex_n_planes_charge = kINVALID_INT;
+    _match_ana_v.clear();
   }
 
   void MatchAnalysis::_Process_() {
@@ -361,22 +362,29 @@ namespace larocv {
       }
     }
 
-    assert(plane0_sz > plane1_sz);
+    //LARCV_DEBUG() << plane0_sz <<","<<plane0<<","<<plane1_sz<<","<<plane1<<std::endl;
+    assert(plane0_sz != -1.0*kINVALID_INT);
+    assert(plane1_sz != -1.0*kINVALID_INT);
+
+    assert(plane0 != kINVALID_SIZE);
+    assert(plane1 != kINVALID_SIZE);
+
+    assert(plane0_sz >= plane1_sz);
     assert(plane0 != plane1);
     assert(plane0 < particle._par_v.size());
     assert(plane1 < particle._par_v.size());
 
-    const auto& ctor0 = particle._par_v[plane0]._ctor;
-    const auto& ctor1 = particle._par_v[plane1]._ctor;
+    const auto& ctor0 = particle._par_v.at(plane0)._ctor;
+    const auto& ctor1 = particle._par_v.at(plane1)._ctor;
 
     // get the list of points inside
-    auto pxpts0_v = FindNonZero(MaskImage(img_v[plane0],ctor0,-1,false));
-    auto pxpts1_v = FindNonZero(MaskImage(img_v[plane1],ctor1,-1,false));
+    auto pxpts0_v = FindNonZero(MaskImage(img_v.at(plane0),ctor0,0,false));
+    auto pxpts1_v = FindNonZero(MaskImage(img_v.at(plane1),ctor1,0,false));
 
     // make 3D point and store in cv::Mat for PCA
     const auto& geo = _VertexAnalysis.Geo();
     std::vector<bool> used_v(pxpts1_v.size(),false);
-
+    
     std::vector<data::Vertex3D> vtx3d_v;
     vtx3d_v.reserve(pxpts1_v.size());
       
@@ -384,21 +392,21 @@ namespace larocv {
       for(size_t pxid1=0; pxid1 < pxpts1_v.size(); ++pxid1) {
 	if (used_v[pxid1]) continue;
 	data::Vertex3D res;
-	if (!geo.YZPoint(pxpts0_v[pxid0],plane0,
-			 pxpts1_v[pxid1],plane1,
+	if (!geo.YZPoint(pxpts0_v.at(pxid0),plane0,
+			 pxpts1_v.at(pxid1),plane1,
 			 res)) continue;
 	
 	vtx3d_v.emplace_back(std::move(res));
-	used_v[pxid1] = true;
+	used_v.at(pxid1) = true;
       }
     }
     
     cv::Mat vertex_mat(vtx3d_v.size(), 3, CV_32FC1);
     
     for(size_t vtxid=0; vtxid<vtx3d_v.size(); ++vtxid) {
-      vertex_mat.at<float>(vtxid, 0) = vtx3d_v[vtxid].x;
-      vertex_mat.at<float>(vtxid, 1) = vtx3d_v[vtxid].y;
-      vertex_mat.at<float>(vtxid, 2) = vtx3d_v[vtxid].z;
+      vertex_mat.at<float>(vtxid, 0) = vtx3d_v.at(vtxid).x;
+      vertex_mat.at<float>(vtxid, 1) = vtx3d_v.at(vtxid).y;
+      vertex_mat.at<float>(vtxid, 2) = vtx3d_v.at(vtxid).z;
     }
 
     LAROCV_DEBUG() << "Calculating PCA for " << vertex_mat.rows << " 3D points" << std::endl;
