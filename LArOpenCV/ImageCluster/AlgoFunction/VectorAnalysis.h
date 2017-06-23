@@ -4,7 +4,10 @@
 namespace larocv {
 
   float CosOpeningAngle(const float theta1, const float phi1,
-		     const float theta2, const float phi2);
+			const float theta2, const float phi2);
+
+  float CosOpeningXZAngle(const float theta1, const float phi1,
+			  const float theta2, const float phi2);
 }
 
 #endif
