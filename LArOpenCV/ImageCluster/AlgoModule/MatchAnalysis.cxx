@@ -149,16 +149,16 @@ namespace larocv {
 	//
 	// do something with this particle
 	//
-	auto& par_pixel_ratio = _par_pixel_ratio_v[par_id];
-	auto& par_valid_end_pt = _par_valid_end_pt_v[par_id];
-	auto& par_end_pt_x = _par_end_pt_x_v[par_id];
-	auto& par_end_pt_y = _par_end_pt_y_v[par_id];
-	auto& par_end_pt_z = _par_end_pt_z_v[par_id];
-	auto& par_n_planes_charge = _par_n_planes_charge_v[par_id];
-	auto& par_3d_segment_theta_estimate = _par_3d_segment_theta_estimate_v[par_id];
-	auto& par_3d_segment_phi_estimate = _par_3d_segment_phi_estimate_v[par_id];
-	auto& par_3d_PCA_theta_estimate = _par_3d_PCA_theta_estimate_v[par_id];
-	auto& par_3d_PCA_phi_estimate = _par_3d_PCA_phi_estimate_v[par_id];
+	auto& par_pixel_ratio = _par_pixel_ratio_v[par_idx];
+	auto& par_valid_end_pt = _par_valid_end_pt_v[par_idx];
+	auto& par_end_pt_x = _par_end_pt_x_v[par_idx];
+	auto& par_end_pt_y = _par_end_pt_y_v[par_idx];
+	auto& par_end_pt_z = _par_end_pt_z_v[par_idx];
+	auto& par_n_planes_charge = _par_n_planes_charge_v[par_idx];
+	auto& par_3d_segment_theta_estimate = _par_3d_segment_theta_estimate_v[par_idx];
+	auto& par_3d_segment_phi_estimate = _par_3d_segment_phi_estimate_v[par_idx];
+	auto& par_3d_PCA_theta_estimate = _par_3d_PCA_theta_estimate_v[par_idx];
+	auto& par_3d_PCA_phi_estimate = _par_3d_PCA_phi_estimate_v[par_idx];
 
 	//
 	// compute the number of planes this particle is on
