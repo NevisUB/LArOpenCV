@@ -7,7 +7,6 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/VertexAnalysis.h"
 
-
 /*
   @brief: XXX
 */
@@ -70,6 +69,10 @@ namespace larocv {
     std::vector<double> _par_3d_segment_theta_estimate_v; // c
     std::vector<double> _par_3d_segment_phi_estimate_v; // c
     int _vertex_n_planes_charge; // c
+    std::vector<float> _par_pca_end_x_v;  
+    std::vector<float> _par_pca_end_y_v;  
+    std::vector<float> _par_pca_end_z_v;  
+    std::vector<float> _par_pca_end_len_v;
 
     
     //
@@ -86,22 +89,46 @@ namespace larocv {
       std::vector<double> par_3d_PCA_phi_estimate_v; 
       std::vector<double> par_3d_segment_theta_estimate_v;
       std::vector<double> par_3d_segment_phi_estimate_v;
-      int vertex_n_planes_charge; 
+      int vertex_n_planes_charge;
+      std::vector<float> par_pca_end_x_v;  
+      std::vector<float> par_pca_end_y_v;
+      std::vector<float> par_pca_end_z_v;  
+      std::vector<float> par_pca_end_len_v;
     };
     
     std::vector<MatchAna> _match_ana_v;
     
   private:
+
     void Clear();
     
     std::pair<float,float> Angle3D(const data::Vertex3D& vtx1,
 				   const data::Vertex3D& vtx2);
     
+
+    std::vector<data::Vertex3D> SpacePointsEstimate(const data::Particle& particle,
+						    const std::vector<cv::Mat>& img_v);
+
+    std::pair<float,float> Angle3D(const std::vector<data::Vertex3D>& vtx3d_v,
+				   const data::Vertex3D& start3d);
+
     
     std::pair<float,float> Angle3D(const data::Particle& particle,
 				   const std::vector<cv::Mat>& img_v,
 				   const data::Vertex3D& start3d);
 
+
+    std::array<float,3> EndPoint3D(const std::vector<data::Vertex3D>& space_pts_v,
+				   const float theta, const float phi,
+				   const data::Vertex3D& start_pt);
+    
+    float Distance3D(const std::array<float,3>& pt1,const data::Vertex3D& vtx);
+    
+    float Distance3D(const data::Vertex3D& vtx, const std::array<float,3>& pt1);
+    
+    void StoreMatchAna();
+    void ClearMatchAna()
+    { _match_ana_v.clear(); }
     
   public:
     DefectBreaker _DefectBreaker;
@@ -109,22 +136,15 @@ namespace larocv {
     VertexAnalysis _VertexAnalysis;
 
 
-  private:
-
-    // for debug
-    void StoreMatchAna();
-    void ClearMatchAna() { _match_ana_v.clear(); }
-    
   };
-
   class MatchAnalysisFactory : public AlgoFactoryBase {
   public:
     MatchAnalysisFactory() { AlgoFactory::get().add_factory("MatchAnalysis",this); }
     ~MatchAnalysisFactory() {}
     ImageClusterBase* create(const std::string instance_name) { return new MatchAnalysis(instance_name); }
   };
-  
-}
-#endif
-/** @} */ // end of doxygen group 
 
+    
+}
+
+#endif

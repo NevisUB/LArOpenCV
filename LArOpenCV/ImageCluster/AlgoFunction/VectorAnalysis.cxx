@@ -11,20 +11,11 @@ namespace larocv {
   float CosOpeningAngle(const float theta1, const float phi1,
 			const float theta2, const float phi2) {
     
-    
-    std::array<float,3> r1,r2;
 
-    r1[0] = std::sin(theta1) * std::cos(phi1);
-    r1[1] = std::sin(theta1) * std::sin(phi1);
-    r1[2] = std::cos(theta1);
+    auto r1 = AsVector(theta1,phi1);
+    auto r2 = AsVector(theta2,phi2);
     
-    r2[0] = std::sin(theta2) * std::cos(phi2);
-    r2[1] = std::sin(theta2) * std::sin(phi2);
-    r2[2] = std::cos(theta2);
-    
-    
-    float top = 0.0;
-    for(short i=0;i<3;++i) top += r1[i]*r2[i];
+    float top = Dot(r1,r2);
 
     return top;
   }
@@ -33,16 +24,9 @@ namespace larocv {
   float CosOpeningXZAngle(const float theta1, const float phi1,
 			  const float theta2, const float phi2) {
 
-    std::array<float,3> r1,r2;
-
-    r1[0] = std::sin(theta1) * std::cos(phi1);
-    r1[1] = std::sin(theta1) * std::sin(phi1);
-    r1[2] = std::cos(theta1);
+    auto r1 = AsVector(theta1,phi1);
+    auto r2 = AsVector(theta2,phi2);
     
-    r2[0] = std::sin(theta2) * std::cos(phi2);
-    r2[1] = std::sin(theta2) * std::sin(phi2);
-    r2[2] = std::cos(theta2);
-
     float top = r1[0] * r2[0] + r1[2] * r2[2];
 
     float bot = 1.0;
@@ -53,9 +37,20 @@ namespace larocv {
       
     return top / bot;
     
-    
-
+ 
   }
+
+  // Holy smokes sorry for stealing this from GeoAlgo, was just too easy...
+  std::array<float,3> ClosestPoint(const std::array<float,3>& p1, // point 1 on line
+				   const std::array<float,3>& p2, // point 2 on line
+				   const std::array<float,3>& p3) // point 3 not on line
+  {
+    const auto ab = Diff(p2,p1);
+    const auto t = Dot( Diff(p3,p1), ab );
+    const auto denom = Norm2(ab);
+    return Sum( p1, Scale(ab,t/denom) );
+  }
+
   
 }
 

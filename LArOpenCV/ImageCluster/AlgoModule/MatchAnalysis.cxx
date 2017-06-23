@@ -5,8 +5,7 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
-
-#include <array>
+#include "LArOpenCV/ImageCluster/AlgoFunction/VectorAnalysis.h"
 
 namespace larocv {
   
@@ -79,7 +78,11 @@ namespace larocv {
     _par_3d_segment_theta_estimate_v.clear();
     _par_3d_segment_phi_estimate_v.clear();
     _vertex_n_planes_charge = kINVALID_INT;
-    _match_ana_v.clear();
+    _par_pca_end_x_v.clear();
+    _par_pca_end_y_v.clear();
+    _par_pca_end_z_v.clear();
+    _par_pca_end_len_v.clear();
+
   }
 
   void MatchAnalysis::_Process_() {
@@ -135,7 +138,11 @@ namespace larocv {
       _par_3d_PCA_phi_estimate_v.resize(npar);
       _par_3d_segment_theta_estimate_v.resize(npar);
       _par_3d_segment_phi_estimate_v.resize(npar);
-
+      _par_pca_end_x_v.resize(npar);
+      _par_pca_end_y_v.resize(npar);
+      _par_pca_end_z_v.resize(npar);
+      _par_pca_end_len_v.resize(npar);
+      
       LAROCV_DEBUG() << "Got " << par_id_v.size() << " particles" << std::endl;
       LAROCV_DEBUG() << " & algo data particle vector sz " << particle_v.size() << std::endl;
       for(size_t par_idx=0; par_idx<par_id_v.size(); ++par_idx) {
@@ -159,7 +166,11 @@ namespace larocv {
 	auto& par_3d_segment_phi_estimate = _par_3d_segment_phi_estimate_v[par_idx];
 	auto& par_3d_PCA_theta_estimate = _par_3d_PCA_theta_estimate_v[par_idx];
 	auto& par_3d_PCA_phi_estimate = _par_3d_PCA_phi_estimate_v[par_idx];
-
+	auto& par_pca_end_x = _par_pca_end_x_v[par_idx];
+	auto& par_pca_end_y = _par_pca_end_y_v[par_idx];
+	auto& par_pca_end_z = _par_pca_end_z_v[par_idx];
+	auto& par_pca_end_len = _par_pca_end_len_v[par_idx];
+	
 	//
 	// compute the number of planes this particle is on
 	//
@@ -281,10 +292,25 @@ namespace larocv {
 	par_3d_PCA_phi_estimate   = kINVALID_DOUBLE;
 	
 	// using the PCA
-	auto pca_angle = Angle3D(par,thresh_img_v,vtx3d);
+	auto space_pts_v = SpacePointsEstimate(par,thresh_img_v);
+	
+	auto pca_angle = Angle3D(space_pts_v,vtx3d);
 	par_3d_PCA_theta_estimate = pca_angle.first;
 	par_3d_PCA_phi_estimate   = pca_angle.second;
 
+	//
+	// Estimate the 3D end point
+	//
+	auto end_pt_3d = EndPoint3D(space_pts_v,
+				    pca_angle.first,pca_angle.second,
+				    vtx3d);
+	
+	auto start_end_dist = Distance3D(end_pt_3d,vtx3d);
+	par_pca_end_x = end_pt_3d[0];
+	par_pca_end_y = end_pt_3d[1];
+	par_pca_end_z = end_pt_3d[2];
+	par_pca_end_len = start_end_dist;
+	
 	LAROCV_DEBUG() << "End particle " << par_idx << " @ " << par_id  << std::endl;
       } // end this particle
       
@@ -326,46 +352,51 @@ namespace larocv {
     LAROCV_DEBUG() << "deg: theta="<<arccos*180/3.14<<" phi="<<arctan*180/3.14<<std::endl;
     return std::make_pair(arccos,arctan);
   }  
-  
-  std::pair<float,float> MatchAnalysis::Angle3D(const data::Particle& particle,
-						const std::vector<cv::Mat>& img_v,
-						const data::Vertex3D& start3d) {
-    
-    
+
+
+  std::vector<data::Vertex3D> MatchAnalysis::SpacePointsEstimate(const data::Particle& particle,
+								 const std::vector<cv::Mat>& img_v) {
     // get the two largest particles clusters
-    int plane0_sz, plane1_sz;
-    plane0_sz = plane1_sz = -1.0*kINVALID_INT;
+
+    std::array<float,3> area_v;
+
+    for(size_t plane=0; plane<particle._par_v.size(); ++plane) {
+      const auto& pcluster = particle._par_v[plane];
+      if (pcluster._ctor.empty()) {
+	area_v[plane] = kINVALID_FLOAT;
+	continue;
+      }
+      area_v[plane] = ContourArea(pcluster._ctor);
+    }
+    
+    float plane0_sz, plane1_sz;
+    plane0_sz = plane1_sz = -1.0*kINVALID_FLOAT;
     
     size_t plane0, plane1;
     plane0 = plane1 = kINVALID_SIZE;
-
+    
     // get the largest
     for(size_t plane=0; plane<particle._par_v.size(); ++plane) {
-      const auto& pcluster = particle._par_v[plane];
-      if (pcluster._ctor.empty()) continue;
-      auto area = ContourArea(pcluster._ctor);
-      if (area > plane0_sz) {
+      if (area_v[plane] == kINVALID_FLOAT) continue;
+      if (area_v[plane] > plane0_sz) {
 	plane0 = plane;
-	plane0_sz = area;
+	plane0_sz = area_v[plane];
       }
     }
-
+    
     // get the second largest
     for(size_t plane=0; plane<particle._par_v.size(); ++plane) {
       if (plane==plane0) continue;
-      const auto& pcluster = particle._par_v[plane];
-      if (pcluster._ctor.empty()) continue;
-      auto area = ContourArea(pcluster._ctor);
-      if (area > plane1_sz) {
+      if (area_v[plane] == kINVALID_FLOAT) continue;
+      if (area_v[plane] > plane1_sz) {
 	plane1 = plane;
-	plane1_sz = area;
+	plane1_sz = area_v[plane];
       }
     }
-
-    //LARCV_DEBUG() << plane0_sz <<","<<plane0<<","<<plane1_sz<<","<<plane1<<std::endl;
-    assert(plane0_sz != -1.0*kINVALID_INT);
-    assert(plane1_sz != -1.0*kINVALID_INT);
-
+    
+    assert(plane0_sz != -1.0*kINVALID_FLOAT);
+    assert(plane1_sz != -1.0*kINVALID_FLOAT);
+	   
     assert(plane0 != kINVALID_SIZE);
     assert(plane1 != kINVALID_SIZE);
 
@@ -400,6 +431,21 @@ namespace larocv {
 	used_v.at(pxid1) = true;
       }
     }
+
+    return vtx3d_v;
+  }
+
+  std::pair<float,float> MatchAnalysis::Angle3D(const data::Particle& particle,
+						const std::vector<cv::Mat>& img_v,
+						const data::Vertex3D& start3d) {
+
+    auto space_pts_v = SpacePointsEstimate(particle,img_v);
+    return Angle3D(space_pts_v,start3d);
+  }
+  
+  std::pair<float,float> MatchAnalysis::Angle3D(const std::vector<data::Vertex3D>& vtx3d_v,
+						const data::Vertex3D& start3d) {
+
     
     cv::Mat vertex_mat(vtx3d_v.size(), 3, CV_32FC1);
     
@@ -470,6 +516,55 @@ namespace larocv {
     LAROCV_DEBUG() << "deg: theta="<<arccos*180.0/3.14<<" phi="<<arctan*180.0/3.14<<std::endl;
     return std::make_pair(arccos,arctan);
   }
+
+
+  std::array<float,3> MatchAnalysis::EndPoint3D(const std::vector<data::Vertex3D>& space_pts_v,
+						const float theta, const float phi,
+						const data::Vertex3D& start_pt) {
+    auto pca_dir   = AsVector(theta,phi);
+    auto vertex_pt = AsVector(start_pt.x, start_pt.y, start_pt.z);
+    auto pca_pt    = Sum(vertex_pt,pca_dir);
+    
+    std::vector<std::array<float,3> > projected_v;
+    projected_v.reserve(space_pts_v.size());
+    
+    for(const auto& vtx3d : space_pts_v) {
+      auto pt = AsVector(vtx3d.x,vtx3d.y,vtx3d.z);
+      projected_v.emplace_back(ClosestPoint(vertex_pt,pca_pt,pt));
+    }
+
+    // get the projected point that is farthest away
+    float max_dist = -1.0*kINVALID_FLOAT;
+    const std::array<float,3>* far_ptr = nullptr;
+    for(const auto& pt : projected_v) {
+      auto distance = Distance(pt,vertex_pt); 
+      if ( distance > max_dist) {
+	max_dist = distance;
+	far_ptr = &pt;
+      }
+    }
+    
+    // project all points onto the PCA line
+    if (far_ptr == nullptr) {
+      LAROCV_WARNING() << "End point 3D could not be estimated" << std::endl;
+      return {{kINVALID_FLOAT,kINVALID_FLOAT,kINVALID_FLOAT}};
+    }
+
+    return *far_ptr;
+  }
+
+
+  float MatchAnalysis::Distance3D(const std::array<float,3>& pt1,
+				  const data::Vertex3D& vtx) {
+    auto pt2 = AsVector(vtx.x,vtx.y,vtx.z);
+    return Distance(pt1,pt2);
+  }
+  
+  float MatchAnalysis::Distance3D(const data::Vertex3D& vtx,
+				  const std::array<float,3>& pt1) {
+    return Distance3D(pt1,vtx);
+  }
+  
   
   void MatchAnalysis::StoreMatchAna() {
     MatchAna match_ana;
@@ -485,7 +580,11 @@ namespace larocv {
     match_ana.par_3d_segment_theta_estimate_v = _par_3d_segment_theta_estimate_v;
     match_ana.par_3d_segment_phi_estimate_v   = _par_3d_segment_phi_estimate_v; 
     match_ana.vertex_n_planes_charge          = _vertex_n_planes_charge;
-    
+    match_ana.par_pca_end_x_v                   = _par_pca_end_x_v;
+    match_ana.par_pca_end_y_v                   = _par_pca_end_y_v;
+    match_ana.par_pca_end_z_v                   = _par_pca_end_z_v;
+    match_ana.par_pca_end_len_v                 = _par_pca_end_len_v;
+      
     _match_ana_v.emplace_back(std::move(match_ana));
   }
 

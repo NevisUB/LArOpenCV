@@ -31,6 +31,9 @@
 #pragma link C++ class larocv::AngleAnalysis+;
 #pragma link C++ class larocv::dQdsAnalysis+;
 #pragma link C++ class larocv::MatchOverlap+;
+#pragma link C++ class larocv::MatchAnalysis+;
+#pragma link C++ class larocv::EmptyAnalysis+;
+#pragma link C++ class larocv::LinearityAnalysis+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif
