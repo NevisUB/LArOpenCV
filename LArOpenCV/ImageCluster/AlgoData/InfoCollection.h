@@ -3,6 +3,8 @@
 
 #include "LArOpenCV/Core/LArOCVTypes.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoDataBase.h"
+#include <array>
+
 /*
   @brief: storage for generic information, whatever you want to get the job done
 */
@@ -22,7 +24,7 @@ namespace larocv {
       /// attribute clear method
       void _Clear_() {}
 
-
+      
     };
 
     /**
@@ -37,6 +39,10 @@ namespace larocv {
       /// attribute clear method
       void _Clear_() {}
 
+      std::array<float,3> pca_dir;
+      std::array<float,3> pca_start_pt;
+      std::array<float,3> pca_end_pt;
+      float pca_length;
 
     };
     
