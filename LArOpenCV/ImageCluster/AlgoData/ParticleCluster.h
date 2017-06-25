@@ -68,7 +68,6 @@ namespace larocv {
       std::vector<ParticleCluster> _par_v; ///< Particle cluster per plane, can be empty
       float score; ///< score
       
-      
     };
     
     /**

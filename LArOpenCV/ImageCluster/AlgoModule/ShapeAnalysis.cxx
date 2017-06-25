@@ -5,6 +5,7 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/PixelChunk.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 #include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
+#include "Geo2D/Core/Geo2D.h"
 
 namespace larocv {
   
@@ -53,7 +54,8 @@ namespace larocv {
     _tree->Branch("mean_pixel_dist_v" , &_mean_pixel_dist_v);
     _tree->Branch("sigma_pixel_dist_v", &_sigma_pixel_dist_v);
     _tree->Branch("angular_sum_v"     , &_angular_sum_v);
-
+    _tree->Branch("triangle_d_sum_v"  , &_triangle_d_sum_v);
+    
     _tree->Branch("track_par_max_id"   , &_track_par_max_id   , "track_par_max_id/I");
     _tree->Branch("shower_par_max_id"  , &_shower_par_max_id  , "shower_par_max_id/I");
     _tree->Branch("track_par_max_frac" , &_track_par_max_frac , "track_par_max_frac/F");
@@ -79,6 +81,7 @@ namespace larocv {
     _mean_pixel_dist_v.clear();
     _sigma_pixel_dist_v.clear();
     _angular_sum_v.clear();
+    _triangle_d_sum_v.clear();
   }
   
   void ShapeAnalysis::_Process_() {
@@ -127,7 +130,8 @@ namespace larocv {
 	float mean_pixel_dist = 0.0;
 	float sigma_pixel_dist = 0.0;
 	float angular_sum = 0.0;
-
+	float triangle_d_sum = 0.0;
+	
 	int nplanes = 0;
 	for(size_t plane=0; plane<3; ++plane) {
 
@@ -152,8 +156,21 @@ namespace larocv {
 	  mean_pixel_dist  += pchunk.mean_pixel_dist;
 	  sigma_pixel_dist += pchunk.sigma_pixel_dist;
 	  angular_sum      += pchunk.angular_sum;
-	} // end plane
 
+	  // Estimate linearity from 3 point triangle
+	  const auto& vtx2d = vtx3d.vtx2d_v.at(plane).pt;
+	  auto valid_end = pchunk.EstimateStartEndPixel(vtx2d,adc_img,10);
+	  if (!valid_end) LAROCV_WARNING() << "Invalid start or end point" << std::endl;
+	  auto valid_trunk = pchunk.EstimateTrunkPCA(vtx2d,adc_img,15,10);
+	  if (!valid_trunk) LAROCV_WARNING() << "Invalid trunk PCA determined" << std::endl;
+
+	  geo2d::Vector<float> ret1,ret2;
+	  float dist = geo2d::ClosestPoint(pchunk.trunkPCA,pchunk.end_pt,ret1,ret2);
+	  if (isinf(dist)) dist = kINVALID_FLOAT;
+	  triangle_d_sum += dist;
+	  
+	} // end plane
+	
 	_length_v.push_back(length);
 	_width_v.push_back(width);
 	_perimeter_v.push_back(perimeter);
@@ -164,8 +181,11 @@ namespace larocv {
 	_mean_pixel_dist_v.push_back(mean_pixel_dist);
 	_sigma_pixel_dist_v.push_back(sigma_pixel_dist);
 	_angular_sum_v.push_back(angular_sum);
+	_triangle_d_sum_v.push_back(triangle_d_sum);
 	_nplanes_v.push_back(nplanes);
+
 	
+	  
       } // end particle
       _nparticles = par_id_v.size();
 

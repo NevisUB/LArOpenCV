@@ -59,7 +59,8 @@ namespace larocv {
     std::vector<float> _mean_pixel_dist_v;
     std::vector<float> _sigma_pixel_dist_v;
     std::vector<float> _angular_sum_v;
-
+    std::vector<float> _triangle_d_sum_v;
+    
     int _track_par_max_id;
     int _shower_par_max_id;
     float _track_par_max_frac;
@@ -69,7 +70,6 @@ namespace larocv {
     int _par2_type;
     float _par1_frac;
     float _par2_frac;
-
     
     void Clear();
   };
