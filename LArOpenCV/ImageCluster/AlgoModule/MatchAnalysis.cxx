@@ -147,6 +147,7 @@ namespace larocv {
       _par_pca_end_x_v.resize(npar);
       _par_pca_end_y_v.resize(npar);
       _par_pca_end_z_v.resize(npar);
+      _pca_end_in_fiducial_v.resize(npar);
       _par_pca_end_len_v.resize(npar);
       
       LAROCV_DEBUG() << "Got " << par_id_v.size() << " particles" << std::endl;
