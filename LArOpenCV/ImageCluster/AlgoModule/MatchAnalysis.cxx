@@ -63,7 +63,8 @@ namespace larocv {
     _tree->Branch("par_3d_segment_theta_estimate_v",&_par_3d_segment_theta_estimate_v);
     _tree->Branch("par_3d_segment_phi_estimate_v",&_par_3d_segment_phi_estimate_v);
     _tree->Branch("vertex_n_planes_charge",&_vertex_n_planes_charge,"vertex_n_planes_charge/I");
-  
+    _tree->Branch("par_pca_end_len_v",&_par_pca_end_len_v);
+      
     _roid = 0;
   }
   
