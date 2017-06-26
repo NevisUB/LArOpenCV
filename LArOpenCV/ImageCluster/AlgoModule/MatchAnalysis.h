@@ -71,9 +71,10 @@ namespace larocv {
     int _vertex_n_planes_charge; // c
     std::vector<float> _par_pca_end_x_v;  
     std::vector<float> _par_pca_end_y_v;  
-    std::vector<float> _par_pca_end_z_v;  
+    std::vector<float> _par_pca_end_z_v;
+    std::vector<int> _pca_end_in_fiducial_v;
     std::vector<float> _par_pca_end_len_v;
-
+    
     
     //
     // for debug, per vertex storage

@@ -604,16 +604,33 @@ namespace larocv {
     std::swap(vtx_temp_v,vtx_v);
   }
 
+
+  // from jarrett
   bool
-  VertexAnalysis::CheckFiducial(const data::Vertex3D& vtx3d) const {
+  VertexAnalysis::CheckFiducial(const data::Vertex3D& vtx,
+				float edge_x, float edge_y, float edge_z) const {
+
+    auto X = vtx.x;
+    auto Y = vtx.y;
+    auto Z = vtx.z;
     
-    if( vtx3d.x < 5.     || vtx3d.x > 251.35 ||
-	vtx3d.y < -111.5 || vtx3d.y > 111.5  ||
-	vtx3d.z < 5.     || vtx3d.z > 1031.8 )
-      return false;
-    
-    return true;
+    static float xmin =  0.0;
+    static float ymin = -116.5;
+    static float zmin =  0.0;
+
+    static float xmax =  256.25; //cm
+    static float ymax =  116.5;  //cm
+    static float zmax = 1036.8;  //cm
+
+    bool XInFid = (X < (xmax - edge_x) && (X > xmin + edge_x) );
+    bool YInFid = (Y < (ymax - edge_y) && (Y > ymin + edge_y) );
+    bool ZInFid = (Z < (zmax - edge_z) && (Z > zmin + edge_z) );
+
+    if (XInFid && YInFid && ZInFid) return true;
+
+    return false;
   }
+
 
   data::Vertex3D
   VertexAnalysis::AverageVertex(const data::Vertex3D& vtx1, const data::Vertex3D& vtx2) const {

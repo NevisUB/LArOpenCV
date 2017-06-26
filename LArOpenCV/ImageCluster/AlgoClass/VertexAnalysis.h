@@ -91,7 +91,8 @@ namespace larocv {
 		bool weight_by_size=false) const;
 
     bool
-    CheckFiducial(const data::Vertex3D& vtx3d) const;
+    CheckFiducial(const data::Vertex3D& vtx3d,
+		  float edge_x=10.0, float edge_y=10.0, float edge_z=10.0) const;
 
     bool
     MatchEdge(const std::array<const data::TrackClusterCompound*,3>& tcluster_arr,

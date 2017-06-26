@@ -63,8 +63,11 @@ namespace larocv {
     _tree->Branch("par_3d_segment_theta_estimate_v",&_par_3d_segment_theta_estimate_v);
     _tree->Branch("par_3d_segment_phi_estimate_v",&_par_3d_segment_phi_estimate_v);
     _tree->Branch("vertex_n_planes_charge",&_vertex_n_planes_charge,"vertex_n_planes_charge/I");
+    _tree->Branch("par_pca_end_x_v",&_par_pca_end_x_v);
+    _tree->Branch("par_pca_end_y_v",&_par_pca_end_y_v);
+    _tree->Branch("par_pca_end_z_v",&_par_pca_end_z_v);
+    _tree->Branch("pca_end_in_fiducial_v",&_pca_end_in_fiducial_v);
     _tree->Branch("par_pca_end_len_v",&_par_pca_end_len_v);
-      
     _roid = 0;
   }
   
@@ -83,6 +86,7 @@ namespace larocv {
     _par_pca_end_x_v.clear();
     _par_pca_end_y_v.clear();
     _par_pca_end_z_v.clear();
+    _pca_end_in_fiducial_v.clear();
     _par_pca_end_len_v.clear();
 
   }
@@ -171,6 +175,7 @@ namespace larocv {
 	auto& par_pca_end_x = _par_pca_end_x_v[par_idx];
 	auto& par_pca_end_y = _par_pca_end_y_v[par_idx];
 	auto& par_pca_end_z = _par_pca_end_z_v[par_idx];
+	auto& pca_end_in_fiducial = _pca_end_in_fiducial_v[par_idx];
 	auto& par_pca_end_len = _par_pca_end_len_v[par_idx];
 	
 	//
@@ -312,6 +317,13 @@ namespace larocv {
 	par_pca_end_y = end_pt_3d[1];
 	par_pca_end_z = end_pt_3d[2];
 	par_pca_end_len = start_end_dist;
+
+	data::Vertex3D end_pca;
+	end_pca.x = end_pt_3d[0];
+	end_pca.y = end_pt_3d[1];
+	end_pca.z = end_pt_3d[2];
+	
+	pca_end_in_fiducial = _VertexAnalysis.CheckFiducial(end_pca);
 	
 	LAROCV_DEBUG() << "End particle " << par_idx << " @ " << par_id  << std::endl;
       } // end this particle
