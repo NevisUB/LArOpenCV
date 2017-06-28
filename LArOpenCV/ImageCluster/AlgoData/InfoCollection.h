@@ -55,6 +55,7 @@ namespace larocv {
       std::array<float,3> trunk_pca_dir;
       std::array<float,3> trunk_pca_start_pt;
       std::array<float,3> trunk_pca_end_pt;
+      bool trunk_pca_valid;
       float trunk_pca_length;
       float pixel_radius;
       

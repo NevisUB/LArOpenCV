@@ -81,7 +81,7 @@ namespace larocv {
     _tree->Branch("par_trunk_pca_end_z_v",&_par_trunk_pca_end_z_v);
     _tree->Branch("par_trunk_pca_end_in_fiducial_v",&_par_trunk_pca_end_in_fiducial_v);
     _tree->Branch("par_trunk_pca_end_len_v",&_par_trunk_pca_end_len_v);
-    
+    _tree->Branch("par_trunk_pca_valid_v",&_par_trunk_pca_valid_v);
     _tree->Branch("trunk_length",&_trunk_length,"trunk_length/F");
 
     Register(new data::Info3DArray);
@@ -174,6 +174,7 @@ namespace larocv {
 	auto& par_trunk_pca_end_y           = _par_trunk_pca_end_y_v[par_idx];
 	auto& par_trunk_pca_end_z           = _par_trunk_pca_end_z_v[par_idx];
 	auto& par_trunk_pca_end_in_fiducial = _par_trunk_pca_end_in_fiducial_v[par_idx];
+	auto& par_trunk_pca_valid           = _par_trunk_pca_valid_v[par_idx];
 	auto& par_trunk_pca_end_len         = _par_trunk_pca_end_len_v[par_idx];
 	
 	//
@@ -281,33 +282,34 @@ namespace larocv {
 	}
 
 	//
-	// determine the 3D angle for this particle in 2 ways
+	// determine the 3D angle for this particle in 3 ways
+	//
+
+	//
+	// using the line segment between vertex
+	// and contour end point
 	//
 	par_3d_segment_theta_estimate = kINVALID_DOUBLE;
 	par_3d_segment_phi_estimate   = kINVALID_DOUBLE;
 	
-	// using the segment
 	if (edge_found) {
 	  auto segment_angle = Angle3D(vtx3d,end3d);
 	  par_3d_segment_theta_estimate = segment_angle.first;
 	  par_3d_segment_phi_estimate   = segment_angle.second;
 	}
 
+	//
+	// using the overall PCA of the cluster
+	//
 	par_pca_theta_estimate = kINVALID_DOUBLE;
 	par_pca_phi_estimate   = kINVALID_DOUBLE;
-
-	//
-	// using the PCA
-	//
+	
 	auto space_pts_v = SpacePointsEstimate(par,thresh_img_v);
 	
 	auto pca_angle = Angle3D(space_pts_v,vtx3d);
 	par_pca_theta_estimate = pca_angle.first;
 	par_pca_phi_estimate   = pca_angle.second;
 
-	//
-	// Estimate the 3D end point
-	//
 	auto end_pt_3d = EndPoint3D(space_pts_v,
 				    pca_angle.first,pca_angle.second,
 				    vtx3d);
@@ -327,37 +329,60 @@ namespace larocv {
 
 	par_trunk_pca_theta_estimate = kINVALID_DOUBLE;
 	par_trunk_pca_phi_estimate   = kINVALID_DOUBLE;
-	
-	// using the PCA trunk
+
+	//
+	// using the trunk of the PCA (radius = configuration)
+	//
 	_trunk_length = _trunk_radius;
 	space_pts_v = SpacePointsEstimate(par,thresh_img_v,_trunk_length,vtx3d);
+	par_trunk_pca_valid = space_pts_v.empty() ? 0 : 1;
+
+	std::pair<double,double> trunk_pca_angle;
+	std::array<float,3> trunk_end_pt_3d;
+	float trunk_start_end_dist;
 	
-	auto trunk_pca_angle = Angle3D(space_pts_v,vtx3d);
-	par_trunk_pca_theta_estimate = trunk_pca_angle.first;
-	par_trunk_pca_phi_estimate   = trunk_pca_angle.second;
+	if (par_trunk_pca_valid) {
+	  trunk_pca_angle = Angle3D(space_pts_v,vtx3d);
+	  par_trunk_pca_theta_estimate = trunk_pca_angle.first;
+	  par_trunk_pca_phi_estimate   = trunk_pca_angle.second;
+	  
+	  
+	  trunk_end_pt_3d = EndPoint3D(space_pts_v,
+				       trunk_pca_angle.first,trunk_pca_angle.second,
+				       vtx3d);
+	  
+	  trunk_start_end_dist = Distance3D(trunk_end_pt_3d,vtx3d);
+	  par_trunk_pca_end_x = trunk_end_pt_3d[0];
+	  par_trunk_pca_end_y = trunk_end_pt_3d[1];
+	  par_trunk_pca_end_z = trunk_end_pt_3d[2];
+	  par_trunk_pca_end_len = trunk_start_end_dist;
+
+	  data::Vertex3D trunk_end_pca;
+	  trunk_end_pca.x = trunk_end_pt_3d[0];
+	  trunk_end_pca.y = trunk_end_pt_3d[1];
+	  trunk_end_pca.z = trunk_end_pt_3d[2];
+	
+	  par_trunk_pca_end_in_fiducial = _VertexAnalysis.CheckFiducial(trunk_end_pca);
+	} else {
+
+	  trunk_pca_angle = std::make_pair(kINVALID_DOUBLE,kINVALID_DOUBLE);
+	  par_trunk_pca_theta_estimate = kINVALID_DOUBLE;
+	  par_trunk_pca_phi_estimate = kINVALID_DOUBLE;
+	  
+	  trunk_end_pt_3d = AsVector(kINVALID_FLOAT,kINVALID_FLOAT,kINVALID_FLOAT);
+	  
+	  par_trunk_pca_end_x = kINVALID_FLOAT;
+	  par_trunk_pca_end_y = kINVALID_FLOAT;
+	  par_trunk_pca_end_z = kINVALID_FLOAT;
+	  par_trunk_pca_end_len = kINVALID_FLOAT;
+
+	  trunk_start_end_dist = kINVALID_FLOAT;
+	  
+	  par_trunk_pca_end_in_fiducial = false;
+	}
 
 	//
-	// Estimate the 3D end point of trunk
-	//
-	auto trunk_end_pt_3d = EndPoint3D(space_pts_v,
-					  trunk_pca_angle.first,trunk_pca_angle.second,
-					  vtx3d);
-	
-	auto trunk_start_end_dist = Distance3D(trunk_end_pt_3d,vtx3d);
-	par_trunk_pca_end_x = trunk_end_pt_3d[0];
-	par_trunk_pca_end_y = trunk_end_pt_3d[1];
-	par_trunk_pca_end_z = trunk_end_pt_3d[2];
-	par_trunk_pca_end_len = trunk_start_end_dist;
-
-	data::Vertex3D trunk_end_pca;
-	trunk_end_pca.x = trunk_end_pt_3d[0];
-	trunk_end_pca.y = trunk_end_pt_3d[1];
-	trunk_end_pca.z = trunk_end_pt_3d[2];
-	
-	par_trunk_pca_end_in_fiducial = _VertexAnalysis.CheckFiducial(trunk_end_pca);
-
-	//
-	// Write out the PCA info
+	// Write out the PCA info @ Info3D Producer
 	//
 	data::Info3D pca_info;
 	pca_info.overall_pca_theta    = par_pca_theta_estimate;
@@ -376,6 +401,7 @@ namespace larocv {
 	pca_info.trunk_pca_start_pt = AsVector(vtx3d.x,vtx3d.y,vtx3d.z);
 	pca_info.trunk_pca_end_pt   = trunk_end_pt_3d;
 	pca_info.trunk_pca_length   = trunk_start_end_dist;
+	pca_info.trunk_pca_valid = par_trunk_pca_valid;
 	pca_info.pixel_radius = _trunk_length;
 	
 	info3d_arr.emplace_back(std::move(pca_info));
@@ -498,7 +524,9 @@ namespace larocv {
   
     auto pxpts0_v = FindNonZero(mask0);
     auto pxpts1_v = FindNonZero(mask1);
-
+    LAROCV_DEBUG() << "Found " << pxpts0_v.size() << " pts @ mask0" << std::endl;
+    LAROCV_DEBUG() << "Found " << pxpts1_v.size() << " pts @ mask1" << std::endl;
+    
     // make 3D point and store in cv::Mat for PCA
     const auto& geo = _VertexAnalysis.Geo();
     std::vector<bool> used_v(pxpts1_v.size(),false);
@@ -513,12 +541,12 @@ namespace larocv {
 	if (!geo.YZPoint(pxpts0_v.at(pxid0),plane0,
 			 pxpts1_v.at(pxid1),plane1,
 			 res)) continue;
-	
 	vtx3d_v.emplace_back(std::move(res));
 	used_v.at(pxid1) = true;
       }
     }
 
+    LAROCV_DEBUG() << "Returned " << vtx3d_v.size() << " 3D space pts" << std::endl;
     return vtx3d_v;
   }
 
@@ -533,7 +561,7 @@ namespace larocv {
   
   std::pair<float,float> MatchAnalysis::Angle3D(const std::vector<data::Vertex3D>& vtx3d_v,
 						const data::Vertex3D& start3d) {
-
+    
     
     cv::Mat vertex_mat(vtx3d_v.size(), 3, CV_32FC1);
     
@@ -585,7 +613,7 @@ namespace larocv {
       // implement direction handling, negative dot product, flip the sign on eigen
       //
 
-      auto dot_product = mean_dir_v[0] * eigen_v[0] + mean_dir_v[1] * eigen_v[1] + mean_dir_v[2] * eigen_v[2];
+      auto dot_product = Dot(mean_dir_v,eigen_v);
       if (dot_product < 0) {
 	eigen_v[0] *= -1;
 	eigen_v[1] *= -1;
@@ -678,6 +706,7 @@ namespace larocv {
     _par_trunk_pca_end_y_v.resize(npar);
     _par_trunk_pca_end_z_v.resize(npar);
     _par_trunk_pca_end_in_fiducial_v.resize(npar);
+    _par_trunk_pca_valid_v.resize(npar);
     _par_trunk_pca_end_len_v.resize(npar);
   }
 
@@ -709,6 +738,7 @@ namespace larocv {
     _par_trunk_pca_end_y_v.clear();
     _par_trunk_pca_end_z_v.clear();
     _par_trunk_pca_end_in_fiducial_v.clear();
+    _par_trunk_pca_valid_v.clear();
     _par_trunk_pca_end_len_v.clear();
     
   }

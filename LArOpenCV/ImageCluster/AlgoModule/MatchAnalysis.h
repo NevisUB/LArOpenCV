@@ -85,6 +85,7 @@ namespace larocv {
     std::vector<float>  _par_trunk_pca_end_z_v;
     std::vector<int>    _par_trunk_pca_end_in_fiducial_v;
     std::vector<float>  _par_trunk_pca_end_len_v;
+    std::vector<int>    _par_trunk_pca_valid_v;
     
     float _trunk_length;
     

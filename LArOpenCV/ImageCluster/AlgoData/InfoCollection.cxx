@@ -24,6 +24,7 @@ namespace larocv {
       trunk_pca_start_pt = invalid_vec;
       trunk_pca_end_pt = invalid_vec;
       trunk_pca_length = kINVALID_FLOAT;
+      trunk_pca_valid = false;
       pixel_radius = kINVALID_FLOAT;
       
     }
