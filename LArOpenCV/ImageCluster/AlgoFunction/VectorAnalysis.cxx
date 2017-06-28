@@ -40,7 +40,7 @@ namespace larocv {
  
   }
 
-  // Holy smokes sorry for stealing this from GeoAlgo, was just too easy...
+// Holy smokes sorry for stealing this from GeoAlgo, was just too easy...
   std::array<float,3> ClosestPoint(const std::array<float,3>& p1, // point 1 on line
 				   const std::array<float,3>& p2, // point 2 on line
 				   const std::array<float,3>& p3) // point 3 not on line

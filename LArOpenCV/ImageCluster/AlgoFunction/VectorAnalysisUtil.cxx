@@ -39,7 +39,7 @@ namespace larocv {
 
   float Distance(const std::array<float,3>& p1,
 		 const std::array<float,3>& p2) {
-    return QuadDiff2(p1,p2);
+    return QuadDiff(p1,p2);
   }
   
   float QuadSum(const std::array<float,3>& p1,

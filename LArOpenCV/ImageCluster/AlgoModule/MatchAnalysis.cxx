@@ -42,7 +42,9 @@ namespace larocv {
     _AtomicAnalysis.Configure(pset.get<Config_t>("AtomicAnalysis"));
     _VertexAnalysis.Configure(pset.get<Config_t>("VertexAnalysis"));
 
-    _debug_match_ana = pset.get<bool>("DebugMatchAna",false);
+    _trunk_radius = 0.0;
+    _trunk_radius = pset.get<float>("TrunkRadius");
+
   
     _tree = new TTree("MatchAnalysis","");
     AttachIDs(_tree);
@@ -58,45 +60,41 @@ namespace larocv {
     _tree->Branch("par_end_pt_y_v",&_par_end_pt_y_v);
     _tree->Branch("par_end_pt_z_v",&_par_end_pt_z_v);
     _tree->Branch("par_n_planes_charge_v",&_par_n_planes_charge_v);
-    _tree->Branch("par_3d_PCA_theta_estimate_v",&_par_3d_PCA_theta_estimate_v);
-    _tree->Branch("par_3d_PCA_phi_estimate_v",&_par_3d_PCA_phi_estimate_v);
+
+    _tree->Branch("vertex_n_planes_charge",&_vertex_n_planes_charge,"vertex_n_planes_charge/I");
+    
     _tree->Branch("par_3d_segment_theta_estimate_v",&_par_3d_segment_theta_estimate_v);
     _tree->Branch("par_3d_segment_phi_estimate_v",&_par_3d_segment_phi_estimate_v);
-    _tree->Branch("vertex_n_planes_charge",&_vertex_n_planes_charge,"vertex_n_planes_charge/I");
+
+    _tree->Branch("par_pca_theta_estimate_v",&_par_pca_theta_estimate_v);
+    _tree->Branch("par_pca_phi_estimate_v",&_par_pca_phi_estimate_v);
     _tree->Branch("par_pca_end_x_v",&_par_pca_end_x_v);
     _tree->Branch("par_pca_end_y_v",&_par_pca_end_y_v);
     _tree->Branch("par_pca_end_z_v",&_par_pca_end_z_v);
-    _tree->Branch("pca_end_in_fiducial_v",&_pca_end_in_fiducial_v);
+    _tree->Branch("par_pca_end_in_fiducial_v",&_par_pca_end_in_fiducial_v);
     _tree->Branch("par_pca_end_len_v",&_par_pca_end_len_v);
+
+    _tree->Branch("par_trunk_pca_theta_estimate_v",&_par_trunk_pca_theta_estimate_v);
+    _tree->Branch("par_trunk_pca_phi_estimate_v",&_par_trunk_pca_phi_estimate_v);
+    _tree->Branch("par_trunk_pca_end_x_v",&_par_trunk_pca_end_x_v);
+    _tree->Branch("par_trunk_pca_end_y_v",&_par_trunk_pca_end_y_v);
+    _tree->Branch("par_trunk_pca_end_z_v",&_par_trunk_pca_end_z_v);
+    _tree->Branch("par_trunk_pca_end_in_fiducial_v",&_par_trunk_pca_end_in_fiducial_v);
+    _tree->Branch("par_trunk_pca_end_len_v",&_par_trunk_pca_end_len_v);
+    
+    _tree->Branch("trunk_length",&_trunk_length,"trunk_length/F");
+
+    Register(new data::Info3DArray);
+    
     _roid = 0;
   }
   
-  void MatchAnalysis::Clear() {
-    _par_pixel_ratio_v.clear();
-    _par_valid_end_pt_v.clear();
-    _par_end_pt_x_v.clear();
-    _par_end_pt_y_v.clear();
-    _par_end_pt_z_v.clear();
-    _par_n_planes_charge_v.clear();
-    _par_3d_PCA_theta_estimate_v.clear();
-    _par_3d_PCA_phi_estimate_v.clear();
-    _par_3d_segment_theta_estimate_v.clear();
-    _par_3d_segment_phi_estimate_v.clear();
-    _vertex_n_planes_charge = kINVALID_INT;
-    _par_pca_end_x_v.clear();
-    _par_pca_end_y_v.clear();
-    _par_pca_end_z_v.clear();
-    _pca_end_in_fiducial_v.clear();
-    _par_pca_end_len_v.clear();
 
-  }
 
   void MatchAnalysis::_Process_() {
     
     if(NextEvent()) _roid=0;
 
-    if(_debug_match_ana) ClearMatchAna();
-    
     auto& ass_man = AssManager();
     
     // Get images
@@ -116,6 +114,9 @@ namespace larocv {
     const auto& particle_arr = AlgoData<data::ParticleArray>(_particle_id,0);
     const auto& particle_v = particle_arr.as_vector();
 
+    // store info3d array for PCA information
+    auto& info3d_arr = AlgoData<data::Info3DArray>(0);
+    
     _vtxid = -1;
     LAROCV_DEBUG() << "Got " << vtx3d_v.size() << " vertices" << std::endl;
     for(size_t vtxid = 0; vtxid < vtx3d_v.size(); ++vtxid) {
@@ -134,22 +135,8 @@ namespace larocv {
 
       size_t npar = par_id_v.size();
       
-      _par_pixel_ratio_v.resize(npar);
-      _par_valid_end_pt_v.resize(npar);
-      _par_end_pt_x_v.resize(npar);
-      _par_end_pt_y_v.resize(npar);
-      _par_end_pt_z_v.resize(npar);
-      _par_n_planes_charge_v.resize(npar);
-      _par_3d_PCA_theta_estimate_v.resize(npar);
-      _par_3d_PCA_phi_estimate_v.resize(npar);
-      _par_3d_segment_theta_estimate_v.resize(npar);
-      _par_3d_segment_phi_estimate_v.resize(npar);
-      _par_pca_end_x_v.resize(npar);
-      _par_pca_end_y_v.resize(npar);
-      _par_pca_end_z_v.resize(npar);
-      _pca_end_in_fiducial_v.resize(npar);
-      _par_pca_end_len_v.resize(npar);
-      
+      ResizeVectors(npar);
+		    
       LAROCV_DEBUG() << "Got " << par_id_v.size() << " particles" << std::endl;
       LAROCV_DEBUG() << " & algo data particle vector sz " << particle_v.size() << std::endl;
       for(size_t par_idx=0; par_idx<par_id_v.size(); ++par_idx) {
@@ -158,7 +145,6 @@ namespace larocv {
 	const auto& par = particle_v[par_id];
 
 	LAROCV_DEBUG() << "At particle id " << par_idx << " @ " << par_id << std::endl;
-	
 	
 	//
 	// do something with this particle
@@ -169,15 +155,26 @@ namespace larocv {
 	auto& par_end_pt_y = _par_end_pt_y_v[par_idx];
 	auto& par_end_pt_z = _par_end_pt_z_v[par_idx];
 	auto& par_n_planes_charge = _par_n_planes_charge_v[par_idx];
+
 	auto& par_3d_segment_theta_estimate = _par_3d_segment_theta_estimate_v[par_idx];
 	auto& par_3d_segment_phi_estimate = _par_3d_segment_phi_estimate_v[par_idx];
-	auto& par_3d_PCA_theta_estimate = _par_3d_PCA_theta_estimate_v[par_idx];
-	auto& par_3d_PCA_phi_estimate = _par_3d_PCA_phi_estimate_v[par_idx];
-	auto& par_pca_end_x = _par_pca_end_x_v[par_idx];
-	auto& par_pca_end_y = _par_pca_end_y_v[par_idx];
-	auto& par_pca_end_z = _par_pca_end_z_v[par_idx];
-	auto& pca_end_in_fiducial = _pca_end_in_fiducial_v[par_idx];
-	auto& par_pca_end_len = _par_pca_end_len_v[par_idx];
+
+	auto& par_pca_theta_estimate  = _par_pca_theta_estimate_v[par_idx];
+	auto& par_pca_phi_estimate    = _par_pca_phi_estimate_v[par_idx];
+	auto& par_pca_end_x           = _par_pca_end_x_v[par_idx];
+	auto& par_pca_end_y           = _par_pca_end_y_v[par_idx];
+	auto& par_pca_end_z           = _par_pca_end_z_v[par_idx];
+	auto& par_pca_end_in_fiducial = _par_pca_end_in_fiducial_v[par_idx];
+	auto& par_pca_end_len         = _par_pca_end_len_v[par_idx];
+
+	auto& par_trunk_pca_theta_estimate  = _par_trunk_pca_theta_estimate_v[par_idx];
+	auto& par_trunk_pca_phi_estimate    = _par_trunk_pca_phi_estimate_v[par_idx];
+
+	auto& par_trunk_pca_end_x           = _par_trunk_pca_end_x_v[par_idx];
+	auto& par_trunk_pca_end_y           = _par_trunk_pca_end_y_v[par_idx];
+	auto& par_trunk_pca_end_z           = _par_trunk_pca_end_z_v[par_idx];
+	auto& par_trunk_pca_end_in_fiducial = _par_trunk_pca_end_in_fiducial_v[par_idx];
+	auto& par_trunk_pca_end_len         = _par_trunk_pca_end_len_v[par_idx];
 	
 	//
 	// compute the number of planes this particle is on
@@ -296,15 +293,17 @@ namespace larocv {
 	  par_3d_segment_phi_estimate   = segment_angle.second;
 	}
 
-	par_3d_PCA_theta_estimate = kINVALID_DOUBLE;
-	par_3d_PCA_phi_estimate   = kINVALID_DOUBLE;
-	
+	par_pca_theta_estimate = kINVALID_DOUBLE;
+	par_pca_phi_estimate   = kINVALID_DOUBLE;
+
+	//
 	// using the PCA
+	//
 	auto space_pts_v = SpacePointsEstimate(par,thresh_img_v);
 	
 	auto pca_angle = Angle3D(space_pts_v,vtx3d);
-	par_3d_PCA_theta_estimate = pca_angle.first;
-	par_3d_PCA_phi_estimate   = pca_angle.second;
+	par_pca_theta_estimate = pca_angle.first;
+	par_pca_phi_estimate   = pca_angle.second;
 
 	//
 	// Estimate the 3D end point
@@ -324,8 +323,64 @@ namespace larocv {
 	end_pca.y = end_pt_3d[1];
 	end_pca.z = end_pt_3d[2];
 	
-	pca_end_in_fiducial = _VertexAnalysis.CheckFiducial(end_pca);
+	par_pca_end_in_fiducial = _VertexAnalysis.CheckFiducial(end_pca);
+
+	par_trunk_pca_theta_estimate = kINVALID_DOUBLE;
+	par_trunk_pca_phi_estimate   = kINVALID_DOUBLE;
 	
+	// using the PCA trunk
+	_trunk_length = _trunk_radius;
+	space_pts_v = SpacePointsEstimate(par,thresh_img_v,_trunk_length,vtx3d);
+	
+	auto trunk_pca_angle = Angle3D(space_pts_v,vtx3d);
+	par_trunk_pca_theta_estimate = trunk_pca_angle.first;
+	par_trunk_pca_phi_estimate   = trunk_pca_angle.second;
+
+	//
+	// Estimate the 3D end point of trunk
+	//
+	auto trunk_end_pt_3d = EndPoint3D(space_pts_v,
+					  trunk_pca_angle.first,trunk_pca_angle.second,
+					  vtx3d);
+	
+	auto trunk_start_end_dist = Distance3D(trunk_end_pt_3d,vtx3d);
+	par_trunk_pca_end_x = trunk_end_pt_3d[0];
+	par_trunk_pca_end_y = trunk_end_pt_3d[1];
+	par_trunk_pca_end_z = trunk_end_pt_3d[2];
+	par_trunk_pca_end_len = trunk_start_end_dist;
+
+	data::Vertex3D trunk_end_pca;
+	trunk_end_pca.x = trunk_end_pt_3d[0];
+	trunk_end_pca.y = trunk_end_pt_3d[1];
+	trunk_end_pca.z = trunk_end_pt_3d[2];
+	
+	par_trunk_pca_end_in_fiducial = _VertexAnalysis.CheckFiducial(trunk_end_pca);
+
+	//
+	// Write out the PCA info
+	//
+	data::Info3D pca_info;
+	pca_info.overall_pca_theta    = par_pca_theta_estimate;
+	pca_info.overall_pca_phi      = par_pca_phi_estimate;
+	pca_info.overall_pca_dir      = AsVector(par_pca_theta_estimate,
+						 par_pca_phi_estimate);
+	pca_info.overall_pca_start_pt = AsVector(vtx3d.x,vtx3d.y,vtx3d.z);
+	pca_info.overall_pca_end_pt   = end_pt_3d;
+	pca_info.overall_pca_length   = start_end_dist;
+
+
+	pca_info.trunk_pca_theta    = par_trunk_pca_theta_estimate;
+	pca_info.trunk_pca_phi      = par_trunk_pca_phi_estimate;
+	pca_info.trunk_pca_dir      = AsVector(par_trunk_pca_theta_estimate,
+					       par_trunk_pca_phi_estimate);
+	pca_info.trunk_pca_start_pt = AsVector(vtx3d.x,vtx3d.y,vtx3d.z);
+	pca_info.trunk_pca_end_pt   = trunk_end_pt_3d;
+	pca_info.trunk_pca_length   = trunk_start_end_dist;
+	pca_info.pixel_radius = _trunk_length;
+	
+	info3d_arr.emplace_back(std::move(pca_info));
+	AssociateOne(info3d_arr.as_vector().back(),par);
+	  
 	LAROCV_DEBUG() << "End particle " << par_idx << " @ " << par_id  << std::endl;
       } // end this particle
       
@@ -340,7 +395,6 @@ namespace larocv {
 	if(npx) _vertex_n_planes_charge += 1;
       }
 
-      if(_debug_match_ana) StoreMatchAna();
       _tree->Fill();
     } // end this vertex
     
@@ -370,7 +424,9 @@ namespace larocv {
 
 
   std::vector<data::Vertex3D> MatchAnalysis::SpacePointsEstimate(const data::Particle& particle,
-								 const std::vector<cv::Mat>& img_v) {
+								 const std::vector<cv::Mat>& img_v,
+								 const float radius,
+								 const data::Vertex3D vertex) {
     // get the two largest particles clusters
 
     std::array<float,3> area_v;
@@ -424,8 +480,24 @@ namespace larocv {
     const auto& ctor1 = particle._par_v.at(plane1)._ctor;
 
     // get the list of points inside
-    auto pxpts0_v = FindNonZero(MaskImage(img_v.at(plane0),ctor0,0,false));
-    auto pxpts1_v = FindNonZero(MaskImage(img_v.at(plane1),ctor1,0,false));
+    auto mask0 = MaskImage(img_v.at(plane0),ctor0,0,false);
+    auto mask1 = MaskImage(img_v.at(plane1),ctor1,0,false);
+  
+    if (radius != 0.0) {
+      const auto& vtx2d_v = vertex.vtx2d_v;
+      mask0 = MaskImage(mask0,
+			geo2d::Circle<float>(vtx2d_v[plane0].pt.x,vtx2d_v[plane0].pt.y,radius),
+			0,
+			false);
+      
+      mask1 = MaskImage(mask1,
+			geo2d::Circle<float>(vtx2d_v[plane1].pt.x,vtx2d_v[plane1].pt.y,radius),
+			0,
+			false);
+    }
+  
+    auto pxpts0_v = FindNonZero(mask0);
+    auto pxpts1_v = FindNonZero(mask1);
 
     // make 3D point and store in cv::Mat for PCA
     const auto& geo = _VertexAnalysis.Geo();
@@ -452,9 +524,10 @@ namespace larocv {
 
   std::pair<float,float> MatchAnalysis::Angle3D(const data::Particle& particle,
 						const std::vector<cv::Mat>& img_v,
-						const data::Vertex3D& start3d) {
+						const data::Vertex3D& start3d,
+						const float radius) {
 
-    auto space_pts_v = SpacePointsEstimate(particle,img_v);
+    auto space_pts_v = SpacePointsEstimate(particle,img_v,radius,start3d);
     return Angle3D(space_pts_v,start3d);
   }
   
@@ -579,31 +652,66 @@ namespace larocv {
 				  const std::array<float,3>& pt1) {
     return Distance3D(pt1,vtx);
   }
-  
-  
-  void MatchAnalysis::StoreMatchAna() {
-    MatchAna match_ana;
-    
-    match_ana.par_pixel_ratio_v               = _par_pixel_ratio_v; 
-    match_ana.par_valid_end_pt_v              = _par_valid_end_pt_v;
-    match_ana.par_end_pt_x_v                  = _par_end_pt_x_v; 
-    match_ana.par_end_pt_y_v                  = _par_end_pt_y_v; 
-    match_ana.par_end_pt_z_v                  = _par_end_pt_z_v; 
-    match_ana.par_n_planes_charge_v           = _par_n_planes_charge_v; 
-    match_ana.par_3d_PCA_theta_estimate_v     = _par_3d_PCA_theta_estimate_v;
-    match_ana.par_3d_PCA_phi_estimate_v       = _par_3d_PCA_phi_estimate_v; 
-    match_ana.par_3d_segment_theta_estimate_v = _par_3d_segment_theta_estimate_v;
-    match_ana.par_3d_segment_phi_estimate_v   = _par_3d_segment_phi_estimate_v; 
-    match_ana.vertex_n_planes_charge          = _vertex_n_planes_charge;
-    match_ana.par_pca_end_x_v                   = _par_pca_end_x_v;
-    match_ana.par_pca_end_y_v                   = _par_pca_end_y_v;
-    match_ana.par_pca_end_z_v                   = _par_pca_end_z_v;
-    match_ana.par_pca_end_len_v                 = _par_pca_end_len_v;
+
+  void MatchAnalysis::ResizeVectors(size_t npar) {
+
+    _par_pixel_ratio_v.resize(npar);
+    _par_valid_end_pt_v.resize(npar);
+    _par_end_pt_x_v.resize(npar);
+    _par_end_pt_y_v.resize(npar);
+    _par_end_pt_z_v.resize(npar);
+    _par_n_planes_charge_v.resize(npar);
+    _par_3d_segment_theta_estimate_v.resize(npar);
+    _par_3d_segment_phi_estimate_v.resize(npar);
       
-    _match_ana_v.emplace_back(std::move(match_ana));
+    _par_pca_theta_estimate_v.resize(npar);
+    _par_pca_phi_estimate_v.resize(npar);
+    _par_pca_end_x_v.resize(npar);
+    _par_pca_end_y_v.resize(npar);
+    _par_pca_end_z_v.resize(npar);
+    _par_pca_end_in_fiducial_v.resize(npar);
+    _par_pca_end_len_v.resize(npar);
+
+    _par_trunk_pca_theta_estimate_v.resize(npar);
+    _par_trunk_pca_phi_estimate_v.resize(npar);
+    _par_trunk_pca_end_x_v.resize(npar);
+    _par_trunk_pca_end_y_v.resize(npar);
+    _par_trunk_pca_end_z_v.resize(npar);
+    _par_trunk_pca_end_in_fiducial_v.resize(npar);
+    _par_trunk_pca_end_len_v.resize(npar);
   }
 
+  void MatchAnalysis::Clear() {
+
+    _par_pixel_ratio_v.clear();
+    _par_valid_end_pt_v.clear();
+    _par_end_pt_x_v.clear();
+    _par_end_pt_y_v.clear();
+    _par_end_pt_z_v.clear();
+    _par_n_planes_charge_v.clear();
+
+    _par_3d_segment_theta_estimate_v.clear();
+    _par_3d_segment_phi_estimate_v.clear();
+
+    _vertex_n_planes_charge = kINVALID_INT;
+
+    _par_pca_theta_estimate_v.clear();
+    _par_pca_phi_estimate_v.clear();
+    _par_pca_end_x_v.clear();
+    _par_pca_end_y_v.clear();
+    _par_pca_end_z_v.clear();
+    _par_pca_end_in_fiducial_v.clear();
+    _par_pca_end_len_v.clear();
+
+    _par_trunk_pca_theta_estimate_v.clear();
+    _par_trunk_pca_phi_estimate_v.clear();
+    _par_trunk_pca_end_x_v.clear();
+    _par_trunk_pca_end_y_v.clear();
+    _par_trunk_pca_end_z_v.clear();
+    _par_trunk_pca_end_in_fiducial_v.clear();
+    _par_trunk_pca_end_len_v.clear();
     
+  }
   
 }
 #endif

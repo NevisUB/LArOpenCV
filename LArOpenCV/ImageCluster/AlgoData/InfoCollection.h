@@ -23,7 +23,6 @@ namespace larocv {
       
       /// attribute clear method
       void _Clear_() {}
-
       
     };
 
@@ -36,14 +35,29 @@ namespace larocv {
       Info3D()  { Clear(); }
       ~Info3D() {}
       
-      /// attribute clear method
-      void _Clear_() {}
+      void _Clear_();
+      
+      // Overall PCA
+      //
+      float overall_pca_theta;
+      float overall_pca_phi;
+      std::array<float,3> overall_pca_dir;
+      std::array<float,3> overall_pca_start_pt;
+      std::array<float,3> overall_pca_end_pt;
+      float overall_pca_length;
+      
 
-      std::array<float,3> pca_dir;
-      std::array<float,3> pca_start_pt;
-      std::array<float,3> pca_end_pt;
-      float pca_length;
-
+      //
+      // Trunk PCA
+      //
+      float trunk_pca_theta;
+      float trunk_pca_phi;
+      std::array<float,3> trunk_pca_dir;
+      std::array<float,3> trunk_pca_start_pt;
+      std::array<float,3> trunk_pca_end_pt;
+      float trunk_pca_length;
+      float pixel_radius;
+      
     };
     
     typedef AlgoDataArrayTemplate<Info2D> Info2DArray;

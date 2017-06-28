@@ -54,61 +54,54 @@ namespace larocv {
     double _z;
 
     bool _break_contours;
-    bool _debug_match_ana;
+
+    float _trunk_radius;
     
   public:
 
-    std::vector<double> _par_pixel_ratio_v; // c
-    std::vector<int>    _par_valid_end_pt_v; // c
-    std::vector<double> _par_end_pt_x_v; // c
-    std::vector<double> _par_end_pt_y_v; // c
-    std::vector<double> _par_end_pt_z_v; // c
-    std::vector<double> _par_n_planes_charge_v; // c
-    std::vector<double> _par_3d_PCA_theta_estimate_v; // c
-    std::vector<double> _par_3d_PCA_phi_estimate_v; // c
-    std::vector<double> _par_3d_segment_theta_estimate_v; // c
-    std::vector<double> _par_3d_segment_phi_estimate_v; // c
-    int _vertex_n_planes_charge; // c
-    std::vector<float> _par_pca_end_x_v;  
-    std::vector<float> _par_pca_end_y_v;  
-    std::vector<float> _par_pca_end_z_v;
-    std::vector<int> _pca_end_in_fiducial_v;
-    std::vector<float> _par_pca_end_len_v;
+    std::vector<double> _par_pixel_ratio_v; 
+    std::vector<int>    _par_valid_end_pt_v; 
+    std::vector<double> _par_end_pt_x_v; 
+    std::vector<double> _par_end_pt_y_v; 
+    std::vector<double> _par_end_pt_z_v; 
+    std::vector<double> _par_n_planes_charge_v; 
+
+    std::vector<double> _par_3d_segment_theta_estimate_v; 
+    std::vector<double> _par_3d_segment_phi_estimate_v; 
+    int _vertex_n_planes_charge; 
     
+    std::vector<double> _par_pca_theta_estimate_v; 
+    std::vector<double> _par_pca_phi_estimate_v; 
+    std::vector<float>  _par_pca_end_x_v;  
+    std::vector<float>  _par_pca_end_y_v;  
+    std::vector<float>  _par_pca_end_z_v;
+    std::vector<int>    _par_pca_end_in_fiducial_v;
+    std::vector<float>  _par_pca_end_len_v;
     
-    //
-    // for debug, per vertex storage
-    //
-    struct MatchAna {
-      std::vector<double> par_pixel_ratio_v; 
-      std::vector<int>    par_valid_end_pt_v;
-      std::vector<double> par_end_pt_x_v; 
-      std::vector<double> par_end_pt_y_v; 
-      std::vector<double> par_end_pt_z_v; 
-      std::vector<double> par_n_planes_charge_v; 
-      std::vector<double> par_3d_PCA_theta_estimate_v;
-      std::vector<double> par_3d_PCA_phi_estimate_v; 
-      std::vector<double> par_3d_segment_theta_estimate_v;
-      std::vector<double> par_3d_segment_phi_estimate_v;
-      int vertex_n_planes_charge;
-      std::vector<float> par_pca_end_x_v;  
-      std::vector<float> par_pca_end_y_v;
-      std::vector<float> par_pca_end_z_v;  
-      std::vector<float> par_pca_end_len_v;
-    };
+    std::vector<double> _par_trunk_pca_theta_estimate_v; 
+    std::vector<double> _par_trunk_pca_phi_estimate_v; 
+    std::vector<float>  _par_trunk_pca_end_x_v;  
+    std::vector<float>  _par_trunk_pca_end_y_v;  
+    std::vector<float>  _par_trunk_pca_end_z_v;
+    std::vector<int>    _par_trunk_pca_end_in_fiducial_v;
+    std::vector<float>  _par_trunk_pca_end_len_v;
     
-    std::vector<MatchAna> _match_ana_v;
+    float _trunk_length;
     
   private:
 
     void Clear();
+    void ResizeVectors(size_t npar);
     
     std::pair<float,float> Angle3D(const data::Vertex3D& vtx1,
 				   const data::Vertex3D& vtx2);
     
 
     std::vector<data::Vertex3D> SpacePointsEstimate(const data::Particle& particle,
-						    const std::vector<cv::Mat>& img_v);
+						    const std::vector<cv::Mat>& img_v,
+						    const float radius=0.0,
+						    const data::Vertex3D vertex = data::Vertex3D());
+
 
     std::pair<float,float> Angle3D(const std::vector<data::Vertex3D>& vtx3d_v,
 				   const data::Vertex3D& start3d);
@@ -116,7 +109,8 @@ namespace larocv {
     
     std::pair<float,float> Angle3D(const data::Particle& particle,
 				   const std::vector<cv::Mat>& img_v,
-				   const data::Vertex3D& start3d);
+				   const data::Vertex3D& start3d,
+				   const float radius=0.0);
 
 
     std::array<float,3> EndPoint3D(const std::vector<data::Vertex3D>& space_pts_v,
@@ -127,9 +121,6 @@ namespace larocv {
     
     float Distance3D(const data::Vertex3D& vtx, const std::array<float,3>& pt1);
     
-    void StoreMatchAna();
-    void ClearMatchAna()
-    { _match_ana_v.clear(); }
     
   public:
     DefectBreaker _DefectBreaker;

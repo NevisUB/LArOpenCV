@@ -183,7 +183,6 @@ namespace larocv {
 	_angular_sum_v.push_back(angular_sum);
 	_triangle_d_sum_v.push_back(triangle_d_sum);
 	_nplanes_v.push_back(nplanes);
-
 	
 	  
       } // end particle

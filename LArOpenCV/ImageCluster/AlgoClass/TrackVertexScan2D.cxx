@@ -24,7 +24,7 @@ namespace larocv{
 
     _cvtx_min_radius  = pset.get<double>("CircleVMinRadius",4);
     _cvtx_max_radius  = pset.get<double>("CircleVMaxRadius",21);
-    _cvtx_radius_step = pset.get<double>("CircleVMinRadius",2);
+    _cvtx_radius_step = pset.get<double>("CircleVStepRadius",2);
     _pi_threshold = pset.get<float>("PIThreshold",10);
     _pca_box_size = pset.get<float>("PCABoxSize",3);
     _global_bound_size = pset.get<float>("GlobalBoundSize",20);
