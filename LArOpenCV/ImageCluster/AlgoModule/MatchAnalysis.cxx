@@ -108,11 +108,16 @@ namespace larocv {
     for(auto& img : thresh_img_v)
       img = Threshold(img,10,255);
 
-    auto ch_img_v = ImageArray(ImageSetID_t::kImageSetChStatus);
-    auto inv_ch_img_v = ch_img_v;
-    for(auto& img : inv_ch_img_v) {
-      img = Threshold(img,1.0,255);
-      cv::bitwise_not(img,img);
+    std::vector<cv::Mat> inv_ch_img_v;
+    try {
+      auto ch_img_v = ImageArray(ImageSetID_t::kImageSetChStatus);
+      inv_ch_img_v = ch_img_v;
+      for(auto& img : inv_ch_img_v) {
+	img = Threshold(img,1.0,255);
+	cv::bitwise_not(img,img);
+      }
+    } catch (const larbys& err) {
+      LAROCV_DEBUG() << "No channel status image available" << std::endl;
     }
     
     const auto& meta_v = MetaArray();

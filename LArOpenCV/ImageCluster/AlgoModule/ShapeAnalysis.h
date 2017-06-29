@@ -60,6 +60,7 @@ namespace larocv {
     std::vector<float> _sigma_pixel_dist_v;
     std::vector<float> _angular_sum_v;
     std::vector<float> _triangle_d_sum_v;
+    std::vector<float> _triangle_d_max_v;
     
     int _track_par_max_id;
     int _shower_par_max_id;

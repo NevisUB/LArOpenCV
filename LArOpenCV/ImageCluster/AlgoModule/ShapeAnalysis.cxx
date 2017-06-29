@@ -55,6 +55,7 @@ namespace larocv {
     _tree->Branch("sigma_pixel_dist_v", &_sigma_pixel_dist_v);
     _tree->Branch("angular_sum_v"     , &_angular_sum_v);
     _tree->Branch("triangle_d_sum_v"  , &_triangle_d_sum_v);
+    _tree->Branch("triangle_d_max_v"  , &_triangle_d_max_v);
     
     _tree->Branch("track_par_max_id"   , &_track_par_max_id   , "track_par_max_id/I");
     _tree->Branch("shower_par_max_id"  , &_shower_par_max_id  , "shower_par_max_id/I");
@@ -82,6 +83,7 @@ namespace larocv {
     _sigma_pixel_dist_v.clear();
     _angular_sum_v.clear();
     _triangle_d_sum_v.clear();
+    _triangle_d_max_v.clear();
   }
   
   void ShapeAnalysis::_Process_() {
@@ -131,6 +133,7 @@ namespace larocv {
 	float sigma_pixel_dist = 0.0;
 	float angular_sum = 0.0;
 	float triangle_d_sum = 0.0;
+	float triangle_d_max = -1.0*kINVALID_FLOAT;
 	
 	int nplanes = 0;
 	for(size_t plane=0; plane<3; ++plane) {
@@ -166,8 +169,14 @@ namespace larocv {
 
 	  geo2d::Vector<float> ret1,ret2;
 	  float dist = geo2d::ClosestPoint(pchunk.trunkPCA,pchunk.end_pt,ret1,ret2);
-	  if (isinf(dist)) dist = kINVALID_FLOAT;
+	  if (isinf(dist)) {
+	    dist = kINVALID_FLOAT;
+	  }
+
 	  triangle_d_sum += dist;
+
+	  if (dist > triangle_d_max && dist != kINVALID_FLOAT)
+	    triangle_d_max = dist;
 	  
 	} // end plane
 	
@@ -182,6 +191,7 @@ namespace larocv {
 	_sigma_pixel_dist_v.push_back(sigma_pixel_dist);
 	_angular_sum_v.push_back(angular_sum);
 	_triangle_d_sum_v.push_back(triangle_d_sum);
+	_triangle_d_max_v.push_back(triangle_d_max);
 	_nplanes_v.push_back(nplanes);
 	
 	  
