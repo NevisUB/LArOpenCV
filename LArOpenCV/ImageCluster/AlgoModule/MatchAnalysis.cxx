@@ -34,6 +34,7 @@ namespace larocv {
       }
     }
 
+    _vertex_charge_radius = 0.0;
     _vertex_charge_radius = pset.get<float>("VertexChargeRadius",6.0);
     
     _break_contours = pset.get<bool>("BreakContours");
@@ -64,7 +65,8 @@ namespace larocv {
     _tree->Branch("par_n_planes_charge_v",&_par_n_planes_charge_v);
 
     _tree->Branch("vertex_n_planes_charge",&_vertex_n_planes_charge,"vertex_n_planes_charge/I");
-    _tree->Branch("vertex_n_planes_dead",&_vertex_n_planes_dead,"vertex_n_planes_dead/I");
+    _tree->Branch("vertex_n_planes_near_dead",&_vertex_n_planes_near_dead,"vertex_n_planes_near_dead/I");
+    _tree->Branch("vertex_n_planes_on_dead",&_vertex_n_planes_on_dead,"vertex_n_planes_on_dead/I");
     
     _tree->Branch("par_3d_segment_theta_estimate_v",&_par_3d_segment_theta_estimate_v);
     _tree->Branch("par_3d_segment_phi_estimate_v",&_par_3d_segment_phi_estimate_v);
@@ -109,7 +111,7 @@ namespace larocv {
     auto ch_img_v = ImageArray(ImageSetID_t::kImageSetChStatus);
     auto inv_ch_img_v = ch_img_v;
     for(auto& img : inv_ch_img_v) {
-      img = Threshold(img,1.0,1.0);
+      img = Threshold(img,1.0,255);
       cv::bitwise_not(img,img);
     }
     
@@ -423,8 +425,11 @@ namespace larocv {
       //
       // determine n planes charge @ vertex
       //
+
       _vertex_n_planes_charge = 0;
-      _vertex_n_planes_dead = 0;
+      _vertex_n_planes_near_dead = 0;
+      _vertex_n_planes_on_dead = 0;
+      
       for(size_t plane=0; plane<3; ++plane) {
 	const auto& pt2d = vtx3d.vtx2d_v[plane];
 	geo2d::Circle<float> circle(pt2d.pt,_vertex_charge_radius);
@@ -438,8 +443,17 @@ namespace larocv {
 
 	npx = CountNonZero(MaskImage(inv_ch_img_v[plane],circle,0,false));
 
-	if(npx)
-	  _vertex_n_planes_dead += 1;
+	if(npx) _vertex_n_planes_near_dead += 1;
+
+	if (pt2d.pt.x >= inv_ch_img_v[plane].cols) continue;
+	if (pt2d.pt.y >= inv_ch_img_v[plane].rows) continue;
+	if (pt2d.pt.x < 0) continue;
+	if (pt2d.pt.y < 0) continue;
+	
+	int vtx_pt = (int)(inv_ch_img_v.at(plane).at<uchar>(pt2d.pt.y,pt2d.pt.x));
+
+	if(vtx_pt) _vertex_n_planes_on_dead += 1;
+	
       }
 
       _tree->Fill();

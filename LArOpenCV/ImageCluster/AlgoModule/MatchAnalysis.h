@@ -69,7 +69,8 @@ namespace larocv {
     std::vector<double> _par_3d_segment_theta_estimate_v; 
     std::vector<double> _par_3d_segment_phi_estimate_v; 
     int _vertex_n_planes_charge;
-    int _vertex_n_planes_dead; 
+    int _vertex_n_planes_near_dead;
+    int _vertex_n_planes_on_dead; 
     
     std::vector<double> _par_pca_theta_estimate_v; 
     std::vector<double> _par_pca_phi_estimate_v; 
