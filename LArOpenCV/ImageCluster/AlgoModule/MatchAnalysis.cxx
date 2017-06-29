@@ -34,8 +34,10 @@ namespace larocv {
       }
     }
 
+    _vertex_charge_radius = pset.get<float>("VertexChargeRadius",6.0);
+    
     _break_contours = pset.get<bool>("BreakContours");
-
+    
     if(_break_contours)
       _DefectBreaker.Configure(pset.get<Config_t>("DefectBreaker"));
     
@@ -62,6 +64,7 @@ namespace larocv {
     _tree->Branch("par_n_planes_charge_v",&_par_n_planes_charge_v);
 
     _tree->Branch("vertex_n_planes_charge",&_vertex_n_planes_charge,"vertex_n_planes_charge/I");
+    _tree->Branch("vertex_n_planes_dead",&_vertex_n_planes_dead,"vertex_n_planes_dead/I");
     
     _tree->Branch("par_3d_segment_theta_estimate_v",&_par_3d_segment_theta_estimate_v);
     _tree->Branch("par_3d_segment_phi_estimate_v",&_par_3d_segment_phi_estimate_v);
@@ -103,6 +106,13 @@ namespace larocv {
     for(auto& img : thresh_img_v)
       img = Threshold(img,10,255);
 
+    auto ch_img_v = ImageArray(ImageSetID_t::kImageSetChStatus);
+    auto inv_ch_img_v = ch_img_v;
+    for(auto& img : inv_ch_img_v) {
+      img = Threshold(img,1.0,1.0);
+      cv::bitwise_not(img,img);
+    }
+    
     const auto& meta_v = MetaArray();
     for(const auto& meta : meta_v)
       _VertexAnalysis.ResetPlaneInfo(meta);
@@ -414,11 +424,22 @@ namespace larocv {
       // determine n planes charge @ vertex
       //
       _vertex_n_planes_charge = 0;
+      _vertex_n_planes_dead = 0;
       for(size_t plane=0; plane<3; ++plane) {
 	const auto& pt2d = vtx3d.vtx2d_v[plane];
-	geo2d::Circle<float> circle(pt2d.pt,6);
+	geo2d::Circle<float> circle(pt2d.pt,_vertex_charge_radius);
+
 	auto npx = CountNonZero(MaskImage(thresh_img_v[plane],circle,0,false));
-	if(npx) _vertex_n_planes_charge += 1;
+
+	if(npx)
+	  _vertex_n_planes_charge += 1;
+
+	if (inv_ch_img_v.empty()) continue;
+
+	npx = CountNonZero(MaskImage(inv_ch_img_v[plane],circle,0,false));
+
+	if(npx)
+	  _vertex_n_planes_dead += 1;
       }
 
       _tree->Fill();

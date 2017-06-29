@@ -34,6 +34,7 @@ namespace larocv {
     kImageSetShower,  ///< shower image
     kImageSetThruMu,  ///< thrumu image
     kImageSetStopMu,  ///< stopmu image
+    kImageSetChStatus,  ///< chstatus image
     kImageSetUnknown  ///< unspecified (always keep it @ end of enum)
   };
   typedef size_t ImageID_t;
