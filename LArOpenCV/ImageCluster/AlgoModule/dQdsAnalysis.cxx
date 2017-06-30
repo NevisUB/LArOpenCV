@@ -8,6 +8,7 @@
 #include "LArOpenCV/ImageCluster/AlgoFunction/SpectrumAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 #include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
+#include "LArOpenCV/ImageCluster/AlgoData/InfoCollection.h"
 
 namespace larocv {
 
@@ -25,7 +26,7 @@ namespace larocv {
     if (!combined_vertex_analysis_algo_name.empty()) {
       _combined_vertex_analysis_algo_id = this->ID(combined_vertex_analysis_algo_name);
       if (_combined_vertex_analysis_algo_id==kINVALID_ALGO_ID)
-	throw larbys("Given ParticleCluster name is INVALID!");
+	throw larbys("Given CombinedAnalysis name is INVALID!");
     }
 
     _angle_analysis_algo_id = kINVALID_ALGO_ID;
@@ -34,7 +35,15 @@ namespace larocv {
     if (!angle_analysis_algo_name.empty()) {
       _angle_analysis_algo_id = this->ID(angle_analysis_algo_name);
       if (_angle_analysis_algo_id==kINVALID_ALGO_ID)
-	throw larbys("Given ParticleCluster name is INVALID!");
+	throw larbys("Given Angleanalysis name is INVALID!");
+    }
+    _match_analysis_algo_id = kINVALID_ALGO_ID;
+    // Input from AngleAnalysisAlgo
+    auto match_analysis_algo_name = pset.get<std::string>("MatchAnalysisAlgo","");
+    if (!match_analysis_algo_name.empty()) {
+      _match_analysis_algo_id = this->ID(match_analysis_algo_name);
+      if (_match_analysis_algo_id==kINVALID_ALGO_ID)
+	throw larbys("Given MatchAnalysis name is INVALID!");
     }
     
     //
@@ -43,8 +52,12 @@ namespace larocv {
     _AtomicAnalysis.Configure(pset.get<Config_t>("AtomicAnalysis"));
     //
     
-    _dqds_scan_thre = pset.get<float>("dQdsScanThre");
-    
+    _dqds_scan_thre   = pset.get<float>("dQdsScanThre");
+    _chop_size        = pset.get<size_t>("dQdsChopLocation");
+    _window_size      = pset.get<double>("TruncateWindowSize");
+    _window_size_thre = pset.get<int>("TruncateWindowSizeThre");
+    _window_frac      = pset.get<double>("TruncateFrac");
+        
     _tree = new TTree("dQdSAnalysis","");
     AttachIDs(_tree);
     _tree->Branch("roid"        , &_roid      , "roid/I");
@@ -53,11 +66,20 @@ namespace larocv {
     _tree->Branch("y"           , &_y         , "y/D");
     _tree->Branch("z"           , &_z         , "z/D");
     //_tree->Branch("dqds_vvv"    ,&_dqds_vvv          );
-    _tree->Branch("dqds_diff_v" , &_dqds_diff_v       );
-    _tree->Branch("dqds_ratio_v" ,&_dqds_ratio_v       );
-    //_tree->Branch("dqds_0" ,&_dqds_0_v       );
-    //_tree->Branch("dqds_1" ,&_dqds_1_v       );
-
+    _tree->Branch("dqds_diff_v"    , &_dqds_diff_v        );
+    _tree->Branch("dqds_ratio_v"   , &_dqds_ratio_v       );
+    _tree->Branch("dqds_0_v"       , &_dqds_0_v           );
+    _tree->Branch("dqds_1_v"       , &_dqds_1_v           );
+    _tree->Branch("tdqds_diff_v"   , &_t_dqds_diff_v      );
+    _tree->Branch("tdqds_ratio_v"  , &_t_dqds_ratio_v     );
+    _tree->Branch("tdqds_0_v"      , &_t_dqds_0_v         );
+    _tree->Branch("tdqds_1_v"      , &_t_dqds_1_v         );
+    _tree->Branch("dqds_diff_01"   , &_dqds_diff_01       );
+    _tree->Branch("dqds_ratio_01"  , &_dqds_ratio_01      );
+    _tree->Branch("theta"          , &_theta              );  
+    _tree->Branch("phi"            , &_phi                );
+    
+    
     _roid = 0;
     
     // Register 3 particle arrays, 1 per plane
@@ -68,14 +90,77 @@ namespace larocv {
   void dQdsAnalysis::Clear(){
     _dqds_diff_v.clear();
     _dqds_diff_v.resize(3,-9999);
+    _dqds_ratio_v.clear();
+    _dqds_ratio_v.resize(3,-9999);
     _dqds_0_v.clear();
     _dqds_0_v.resize(3);
     _dqds_1_v.clear();
     _dqds_1_v.resize(3);
-    _dqds_ratio_v.clear();
-    _dqds_ratio_v.resize(3,-9999);
-
+    _t_dqds_diff_v.clear();
+    _t_dqds_diff_v.resize(3,-9999);
+    _t_dqds_ratio_v.clear();
+    _t_dqds_ratio_v.resize(3,-9999);
+    _t_dqds_0_v.clear();
+    _t_dqds_0_v.resize(3);
+    _t_dqds_1_v.clear();
+    _t_dqds_1_v.resize(3);
   }
+
+  std::vector<float> dQdsAnalysis::dQdsDropper (std::vector<float> input_dqds){
+    
+    std::vector<float> res;
+    res.clear();
+    
+    if (input_dqds.size()>_chop_size){
+      for (size_t idx = _chop_size; idx< input_dqds.size();++idx){
+	res.push_back(input_dqds[idx]);
+      }
+    }
+    return res;
+  }
+
+  
+  std::vector<float> dQdsAnalysis::PeakFinder(std::vector<float> input_dqds, double frac){
+    
+   bool show = false;
+    
+    size_t dqds_size = input_dqds.size();
+    
+    if (input_dqds.size()>=8){ 
+      
+      float mean_before = 0;
+      float mean_after  = 0;
+      for (size_t idx = 0; idx < input_dqds.size()-3; ++idx){
+	
+	mean_before = (input_dqds[idx]+input_dqds[idx+1]+input_dqds[idx+2])/3;
+
+	if(show)std::cout<<"mean_before, idx: "<< idx <<" | "<< idx+1<<" | "<<idx+2<<std::endl;
+	if(show)std::cout<<"dqds_before, val: "<< input_dqds[idx]<<" | "<<input_dqds[idx+1]<<" | "<<input_dqds[idx+2]<<std::endl;
+	if(show)std::cout<<"before >>>>>>>>>> "<<mean_before<<std::endl;
+	
+	mean_after  = (input_dqds[idx+1]+input_dqds[idx+2]+input_dqds[idx+3])/3;
+	
+	if(show)std::cout<<"mean_after, idx: "<< idx+1 <<" | "<< idx+2<<" | "<<idx+3<<std::endl;
+	if(show)std::cout<<"dqds_after, val: "<< input_dqds[idx+1]<<" | "<<input_dqds[idx+2]<<" | "<<input_dqds[idx+3]<<std::endl;
+	if(show)std::cout<<"after >>>>>>>>>> "<<mean_after<<std::endl;
+	dqds_size = idx;	
+	
+	if (std::abs(mean_before - mean_after)>_dqds_scan_thre && double(idx)/double(input_dqds.size())>frac) {
+	  break;
+	}
+      }
+    }
+    
+    std::vector<float> res;
+    res.clear();
+    res.resize(dqds_size);
+    
+    for(size_t idx = 0; idx< res.size(); ++idx){
+      res[idx] = input_dqds[idx];
+    }
+    return res;
+  }
+  
   
   bool dQdsAnalysis::_PostProcess_() const
   { return true; }
@@ -99,12 +184,14 @@ namespace larocv {
 	vertex_data_v.push_back(&vtx);
     }
     
+    const auto& threeD_data  = AlgoData<data::Info3DArray>(_match_analysis_algo_id,0);
+
     for(size_t vertex_id = 0; vertex_id < vertex_data_v.size(); ++vertex_id) {
       Clear();
 
       _vtxid  =vertex_id;
-      
-      if(show)std::cout<<"====>>>>dQds Analysis Starts<<<<====="<<std::endl;
+      if(show)std::cout<<"vertex  "<<_vtxid<<std::endl;
+      if(show)if(show)std::cout<<"====>>>>dQds Analysis Starts<<<<====="<<std::endl;
       
       const auto& vertex3d = vertex_data_v[vertex_id];
       _x = vertex3d->x;
@@ -117,6 +204,7 @@ namespace larocv {
 	// Input algo data
 	const auto& par_data = AlgoData<data::ParticleClusterArray>(_angle_analysis_algo_id,plane);
 	auto par_ass_id_v = ass_man.GetManyAss(*vertex3d,par_data.ID());
+
 	if(par_ass_id_v.size()==0) continue;
 	auto& this_par_data = AlgoData<data::ParticleClusterArray>(plane);
 	
@@ -124,8 +212,19 @@ namespace larocv {
 	float dqds_mean_1 =-9999.0;
 	int pid = 0;
 	for(auto par_id : par_ass_id_v) {
+	  if(show)std::cout<<par_id<<std::endl;
 	  if(show)std::cout<<"Particle ID is"<<par_id<<std::endl;
-	  auto par = par_data.as_vector().at(par_id);
+	    
+	  auto par    = par_data.as_vector().at(par_id);
+
+	  //auto info3d_id   = ass_man.GetOneAss(par,threeD_data.ID());
+	  //if(show)std::cout<<"info id is "<<info3d_id<<std::endl;
+	  //auto this_info3d = threeD_data.as_vector().at(info3d_id);
+	  auto this_info3d = threeD_data.as_vector().at(par_id);
+
+	  _theta = this_info3d.trunk_pca_theta;
+	  _phi   = this_info3d.trunk_pca_phi;
+
 	  cv::Mat masked_ctor;
 	  masked_ctor = MaskImage(img_v[plane],par._ctor,0,false); 	
 
@@ -155,63 +254,38 @@ namespace larocv {
 	  
 	  std::vector<float> this_dqds;
 	  this_dqds.clear();
-	  
 	  this_dqds = _AtomicAnalysis.AtomdQdX(masked_ctor, thisatom, this_pca, start_point, end_point);
 	  
-	  size_t dqds_size = this_dqds.size();
+	  std::vector<float> drop_dqds;
+	  drop_dqds.clear();
+	  drop_dqds = dQdsDropper(this_dqds);
 	  
-	  if (this_dqds.size()>=4){ 
-	    float mean_before = 0;
-	    float mean_after  = 0;
-	    for (size_t idx = 0; idx < this_dqds.size()-4; ++idx){
-	      mean_before = (this_dqds[idx]+this_dqds[idx+1]+this_dqds[idx+2])/3;
-	      if(show)std::cout<<"mean_before, idx: "<< idx <<" | "<< idx+1<<" | "<<idx+2<<std::endl;
-	      if(show)std::cout<<"dqds_before, val: "<< this_dqds[idx]<<" | "<<this_dqds[idx+1]<<" | "<<this_dqds[idx+2]<<std::endl;
-	      if(show)std::cout<<"before >>>>>>>>>> "<<mean_before<<std::endl;
-	      
-	      mean_after  = (this_dqds[idx+1]+this_dqds[idx+2]+this_dqds[idx+3])/3;
-	      if(show)std::cout<<"mean_after, idx: "<< idx+1 <<" | "<< idx+2<<" | "<<idx+3<<std::endl;
-	      if(show)std::cout<<"dqds_after, val: "<< this_dqds[idx+1]<<" | "<<this_dqds[idx+2]<<" | "<<this_dqds[idx+3]<<std::endl;
-	      if(show)std::cout<<"after >>>>>>>>>> "<<mean_after<<std::endl;
-	      
-	      if (std::abs(mean_before- mean_after)>_dqds_scan_thre) {
-		dqds_size = idx+3;
-		break;
-	      }
-	    }
-	  }
+	  std::vector<float> truncated_dqds;
+	  truncated_dqds.clear();
+	  if(this_dqds.size())
+	    truncated_dqds = Calc_smooth_mean(drop_dqds, _window_size,_window_size_thre,_window_frac);
 
-	  std::vector<float> chosen_dqds;
-	  chosen_dqds.clear();
-	  chosen_dqds.resize(dqds_size);
-	  
-	  for(size_t idx = 0; idx< chosen_dqds.size(); ++idx){
-	    chosen_dqds[idx] = this_dqds[idx];
-	  }
+	  std::vector<float> chop_truncated_dqds;
+	  chop_truncated_dqds.clear();
+	  chop_truncated_dqds = PeakFinder(truncated_dqds,0.1);
 
-	  par._vertex_dqds = chosen_dqds;
-		  
-	  par._dqds_mean = VectorMean(chosen_dqds);
+	  par._vertex_dqds = this_dqds;
+	  //par._truncated_dqds = drop_dqds;
+	  par._truncated_dqds = chop_truncated_dqds;
+	  par._dqds_mean = VectorMean(chop_truncated_dqds);
 	  
-	  if(show)std::cout<<"  this dqds size is "<<this_dqds.size()<<std::endl;
-	  if(show)std::cout<<"chosen dqds size is "<<chosen_dqds.size()<<std::endl;
+	  if(show)std::cout<<"intial dqds size is "<<this_dqds.size()<<std::endl;
+	  if(show)std::cout<<"chosen dqds size is "<<chop_truncated_dqds.size()<<std::endl;
 	  	  
 	  if(pid == 0){
 	    dqds_mean_0 = par._dqds_mean;
-	    _dqds_0_v[plane] = chosen_dqds;
+	    _dqds_0_v[plane] = dqds_mean_0;
 	  }
 	  if(pid == 1){
 	    dqds_mean_1 = par._dqds_mean;
-	    _dqds_1_v[plane] = chosen_dqds;
+	    _dqds_1_v[plane] = dqds_mean_1;
 	  }
-	  /*
-	    AtomdQdX(const cv::Mat& img, 
-	             const data::AtomicContour& atom,
-	             const geo2d::Line<float>& pca,
-	             const geo2d::Vector<float>& start,
-	             const geo2d::Vector<float>& end) const;
-	  */
-	  
+
 	  this_par_data.push_back(par);
 	  AssociateMany(*vertex3d,this_par_data.as_vector().back());
 	  ++pid;
@@ -224,6 +298,12 @@ namespace larocv {
 	_dqds_ratio_v[plane] = (dqds_mean_0/dqds_mean_1 <= 1 ? dqds_mean_0/dqds_mean_1 : dqds_mean_1/dqds_mean_0 );
 	
       }
+      _dqds_diff_01 = _dqds_diff_v[0];
+      if (_dqds_diff_v[1]< _dqds_diff_01 && _dqds_diff_v[1]>0) _dqds_diff_01 = _dqds_diff_v[1];
+
+      _dqds_ratio_01 = _dqds_ratio_v[0];
+      if (_dqds_ratio_v[1]< _dqds_ratio_01 && _dqds_ratio_v[1]>0) _dqds_ratio_01 = _dqds_ratio_v[1];
+      
       _tree->Fill();
     }//loop of vertex
     _roid += 1;

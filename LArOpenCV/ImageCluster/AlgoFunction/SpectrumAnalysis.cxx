@@ -5,8 +5,127 @@
 #include <numeric>
 #include <cmath>
 #include <stdexcept>
+#include <iostream>
 
 namespace larocv {
+
+  ///////////////////////////////////Truncated
+  std::vector<float> 
+  Calc_smooth_mean(const std::vector<float>& dq,
+		   const double _n_window_size,
+		   const int window_cutoff,
+		   const double frac)
+  {
+    std::vector<float> truncatedQ;
+    
+    for(auto window : Get_windows(dq,_n_window_size) ) {
+      if(window.size() > (size_t)window_cutoff) 
+	Cut(window,frac);
+      truncatedQ.push_back(Calc_mean(window));
+    }
+    return truncatedQ;
+  }
+
+  template<typename T>
+  std::vector<std::vector<T>> 
+  Get_windows(const std::vector<T>& the_thing,
+	      const size_t window_size)
+  {
+
+    // given a vector of values return a vector of the same length
+    // with each element being a vector of the values of the local neighbors
+    // of the element at position i in the original vector
+    // input  : [0,1,2,3,4,5,6,...,...,N-3,N-2,N-1] (input vector of size N)
+    // output  (assuming a value of 'w' below == 3):
+    // 0th element: [0]
+    // 1st element: [0,1,2]
+    // 2nd element: [0,1,2,3,4]
+    // jth element: [j-w,j-w+1,..,j+w-2,j+w-1]
+    
+    std::vector<std::vector<T> > data;
+    
+    auto w = window_size + 2;
+    w = (unsigned int)((w - 1)/2);
+    auto num = the_thing.size();
+    
+    data.reserve(num);
+    
+    for(size_t i = 1; i <= num; ++i) {
+      std::vector<T> inner;
+      inner.reserve(20);
+      // if we are at the beginning of the vector (and risk accessing -1 elements)
+      if(i < w)
+	{
+	  if (i == 1)
+	    {
+	      for(size_t j = 0; j < 2; ++j)
+		inner.push_back(the_thing[j]);
+	    }
+	  else
+	    {
+	      for(size_t j = 0; j < 2 * (i%w) - 1; ++j)
+		inner.push_back(the_thing[j]);
+	    }
+	}
+      // if we are at the end of the vector (and risk going past it)
+      else if (i > num - w + 1)
+	{
+	  for(size_t j = num - 2*((num - i)%w)-1 ; j < num; ++j)
+	    inner.push_back(the_thing[j]);
+	}
+      // if we are in the middle of the waveform
+      else
+	{
+	  for(size_t j = i - w; j < i + w - 1; ++j)
+	    inner.push_back(the_thing[j]);
+	}
+      data.emplace_back(inner);
+    }
+
+    return data;
+  
+  }
+
+  template<typename W>
+  void Cut(std::vector<W>& data, double frac)
+  {
+    auto size   = data.size();
+    // calcualte number of elements to be kept
+    int to_stay = floor(frac*size);
+  
+    // sort the array based on charge
+    // so that high-charge hits are removed
+    std::sort(data.begin(),data.end(),
+	      [](const W& a, const W& b) -> bool
+	      {
+		return a < b;	      
+	      });
+
+    // erase all elements after the last one to be kept
+    data.erase(data.begin(), data.begin() + to_stay);
+    data.erase(data.end() - to_stay, data.end());
+    //data.erase(data.begin() + to_stay, data.end());
+  }
+
+  template<typename S>
+  S Calc_mean(const std::vector<S>& data)
+  {
+    if(!data.size())
+      std::invalid_argument("You have me nill to Calc_mean");
+
+    auto sum = S{0.0};
+    size_t denominator = 0;
+    std::cout<<"==============="<<std::endl;
+    
+    for(const auto& d : data) 
+      {
+	if (d!=0) denominator+=1;
+	sum += d;
+	std::cout<<"d is "<<d<<std::endl;
+      }
+    return sum / ( (S) data.size() ); 
+    //return sum / ((S)denominator); 
+  }
 
   float
   VectorMean(const std::vector<float>& v)
