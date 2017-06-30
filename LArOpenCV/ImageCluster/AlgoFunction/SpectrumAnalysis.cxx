@@ -5,7 +5,6 @@
 #include <numeric>
 #include <cmath>
 #include <stdexcept>
-#include <iostream>
 
 namespace larocv {
 
@@ -115,13 +114,11 @@ namespace larocv {
 
     auto sum = S{0.0};
     size_t denominator = 0;
-    std::cout<<"==============="<<std::endl;
     
     for(const auto& d : data) 
       {
 	if (d!=0) denominator+=1;
 	sum += d;
-	std::cout<<"d is "<<d<<std::endl;
       }
     return sum / ( (S) data.size() ); 
     //return sum / ((S)denominator); 
