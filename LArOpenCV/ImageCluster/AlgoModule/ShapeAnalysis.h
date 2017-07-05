@@ -60,7 +60,32 @@ namespace larocv {
     std::vector<float> _sigma_pixel_dist_v;
     std::vector<float> _angular_sum_v;
     std::vector<float> _triangle_d_sum_v;
+
+    std::vector<float> _length_max_v;
+    std::vector<float> _width_max_v;
+    std::vector<float> _perimeter_max_v;
+    std::vector<float> _area_max_v;
+    std::vector<float> _npixel_max_v;
+    std::vector<float> _track_frac_max_v;
+    std::vector<float> _shower_frac_max_v;
+    std::vector<float> _mean_pixel_dist_max_v;
+    std::vector<float> _sigma_pixel_dist_max_v;
+    std::vector<float> _angular_sum_max_v;
     std::vector<float> _triangle_d_max_v;
+
+
+    std::vector<float> _length_min_v;
+    std::vector<float> _width_min_v;
+    std::vector<float> _perimeter_min_v;
+    std::vector<float> _area_min_v;
+    std::vector<float> _npixel_min_v;
+    std::vector<float> _track_frac_min_v;
+    std::vector<float> _shower_frac_min_v;
+    std::vector<float> _mean_pixel_dist_min_v;
+    std::vector<float> _sigma_pixel_dist_min_v;
+    std::vector<float> _angular_sum_min_v;
+    std::vector<float> _triangle_d_min_v;
+    
     
     int _track_par_max_id;
     int _shower_par_max_id;
