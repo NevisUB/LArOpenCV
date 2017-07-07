@@ -77,8 +77,8 @@ namespace larocv {
     _tree->Branch("tdqds_1_v"      , &_t_dqds_1_v         );
     _tree->Branch("dqds_diff_01"   , &_dqds_diff_01       );
     _tree->Branch("dqds_ratio_01"  , &_dqds_ratio_01      );
-    _tree->Branch("dqds_diff_012"  , &_dqds_diff_012      );
-    _tree->Branch("dqds_ratio_012" , &_dqds_ratio_012     );
+    //_tree->Branch("dqds_diff_012"  , &_dqds_diff_012      );
+    //_tree->Branch("dqds_ratio_012" , &_dqds_ratio_012     );
     _tree->Branch("theta"          , &_theta              );  
     _tree->Branch("phi"            , &_phi                );
     
