@@ -191,10 +191,11 @@ namespace larocv {
     
     const auto& threeD_data  = AlgoData<data::Info3DArray>(_match_analysis_algo_id,0);
 
+    _vtxid = -1;
     for(size_t vertex_id = 0; vertex_id < vertex_data_v.size(); ++vertex_id) {
       Clear();
 
-      _vtxid  =vertex_id;
+	
       if(show)std::cout<<"vertex  "<<_vtxid<<std::endl;
       if(show)if(show)std::cout<<"====>>>>dQds Analysis Starts<<<<====="<<std::endl;
       
@@ -202,31 +203,47 @@ namespace larocv {
       _x = vertex3d->x;
       _y = vertex3d->y;
       _z = vertex3d->z;
+
+      const auto& par_data = AlgoData<data::ParticleArray>(_angle_analysis_algo_id,0);
+      auto par_ass_id_v = ass_man.GetManyAss(*vertex3d,par_data.ID());
+      if(par_ass_id_v.size()==0) continue;
+
+      _vtxid += 1;
+
+      // per plane a vector for particle cluster & info3d
+      std::vector<std::vector<data::ParticleCluster> > pcluster_vv(3);
+      std::vector<std::vector<data::Info3D> >          info3d_vv(3);
+
+      for(auto par_id : par_ass_id_v) {
+	const auto& par  = par_data.as_vector().at(par_id);
+
+	for(size_t plane=0; plane<3; ++plane) 
+	 pcluster_vv.at(plane).push_back(par._par_v.at(plane));
+
+	const auto info3d_id   = ass_man.GetOneAss(par,threeD_data.ID());
+	if(show) std::cout<<"info id is "<<info3d_id<<std::endl;
+	const auto& this_info3d = threeD_data.as_vector().at(info3d_id);	
+
+	for(size_t plane=0; plane<3; ++plane) 
+	  info3d_vv.at(plane).push_back(this_info3d);
+      }
       
       for(size_t plane =0; plane <=2; ++plane){
 	if(show)std::cout<<"====>>>>Plane "<<plane<<"<<<<====="<<std::endl;
-		
+	
 	// Input algo data
-	const auto& par_data = AlgoData<data::ParticleClusterArray>(_angle_analysis_algo_id,plane);
-	auto par_ass_id_v = ass_man.GetManyAss(*vertex3d,par_data.ID());
-
-	if(par_ass_id_v.size()==0) continue;
 	auto& this_par_data = AlgoData<data::ParticleClusterArray>(plane);
 	
 	float dqds_mean_0 =9999.0;
 	float dqds_mean_1 =9999.0;
 	int pid = 0;
-	for(auto par_id : par_ass_id_v) {
+	for(size_t par_id = 0; par_id < pcluster_vv.at(plane).size(); par_id++) {
 	  if(show)std::cout<<par_id<<std::endl;
 	  if(show)std::cout<<"Particle ID is"<<par_id<<std::endl;
 	    
-	  auto par    = par_data.as_vector().at(par_id);
-
-	  //auto info3d_id   = ass_man.GetOneAss(par,threeD_data.ID());
-	  //if(show)std::cout<<"info id is "<<info3d_id<<std::endl;
-	  //auto this_info3d = threeD_data.as_vector().at(info3d_id);
-	  auto this_info3d = threeD_data.as_vector().at(par_id);
-
+	  auto& par = pcluster_vv.at(plane).at(par_id);
+	  auto& this_info3d = info3d_vv.at(plane).at(par_id);
+	    
 	  _theta = this_info3d.trunk_pca_theta;
 	  _phi   = this_info3d.trunk_pca_phi;
 
