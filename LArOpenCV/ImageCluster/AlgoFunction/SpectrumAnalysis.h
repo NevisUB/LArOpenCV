@@ -5,7 +5,32 @@
 #include <stdlib.h>
 #include <algorithm>
 namespace larocv {
+  
+  std::vector<float> 
+  Calc_smooth_mean(const std::vector<float>& dq,
+		   const double _n_window_size,
+		   const int window_cutoff,
+		   const double p_above);
 
+  template<typename T> 
+  std::vector<std::vector<T>> 
+  Get_windows(const std::vector<T>& the_thing,
+	      const size_t window_size);
+  
+  template<typename W>
+  void 
+  Cut(std::vector<W>& data, double frac);
+
+  template<typename W>
+  std::vector<W> 
+  Remove(std::vector<W> data, double frac);
+
+  template<typename S>
+  S Calc_mean(const std::vector<S>& data);
+  //Above are truncated mean Methods
+
+  std::vector<float> CutHeads(std::vector<float>, double frac1, double frac2);
+  
   float
   VectorMean(const std::vector<float>& v);
   

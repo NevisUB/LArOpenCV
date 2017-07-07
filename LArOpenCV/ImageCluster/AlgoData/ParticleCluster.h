@@ -33,6 +33,7 @@ namespace larocv {
 	type=ParticleType_t::kUnknown;
 	_ctor.clear();
 	_vertex_dqds.clear();
+	_truncated_dqds.clear();
 	_end_point.x = -9999;
 	_end_point.y = -9999;
       }
@@ -48,6 +49,7 @@ namespace larocv {
       
       float _dqds_mean;
       std::vector<float> _vertex_dqds;
+      std::vector<float> _truncated_dqds;
       geo2d::Vector<float> _end_point; // last scanned radius from angleanalysis
       
     };
