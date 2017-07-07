@@ -53,10 +53,11 @@ namespace larocv {
     //
     
     _dqds_scan_thre   = pset.get<float>("dQdsScanThre");
-    _chop_size        = pset.get<size_t>("dQdsChopLocation");
+    _drop_location        = pset.get<size_t>("dQdsDropLocation");
     _window_size      = pset.get<double>("TruncateWindowSize");
     _window_size_thre = pset.get<int>("TruncateWindowSizeThre");
-    _window_frac      = pset.get<double>("TruncateFrac");
+    _head_frac      = pset.get<double>("HeadFrac");
+    _tail_frac      = pset.get<double>("TailFrac");
         
     _tree = new TTree("dQdSAnalysis","");
     AttachIDs(_tree);
@@ -76,6 +77,8 @@ namespace larocv {
     _tree->Branch("tdqds_1_v"      , &_t_dqds_1_v         );
     _tree->Branch("dqds_diff_01"   , &_dqds_diff_01       );
     _tree->Branch("dqds_ratio_01"  , &_dqds_ratio_01      );
+    _tree->Branch("dqds_diff_012"  , &_dqds_diff_012      );
+    _tree->Branch("dqds_ratio_012" , &_dqds_ratio_012     );
     _tree->Branch("theta"          , &_theta              );  
     _tree->Branch("phi"            , &_phi                );
     
@@ -110,9 +113,11 @@ namespace larocv {
     
     std::vector<float> res;
     res.clear();
-    
-    if (input_dqds.size()>_chop_size){
-      for (size_t idx = _chop_size; idx< input_dqds.size();++idx){
+    res = input_dqds;
+
+    if (input_dqds.size()>_drop_location +5){
+      res.clear();
+      for (size_t idx = _drop_location; idx< input_dqds.size();++idx){
 	res.push_back(input_dqds[idx]);
       }
     }
@@ -208,8 +213,8 @@ namespace larocv {
 	if(par_ass_id_v.size()==0) continue;
 	auto& this_par_data = AlgoData<data::ParticleClusterArray>(plane);
 	
-	float dqds_mean_0 =-9999.0;
-	float dqds_mean_1 =-9999.0;
+	float dqds_mean_0 =9999.0;
+	float dqds_mean_1 =9999.0;
 	int pid = 0;
 	for(auto par_id : par_ass_id_v) {
 	  if(show)std::cout<<par_id<<std::endl;
@@ -247,15 +252,27 @@ namespace larocv {
 	  
 	  end_point = par._end_point;
 	  
-	  if (int(par._end_point.x == -9999)){
+	  if (int(par._end_point.x == 9999)){
 	    if(show)std::cout<<par._end_point.x<<std::endl;
 	    FindEdge(thisatom, start_point, end_point);
 	  }
 	  
-	  std::vector<float> this_dqds;
-	  this_dqds.clear();
-	  this_dqds = _AtomicAnalysis.AtomdQdX(masked_ctor, thisatom, this_pca, start_point, end_point);
+	  std::vector<float> par_dqds;
+	  par_dqds.clear();
+	  par_dqds = _AtomicAnalysis.AtomdQdX(masked_ctor, thisatom, this_pca, start_point, end_point);
 	  
+	  std::vector<float> trunk_dqds;
+	  trunk_dqds.clear();
+	  if (par_dqds.size() > 30){
+	    for(size_t idx = 0; idx <30 ; ++idx ) trunk_dqds.push_back(par_dqds[idx]);
+	  }
+	  else {trunk_dqds = par_dqds;};
+	  
+	  std::vector<float> remove_dqds;
+	  remove_dqds.clear();
+	  remove_dqds = CutHeads(trunk_dqds, _head_frac, _tail_frac);
+	  
+	  /*
 	  std::vector<float> drop_dqds;
 	  drop_dqds.clear();
 	  drop_dqds = dQdsDropper(this_dqds);
@@ -268,15 +285,12 @@ namespace larocv {
 	  std::vector<float> chop_truncated_dqds;
 	  chop_truncated_dqds.clear();
 	  chop_truncated_dqds = PeakFinder(truncated_dqds,0.1);
-
-	  par._vertex_dqds = this_dqds;
+	  */
+	  par._vertex_dqds = par_dqds;
 	  //par._truncated_dqds = drop_dqds;
-	  par._truncated_dqds = chop_truncated_dqds;
-	  par._dqds_mean = VectorMean(chop_truncated_dqds);
+	  par._truncated_dqds = remove_dqds;
+	  par._dqds_mean = VectorMean(remove_dqds);
 	  
-	  if(show)std::cout<<"intial dqds size is "<<this_dqds.size()<<std::endl;
-	  if(show)std::cout<<"chosen dqds size is "<<chop_truncated_dqds.size()<<std::endl;
-	  	  
 	  if(pid == 0){
 	    dqds_mean_0 = par._dqds_mean;
 	    _dqds_0_v[plane] = dqds_mean_0;
@@ -298,8 +312,9 @@ namespace larocv {
 	_dqds_ratio_v[plane] = (dqds_mean_0/dqds_mean_1 <= 1 ? dqds_mean_0/dqds_mean_1 : dqds_mean_1/dqds_mean_0 );
 	
       }
-      _dqds_diff_01 = _dqds_diff_v[0];
-      if (_dqds_diff_v[1]< _dqds_diff_01 && _dqds_diff_v[1]>0) _dqds_diff_01 = _dqds_diff_v[1];
+      _dqds_diff_01 = 9999;
+      if (_dqds_diff_v[0] >= 0 )_dqds_diff_01 = _dqds_diff_v[0];
+      if (_dqds_diff_v[1] > _dqds_diff_01 && _dqds_diff_v[1]>0) _dqds_diff_01 = _dqds_diff_v[1];
 
       _dqds_ratio_01 = _dqds_ratio_v[0];
       if (_dqds_ratio_v[1]< _dqds_ratio_01 && _dqds_ratio_v[1]>0) _dqds_ratio_01 = _dqds_ratio_v[1];

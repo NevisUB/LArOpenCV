@@ -8,7 +8,7 @@
 
 namespace larocv {
 
-  ///////////////////////////////////Truncated
+  //Methods for Truncated Mean
   std::vector<float> 
   Calc_smooth_mean(const std::vector<float>& dq,
 		   const double _n_window_size,
@@ -122,6 +122,52 @@ namespace larocv {
       }
     return sum / ( (S) data.size() ); 
     //return sum / ((S)denominator); 
+  }
+  //Above are truncated mean methods
+
+  std::vector<float> CutHeads(std::vector<float> data, double frac_head, double frac_tail)
+  {
+    auto size   = data.size();
+    std::vector<float> res;
+    res.clear();
+
+    std::vector<float> copy;
+    copy.clear();
+    copy = data;
+        
+    int to_stay_head = floor(frac_head*size);
+    int to_stay_tail = floor(frac_tail*size);
+  
+    std::sort(copy.begin(),copy.end(),
+	      [](const float& a, const float& b) -> bool
+	      {
+		return a < b;	      
+	      });
+
+    // erase all elements after the last one to be kept
+    //data.erase(data.begin(), data.begin() + to_stay);
+    //data.erase(data.end() - to_stay, data.end());
+    
+    for (size_t idx=0; idx < data.size() ; ++idx){
+      if (data[idx] < copy[copy.size()-to_stay_tail] && data[idx] > copy[to_stay_head]) res.push_back(data[idx]);
+    }
+    
+    if (res.size()<3) {
+      res.clear();
+      for (size_t idx=0; idx < data.size() ; ++idx){
+	if (data[idx] < copy[copy.size()-to_stay_tail]) res.push_back(data[idx]);
+      } 
+    }
+
+    if (res.size()<3) {
+      res.clear();
+      for (size_t idx=0; idx < data.size() ; ++idx){
+	res.push_back(data[idx]);
+      } 
+    }
+    
+    //data.erase(data.begin() + to_stay, data.end());
+    return res;
   }
 
   float

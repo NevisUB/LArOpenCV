@@ -72,9 +72,10 @@ namespace larocv {
     //Variables for truncated mean
     double _window_size;
     int _window_size_thre;
-    double _window_frac;
+    double _head_frac;
+    double _tail_frac;
     
-    size_t _chop_size;//chop the first x data points on dqds spectrum
+    size_t _drop_location;//drop the first x data points on dqds spectrum
     
     float _dqds_scan_thre;
     

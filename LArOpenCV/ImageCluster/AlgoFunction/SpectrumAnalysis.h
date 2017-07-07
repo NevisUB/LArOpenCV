@@ -21,9 +21,16 @@ namespace larocv {
   void 
   Cut(std::vector<W>& data, double frac);
 
+  template<typename W>
+  std::vector<W> 
+  Remove(std::vector<W> data, double frac);
+
   template<typename S>
   S Calc_mean(const std::vector<S>& data);
-  ////////////////////////////////////////
+  //Above are truncated mean Methods
+
+  std::vector<float> CutHeads(std::vector<float>, double frac1, double frac2);
+  
   float
   VectorMean(const std::vector<float>& v);
   
