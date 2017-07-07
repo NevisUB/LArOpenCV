@@ -47,6 +47,7 @@ namespace larocv {
     AlgorithmID_t _angle_analysis_algo_id;
     AlgorithmID_t _combined_vertex_analysis_algo_id;
     AlgorithmID_t _match_analysis_algo_id;
+    AlgorithmID_t _match_overlap_algo_id;
     
     AtomicAnalysis _AtomicAnalysis;
 

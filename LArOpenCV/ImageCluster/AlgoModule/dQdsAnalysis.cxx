@@ -29,14 +29,24 @@ namespace larocv {
 	throw larbys("Given CombinedAnalysis name is INVALID!");
     }
 
+    _match_overlap_algo_id = kINVALID_ALGO_ID;
+    // Input from MatchOverlap
+    auto match_overlap_algo_name = pset.get<std::string>("MatchOverlapAlgo","");
+    if (!match_overlap_algo_name.empty()) {
+      _match_overlap_algo_id = this->ID(match_overlap_algo_name);
+      if (_match_overlap_algo_id==kINVALID_ALGO_ID)
+	throw larbys("Given MatchOverlap name is INVALID!");
+    }
+    
     _angle_analysis_algo_id = kINVALID_ALGO_ID;
     // Input from AngleAnalysisAlgo
     auto angle_analysis_algo_name = pset.get<std::string>("AngleAnalysisAlgo","");
     if (!angle_analysis_algo_name.empty()) {
       _angle_analysis_algo_id = this->ID(angle_analysis_algo_name);
       if (_angle_analysis_algo_id==kINVALID_ALGO_ID)
-	throw larbys("Given Angleanalysis name is INVALID!");
+	throw larbys("Given AngleAnalysis name is INVALID!");
     }
+    
     _match_analysis_algo_id = kINVALID_ALGO_ID;
     // Input from AngleAnalysisAlgo
     auto match_analysis_algo_name = pset.get<std::string>("MatchAnalysisAlgo","");
@@ -204,7 +214,9 @@ namespace larocv {
       _y = vertex3d->y;
       _z = vertex3d->z;
 
-      const auto& par_data = AlgoData<data::ParticleArray>(_angle_analysis_algo_id,0);
+
+      const auto& par_data = AlgoData<data::ParticleArray>(_match_overlap_algo_id,0);
+      std::cout << "SEE par_data sz " << par_data.as_vector().size() << std::endl;
       auto par_ass_id_v = ass_man.GetManyAss(*vertex3d,par_data.ID());
       if(par_ass_id_v.size()==0) continue;
 
@@ -215,21 +227,35 @@ namespace larocv {
       std::vector<std::vector<data::Info3D> >          info3d_vv(3);
 
       for(auto par_id : par_ass_id_v) {
-	const auto& par  = par_data.as_vector().at(par_id);
 
-	for(size_t plane=0; plane<3; ++plane) 
-	 pcluster_vv.at(plane).push_back(par._par_v.at(plane));
+	const auto& par  = par_data.as_vector().at(par_id);
+	
+	for(size_t plane=0; plane<3; ++plane) {
+	  LAROCV_DEBUG() << "@ par_id " << par_id << " & plane " << plane << std::endl;
+	  const auto& pcluster_array = AlgoData<data::ParticleClusterArray>(_angle_analysis_algo_id,plane);
+	  LAROCV_DEBUG() << "GOT: pcluster sz -- " << pcluster_array.as_vector().size() << std::endl;
+	  auto pcluster_id = ass_man.GetOneAss(par,pcluster_array.ID());
+	  LAROCV_DEBUG() << "GOT: pcluster id -- " << pcluster_id << std::endl;
+	  if (pcluster_id >= pcluster_array.as_vector().size()) {
+	    LAROCV_DEBUG() << "\t--> SKIP!!" << std::endl;
+	    pcluster_vv.at(plane).push_back(data::ParticleCluster());
+	    continue;
+	  }
+	  const auto& pcluster = pcluster_array.as_vector().at(pcluster_id);
+	  pcluster_vv.at(plane).push_back(pcluster);
+	}
 
 	const auto info3d_id   = ass_man.GetOneAss(par,threeD_data.ID());
-	if(show) std::cout<<"info id is "<<info3d_id<<std::endl;
+	if(show) <<"info id is "<<info3d_id<<std::endl;
 	const auto& this_info3d = threeD_data.as_vector().at(info3d_id);	
 
-	for(size_t plane=0; plane<3; ++plane) 
+	for(size_t plane=0; plane<3; ++plane)
 	  info3d_vv.at(plane).push_back(this_info3d);
+	
       }
       
       for(size_t plane =0; plane <=2; ++plane){
-	if(show)std::cout<<"====>>>>Plane "<<plane<<"<<<<====="<<std::endl;
+	if(show)LAROCV_DEBUG()<<"====>>>>Plane "<<plane<<"<<<<====="<<std::endl;
 	
 	// Input algo data
 	auto& this_par_data = AlgoData<data::ParticleClusterArray>(plane);

@@ -8,6 +8,8 @@
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 #include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 #define PI 3.1415926
+#include "LArOpenCV/ImageCluster/AlgoData/InfoCollection.h"
+
 namespace larocv {
 
   /// Global larocv::AngleAnalysisFactory to register AlgoFactory
@@ -59,7 +61,8 @@ namespace larocv {
     
     // Register 3 particle arrays, 1 per plane
     _nplanes = 3;
-    for(size_t plane=0;plane<_nplanes;++plane) Register(new data::ParticleClusterArray);
+    for(size_t plane=0;plane<_nplanes;++plane)
+      Register(new data::ParticleClusterArray);
   }
 
   void AngleAnalysis::Clear(){
@@ -129,9 +132,7 @@ namespace larocv {
 	double angle1 = -9999;	
 	int pid = 0 ;
 	for(auto par_id : par_ass_id_v) {
-	  //std::cout<<">>>Particle ID "<<par_id<<std::endl;
-	  //auto par = par_data.as_vector().at(par_id);
-	  auto par = particle_v[par_id]._par_v[plane];
+	  auto par = particle_v.at(par_id)._par_v[plane];
 	  if(par._ctor.empty()) continue;
 	  cv::Mat masked_ctor_start;
 
@@ -285,6 +286,7 @@ namespace larocv {
 	  //std::cout<<"end point X is "<<end_point.x<<std::endl;
 	  this_par_data.push_back(par);
 	  AssociateMany(*vertex3d,this_par_data.as_vector().back());
+	  AssociateOne(particle_v.at(par_id),this_par_data.as_vector().back());
 	  
 	  //std::cout<<"pct   is "<<pct<<std::endl;
 	  //std::cout<<"angle is "<<angle<<std::endl;
