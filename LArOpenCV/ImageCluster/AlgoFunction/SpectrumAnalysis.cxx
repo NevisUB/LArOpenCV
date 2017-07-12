@@ -8,7 +8,77 @@
 
 namespace larocv {
 
-  //Methods for Truncated Mean
+  //Methods for Truncated Mean removing numbers based on mean,sigma
+
+  float 
+  Calc_truncated_mean(std::vector<float> input, float thre) {
+    
+    if (!input.size()) return -9999.0;
+    
+    if (input.size()<15) return Mean(input);
+
+    double mean0;
+    double mean1;
+    double sigma0;
+    double sigma1;
+    
+    size_t iter = 0;
+    std::vector<float> data;
+    data.clear();
+
+    while(iter == 0 ){
+      mean0  = Mean(input);
+      sigma0 = Sigma(input);
+            
+      for (size_t idx = 0; idx< input.size(); ++idx) {
+      if( input[idx]> (mean0 - sigma0) && input[idx]< (mean0+ sigma0) ) data.push_back(input[idx]);
+      }
+      
+      mean1  = Mean(data);
+      sigma1 = Sigma(data);
+      ++iter;
+    }
+    
+    size_t size_check = input.size();
+    
+    double ratio = (mean0/mean1 <=1 ? mean0/mean1 : mean1/mean0);
+
+      //while ( iter>0 && std::abs(mean0 - mean1) > thre && size_check > 5  ){
+    while ( iter < 3 && ratio < 0.8 && size_check > 5  && data.size()>10 ){
+
+      mean0  = Mean(data);
+      sigma0 = Sigma(data);
+      
+      std::vector<float> copy;
+      copy.clear();
+      copy = data;
+      data.clear();
+
+      for (size_t idx = 0; idx< input.size(); ++idx) {
+
+	if( copy[idx]> (mean0 - sigma0) && copy[idx]< (mean0+ sigma0) ) data.push_back(copy[idx]);
+      
+	size_check = data.size();
+	
+      }
+      
+      mean1  = Mean(data);
+      sigma1 = Sigma(data);      
+    
+      ratio = (mean0/mean1 <=1 ? mean0/mean1 : mean1/mean0);
+
+      ++iter;
+      
+    }
+    
+    
+    return mean1;
+    
+  }
+
+  //Above are Methods for Truncated Mean removing numbers based on mean,sigma
+
+  //Methods for Smoothing 
   std::vector<float> 
   Calc_smooth_mean(const std::vector<float>& dq,
 		   const double _n_window_size,
@@ -123,7 +193,7 @@ namespace larocv {
     return sum / ( (S) data.size() ); 
     //return sum / ((S)denominator); 
   }
-  //Above are truncated mean methods
+  //Above are Smoothing method
 
   std::vector<float> CutHeads(std::vector<float> data, double frac_head, double frac_tail)
   {
@@ -173,8 +243,9 @@ namespace larocv {
   float
   VectorMean(const std::vector<float>& v)
   {
-    double sum = std::accumulate(v.begin(), v.end(), 0.0);
-    double mean = sum / (float) v.size();
+    
+    float sum = std::accumulate(v.begin(), v.end(), 0.0);
+    float mean = sum / (float) v.size();
     
     return mean;
   }

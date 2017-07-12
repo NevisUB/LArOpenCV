@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <algorithm>
 namespace larocv {
+
+  float
+  Calc_truncated_mean(std::vector<float> input, float thre);
   
   std::vector<float> 
   Calc_smooth_mean(const std::vector<float>& dq,

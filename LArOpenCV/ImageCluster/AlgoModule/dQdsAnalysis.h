@@ -37,6 +37,10 @@ namespace larocv {
     std::vector<float> PeakFinder  (std::vector<float> input_dqds, double frac); //Find the first peak in dqds and stop
 
     std::vector<float> dQdsDropper (std::vector<float> input_dqds);
+
+    float Correct3D ( float dqds_mean, float theta, float phi);
+
+    std::vector<float> Sort01 (const std::vector<float> input);
     
   private:
 
@@ -47,6 +51,7 @@ namespace larocv {
     AlgorithmID_t _angle_analysis_algo_id;
     AlgorithmID_t _combined_vertex_analysis_algo_id;
     AlgorithmID_t _match_analysis_algo_id;
+    AlgorithmID_t _match_overlap_algo_id;
     
     AtomicAnalysis _AtomicAnalysis;
 
@@ -59,16 +64,32 @@ namespace larocv {
     double _y;
     double _z;
     
-    std::vector<float> _dqds_0_v;//per vtx, per plane, particle 0
-    std::vector<float> _dqds_1_v;//per vtx, per plane, particle 1
+    std::vector<float> _dqds_0_v;//dqds mean per vtx, per plane, particle 0
+    std::vector<float> _dqds_1_v;//dqds mean per vtx, per plane, particle 1
     std::vector<float> _dqds_diff_v;//diff of mean dqds between particle 0&1
     std::vector<float> _dqds_ratio_v;//diff of mean dqds between particle 0&1
+    float _dqds_diff_01;//smaller dqds diff of plane 0&1
+    float _dqds_ratio_01;//smaller dqds diff of plane 0&1
     
-    std::vector<float> _t_dqds_0_v;//per vtx, per plane, particle 0
-    std::vector<float> _t_dqds_1_v;//per vtx, per plane, particle 1
+    std::vector<float> _t_dqds_0_v;//dqds mean per vtx, per plane, particle 0
+    std::vector<float> _t_dqds_1_v;//dqds mean per vtx, per plane, particle 1
     std::vector<float> _t_dqds_diff_v;//diff of mean dqds between particle 0&1
     std::vector<float> _t_dqds_ratio_v;//diff of mean dqds between particle 0&1
+    float _t_dqds_diff_01;//smaller dqds diff of plane 0&1
+    float _t_dqds_ratio_01;//smaller dqds diff of plane 0&1
 
+    std::vector<float> _r_dqds_0_v;//dqds spectrum per vtx, per plane, particle 0
+    std::vector<float> _r_dqds_1_v;//dqds spectrum per vtx, per plane, particle 1
+    std::vector<float> _r_dqds_diff_v;//diff of mean dqds between particle 0&1
+    std::vector<float> _r_dqds_ratio_v;//diff of mean dqds between particle 0&1
+    float _r_dqds_diff_01;//smaller dqds diff of plane 0&1
+    float _r_dqds_ratio_01;//smaller dqds diff of plane 0&1
+    
+    std::vector<float> _dqds_0_v_3dc;//per vtx, per plane, particle 0
+    std::vector<float> _dqds_1_v_3dc;//per vtx, per plane, particle 1
+    std::vector<float> _dqds_diff_v_3dc;//diff of mean dqds between particle 0&1
+    std::vector<float> _dqds_ratio_v_3dc;//diff of mean dqds between particle 0&1
+    
     //Variables for truncated mean
     double _window_size;
     int _window_size_thre;
@@ -79,11 +100,17 @@ namespace larocv {
     
     float _dqds_scan_thre;
     
-    float _dqds_diff_01;//smaller dqds diff of plane 0&1
-    float _dqds_ratio_01;//smaller dqds diff of plane 0&1
+
+
+
 
     float _theta;
     float _phi;
+
+    float _dqds_diff_01_3dc;//smaller dqds diff of plane 0&1 [3D corrected]
+    float _dqds_ratio_01_3dc;//smaller dqds diff of plane 0&1 [3D corrected]
+    
+
     
   };
 
