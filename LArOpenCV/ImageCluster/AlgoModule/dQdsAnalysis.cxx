@@ -233,8 +233,15 @@ namespace larocv {
       _x = vertex3d->x;
       _y = vertex3d->y;
       _z = vertex3d->z;
+<<<<<<< HEAD
       
       const auto& par_data = AlgoData<data::ParticleArray>(_match_overlap_algo_id,0);
+=======
+
+
+      const auto& par_data = AlgoData<data::ParticleArray>(_match_overlap_algo_id,0);
+      std::cout << "SEE par_data sz " << par_data.as_vector().size() << std::endl;
+>>>>>>> 2cdd02e5b5f59d2d567e84f0a9c857d747b4a08c
       auto par_ass_id_v = ass_man.GetManyAss(*vertex3d,par_data.ID());
       if(par_ass_id_v.size()==0) continue;
 
@@ -245,6 +252,7 @@ namespace larocv {
       std::vector<std::vector<data::Info3D> >          info3d_vv(3);
 
       for(auto par_id : par_ass_id_v) {
+<<<<<<< HEAD
 
 	const auto& par  = par_data.as_vector().at(par_id);
 	
@@ -256,6 +264,19 @@ namespace larocv {
 
 	  if (pcluster_id >= pcluster_array.as_vector().size()) {
 
+=======
+
+	const auto& par  = par_data.as_vector().at(par_id);
+	
+	for(size_t plane=0; plane<3; ++plane) {
+	  LAROCV_DEBUG() << "@ par_id " << par_id << " & plane " << plane << std::endl;
+	  const auto& pcluster_array = AlgoData<data::ParticleClusterArray>(_angle_analysis_algo_id,plane);
+	  LAROCV_DEBUG() << "GOT: pcluster sz -- " << pcluster_array.as_vector().size() << std::endl;
+	  auto pcluster_id = ass_man.GetOneAss(par,pcluster_array.ID());
+	  LAROCV_DEBUG() << "GOT: pcluster id -- " << pcluster_id << std::endl;
+	  if (pcluster_id >= pcluster_array.as_vector().size()) {
+	    LAROCV_DEBUG() << "\t--> SKIP!!" << std::endl;
+>>>>>>> 2cdd02e5b5f59d2d567e84f0a9c857d747b4a08c
 	    pcluster_vv.at(plane).push_back(data::ParticleCluster());
 	    continue;
 	  }
@@ -264,15 +285,27 @@ namespace larocv {
 	}
 
 	const auto info3d_id   = ass_man.GetOneAss(par,threeD_data.ID());
+<<<<<<< HEAD
 
 	const auto& this_info3d = threeD_data.as_vector().at(info3d_id);	
 
 	for(size_t plane=0; plane<3; ++plane)
 	info3d_vv.at(plane).push_back(this_info3d);
+=======
+	if(show) <<"info id is "<<info3d_id<<std::endl;
+	const auto& this_info3d = threeD_data.as_vector().at(info3d_id);	
+
+	for(size_t plane=0; plane<3; ++plane)
+	  info3d_vv.at(plane).push_back(this_info3d);
+>>>>>>> 2cdd02e5b5f59d2d567e84f0a9c857d747b4a08c
 	
       }
       
       for(size_t plane =0; plane <=2; ++plane){
+<<<<<<< HEAD
+=======
+	if(show)LAROCV_DEBUG()<<"====>>>>Plane "<<plane<<"<<<<====="<<std::endl;
+>>>>>>> 2cdd02e5b5f59d2d567e84f0a9c857d747b4a08c
 	
 	// Input algo data
 	auto& this_par_data = AlgoData<data::ParticleClusterArray>(plane);
