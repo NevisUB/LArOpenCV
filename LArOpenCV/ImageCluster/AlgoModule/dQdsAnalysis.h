@@ -100,12 +100,10 @@ namespace larocv {
     
     float _dqds_scan_thre;
     
-
-
-
-
-    float _theta;
-    float _phi;
+    float _theta_0;
+    float _phi_0;
+    float _theta_1;
+    float _phi_1;
 
     float _dqds_diff_01_3dc;//smaller dqds diff of plane 0&1 [3D corrected]
     float _dqds_ratio_01_3dc;//smaller dqds diff of plane 0&1 [3D corrected]

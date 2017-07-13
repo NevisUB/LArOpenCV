@@ -98,8 +98,10 @@ namespace larocv {
     _tree->Branch("rdqds_diff_01"  , &_r_dqds_diff_01       );
     _tree->Branch("rdqds_ratio_01" , &_r_dqds_ratio_01      );
 
-    _tree->Branch("theta"              , &_theta              );  
-    _tree->Branch("phi"                , &_phi                );
+    _tree->Branch("theta_0"            , &_theta_0              );  
+    _tree->Branch("phi_0"              , &_phi_0                );
+    _tree->Branch("theta_1"            , &_theta_1              );  
+    _tree->Branch("phi_1"              , &_phi_1                );
     _tree->Branch("dqds_0_v_3dc"       , &_dqds_0_v_3dc           );//to check abs dqds
     _tree->Branch("dqds_1_v_3dc"       , &_dqds_1_v_3dc           );//to check abs dqds
     _tree->Branch("dqds_diff_01_3dc"   , &_dqds_diff_01_3dc       );
@@ -113,6 +115,7 @@ namespace larocv {
   }
   
   void dQdsAnalysis::Clear(){
+    
     _dqds_0_v.clear();
     _dqds_0_v.resize(3);
     _dqds_1_v.clear();
@@ -283,8 +286,8 @@ namespace larocv {
 	  auto& par = pcluster_vv.at(plane).at(par_id);
 	  auto& this_info3d = info3d_vv.at(plane).at(par_id);
 	    
-	  _theta = this_info3d.trunk_pca_theta;
-	  _phi   = this_info3d.trunk_pca_phi;
+	  auto theta = this_info3d.trunk_pca_theta;
+	  auto phi   = this_info3d.trunk_pca_phi;
 
 	  cv::Mat masked_ctor;
 	  masked_ctor = MaskImage(img_v[plane],par._ctor,0,false); 	
@@ -356,17 +359,21 @@ namespace larocv {
 	  
 	  if(pid == 0){
 	    _dqds_0_v[plane] = par._dqds_mean;
-	    _dqds_0_v_3dc[plane] = Correct3D(_dqds_0_v[plane], _theta, _phi);
+	    _dqds_0_v_3dc[plane] = Correct3D(_dqds_0_v[plane], theta, phi);
 	    //_dqds_0_v_3dc[plane] = Correct3D(truncated_dqds, _theta, _phi);
 	    //_r_dqds_0_v[plane] = VectorMean(remove_dqds);
 	    //_t_dqds_0_v[plane] = truncated_dqds;
+	    _theta_0 = theta;
+	    _phi_0 = phi;
 	  }
 	  if(pid == 1){
 	    _dqds_1_v[plane] = par._dqds_mean;
-	    _dqds_1_v_3dc[plane] = Correct3D(_dqds_1_v[plane], _theta, _phi);
+	    _dqds_1_v_3dc[plane] = Correct3D(_dqds_1_v[plane], theta, phi);
 	    //_dqds_1_v_3dc[plane] = Correct3D(truncated_dqds, _theta, _phi);
 	    //_r_dqds_1_v[plane] = VectorMean(remove_dqds);
 	    //_t_dqds_1_v[plane] = truncated_dqds;
+	    _theta_1 = theta;
+	    _phi_1 = phi;
 	  }
 
 	  this_par_data.push_back(par);

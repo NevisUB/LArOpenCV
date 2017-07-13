@@ -59,6 +59,9 @@ namespace larocv {
     double _anglediff;
     double _anglediff_straight;
     double _anglediff_max;
+
+    std::vector<double> _angle_0_v;
+    std::vector<double> _angle_1_v;
     
     std::vector<double> _anglediff_v;//Per plane
     std::vector<double> _angle_particles;
