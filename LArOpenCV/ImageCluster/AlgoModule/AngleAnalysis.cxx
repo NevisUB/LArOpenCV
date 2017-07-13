@@ -69,7 +69,9 @@ namespace larocv {
 
   void AngleAnalysis::Clear(){
     _angle_0_v.clear();   
+    _angle_0_v.resize(3,-9999);
     _angle_1_v.clear();
+    _angle_1_v.resize(3,-9999);
     _anglediff_v.clear();
     _anglediff_v.resize(3,-9999);
     _angle_particles.clear();
