@@ -411,15 +411,47 @@ namespace larocv {
       //if (_dqds_diff_v[1] > _dqds_diff_01 && _dqds_diff_v[1]>0) _dqds_diff_01 = _dqds_diff_v[1];
       //if (_dqds_ratio_v[0] >= 0 )_dqds_ratio_01 = _dqds_ratio_v[0];
       //if (_dqds_ratio_v[1]< _dqds_ratio_01 && _dqds_ratio_v[1]>0) _dqds_ratio_01 = _dqds_ratio_v[1];
+      if (!_dqds_diff_v.empty()) {
+	auto res = Sort01(_dqds_diff_v);
+	if (!res.empty())
+	  _dqds_diff_01 = res[1];
+	else
+	  _dqds_diff_01=kINVALID_DOUBLE;
+      }else
+	_dqds_diff_01=kINVALID_DOUBLE;
+      
 
-      _dqds_diff_01      = Sort01(_dqds_diff_v)[1];
-      _dqds_ratio_01     = Sort01(_dqds_ratio_v)[0];
+      if (!_dqds_ratio_v.empty()) {
+	auto res = Sort01(_dqds_ratio_v);
+	if (!res.empty())
+	  _dqds_ratio_01 =  res[0];
+	else
+	  _dqds_ratio_01 = kINVALID_DOUBLE;
+      }else
+	_dqds_ratio_01=kINVALID_DOUBLE;
+      
       //_t_dqds_diff_01    = Sort01(_t_dqds_diff_v)[1];
       //_t_dqds_ratio_01   = Sort01(_t_dqds_ratio_v)[0];
       //_r_dqds_diff_01    = Sort01(_r_dqds_diff_v)[1];
       //_r_dqds_ratio_01   = Sort01(_r_dqds_ratio_v)[0];
-      _dqds_diff_01_3dc  = Sort01(_dqds_diff_v_3dc)[1];
-      _dqds_ratio_01_3dc = Sort01(_dqds_ratio_v_3dc)[0];
+
+      if (!_dqds_diff_v_3dc.empty()) {
+	auto res = Sort01(_dqds_diff_v_3dc);
+	if (!res.empty())
+	  _dqds_diff_01_3dc  = res[1];
+	else
+	  _dqds_diff_01_3dc = kINVALID_DOUBLE;
+      }else
+	_dqds_diff_01_3dc = kINVALID_DOUBLE;
+
+      if (!_dqds_ratio_v_3dc.empty()) {
+	auto res = Sort01(_dqds_ratio_v_3dc);
+	if (!res.empty())
+	  _dqds_ratio_01_3dc = res[0];
+	else
+	  _dqds_ratio_01_3dc = kINVALID_DOUBLE;
+      } else
+	_dqds_ratio_01_3dc = kINVALID_DOUBLE;
       
       /*
       auto minmax_diff = std::minmax_element(std::begin(_dqds_diff_v), std::end(_dqds_diff_v));
