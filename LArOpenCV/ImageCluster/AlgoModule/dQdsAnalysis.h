@@ -40,7 +40,9 @@ namespace larocv {
 
     float Correct3D ( float dqds_mean, float theta, float phi);
 
-    std::vector<float> Sort01 (const std::vector<float> input);
+    std::vector<float> Sort01 (const std::vector<float> input_dqds);
+    
+    float Metric3D (const std::vector<float> input_dqds);
     
   private:
 
@@ -107,8 +109,7 @@ namespace larocv {
 
     float _dqds_diff_01_3dc;//smaller dqds diff of plane 0&1 [3D corrected]
     float _dqds_ratio_01_3dc;//smaller dqds diff of plane 0&1 [3D corrected]
-    
-
+    float _dqds_metric_3dc;// defined as mean value of V[i]/V_mean to check if 3d dQ/dx makes sense.
     
   };
 
