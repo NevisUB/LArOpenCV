@@ -4,6 +4,7 @@
 #include "LArOpenCV/Core/LArOCVTypes.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoDataBase.h"
 #include <array>
+#include "ParticleCluster.h"
 
 /*
   @brief: storage for generic information, whatever you want to get the job done
@@ -22,7 +23,9 @@ namespace larocv {
       ~Info2D() {}
       
       /// attribute clear method
-      void _Clear_() {}
+      void _Clear_() { ptype = ParticleType_t::kUnknown; }
+
+      ParticleType_t ptype;
       
     };
 
@@ -46,7 +49,6 @@ namespace larocv {
       std::array<float,3> overall_pca_end_pt;
       float overall_pca_length;
       
-
       //
       // Trunk PCA
       //

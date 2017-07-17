@@ -4,7 +4,7 @@
 #include "ShapeAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/PixelChunk.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
-#include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
+#include "LArOpenCV/ImageCluster/AlgoData/InfoCollection.h"
 #include "Geo2D/Core/Geo2D.h"
 
 namespace larocv {
@@ -92,6 +92,10 @@ namespace larocv {
     _tree->Branch("par2_frac", &_par2_frac, "par2_frac/F");
       
     _roid = 0;
+
+
+    Register(new data::Info2D);
+    
   }
 
   
@@ -106,6 +110,9 @@ namespace larocv {
     auto track_img_v   = ImageArray(ImageSetID_t::kImageSetTrack);
     auto shower_img_v  = ImageArray(ImageSetID_t::kImageSetShower);
 
+    // Get Info2D to store particle type
+    auto& info2d_arr = AlgoData<data::Info2DArray>(0);
+    
     // Get the particle clusters from the previous module, go vertex-by-vertex
     const auto& vtx3d_arr = AlgoData<data::Vertex3DArray>(_combined_id,0);
     const auto& vtx3d_v = vtx3d_arr.as_vector();
@@ -128,8 +135,15 @@ namespace larocv {
 
       _vtxid += 1;
 
+      std::vector<const data::Particle*> par_v(par_id_v.size(),nullptr);
+
       for(auto par_id : par_id_v) {
 	const auto& par = particle_v[par_id];
+	par_v.push_back(&par);
+      }
+
+      for(const auto par_ptr : par_v) {
+	const auto& par = *par_ptr;
 	
 	float length    = 0.0;
 	float width     = 0.0;
@@ -304,14 +318,21 @@ namespace larocv {
 	auto track_frac  = _track_frac_v[parid];
 	auto shower_frac = _shower_frac_v[parid];
 
+	data::Info2D info2d;
+	
 	if (track_frac >= shower_frac) {
 	  par_type = 1;
 	  par_frac = track_frac;
+	  info2d.ptype = data::ParticleType_t::kTrack;
 	}
 	else {
 	  par_type = 2;
 	  par_frac = shower_frac;
+	  info2d.ptype = data::ParticleType_t::kShower;
 	}
+
+	info2d_arr.emplace_back(std::move(info2d));
+	AssociateOne(info2d_arr.as_vector().back(),*(par_v[parid]));
       }
 
       _par1_type = par_type_v.front();
