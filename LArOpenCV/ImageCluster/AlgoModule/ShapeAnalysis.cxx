@@ -94,7 +94,7 @@ namespace larocv {
     _roid = 0;
 
 
-    Register(new data::Info2D);
+    Register(new data::Info2DArray);
     
   }
 
@@ -135,7 +135,7 @@ namespace larocv {
 
       _vtxid += 1;
 
-      std::vector<const data::Particle*> par_v(par_id_v.size(),nullptr);
+      std::vector<const data::Particle*> par_v;
 
       for(auto par_id : par_id_v) {
 	const auto& par = particle_v[par_id];
