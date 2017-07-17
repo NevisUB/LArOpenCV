@@ -88,24 +88,26 @@ namespace larocv {
     _tree->Branch("tdqds_1_v"      , &_t_dqds_1_v         );
     _tree->Branch("tdqds_diff_v"   , &_t_dqds_diff_v      );
     _tree->Branch("tdqds_ratio_v"  , &_t_dqds_ratio_v     );
-    _tree->Branch("tdqds_diff_01"  , &_t_dqds_diff_01       );
-    _tree->Branch("tdqds_ratio_01" , &_t_dqds_ratio_01      );
+    _tree->Branch("tdqds_diff_01"  , &_t_dqds_diff_01     );
+    _tree->Branch("tdqds_ratio_01" , &_t_dqds_ratio_01    );
 
     _tree->Branch("rdqds_0_v"      , &_r_dqds_0_v         );
     _tree->Branch("rdqds_1_v"      , &_r_dqds_1_v         );
     _tree->Branch("rdqds_diff_v"   , &_r_dqds_diff_v      );
     _tree->Branch("rdqds_ratio_v"  , &_r_dqds_ratio_v     );
-    _tree->Branch("rdqds_diff_01"  , &_r_dqds_diff_01       );
-    _tree->Branch("rdqds_ratio_01" , &_r_dqds_ratio_01      );
+    _tree->Branch("rdqds_diff_01"  , &_r_dqds_diff_01     );
+    _tree->Branch("rdqds_ratio_01" , &_r_dqds_ratio_01    );
 
-    _tree->Branch("theta_0"            , &_theta_0              );  
-    _tree->Branch("phi_0"              , &_phi_0                );
-    _tree->Branch("theta_1"            , &_theta_1              );  
-    _tree->Branch("phi_1"              , &_phi_1                );
-    _tree->Branch("dqds_0_v_3dc"       , &_dqds_0_v_3dc           );//to check abs dqds
-    _tree->Branch("dqds_1_v_3dc"       , &_dqds_1_v_3dc           );//to check abs dqds
-    _tree->Branch("dqds_diff_01_3dc"   , &_dqds_diff_01_3dc       );
-    _tree->Branch("dqds_ratio_01_3dc"  , &_dqds_ratio_01_3dc      );
+    _tree->Branch("theta_0"            , &_theta_0         );  
+    _tree->Branch("phi_0"              , &_phi_0           );
+    _tree->Branch("theta_1"            , &_theta_1         );  
+    _tree->Branch("phi_1"              , &_phi_1           );
+    _tree->Branch("dqds_0_v_3dc"       , &_dqds_0_v_3dc      );//to check abs dqds
+    _tree->Branch("dqds_1_v_3dc"       , &_dqds_1_v_3dc      );//to check abs dqds
+    _tree->Branch("dqds_diff_01_3dc"   , &_dqds_diff_01_3dc  );
+    _tree->Branch("dqds_ratio_01_3dc"  , &_dqds_ratio_01_3dc );
+    _tree->Branch("dqds_metric_3dc"    , &_dqds_metric_3dc   );//to check abs dqds
+   
     
     _roid = 0;
     
@@ -145,13 +147,15 @@ namespace larocv {
     _t_dqds_ratio_v.resize(3,-9999);
     
     _dqds_0_v_3dc.clear();
-    _dqds_0_v_3dc.resize(3);
+    _dqds_0_v_3dc.resize(3,-9999);
     _dqds_1_v_3dc.clear();
-    _dqds_1_v_3dc.resize(3);
+    _dqds_1_v_3dc.resize(3,-9999);
     _dqds_diff_v_3dc.clear();
     _dqds_diff_v_3dc.resize(3,-9999);
     _dqds_ratio_v_3dc.clear();
     _dqds_ratio_v_3dc.resize(3,-9999);
+
+    _dqds_metric_3dc = 0;
     
   }
 
@@ -406,7 +410,14 @@ namespace larocv {
 				    _dqds_0_v_3dc[plane]/_dqds_1_v_3dc[plane] : _dqds_1_v_3dc[plane]/_dqds_0_v_3dc[plane] );
 	
       }
-      
+     
+      auto metric_0 = Metric3D(_dqds_0_v_3dc);
+      std::cout<<metric_0<<std::endl;
+      _dqds_metric_3dc += metric_0;
+      auto metric_1 = Metric3D(_dqds_1_v_3dc);
+      _dqds_metric_3dc += metric_1;
+      _dqds_metric_3dc /= 2.;
+
       //if (_dqds_diff_v[0] >= 0 )_dqds_diff_01 = _dqds_diff_v[0];
       //if (_dqds_diff_v[1] > _dqds_diff_01 && _dqds_diff_v[1]>0) _dqds_diff_01 = _dqds_diff_v[1];
       //if (_dqds_ratio_v[0] >= 0 )_dqds_ratio_01 = _dqds_ratio_v[0];
@@ -512,5 +523,24 @@ namespace larocv {
     return res;
     
   }
+
+  float dQdsAnalysis::Metric3D(const std::vector<float> input_dqds){
+
+    float mean = VectorMean(input_dqds);
+    float sum = 0;
+    int  size = 0;
+    for(auto each : input_dqds){
+      if (each < 0) continue;
+      std::cout<<"each "<<each<<" mean "<<mean<<std::endl;
+      sum += float(each) / float(mean);
+      size += 1;
+    }
+    
+    return float(sum)/ float(size);
+    
+  }
+
+  //flaot dQdsAnalysis::Metric3D( const float ,const float x ){}
+
 }
 #endif
