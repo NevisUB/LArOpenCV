@@ -48,6 +48,7 @@ namespace larocv {
       std::array<float,3> overall_pca_start_pt;
       std::array<float,3> overall_pca_end_pt;
       float overall_pca_length;
+      bool overall_pca_valid;
       
       //
       // Trunk PCA

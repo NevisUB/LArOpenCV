@@ -78,7 +78,8 @@ namespace larocv {
     _tree->Branch("par_pca_end_z_v",&_par_pca_end_z_v);
     _tree->Branch("par_pca_end_in_fiducial_v",&_par_pca_end_in_fiducial_v);
     _tree->Branch("par_pca_end_len_v",&_par_pca_end_len_v);
-
+    _tree->Branch("par_pca_valid_v",&_par_pca_valid_v);
+    
     _tree->Branch("par_trunk_pca_theta_estimate_v",&_par_trunk_pca_theta_estimate_v);
     _tree->Branch("par_trunk_pca_phi_estimate_v",&_par_trunk_pca_phi_estimate_v);
     _tree->Branch("par_trunk_pca_end_x_v",&_par_trunk_pca_end_x_v);
@@ -182,6 +183,7 @@ namespace larocv {
 	auto& par_pca_end_y           = _par_pca_end_y_v[par_idx];
 	auto& par_pca_end_z           = _par_pca_end_z_v[par_idx];
 	auto& par_pca_end_in_fiducial = _par_pca_end_in_fiducial_v[par_idx];
+	auto& par_pca_valid           = _par_pca_valid_v[par_idx];
 	auto& par_pca_end_len         = _par_pca_end_len_v[par_idx];
 
 	auto& par_trunk_pca_theta_estimate  = _par_trunk_pca_theta_estimate_v[par_idx];
@@ -322,31 +324,56 @@ namespace larocv {
 	par_pca_phi_estimate   = kINVALID_DOUBLE;
 	
 	auto space_pts_v = SpacePointsEstimate(par,thresh_img_v);
+
+	par_pca_valid = space_pts_v.empty() ? 0 : 1;
+
+	std::pair<double,double> pca_angle;
+	std::array<float,3> end_pt_3d;
+	float start_end_dist;
+
+	if (par_pca_valid) {
 	
-	if (!space_pts_v.size()) continue;
-	
-	auto pca_angle = Angle3D(space_pts_v,vtx3d);
-	par_pca_theta_estimate = pca_angle.first;
-	par_pca_phi_estimate   = pca_angle.second;
+	  pca_angle = Angle3D(space_pts_v,vtx3d);
+	  par_pca_theta_estimate = pca_angle.first;
+	  par_pca_phi_estimate   = pca_angle.second;
 
 
-	auto end_pt_3d = EndPoint3D(space_pts_v,
-				    pca_angle.first,pca_angle.second,
-				    vtx3d);
+	  end_pt_3d = EndPoint3D(space_pts_v,
+				 pca_angle.first,pca_angle.second,
+				 vtx3d);
 	
-	auto start_end_dist = Distance3D(end_pt_3d,vtx3d);
-	par_pca_end_x = end_pt_3d[0];
-	par_pca_end_y = end_pt_3d[1];
-	par_pca_end_z = end_pt_3d[2];
-	par_pca_end_len = start_end_dist;
+	  start_end_dist = Distance3D(end_pt_3d,vtx3d);
+	  par_pca_end_x = end_pt_3d[0];
+	  par_pca_end_y = end_pt_3d[1];
+	  par_pca_end_z = end_pt_3d[2];
+	  par_pca_end_len = start_end_dist;
 
-	data::Vertex3D end_pca;
-	end_pca.x = end_pt_3d[0];
-	end_pca.y = end_pt_3d[1];
-	end_pca.z = end_pt_3d[2];
+	  data::Vertex3D end_pca;
+	  end_pca.x = end_pt_3d[0];
+	  end_pca.y = end_pt_3d[1];
+	  end_pca.z = end_pt_3d[2];
+
+	  par_pca_end_in_fiducial = _VertexAnalysis.CheckFiducial(end_pca);
+	  
+	} else {
+	  
+	  pca_angle = std::make_pair(kINVALID_DOUBLE,kINVALID_DOUBLE);
+	  par_pca_theta_estimate = kINVALID_DOUBLE;
+	  par_pca_phi_estimate = kINVALID_DOUBLE;
+	  
+	  end_pt_3d = AsVector(kINVALID_FLOAT,kINVALID_FLOAT,kINVALID_FLOAT);
+	  
+	  par_pca_end_x = kINVALID_FLOAT;
+	  par_pca_end_y = kINVALID_FLOAT;
+	  par_pca_end_z = kINVALID_FLOAT;
+	  par_pca_end_len = kINVALID_FLOAT;
+
+	  start_end_dist = kINVALID_FLOAT;
+	  
+	  par_pca_end_in_fiducial = false;
+
+	}
 	
-	par_pca_end_in_fiducial = _VertexAnalysis.CheckFiducial(end_pca);
-
 	par_trunk_pca_theta_estimate = kINVALID_DOUBLE;
 	par_trunk_pca_phi_estimate   = kINVALID_DOUBLE;
 
@@ -412,7 +439,7 @@ namespace larocv {
 	pca_info.overall_pca_start_pt = AsVector(vtx3d.x,vtx3d.y,vtx3d.z);
 	pca_info.overall_pca_end_pt   = end_pt_3d;
 	pca_info.overall_pca_length   = start_end_dist;
-
+	pca_info.overall_pca_valid            = par_pca_valid;
 
 	pca_info.trunk_pca_theta    = par_trunk_pca_theta_estimate;
 	pca_info.trunk_pca_phi      = par_trunk_pca_phi_estimate;
@@ -742,6 +769,7 @@ namespace larocv {
     _par_pca_end_z_v.resize(npar);
     _par_pca_end_in_fiducial_v.resize(npar);
     _par_pca_end_len_v.resize(npar);
+    _par_pca_valid_v.resize(npar);
 
     _par_trunk_pca_theta_estimate_v.resize(npar);
     _par_trunk_pca_phi_estimate_v.resize(npar);
@@ -773,6 +801,7 @@ namespace larocv {
     _par_pca_end_y_v.clear();
     _par_pca_end_z_v.clear();
     _par_pca_end_in_fiducial_v.clear();
+    _par_pca_valid_v.clear();
     _par_pca_end_len_v.clear();
 
     _par_trunk_pca_theta_estimate_v.clear();

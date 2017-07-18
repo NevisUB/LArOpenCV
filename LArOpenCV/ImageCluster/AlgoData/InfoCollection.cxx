@@ -17,7 +17,8 @@ namespace larocv {
       overall_pca_start_pt = invalid_vec;
       overall_pca_end_pt = invalid_vec;
       overall_pca_length = kINVALID_FLOAT;
-
+      overall_pca_valid = true;
+      
       trunk_pca_theta = kINVALID_FLOAT;
       trunk_pca_phi = kINVALID_FLOAT;
       trunk_pca_dir = invalid_vec;
