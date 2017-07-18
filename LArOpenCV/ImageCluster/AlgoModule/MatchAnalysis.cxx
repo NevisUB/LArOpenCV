@@ -323,8 +323,6 @@ namespace larocv {
 	
 	auto space_pts_v = SpacePointsEstimate(par,thresh_img_v);
 	
-	std::cout<<"space pts size   "<<space_pts_v.size()<<std::endl;
-	
 	if (!space_pts_v.size()) continue;
 	
 	auto pca_angle = Angle3D(space_pts_v,vtx3d);
@@ -617,7 +615,6 @@ namespace larocv {
     }
 
     LAROCV_DEBUG() << "Calculating PCA for " << vertex_mat.rows << " 3D points" << std::endl;
-    std::cout << "Calculating PCA for " << vertex_mat.rows << " 3D points" << std::endl;
     cv::PCA pca_ana(vertex_mat, cv::Mat(), CV_PCA_DATA_AS_ROW, 0);
 
     std::array<float,3> mean_v;
