@@ -56,6 +56,16 @@ namespace larocv {
 	throw larbys("Given MatchAnalysis name is INVALID!");
     }
     
+    _shape_analysis_algo_id = kINVALID_ALGO_ID;
+    // Input from AngleAnalysisAlgo
+    auto shape_analysis_algo_name = pset.get<std::string>("ShapeAnalysisAlgo","");
+    if (!shape_analysis_algo_name.empty()) {
+      _shape_analysis_algo_id = this->ID(shape_analysis_algo_name);
+      if (_shape_analysis_algo_id==kINVALID_ALGO_ID)
+	throw larbys("Given MatchAnalysis name is INVALID!");
+    }
+
+
     //
     // Configure AtomicAnalysis
     //
@@ -106,9 +116,21 @@ namespace larocv {
     _tree->Branch("dqds_1_v_3dc"       , &_dqds_1_v_3dc      );//to check abs dqds
     _tree->Branch("dqds_diff_01_3dc"   , &_dqds_diff_01_3dc  );
     _tree->Branch("dqds_ratio_01_3dc"  , &_dqds_ratio_01_3dc );
-    _tree->Branch("dqds_metric_3dc"    , &_dqds_metric_3dc   );//to check abs dqds
-   
+
+    _tree->Branch("trackp_totq"         , &_trackp_totq         );
+    _tree->Branch("showerp_totq"        , &_showerp_totq        );
+    _tree->Branch("trackp_cosz"         , &_trackp_cosz         );
+    _tree->Branch("showerp_cosz"        , &_showerp_cosz        );
+
+    _tree->Branch("trackp_dqds_v"           , &_trackp_dqds_v       );
+    _tree->Branch("showerp_dqds_v"          , &_showerp_dqds_v      );
+    _tree->Branch("trackp_dqds_3dc_v"       , &_trackp_dqds_3dc_v       );
+    _tree->Branch("showerp_dqds_3dc_v"      , &_showerp_dqds_3dc_v      );
     
+    _tree->Branch("long_trackp_dqds_v"      , &_long_trackp_dqds_v  );
+    _tree->Branch("short_trackp_dqds_v"     , &_short_trackp_dqds_v );
+    _tree->Branch("long_trackp_dqds_3dc_v"  , &_long_trackp_dqds_3dc_v  );
+    _tree->Branch("short_trackp_dqds_3dc_v" , &_short_trackp_dqds_3dc_v );
     _roid = 0;
     
     // Register 3 particle cluster arrays, 1 per plane
@@ -155,7 +177,25 @@ namespace larocv {
     _dqds_ratio_v_3dc.clear();
     _dqds_ratio_v_3dc.resize(3,-9999);
 
-    _dqds_metric_3dc = 0;
+    _trackp_dqds_v.clear();
+    _trackp_dqds_v.resize(3,-9999);
+    _showerp_dqds_v.clear();
+    _showerp_dqds_v.resize(3,-9999);
+    
+    _trackp_dqds_3dc_v.clear();
+    _trackp_dqds_3dc_v.resize(3,-9999);
+    _showerp_dqds_3dc_v.clear();
+    _showerp_dqds_3dc_v.resize(3,-9999);
+    
+    _long_trackp_dqds_3dc_v.clear();
+    _long_trackp_dqds_3dc_v.resize(3,-9999);
+    _short_trackp_dqds_3dc_v.clear();
+    _short_trackp_dqds_3dc_v.resize(3,-9999);
+    
+    _long_trackp_dqds_v.clear();
+    _long_trackp_dqds_v.resize(3,-9999);
+    _short_trackp_dqds_v.clear();
+    _short_trackp_dqds_v.resize(3,-9999);
     
   }
 
@@ -230,6 +270,7 @@ namespace larocv {
     
     // Get 3d info from matchoverlap
     const auto& threeD_data  = AlgoData<data::Info3DArray>(_match_analysis_algo_id,0);
+    const auto& twoD_data    = AlgoData<data::Info2DArray>(_shape_analysis_algo_id,0);
     
     _vtxid = -1;
     
@@ -250,7 +291,9 @@ namespace larocv {
       // per plane a vector for particle cluster & info3d
       std::vector<std::vector<data::ParticleCluster> > pcluster_vv(3);
       std::vector<std::vector<data::Info3D> >          info3d_vv(3);
-
+      std::vector<std::vector<data::Info2D> >          info2d_vv(3);
+      
+      
       for(auto par_id : par_ass_id_v) {
 
 	const auto& par  = par_data.as_vector().at(par_id);
@@ -262,7 +305,7 @@ namespace larocv {
 	  auto pcluster_id = ass_man.GetOneAss(par,pcluster_array.ID());
 
 	  if (pcluster_id >= pcluster_array.as_vector().size()) {
-
+	    
 	    pcluster_vv.at(plane).push_back(data::ParticleCluster());
 	    continue;
 	  }
@@ -271,30 +314,61 @@ namespace larocv {
 	}
 
 	const auto info3d_id   = ass_man.GetOneAss(par,threeD_data.ID());
-
-	const auto& this_info3d = threeD_data.as_vector().at(info3d_id);	
-
-	for(size_t plane=0; plane<3; ++plane)
-	info3d_vv.at(plane).push_back(this_info3d);
+	const auto info2d_id   = ass_man.GetOneAss(par,twoD_data.ID());
 	
+	const auto& this_info3d = threeD_data.as_vector().at(info3d_id);
+	const auto& this_info2d = twoD_data.as_vector().at(info2d_id);
+	
+	for(size_t plane=0; plane<3; ++plane){
+	  info3d_vv.at(plane).push_back(this_info3d);
+	  info2d_vv.at(plane).push_back(this_info2d);
+	}
       }
       
       for(size_t plane =0; plane <=2; ++plane){
 	
 	// Input algo data
+	
 	auto& this_par_data = AlgoData<data::ParticleClusterArray>(plane);
 	
 	int pid = 0;
+	float  length0 ; 
+	float  length1 ;
+		
 	for(size_t par_id = 0; par_id < pcluster_vv.at(plane).size(); par_id++) {
 	    
 	  auto& par = pcluster_vv.at(plane).at(par_id);
 	  auto& this_info3d = info3d_vv.at(plane).at(par_id);
+	  auto& this_info2d = info2d_vv.at(plane).at(par_id);
 	    
 	  auto theta = this_info3d.trunk_pca_theta;
 	  auto phi   = this_info3d.trunk_pca_phi;
-
+	  auto cosz  = std::cos(theta);
+	  
 	  cv::Mat masked_ctor;
 	  masked_ctor = MaskImage(img_v[plane],par._ctor,0,false); 	
+
+	  data::AtomicContour thisatom;
+	  data::AtomicContour raw_atom;
+	  
+	  thisatom = FindNonZero(masked_ctor);
+	  raw_atom = FindNonZero(masked_ctor);
+		  
+	  float tot_q = 0;
+	  
+	  for(auto pt : thisatom) {
+	    float q = (float)(masked_ctor.at<unsigned char>((size_t)(pt.y),(size_t)(pt.x)));
+	    tot_q +=q;
+	  }
+	  
+	  if (this_info2d.ptype == data::ParticleType_t::kTrack){
+	    _trackp_totq = tot_q;
+	    _trackp_cosz = cosz;
+	  }
+	  if (this_info2d.ptype == data::ParticleType_t::kShower){
+	    _showerp_totq = tot_q;
+	    _showerp_cosz = cosz;
+	  }
 
 	  geo2d::Circle<float> circle;
 	  
@@ -304,8 +378,6 @@ namespace larocv {
 	  //masked_ctor = Threshold(masked_ctor, 10, 255);
 	  
 	  if ( FindNonZero(masked_ctor).size() <2 ) continue;
-	  
-	  data::AtomicContour thisatom;
 	  
 	  thisatom = FindNonZero(masked_ctor);
 	  
@@ -319,6 +391,11 @@ namespace larocv {
 	    FindEdge(thisatom, start_point, end_point);
 	  }
 	  
+	  geo2d::Vector<float> atom_end_point;
+	  FindEdge(raw_atom, start_point, atom_end_point);
+	  float length = std::sqrt(std::pow(start_point.x - atom_end_point.x , 2) + 
+				   std::pow(start_point.y - atom_end_point.y , 2) );
+
 	  std::vector<float> par_dqds;
 	  par_dqds.clear();
 	  par_dqds = _AtomicAnalysis.AtomdQdX(masked_ctor, thisatom, this_pca, start_point, end_point);
@@ -359,25 +436,38 @@ namespace larocv {
 	  
 	  par._vertex_dqds = par_dqds;
 	  par._truncated_dqds = remove_dqds;
-	  par._dqds_mean = VectorMean(remove_dqds);
-	  
+	  //par._dqds_mean = 
+	  auto mean_dqds = VectorMean(remove_dqds);
+	  auto dqds_3dc = Correct3D(mean_dqds, theta, phi);
+	  par._dqds_mean = dqds_3dc;
 	  if(pid == 0){
-	    _dqds_0_v[plane] = par._dqds_mean;
-	    _dqds_0_v_3dc[plane] = Correct3D(_dqds_0_v[plane], theta, phi);
+	    _dqds_0_v[plane] = mean_dqds;
+	    _dqds_0_v_3dc[plane] = dqds_3dc;//Correct3D(_dqds_0_v[plane], theta, phi);
 	    //_dqds_0_v_3dc[plane] = Correct3D(truncated_dqds, _theta, _phi);
 	    //_r_dqds_0_v[plane] = VectorMean(remove_dqds);
 	    //_t_dqds_0_v[plane] = truncated_dqds;
 	    _theta_0 = theta;
-	    _phi_0 = phi;
+	    _phi_0   = phi;
+	    length0  = length;
 	  }
 	  if(pid == 1){
-	    _dqds_1_v[plane] = par._dqds_mean;
-	    _dqds_1_v_3dc[plane] = Correct3D(_dqds_1_v[plane], theta, phi);
+	    _dqds_1_v[plane] = mean_dqds;
+	    _dqds_1_v_3dc[plane] = dqds_3dc;//Correct3D(_dqds_1_v[plane], theta, phi);
 	    //_dqds_1_v_3dc[plane] = Correct3D(truncated_dqds, _theta, _phi);
 	    //_r_dqds_1_v[plane] = VectorMean(remove_dqds);
 	    //_t_dqds_1_v[plane] = truncated_dqds;
 	    _theta_1 = theta;
 	    _phi_1 = phi;
+	    length1  = length;
+	  }
+
+	  if (this_info2d.ptype == data::ParticleType_t::kTrack){
+	    _trackp_dqds_v[plane]  = mean_dqds;//Correct3D(par._dqds_mean, theta, phi);
+	    _trackp_dqds_3dc_v[plane]  = dqds_3dc;//Correct3D(par._dqds_mean, theta, phi);
+	  }
+	  if (this_info2d.ptype == data::ParticleType_t::kShower){
+	    _showerp_dqds_v[plane] = mean_dqds;//Correct3D(par._dqds_mean, theta, phi);
+	    _showerp_dqds_3dc_v[plane] = dqds_3dc;//Correct3D(par._dqds_mean, theta, phi);
 	  }
 
 	  this_par_data.push_back(par);
@@ -385,6 +475,20 @@ namespace larocv {
 	  ++pid;
 	}
 
+	if(pid == 2){
+	  if (length0 >= length1) {
+	    _long_trackp_dqds_v[plane]  = _dqds_0_v[plane];
+	    _short_trackp_dqds_v[plane] = _dqds_1_v[plane];
+	    _long_trackp_dqds_3dc_v[plane]  = _dqds_0_v_3dc[plane];
+	    _short_trackp_dqds_3dc_v[plane] = _dqds_1_v_3dc[plane];
+	  }else{
+	    _long_trackp_dqds_v[plane]  = _dqds_1_v[plane];
+	    _short_trackp_dqds_v[plane] = _dqds_0_v[plane];
+	    _long_trackp_dqds_3dc_v[plane]  = _dqds_1_v_3dc[plane];
+	    _short_trackp_dqds_3dc_v[plane] = _dqds_0_v_3dc[plane];
+	  } 
+	}
+	
 	if(_dqds_0_v[plane]     == 0 ) _dqds_0_v[plane]     = _dqds_1_v[plane]; //stupid way for cases where dqds not calculated
 	if(_dqds_1_v[plane]     == 0 ) _dqds_1_v[plane]     = _dqds_0_v[plane]; //stupid way for cases where dqds not calculated
 	//if(_t_dqds_0_v[plane]   == 0 ) _t_dqds_0_v[plane]   = _t_dqds_1_v[plane]; //stupid way for cases where dqds not calculated
@@ -411,13 +515,6 @@ namespace larocv {
 	
       }
      
-      auto metric_0 = Metric3D(_dqds_0_v_3dc);
-      std::cout<<metric_0<<std::endl;
-      _dqds_metric_3dc += metric_0;
-      auto metric_1 = Metric3D(_dqds_1_v_3dc);
-      _dqds_metric_3dc += metric_1;
-      _dqds_metric_3dc /= 2.;
-
       //if (_dqds_diff_v[0] >= 0 )_dqds_diff_01 = _dqds_diff_v[0];
       //if (_dqds_diff_v[1] > _dqds_diff_01 && _dqds_diff_v[1]>0) _dqds_diff_01 = _dqds_diff_v[1];
       //if (_dqds_ratio_v[0] >= 0 )_dqds_ratio_01 = _dqds_ratio_v[0];
@@ -523,24 +620,6 @@ namespace larocv {
     return res;
     
   }
-
-  float dQdsAnalysis::Metric3D(const std::vector<float> input_dqds){
-
-    float mean = VectorMean(input_dqds);
-    float sum = 0;
-    int  size = 0;
-    for(auto each : input_dqds){
-      if (each < 0) continue;
-      std::cout<<"each "<<each<<" mean "<<mean<<std::endl;
-      sum += float(each) / float(mean);
-      size += 1;
-    }
-    
-    return float(sum)/ float(size);
-    
-  }
-
-  //flaot dQdsAnalysis::Metric3D( const float ,const float x ){}
 
 }
 #endif

@@ -244,8 +244,16 @@ namespace larocv {
   VectorMean(const std::vector<float>& v)
   {
     
-    float sum = std::accumulate(v.begin(), v.end(), 0.0);
-    float mean = sum / (float) v.size();
+    float sum  = 0;
+    int   size = 0;
+    for (auto each : v ){
+      if (each == -9999) continue;
+      sum  += each;
+      size += 1;
+    }
+
+    //float sum = std::accumulate(v.begin(), v.end(), 0.0);
+    float mean = sum / float(size);
     
     return mean;
   }
