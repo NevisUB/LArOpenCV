@@ -353,7 +353,9 @@ namespace larocv {
 	  
 	  thisatom = FindNonZero(masked_ctor);
 	  raw_atom = FindNonZero(masked_ctor);
-		  
+		
+	  par._atom = raw_atom;
+	  
 	  float tot_q = 0;
 	  
 	  for(auto pt : thisatom) {
@@ -383,22 +385,23 @@ namespace larocv {
 	  
 	  auto this_pca = CalcPCA(thisatom);
 	  auto start_point = circle.center;
-	  geo2d::Vector<float> end_point;
+	  geo2d::Vector<float> angle_scan_end_point;
 	  
-	  end_point = par._end_point;
+	  angle_scan_end_point = par._angle_scan_end_point;
 	  
-	  if (int(par._end_point.x == 9999)){
-	    FindEdge(thisatom, start_point, end_point);
+	  if (int(par._angle_scan_end_point.x == -9999)){
+	    FindEdge(thisatom, start_point, angle_scan_end_point);
 	  }
 	  
 	  geo2d::Vector<float> atom_end_point;
 	  FindEdge(raw_atom, start_point, atom_end_point);
 	  float length = std::sqrt(std::pow(start_point.x - atom_end_point.x , 2) + 
 				   std::pow(start_point.y - atom_end_point.y , 2) );
+	  par._atom_end_point = atom_end_point;
 
 	  std::vector<float> par_dqds;
 	  par_dqds.clear();
-	  par_dqds = _AtomicAnalysis.AtomdQdX(masked_ctor, thisatom, this_pca, start_point, end_point);
+	  par_dqds = _AtomicAnalysis.AtomdQdX(masked_ctor, thisatom, this_pca, start_point, angle_scan_end_point);
 	  
 	  std::vector<float> trunk_dqds;
 	  trunk_dqds.clear();
