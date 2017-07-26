@@ -53,6 +53,7 @@ namespace larocv {
 
   typedef std::vector<std::vector<geo2d::Vector<int> > > GEO2D_ContourArray_t;
   typedef std::vector<geo2d::Vector<int> >               GEO2D_Contour_t;
+  typedef std::vector<geo2d::Vector<int> >               GEO2D_Particle_t;
 
   namespace data {
     enum AlgoDataCategory_t {

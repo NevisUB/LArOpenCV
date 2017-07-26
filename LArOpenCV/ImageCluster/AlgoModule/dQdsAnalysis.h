@@ -42,8 +42,6 @@ namespace larocv {
 
     std::vector<float> Sort01 (const std::vector<float> input_dqds);
     
-    float Metric3D (const std::vector<float> input_dqds);
-    
   private:
 
     void Clear();
@@ -54,6 +52,7 @@ namespace larocv {
     AlgorithmID_t _combined_vertex_analysis_algo_id;
     AlgorithmID_t _match_analysis_algo_id;
     AlgorithmID_t _match_overlap_algo_id;
+    AlgorithmID_t _shape_analysis_algo_id;
     
     AtomicAnalysis _AtomicAnalysis;
 
@@ -92,6 +91,16 @@ namespace larocv {
     std::vector<float> _dqds_diff_v_3dc;//diff of mean dqds between particle 0&1
     std::vector<float> _dqds_ratio_v_3dc;//diff of mean dqds between particle 0&1
     
+    std::vector<float> _trackp_dqds_v;//per vtx, per plane, track particle
+    std::vector<float> _showerp_dqds_v;//per vtx, per plane, shower particle
+    std::vector<float> _trackp_dqds_3dc_v;//per vtx, per plane, track particle
+    std::vector<float> _showerp_dqds_3dc_v;//per vtx, per plane, shower particle
+
+    std::vector<float> _long_trackp_dqds_v;//per vtx, per plane, long track particle
+    std::vector<float> _short_trackp_dqds_v;//per vtx, per plane, short particle
+    std::vector<float> _long_trackp_dqds_3dc_v;//per vtx, per plane, long track particle
+    std::vector<float> _short_trackp_dqds_3dc_v;//per vtx, per plane, short particle
+    
     //Variables for truncated mean
     double _window_size;
     int _window_size_thre;
@@ -109,7 +118,11 @@ namespace larocv {
 
     float _dqds_diff_01_3dc;//smaller dqds diff of plane 0&1 [3D corrected]
     float _dqds_ratio_01_3dc;//smaller dqds diff of plane 0&1 [3D corrected]
-    float _dqds_metric_3dc;// defined as mean value of V[i]/V_mean to check if 3d dQ/dx makes sense.
+
+    float _trackp_totq;
+    float _showerp_totq;
+    float _trackp_cosz;
+    float _showerp_cosz;
     
   };
 

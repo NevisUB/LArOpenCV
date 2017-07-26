@@ -285,7 +285,7 @@ namespace larocv {
 	  
 	  par._angle = angle;
 	  par._circle = circle;
-	  par._end_point = end_point;
+	  par._angle_scan_end_point = end_point;
 	
 	  this_par_data.push_back(par);
 	  AssociateMany(*vertex3d,this_par_data.as_vector().back());
