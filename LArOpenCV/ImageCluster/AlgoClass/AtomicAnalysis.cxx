@@ -424,7 +424,12 @@ namespace larocv {
 
       size_t bin = (pts_1dcoord[pt_index] / _dx_resolution);
 
-      dqdx[bin] += q;
+      if (bin >= dqdx.size()) {
+	LAROCV_WARNING() << "Skipping bin " << bin << std::endl;
+	continue;
+      }
+      
+      dqdx.at(bin) += q;
 
     }
 
