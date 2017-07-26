@@ -62,28 +62,31 @@ namespace larocv {
     // Get the assman
     auto& ass_man = AssManager();
     auto& vertex_data = AlgoData<data::Vertex3DArray>(0);
-
-    std::vector<const data::Vertex3D*> vertex3d_v;
-
+    
+    std::vector<const data::Vertex3D*> vertex_v;
+    
     if (_shower_vertex_algo_id!=kINVALID_ALGO_ID) {
       const auto& shower_vertex_data = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);
-      for(const auto& vtx : shower_vertex_data.as_vector()) vertex3d_v.push_back(&vtx);
+      for(const auto& vtx : shower_vertex_data.as_vector()) vertex_v.push_back(&vtx);
     }
 
     if (_track_vertex_algo_id!=kINVALID_ALGO_ID) {
       const auto& track_vertex_data  = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
-      for(const auto& vtx : track_vertex_data.as_vector())  vertex3d_v.push_back(&vtx);
+      for(const auto& vtx : track_vertex_data.as_vector()) vertex_v.push_back(&vtx);
     }
 
-    for(const auto& vertex3d_ptr : vertex3d_v) {
+    for(size_t vertex_id=0; vertex_id < vertex_v.size(); ++vertex_id) {
 
+      const auto vertex3d_ptr = vertex_v[vertex_id];
+
+      // Make a copy into module algo data
       const auto& vtx3d = *vertex3d_ptr;
       vertex_data.push_back(vtx3d);
       auto& vtx3d_copy = vertex_data.as_vector().back();
-      
-      for(size_t plane=0;plane<_nplanes;++plane) {
+
+      for(size_t plane=0; plane<_nplanes; ++plane) {
 	
-	// This modules AlgoData
+	// This module AlgoData
 	auto& this_par_data = AlgoData<data::ParticleClusterArray>(plane+1);
 
 	// Input algo data
@@ -94,8 +97,9 @@ namespace larocv {
 	for(auto par_id : par_ass_id_v) {
 	  auto par = par_data.as_vector().at(par_id);
 
-	  // All particles are shower type at the moment until we look at the relative pixel fractions
-	  par.type = data::ParticleType_t::kShower;
+	  // All particles are unknown type at the moment until we look at the relative pixel fractions
+	  par.type = data::ParticleType_t::kUnknown;
+	  
 	  LAROCV_DEBUG() << "Inserting particle @ plane " << plane << " sz " << par._ctor.size() << std::endl;
 	  if(par._ctor.empty()) {
 	    LAROCV_DEBUG() << "... not inserting" << std::endl;
@@ -108,7 +112,7 @@ namespace larocv {
       } // end this plane
     } // end this vertex
     
-    LAROCV_DEBUG() << "Merged " << vertex3d_v.size() << " verticies" << std::endl;
+    LAROCV_DEBUG() << "Merged " << vertex_v.size() << " verticies" << std::endl;
     LAROCV_DEBUG() << "end" << std::endl;
   }
   

@@ -26,7 +26,7 @@ namespace larocv {
     _refine_polar_cluster = true;
     _refine_cartesian_cluster = true;
     _merge_by_mask = false;
-    _refine_cartesian_thickness=2;
+    _refine_cartesian_thickness = 2;
   }
 
   void
@@ -104,12 +104,15 @@ namespace larocv {
       ss0 << "thresh_plane_input.png";
       cv::imwrite(std::string(ss0.str()).c_str(), thresh_img);
     }
-    
-    // Create seed clusters
+
+    //
+    // Create seed clusters using a mask of the circle vertex radius size
+    //
     LAROCV_DEBUG() << "Masking region @ " << cvtx2d.center << " rad: " << cvtx2d.radius << std::endl;
     
     geo2d::Circle<float> mask_region(cvtx2d.center,cvtx2d.radius);
 
+    // user requested to reset the crossing points of circle 
     if (_reset_xs) {
       LAROCV_DEBUG() << "Requested to recompute XS" << std::endl;
 
@@ -118,32 +121,35 @@ namespace larocv {
 	for(const auto& xs : cvtx2d.xs_v)
 	  LAROCV_DEBUG() << "... " << xs.pt << std::endl; 
       }
+
       cvtx2d.xs_v.clear();
+
+      // Reset using a fixed radius
       if (_reset_fixed_rad) {
+	
 	mask_region.radius = _reset_fixed_rad_size;
 	auto xs_v = QPointOnCircle(img,mask_region,10);
 	
 	if(_refine_xs)
 	  xs_v = QPointOnCircleRefine(img,mask_region,xs_v,_refine_mask_inner);
 	
-	for(auto& xs : xs_v) {
-	  cvtx2d.xs_v.emplace_back(xs,geo2d::Line<float>());
-	}
+	for(auto& xs : xs_v) cvtx2d.xs_v.emplace_back(xs,geo2d::Line<float>());
 	
       }
+      // Scan and chose the largest radii with non-zero crossings
       else {
 	auto xs_vv = QPointArrayOnCircleArray(img,cvtx2d.center,{5,6,7,8,9,10},10,0);
 	LAROCV_DEBUG() << "Computed " << xs_vv.size()
 		       << " @ radii 5->10 " << std::endl;
-	//get the largest radii with non-zero crossings
+
 	size_t largest_id=kINVALID_SIZE;
+
 	for(size_t xs_vid=0; xs_vid < xs_vv.size(); ++xs_vid) {
 	  if (xs_vv[xs_vid].empty()) continue;
 	  largest_id = xs_vid;
 	}
-	for(auto& xs : xs_vv[largest_id]) {
-	  cvtx2d.xs_v.emplace_back(xs,geo2d::Line<float>());
-	}
+	
+	for(auto& xs : xs_vv[largest_id]) cvtx2d.xs_v.emplace_back(xs,geo2d::Line<float>());
       }
       
       if(this->logger().level() == ::larocv::msg::kDEBUG) {
@@ -152,7 +158,7 @@ namespace larocv {
 	  LAROCV_DEBUG() << "... " << xs.pt << std::endl; 
       }
     }
-    
+
     auto img_circle = MaskImage(thresh_img, mask_region, 0, false);
     
     // Create seed clusters
@@ -424,8 +430,13 @@ namespace larocv {
 
       // mask-out very-near vtx pixels
       float mask_radius = 0;
-      if(_mask_fraction_radius >0.) mask_radius = _mask_fraction_radius * max_radius_range * vtx.radius;
-      if(_mask_min_radius>0. && mask_radius < _mask_min_radius) mask_radius = _mask_min_radius;
+
+      if(_mask_fraction_radius > 0.)
+	mask_radius = _mask_fraction_radius * max_radius_range * vtx.radius;
+      
+      if(_mask_min_radius>0. && mask_radius < _mask_min_radius)
+	mask_radius = _mask_min_radius;
+      
       if(mask_radius>0.) {
 	size_t mask_col_max = (int)(mask_radius/(vtx.radius * max_radius_range) * rot_polarimg.cols) + 1;
 	for(size_t row=0; row<rot_polarimg.rows; row++) {
