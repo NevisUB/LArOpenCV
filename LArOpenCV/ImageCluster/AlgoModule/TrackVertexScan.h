@@ -40,6 +40,7 @@ namespace larocv {
   private:
 
     AlgorithmID_t _vertex_estimate_algo_id;
+    AlgorithmID_t _vertex_seed_algo_id;
     
     LArPlaneGeo _geo;
     VertexAnalysis _vtxana;
