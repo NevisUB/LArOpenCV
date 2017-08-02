@@ -54,6 +54,8 @@ namespace larocv {
     std::vector<std::string> GetClusterAlgNames() const;
     /// Algorithm getter via unique identifier (AlgorithmID_t)
     const ImageClusterBase* GetClusterAlg(const AlgorithmID_t id) const;
+    /// Algorithm getter for read-write via unique identifier (AlgorithmID_t)
+    ImageClusterBase* GetClusterAlgRW(const AlgorithmID_t id);
     /// Algorithm getter via unique identifier (string name)
     const ImageClusterBase* GetClusterAlg(const std::string name) const;
     /// Clustering algorithm ID getter via unique identifier (string name)

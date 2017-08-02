@@ -111,6 +111,12 @@ namespace larocv {
     return _cluster_alg_v[id];
   }
 
+  ImageClusterBase* ImageClusterManager::GetClusterAlgRW(const AlgorithmID_t id)
+  {
+    if(id >= _cluster_alg_v.size()) throw larbys("Invalid algorithm ID requested...");
+    return _cluster_alg_v[id];
+  }
+
   const ImageClusterBase* ImageClusterManager::GetClusterAlg(const std::string name) const
   {
     return GetClusterAlg(GetClusterAlgID(name));
