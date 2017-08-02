@@ -56,6 +56,16 @@ namespace larocv {
   CountNonZero(const cv::Mat& img){
     return (size_t)cv::countNonZero(img);
   }
+
+  float
+  SumNonZero(const cv::Mat& img) {
+    auto pts_v = FindNonZero(img);
+    float sum = 0.0;
+    for(const auto& pt : pts_v) {
+      sum += (float)( (uchar)img.at<uchar>(pt.y,pt.x) );
+    }
+    return sum;
+  }
   
   double
   MeanDistanceToLine(const cv::Mat& img,

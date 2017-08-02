@@ -29,6 +29,9 @@ namespace larocv {
 
   size_t
   CountNonZero(const cv::Mat& img);
+
+  float
+  SumNonZero(const cv::Mat& img);
   
   double
   MeanDistanceToLine(const cv::Mat& img,

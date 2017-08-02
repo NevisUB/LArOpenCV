@@ -45,6 +45,8 @@ namespace larocv {
 
     auto mask_img = MaskImage(adc_img,contour,0,false);
 
+    qsum = SumNonZero(mask_img);
+    
     if (threshold > 0.0)
       mask_img = Threshold(mask_img,threshold,255);
 

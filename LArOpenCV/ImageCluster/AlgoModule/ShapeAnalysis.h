@@ -54,6 +54,7 @@ namespace larocv {
     std::vector<float> _perimeter_v;
     std::vector<float> _area_v;
     std::vector<float> _npixel_v;
+    std::vector<float> _qsum_v;
     std::vector<float> _track_frac_v;
     std::vector<float> _shower_frac_v;
     std::vector<float> _mean_pixel_dist_v;
@@ -66,6 +67,7 @@ namespace larocv {
     std::vector<float> _perimeter_max_v;
     std::vector<float> _area_max_v;
     std::vector<float> _npixel_max_v;
+    std::vector<float> _qsum_max_v;
     std::vector<float> _track_frac_max_v;
     std::vector<float> _shower_frac_max_v;
     std::vector<float> _mean_pixel_dist_max_v;
@@ -79,6 +81,7 @@ namespace larocv {
     std::vector<float> _perimeter_min_v;
     std::vector<float> _area_min_v;
     std::vector<float> _npixel_min_v;
+    std::vector<float> _qsum_min_v;
     std::vector<float> _track_frac_min_v;
     std::vector<float> _shower_frac_min_v;
     std::vector<float> _mean_pixel_dist_min_v;

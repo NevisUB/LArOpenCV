@@ -49,7 +49,8 @@ namespace larocv {
     _tree->Branch("width_v"           , &_width_v);
     _tree->Branch("perimeter_v"       , &_perimeter_v);
     _tree->Branch("area_v"            , &_area_v);
-    _tree->Branch("npixel_v"          , &_npixel_v);  
+    _tree->Branch("npixel_v"          , &_npixel_v);
+    _tree->Branch("qsum_v"            , &_qsum_v);  
     _tree->Branch("track_frac_v"      , &_track_frac_v);
     _tree->Branch("shower_frac_v"     , &_shower_frac_v);
     _tree->Branch("mean_pixel_dist_v" , &_mean_pixel_dist_v);
@@ -62,6 +63,7 @@ namespace larocv {
     _tree->Branch("perimeter_max_v"       , &_perimeter_max_v);
     _tree->Branch("area_max_v"            , &_area_max_v);
     _tree->Branch("npixel_max_v"          , &_npixel_max_v);
+    _tree->Branch("qsum_max_v"            , &_qsum_max_v);
     _tree->Branch("track_frac_max_v"      , &_track_frac_max_v);
     _tree->Branch("shower_frac_max_v"     , &_shower_frac_max_v);
     _tree->Branch("mean_pixel_dist_max_v" , &_mean_pixel_dist_max_v);
@@ -74,6 +76,7 @@ namespace larocv {
     _tree->Branch("perimeter_min_v"        , &_perimeter_min_v);
     _tree->Branch("area_min_v"             , &_area_min_v);
     _tree->Branch("npixel_min_v"           , &_npixel_min_v);
+    _tree->Branch("qsum_min_v"             , &_qsum_min_v);
     _tree->Branch("track_frac_min_v"       , &_track_frac_min_v);
     _tree->Branch("shower_frac_min_v"      , &_shower_frac_min_v);
     _tree->Branch("mean_pixel_dist_min_v"  , &_mean_pixel_dist_min_v);
@@ -150,6 +153,7 @@ namespace larocv {
 	float perimeter = 0.0;
 	float area  = 0.0;
 	float npixel = 0.0;
+	float qsum = 0.0;
 	float track_frac = 0.0;
 	float shower_frac = 0.0;
 	float mean_pixel_dist = 0.0;
@@ -162,6 +166,7 @@ namespace larocv {
 	float perimeter_max        = -1.0*kINVALID_FLOAT;
 	float area_max             = -1.0*kINVALID_FLOAT;
 	float npixel_max           = -1.0*kINVALID_FLOAT;
+	float qsum_max             = -1.0*kINVALID_FLOAT;
 	float track_frac_max       = -1.0*kINVALID_FLOAT;
 	float shower_frac_max      = -1.0*kINVALID_FLOAT;
 	float mean_pixel_dist_max  = -1.0*kINVALID_FLOAT;
@@ -174,6 +179,7 @@ namespace larocv {
 	float perimeter_min        =  1.0*kINVALID_FLOAT;
 	float area_min             =  1.0*kINVALID_FLOAT;
 	float npixel_min           =  1.0*kINVALID_FLOAT;
+	float qsum_min             =  1.0*kINVALID_FLOAT;
 	float track_frac_min       =  1.0*kINVALID_FLOAT;
 	float shower_frac_min      =  1.0*kINVALID_FLOAT;
 	float mean_pixel_dist_min  =  1.0*kINVALID_FLOAT;
@@ -200,6 +206,7 @@ namespace larocv {
 	  perimeter        += pchunk.perimeter;
 	  area             += pchunk.area;
 	  npixel           += pchunk.npixel;
+	  qsum             += pchunk.qsum;
 	  track_frac       += pchunk.track_frac;
 	  shower_frac      += pchunk.shower_frac;
 	  mean_pixel_dist  += pchunk.mean_pixel_dist;
@@ -231,6 +238,7 @@ namespace larocv {
 	  if (pchunk.perimeter   > perimeter_max)   perimeter_max    = pchunk.perimeter;
 	  if (pchunk.area        > area_max)        area_max         = pchunk.area;
 	  if (pchunk.npixel      > npixel_max)      npixel_max       = pchunk.npixel;
+	  if (pchunk.qsum        > qsum_max)        qsum_max         = pchunk.qsum;
 	  if (pchunk.track_frac  > track_frac_max)  track_frac_max   = pchunk.track_frac;
 	  if (pchunk.shower_frac > shower_frac_max) shower_frac_max  = pchunk.shower_frac;
 
@@ -243,6 +251,7 @@ namespace larocv {
 	  if (pchunk.perimeter   < perimeter_min)   perimeter_min    = pchunk.perimeter;
 	  if (pchunk.area        < area_min)        area_min         = pchunk.area;
 	  if (pchunk.npixel      < npixel_min)      npixel_min       = pchunk.npixel;
+	  if (pchunk.qsum        < qsum_min)        qsum_min         = pchunk.qsum;
 	  if (pchunk.track_frac  < track_frac_min)  track_frac_min   = pchunk.track_frac;
 	  if (pchunk.shower_frac < shower_frac_min) shower_frac_min  = pchunk.shower_frac;
 
@@ -258,6 +267,7 @@ namespace larocv {
 	_perimeter_v        . push_back(perimeter);
 	_area_v             . push_back(area);
 	_npixel_v           . push_back(npixel);
+	_qsum_v             . push_back(qsum);
 	_track_frac_v       . push_back(track_frac);
 	_shower_frac_v      . push_back(shower_frac);
 	_mean_pixel_dist_v  . push_back(mean_pixel_dist);
@@ -270,6 +280,7 @@ namespace larocv {
 	_perimeter_min_v        . push_back(perimeter_min);
 	_area_min_v             . push_back(area_min);
 	_npixel_min_v           . push_back(npixel_min);
+	_qsum_min_v             . push_back(qsum_min);
 	_track_frac_min_v       . push_back(track_frac_min);
 	_shower_frac_min_v      . push_back(shower_frac_min);
 	_mean_pixel_dist_min_v  . push_back(mean_pixel_dist_min);
@@ -283,6 +294,7 @@ namespace larocv {
 	_perimeter_max_v        . push_back(perimeter_max);
 	_area_max_v             . push_back(area_max);
 	_npixel_max_v           . push_back(npixel_max);
+	_qsum_max_v             . push_back(qsum_max);
 	_track_frac_max_v       . push_back(track_frac_max);
 	_shower_frac_max_v      . push_back(shower_frac_max);
 	_mean_pixel_dist_max_v  . push_back(mean_pixel_dist_max);
@@ -356,6 +368,7 @@ namespace larocv {
     _perimeter_v.clear();
     _area_v.clear();
     _npixel_v.clear();
+    _qsum_v.clear();
     _track_frac_v.clear();
     _shower_frac_v.clear();
     _mean_pixel_dist_v.clear();
@@ -368,6 +381,7 @@ namespace larocv {
     _perimeter_max_v.clear();
     _area_max_v.clear();
     _npixel_max_v.clear();
+    _qsum_max_v.clear();
     _track_frac_max_v.clear();
     _shower_frac_max_v.clear();
     _mean_pixel_dist_max_v.clear();
@@ -380,6 +394,7 @@ namespace larocv {
     _perimeter_min_v.clear();
     _area_min_v.clear();
     _npixel_min_v.clear();
+    _qsum_min_v.clear();
     _track_frac_min_v.clear();
     _shower_frac_min_v.clear();
     _mean_pixel_dist_min_v.clear();

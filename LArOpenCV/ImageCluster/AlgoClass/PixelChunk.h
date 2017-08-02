@@ -27,6 +27,7 @@ namespace larocv {
     float perimeter;
     float area;
     uint npixel;
+    float qsum;
     geo2d::Line<float> ctorPCA;
     geo2d::Line<float> pixelPCA;
     geo2d::Line<float> trunkPCA;

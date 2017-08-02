@@ -2,6 +2,7 @@
 #define __VERTEXCHEATER_CXX__
 
 #include "VertexCheater.h"
+#include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 
 namespace larocv {
 
@@ -22,6 +23,11 @@ namespace larocv {
 
     for(auto const& meta : MetaArray())
       _geo.ResetPlaneInfo(meta);
+
+    auto adc_img_v = ImageArray(ImageSetID_t::kImageSetWire);
+    auto thresh_img_v = adc_img_v;
+    for(auto& img : thresh_img_v)
+      img = Threshold(img,10,255);
     
     auto& cheater_data = AlgoData<data::Vertex3DArray>(0);
 
@@ -64,7 +70,25 @@ namespace larocv {
 	
       cvtx2d.center.x = x;
       cvtx2d.center.y = y;
+      
+      const auto& thresh_img = thresh_img_v.at(plane);
+      auto& xs_v = cvtx2d.xs_v;
+      auto circle = cvtx2d.as_circle();
+	
+      auto xs_pt_v = QPointOnCircle(thresh_img,circle);
+      xs_v.reserve(xs_pt_v.size());
 
+      for(const auto& xs_pt : xs_pt_v) {
+	geo2d::Line<float> local_pca;
+	local_pca.pt = cv::Point_<float>(kINVALID_FLOAT,kINVALID_FLOAT);
+	local_pca.dir = local_pca.pt;
+	try {
+	  local_pca   = SquarePCA(thresh_img, xs_pt, 2,2);
+	} catch (const larbys& what) {}
+
+	xs_v.push_back(data::PointPCA(xs_pt, local_pca));
+      }
+      
     }
 
     cheater_data.emplace_back(std::move(_true_vertex));
