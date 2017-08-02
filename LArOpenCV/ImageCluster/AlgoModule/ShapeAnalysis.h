@@ -89,16 +89,19 @@ namespace larocv {
     std::vector<float> _angular_sum_min_v;
     std::vector<float> _triangle_d_min_v;
     
-    
     int _track_par_max_id;
     int _shower_par_max_id;
+
     float _track_par_max_frac;
     float _shower_par_max_frac;
 
     int _par1_type;
     int _par2_type;
+
     float _par1_frac;
     float _par2_frac;
+
+    int _vertex_type;
     
     void Clear();
   };

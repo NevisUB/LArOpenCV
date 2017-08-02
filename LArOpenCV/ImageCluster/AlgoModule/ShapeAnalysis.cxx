@@ -93,7 +93,9 @@ namespace larocv {
     _tree->Branch("par2_type", &_par2_type, "par2_type/I");
     _tree->Branch("par1_frac", &_par1_frac, "par1_frac/F");
     _tree->Branch("par2_frac", &_par2_frac, "par2_frac/F");
-      
+
+    _tree->Branch("vertex_type",&_vertex_type,"vertex_type/I");
+    
     _roid = 0;
 
 
@@ -130,6 +132,8 @@ namespace larocv {
       auto par_id_v = ass_man.GetManyAss(vtx3d,particle_arr.ID());
       if (par_id_v.empty()) continue;
 
+      _vertex_type = (int) vtx3d.type;
+      
       _x = vtx3d.x;
       _y = vtx3d.y;
       _z = vtx3d.z;
