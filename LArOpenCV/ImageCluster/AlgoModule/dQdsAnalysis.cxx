@@ -112,10 +112,15 @@ namespace larocv {
     _tree->Branch("phi_0"              , &_phi_0           );
     _tree->Branch("theta_1"            , &_theta_1         );  
     _tree->Branch("phi_1"              , &_phi_1           );
-    _tree->Branch("dqds_0_v_3dc"       , &_dqds_0_v_3dc      );//to check abs dqds
-    _tree->Branch("dqds_1_v_3dc"       , &_dqds_1_v_3dc      );//to check abs dqds
-    _tree->Branch("dqds_diff_01_3dc"   , &_dqds_diff_01_3dc  );
-    _tree->Branch("dqds_ratio_01_3dc"  , &_dqds_ratio_01_3dc );
+    _tree->Branch("dqds_0_v_3dc"       , &_dqdx_0_v_3dc      );//to check abs dqds
+    _tree->Branch("dqds_1_v_3dc"       , &_dqdx_1_v_3dc      );//to check abs dqds
+    _tree->Branch("dqds_diff_01_3dc"   , &_dqdx_diff_01_3dc  );
+    _tree->Branch("dqds_ratio_01_3dc"  , &_dqdx_ratio_01_3dc );
+    
+    _tree->Branch("dqds_0_end_v_3dc"       , &_dqdx_0_end_v_3dc      );//END dQ/ds
+    _tree->Branch("dqds_1_end_v_3dc"       , &_dqdx_1_end_v_3dc      );
+    _tree->Branch("dqds_diff_end_v_3dc"   , &_dqdx_diff_end_v_3dc  );
+    _tree->Branch("dqds_ratio_end_v_3dc"  , &_dqdx_ratio_end_v_3dc );
 
     _tree->Branch("trackp_totq"         , &_trackp_totq         );
     _tree->Branch("showerp_totq"        , &_showerp_totq        );
@@ -124,16 +129,51 @@ namespace larocv {
 
     _tree->Branch("trackp_dqds_v"           , &_trackp_dqds_v       );
     _tree->Branch("showerp_dqds_v"          , &_showerp_dqds_v      );
-    _tree->Branch("trackp_dqds_3dc_v"       , &_trackp_dqds_3dc_v       );
-    _tree->Branch("showerp_dqds_3dc_v"      , &_showerp_dqds_3dc_v      );
+    _tree->Branch("trackp_dqds_3dc_v"       , &_trackp_dqdx_3dc_v       );
+    _tree->Branch("showerp_dqds_3dc_v"      , &_showerp_dqdx_3dc_v      );
     
     _tree->Branch("long_trackp_dqds_v"      , &_long_trackp_dqds_v  );
     _tree->Branch("short_trackp_dqds_v"     , &_short_trackp_dqds_v );
-    _tree->Branch("long_trackp_dqds_3dc_v"  , &_long_trackp_dqds_3dc_v  );
-    _tree->Branch("short_trackp_dqds_3dc_v" , &_short_trackp_dqds_3dc_v );
+    _tree->Branch("long_trackp_dqdx_3dc_v"  , &_long_trackp_dqdx_3dc_v  );
+    _tree->Branch("short_trackp_dqdx_3dc_v" , &_short_trackp_dqdx_3dc_v );
     _roid = 0;
+
+    _tree->Branch("vertex_v"                  , &_vertex_v);
+    _tree->Branch("particle0_end_point_v"     , &_particle0_end_point);
+    _tree->Branch("particle1_end_point_v"     , &_particle1_end_point);
+    //_tree->Branch("particle0_pixels_v"        , &_particle0_pixels_v);
+    //_tree->Branch("particle1_pixels_v"        , &_particle1_pixels_v);
+
+    _tree->Branch("particle0_end_x"           , &_particle0_end_x);
+    _tree->Branch("particle0_end_y"           , &_particle0_end_y);
+    _tree->Branch("particle0_end_z"           , &_particle0_end_z);
+    _tree->Branch("particle1_end_x"           , &_particle1_end_x);
+    _tree->Branch("particle1_end_y"           , &_particle1_end_y);
+    _tree->Branch("particle1_end_z"           , &_particle1_end_z);
+
+    _tree->Branch("image_particle0_plane0_tmp_x"      , &_image_particle0_plane0_tmp_x);
+    _tree->Branch("image_particle0_plane0_tmp_y"      , &_image_particle0_plane0_tmp_y);
+    _tree->Branch("image_particle0_plane0_tmp_v"      , &_image_particle0_plane0_tmp_v);
+    _tree->Branch("image_particle0_plane1_tmp_x"      , &_image_particle0_plane1_tmp_x);
+    _tree->Branch("image_particle0_plane1_tmp_y"      , &_image_particle0_plane1_tmp_y);
+    _tree->Branch("image_particle0_plane1_tmp_v"      , &_image_particle0_plane1_tmp_v);
+    _tree->Branch("image_particle0_plane2_tmp_x"      , &_image_particle0_plane2_tmp_x);
+    _tree->Branch("image_particle0_plane2_tmp_y"      , &_image_particle0_plane2_tmp_y);
+    _tree->Branch("image_particle0_plane2_tmp_v"      , &_image_particle0_plane2_tmp_v);
+
+    _tree->Branch("image_particle1_plane0_tmp_x"      , &_image_particle1_plane0_tmp_x);
+    _tree->Branch("image_particle1_plane0_tmp_y"      , &_image_particle1_plane0_tmp_y);
+    _tree->Branch("image_particle1_plane0_tmp_v"      , &_image_particle1_plane0_tmp_v);
+    _tree->Branch("image_particle1_plane1_tmp_x"      , &_image_particle1_plane1_tmp_x);
+    _tree->Branch("image_particle1_plane1_tmp_y"      , &_image_particle1_plane1_tmp_y);
+    _tree->Branch("image_particle1_plane1_tmp_v"      , &_image_particle1_plane1_tmp_v);
+    _tree->Branch("image_particle1_plane2_tmp_x"      , &_image_particle1_plane2_tmp_x);
+    _tree->Branch("image_particle1_plane2_tmp_y"      , &_image_particle1_plane2_tmp_y);
+    _tree->Branch("image_particle1_plane2_tmp_v"      , &_image_particle1_plane2_tmp_v);
     
     // Register 3 particle cluster arrays, 1 per plane
+
+
     _nplanes = 3;
     for(size_t plane=0;plane<_nplanes;++plane) Register(new data::ParticleClusterArray);
   }
@@ -168,35 +208,80 @@ namespace larocv {
     _t_dqds_ratio_v.clear();
     _t_dqds_ratio_v.resize(3,-9999);
     
-    _dqds_0_v_3dc.clear();
-    _dqds_0_v_3dc.resize(3,-9999);
-    _dqds_1_v_3dc.clear();
-    _dqds_1_v_3dc.resize(3,-9999);
-    _dqds_diff_v_3dc.clear();
-    _dqds_diff_v_3dc.resize(3,-9999);
-    _dqds_ratio_v_3dc.clear();
-    _dqds_ratio_v_3dc.resize(3,-9999);
+    _dqdx_0_v_3dc.clear();
+    _dqdx_0_v_3dc.resize(3,-9999);
+    _dqdx_1_v_3dc.clear();
+    _dqdx_1_v_3dc.resize(3,-9999);
+    _dqdx_diff_v_3dc.clear();
+    _dqdx_diff_v_3dc.resize(3,-9999);
+    _dqdx_ratio_v_3dc.clear();
+    _dqdx_ratio_v_3dc.resize(3,-9999);
+
+    _dqdx_0_end_v_3dc.clear();
+    _dqdx_0_end_v_3dc.resize(3,-9999);
+    _dqdx_1_end_v_3dc.clear();
+    _dqdx_1_end_v_3dc.resize(3,-9999);
+    _dqdx_diff_end_v_3dc.clear();
+    _dqdx_diff_end_v_3dc.resize(3,-9999);
+    _dqdx_ratio_end_v_3dc.clear();
+    _dqdx_ratio_end_v_3dc.resize(3,-9999);
+    
 
     _trackp_dqds_v.clear();
     _trackp_dqds_v.resize(3,-9999);
     _showerp_dqds_v.clear();
     _showerp_dqds_v.resize(3,-9999);
     
-    _trackp_dqds_3dc_v.clear();
-    _trackp_dqds_3dc_v.resize(3,-9999);
-    _showerp_dqds_3dc_v.clear();
-    _showerp_dqds_3dc_v.resize(3,-9999);
+    _trackp_dqdx_3dc_v.clear();
+    _trackp_dqdx_3dc_v.resize(3,-9999);
+    _showerp_dqdx_3dc_v.clear();
+    _showerp_dqdx_3dc_v.resize(3,-9999);
     
-    _long_trackp_dqds_3dc_v.clear();
-    _long_trackp_dqds_3dc_v.resize(3,-9999);
-    _short_trackp_dqds_3dc_v.clear();
-    _short_trackp_dqds_3dc_v.resize(3,-9999);
+    _long_trackp_dqdx_3dc_v.clear();
+    _long_trackp_dqdx_3dc_v.resize(3,-9999);
+    _short_trackp_dqdx_3dc_v.clear();
+    _short_trackp_dqdx_3dc_v.resize(3,-9999);
     
     _long_trackp_dqds_v.clear();
     _long_trackp_dqds_v.resize(3,-9999);
     _short_trackp_dqds_v.clear();
     _short_trackp_dqds_v.resize(3,-9999);
     
+    _vertex_v.clear();
+    _vertex_v.resize(3);
+    
+    _particle0_end_point.clear();
+    _particle0_end_point.resize(3);
+    
+    _particle1_end_point.clear();    
+    _particle1_end_point.resize(3);
+    
+    _particle0_pixels_v.clear();
+    _particle0_pixels_v.resize(3);
+    
+    _particle1_pixels_v.clear();
+    _particle1_pixels_v.resize(3);
+
+    _image_particle0_plane0_tmp_x.clear();
+    _image_particle0_plane0_tmp_y.clear();
+    _image_particle0_plane0_tmp_v.clear();
+    _image_particle0_plane1_tmp_x.clear();
+    _image_particle0_plane1_tmp_y.clear();
+    _image_particle0_plane1_tmp_v.clear();
+    _image_particle0_plane2_tmp_x.clear();
+    _image_particle0_plane2_tmp_y.clear();
+    _image_particle0_plane2_tmp_v.clear();
+
+    _image_particle1_plane0_tmp_x.clear();
+    _image_particle1_plane0_tmp_y.clear();
+    _image_particle1_plane0_tmp_v.clear();
+    _image_particle1_plane1_tmp_x.clear();
+    _image_particle1_plane1_tmp_y.clear();
+    _image_particle1_plane1_tmp_v.clear();
+    _image_particle1_plane2_tmp_x.clear();
+    _image_particle1_plane2_tmp_y.clear();
+    _image_particle1_plane2_tmp_v.clear();    
+        
   }
 
   std::vector<float> dQdsAnalysis::dQdsDropper (std::vector<float> input_dqds){
@@ -252,12 +337,16 @@ namespace larocv {
   { return true; }
 
   void dQdsAnalysis::_Process_() {
-    
+
     if(NextEvent()) _roid =0;
     
     auto img_v  = ImageArray();
+    //_image_array = img_v;
+    
+    
     auto meta_v = MetaArray();
-   // Get the Association Manager
+    
+    // Get the Association Manager
     auto& ass_man = AssManager();
     
     // Get vertex from combined analysis
@@ -284,6 +373,7 @@ namespace larocv {
       
       const auto& par_data = AlgoData<data::ParticleArray>(_match_overlap_algo_id,0);
       auto par_ass_id_v = ass_man.GetManyAss(*vertex3d,par_data.ID());
+
       if(par_ass_id_v.size()==0) continue;
 
       _vtxid += 1;
@@ -334,28 +424,56 @@ namespace larocv {
 	int pid = 0;
 	float  length0 ; 
 	float  length1 ;
-		
 	for(size_t par_id = 0; par_id < pcluster_vv.at(plane).size(); par_id++) {
 	    
 	  auto& par = pcluster_vv.at(plane).at(par_id);
 	  auto& this_info3d = info3d_vv.at(plane).at(par_id);
 	  auto& this_info2d = info2d_vv.at(plane).at(par_id);
 	    
-	  auto theta = this_info3d.trunk_pca_theta;
-	  auto phi   = this_info3d.trunk_pca_phi;
-	  auto cosz  = std::cos(theta);
+	  auto end_pt = this_info3d.overall_pca_end_pt;
+	  auto theta  = this_info3d.trunk_pca_theta;
+	  auto phi    = this_info3d.trunk_pca_phi;
+	  auto cosz   = std::cos(theta);
 	  
 	  cv::Mat masked_ctor;
-	  masked_ctor = MaskImage(img_v[plane],par._ctor,0,false); 	
 
+	  masked_ctor = MaskImage(img_v[plane],par._ctor,0,false); 	
+	  
 	  data::AtomicContour thisatom;
 	  data::AtomicContour raw_atom;
 	  
 	  thisatom = FindNonZero(masked_ctor);
 	  raw_atom = FindNonZero(masked_ctor);
-		
-	  par._atom = raw_atom;
 	  
+	  par._atom = raw_atom;
+
+	  //################For Adrien
+
+	  _image_array_tmp.clear();
+	  _image_array_tmp.resize(3);
+	  
+	  _image_array_tmp[plane].clear();
+	  size_t img_size = par._atom.size();
+	  /*if(img_size == 0) {
+	    _image_array_tmp[plane].resize(1);
+	    _image_array_tmp[plane][0].SetX(-1);
+	    _image_array_tmp[plane][0].SetY(-1);
+	    _image_array_tmp[plane][0].SetZ(-1);
+
+	    }*/
+	  _image_array_tmp[plane].resize(img_size);
+	  
+	  for (size_t idx = 0; idx < img_size; ++idx){
+	    //std::vector<float> _image_array_tmp[plane][idx];
+	    
+	    //_image_array_tmp[plane][idx].clear();
+	    _image_array_tmp[plane][idx].SetX(par._atom[idx].x);
+	    _image_array_tmp[plane][idx].SetY(par._atom[idx].y);
+	    _image_array_tmp[plane][idx].SetZ((int)(img_v.at(plane).at<uchar>(par._atom[idx].y, par._atom[idx].x)));
+	    //this_img.push_back(_image_array_tmp[plane][idx]);
+	  }
+	  
+	  //#################For Adrien
 	  float tot_q = 0;
 	  
 	  for(auto pt : thisatom) {
@@ -385,6 +503,8 @@ namespace larocv {
 	  
 	  auto this_pca = CalcPCA(thisatom);
 	  auto start_point = circle.center;
+	  _vertex_v[plane].first  = start_point.x;
+	  _vertex_v[plane].second = start_point.y;
 	  geo2d::Vector<float> angle_scan_end_point;
 	  
 	  angle_scan_end_point = par._angle_scan_end_point;
@@ -392,7 +512,6 @@ namespace larocv {
 	  if (int(par._angle_scan_end_point.x == -9999)){
 	    FindEdge(thisatom, start_point, angle_scan_end_point);
 	  }
-	  
 	  geo2d::Vector<float> atom_end_point;
 	  FindEdge(raw_atom, start_point, atom_end_point);
 	  float length = std::sqrt(std::pow(start_point.x - atom_end_point.x , 2) + 
@@ -403,6 +522,67 @@ namespace larocv {
 	  par_dqds.clear();
 	  par_dqds = _AtomicAnalysis.AtomdQdX(masked_ctor, thisatom, this_pca, start_point, angle_scan_end_point);
 	  
+	  
+	  
+	  // For end dqds
+	  // Get the image again
+	  cv::Mat raw_ctor;
+	  raw_ctor = MaskImage(img_v[plane],par._ctor,0,false); 	
+	  // Draw a circle at the end point to mask out bragg peak and michel etc. 
+	  geo2d::Circle<float> end_circle;
+	  
+	  end_circle.center = atom_end_point;
+	  end_circle.radius = 10;
+
+	  masked_ctor = MaskImage(raw_ctor,end_circle,0,true); 	
+	  
+	  geo2d::Vector<float> in_start;
+	  geo2d::Vector<float> in_end;
+	  
+	  FindEdges(raw_atom, in_start, in_end);
+	  
+	  float end_radius = 40;
+	  
+	  if (std::sqrt(std::pow(in_start.x - in_end.x,2) + std::pow(in_start.y - in_end.y,2)) < 40)
+	    {
+	      end_radius = std::sqrt(std::pow(in_start.x - in_end.x,2) + std::pow(in_start.y - in_end.y,2));
+	      //std::cout<<"end_radius is "<<end_radius<<std::endl;
+	    }
+	  
+	  end_circle.radius = end_radius;
+	  masked_ctor = MaskImage(masked_ctor,end_circle,0,false);
+	  auto end_pca = CalcPCA(thisatom);
+	  
+	  data::AtomicContour endatom;
+	  endatom = FindNonZero(masked_ctor);
+	  
+	  std::vector<float> end_par_dqds;
+
+	  geo2d::Vector<float> end_A;
+	  geo2d::Vector<float> end_B;
+	  
+	  float a = 99999999,  b = 0;
+	  
+	  for (auto const pt : endatom){
+	    geo2d::Vector<float> pt_f;
+	    
+	    pt_f.x = (float) pt.x;
+	    pt_f.y = (float) pt.y;
+	    
+	    if (geo2d::dist(pt_f, atom_end_point) < a) end_A = pt;
+	    if (geo2d::dist(pt_f, atom_end_point) > b) end_B = pt;
+	  }
+	  
+	  end_par_dqds.clear();
+	  end_par_dqds = _AtomicAnalysis.AtomdQdX(masked_ctor, endatom, end_pca, end_A, end_B);
+	  
+	  std::vector<float> remove_end_dqds;
+	  remove_end_dqds.clear();
+	  remove_end_dqds = CutHeads(end_par_dqds, _head_frac, _tail_frac);
+	  
+	  auto mean_end_dqds = VectorMean(remove_end_dqds);
+	  auto end_dqds_3dc = Correct3D(mean_end_dqds, theta, phi);	    
+
 	  std::vector<float> trunk_dqds;
 	  trunk_dqds.clear();
 	  if (par_dqds.size() > 30){
@@ -413,8 +593,7 @@ namespace larocv {
 	  std::vector<float> remove_dqds;
 	  remove_dqds.clear();
 	  remove_dqds = CutHeads(trunk_dqds, _head_frac, _tail_frac);
-
-
+	  
 	  /* 
 	  //Play w/ truncated method
 	  float truncated_dqds;
@@ -442,35 +621,109 @@ namespace larocv {
 	  //par._dqds_mean = 
 	  auto mean_dqds = VectorMean(remove_dqds);
 	  auto dqds_3dc = Correct3D(mean_dqds, theta, phi);
-	  par._dqds_mean = dqds_3dc;
+	  
+	  //par._dqds_mean = dqds_3dc;
+	  par._dqds_mean = mean_dqds;
+
 	  if(pid == 0){
 	    _dqds_0_v[plane] = mean_dqds;
-	    _dqds_0_v_3dc[plane] = dqds_3dc;//Correct3D(_dqds_0_v[plane], theta, phi);
-	    //_dqds_0_v_3dc[plane] = Correct3D(truncated_dqds, _theta, _phi);
+
+	    _dqdx_0_v_3dc[plane] = dqds_3dc;//Correct3D(_dqds_0_v[plane], theta, phi);
+	    _dqdx_0_end_v_3dc[plane] = end_dqds_3dc;
+	    //_dqdx_0_v_3dc[plane] = Correct3D(truncated_dqds, _theta, _phi);
 	    //_r_dqds_0_v[plane] = VectorMean(remove_dqds);
 	    //_t_dqds_0_v[plane] = truncated_dqds;
 	    _theta_0 = theta;
 	    _phi_0   = phi;
 	    length0  = length;
+	    _particle0_end_point[plane].first  = atom_end_point.x;
+	    _particle0_end_point[plane].second = atom_end_point.y;
+	    _particle0_end_x = end_pt[0];
+	    _particle0_end_y = end_pt[1];
+	    _particle0_end_z = end_pt[2];
+
+	    if(plane == 0){
+	      for(size_t idx = 0; idx < _image_array_tmp[plane].size(); ++idx){
+		  _image_particle0_plane0_tmp_x.push_back(_image_array_tmp[plane][idx].X());
+		  _image_particle0_plane0_tmp_y.push_back(_image_array_tmp[plane][idx].Y());
+		  _image_particle0_plane0_tmp_v.push_back(_image_array_tmp[plane][idx].Z());
+	      }
+	    }
+	    if(plane == 1){
+	      for(size_t idx = 0; idx < _image_array_tmp[plane].size(); ++idx){
+		_image_particle0_plane1_tmp_x.push_back(_image_array_tmp[plane][idx].X());
+		_image_particle0_plane1_tmp_y.push_back(_image_array_tmp[plane][idx].Y());
+		_image_particle0_plane1_tmp_v.push_back(_image_array_tmp[plane][idx].Z());
+	      }
+	    }
+	    if(plane == 2){
+	      for(size_t idx = 0; idx < _image_array_tmp[plane].size(); ++idx){
+		_image_particle0_plane2_tmp_x.push_back(_image_array_tmp[plane][idx].X());
+		_image_particle0_plane2_tmp_y.push_back(_image_array_tmp[plane][idx].Y());
+		_image_particle0_plane2_tmp_v.push_back(_image_array_tmp[plane][idx].Z());
+	      }
+	    }
+	    _particle0_pixels_v[plane].clear();
+	    _particle0_pixels_v[plane].resize(par._atom.size());
+	    for(size_t idx = 0; idx < par._atom.size(); ++idx) {
+	      _particle0_pixels_v[plane][idx].first   = par._atom[idx].x;
+	      _particle0_pixels_v[plane][idx].second  = par._atom[idx].y;
+
+	    }
 	  }
 	  if(pid == 1){
 	    _dqds_1_v[plane] = mean_dqds;
-	    _dqds_1_v_3dc[plane] = dqds_3dc;//Correct3D(_dqds_1_v[plane], theta, phi);
-	    //_dqds_1_v_3dc[plane] = Correct3D(truncated_dqds, _theta, _phi);
+
+	    _dqdx_1_v_3dc[plane] = dqds_3dc;//Correct3D(_dqds_1_v[plane], theta, phi);
+	    _dqdx_1_end_v_3dc[plane] = end_dqds_3dc;
+	    //_dqdx_1_v_3dc[plane] = Correct3D(truncated_dqds, _theta, _phi);
 	    //_r_dqds_1_v[plane] = VectorMean(remove_dqds);
 	    //_t_dqds_1_v[plane] = truncated_dqds;
 	    _theta_1 = theta;
-	    _phi_1 = phi;
+	    _phi_1   = phi;
 	    length1  = length;
+	    _particle1_end_point[plane].first  = atom_end_point.x;
+	    _particle1_end_point[plane].second = atom_end_point.y;
+	    _particle1_end_x = end_pt[0];
+	    _particle1_end_y = end_pt[1];
+	    _particle1_end_z = end_pt[2];	    
+	    
+	    if(plane == 0){
+	      for(size_t idx = 0; idx < _image_array_tmp[plane].size(); ++idx){
+		_image_particle1_plane0_tmp_x.push_back(_image_array_tmp[plane][idx].X());
+		_image_particle1_plane0_tmp_y.push_back(_image_array_tmp[plane][idx].Y());
+		_image_particle1_plane0_tmp_v.push_back(_image_array_tmp[plane][idx].Z());
+	      }
+	    }
+	    if(plane == 1){
+	      for(size_t idx = 0; idx < _image_array_tmp[plane].size(); ++idx){
+		_image_particle1_plane1_tmp_x.push_back(_image_array_tmp[plane][idx].X());
+		_image_particle1_plane1_tmp_y.push_back(_image_array_tmp[plane][idx].Y());
+		_image_particle1_plane1_tmp_v.push_back(_image_array_tmp[plane][idx].Z());
+	      }
+	    }
+	    if(plane == 2){
+	      for(size_t idx = 0; idx < _image_array_tmp[plane].size(); ++idx){
+		_image_particle1_plane2_tmp_x.push_back(_image_array_tmp[plane][idx].X());
+		_image_particle1_plane2_tmp_y.push_back(_image_array_tmp[plane][idx].Y());
+		_image_particle1_plane2_tmp_v.push_back(_image_array_tmp[plane][idx].Z());
+	      }
+	    }
+	    _particle1_pixels_v[plane].clear();
+	    _particle1_pixels_v[plane].resize(par._atom.size());
+	    for(size_t idx = 0; idx < par._atom.size(); ++idx) {
+	      _particle1_pixels_v[plane][idx].first   = par._atom[idx].x;
+	      _particle1_pixels_v[plane][idx].second  = par._atom[idx].y;
+	    }
 	  }
-
+	  
 	  if (this_info2d.ptype == data::ParticleType_t::kTrack){
 	    _trackp_dqds_v[plane]  = mean_dqds;//Correct3D(par._dqds_mean, theta, phi);
-	    _trackp_dqds_3dc_v[plane]  = dqds_3dc;//Correct3D(par._dqds_mean, theta, phi);
+	    _trackp_dqdx_3dc_v[plane]  = dqds_3dc;//Correct3D(par._dqds_mean, theta, phi);
 	  }
 	  if (this_info2d.ptype == data::ParticleType_t::kShower){
 	    _showerp_dqds_v[plane] = mean_dqds;//Correct3D(par._dqds_mean, theta, phi);
-	    _showerp_dqds_3dc_v[plane] = dqds_3dc;//Correct3D(par._dqds_mean, theta, phi);
+	    _showerp_dqdx_3dc_v[plane] = dqds_3dc;//Correct3D(par._dqds_mean, theta, phi);
 	  }
 
 	  this_par_data.push_back(par);
@@ -482,13 +735,13 @@ namespace larocv {
 	  if (length0 >= length1) {
 	    _long_trackp_dqds_v[plane]  = _dqds_0_v[plane];
 	    _short_trackp_dqds_v[plane] = _dqds_1_v[plane];
-	    _long_trackp_dqds_3dc_v[plane]  = _dqds_0_v_3dc[plane];
-	    _short_trackp_dqds_3dc_v[plane] = _dqds_1_v_3dc[plane];
+	    _long_trackp_dqdx_3dc_v[plane]  = _dqdx_0_v_3dc[plane];
+	    _short_trackp_dqdx_3dc_v[plane] = _dqdx_1_v_3dc[plane];
 	  }else{
 	    _long_trackp_dqds_v[plane]  = _dqds_1_v[plane];
 	    _short_trackp_dqds_v[plane] = _dqds_0_v[plane];
-	    _long_trackp_dqds_3dc_v[plane]  = _dqds_1_v_3dc[plane];
-	    _short_trackp_dqds_3dc_v[plane] = _dqds_0_v_3dc[plane];
+	    _long_trackp_dqdx_3dc_v[plane]  = _dqdx_1_v_3dc[plane];
+	    _short_trackp_dqdx_3dc_v[plane] = _dqdx_0_v_3dc[plane];
 	  } 
 	}
 	
@@ -498,14 +751,16 @@ namespace larocv {
 	//if(_t_dqds_1_v[plane]   == 0 ) _t_dqds_1_v[plane]   = _t_dqds_0_v[plane]; //stupid way for cases where dqds not calculated
 	//if(_r_dqds_0_v[plane]   == 0 ) _r_dqds_0_v[plane]   = _r_dqds_1_v[plane]; //stupid way for cases where dqds not calculated
 	//if(_r_dqds_1_v[plane]   == 0 ) _r_dqds_1_v[plane]   = _r_dqds_0_v[plane]; //stupid way for cases where dqds not calculated
-	if(_dqds_0_v_3dc[plane] == 0 ) _dqds_0_v_3dc[plane] = _dqds_1_v_3dc[plane]; //stupid way for cases where dqds not calculated
-	if(_dqds_1_v_3dc[plane] == 0 ) _dqds_1_v_3dc[plane] = _dqds_0_v_3dc[plane]; //stupid way for cases where dqds not calculated
+	if(_dqdx_0_v_3dc[plane] == 0 ) _dqdx_0_v_3dc[plane] = _dqdx_1_v_3dc[plane]; //stupid way for cases where dqds not calculated
+	if(_dqdx_1_v_3dc[plane] == 0 ) _dqdx_1_v_3dc[plane] = _dqdx_0_v_3dc[plane]; //stupid way for cases where dqds not calculated
+	if(_dqdx_0_end_v_3dc[plane] == 0 ) _dqdx_0_end_v_3dc[plane] = _dqdx_1_end_v_3dc[plane]; //stupid way for cases where dqds not calculated
+	if(_dqdx_1_end_v_3dc[plane] == 0 ) _dqdx_1_end_v_3dc[plane] = _dqdx_0_end_v_3dc[plane]; //stupid way for cases where dqds not calculated
 
 
 	_dqds_diff_v[plane]     = std::abs(_dqds_0_v[plane]     -  _dqds_1_v[plane]);
 	//_t_dqds_diff_v[plane]   = std::abs(_t_dqds_0_v[plane]   -  _t_dqds_1_v[plane]);
 	//_r_dqds_diff_v[plane]   = std::abs(_r_dqds_0_v[plane]   -  _r_dqds_1_v[plane]);
-	_dqds_diff_v_3dc[plane] = std::abs(_dqds_0_v_3dc[plane] -  _dqds_1_v_3dc[plane]);
+	_dqdx_diff_v_3dc[plane] = std::abs(_dqdx_0_v_3dc[plane] -  _dqdx_1_v_3dc[plane]);
 	
 	_dqds_ratio_v[plane]     = (_dqds_0_v[plane]/_dqds_1_v[plane] <= 1 ? 
 				    _dqds_0_v[plane]/_dqds_1_v[plane] : _dqds_1_v[plane]/_dqds_0_v[plane] );
@@ -513,8 +768,8 @@ namespace larocv {
 	//_t_dqds_0_v[plane]/_t_dqds_1_v[plane] : _t_dqds_1_v[plane]/_t_dqds_0_v[plane] );
 	//_r_dqds_ratio_v[plane]   = (_r_dqds_0_v[plane]/_r_dqds_1_v[plane] <= 1 ? 
 	//_r_dqds_0_v[plane]/_r_dqds_1_v[plane] : _r_dqds_1_v[plane]/_r_dqds_0_v[plane] );
-	_dqds_ratio_v_3dc[plane] = (_dqds_0_v_3dc[plane]/_dqds_1_v_3dc[plane] <= 1 ?
-				    _dqds_0_v_3dc[plane]/_dqds_1_v_3dc[plane] : _dqds_1_v_3dc[plane]/_dqds_0_v_3dc[plane] );
+	_dqdx_ratio_v_3dc[plane] = (_dqdx_0_v_3dc[plane]/_dqdx_1_v_3dc[plane] <= 1 ?
+				    _dqdx_0_v_3dc[plane]/_dqdx_1_v_3dc[plane] : _dqdx_1_v_3dc[plane]/_dqdx_0_v_3dc[plane] );
 	
       }
      
@@ -546,33 +801,33 @@ namespace larocv {
       //_r_dqds_diff_01    = Sort01(_r_dqds_diff_v)[1];
       //_r_dqds_ratio_01   = Sort01(_r_dqds_ratio_v)[0];
 
-      if (!_dqds_diff_v_3dc.empty()) {
-	auto res = Sort01(_dqds_diff_v_3dc);
+      if (!_dqdx_diff_v_3dc.empty()) {
+	auto res = Sort01(_dqdx_diff_v_3dc);
 	if (!res.empty())
-	  _dqds_diff_01_3dc  = res[1];
+	  _dqdx_diff_01_3dc  = res[1];
 	else
-	  _dqds_diff_01_3dc = kINVALID_DOUBLE;
+	  _dqdx_diff_01_3dc = kINVALID_DOUBLE;
       }else
-	_dqds_diff_01_3dc = kINVALID_DOUBLE;
+	_dqdx_diff_01_3dc = kINVALID_DOUBLE;
 
-      if (!_dqds_ratio_v_3dc.empty()) {
-	auto res = Sort01(_dqds_ratio_v_3dc);
+      if (!_dqdx_ratio_v_3dc.empty()) {
+	auto res = Sort01(_dqdx_ratio_v_3dc);
 	if (!res.empty())
-	  _dqds_ratio_01_3dc = res[0];
+	  _dqdx_ratio_01_3dc = res[0];
 	else
-	  _dqds_ratio_01_3dc = kINVALID_DOUBLE;
+	  _dqdx_ratio_01_3dc = kINVALID_DOUBLE;
       } else
-	_dqds_ratio_01_3dc = kINVALID_DOUBLE;
+	_dqdx_ratio_01_3dc = kINVALID_DOUBLE;
       
       /*
       auto minmax_diff = std::minmax_element(std::begin(_dqds_diff_v), std::end(_dqds_diff_v));
       _dqds_diff_01 = *(minmax_diff.second);
       auto minmax_ratio = std::minmax_element(std::begin(_dqds_ratio_v), std::end(_dqds_ratio_v));
       _dqds_ratio_01 = *(minmax_ratio.first);
-      auto minmax_diff_3dc = std::minmax_element(std::begin(_dqds_diff_v_3dc), std::end(_dqds_diff_v_3dc));
-      _dqds_diff_01_3dc = *(minmax_diff_3dc.second);
-      auto minmax_ratio_3dc = std::minmax_element(std::begin(_dqds_ratio_v_3dc), std::end(_dqds_ratio_v_3dc));
-      _dqds_ratio_01_3dc = *(minmax_ratio_3dc.first);
+      auto minmax_diff_3dc = std::minmax_element(std::begin(_dqdx_diff_v_3dc), std::end(_dqdx_diff_v_3dc));
+      _dqdx_diff_01_3dc = *(minmax_diff_3dc.second);
+      auto minmax_ratio_3dc = std::minmax_element(std::begin(_dqdx_ratio_v_3dc), std::end(_dqdx_ratio_v_3dc));
+      _dqdx_ratio_01_3dc = *(minmax_ratio_3dc.first);
       */
 
       _tree->Fill();

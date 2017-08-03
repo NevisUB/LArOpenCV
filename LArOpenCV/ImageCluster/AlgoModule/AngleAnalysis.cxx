@@ -146,11 +146,23 @@ namespace larocv {
 
 	  masked_ctor_start = MaskImage(img_v[plane],par._ctor,0,false); 	
 	  //masked_ctor = MaskImage(masked_ctor,circle,0,false); 	
+	  auto masked_ctor_start_img = FindNonZero(masked_ctor_start);
+	  geo2d::Circle<float> par_circle;
+	  par_circle.center = circle_vertex.center;
+	  par_circle.radius = 100;
+	  double par_angle;
+	  double par_pct;
+	  
+	  if ( FindNonZero(masked_ctor_start).size() < 2 ) continue;
+
+	  ParticleAngle(masked_ctor_start_img, masked_ctor_start_img, par_circle, par_pct, par_angle );
+
+
 	  masked_ctor_start = Threshold(masked_ctor_start, 10, 255);
 	  
 	  if ( FindNonZero(masked_ctor_start).size() < 2 ) continue;
 	  
-	  auto masked_ctor_start_img = FindNonZero(masked_ctor_start);
+	  masked_ctor_start_img = FindNonZero(masked_ctor_start);
 	  
 	  auto start_point = circle_vertex.center;
 	  
@@ -281,9 +293,12 @@ namespace larocv {
 	    {
 	      angle1 = angle;
 	      _angle_1_v[plane] = angle; 
+	      par._adiff = std::abs(angle1 - angle0);//Only when pid == 1, diff makes sense
+		  
 	    }
 	  
 	  par._angle = angle;
+	  par._par_angle = par_angle;
 	  par._circle = circle;
 	  par._angle_scan_end_point = end_point;
 	
