@@ -47,6 +47,8 @@ namespace larocv {
       
       // Ruis stuff
       double _angle;
+      double _par_angle;
+      double _adiff;
 
       geo2d::Line<float> _pca;
       geo2d::Circle<float> _circle;
