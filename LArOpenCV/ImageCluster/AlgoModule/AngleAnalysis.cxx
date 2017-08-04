@@ -54,11 +54,10 @@ namespace larocv {
     _tree->Branch("straightness"      , &_straightness, "straightness/I");
     _tree->Branch("angle_0_v"         , &_angle_0_v);   
     _tree->Branch("angle_1_v"         , &_angle_1_v);   
-    _tree->Branch("anglediff"         , &_anglediff);
-    _tree->Branch("anglediff_straight", &_anglediff_straight);
-    _tree->Branch("anglediff_max"     , &_anglediff_max);
+    _tree->Branch("anglediff"         , &_anglediff, "anglediff/D");
+    _tree->Branch("anglediff_straight", &_anglediff_straight, "anglediff_straight/D");
+    _tree->Branch("anglediff_max"     , &_anglediff_max, "anglediff_max/D");
     _tree->Branch("anglediff_v"       , &_anglediff_v);
-    _tree->Branch("unity"             , &_unity);
     _roid = 0;
     
     // Register 3 particle arrays, 1 per plane
@@ -82,8 +81,6 @@ namespace larocv {
   { return true; }
 
   void AngleAnalysis::_Process_() {
-    
-    _unity = 1;
     
     if(NextEvent()) _roid =0;
     
