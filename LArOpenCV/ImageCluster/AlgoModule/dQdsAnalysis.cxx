@@ -107,7 +107,7 @@ namespace larocv {
     _tree->Branch("rdqds_ratio_v"  , &_r_dqds_ratio_v     );
     _tree->Branch("rdqds_diff_01"  , &_r_dqds_diff_01     ,"rdqds_diff_01/F");
     _tree->Branch("rdqds_ratio_01" , &_r_dqds_ratio_01    ,"rdqds_ratio_01/F");
-
+    
     _tree->Branch("theta_0"            , &_theta_0         ,"theta_0/F");  
     _tree->Branch("phi_0"              , &_phi_0           ,"phi_0/F");
     _tree->Branch("theta_1"            , &_theta_1         ,"theta_1/F");  
@@ -138,12 +138,15 @@ namespace larocv {
     _tree->Branch("short_trackp_dqdx_3dc_v" , &_short_trackp_dqdx_3dc_v );
     _roid = 0;
 
+    // may be removed if larcv data product file works
     _tree->Branch("vertex_v"                  , &_vertex_v);
     _tree->Branch("particle0_end_point_v"     , &_particle0_end_point);
     _tree->Branch("particle1_end_point_v"     , &_particle1_end_point);
     //_tree->Branch("particle0_pixels_v"        , &_particle0_pixels_v);
     //_tree->Branch("particle1_pixels_v"        , &_particle1_pixels_v);
 
+
+    // may be removed if larcv data product file works
     _tree->Branch("particle0_end_x"           , &_particle0_end_x,"particle0_end_x/D");
     _tree->Branch("particle0_end_y"           , &_particle0_end_y,"particle0_end_y/D");
     _tree->Branch("particle0_end_z"           , &_particle0_end_z,"particle0_end_z/D");
@@ -151,25 +154,25 @@ namespace larocv {
     _tree->Branch("particle1_end_y"           , &_particle1_end_y,"particle1_end_y/D");
     _tree->Branch("particle1_end_z"           , &_particle1_end_z,"particle1_end_z/D");
 
-    _tree->Branch("image_particle0_plane0_tmp_x"      , &_image_particle0_plane0_tmp_x);
-    _tree->Branch("image_particle0_plane0_tmp_y"      , &_image_particle0_plane0_tmp_y);
-    _tree->Branch("image_particle0_plane0_tmp_v"      , &_image_particle0_plane0_tmp_v);
-    _tree->Branch("image_particle0_plane1_tmp_x"      , &_image_particle0_plane1_tmp_x);
-    _tree->Branch("image_particle0_plane1_tmp_y"      , &_image_particle0_plane1_tmp_y);
-    _tree->Branch("image_particle0_plane1_tmp_v"      , &_image_particle0_plane1_tmp_v);
-    _tree->Branch("image_particle0_plane2_tmp_x"      , &_image_particle0_plane2_tmp_x);
-    _tree->Branch("image_particle0_plane2_tmp_y"      , &_image_particle0_plane2_tmp_y);
-    _tree->Branch("image_particle0_plane2_tmp_v"      , &_image_particle0_plane2_tmp_v);
+    // _tree->Branch("image_particle0_plane0_tmp_x"      , &_image_particle0_plane0_tmp_x);
+    // _tree->Branch("image_particle0_plane0_tmp_y"      , &_image_particle0_plane0_tmp_y);
+    // _tree->Branch("image_particle0_plane0_tmp_v"      , &_image_particle0_plane0_tmp_v);
+    // _tree->Branch("image_particle0_plane1_tmp_x"      , &_image_particle0_plane1_tmp_x);
+    // _tree->Branch("image_particle0_plane1_tmp_y"      , &_image_particle0_plane1_tmp_y);
+    // _tree->Branch("image_particle0_plane1_tmp_v"      , &_image_particle0_plane1_tmp_v);
+    // _tree->Branch("image_particle0_plane2_tmp_x"      , &_image_particle0_plane2_tmp_x);
+    // _tree->Branch("image_particle0_plane2_tmp_y"      , &_image_particle0_plane2_tmp_y);
+    // _tree->Branch("image_particle0_plane2_tmp_v"      , &_image_particle0_plane2_tmp_v);
 
-    _tree->Branch("image_particle1_plane0_tmp_x"      , &_image_particle1_plane0_tmp_x);
-    _tree->Branch("image_particle1_plane0_tmp_y"      , &_image_particle1_plane0_tmp_y);
-    _tree->Branch("image_particle1_plane0_tmp_v"      , &_image_particle1_plane0_tmp_v);
-    _tree->Branch("image_particle1_plane1_tmp_x"      , &_image_particle1_plane1_tmp_x);
-    _tree->Branch("image_particle1_plane1_tmp_y"      , &_image_particle1_plane1_tmp_y);
-    _tree->Branch("image_particle1_plane1_tmp_v"      , &_image_particle1_plane1_tmp_v);
-    _tree->Branch("image_particle1_plane2_tmp_x"      , &_image_particle1_plane2_tmp_x);
-    _tree->Branch("image_particle1_plane2_tmp_y"      , &_image_particle1_plane2_tmp_y);
-    _tree->Branch("image_particle1_plane2_tmp_v"      , &_image_particle1_plane2_tmp_v);
+    // _tree->Branch("image_particle1_plane0_tmp_x"      , &_image_particle1_plane0_tmp_x);
+    // _tree->Branch("image_particle1_plane0_tmp_y"      , &_image_particle1_plane0_tmp_y);
+    // _tree->Branch("image_particle1_plane0_tmp_v"      , &_image_particle1_plane0_tmp_v);
+    // _tree->Branch("image_particle1_plane1_tmp_x"      , &_image_particle1_plane1_tmp_x);
+    // _tree->Branch("image_particle1_plane1_tmp_y"      , &_image_particle1_plane1_tmp_y);
+    // _tree->Branch("image_particle1_plane1_tmp_v"      , &_image_particle1_plane1_tmp_v);
+    // _tree->Branch("image_particle1_plane2_tmp_x"      , &_image_particle1_plane2_tmp_x);
+    // _tree->Branch("image_particle1_plane2_tmp_y"      , &_image_particle1_plane2_tmp_y);
+    // _tree->Branch("image_particle1_plane2_tmp_v"      , &_image_particle1_plane2_tmp_v);
     
     // Register 3 particle cluster arrays, 1 per plane
 
