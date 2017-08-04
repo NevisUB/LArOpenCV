@@ -91,41 +91,41 @@ namespace larocv {
     _tree->Branch("dqds_1_v"       , &_dqds_1_v           );
     _tree->Branch("dqds_diff_v"    , &_dqds_diff_v        );
     _tree->Branch("dqds_ratio_v"   , &_dqds_ratio_v       );
-    _tree->Branch("dqds_diff_01"   , &_dqds_diff_01       );
-    _tree->Branch("dqds_ratio_01"  , &_dqds_ratio_01      );
+    _tree->Branch("dqds_diff_01"   , &_dqds_diff_01       ,"dqds_diff_01/F");
+    _tree->Branch("dqds_ratio_01"  , &_dqds_ratio_01      ,"dqds_ratio_01/F");
 
     _tree->Branch("tdqds_0_v"      , &_t_dqds_0_v         );
     _tree->Branch("tdqds_1_v"      , &_t_dqds_1_v         );
     _tree->Branch("tdqds_diff_v"   , &_t_dqds_diff_v      );
     _tree->Branch("tdqds_ratio_v"  , &_t_dqds_ratio_v     );
-    _tree->Branch("tdqds_diff_01"  , &_t_dqds_diff_01     );
-    _tree->Branch("tdqds_ratio_01" , &_t_dqds_ratio_01    );
+    _tree->Branch("tdqds_diff_01"  , &_t_dqds_diff_01     ,"tdqds_diff_01/F");
+    _tree->Branch("tdqds_ratio_01" , &_t_dqds_ratio_01    ,"tdqds_ratio_01/F");
 
     _tree->Branch("rdqds_0_v"      , &_r_dqds_0_v         );
     _tree->Branch("rdqds_1_v"      , &_r_dqds_1_v         );
     _tree->Branch("rdqds_diff_v"   , &_r_dqds_diff_v      );
     _tree->Branch("rdqds_ratio_v"  , &_r_dqds_ratio_v     );
-    _tree->Branch("rdqds_diff_01"  , &_r_dqds_diff_01     );
-    _tree->Branch("rdqds_ratio_01" , &_r_dqds_ratio_01    );
+    _tree->Branch("rdqds_diff_01"  , &_r_dqds_diff_01     ,"rdqds_diff_01/F");
+    _tree->Branch("rdqds_ratio_01" , &_r_dqds_ratio_01    ,"rdqds_ratio_01/F");
 
-    _tree->Branch("theta_0"            , &_theta_0         );  
-    _tree->Branch("phi_0"              , &_phi_0           );
-    _tree->Branch("theta_1"            , &_theta_1         );  
-    _tree->Branch("phi_1"              , &_phi_1           );
+    _tree->Branch("theta_0"            , &_theta_0         ,"theta_0/F");  
+    _tree->Branch("phi_0"              , &_phi_0           ,"phi_0/F");
+    _tree->Branch("theta_1"            , &_theta_1         ,"theta_1/F");  
+    _tree->Branch("phi_1"              , &_phi_1           ,"phi_1/F");
     _tree->Branch("dqds_0_v_3dc"       , &_dqdx_0_v_3dc      );//to check abs dqds
     _tree->Branch("dqds_1_v_3dc"       , &_dqdx_1_v_3dc      );//to check abs dqds
-    _tree->Branch("dqds_diff_01_3dc"   , &_dqdx_diff_01_3dc  );
-    _tree->Branch("dqds_ratio_01_3dc"  , &_dqdx_ratio_01_3dc );
+    _tree->Branch("dqds_diff_01_3dc"   , &_dqdx_diff_01_3dc  ,"dqdx_diff_01_3dc/F");
+    _tree->Branch("dqds_ratio_01_3dc"  , &_dqdx_ratio_01_3dc ,"dqdx_ratio_01_3dc/F");
     
     _tree->Branch("dqds_0_end_v_3dc"       , &_dqdx_0_end_v_3dc      );//END dQ/ds
     _tree->Branch("dqds_1_end_v_3dc"       , &_dqdx_1_end_v_3dc      );
     _tree->Branch("dqds_diff_end_v_3dc"   , &_dqdx_diff_end_v_3dc  );
     _tree->Branch("dqds_ratio_end_v_3dc"  , &_dqdx_ratio_end_v_3dc );
 
-    _tree->Branch("trackp_totq"         , &_trackp_totq         );
-    _tree->Branch("showerp_totq"        , &_showerp_totq        );
-    _tree->Branch("trackp_cosz"         , &_trackp_cosz         );
-    _tree->Branch("showerp_cosz"        , &_showerp_cosz        );
+    _tree->Branch("trackp_totq"         , &_trackp_totq         ,"trackp_totq/F");
+    _tree->Branch("showerp_totq"        , &_showerp_totq        ,"showerp_totq/F");
+    _tree->Branch("trackp_cosz"         , &_trackp_cosz         ,"trackp_cosz/F");
+    _tree->Branch("showerp_cosz"        , &_showerp_cosz        ,"showerp_cosz/F");
 
     _tree->Branch("trackp_dqds_v"           , &_trackp_dqds_v       );
     _tree->Branch("showerp_dqds_v"          , &_showerp_dqds_v      );
@@ -144,12 +144,12 @@ namespace larocv {
     //_tree->Branch("particle0_pixels_v"        , &_particle0_pixels_v);
     //_tree->Branch("particle1_pixels_v"        , &_particle1_pixels_v);
 
-    _tree->Branch("particle0_end_x"           , &_particle0_end_x);
-    _tree->Branch("particle0_end_y"           , &_particle0_end_y);
-    _tree->Branch("particle0_end_z"           , &_particle0_end_z);
-    _tree->Branch("particle1_end_x"           , &_particle1_end_x);
-    _tree->Branch("particle1_end_y"           , &_particle1_end_y);
-    _tree->Branch("particle1_end_z"           , &_particle1_end_z);
+    _tree->Branch("particle0_end_x"           , &_particle0_end_x,"particle0_end_x/D");
+    _tree->Branch("particle0_end_y"           , &_particle0_end_y,"particle0_end_y/D");
+    _tree->Branch("particle0_end_z"           , &_particle0_end_z,"particle0_end_z/D");
+    _tree->Branch("particle1_end_x"           , &_particle1_end_x,"particle1_end_x/D");
+    _tree->Branch("particle1_end_y"           , &_particle1_end_y,"particle1_end_y/D");
+    _tree->Branch("particle1_end_z"           , &_particle1_end_z,"particle1_end_z/D");
 
     _tree->Branch("image_particle0_plane0_tmp_x"      , &_image_particle0_plane0_tmp_x);
     _tree->Branch("image_particle0_plane0_tmp_y"      , &_image_particle0_plane0_tmp_y);

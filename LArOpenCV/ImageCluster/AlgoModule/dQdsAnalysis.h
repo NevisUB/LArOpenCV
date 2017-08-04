@@ -172,8 +172,7 @@ namespace larocv {
   public:
     dQdsAnalysisFactory() { AlgoFactory::get().add_factory("dQdsAnalysis",this); }
     ~dQdsAnalysisFactory() {}
-    ImageClusterBase* create(const std::string instance_name) { return new dQdsAnalysis
-	(instance_name); }
+    ImageClusterBase* create(const std::string instance_name) { return new dQdsAnalysis(instance_name); }
   };
   
 }

@@ -9,6 +9,11 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ class std::pair<float,float>+;
+#pragma link C++ class std::vector<std::pair<float, float> >+;
+#pragma link C++ class std::vector<std::vector<std::pair<float, float> > >+;
+#pragma link C++ class std::vector<std::vector<TVector3> >+;
+
 #pragma link C++ class larocv::SuperClusterMaker+;
 #pragma link C++ class larocv::TrackVertexSeeds+;
 #pragma link C++ class larocv::TrackVertexEstimate+;
