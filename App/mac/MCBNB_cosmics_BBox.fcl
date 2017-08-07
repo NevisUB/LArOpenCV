@@ -5,6 +5,8 @@ LArImageHit: {
   Profile: true
   StoreOriginalImage: false
   Producer: gaushit #hit02 
+  ChainModules: false
+
   UseHitRemoval: true 
 
   # LArImageHit config

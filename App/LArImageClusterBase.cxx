@@ -27,6 +27,7 @@ namespace larlite {
     _producer = "";
     _store_original_img = false;
     _event = 0;
+    _chain_modules = false ;
   }
 
   void LArImageClusterBase::set_config(const std::string cfg_file)
@@ -46,6 +47,8 @@ namespace larlite {
     _profile = main_cfg.get<bool>("Profile");
     _producer = main_cfg.get<std::string>("Producer");
     _store_original_img = main_cfg.get<bool>("StoreOriginalImage");
+    _chain_modules = main_cfg.get<bool>("ChainModules");
+
     _process_count = 0;
     _process_time_image_extraction = 0;
     _process_time_analyze = 0;
@@ -64,7 +67,7 @@ namespace larlite {
 
   bool LArImageClusterBase::analyze(storage_manager* storage) {
     
-    std::cout<<"\n\nOn event: "<<_event <<std::endl ;
+    std::cout<<"\n\nLArImageClusterBase - Event: "<<_event <<std::endl ;
     _event++ ;
 
     _img_mgr.clear();
@@ -143,6 +146,18 @@ namespace larlite {
     watch_one.Start();
 
     this->store_clusters(storage);
+
+    auto ev_cluster = storage->get_data<event_cluster> ("ImageClusterHit");
+    auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
+    //std::cout<<"Final cluster size: "<<ev_cluster->size() <<std::endl ;
+
+    if ( _chain_modules && !ev_pfpart->size() ){
+
+      ev_cluster->clear();
+      ev_pfpart->clear();
+
+      return false ;
+    }
     
     _process_time_cluster_storage += watch_one.WallTime();
 
@@ -242,15 +257,14 @@ namespace larlite {
       temp_cluster_hit_ass[cid].push_back(hindex);
       
     }// for all hits
+
+    //std::cout<<"Temp cluster ass size: "<<temp_cluster_hit_ass.size() <<std::endl ;
+
     int test_id = -1;
     for(auto & temp_cluster_hit_a : temp_cluster_hit_ass) {
       test_id ++ ;
       if (!temp_cluster_hit_a.size()) continue;
 
-      //if ( temp_cluster_hit_a.size() >= 10 ) { //<= 20){ 
-      //  auto const& im = alg_mgr.Cluster(test_id);
-      //  std::cout<<"ImageCluster hit size: "<<temp_cluster_hit_a.size()<<", "<<im.PlaneID()<<std::endl ;
-      //}
       cluster_hit_ass.emplace_back(temp_cluster_hit_a); // do not std::move it, we need to check nonzero later
     }
     auto ev_cluster = storage->get_data<event_cluster>("ImageClusterHit");
@@ -265,9 +279,13 @@ namespace larlite {
     // other clusters as well. We need a way to remove it, lets do it like this;
     std::vector<int> cid_good_list(_num_clusters,0);
     int offset=0;
+
+    //std::cout<<"Start Cluster and PFPart size: "<<ev_cluster->size()<<", "<<ev_pfpart->size()<<std::endl; 
     
     if (ev_cluster) {
-      
+
+      //std::cout<<"How many clusters befoer anything is done? "<<ev_cluster->size()<<std::endl; 
+
       ev_cluster->reserve(_num_clusters);
       for (size_t cid = 0; cid < _num_clusters; ++cid) {
 	cid_good_list[cid] = offset;
@@ -341,11 +359,11 @@ namespace larlite {
       // ev_vtx_ass->set_association(ev_cluster->id(), ev_vtx->id(), cluster_vtx_ass);
 
     }
-    
+
     if (ev_pfpart) {
       
       auto const match_info = alg_mgr.BookKeeper().GetResult();
-      
+
       AssSet_t pfpart_ass;
       pfpart_ass.reserve(match_info.size());
       
@@ -377,6 +395,8 @@ namespace larlite {
       }
 
     }
+
+    //std::cout<<"End Cluster and PFPart size: "<<ev_cluster->size()<<", "<<ev_pfpart->size()<<std::endl; 
 
     return;
   }

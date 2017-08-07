@@ -94,6 +94,7 @@ namespace larlite {
 
     int _event ;
     bool _hit_removal ;
+    bool _chain_modules ;
 
   };
 }
