@@ -8,6 +8,8 @@
 #include "DataFormat/rawdigit.h"
 #include "DataFormat/hit.h"
 #include "DataFormat/cluster.h"
+#include "DataFormat/vertex.h"
+#include "DataFormat/track.h"
 
 //#include "DataFormat/PiZeroROI.h"
 
@@ -147,14 +149,19 @@ namespace larlite {
 
     this->store_clusters(storage);
 
-    auto ev_cluster = storage->get_data<event_cluster> ("ImageClusterHit");
     auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
     //std::cout<<"Final cluster size: "<<ev_cluster->size() <<std::endl ;
 
     if ( _chain_modules && !ev_pfpart->size() ){
 
+      auto ev_cluster = storage->get_data<event_cluster> ("ImageClusterHit");
+      auto ev_vertex = storage->get_data<event_vertex> (_vtx_producer);
+      auto ev_track = storage->get_data<event_track> ("numuCC_track");
+
       ev_cluster->clear();
       ev_pfpart->clear();
+      ev_vertex->clear();
+      ev_track->clear();
 
       return false ;
     }
