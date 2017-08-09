@@ -6,6 +6,7 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/DefectBreaker.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/VertexAnalysis.h"
+#include "LArOpenCV/ImageCluster/AlgoData/InfoCollection.h"
 
 /*
   @brief: XXX
@@ -100,25 +101,23 @@ namespace larocv {
     
     std::pair<float,float> Angle3D(const data::Vertex3D& vtx1,
 				   const data::Vertex3D& vtx2);
-    
 
-    std::vector<data::Vertex3D> SpacePointsEstimate(const data::Particle& particle,
-						    const std::vector<cv::Mat>& img_v,
-						    const float radius=0.0,
-						    const data::Vertex3D vertex = data::Vertex3D());
+    std::vector<data::SpacePoint> SpacePointsEstimate(const data::Particle& particle,
+						      const std::vector<cv::Mat>& img_v,
+						      const std::vector<cv::Mat>& qimg_v,
+						      const float radius=0.0,
+						      const data::Vertex3D vertex = data::Vertex3D());
 
-
-    std::pair<float,float> Angle3D(const std::vector<data::Vertex3D>& vtx3d_v,
+    std::pair<float,float> Angle3D(const std::vector<data::SpacePoint>& vtx3d_v,
 				   const data::Vertex3D& start3d);
 
-    
     std::pair<float,float> Angle3D(const data::Particle& particle,
 				   const std::vector<cv::Mat>& img_v,
+				   const std::vector<cv::Mat>& qimg_v,
 				   const data::Vertex3D& start3d,
 				   const float radius=0.0);
 
-
-    std::array<float,3> EndPoint3D(const std::vector<data::Vertex3D>& space_pts_v,
+    std::array<float,3> EndPoint3D(const std::vector<data::SpacePoint>& space_pts_v,
 				   const float theta, const float phi,
 				   const data::Vertex3D& start_pt);
     

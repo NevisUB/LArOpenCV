@@ -91,7 +91,6 @@
 #pragma link C++ class larocv::data::AlgoDataArrayTemplate<larocv::data::Particle>+;
 #pragma link C++ class larocv::data::AlgoDataArrayTemplate<larocv::data::TrackClusterCompound>+;
 
-
 #pragma link C++ class std::vector<larocv::data::AlgoDataArrayTemplate<larocv::data::Info2D> >+;
 #pragma link C++ class std::vector<larocv::data::AlgoDataArrayTemplate<larocv::data::Info3D> >+;
 #pragma link C++ class std::vector<larocv::data::AlgoDataArrayTemplate<larocv::data::Vertex3D> >+;
