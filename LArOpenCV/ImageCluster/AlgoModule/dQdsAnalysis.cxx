@@ -9,6 +9,7 @@
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 #include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 #include "LArOpenCV/ImageCluster/AlgoData/InfoCollection.h"
+#include <cassert>
 
 namespace larocv {
 
@@ -73,11 +74,11 @@ namespace larocv {
     //
     
     _dqds_scan_thre   = pset.get<float>("dQdsScanThre");
-    _drop_location        = pset.get<size_t>("dQdsDropLocation");
+    _drop_location    = pset.get<size_t>("dQdsDropLocation");
     _window_size      = pset.get<double>("TruncateWindowSize");
     _window_size_thre = pset.get<int>("TruncateWindowSizeThre");
-    _head_frac      = pset.get<double>("HeadFrac");
-    _tail_frac      = pset.get<double>("TailFrac");
+    _head_frac        = pset.get<double>("HeadFrac");
+    _tail_frac        = pset.get<double>("TailFrac");
         
     _tree = new TTree("dQdSAnalysis","");
     AttachIDs(_tree);
@@ -139,20 +140,20 @@ namespace larocv {
     _roid = 0;
 
     // may be removed if larcv data product file works
-    _tree->Branch("vertex_v"                  , &_vertex_v);
-    _tree->Branch("particle0_end_point_v"     , &_particle0_end_point);
-    _tree->Branch("particle1_end_point_v"     , &_particle1_end_point);
+    // _tree->Branch("vertex_v"                  , &_vertex_v);
+    // _tree->Branch("particle0_end_point_v"     , &_particle0_end_point);
+    // _tree->Branch("particle1_end_point_v"     , &_particle1_end_point);
     //_tree->Branch("particle0_pixels_v"        , &_particle0_pixels_v);
     //_tree->Branch("particle1_pixels_v"        , &_particle1_pixels_v);
 
 
     // may be removed if larcv data product file works
-    _tree->Branch("particle0_end_x"           , &_particle0_end_x,"particle0_end_x/D");
-    _tree->Branch("particle0_end_y"           , &_particle0_end_y,"particle0_end_y/D");
-    _tree->Branch("particle0_end_z"           , &_particle0_end_z,"particle0_end_z/D");
-    _tree->Branch("particle1_end_x"           , &_particle1_end_x,"particle1_end_x/D");
-    _tree->Branch("particle1_end_y"           , &_particle1_end_y,"particle1_end_y/D");
-    _tree->Branch("particle1_end_z"           , &_particle1_end_z,"particle1_end_z/D");
+    // _tree->Branch("particle0_end_x"           , &_particle0_end_x,"particle0_end_x/D");
+    // _tree->Branch("particle0_end_y"           , &_particle0_end_y,"particle0_end_y/D");
+    // _tree->Branch("particle0_end_z"           , &_particle0_end_z,"particle0_end_z/D");
+    // _tree->Branch("particle1_end_x"           , &_particle1_end_x,"particle1_end_x/D");
+    // _tree->Branch("particle1_end_y"           , &_particle1_end_y,"particle1_end_y/D");
+    // _tree->Branch("particle1_end_z"           , &_particle1_end_z,"particle1_end_z/D");
 
     // _tree->Branch("image_particle0_plane0_tmp_x"      , &_image_particle0_plane0_tmp_x);
     // _tree->Branch("image_particle0_plane0_tmp_y"      , &_image_particle0_plane0_tmp_y);
@@ -296,7 +297,7 @@ namespace larocv {
     if (input_dqds.size()>_drop_location +5){
       res.clear();
       for (size_t idx = _drop_location; idx< input_dqds.size();++idx){
-	res.push_back(input_dqds[idx]);
+	res.push_back(input_dqds.at(idx));
       }
     }
     return res;
@@ -313,7 +314,7 @@ namespace larocv {
       float mean_after  = 0;
       for (size_t idx = 0; idx < input_dqds.size()-3; ++idx){
 	
-	mean_before = (input_dqds[idx]+input_dqds[idx+1]+input_dqds[idx+2])/3;
+	mean_before = (input_dqds.at(idx)+input_dqds[idx+1]+input_dqds[idx+2])/3;
 
 	mean_after  = (input_dqds[idx+1]+input_dqds[idx+2]+input_dqds[idx+3])/3;
 
@@ -330,7 +331,7 @@ namespace larocv {
     res.resize(dqds_size);
     
     for(size_t idx = 0; idx< res.size(); ++idx){
-      res[idx] = input_dqds[idx];
+      res.at(idx) = input_dqds.at(idx);
     }
     return res;
   }
@@ -440,7 +441,7 @@ namespace larocv {
 	  
 	  cv::Mat masked_ctor;
 
-	  masked_ctor = MaskImage(img_v[plane],par._ctor,0,false); 	
+	  masked_ctor = MaskImage(img_v.at(plane),par._ctor,0,false); 	
 	  
 	  data::AtomicContour thisatom;
 	  data::AtomicContour raw_atom;
@@ -455,25 +456,32 @@ namespace larocv {
 	  _image_array_tmp.clear();
 	  _image_array_tmp.resize(3);
 	  
-	  _image_array_tmp[plane].clear();
+	  _image_array_tmp.at(plane).clear();
 	  size_t img_size = par._atom.size();
 	  /*if(img_size == 0) {
-	    _image_array_tmp[plane].resize(1);
-	    _image_array_tmp[plane][0].SetX(-1);
-	    _image_array_tmp[plane][0].SetY(-1);
-	    _image_array_tmp[plane][0].SetZ(-1);
+	    _image_array_tmp.at(plane).resize(1);
+	    _image_array_tmp.at(plane).at(0).SetX(-1);
+	    _image_array_tmp.at(plane).at(0).SetY(-1);
+	    _image_array_tmp.at(plane).at(0).SetZ(-1);
 
 	    }*/
-	  _image_array_tmp[plane].resize(img_size);
+	  _image_array_tmp.at(plane).resize(img_size);
 	  
 	  for (size_t idx = 0; idx < img_size; ++idx){
-	    //std::vector<float> _image_array_tmp[plane][idx];
+	    //std::vector<float> _image_array_tmp.at(plane).at(idx);
 	    
-	    //_image_array_tmp[plane][idx].clear();
-	    _image_array_tmp[plane][idx].SetX(par._atom[idx].x);
-	    _image_array_tmp[plane][idx].SetY(par._atom[idx].y);
-	    _image_array_tmp[plane][idx].SetZ((int)(img_v.at(plane).at<uchar>(par._atom[idx].y, par._atom[idx].x)));
-	    //this_img.push_back(_image_array_tmp[plane][idx]);
+	    //_image_array_tmp.at(plane).at(idx).clear();
+	    _image_array_tmp.at(plane).at(idx).SetX(par._atom.at(idx).x);
+	    _image_array_tmp.at(plane).at(idx).SetY(par._atom.at(idx).y);
+	    assert(par._atom.at(idx).x >= 0);
+	    assert(par._atom.at(idx).y >= 0);
+
+
+	    assert(par._atom.at(idx).y < img_v.at(plane).rows());
+	    assert(par._atom.at(idx).x < img_v.at(plane).cols());
+
+	    _image_array_tmp.at(plane).at(idx).SetZ((int)(img_v.at(plane).at<uchar>(par._atom.at(idx).y, par._atom.at(idx).x)));
+	    //this_img.push_back(_image_array_tmp.at(plane).at(idx));
 	  }
 	  
 	  //#################For Adrien
@@ -506,8 +514,8 @@ namespace larocv {
 	  
 	  auto this_pca = CalcPCA(thisatom);
 	  auto start_point = circle.center;
-	  _vertex_v[plane].first  = start_point.x;
-	  _vertex_v[plane].second = start_point.y;
+	  _vertex_v.at(plane).first  = start_point.x;
+	  _vertex_v.at(plane).second = start_point.y;
 	  geo2d::Vector<float> angle_scan_end_point;
 	  
 	  angle_scan_end_point = par._angle_scan_end_point;
@@ -530,7 +538,7 @@ namespace larocv {
 	  // For end dqds
 	  // Get the image again
 	  cv::Mat raw_ctor;
-	  raw_ctor = MaskImage(img_v[plane],par._ctor,0,false); 	
+	  raw_ctor = MaskImage(img_v.at(plane),par._ctor,0,false); 	
 	  // Draw a circle at the end point to mask out bragg peak and michel etc. 
 	  geo2d::Circle<float> end_circle;
 	  
@@ -589,7 +597,7 @@ namespace larocv {
 	  std::vector<float> trunk_dqds;
 	  trunk_dqds.clear();
 	  if (par_dqds.size() > 30){
-	    for(size_t idx = 0; idx <30 ; ++idx ) trunk_dqds.push_back(par_dqds[idx]);
+	    for(size_t idx = 0; idx <30 ; ++idx ) trunk_dqds.push_back(par_dqds.at(idx));
 	  }
 	  else {trunk_dqds = par_dqds;};
 	  
@@ -629,104 +637,104 @@ namespace larocv {
 	  par._dqds_mean = mean_dqds;
 
 	  if(pid == 0){
-	    _dqds_0_v[plane] = mean_dqds;
+	    _dqds_0_v.at(plane) = mean_dqds;
 
-	    _dqdx_0_v_3dc[plane] = dqds_3dc;//Correct3D(_dqds_0_v[plane], theta, phi);
-	    _dqdx_0_end_v_3dc[plane] = end_dqds_3dc;
-	    //_dqdx_0_v_3dc[plane] = Correct3D(truncated_dqds, _theta, _phi);
-	    //_r_dqds_0_v[plane] = VectorMean(remove_dqds);
-	    //_t_dqds_0_v[plane] = truncated_dqds;
+	    _dqdx_0_v_3dc.at(plane) = dqds_3dc;//Correct3D(_dqds_0_v.at(plane), theta, phi);
+	    _dqdx_0_end_v_3dc.at(plane) = end_dqds_3dc;
+	    //_dqdx_0_v_3dc.at(plane) = Correct3D(truncated_dqds, _theta, _phi);
+	    //_r_dqds_0_v.at(plane) = VectorMean(remove_dqds);
+	    //_t_dqds_0_v.at(plane) = truncated_dqds;
 	    _theta_0 = theta;
 	    _phi_0   = phi;
 	    length0  = length;
-	    _particle0_end_point[plane].first  = atom_end_point.x;
-	    _particle0_end_point[plane].second = atom_end_point.y;
-	    _particle0_end_x = end_pt[0];
-	    _particle0_end_y = end_pt[1];
-	    _particle0_end_z = end_pt[2];
+	    _particle0_end_point.at(plane).first  = atom_end_point.x;
+	    _particle0_end_point.at(plane).second = atom_end_point.y;
+	    _particle0_end_x = end_pt.at(0);
+	    _particle0_end_y = end_pt.at(1);
+	    _particle0_end_z = end_pt.at(2);
 
 	    if(plane == 0){
-	      for(size_t idx = 0; idx < _image_array_tmp[plane].size(); ++idx){
-		  _image_particle0_plane0_tmp_x.push_back(_image_array_tmp[plane][idx].X());
-		  _image_particle0_plane0_tmp_y.push_back(_image_array_tmp[plane][idx].Y());
-		  _image_particle0_plane0_tmp_v.push_back(_image_array_tmp[plane][idx].Z());
+	      for(size_t idx = 0; idx < _image_array_tmp.at(plane).size(); ++idx){
+		  _image_particle0_plane0_tmp_x.push_back(_image_array_tmp.at(plane).at(idx).X());
+		  _image_particle0_plane0_tmp_y.push_back(_image_array_tmp.at(plane).at(idx).Y());
+		  _image_particle0_plane0_tmp_v.push_back(_image_array_tmp.at(plane).at(idx).Z());
 	      }
 	    }
 	    if(plane == 1){
-	      for(size_t idx = 0; idx < _image_array_tmp[plane].size(); ++idx){
-		_image_particle0_plane1_tmp_x.push_back(_image_array_tmp[plane][idx].X());
-		_image_particle0_plane1_tmp_y.push_back(_image_array_tmp[plane][idx].Y());
-		_image_particle0_plane1_tmp_v.push_back(_image_array_tmp[plane][idx].Z());
+	      for(size_t idx = 0; idx < _image_array_tmp.at(plane).size(); ++idx){
+		_image_particle0_plane1_tmp_x.push_back(_image_array_tmp.at(plane).at(idx).X());
+		_image_particle0_plane1_tmp_y.push_back(_image_array_tmp.at(plane).at(idx).Y());
+		_image_particle0_plane1_tmp_v.push_back(_image_array_tmp.at(plane).at(idx).Z());
 	      }
 	    }
 	    if(plane == 2){
-	      for(size_t idx = 0; idx < _image_array_tmp[plane].size(); ++idx){
-		_image_particle0_plane2_tmp_x.push_back(_image_array_tmp[plane][idx].X());
-		_image_particle0_plane2_tmp_y.push_back(_image_array_tmp[plane][idx].Y());
-		_image_particle0_plane2_tmp_v.push_back(_image_array_tmp[plane][idx].Z());
+	      for(size_t idx = 0; idx < _image_array_tmp.at(plane).size(); ++idx){
+		_image_particle0_plane2_tmp_x.push_back(_image_array_tmp.at(plane).at(idx).X());
+		_image_particle0_plane2_tmp_y.push_back(_image_array_tmp.at(plane).at(idx).Y());
+		_image_particle0_plane2_tmp_v.push_back(_image_array_tmp.at(plane).at(idx).Z());
 	      }
 	    }
-	    _particle0_pixels_v[plane].clear();
-	    _particle0_pixels_v[plane].resize(par._atom.size());
+	    _particle0_pixels_v.at(plane).clear();
+	    _particle0_pixels_v.at(plane).resize(par._atom.size());
 	    for(size_t idx = 0; idx < par._atom.size(); ++idx) {
-	      _particle0_pixels_v[plane][idx].first   = par._atom[idx].x;
-	      _particle0_pixels_v[plane][idx].second  = par._atom[idx].y;
+	      _particle0_pixels_v.at(plane).at(idx).first   = par._atom.at(idx).x;
+	      _particle0_pixels_v.at(plane).at(idx).second  = par._atom.at(idx).y;
 
 	    }
 	  }
 	  if(pid == 1){
-	    _dqds_1_v[plane] = mean_dqds;
+	    _dqds_1_v.at(plane) = mean_dqds;
 
-	    _dqdx_1_v_3dc[plane] = dqds_3dc;//Correct3D(_dqds_1_v[plane], theta, phi);
-	    _dqdx_1_end_v_3dc[plane] = end_dqds_3dc;
-	    //_dqdx_1_v_3dc[plane] = Correct3D(truncated_dqds, _theta, _phi);
-	    //_r_dqds_1_v[plane] = VectorMean(remove_dqds);
-	    //_t_dqds_1_v[plane] = truncated_dqds;
+	    _dqdx_1_v_3dc.at(plane) = dqds_3dc;//Correct3D(_dqds_1_v.at(plane), theta, phi);
+	    _dqdx_1_end_v_3dc.at(plane) = end_dqds_3dc;
+	    //_dqdx_1_v_3dc.at(plane) = Correct3D(truncated_dqds, _theta, _phi);
+	    //_r_dqds_1_v.at(plane) = VectorMean(remove_dqds);
+	    //_t_dqds_1_v.at(plane) = truncated_dqds;
 	    _theta_1 = theta;
 	    _phi_1   = phi;
 	    length1  = length;
-	    _particle1_end_point[plane].first  = atom_end_point.x;
-	    _particle1_end_point[plane].second = atom_end_point.y;
-	    _particle1_end_x = end_pt[0];
-	    _particle1_end_y = end_pt[1];
-	    _particle1_end_z = end_pt[2];	    
+	    _particle1_end_point.at(plane).first  = atom_end_point.x;
+	    _particle1_end_point.at(plane).second = atom_end_point.y;
+	    _particle1_end_x = end_pt.at(0);
+	    _particle1_end_y = end_pt.at(1);
+	    _particle1_end_z = end_pt.at(2);	    
 	    
 	    if(plane == 0){
-	      for(size_t idx = 0; idx < _image_array_tmp[plane].size(); ++idx){
-		_image_particle1_plane0_tmp_x.push_back(_image_array_tmp[plane][idx].X());
-		_image_particle1_plane0_tmp_y.push_back(_image_array_tmp[plane][idx].Y());
-		_image_particle1_plane0_tmp_v.push_back(_image_array_tmp[plane][idx].Z());
+	      for(size_t idx = 0; idx < _image_array_tmp.at(plane).size(); ++idx){
+		_image_particle1_plane0_tmp_x.push_back(_image_array_tmp.at(plane).at(idx).X());
+		_image_particle1_plane0_tmp_y.push_back(_image_array_tmp.at(plane).at(idx).Y());
+		_image_particle1_plane0_tmp_v.push_back(_image_array_tmp.at(plane).at(idx).Z());
 	      }
 	    }
 	    if(plane == 1){
-	      for(size_t idx = 0; idx < _image_array_tmp[plane].size(); ++idx){
-		_image_particle1_plane1_tmp_x.push_back(_image_array_tmp[plane][idx].X());
-		_image_particle1_plane1_tmp_y.push_back(_image_array_tmp[plane][idx].Y());
-		_image_particle1_plane1_tmp_v.push_back(_image_array_tmp[plane][idx].Z());
+	      for(size_t idx = 0; idx < _image_array_tmp.at(plane).size(); ++idx){
+		_image_particle1_plane1_tmp_x.push_back(_image_array_tmp.at(plane).at(idx).X());
+		_image_particle1_plane1_tmp_y.push_back(_image_array_tmp.at(plane).at(idx).Y());
+		_image_particle1_plane1_tmp_v.push_back(_image_array_tmp.at(plane).at(idx).Z());
 	      }
 	    }
 	    if(plane == 2){
-	      for(size_t idx = 0; idx < _image_array_tmp[plane].size(); ++idx){
-		_image_particle1_plane2_tmp_x.push_back(_image_array_tmp[plane][idx].X());
-		_image_particle1_plane2_tmp_y.push_back(_image_array_tmp[plane][idx].Y());
-		_image_particle1_plane2_tmp_v.push_back(_image_array_tmp[plane][idx].Z());
+	      for(size_t idx = 0; idx < _image_array_tmp.at(plane).size(); ++idx){
+		_image_particle1_plane2_tmp_x.push_back(_image_array_tmp.at(plane).at(idx).X());
+		_image_particle1_plane2_tmp_y.push_back(_image_array_tmp.at(plane).at(idx).Y());
+		_image_particle1_plane2_tmp_v.push_back(_image_array_tmp.at(plane).at(idx).Z());
 	      }
 	    }
-	    _particle1_pixels_v[plane].clear();
-	    _particle1_pixels_v[plane].resize(par._atom.size());
+	    _particle1_pixels_v.at(plane).clear();
+	    _particle1_pixels_v.at(plane).resize(par._atom.size());
 	    for(size_t idx = 0; idx < par._atom.size(); ++idx) {
-	      _particle1_pixels_v[plane][idx].first   = par._atom[idx].x;
-	      _particle1_pixels_v[plane][idx].second  = par._atom[idx].y;
+	      _particle1_pixels_v.at(plane).at(idx).first   = par._atom.at(idx).x;
+	      _particle1_pixels_v.at(plane).at(idx).second  = par._atom.at(idx).y;
 	    }
 	  }
 	  
 	  if (this_info2d.ptype == data::ParticleType_t::kTrack){
-	    _trackp_dqds_v[plane]  = mean_dqds;//Correct3D(par._dqds_mean, theta, phi);
-	    _trackp_dqdx_3dc_v[plane]  = dqds_3dc;//Correct3D(par._dqds_mean, theta, phi);
+	    _trackp_dqds_v.at(plane)  = mean_dqds;//Correct3D(par._dqds_mean, theta, phi);
+	    _trackp_dqdx_3dc_v.at(plane)  = dqds_3dc;//Correct3D(par._dqds_mean, theta, phi);
 	  }
 	  if (this_info2d.ptype == data::ParticleType_t::kShower){
-	    _showerp_dqds_v[plane] = mean_dqds;//Correct3D(par._dqds_mean, theta, phi);
-	    _showerp_dqdx_3dc_v[plane] = dqds_3dc;//Correct3D(par._dqds_mean, theta, phi);
+	    _showerp_dqds_v.at(plane) = mean_dqds;//Correct3D(par._dqds_mean, theta, phi);
+	    _showerp_dqdx_3dc_v.at(plane) = dqds_3dc;//Correct3D(par._dqds_mean, theta, phi);
 	  }
 
 	  this_par_data.push_back(par);
@@ -736,54 +744,54 @@ namespace larocv {
 
 	if(pid == 2){
 	  if (length0 >= length1) {
-	    _long_trackp_dqds_v[plane]  = _dqds_0_v[plane];
-	    _short_trackp_dqds_v[plane] = _dqds_1_v[plane];
-	    _long_trackp_dqdx_3dc_v[plane]  = _dqdx_0_v_3dc[plane];
-	    _short_trackp_dqdx_3dc_v[plane] = _dqdx_1_v_3dc[plane];
+	    _long_trackp_dqds_v.at(plane)  = _dqds_0_v.at(plane);
+	    _short_trackp_dqds_v.at(plane) = _dqds_1_v.at(plane);
+	    _long_trackp_dqdx_3dc_v.at(plane)  = _dqdx_0_v_3dc.at(plane);
+	    _short_trackp_dqdx_3dc_v.at(plane) = _dqdx_1_v_3dc.at(plane);
 	  }else{
-	    _long_trackp_dqds_v[plane]  = _dqds_1_v[plane];
-	    _short_trackp_dqds_v[plane] = _dqds_0_v[plane];
-	    _long_trackp_dqdx_3dc_v[plane]  = _dqdx_1_v_3dc[plane];
-	    _short_trackp_dqdx_3dc_v[plane] = _dqdx_0_v_3dc[plane];
+	    _long_trackp_dqds_v.at(plane)  = _dqds_1_v.at(plane);
+	    _short_trackp_dqds_v.at(plane) = _dqds_0_v.at(plane);
+	    _long_trackp_dqdx_3dc_v.at(plane)  = _dqdx_1_v_3dc.at(plane);
+	    _short_trackp_dqdx_3dc_v.at(plane) = _dqdx_0_v_3dc.at(plane);
 	  } 
 	}
 	
-	if(_dqds_0_v[plane]     == 0 ) _dqds_0_v[plane]     = _dqds_1_v[plane]; //stupid way for cases where dqds not calculated
-	if(_dqds_1_v[plane]     == 0 ) _dqds_1_v[plane]     = _dqds_0_v[plane]; //stupid way for cases where dqds not calculated
-	//if(_t_dqds_0_v[plane]   == 0 ) _t_dqds_0_v[plane]   = _t_dqds_1_v[plane]; //stupid way for cases where dqds not calculated
-	//if(_t_dqds_1_v[plane]   == 0 ) _t_dqds_1_v[plane]   = _t_dqds_0_v[plane]; //stupid way for cases where dqds not calculated
-	//if(_r_dqds_0_v[plane]   == 0 ) _r_dqds_0_v[plane]   = _r_dqds_1_v[plane]; //stupid way for cases where dqds not calculated
-	//if(_r_dqds_1_v[plane]   == 0 ) _r_dqds_1_v[plane]   = _r_dqds_0_v[plane]; //stupid way for cases where dqds not calculated
-	if(_dqdx_0_v_3dc[plane] == 0 ) _dqdx_0_v_3dc[plane] = _dqdx_1_v_3dc[plane]; //stupid way for cases where dqds not calculated
-	if(_dqdx_1_v_3dc[plane] == 0 ) _dqdx_1_v_3dc[plane] = _dqdx_0_v_3dc[plane]; //stupid way for cases where dqds not calculated
-	if(_dqdx_0_end_v_3dc[plane] == 0 ) _dqdx_0_end_v_3dc[plane] = _dqdx_1_end_v_3dc[plane]; //stupid way for cases where dqds not calculated
-	if(_dqdx_1_end_v_3dc[plane] == 0 ) _dqdx_1_end_v_3dc[plane] = _dqdx_0_end_v_3dc[plane]; //stupid way for cases where dqds not calculated
+	if(_dqds_0_v.at(plane)     == 0 ) _dqds_0_v.at(plane)     = _dqds_1_v.at(plane); //stupid way for cases where dqds not calculated
+	if(_dqds_1_v.at(plane)     == 0 ) _dqds_1_v.at(plane)     = _dqds_0_v.at(plane); //stupid way for cases where dqds not calculated
+	//if(_t_dqds_0_v.at(plane)   == 0 ) _t_dqds_0_v.at(plane)   = _t_dqds_1_v.at(plane); //stupid way for cases where dqds not calculated
+	//if(_t_dqds_1_v.at(plane)   == 0 ) _t_dqds_1_v.at(plane)   = _t_dqds_0_v.at(plane); //stupid way for cases where dqds not calculated
+	//if(_r_dqds_0_v.at(plane)   == 0 ) _r_dqds_0_v.at(plane)   = _r_dqds_1_v.at(plane); //stupid way for cases where dqds not calculated
+	//if(_r_dqds_1_v.at(plane)   == 0 ) _r_dqds_1_v.at(plane)   = _r_dqds_0_v.at(plane); //stupid way for cases where dqds not calculated
+	if(_dqdx_0_v_3dc.at(plane) == 0 ) _dqdx_0_v_3dc.at(plane) = _dqdx_1_v_3dc.at(plane); //stupid way for cases where dqds not calculated
+	if(_dqdx_1_v_3dc.at(plane) == 0 ) _dqdx_1_v_3dc.at(plane) = _dqdx_0_v_3dc.at(plane); //stupid way for cases where dqds not calculated
+	if(_dqdx_0_end_v_3dc.at(plane) == 0 ) _dqdx_0_end_v_3dc.at(plane) = _dqdx_1_end_v_3dc.at(plane); //stupid way for cases where dqds not calculated
+	if(_dqdx_1_end_v_3dc.at(plane) == 0 ) _dqdx_1_end_v_3dc.at(plane) = _dqdx_0_end_v_3dc.at(plane); //stupid way for cases where dqds not calculated
 
 
-	_dqds_diff_v[plane]     = std::abs(_dqds_0_v[plane]     -  _dqds_1_v[plane]);
-	//_t_dqds_diff_v[plane]   = std::abs(_t_dqds_0_v[plane]   -  _t_dqds_1_v[plane]);
-	//_r_dqds_diff_v[plane]   = std::abs(_r_dqds_0_v[plane]   -  _r_dqds_1_v[plane]);
-	_dqdx_diff_v_3dc[plane] = std::abs(_dqdx_0_v_3dc[plane] -  _dqdx_1_v_3dc[plane]);
+	_dqds_diff_v.at(plane)     = std::abs(_dqds_0_v.at(plane)     -  _dqds_1_v.at(plane));
+	//_t_dqds_diff_v.at(plane)   = std::abs(_t_dqds_0_v.at(plane)   -  _t_dqds_1_v.at(plane));
+	//_r_dqds_diff_v.at(plane)   = std::abs(_r_dqds_0_v.at(plane)   -  _r_dqds_1_v.at(plane));
+	_dqdx_diff_v_3dc.at(plane) = std::abs(_dqdx_0_v_3dc.at(plane) -  _dqdx_1_v_3dc.at(plane));
 	
-	_dqds_ratio_v[plane]     = (_dqds_0_v[plane]/_dqds_1_v[plane] <= 1 ? 
-				    _dqds_0_v[plane]/_dqds_1_v[plane] : _dqds_1_v[plane]/_dqds_0_v[plane] );
-	//_t_dqds_ratio_v[plane]   = (_t_dqds_0_v[plane]/_t_dqds_1_v[plane] <= 1 ? 
-	//_t_dqds_0_v[plane]/_t_dqds_1_v[plane] : _t_dqds_1_v[plane]/_t_dqds_0_v[plane] );
-	//_r_dqds_ratio_v[plane]   = (_r_dqds_0_v[plane]/_r_dqds_1_v[plane] <= 1 ? 
-	//_r_dqds_0_v[plane]/_r_dqds_1_v[plane] : _r_dqds_1_v[plane]/_r_dqds_0_v[plane] );
-	_dqdx_ratio_v_3dc[plane] = (_dqdx_0_v_3dc[plane]/_dqdx_1_v_3dc[plane] <= 1 ?
-				    _dqdx_0_v_3dc[plane]/_dqdx_1_v_3dc[plane] : _dqdx_1_v_3dc[plane]/_dqdx_0_v_3dc[plane] );
+	_dqds_ratio_v.at(plane)     = (_dqds_0_v.at(plane)/_dqds_1_v.at(plane) <= 1 ? 
+				    _dqds_0_v.at(plane)/_dqds_1_v.at(plane) : _dqds_1_v.at(plane)/_dqds_0_v.at(plane) );
+	//_t_dqds_ratio_v.at(plane)   = (_t_dqds_0_v.at(plane)/_t_dqds_1_v.at(plane) <= 1 ? 
+	//_t_dqds_0_v.at(plane)/_t_dqds_1_v.at(plane) : _t_dqds_1_v.at(plane)/_t_dqds_0_v.at(plane) );
+	//_r_dqds_ratio_v.at(plane)   = (_r_dqds_0_v.at(plane)/_r_dqds_1_v.at(plane) <= 1 ? 
+	//_r_dqds_0_v.at(plane)/_r_dqds_1_v.at(plane) : _r_dqds_1_v.at(plane)/_r_dqds_0_v.at(plane) );
+	_dqdx_ratio_v_3dc.at(plane) = (_dqdx_0_v_3dc.at(plane)/_dqdx_1_v_3dc.at(plane) <= 1 ?
+				    _dqdx_0_v_3dc.at(plane)/_dqdx_1_v_3dc.at(plane) : _dqdx_1_v_3dc.at(plane)/_dqdx_0_v_3dc.at(plane) );
 	
       }
      
-      //if (_dqds_diff_v[0] >= 0 )_dqds_diff_01 = _dqds_diff_v[0];
-      //if (_dqds_diff_v[1] > _dqds_diff_01 && _dqds_diff_v[1]>0) _dqds_diff_01 = _dqds_diff_v[1];
-      //if (_dqds_ratio_v[0] >= 0 )_dqds_ratio_01 = _dqds_ratio_v[0];
-      //if (_dqds_ratio_v[1]< _dqds_ratio_01 && _dqds_ratio_v[1]>0) _dqds_ratio_01 = _dqds_ratio_v[1];
+      //if (_dqds_diff_v.at(0) >= 0 )_dqds_diff_01 = _dqds_diff_v.at(0);
+      //if (_dqds_diff_v.at(1) > _dqds_diff_01 && _dqds_diff_v.at(1)>0) _dqds_diff_01 = _dqds_diff_v.at(1);
+      //if (_dqds_ratio_v.at(0) >= 0 )_dqds_ratio_01 = _dqds_ratio_v.at(0);
+      //if (_dqds_ratio_v.at(1)< _dqds_ratio_01 && _dqds_ratio_v.at(1)>0) _dqds_ratio_01 = _dqds_ratio_v.at(1);
       if (!_dqds_diff_v.empty()) {
 	auto res = Sort01(_dqds_diff_v);
 	if (!res.empty())
-	  _dqds_diff_01 = res[1];
+	  _dqds_diff_01 = res.at(1);
 	else
 	  _dqds_diff_01=kINVALID_DOUBLE;
       }else
@@ -793,21 +801,21 @@ namespace larocv {
       if (!_dqds_ratio_v.empty()) {
 	auto res = Sort01(_dqds_ratio_v);
 	if (!res.empty())
-	  _dqds_ratio_01 =  res[0];
+	  _dqds_ratio_01 =  res.at(0);
 	else
 	  _dqds_ratio_01 = kINVALID_DOUBLE;
       }else
 	_dqds_ratio_01=kINVALID_DOUBLE;
       
-      //_t_dqds_diff_01    = Sort01(_t_dqds_diff_v)[1];
-      //_t_dqds_ratio_01   = Sort01(_t_dqds_ratio_v)[0];
-      //_r_dqds_diff_01    = Sort01(_r_dqds_diff_v)[1];
-      //_r_dqds_ratio_01   = Sort01(_r_dqds_ratio_v)[0];
+      //_t_dqds_diff_01    = Sort01(_t_dqds_diff_v).at(1);
+      //_t_dqds_ratio_01   = Sort01(_t_dqds_ratio_v).at(0);
+      //_r_dqds_diff_01    = Sort01(_r_dqds_diff_v).at(1);
+      //_r_dqds_ratio_01   = Sort01(_r_dqds_ratio_v).at(0);
 
       if (!_dqdx_diff_v_3dc.empty()) {
 	auto res = Sort01(_dqdx_diff_v_3dc);
 	if (!res.empty())
-	  _dqdx_diff_01_3dc  = res[1];
+	  _dqdx_diff_01_3dc  = res.at(1);
 	else
 	  _dqdx_diff_01_3dc = kINVALID_DOUBLE;
       }else
@@ -816,7 +824,7 @@ namespace larocv {
       if (!_dqdx_ratio_v_3dc.empty()) {
 	auto res = Sort01(_dqdx_ratio_v_3dc);
 	if (!res.empty())
-	  _dqdx_ratio_01_3dc = res[0];
+	  _dqdx_ratio_01_3dc = res.at(0);
 	else
 	  _dqdx_ratio_01_3dc = kINVALID_DOUBLE;
       } else

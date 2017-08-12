@@ -16,6 +16,7 @@
 #include <set>
 #include <cmath>
 #include <array>
+#include <cassert>
 
 namespace larocv {
 
