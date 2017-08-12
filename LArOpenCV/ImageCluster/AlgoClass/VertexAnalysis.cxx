@@ -2,8 +2,12 @@
 #define __VERTEXANALYSIS_CXX__
 
 #include "VertexAnalysis.h"
+#ifndef __CLING__
+#ifndef __CINT__
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#endif
+#endif
 #include "LArOpenCV/Core/larbys.h"
 #include "LArOpenCV/ImageCluster/Base/BaseUtil.h"
 #include "LArOpenCV/ImageCluster/Base/MatchBookKeeper.h"

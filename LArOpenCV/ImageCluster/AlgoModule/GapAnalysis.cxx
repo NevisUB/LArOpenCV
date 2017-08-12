@@ -118,8 +118,8 @@ namespace larocv {
 	  const auto& pctor = pcluster._ctor;
 	  if (pctor.empty()) continue;
 
-	  auto& plane_path_exists = plane_path_exists_v[plane];
-	  auto& circle_path_exists= circle_path_exists_v[plane];
+	  auto& plane_path_exists = plane_path_exists_v.at(plane);
+	  auto& circle_path_exists= circle_path_exists_v.at(plane);
 
 	  const auto& cvtx = cvtx2d_v.at(plane);
 
@@ -136,8 +136,8 @@ namespace larocv {
 	  // Check if the crossing points are withen the same contour
 	  std::vector<size_t> parent_ctor_id_v(xs_v.size(),kINVALID_SIZE);
 	  for(size_t xs_id=0; xs_id < xs_v.size(); ++xs_id) {
-	    auto parent_id = larocv::FindContainingContour(mask_ctor_v,xs_v[xs_id]);
-	    parent_ctor_id_v[xs_id] = parent_id;
+	    auto parent_id = larocv::FindContainingContour(mask_ctor_v,xs_v.at(xs_id));
+	    parent_ctor_id_v.at(xs_id) = parent_id;
 	  }
 
 	  bool different = false;

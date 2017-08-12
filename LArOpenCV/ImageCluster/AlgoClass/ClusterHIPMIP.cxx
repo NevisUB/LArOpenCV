@@ -2,8 +2,12 @@
 #define __CLUSTERHIPMIP_CXX__
 
 #include "ClusterHIPMIP.h"
+#ifndef __CLING__
+#ifndef __CINT__
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#endif
+#endif
 #include "LArOpenCV/Core/larbys.h"
 
 using larocv::larbys;

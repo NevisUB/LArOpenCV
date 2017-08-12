@@ -52,11 +52,11 @@ namespace larocv {
     _tree->Branch("z"          , &_z         , "z/D");
     _tree->Branch("nparticles"        , &_nparticles, "nparticles/I");
     _tree->Branch("straightness"      , &_straightness, "straightness/I");
-    _tree->Branch("angle_0_v"         , &_angle_0_v);   
-    _tree->Branch("angle_1_v"         , &_angle_1_v);   
     _tree->Branch("anglediff"         , &_anglediff, "anglediff/D");
     _tree->Branch("anglediff_straight", &_anglediff_straight, "anglediff_straight/D");
     _tree->Branch("anglediff_max"     , &_anglediff_max, "anglediff_max/D");
+    _tree->Branch("angle_0_v"         , &_angle_0_v);   
+    _tree->Branch("angle_1_v"         , &_angle_1_v);   
     _tree->Branch("anglediff_v"       , &_anglediff_v);
     _roid = 0;
     

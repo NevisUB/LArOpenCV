@@ -1,7 +1,11 @@
 #ifndef __IMAGECLUSTERMANAGER_CXX__
 #define __IMAGECLUSTERMANAGER_CXX__
 
+#ifndef __CLING__
+#ifndef __CINT__
 #include <opencv2/imgproc/imgproc.hpp>
+#endif
+#endif
 #include "ImageClusterManager.h"
 #include "LArOpenCV/Core/larbys.h"
 #include "AlgoFactory.h"

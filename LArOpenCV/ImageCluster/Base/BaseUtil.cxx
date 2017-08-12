@@ -2,7 +2,11 @@
 #define __IMAGECLUSTER_BASEUTIL_CXX__
 
 #include <limits.h>
+#ifndef __CLING__
+#ifndef __CINT__
 #include <opencv2/imgproc/imgproc.hpp>
+#endif
+#endif
 #include "LArOpenCV/Core/larbys.h"
 #include "BaseUtil.h"
 #include <vector>

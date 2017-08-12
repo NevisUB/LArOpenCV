@@ -6,7 +6,11 @@
 #include "Geo2D/Core/Vector.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
+#ifndef __CLING__
+#ifndef __CINT__
 #include <opencv2/opencv.hpp>
+#endif
+#endif
 #include <opencv2/core/core.hpp>
 
 using larocv::larbys;

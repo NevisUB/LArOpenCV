@@ -3,8 +3,12 @@
 
 #include "Contour2DAnalysis.h"
 #include "Geo2D/Core/VectorArray.h"
+#ifndef __CLING__
+#ifndef __CINT__
 #include "opencv2/imgproc.hpp"
 #include <opencv2/opencv.hpp>
+#endif
+#endif
 #include "LArOpenCV/Core/larbys.h"
 #include "ImagePatchAnalysis.h"
 
@@ -425,10 +429,10 @@ namespace larocv {
 			const GEO2D_Contour_t& ctr)
   {
     size_t res = kINVALID_SIZE;
-    double max_area = 0;
-    for(size_t idx = 0; idx<contour_v.size(); ++idx) {
-      auto area_overlap = AreaOverlap(contour_v[idx],ctr);
-      if(area_overlap>=max_area) {
+    double max_area = -1.0*kINVALID_DOUBLE;
+    for(size_t idx = 0; idx < contour_v.size(); ++idx) {
+      auto area_overlap = AreaOverlap(contour_v.at(idx),ctr);
+      if(area_overlap >= max_area) {
 	max_area = area_overlap;
 	res = idx;
       }

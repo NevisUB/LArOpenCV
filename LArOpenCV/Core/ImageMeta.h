@@ -15,8 +15,14 @@
 #define __LAROCV_IMAGEMETA_H__
 
 #include <iostream>
+
+#ifndef __CLING__
+#ifndef __CINT__
 #include <opencv2/opencv.hpp>
+#endif
+#endif
 #include <opencv2/core/core.hpp>
+
 #include "larbys.h"
 #include "LArOCVTypes.h"
 
@@ -83,7 +89,7 @@ namespace larocv {
       _height_npixel = height_npixel;
     }
     /// Change # of vertical/horizontal pixels in meta data with cv::Mat as an input
-    void update(const ::cv::Mat& mat)
+    void update(const cv::Mat& mat)
     { update(mat.rows,mat.cols); }
 
     /// convert from X variable to Time-Tick

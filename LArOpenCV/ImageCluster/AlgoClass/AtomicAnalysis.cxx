@@ -3,9 +3,13 @@
 
 #include "AtomicAnalysis.h"
 #include "Geo2D/Core/Geo2D.h"
+#ifndef __CLING__
+#ifndef __CINT__
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#endif
+#endif
 #include "LArOpenCV/Core/larbys.h"
 
 namespace larocv {

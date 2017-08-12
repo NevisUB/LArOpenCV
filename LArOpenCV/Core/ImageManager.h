@@ -14,12 +14,11 @@
 #ifndef IMAGEMANAGER_H
 #define IMAGEMANAGER_H
 
-#include <opencv2/opencv.hpp>
-#include <opencv2/core/core.hpp>
 #include <iostream>
 #include <vector>
 #include "laropencv_base.h"
 #include "larbys.h"
+
 #include "ImageMeta.h"
 
 namespace larocv  {
@@ -42,11 +41,11 @@ namespace larocv  {
     /// Returns # images currently registered
     size_t size() const { return _mat_v.size(); }
     /// Register image by copying header
-    void push_back(const ::cv::Mat& img, const larocv::ImageMeta& meta);
+    void push_back(const cv::Mat& img, const larocv::ImageMeta& meta);
     /// Register image + meta via move
-    void emplace_back(::cv::Mat&& img, larocv::ImageMeta&& meta);
+    void emplace_back(cv::Mat&& img, larocv::ImageMeta&& meta);
     /// Image getter
-    ::cv::Mat& img_at(size_t index=0);
+    cv::Mat& img_at(size_t index=0);
     /// Metadata getter
     larocv::ImageMeta& meta_at(size_t index=0);
     /// Clear data

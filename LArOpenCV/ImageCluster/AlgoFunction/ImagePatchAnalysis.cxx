@@ -3,8 +3,12 @@
 
 #include "ImagePatchAnalysis.h"
 #include "Geo2D/Core/Geo2D.h"
+#ifndef __CLING__
+#ifndef __CINT__
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
+#endif
+#endif
 #include "LArOpenCV/Core/laropencv_logger.h"
 #include "LArOpenCV/Core/larbys.h"
 #include "Contour2DAnalysis.h"
