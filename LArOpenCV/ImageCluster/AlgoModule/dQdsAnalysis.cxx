@@ -477,8 +477,8 @@ namespace larocv {
 	    assert(par._atom.at(idx).y >= 0);
 
 
-	    assert(par._atom.at(idx).y < img_v.at(plane).rows());
-	    assert(par._atom.at(idx).x < img_v.at(plane).cols());
+	    assert(par._atom.at(idx).y < img_v.at(plane).rows);
+	    assert(par._atom.at(idx).x < img_v.at(plane).cols);
 
 	    _image_array_tmp.at(plane).at(idx).SetZ((int)(img_v.at(plane).at<uchar>(par._atom.at(idx).y, par._atom.at(idx).x)));
 	    //this_img.push_back(_image_array_tmp.at(plane).at(idx));
