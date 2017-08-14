@@ -38,10 +38,12 @@ namespace larocv {
 
   private:
 
-    void Clear();
+    void ClearEvent();
+    void ClearVertex();
+    
     int _nplanes;
     int _pixels_number;
-    int _unity;
+    
     double _angle_cut;
     AlgorithmID_t _combined_vertex_analysis_algo_id;
     AlgorithmID_t _particle_id;

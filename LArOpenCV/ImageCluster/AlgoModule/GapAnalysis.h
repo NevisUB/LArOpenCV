@@ -34,6 +34,9 @@ namespace larocv {
 
   private:
 
+    void ClearEvent();
+    void ClearVertex();
+    
     AlgorithmID_t _combined_id;
     AlgorithmID_t _particle_id;
     

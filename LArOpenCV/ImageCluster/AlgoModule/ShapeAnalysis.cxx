@@ -97,14 +97,14 @@ namespace larocv {
     _tree->Branch("vertex_type",&_vertex_type,"vertex_type/I");
     
     _roid = 0;
-
-
-    Register(new data::Info2DArray);
     
+    Register(new data::Info2DArray);    
   }
 
   
   void ShapeAnalysis::_Process_() {
+
+    ClearEvent();
     
     if(NextEvent()) _roid=0;
     
@@ -127,6 +127,9 @@ namespace larocv {
 
     _vtxid = -1;
     for(size_t vtxid = 0; vtxid < vtx3d_v.size(); ++vtxid) {
+
+      ClearVertex();
+
       const auto& vtx3d = vtx3d_v[vtxid];
       
       auto par_id_v = ass_man.GetManyAss(vtx3d,particle_arr.ID());
@@ -138,8 +141,6 @@ namespace larocv {
       _y = vtx3d.y;
       _z = vtx3d.z;
       
-      Clear();
-
       _vtxid += 1;
 
       std::vector<const data::Particle*> par_v;
@@ -363,7 +364,20 @@ namespace larocv {
     _roid += 1;
   }
 
-  void ShapeAnalysis::Clear() {
+
+  void ShapeAnalysis::ClearEvent() {
+    _vtxid = kINVALID_INT;
+    
+    ClearVertex();
+  }
+  
+  void ShapeAnalysis::ClearVertex() {
+
+    _x = kINVALID_DOUBLE;
+    _y = kINVALID_DOUBLE;
+    _z = kINVALID_DOUBLE;
+
+    _nparticles = kINVALID_INT;
 
     _nplanes_v.clear();
 
@@ -405,6 +419,20 @@ namespace larocv {
     _sigma_pixel_dist_min_v.clear();
     _angular_sum_min_v.clear();
     _triangle_d_min_v.clear();
+    
+    _track_par_max_id = kINVALID_INT;
+    _shower_par_max_id = kINVALID_INT;
+    
+    _track_par_max_frac = kINVALID_FLOAT;
+    _shower_par_max_frac = kINVALID_FLOAT;
+    
+    _par1_type = kINVALID_INT;
+    _par2_type = kINVALID_INT;
+    
+    _par1_frac = kINVALID_FLOAT;
+    _par2_frac = kINVALID_FLOAT;
+    
+    _vertex_type = kINVALID_INT;
   }
 
   

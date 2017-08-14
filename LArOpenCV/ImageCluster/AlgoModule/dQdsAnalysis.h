@@ -22,9 +22,9 @@ namespace larocv {
     
     virtual ~dQdsAnalysis(){}
     
-    void Finalize(TFile* fout) {      
-      fout->cd(); _tree->Write();}
-
+    void Finalize(TFile* fout)
+    { fout->cd(); _tree->Write();}
+    
     void Reset() {}
 
   protected:
@@ -45,7 +45,8 @@ namespace larocv {
     
   private:
 
-    void Clear();
+    void ClearEvent();
+    void ClearVertex();
 
     int _nplanes;
     
@@ -78,7 +79,7 @@ namespace larocv {
     std::vector<float> _dqds_ratio_v;//diff of mean dqds between particle 0&1
     float _dqds_diff_01;//smaller dqds diff of plane 0&1
     float _dqds_ratio_01;//smaller dqds diff of plane 0&1
-    
+        
     std::vector<float> _t_dqds_0_v;//dqds mean per vtx, per plane, particle 0
     std::vector<float> _t_dqds_1_v;//dqds mean per vtx, per plane, particle 1
     std::vector<float> _t_dqds_diff_v;//diff of mean dqds between particle 0&1
@@ -113,14 +114,13 @@ namespace larocv {
     std::vector<float> _long_trackp_dqdx_3dc_v;//per vtx, per plane, long track particle
     std::vector<float> _short_trackp_dqdx_3dc_v;//per vtx, per plane, short particle
     
-    std::vector<std::pair<float, float>> _vertex_v;
-    std::vector<std::pair<float, float>> _particle0_end_point;
-    std::vector<std::pair<float, float>> _particle1_end_point;
-    std::vector<std::vector<std::pair<float, float>>> _particle0_pixels_v;
-    std::vector<std::vector<std::pair<float, float>>> _particle1_pixels_v;
-   
+    std::vector<std::pair<float, float> > _vertex_v;
+    std::vector<std::pair<float, float> > _particle0_end_point;
+    std::vector<std::pair<float, float> > _particle1_end_point;
+    std::vector<std::vector<std::pair<float, float> > > _particle0_pixels_v;
+    std::vector<std::vector<std::pair<float, float> > > _particle1_pixels_v;
     
-    std::vector<std::vector<TVector3>> _image_array_tmp;
+    std::vector<std::vector<TVector3> > _image_array_tmp;
     
     std::vector<float> _image_particle0_plane0_tmp_x;
     std::vector<float> _image_particle0_plane0_tmp_y;
@@ -149,7 +149,7 @@ namespace larocv {
     double _head_frac;
     double _tail_frac;
     
-    size_t _drop_location;//drop the first x data points on dqds spectrum
+    size_t _drop_location; //drop the first x data points on dqds spectrum
     
     float _dqds_scan_thre;
     

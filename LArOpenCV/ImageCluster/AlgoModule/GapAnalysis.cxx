@@ -52,14 +52,16 @@ namespace larocv {
     _tree->Branch("pathexists2_v", &_pathexists2_v);
     
     _tree->Branch("infiducial"    , &_infiducial, "infiducial/I");
-    
+
+    _roid  = 0;
   }
 
   bool GapAnalysis::_PostProcess_() const
   { return true; }
 
   void GapAnalysis::_Process_() {
-
+    ClearEvent();
+    
     if(NextEvent()) _roid=0;
     
     auto adc_img_v = ImageArray(ImageSetID_t::kImageSetWire);
@@ -77,6 +79,9 @@ namespace larocv {
 
     _vtxid = -1;
     for(size_t vtxid = 0; vtxid < vtx3d_v.size(); ++vtxid) {
+
+      ClearVertex();
+      
       const auto& vtx3d = vtx3d_v[vtxid];
       
       auto par_id_v = ass_man.GetManyAss(vtx3d,particle_arr.ID());
@@ -217,9 +222,7 @@ namespace larocv {
 	
 	if (valid_circle_path_exists == 3 && circle_path_exists <= 1 )
 	  _pathexists2_v[pidx] = 0;
-	
       }
-
 
       _pathexists1 = 1;
       _pathexists2 = 1;
@@ -231,18 +234,39 @@ namespace larocv {
       for(auto pe : _pathexists2_v) {
 	if (!pe) { _pathexists2 = 0; }
       }
-
       
       _infiducial=1;
       if( _x < 5.     || _x > 251.35 ||
 	  _y < -111.5 || _y > 111.5  ||
 	  _z < 5.     || _z > 1031.8 )
 	_infiducial = 0;
-      
+
       _tree->Fill();
     } // end vertex
 
     _roid += 1;
   }
+
+  void GapAnalysis::ClearEvent() {
+    _vtxid = kINVALID_INT;
+    ClearVertex();
+  }
+  
+
+  void GapAnalysis::ClearVertex() {
+
+    _x = kINVALID_DOUBLE;   
+    _y = kINVALID_DOUBLE;
+    _z = kINVALID_DOUBLE;
+    
+    _pathexists1 = kINVALID_INT;
+    _pathexists2 = kINVALID_INT;
+    
+    _pathexists1_v.clear();
+    _pathexists2_v.clear();
+
+    _infiducial = kINVALID_INT;
+  }
+  
 }
 #endif

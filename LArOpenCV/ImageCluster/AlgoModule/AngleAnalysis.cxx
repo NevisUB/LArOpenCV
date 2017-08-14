@@ -66,21 +66,40 @@ namespace larocv {
       Register(new data::ParticleClusterArray);
   }
 
-  void AngleAnalysis::Clear(){
+  void AngleAnalysis::ClearEvent() {
+    _vtxid = kINVALID_INT;
+    ClearVertex();
+  }
+  
+  void AngleAnalysis::ClearVertex(){
+    
     _angle_0_v.clear();   
-    _angle_0_v.resize(3,-9999);
+    _angle_0_v.resize(3,-1.0*kINVALID_DOUBLE);
+    
     _angle_1_v.clear();
-    _angle_1_v.resize(3,-9999);
+    _angle_1_v.resize(3,-1.0*kINVALID_DOUBLE);
+    
     _anglediff_v.clear();
-    _anglediff_v.resize(3,-9999);
+    _anglediff_v.resize(3,-1.0*kINVALID_DOUBLE);
+    
     _angle_particles.clear();
     _straightness = 0;
+
+    _nparticles = kINVALID_INT;
+    _x = kINVALID_DOUBLE;
+    _y = kINVALID_DOUBLE;
+    _z = kINVALID_DOUBLE;
+
+    _anglediff = kINVALID_DOUBLE;
+    _anglediff_straight = kINVALID_DOUBLE;
+    _anglediff_max = kINVALID_DOUBLE;
   }
   
   bool AngleAnalysis::_PostProcess_() const
   { return true; }
 
   void AngleAnalysis::_Process_() {
+    ClearEvent();
     
     if(NextEvent()) _roid =0;
     
@@ -93,7 +112,9 @@ namespace larocv {
     std::vector<const data::Vertex3D*> vertex_data_v;
     
     if(_combined_vertex_analysis_algo_id!=kINVALID_ALGO_ID) {
-      const auto& input_vertex_data_v  = AlgoData<data::Vertex3DArray>(_combined_vertex_analysis_algo_id,0).as_vector();
+      const auto& input_vertex_data_v
+	= AlgoData<data::Vertex3DArray>(_combined_vertex_analysis_algo_id,0).as_vector();
+      
       for(const auto& vtx : input_vertex_data_v)
 	vertex_data_v.push_back(&vtx);
     }
@@ -101,7 +122,7 @@ namespace larocv {
     _vtxid = -1;
     for(size_t vertex_id = 0; vertex_id < vertex_data_v.size(); ++vertex_id) {
       
-      Clear();
+      ClearVertex();
 
       LAROCV_DEBUG() << "====>>>>Angle Analysis Starts<<<<====="<<std::endl;
       LAROCV_DEBUG() << "============================================>>>>>>>>vertex id  "<<vertex_id<<std::endl;
@@ -131,17 +152,17 @@ namespace larocv {
 	
 	auto& this_par_data = AlgoData<data::ParticleClusterArray>(plane);
 	
-	double angle0 = -9999;
-	double angle1 = -9999;	
+	double angle0 = -1.0*kINVALID_DOUBLE;
+	double angle1 = -1.0*kINVALID_DOUBLE;	
 	int pid = 0 ;
 	for(auto par_id : par_ass_id_v) {
-	  auto par = particle_v.at(par_id)._par_v[plane];
+	  auto par = particle_v.at(par_id)._par_v.at(plane);
 	  if(par._ctor.empty()) continue;
 	  cv::Mat masked_ctor_start;
 
 	  int par_pixel_amount = par._ctor.size();
 
-	  masked_ctor_start = MaskImage(img_v[plane],par._ctor,0,false); 	
+	  masked_ctor_start = MaskImage(img_v.at(plane),par._ctor,0,false); 	
 	  //masked_ctor = MaskImage(masked_ctor,circle,0,false); 	
 	  auto masked_ctor_start_img = FindNonZero(masked_ctor_start);
 	  geo2d::Circle<float> par_circle;
@@ -153,7 +174,6 @@ namespace larocv {
 	  if ( FindNonZero(masked_ctor_start).size() < 2 ) continue;
 
 	  ParticleAngle(masked_ctor_start_img, masked_ctor_start_img, par_circle, par_pct, par_angle );
-
 
 	  masked_ctor_start = Threshold(masked_ctor_start, 10, 255);
 	  
@@ -175,7 +195,7 @@ namespace larocv {
 	  radius_v.clear();
 	  radius_v.resize(r_size, circle_vertex.radius);
 	  
-	  for(int ridx = 0; ridx < r_size ; ++ridx) radius_v[ridx] += ridx;
+	  for(int ridx = 0; ridx < r_size ; ++ridx) radius_v.at(ridx) += ridx;
 
 	  double angle;
 	  double pct;
@@ -188,11 +208,11 @@ namespace larocv {
 	  double pct_last;
 	  
 	  for(int ridx = 0; ridx < r_size ; ++ridx){
-	    angle_this = -9999;
-	    if(ridx == 0 && pid ==1) angle_last = -9999;
+	    angle_this = -1.0*kINVALID_DOUBLE;
+	    if(ridx == 0 && pid ==1) angle_last = -1.0*kINVALID_DOUBLE;
 	  
 	    geo2d::Circle<float> circle_this;
-	    circle_this.radius = radius_v[ridx];
+	    circle_this.radius = radius_v.at(ridx);
 	    circle_this.center = circle_vertex.center;
 	    
 	    double pct_this;
@@ -211,7 +231,7 @@ namespace larocv {
 	    if (masked_ctor_this_img.size()<2) continue;
 	    ParticleAngle(masked_ctor_start_img, masked_ctor_this_img, circle_this, pct_this, angle_this );
 	    
-	    if (angle_this == -9999) continue;
+	    if (angle_this == -1.0*kINVALID_DOUBLE) continue;
 	    
 	    if ( xs_v_this.size() == 0 && par_pixel_amount == masked_ctor_this_img.size() && ridx == 0) {
 	      angle =  angle_this;
@@ -237,19 +257,19 @@ namespace larocv {
 	    }
 	    
 	    if ( ridx == 0 ) continue; 
-	    float resolution_last = 360 / (2 * PI * radius_v[ridx-1]);
+	    float resolution_last = 360 / (2 * PI * radius_v.at(ridx-1));
 	    	    
-	    masked_ctor_start = MaskImage(img_v[plane],par._ctor,0,false); 	
+	    masked_ctor_start = MaskImage(img_v.at(plane),par._ctor,0,false); 	
 	    masked_ctor_start = Threshold(masked_ctor_start, 10, 255);
 	    
-	    circle_last.radius = radius_v[ridx-1];
+	    circle_last.radius = radius_v.at(ridx-1);
 	    circle_last.center = circle_vertex.center;
 	    
 	    circle_this.center = circle_vertex.center;
 	    
 	    auto xs_v_last = QPointOnCircle(masked_ctor_this, circle_this, pi_threshold, supression);
 	    if (xs_v_last.size()==1) {
-	      end_point_last = xs_v_last[0]; 
+	      end_point_last = xs_v_last.at(0); 
 	      end_point = end_point_last;
 	    }
 	    
@@ -284,12 +304,12 @@ namespace larocv {
 	  if(pid == 0) 
 	    {
 	      angle0 = angle;
-	      _angle_0_v[plane] = angle; 
+	      _angle_0_v.at(plane) = angle; 
 	    }
 	  if(pid == 1) 
 	    {
 	      angle1 = angle;
-	      _angle_1_v[plane] = angle; 
+	      _angle_1_v.at(plane) = angle; 
 	      par._adiff = std::abs(angle1 - angle0);//Only when pid == 1, diff makes sense
 		  
 	    }
@@ -308,12 +328,12 @@ namespace larocv {
 	  ++pid;
 	}
 
-	double anglediff = -9999; 
-	if (angle0 > -9999 && angle1 > -9999) {
+	double anglediff = -1.0*kINVALID_DOUBLE; 
+	if (angle0 > -1.0*kINVALID_DOUBLE && angle1 > -1.0*kINVALID_DOUBLE) {
 	  anglediff = std::abs(angle0-angle1);
 	  if (anglediff>180) anglediff = 360-anglediff;
 	  _anglediff = anglediff;
-	  _anglediff_v[plane] = anglediff;
+	  _anglediff_v.at(plane) = anglediff;
 	}
 	if (anglediff > _angle_cut) _straightness++;
 
@@ -340,8 +360,8 @@ namespace larocv {
     float vtx2d_y =  circle.center.y;
     
     for(size_t idx= 0;idx < ctor.size(); ++idx){
-      ctor[idx].x =  ctor[idx].x- circle.center.x;
-      ctor[idx].y =  ctor[idx].y- circle.center.y;
+      ctor.at(idx).x =  ctor.at(idx).x- circle.center.x;
+      ctor.at(idx).y =  ctor.at(idx).y- circle.center.y;
     }
     
     auto meanx = Getx2vtxmean(ctor_origin, vtx2d_x, vtx2d_y, pct );
@@ -362,11 +382,11 @@ namespace larocv {
     double ctr_pos = 0.0;
     double ctr_neg = 0.0;
     double sum = 0;
-    double mean = -999;
+    double mean = -1.0*kINVALID_DOUBLE;
     for(size_t idx= 0;idx < ctor.size(); ++idx){
-      sum += ctor[idx].x - x2d;
-      if (ctor[idx].x - x2d > 0) ctr_pos++;
-      if (ctor[idx].x - x2d < 0) ctr_neg++;
+      sum += ctor.at(idx).x - x2d;
+      if (ctor.at(idx).x - x2d > 0) ctr_pos++;
+      if (ctor.at(idx).x - x2d < 0) ctr_neg++;
     }
     pct = std::abs(ctr_pos - ctr_neg)/ctor.size();
     if (ctor.size()>0) mean = sum / ctor.size();
@@ -378,11 +398,11 @@ namespace larocv {
     double ctr_pos = 0.0;
     double ctr_neg = 0.0;
     double sum = 0;
-    double mean = -999;
+    double mean = -1.0*kINVALID_DOUBLE;
     for(size_t idx= 0;idx < ctor.size(); ++idx){
-      sum += ctor[idx].y - y2d;
-      if (ctor[idx].y - y2d > 0) ctr_pos++;
-      if (ctor[idx].y - y2d < 0) ctr_neg++;
+      sum += ctor.at(idx).y - y2d;
+      if (ctor.at(idx).y - y2d > 0) ctr_pos++;
+      if (ctor.at(idx).y - y2d < 0) ctr_neg++;
     }
     pct = std::abs(ctr_pos - ctr_neg)/ctor.size();
     if (ctor.size()>0) mean = sum / ctor.size();

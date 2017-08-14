@@ -103,7 +103,8 @@ namespace larocv {
 
     int _vertex_type;
     
-    void Clear();
+    void ClearEvent();
+    void ClearVertex();
   };
 
   class ShapeAnalysisFactory : public AlgoFactoryBase {
