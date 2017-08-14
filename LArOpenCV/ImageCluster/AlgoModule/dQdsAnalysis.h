@@ -165,7 +165,12 @@ namespace larocv {
     float _showerp_totq;
     float _trackp_cosz;
     float _showerp_cosz;
-    
+
+    float _dedx_p0;
+    float _dedx_p1;
+
+    float _dedx_diff;
+
   };
 
   class dQdsAnalysisFactory : public AlgoFactoryBase {
