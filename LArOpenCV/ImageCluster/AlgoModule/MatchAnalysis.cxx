@@ -47,7 +47,6 @@ namespace larocv {
 
     _trunk_radius = 0.0;
     _trunk_radius = pset.get<float>("TrunkRadius");
-
   
     _tree = new TTree("MatchAnalysis","");
     AttachIDs(_tree);
@@ -95,9 +94,9 @@ namespace larocv {
     _roid = 0;
   }
   
-
-
   void MatchAnalysis::_Process_() {
+    
+    ClearEvent();
     
     if(NextEvent()) _roid=0;
 
@@ -118,7 +117,7 @@ namespace larocv {
 	cv::bitwise_not(img,img);
       }
     } catch (const larbys& err) {
-      LAROCV_DEBUG() << "No channel status image available" << std::endl;
+      LAROCV_INFO() << "No channel status image available" << std::endl;
     }
     
     const auto& meta_v = MetaArray();
@@ -138,6 +137,9 @@ namespace larocv {
     _vtxid = -1;
     LAROCV_DEBUG() << "Got " << vtx3d_v.size() << " vertices" << std::endl;
     for(size_t vtxid = 0; vtxid < vtx3d_v.size(); ++vtxid) {
+
+      ClearVertex();
+      
       const auto& vtx3d = vtx3d_v[vtxid];
       
       auto par_id_v = ass_man.GetManyAss(vtx3d,particle_arr.ID());
@@ -148,8 +150,6 @@ namespace larocv {
       _x = vtx3d.x;
       _y = vtx3d.y;
       _z = vtx3d.z;
-
-      Clear();
 
       size_t npar = par_id_v.size();
       
@@ -410,6 +410,7 @@ namespace larocv {
 	  trunk_end_pca.z = trunk_end_pt_3d[2];
 	
 	  par_trunk_pca_end_in_fiducial = _VertexAnalysis.CheckFiducial(trunk_end_pca);
+	  
 	} else {
 
 	  trunk_pca_angle = std::make_pair(kINVALID_DOUBLE,kINVALID_DOUBLE);
@@ -796,7 +797,16 @@ namespace larocv {
     _par_trunk_pca_end_len_v.resize(npar);
   }
 
-  void MatchAnalysis::Clear() {
+  void MatchAnalysis::ClearEvent() {
+    _vtxid = kINVALID_INT;
+    ClearVertex();
+  }
+  
+  void MatchAnalysis::ClearVertex() {
+        
+    _x = kINVALID_DOUBLE;
+    _y = kINVALID_DOUBLE;
+    _z = kINVALID_DOUBLE;
 
     _par_pixel_ratio_v.clear();
     _par_valid_end_pt_v.clear();
@@ -809,7 +819,9 @@ namespace larocv {
     _par_3d_segment_phi_estimate_v.clear();
 
     _vertex_n_planes_charge = kINVALID_INT;
-
+    _vertex_n_planes_near_dead = kINVALID_INT;
+    _vertex_n_planes_on_dead = kINVALID_INT;
+    
     _par_pca_theta_estimate_v.clear();
     _par_pca_phi_estimate_v.clear();
     _par_pca_end_x_v.clear();
@@ -827,7 +839,8 @@ namespace larocv {
     _par_trunk_pca_end_in_fiducial_v.clear();
     _par_trunk_pca_valid_v.clear();
     _par_trunk_pca_end_len_v.clear();
-    
+
+    _trunk_length = kINVALID_FLOAT;
   }
   
 }

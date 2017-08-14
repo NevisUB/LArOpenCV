@@ -182,12 +182,35 @@ namespace larocv {
     
     // Register 3 particle cluster arrays, 1 per plane
 
-
     _nplanes = 3;
     for(size_t plane=0;plane<_nplanes;++plane) Register(new data::ParticleClusterArray);
   }
+
+  void dQdsAnalysis::ClearEvent(){
+    _vtxid = kINVALID_INT;
+    ClearVertex();
+  }
   
-  void dQdsAnalysis::Clear(){
+  void dQdsAnalysis::ClearVertex(){
+    _x = kINVALID_DOUBLE;
+    _y = kINVALID_DOUBLE;
+    _z = kINVALID_DOUBLE;
+    _particle0_end_x = kINVALID_DOUBLE;
+    _particle0_end_y = kINVALID_DOUBLE;
+    _particle0_end_z = kINVALID_DOUBLE;
+    _particle1_end_x = kINVALID_DOUBLE;
+    _particle1_end_y = kINVALID_DOUBLE;
+    _particle1_end_z = kINVALID_DOUBLE;
+
+
+    _dqds_diff_01 = kINVALID_FLOAT;
+    _dqds_ratio_01 = kINVALID_FLOAT;
+    
+    _t_dqds_diff_01 = kINVALID_FLOAT;
+    _t_dqds_ratio_01 = kINVALID_FLOAT;
+
+    _r_dqds_diff_01 = kINVALID_FLOAT;
+    _r_dqds_ratio_01 = kINVALID_FLOAT;
     
     _dqds_0_v.clear();
     _dqds_0_v.resize(3);
@@ -197,7 +220,6 @@ namespace larocv {
     _dqds_diff_v.resize(3,-9999);
     _dqds_ratio_v.clear();
     _dqds_ratio_v.resize(3,-9999);
-
 
     _r_dqds_0_v.clear();
     _r_dqds_0_v.resize(3);
@@ -234,7 +256,6 @@ namespace larocv {
     _dqdx_diff_end_v_3dc.resize(3,-9999);
     _dqdx_ratio_end_v_3dc.clear();
     _dqdx_ratio_end_v_3dc.resize(3,-9999);
-    
 
     _trackp_dqds_v.clear();
     _trackp_dqds_v.resize(3,-9999);
@@ -290,7 +311,20 @@ namespace larocv {
     _image_particle1_plane2_tmp_x.clear();
     _image_particle1_plane2_tmp_y.clear();
     _image_particle1_plane2_tmp_v.clear();    
-        
+    
+    _theta_0 = kINVALID_FLOAT;
+    _phi_0 = kINVALID_FLOAT;
+    _theta_1 = kINVALID_FLOAT;
+    _phi_1 = kINVALID_FLOAT;
+    
+    _dqdx_diff_01_3dc = kINVALID_FLOAT;
+    _dqdx_ratio_01_3dc = kINVALID_FLOAT;
+    
+    _trackp_totq = kINVALID_FLOAT;
+    _showerp_totq = kINVALID_FLOAT;
+    _trackp_cosz = kINVALID_FLOAT;
+    _showerp_cosz = kINVALID_FLOAT;
+    
   }
 
   std::vector<float> dQdsAnalysis::dQdsDropper (std::vector<float> input_dqds){
@@ -347,6 +381,8 @@ namespace larocv {
 
   void dQdsAnalysis::_Process_() {
 
+    ClearEvent();
+    
     if(NextEvent()) _roid =0;
     
     auto img_v  = ImageArray();
@@ -373,7 +409,7 @@ namespace larocv {
     _vtxid = -1;
     
     for(size_t vertex_id = 0; vertex_id < vertex_data_v.size(); ++vertex_id) {
-      Clear();
+      ClearVertex();
       
       const auto& vertex3d = vertex_data_v[vertex_id];
       _x = vertex3d->x;
@@ -391,7 +427,6 @@ namespace larocv {
       std::vector<std::vector<data::ParticleCluster> > pcluster_vv(3);
       std::vector<std::vector<data::Info3D> >          info3d_vv(3);
       std::vector<std::vector<data::Info2D> >          info2d_vv(3);
-      
       
       for(auto par_id : par_ass_id_v) {
 

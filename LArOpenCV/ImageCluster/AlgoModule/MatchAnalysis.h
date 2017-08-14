@@ -96,7 +96,9 @@ namespace larocv {
     
   private:
 
-    void Clear();
+    void ClearEvent();
+    void ClearVertex();
+    
     void ResizeVectors(size_t npar);
     
     std::pair<float,float> Angle3D(const data::Vertex3D& vtx1,
