@@ -170,7 +170,11 @@ namespace larocv {
     float _dedx_p1;
 
     float _dedx_diff;
-
+    float _trackp_dedx;
+    float _showerp_dedx;
+    float _long_trackp_dedx;
+    float _short_trackp_dedx;
+    
   };
 
   class dQdsAnalysisFactory : public AlgoFactoryBase {

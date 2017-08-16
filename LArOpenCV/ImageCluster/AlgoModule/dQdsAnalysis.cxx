@@ -10,6 +10,7 @@
 #include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 #include "LArOpenCV/ImageCluster/AlgoData/InfoCollection.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/VectorAnalysis.h"
+#include "LArUtil/LArProperties.h"
 #include <cassert>
 
 namespace larocv {
@@ -143,6 +144,10 @@ namespace larocv {
     _tree->Branch("dedx_p0"                 , &_dedx_p0);
     _tree->Branch("dedx_p1"                 , &_dedx_p1);
     _tree->Branch("dedx_diff"               , &_dedx_diff);
+    _tree->Branch("dedx_trackp"             , &_trackp_dedx);
+    _tree->Branch("dedx_showerp"            , &_showerp_dedx);
+    _tree->Branch("dedx_long_trackp"        , &_long_trackp_dedx);
+    _tree->Branch("dedx_short_trackp"       , &_short_trackp_dedx);
     
     // may be removed if larcv data product file works
     // _tree->Branch("vertex_v"                  , &_vertex_v);
@@ -483,57 +488,61 @@ namespace larocv {
 	  auto threeD_pca_start_pt = this_info3d.trunk_pca_start_pt;
 	  auto threeD_pca_end_pt   = this_info3d.trunk_pca_end_pt;
 
-	  std::vector<std::array<float,3> > projected_v;
-	  projected_v.reserve(trunk_space_pts_v.size());
-	  
-	  for (auto this_3d_pt : trunk_space_pts_v ){
-	    auto pt = AsVector(this_3d_pt.pt.x,this_3d_pt.pt.y,this_3d_pt.pt.z);
-	    projected_v.emplace_back(ClosestPoint(threeD_pca_start_pt,
-						  threeD_pca_end_pt,
-						  pt));
-	  }
-
-	  float max_dist = -1.0*kINVALID_FLOAT;
-	  float min_dist = kINVALID_FLOAT;
-
-	  auto vertex_pt = AsVector(vertex3d->x, 
-				    vertex3d->y, 
-				    vertex3d->z);
-	  
-	  for (auto this_proj_pt : projected_v){
-	    auto distance = Distance(this_proj_pt,vertex_pt);
-	    if (distance > max_dist) max_dist = distance;
-	    if (distance < min_dist) min_dist = distance;
-	  }
-	  
-	  float remove_dedx_mean = -9999;
-	  
-	  if(max_dist > min_dist) {
-	    
-	    size_t num_bins = (max_dist - min_dist) / 0.3 + 1; //resolution
-	    std::cout<<"num_bins is "<<num_bins<<std::endl;
-	    std::vector<float> dedx(num_bins, 0.);
+	  float converted_dedx = -1 * kINVALID_FLOAT;
+	  if( converted_dedx == -1 * kINVALID_FLOAT ){
+	    std::vector<std::array<float,3> > projected_v;
+	    projected_v.reserve(trunk_space_pts_v.size());
 	    
 	    for (auto this_3d_pt : trunk_space_pts_v ){
 	      auto pt = AsVector(this_3d_pt.pt.x,this_3d_pt.pt.y,this_3d_pt.pt.z);
-	      auto this_proj_pt = ClosestPoint(threeD_pca_start_pt,
-					       threeD_pca_end_pt,
-					       pt);
-	      auto distance = Distance(this_proj_pt,vertex_pt);
-	      size_t bin = (distance - min_dist) / 0.3 ; //resolution
-	      if (bin >= dedx.size()) std::cout<<"fucked"<<std::endl;
-	      dedx.at(bin) += this_3d_pt.q;
+	      projected_v.emplace_back(ClosestPoint(threeD_pca_start_pt,
+						    threeD_pca_end_pt,
+						    pt));
 	    }
 	    
-	    std::vector<float> remove_dedx;
-	    remove_dedx.clear();
-	    remove_dedx = CutHeads(dedx, _head_frac, _tail_frac);
+	    float max_dist = -1.0*kINVALID_FLOAT;
+	    float min_dist = kINVALID_FLOAT;
 	    
-	    remove_dedx_mean =  VectorMean(remove_dedx);
+	    auto vertex_pt = AsVector(vertex3d->x, 
+				      vertex3d->y, 
+				      vertex3d->z);
+	    
+	    for (auto this_proj_pt : projected_v){
+	      auto distance = Distance(this_proj_pt,vertex_pt);
+	      if (distance > max_dist) max_dist = distance;
+	      if (distance < min_dist) min_dist = distance;
+	    }
+	    
+	    float remove_dedx_mean = -9999;
+	    
+	    if(max_dist > min_dist) {
+	      
+	      size_t num_bins = (max_dist - min_dist) / 0.3 + 1; //resolution
+	      std::vector<float> dedx(num_bins, 0.);
+	      
+	      for (auto this_3d_pt : trunk_space_pts_v ){
+		auto pt = AsVector(this_3d_pt.pt.x,this_3d_pt.pt.y,this_3d_pt.pt.z);
+		auto this_proj_pt = ClosestPoint(threeD_pca_start_pt,
+						 threeD_pca_end_pt,
+						 pt);
+		auto distance = Distance(this_proj_pt,vertex_pt);
+		size_t bin = (distance - min_dist) / 0.3 ; //resolution
+		//if (bin >= dedx.size()) std::cout<<"fucked"<<std::endl;
+		dedx.at(bin) += this_3d_pt.q;
+	      }
+	      
+	      std::vector<float> remove_dedx;
+	      remove_dedx.clear();
+	      remove_dedx = CutHeads(dedx, _head_frac, _tail_frac);
+	    
+	      remove_dedx_mean =  VectorMean(remove_dedx);
+	    }
+	    
+	    par._dedx = remove_dedx_mean;
+	    
+	    converted_dedx = larutil::LArProperties::GetME()->ModBoxCorrection(remove_dedx_mean*200*6);
+
 	  }
-	  
-	  par._dedx = remove_dedx_mean;
-	  
 	  //dedx above///////////////////////////////////////
 
 	  cv::Mat masked_ctor;
@@ -592,10 +601,12 @@ namespace larocv {
 	  if (this_info2d.ptype == data::ParticleType_t::kTrack){
 	    _trackp_totq = tot_q;
 	    _trackp_cosz = cosz;
+	    _trackp_dedx = converted_dedx;
 	  }
 	  if (this_info2d.ptype == data::ParticleType_t::kShower){
 	    _showerp_totq = tot_q;
 	    _showerp_cosz = cosz;
+	    _showerp_dedx = converted_dedx;
 	  }
 
 	  geo2d::Circle<float> circle;
@@ -750,7 +761,7 @@ namespace larocv {
 	    _particle0_end_y = end_pt.at(1);
 	    _particle0_end_z = end_pt.at(2);
 
-	    _dedx_p0 = remove_dedx_mean;
+	    _dedx_p0 = converted_dedx;
 	    
 	    if(plane == 0){
 	      for(size_t idx = 0; idx < _image_array_tmp.at(plane).size(); ++idx){
@@ -797,9 +808,9 @@ namespace larocv {
 	    _particle1_end_x = end_pt.at(0);
 	    _particle1_end_y = end_pt.at(1);
 	    _particle1_end_z = end_pt.at(2);	    
-	    _dedx_p1 = remove_dedx_mean;
+	    _dedx_p1 = converted_dedx;
 	    
-	    _dedx_diff = std::abs(_dedx_p1-_dedx_p0);
+
 	    
 	    if(plane == 0){
 	      for(size_t idx = 0; idx < _image_array_tmp.at(plane).size(); ++idx){
@@ -850,12 +861,18 @@ namespace larocv {
 	    _short_trackp_dqds_v.at(plane) = _dqds_1_v.at(plane);
 	    _long_trackp_dqdx_3dc_v.at(plane)  = _dqdx_0_v_3dc.at(plane);
 	    _short_trackp_dqdx_3dc_v.at(plane) = _dqdx_1_v_3dc.at(plane);
+	    _long_trackp_dedx  = _dedx_p0;
+	    _short_trackp_dedx = _dedx_p1;
+	    
 	  }else{
 	    _long_trackp_dqds_v.at(plane)  = _dqds_1_v.at(plane);
 	    _short_trackp_dqds_v.at(plane) = _dqds_0_v.at(plane);
 	    _long_trackp_dqdx_3dc_v.at(plane)  = _dqdx_1_v_3dc.at(plane);
 	    _short_trackp_dqdx_3dc_v.at(plane) = _dqdx_0_v_3dc.at(plane);
+	    _long_trackp_dedx  = _dedx_p1;
+	    _short_trackp_dedx = _dedx_p0;
 	  } 
+	  _dedx_diff = std::abs(_dedx_p1-_dedx_p0);
 	}
 	
 	if(_dqds_0_v.at(plane)     == 0 ) _dqds_0_v.at(plane)     = _dqds_1_v.at(plane); //stupid way for cases where dqds not calculated
