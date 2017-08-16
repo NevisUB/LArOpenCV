@@ -143,6 +143,8 @@ print
 
 
 import matplotlib
+matplotlib.use('agg')
+
 import matplotlib.pyplot as plt
 
 plt.imshow(adc_v[0],cmap='Greys',interpolation='none')
