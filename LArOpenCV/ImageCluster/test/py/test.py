@@ -11,7 +11,7 @@ alg_mgr = larocv.ImageClusterManager()
 #
 # Load the configuration for algorithm manager
 #
-config = larocv.CreatePSetFromFile("image_cluster_manager.cfg","ImageClusterManager")
+config = larocv.CreatePSetFromFile("../image_cluster_manager.cfg","ImageClusterManager")
 
 print "Loaded config"
 print config.dump()
@@ -30,9 +30,9 @@ import numpy as np
 #
 # Read in the ADC images
 #
-adc0 = cv2.imread("img/adc.001.jpeg",cv2.IMREAD_GRAYSCALE)
-adc1 = cv2.imread("img/adc.002.jpeg",cv2.IMREAD_GRAYSCALE)
-adc2 = cv2.imread("img/adc.003.jpeg",cv2.IMREAD_GRAYSCALE)
+adc0 = cv2.imread("../img/adc.001.jpeg",cv2.IMREAD_GRAYSCALE)
+adc1 = cv2.imread("../img/adc.002.jpeg",cv2.IMREAD_GRAYSCALE)
+adc2 = cv2.imread("../img/adc.003.jpeg",cv2.IMREAD_GRAYSCALE)
 
 adc0 = 255 - adc0
 adc1 = 255 - adc1
@@ -44,9 +44,9 @@ adc_v = [adc0,adc1,adc2]
 # Read in the Track images
 #
 
-trk0 = cv2.imread("img/track.001.jpeg",cv2.IMREAD_GRAYSCALE)
-trk1 = cv2.imread("img/track.002.jpeg",cv2.IMREAD_GRAYSCALE)
-trk2 = cv2.imread("img/track.003.jpeg",cv2.IMREAD_GRAYSCALE)
+trk0 = cv2.imread("../img/track.001.jpeg",cv2.IMREAD_GRAYSCALE)
+trk1 = cv2.imread("../img/track.002.jpeg",cv2.IMREAD_GRAYSCALE)
+trk2 = cv2.imread("../img/track.003.jpeg",cv2.IMREAD_GRAYSCALE)
 
 trk0 = 255 - trk0
 trk1 = 255 - trk1
@@ -57,9 +57,9 @@ trk_v = [trk0,trk1,trk2]
 #
 # Read in the shower images
 #
-shr0 = cv2.imread("img/shower.001.jpeg",cv2.IMREAD_GRAYSCALE)
-shr1 = cv2.imread("img/shower.002.jpeg",cv2.IMREAD_GRAYSCALE)
-shr2 = cv2.imread("img/shower.003.jpeg",cv2.IMREAD_GRAYSCALE)
+shr0 = cv2.imread("../img/shower.001.jpeg",cv2.IMREAD_GRAYSCALE)
+shr1 = cv2.imread("../img/shower.002.jpeg",cv2.IMREAD_GRAYSCALE)
+shr2 = cv2.imread("../img/shower.003.jpeg",cv2.IMREAD_GRAYSCALE)
 
 shr0 = 255 - shr0
 shr1 = 255 - shr1
