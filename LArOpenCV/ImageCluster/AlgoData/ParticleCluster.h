@@ -44,9 +44,12 @@ namespace larocv {
       
       ParticleType_t type;    ///< particle type from enum
       GEO2D_Contour_t _ctor;  ///< contour to define a cluster
+
+      //
+      // START: Ruis stuff
+      //
       GEO2D_Particle_t _atom; ///< Pts inside the particle contour
-      
-      // Ruis stuff
+
       // 2D angle
       double _angle;
       double _par_angle;
@@ -54,18 +57,22 @@ namespace larocv {
 
       geo2d::Line<float> _pca;
       geo2d::Circle<float> _circle;
+
       // dQdS
       float _dqds_mean;
       std::vector<float> _vertex_dqds;
       std::vector<float> _truncated_dqds;
       geo2d::Vector<float> _angle_scan_end_point; // last scanned radius from angleanalysis
-      geo2d::Vector<float> _atom_end_point;       // particle edge point w.r.t the vertex pt
+      geo2d::Vector<float> _atom_end_point;       // angle edge point w.r.t the vertex pt
 
       //VertexParticleClusterMaker
       std::vector<GEO2D_Contour_t> _supercluster_v;// to be removed
       GEO2D_Contour_t _mergedctor;// to be removed
-
+      
       float _dedx;
+      //
+      // END: Ruis stuff
+      //
       
     };
 

@@ -980,7 +980,7 @@ namespace larocv {
 
     factor = std::sqrt(std::pow(y,2) + std::pow(z,2)) / std::sqrt(std::pow(x,2) +std::pow(y,2) + std::pow(z,2));
 
-    if (isnan(factor))  factor = 1;
+    if (std::isnan(factor))  factor = 1;
     
     return factor * dqds_mean;
 
@@ -995,7 +995,7 @@ namespace larocv {
     data.clear();
 
     for (size_t i = 0; i < 2; ++i){
-      if( !isnan(input.at(i) ) )   data.push_back(input.at(i));
+      if( !std::isnan(input.at(i) ) )   data.push_back(input.at(i));
     }
 
     std::sort(data.begin(),data.end(),

@@ -23,7 +23,10 @@ namespace larocv {
   { return true; }
 
   void TrumpExample::_Process_() {
-
+    
+    //
+    // Get the image from ID set in the configuration file
+    //
     auto img_v  = ImageArray();
     auto meta_v = MetaArray();
 

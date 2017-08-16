@@ -20,6 +20,9 @@
 #pragma link C++ class std::vector<larocv::data::Info3D>+;
 #pragma link C++ class larocv::data::Info3DArray+;
 
+#pragma link C++ class larocv::data::SpacePt+;
+#pragma link C++ class std::vector<larocv::data::SpacePt>+;
+
 #pragma link C++ class larocv::data::Info2D+;
 #pragma link C++ class std::vector<larocv::data::Info2D>+;
 #pragma link C++ class larocv::data::Info2DArray+;

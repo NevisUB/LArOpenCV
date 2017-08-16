@@ -227,7 +227,7 @@ namespace larocv {
 
 	  geo2d::Vector<float> ret1,ret2;
 	  float dist = geo2d::ClosestPoint(pchunk.trunkPCA,pchunk.end_pt,ret1,ret2);
-	  if (isinf(dist))
+	  if (std::isinf(dist))
 	    dist = kINVALID_FLOAT;
 
 	  triangle_d_sum += dist;
