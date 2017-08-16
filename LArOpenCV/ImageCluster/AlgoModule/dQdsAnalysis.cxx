@@ -9,6 +9,7 @@
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 #include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 #include "LArOpenCV/ImageCluster/AlgoData/InfoCollection.h"
+#include "LArOpenCV/ImageCluster/AlgoFunction/VectorAnalysis.h"
 #include <cassert>
 
 namespace larocv {
@@ -113,15 +114,15 @@ namespace larocv {
     _tree->Branch("phi_0"              , &_phi_0           ,"phi_0/F");
     _tree->Branch("theta_1"            , &_theta_1         ,"theta_1/F");  
     _tree->Branch("phi_1"              , &_phi_1           ,"phi_1/F");
-    _tree->Branch("dqds_0_v_3dc"       , &_dqdx_0_v_3dc      );//to check abs dqds
-    _tree->Branch("dqds_1_v_3dc"       , &_dqdx_1_v_3dc      );//to check abs dqds
-    _tree->Branch("dqds_diff_01_3dc"   , &_dqdx_diff_01_3dc  ,"dqdx_diff_01_3dc/F");
-    _tree->Branch("dqds_ratio_01_3dc"  , &_dqdx_ratio_01_3dc ,"dqdx_ratio_01_3dc/F");
+    _tree->Branch("dqdx_0_v_3dc"       , &_dqdx_0_v_3dc      );//to check abs dqds
+    _tree->Branch("dqdx_1_v_3dc"       , &_dqdx_1_v_3dc      );//to check abs dqds
+    _tree->Branch("dqdx_diff_01_3dc"   , &_dqdx_diff_01_3dc  ,"dqdx_diff_01_3dc/F");
+    _tree->Branch("dqdx_ratio_01_3dc"  , &_dqdx_ratio_01_3dc ,"dqdx_ratio_01_3dc/F");
     
-    _tree->Branch("dqds_0_end_v_3dc"       , &_dqdx_0_end_v_3dc      );//END dQ/ds
-    _tree->Branch("dqds_1_end_v_3dc"       , &_dqdx_1_end_v_3dc      );
-    _tree->Branch("dqds_diff_end_v_3dc"   , &_dqdx_diff_end_v_3dc  );
-    _tree->Branch("dqds_ratio_end_v_3dc"  , &_dqdx_ratio_end_v_3dc );
+    _tree->Branch("dqdx_0_end_v_3dc"       , &_dqdx_0_end_v_3dc      );//END dQ/ds
+    _tree->Branch("dqdx_1_end_v_3dc"       , &_dqdx_1_end_v_3dc      );
+    _tree->Branch("dqdx_diff_end_v_3dc"   , &_dqdx_diff_end_v_3dc  );
+    _tree->Branch("dqdx_ratio_end_v_3dc"  , &_dqdx_ratio_end_v_3dc );
 
     _tree->Branch("trackp_totq"         , &_trackp_totq         ,"trackp_totq/F");
     _tree->Branch("showerp_totq"        , &_showerp_totq        ,"showerp_totq/F");
@@ -130,8 +131,8 @@ namespace larocv {
 
     _tree->Branch("trackp_dqds_v"           , &_trackp_dqds_v       );
     _tree->Branch("showerp_dqds_v"          , &_showerp_dqds_v      );
-    _tree->Branch("trackp_dqds_3dc_v"       , &_trackp_dqdx_3dc_v       );
-    _tree->Branch("showerp_dqds_3dc_v"      , &_showerp_dqdx_3dc_v      );
+    _tree->Branch("trackp_dqdx_3dc_v"       , &_trackp_dqdx_3dc_v       );
+    _tree->Branch("showerp_dqdx_3dc_v"      , &_showerp_dqdx_3dc_v      );
     
     _tree->Branch("long_trackp_dqds_v"      , &_long_trackp_dqds_v  );
     _tree->Branch("short_trackp_dqds_v"     , &_short_trackp_dqds_v );
@@ -139,6 +140,10 @@ namespace larocv {
     _tree->Branch("short_trackp_dqdx_3dc_v" , &_short_trackp_dqdx_3dc_v );
     _roid = 0;
 
+    _tree->Branch("dedx_p0"                 , &_dedx_p0);
+    _tree->Branch("dedx_p1"                 , &_dedx_p1);
+    _tree->Branch("dedx_diff"               , &_dedx_diff);
+    
     // may be removed if larcv data product file works
     // _tree->Branch("vertex_v"                  , &_vertex_v);
     // _tree->Branch("particle0_end_point_v"     , &_particle0_end_point);
@@ -474,6 +479,63 @@ namespace larocv {
 	  auto phi    = this_info3d.trunk_pca_phi;
 	  auto cosz   = std::cos(theta);
 	  
+	  auto trunk_space_pts_v = this_info3d.trunk_space_pts_v;
+	  auto threeD_pca_start_pt = this_info3d.trunk_pca_start_pt;
+	  auto threeD_pca_end_pt   = this_info3d.trunk_pca_end_pt;
+
+	  std::vector<std::array<float,3> > projected_v;
+	  projected_v.reserve(trunk_space_pts_v.size());
+	  
+	  for (auto this_3d_pt : trunk_space_pts_v ){
+	    auto pt = AsVector(this_3d_pt.pt.x,this_3d_pt.pt.y,this_3d_pt.pt.z);
+	    projected_v.emplace_back(ClosestPoint(threeD_pca_start_pt,
+						  threeD_pca_end_pt,
+						  pt));
+	  }
+
+	  float max_dist = -1.0*kINVALID_FLOAT;
+	  float min_dist = kINVALID_FLOAT;
+
+	  auto vertex_pt = AsVector(vertex3d->x, 
+				    vertex3d->y, 
+				    vertex3d->z);
+	  
+	  for (auto this_proj_pt : projected_v){
+	    auto distance = Distance(this_proj_pt,vertex_pt);
+	    if (distance > max_dist) max_dist = distance;
+	    if (distance < min_dist) min_dist = distance;
+	  }
+	  
+	  float remove_dedx_mean = -9999;
+	  
+	  if(max_dist > min_dist) {
+	    
+	    size_t num_bins = (max_dist - min_dist) / 0.3 + 1; //resolution
+	    std::cout<<"num_bins is "<<num_bins<<std::endl;
+	    std::vector<float> dedx(num_bins, 0.);
+	    
+	    for (auto this_3d_pt : trunk_space_pts_v ){
+	      auto pt = AsVector(this_3d_pt.pt.x,this_3d_pt.pt.y,this_3d_pt.pt.z);
+	      auto this_proj_pt = ClosestPoint(threeD_pca_start_pt,
+					       threeD_pca_end_pt,
+					       pt);
+	      auto distance = Distance(this_proj_pt,vertex_pt);
+	      size_t bin = (distance - min_dist) / 0.3 ; //resolution
+	      if (bin >= dedx.size()) std::cout<<"fucked"<<std::endl;
+	      dedx.at(bin) += this_3d_pt.q;
+	    }
+	    
+	    std::vector<float> remove_dedx;
+	    remove_dedx.clear();
+	    remove_dedx = CutHeads(dedx, _head_frac, _tail_frac);
+	    
+	    remove_dedx_mean =  VectorMean(remove_dedx);
+	  }
+	  
+	  par._dedx = remove_dedx_mean;
+	  
+	  //dedx above///////////////////////////////////////
+
 	  cv::Mat masked_ctor;
 
 	  masked_ctor = MaskImage(img_v.at(plane),par._ctor,0,false); 	
@@ -662,7 +724,7 @@ namespace larocv {
 	  chop_truncated_dqds = PeakFinder(truncated_dqds,0.1);
 	  */
 	  
-	  par._vertex_dqds = par_dqds;
+	  par._vertex_dqds = par_dqds;//raw dqds
 	  par._truncated_dqds = remove_dqds;
 	  //par._dqds_mean = 
 	  auto mean_dqds = VectorMean(remove_dqds);
@@ -688,6 +750,8 @@ namespace larocv {
 	    _particle0_end_y = end_pt.at(1);
 	    _particle0_end_z = end_pt.at(2);
 
+	    _dedx_p0 = remove_dedx_mean;
+	    
 	    if(plane == 0){
 	      for(size_t idx = 0; idx < _image_array_tmp.at(plane).size(); ++idx){
 		  _image_particle0_plane0_tmp_x.push_back(_image_array_tmp.at(plane).at(idx).X());
@@ -733,6 +797,9 @@ namespace larocv {
 	    _particle1_end_x = end_pt.at(0);
 	    _particle1_end_y = end_pt.at(1);
 	    _particle1_end_z = end_pt.at(2);	    
+	    _dedx_p1 = remove_dedx_mean;
+	    
+	    _dedx_diff = std::abs(_dedx_p1-_dedx_p0);
 	    
 	    if(plane == 0){
 	      for(size_t idx = 0; idx < _image_array_tmp.at(plane).size(); ++idx){
