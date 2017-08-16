@@ -5,7 +5,7 @@
 #include "LArOpenCV/ImageCluster/Base/AlgoDataBase.h"
 #include <array>
 #include "ParticleCluster.h"
-#include "SpacePoint.h"
+#include "SpacePt.h"
 
 /*
   @brief: storage for generic information, whatever you want to get the job done
@@ -50,7 +50,7 @@ namespace larocv {
       std::array<float,3> overall_pca_end_pt;
       float overall_pca_length;
       bool overall_pca_valid;
-      std::vector<SpacePoint> overall_space_pts_v;
+      std::vector<SpacePt> overall_space_pts_v;
       
       //
       // Trunk PCA
@@ -63,7 +63,7 @@ namespace larocv {
       bool trunk_pca_valid;
       float trunk_pca_length;
       float pixel_radius;
-      std::vector<SpacePoint> trunk_space_pts_v;
+      std::vector<SpacePt> trunk_space_pts_v;
 
       
     };

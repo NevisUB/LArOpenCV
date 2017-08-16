@@ -323,7 +323,7 @@ namespace larocv {
 	par_pca_theta_estimate = kINVALID_DOUBLE;
 	par_pca_phi_estimate   = kINVALID_DOUBLE;
 	
-	auto overall_space_pts_v = SpacePointsEstimate(par,thresh_img_v,adc_img_v);
+	auto overall_space_pts_v = SpacePtsEstimate(par,thresh_img_v,adc_img_v);
 
 	par_pca_valid = overall_space_pts_v.empty() ? 0 : 1;
 
@@ -381,7 +381,7 @@ namespace larocv {
 	// using the trunk of the PCA (radius = configuration)
 	//
 	_trunk_length = _trunk_radius;
-	auto trunk_space_pts_v = SpacePointsEstimate(par,thresh_img_v,adc_img_v,_trunk_length,vtx3d);
+	auto trunk_space_pts_v = SpacePtsEstimate(par,thresh_img_v,adc_img_v,_trunk_length,vtx3d);
 	par_trunk_pca_valid = trunk_space_pts_v.empty() ? 0 : 1;
 
 	std::pair<double,double> trunk_pca_angle;
@@ -524,7 +524,7 @@ namespace larocv {
   }  
 
 
-  std::vector<data::SpacePoint> MatchAnalysis::SpacePointsEstimate(const data::Particle& particle,
+  std::vector<data::SpacePt> MatchAnalysis::SpacePtsEstimate(const data::Particle& particle,
 								   const std::vector<cv::Mat>& img_v,
 								   const std::vector<cv::Mat>& qimg_v,
 								   const float radius,
@@ -607,7 +607,7 @@ namespace larocv {
     const auto& geo = _VertexAnalysis.Geo();
     std::vector<bool> used_v(pxpts1_v.size(),false);
     
-    std::vector<data::SpacePoint> sps_v;
+    std::vector<data::SpacePt> sps_v;
     sps_v.reserve(pxpts1_v.size());
       
     for(size_t pxid0=0; pxid0 < pxpts0_v.size(); ++pxid0) {
@@ -641,11 +641,11 @@ namespace larocv {
 						const data::Vertex3D& start3d,
 						const float radius) {
 
-    auto space_pts_v = SpacePointsEstimate(particle,img_v,qimg_v,radius,start3d);
+    auto space_pts_v = SpacePtsEstimate(particle,img_v,qimg_v,radius,start3d);
     return Angle3D(space_pts_v,start3d);
   }
   
-  std::pair<float,float> MatchAnalysis::Angle3D(const std::vector<data::SpacePoint>& sps_v,
+  std::pair<float,float> MatchAnalysis::Angle3D(const std::vector<data::SpacePt>& sps_v,
 						const data::Vertex3D& start3d) {
     
     
@@ -720,7 +720,7 @@ namespace larocv {
   }
 
 
-  std::array<float,3> MatchAnalysis::EndPoint3D(const std::vector<data::SpacePoint>& space_pts_v,
+  std::array<float,3> MatchAnalysis::EndPoint3D(const std::vector<data::SpacePt>& space_pts_v,
 						const float theta, const float phi,
 						const data::Vertex3D& start_pt) {
     auto pca_dir   = AsVector(theta,phi);
