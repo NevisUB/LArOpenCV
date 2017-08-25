@@ -18,7 +18,8 @@ namespace larocv {
     _ClusterHIPMIP.Configure(pset.get<Config_t>("ClusterHIPMIP"));
     _DefectBreaker.Configure(pset.get<Config_t>("DefectBreaker"));
     _PCACrossing.Configure(pset.get<Config_t>("PCACrossing"));
-
+    _SimpleKink.Configure(pset.get<Config_t>("SimpleKink"));
+    
     // Create a container for VertexSeed2DArray algorithm data
     for(size_t plane=0; plane<3; ++plane) {
       LAROCV_DEBUG() << "Registering VertexSeed2DArray on plane " << plane << std::endl;
@@ -72,6 +73,13 @@ namespace larocv {
 	LAROCV_DEBUG() << "I split this contour into " << cluscomp.size() << " atomics" << std::endl;
 	LAROCV_DEBUG() << "Found " << cluscomp.get_defects().size() << " defects for seeds" << std::endl;
 
+	
+	auto simpleKinkSeed = _SimpleKink.FindInflections(ctor,img);
+	for (const auto& crowSeed : simpleKinkSeed) {
+	  data::VertexSeed2D seed(crowSeed);
+	  vertex_seeds_v.emplace_back(std::move(seed));
+	}
+
 	// Generate seeds from PCA
 	for(auto & pca : _PCACrossing.ComputePCALines(cluscomp))
 	  line_v.emplace_back(std::move(pca));
@@ -104,6 +112,10 @@ namespace larocv {
 	seed.type=data::SeedType_t::kPCA;
 	vertex_seeds_v.emplace_back(std::move(seed));
       }
+
+
+
+      
     }
     return;
   }

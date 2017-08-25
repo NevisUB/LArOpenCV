@@ -7,6 +7,7 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/ClusterHIPMIP.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/DefectBreaker.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/PCACrossing.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/SimpleKink.h"
 /*
   @brief: Created 2D vertex seeds from defect points and PCA crossing points
 */
@@ -21,7 +22,8 @@ namespace larocv {
       ImageAnaBase(name),
       _ClusterHIPMIP(),
       _DefectBreaker(),
-      _PCACrossing()
+	_PCACrossing(),
+	_SimpleKink()
     {}
     
     /// Default destructor
@@ -43,13 +45,14 @@ namespace larocv {
     const ClusterHIPMIP& ClusterHIPMIPAlgo() { return _ClusterHIPMIP; }
     const DefectBreaker& DefectBreakerAlgo() { return _DefectBreaker; }
     const PCACrossing& PCACrossingAlgo()     { return _PCACrossing;   }
+    const SimpleKink& SimpleKinkAlgo()       { return _SimpleKink;    }
     
   private:
     
     ClusterHIPMIP _ClusterHIPMIP;
     DefectBreaker _DefectBreaker;
     PCACrossing   _PCACrossing;
-    
+    SimpleKink    _SimpleKink;
   };
 
   
