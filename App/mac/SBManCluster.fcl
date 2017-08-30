@@ -4,8 +4,9 @@ LArImageHit: {
 
   Profile: true
   StoreOriginalImage: false
-  Producer: gaushit #hit02 
+  Producer: gaushit 
   UseHitRemoval: true 
+  ChainModules: false
 
   # LArImageHit config
   PoolTimeTick: 0 
@@ -14,7 +15,7 @@ LArImageHit: {
   Debug: true
 
   MakeROI: true
-  CropROI: true #false
+  CropROI: true 
   
   ROIBufferW : 108
   ROIBufferT : 108
@@ -23,7 +24,7 @@ LArImageHit: {
   QMin: 5
 
   TimeOffset : 800
-  WindowTMax : 6399 #9599 #9599MC #6399Data
+  WindowTMax : 9599 #9599MC #6399Data
   WindowTMin : 0
 
   MatchPlaneWeights : [1,1,1] #plane 0,1,2
@@ -60,10 +61,10 @@ ImageClusterManager: {
  
  iouo : {
    IOUScore: 0.25
-   HitRatio: 0.01 #0.2
+   HitRatio: 0.2
  }
 
- sbc:{
+ sbc : {
 
    Verbosity: 1
    DilationSize : 5 
