@@ -15,6 +15,7 @@
 #include "DataFormat/event_ass.h"
 #include "DataFormat/vertex.h"
 #include "DataFormat/pfpart.h"
+#include "DataFormat/track.h"
 
 namespace larlite {
 
@@ -147,14 +148,19 @@ namespace larlite {
 
     this->store_clusters(storage);
 
-    auto ev_cluster = storage->get_data<event_cluster> ("ImageClusterHit");
     auto ev_pfpart  = storage->get_data<event_pfpart> ("ImageClusterHit");
     //std::cout<<"Final cluster size: "<<ev_cluster->size() <<std::endl ;
 
     if ( _chain_modules && !ev_pfpart->size() ){
 
+      auto ev_cluster = storage->get_data<event_cluster> ("ImageClusterHit");
+      auto ev_vtx = storage->get_data<event_vertex> ("numuCC_vertex");
+      auto ev_trk = storage->get_data<event_track> ("numuCC_track");
+
       ev_cluster->clear();
       ev_pfpart->clear();
+      ev_trk->clear();
+      ev_vtx->clear();
 
       return false ;
     }
