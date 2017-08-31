@@ -2,7 +2,7 @@
 #define __PCACROSSING_CXX__
 
 #include "PCACrossing.h"
-o#ifndef __CLING__
+#ifndef __CLING__
 #ifndef __CINT__
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
