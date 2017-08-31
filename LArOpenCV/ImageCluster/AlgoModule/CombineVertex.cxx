@@ -64,24 +64,26 @@ namespace larocv {
     auto& vertex_data = AlgoData<data::Vertex3DArray>(0);
     
     std::vector<const data::Vertex3D*> vertex_v;
-    
+    std::vector<data::VertexType_t> vertex_type_v;
+      
     if (_shower_vertex_algo_id!=kINVALID_ALGO_ID) {
       const auto& shower_vertex_data = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);
-      for(const auto& vtx : shower_vertex_data.as_vector()) vertex_v.push_back(&vtx);
+      for(const auto& vtx : shower_vertex_data.as_vector())
+	{ vertex_v.push_back(&vtx); vertex_type_v.push_back(data::VertexType_t::kShower); }
     }
 
     if (_track_vertex_algo_id!=kINVALID_ALGO_ID) {
       const auto& track_vertex_data  = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
-      for(const auto& vtx : track_vertex_data.as_vector()) vertex_v.push_back(&vtx);
+      for(const auto& vtx : track_vertex_data.as_vector())
+	{ vertex_v.push_back(&vtx); vertex_type_v.push_back(data::VertexType_t::kTrack); }
     }
 
     for(size_t vertex_id=0; vertex_id < vertex_v.size(); ++vertex_id) {
 
-      const auto vertex3d_ptr = vertex_v[vertex_id];
-
       // Make a copy into module algo data
-      const auto& vtx3d = *vertex3d_ptr;
-      vertex_data.push_back(vtx3d);
+      auto vtx3d = *(vertex_v[vertex_id]);
+      vtx3d.type = vertex_type_v[vertex_id];
+      vertex_data.emplace_back(std::move(vtx3d));
       auto& vtx3d_copy = vertex_data.as_vector().back();
 
       for(size_t plane=0; plane<_nplanes; ++plane) {
