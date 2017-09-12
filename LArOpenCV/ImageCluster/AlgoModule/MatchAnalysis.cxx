@@ -95,7 +95,7 @@ namespace larocv {
   }
   
   void MatchAnalysis::_Process_() {
-    
+    LAROCV_INFO() << "start" << std::endl;
     ClearEvent();
     
     if(NextEvent()) _roid=0;
@@ -500,6 +500,7 @@ namespace larocv {
     } // end this vertex
     
     _roid += 1;
+    LAROCV_INFO() << "end" << std::endl;
   }
 
 

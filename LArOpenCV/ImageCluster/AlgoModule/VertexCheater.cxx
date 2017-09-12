@@ -11,7 +11,6 @@ namespace larocv {
   
   void VertexCheater::_Configure_(const Config_t &pset)
   {
-
     _default_radius = pset.get<float>("DefaultRadius",6);
     
     LAROCV_DEBUG() << "Register data::Vertex3DArray" << std::endl;
@@ -42,7 +41,6 @@ namespace larocv {
 
       auto& vtx2d  = _true_vertex.vtx2d_v[plane];
       auto& cvtx2d = _true_vertex.cvtx2d_v[plane];
-
 
       cvtx2d.radius = _default_radius;
       

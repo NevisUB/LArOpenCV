@@ -8,10 +8,11 @@ namespace larocv {
   namespace data {
     
     VertexSeed3D::VertexSeed3D(const Vertex3D& vtx3d) {
-      
+
+      vtx2d_v.clear();
+
       for(const auto& vtx2d : vtx3d.vtx2d_v) 
 	vtx2d_v.emplace_back(vtx2d);
-
       
       x = vtx3d.x;
       y = vtx3d.y;

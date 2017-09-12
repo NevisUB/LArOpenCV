@@ -60,6 +60,7 @@ namespace larocv {
   { return true; }
 
   void GapAnalysis::_Process_() {
+    LAROCV_INFO() << "start" << std::endl;
     ClearEvent();
     
     if(NextEvent()) _roid=0;
@@ -103,7 +104,6 @@ namespace larocv {
       plane_path_exists_vv.resize(nparticles);
       circle_path_exists_vv.resize(nparticles);
 	
-      const auto& vtx2d_v = vtx3d.vtx2d_v;
       const auto& cvtx2d_v = vtx3d.cvtx2d_v;
       
       for(size_t par_idx = 0; par_idx < par_id_v.size(); ++par_idx) {
@@ -133,7 +133,7 @@ namespace larocv {
 	  for(auto v : cvtx.xs_v) xs_v.emplace_back(v.pt);
 	  
 	  auto circle = cvtx.as_circle();
-	  
+	  if (circle.radius <= 0) throw larbys("circle rad sz < 0");
 	  const auto& thresh_img = adc_thresh_img_v.at(plane);
 	  auto mask_img = larocv::MaskImage(thresh_img,circle,0,false);
 	  auto mask_ctor_v = larocv::FindContours(mask_img);
@@ -245,6 +245,7 @@ namespace larocv {
     } // end vertex
 
     _roid += 1;
+    LAROCV_INFO() << "end" << std::endl;
   }
 
   void GapAnalysis::ClearEvent() {

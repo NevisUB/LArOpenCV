@@ -385,7 +385,7 @@ namespace larocv {
   { return true; }
 
   void dQdsAnalysis::_Process_() {
-
+    LAROCV_INFO() << "start" << std::endl;
     ClearEvent();
     
     if(NextEvent()) _roid =0;
@@ -963,6 +963,7 @@ namespace larocv {
       _tree->Fill();
     }//loop of vertex
     _roid += 1;
+    LAROCV_INFO() << "end" << std::endl;
   }
   
   float dQdsAnalysis::Correct3D (float dqds_mean, float theta, float phi){

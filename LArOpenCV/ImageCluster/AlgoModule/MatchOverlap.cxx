@@ -49,7 +49,7 @@ namespace larocv {
   { return true; }
 
   void MatchOverlap::_Process_() {
-
+    LAROCV_DEBUG() << "start" << std::endl;
     auto wire_img_v  = ImageArray(ImageSetID_t::kImageSetWire);
     auto meta_v      = MetaArray(ImageSetID_t::kImageSetWire);
     
@@ -137,6 +137,7 @@ namespace larocv {
       }
       
     } // end this vertex    
+    LAROCV_DEBUG() << "end" << std::endl;
   } // end process
   
 }

@@ -20,10 +20,12 @@ namespace larocv {
       _tree(nullptr)
       {}
     
-    virtual ~dQdsAnalysis(){}
+    virtual ~dQdsAnalysis() {}
     
-    void Finalize(TFile* fout)
-    { fout->cd(); _tree->Write();}
+    void Finalize(TFile* fout) {
+      fout->cd(); 
+      _tree->Write();
+    }
     
     void Reset() {}
 

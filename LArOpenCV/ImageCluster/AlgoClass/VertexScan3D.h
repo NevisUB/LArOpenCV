@@ -54,6 +54,8 @@ namespace larocv {
     
     std::vector<data::Vertex3D> RegionScan3D(const std::vector<cv::Mat>& image_v) const;
 
+    data::CircleVertex RadialScan2D(const cv::Mat& img, const geo2d::Vector<float>& pt) const;
+
     float _dx;
     float _dy;
     float _dz;
@@ -70,10 +72,9 @@ namespace larocv {
     bool _merge_voxels;
     bool _require_3planes_charge;
     float _allowed_radius;
+    std::vector<float> _radius_v;
     
   private:
-
-    data::CircleVertex RadialScan2D(const cv::Mat& img, const geo2d::Vector<float>& pt) const;
 
     double CircleWeight(const larocv::data::CircleVertex& cvtx) const;
 
