@@ -103,7 +103,6 @@ namespace larocv {
       _y = vtx3d.y;
       _z = vtx3d.z;
       
-      
       //
       //
       //
@@ -117,7 +116,8 @@ namespace larocv {
 
 	const auto& ctor_v = ctor_vv[plane];
 	const auto& vtx2d = vtx3d.vtx2d_v[plane];
-	
+
+	if (vtx2d.pt.x == kINVALID_FLOAT) continue;
 
 	auto id = FindContainingContour(ctor_v, vtx2d.pt);
 	if (id == kINVALID_SIZE) continue;
@@ -132,11 +132,46 @@ namespace larocv {
       // associate to contours
       auto ass_vv = _PixelScan3D.AssociateContours(reg_vv,ctor_vv);
 
+      // count the number of consistent 3D points per contour ID
+      std::vector<std::array<size_t,3>> trip_v;
+      std::vector<std::vector<const data::Vertex3D*> > trip_vtx_ptr_vv;
+      std::vector<size_t> trip_cnt_v;
+
+      bool found = false;
+      // for(const auto& ass_v : ass_vv) {
+      // 	for (const auto& ass : ass_v) {
+      for(size_t assvid =0; assvid < ass_vv.size(); ++assvid) {
+	const auto& ass_v = ass_vv[assvid];
+	for(size_t assid =0; assid < ass_v.size(); ++assid) {
+	  const auto& ass = ass_v[assid];
+	  const auto& reg = reg_vv.at(assvid).at(assid);
+
+	  found = false;
+	  for(size_t tid=0; tid<trip_v.size(); ++tid) {
+	    if(!CompareAsses(ass,trip_v[tid])) continue;
+	    found = true;
+	    trip_cnt_v[tid] += 1;
+	    trip_vtx_ptr_vv[tid].emplace_back(&reg);
+	    break;
+	  }
+	  if (found) continue;
+	  trip_v.emplace_back(ass);
+	  trip_cnt_v.emplace_back(1);
+	  trip_vtx_ptr_vv.emplace_back(std::vector<const data::Vertex3D*>(1,&reg));
+	}
+      }
+
+      LAROCV_DEBUG() << "trip_v sz=    " << trip_v.size() << std::endl;
+      LAROCV_DEBUG() << "trip_cnt_v sz=" << trip_cnt_v.size() << std::endl;
+      for(size_t tid=0; tid< trip_v.size(); ++tid) {
+	LAROCV_DEBUG() << "@tid=" << tid 
+		       << " {" << trip_v[tid][0] << "," << trip_v[tid][1]  << "," << trip_v[tid][2] << "} = " 
+		       << trip_cnt_v[tid] << std::endl;
+      }
+
       //
       //
       //
-      
-      
       LAROCV_DEBUG() << "Got " << par_id_v.size() << " particles" << std::endl;
       LAROCV_DEBUG() << " & algo data particle vector sz " << particle_v.size() << std::endl;
 

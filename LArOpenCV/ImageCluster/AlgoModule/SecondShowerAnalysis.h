@@ -54,6 +54,9 @@ namespace larocv {
   public:
     PixelScan3D _PixelScan3D;
     
+    inline bool CompareAsses(const std::array<size_t,3> & a1, const std::array<size_t,3> & a2)
+    {  return (true ? (( a1[0] == a2[0]) && (a1[1] == a2[1]) && (a1[2] == a2[2])) : false); }
+    
   };
 
   class SecondShowerAnalysisFactory : public AlgoFactoryBase {

@@ -189,7 +189,7 @@ namespace larocv {
 	  
 	}
 
-	assert(info2d.nplanes == (int) nplanes);
+	//assert(info2d.nplanes == (int) nplanes);
 	thrumu_nonzero_avg = thrumu_nonzero_avg / info2d.area / nplanes;
 	stopmu_nonzero_avg = stopmu_nonzero_avg / info2d.area / nplanes;
 	
@@ -198,16 +198,18 @@ namespace larocv {
 	auto& ctor_asym   = _ctor_asym_v[par_idx];
 	auto& area_asym   = _area_asym_v[par_idx];
 
-	assert(info2d.qsum_min   != info2d.qsum_max);
-	assert(info2d.npixel_min != info2d.npixel_max);
-	assert(info2d.area_min   != info2d.area_max);
-	assert(ctor_min          != ctor_max);
+	if (info2d.qsum_min != info2d.qsum_max)
+	  charge_asym = (info2d.qsum_max   - info2d.qsum_min)   / (info2d.qsum_max   + info2d.qsum_min);
 
-	charge_asym = (info2d.qsum_max   - info2d.qsum_min)   / (info2d.qsum_max   + info2d.qsum_min);
-	npixel_asym = (info2d.npixel_max - info2d.npixel_min) / (info2d.npixel_max + info2d.npixel_min);
-	area_asym   = (info2d.area_max   - info2d.area_min)   / (info2d.area_max   + info2d.area_min);
-	ctor_asym   = (ctor_max   - ctor_min)   / (ctor_max   + ctor_min);
-	
+	if(info2d.npixel_min != info2d.npixel_max)
+	  npixel_asym = (info2d.npixel_max - info2d.npixel_min) / (info2d.npixel_max + info2d.npixel_min);
+
+	if(info2d.area_min != info2d.area_max)
+	  area_asym   = (info2d.area_max   - info2d.area_min)   / (info2d.area_max   + info2d.area_min);	  
+
+	if(ctor_min != ctor_max)
+	  ctor_asym   = (ctor_max   - ctor_min)   / (ctor_max   + ctor_min);
+
 	auto& frac_stopmu = _frac_stopmu_v[par_idx];
 	auto& frac_thrumu = _frac_thrumu_v[par_idx];
 	
