@@ -3,6 +3,7 @@
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/PixelScan3D.h"
 
 /*
   @brief: XXX
@@ -49,8 +50,9 @@ namespace larocv {
     void ClearVertex();
     void ResetVectors(size_t sz);
 
-  private:
-
+    
+  public:
+    PixelScan3D _PixelScan3D;
     
   };
 

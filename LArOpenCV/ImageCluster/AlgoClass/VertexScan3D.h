@@ -1,5 +1,5 @@
-#ifndef VERTEXSCAN3D_H
-#define VERTEXSCAN3D_H
+#ifndef __VERTEXSCAN3D_H__
+#define __VERTEXSCAN3D_H__
 
 #include "LArOpenCV/Core/laropencv_base.h"
 #include "LArOpenCV/ImageCluster/AlgoData/VertexSeed.h"

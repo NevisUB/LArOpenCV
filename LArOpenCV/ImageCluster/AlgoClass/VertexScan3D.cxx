@@ -1,5 +1,5 @@
-#ifndef __VERTEXSCAN3D_H__
-#define __VERTEXSCAN3D_H__
+#ifndef __VERTEXSCAN3D_CXX__
+#define __VERTEXSCAN3D_CXX__
 
 #include "VertexScan3D.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"

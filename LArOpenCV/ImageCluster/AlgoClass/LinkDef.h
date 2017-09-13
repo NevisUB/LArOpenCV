@@ -9,31 +9,26 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class larocv::SuperClusterMaker+;
-#pragma link C++ class larocv::TrackVertexSeeds+;
-#pragma link C++ class larocv::TrackVertexEstimate+;
-#pragma link C++ class larocv::TrackParticleCluster+;
+
+#pragma link C++ class larocv::AtomicAnalysis+;
+#pragma link C++ class larocv::ClusterHIPMIP+;
+#pragma link C++ class larocv::ClusterMerge+;
+#pragma link C++ class larocv::DefectBreaker+;
+#pragma link C++ class larocv::ElectronShowerVertexSeed+;
+#pragma link C++ class larocv::LArPlaneGeo+;
+#pragma link C++ class larocv::OneTrackOneShower+;
+#pragma link C++ class larocv::PCACrossing+;
+#pragma link C++ class larocv::PiRange+;
+#pragma link C++ class larocv::PixelChunk+;
+#pragma link C++ class larocv::PixelScan3D+;
+#pragma link C++ class larocv::SimpleKink+;
+#pragma link C++ class larocv::SingleLinearTrack+;
 #pragma link C++ class larocv::SuperClusterer+;
-#pragma link C++ class larocv::LinearTrackSeeds+;
-#pragma link C++ class larocv::ShowerVertexEstimate+;
-#pragma link C++ class larocv::ShowerParticleCluster+;
-#pragma link C++ class larocv::ShowerOnTrackEnd+;
-#pragma link C++ class larocv::ShowerVertexMerger+;
-#pragma link C++ class larocv::TrackVertexAnalysis+;
-#pragma link C++ class larocv::ShowerVertexAnalysis+;
-#pragma link C++ class larocv::CombineVertex+;
-#pragma link C++ class larocv::VerteSeedResize+;
-#pragma link C++ class larocv::ShowerPlaneSeeds+;
-#pragma link C++ class larocv::ShowerVertexScan+;
-#pragma link C++ class larocv::ShapeAnalysis+;
-#pragma link C++ class larocv::EmptyAlgoModule+;
-#pragma link C++ class larocv::TrumpExample+;
-#pragma link C++ class larocv::AngleAnalysis+;
-#pragma link C++ class larocv::dQdsAnalysis+;
-#pragma link C++ class larocv::MatchOverlap+;
-#pragma link C++ class larocv::MatchAnalysis+;
-#pragma link C++ class larocv::EmptyAnalysis+;
-#pragma link C++ class larocv::VertexCheater+;
+#pragma link C++ class larocv::TrackVertexScan2D+;
+#pragma link C++ class larocv::VertexAnalysis+;
+#pragma link C++ class larocv::VertexParticleCluster+;
+#pragma link C++ class larocv::VertexScan3D+;
+#pragma link C++ class larocv::Voxel+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

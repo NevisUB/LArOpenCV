@@ -15,6 +15,9 @@ namespace larocv {
   void SecondShowerAnalysis::_Configure_(const Config_t &pset)
   {
 
+    _PixelScan3D.set_verbosity(this->logger().level());
+    _PixelScan3D.Configure(pset.get<Config_t>("PixelScan3D"));
+
     auto name_combined = pset.get<std::string>("VertexProducer");
     _combined_id=kINVALID_ALGO_ID;
     if (!name_combined.empty()) {
@@ -53,11 +56,28 @@ namespace larocv {
     
     // Get images
     auto adc_img_v = ImageArray(ImageSetID_t::kImageSetWire);
-    auto thresh_img_v = adc_img_v;
-    for(auto& img : thresh_img_v)
+    auto shr_img_v = ImageArray(ImageSetID_t::kImageSetShower);
+
+    auto tadc_img_v = adc_img_v;
+    auto tshr_img_v = shr_img_v;
+
+    for(auto& img : tadc_img_v)
       img = Threshold(img,10,255);
 
+    for(auto& img : tshr_img_v)
+      img = Threshold(img,10,255);
+
+    std::vector<GEO2D_ContourArray_t> ctor_vv;
+    ctor_vv.reserve(3);
+    for(size_t plane=0; plane<3; ++plane) {
+      auto ctor_v = FindContours(tadc_img_v[plane]); 
+      ctor_vv.emplace_back(std::move(ctor_v));
+    }
+
     const auto& meta_v = MetaArray();
+    
+    for(auto const& meta : meta_v)
+      _PixelScan3D.SetPlaneInfo(meta);
 
     // Get the particle clusters from the previous module, go vertex-by-vertex
     const auto& vtx3d_arr = AlgoData<data::Vertex3DArray>(_combined_id,0);
@@ -67,7 +87,7 @@ namespace larocv {
     const auto& particle_v = particle_arr.as_vector();
     
     _vtxid = -1;
-
+    
     LAROCV_DEBUG() << "Got " << vtx3d_v.size() << " vertices" << std::endl;
     for(size_t vtxid = 0; vtxid < vtx3d_v.size(); ++vtxid) {
       ClearVertex();
@@ -82,6 +102,40 @@ namespace larocv {
       _x = vtx3d.x;
       _y = vtx3d.y;
       _z = vtx3d.z;
+      
+      
+      //
+      //
+      //
+
+      // Mask the vertex out of the shower image
+      std::vector<cv::Mat> simg_v;
+      simg_v.resize(3);
+      
+      for(size_t plane=0; plane<3; ++plane) {
+	simg_v[plane] = tshr_img_v[plane].clone();
+
+	const auto& ctor_v = ctor_vv[plane];
+	const auto& vtx2d = vtx3d.vtx2d_v[plane];
+	
+
+	auto id = FindContainingContour(ctor_v, vtx2d.pt);
+	if (id == kINVALID_SIZE) continue;
+	const auto& ctor = ctor_v[id];
+	
+	simg_v[plane] = MaskImage(simg_v[plane],ctor,0,true);
+      }
+
+      // Register regions
+      auto reg_vv = _PixelScan3D.RegionScan3D(simg_v,vtx3d);
+
+      // associate to contours
+      auto ass_vv = _PixelScan3D.AssociateContours(reg_vv,ctor_vv);
+
+      //
+      //
+      //
+      
       
       LAROCV_DEBUG() << "Got " << par_id_v.size() << " particles" << std::endl;
       LAROCV_DEBUG() << " & algo data particle vector sz " << particle_v.size() << std::endl;
