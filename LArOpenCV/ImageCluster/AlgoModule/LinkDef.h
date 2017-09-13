@@ -35,6 +35,8 @@
 #pragma link C++ class larocv::EmptyAnalysis+;
 #pragma link C++ class larocv::VertexCheater+;
 #pragma link C++ class larocv::ReAnaVertex+;
+#pragma link C++ class larocv::CosmicAnalysis+;
+#pragma link C++ class larocv::SecondShowerAnalysis+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

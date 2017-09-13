@@ -56,9 +56,6 @@ namespace larocv {
     _roid  = 0;
   }
 
-  bool GapAnalysis::_PostProcess_() const
-  { return true; }
-
   void GapAnalysis::_Process_() {
     LAROCV_INFO() << "start" << std::endl;
     ClearEvent();
@@ -97,7 +94,7 @@ namespace larocv {
       auto nparticles = par_id_v.size();
 
       //
-      // Particle wise check if path exists (2 diff ways)
+      // Particle wise check if path exists (2 different ways)
       //
       std::vector<std::vector<int> > plane_path_exists_vv;
       std::vector<std::vector<int> > circle_path_exists_vv;
@@ -123,8 +120,8 @@ namespace larocv {
 	  const auto& pctor = pcluster._ctor;
 	  if (pctor.empty()) continue;
 
-	  auto& plane_path_exists = plane_path_exists_v.at(plane);
-	  auto& circle_path_exists= circle_path_exists_v.at(plane);
+	  auto& plane_path_exists = plane_path_exists_v[plane];
+	  auto& circle_path_exists= circle_path_exists_v[plane];
 
 	  const auto& cvtx = cvtx2d_v.at(plane);
 
@@ -141,10 +138,9 @@ namespace larocv {
 	  // Check if the crossing points are withen the same contour
 	  std::vector<size_t> parent_ctor_id_v(xs_v.size(),kINVALID_SIZE);
 	  for(size_t xs_id=0; xs_id < xs_v.size(); ++xs_id) {
-	    auto parent_id = larocv::FindContainingContour(mask_ctor_v,xs_v.at(xs_id));
-	    parent_ctor_id_v.at(xs_id) = parent_id;
+	    parent_ctor_id_v.at(xs_id) = larocv::FindContainingContour(mask_ctor_v,xs_v.at(xs_id));
 	  }
-
+	  
 	  bool different = false;
 
 	  // They do not have the same parent id, they are different
@@ -154,7 +150,7 @@ namespace larocv {
 	    if (parent_ctor_id != this_ctor_id) 
 	      { different = true; break; }
 	  }
-
+	  
 	  // There is only one crossing point, they are different
 	  if (xs_v.size()==1) different = true;
 
@@ -173,7 +169,6 @@ namespace larocv {
 	    if (inside) { min_dist = 0; min_pt = xs; break; }
 	    if (dist < min_dist) { min_dist = dist; min_pt = xs; }
 	  }
-
 	  // Check if the vertex is in the same contour as the particle
 	  if (xs_v.size()==1) circle_path_exists = 0;
 	  else  circle_path_exists = larocv::PathExists(mask_img,circle.center,min_pt,5,0,1);
@@ -198,7 +193,7 @@ namespace larocv {
 	for(auto path_plane : plane_path_exists_vv[pidx]) {
 	  if (path_plane == kINVALID_INT) continue;
 	  valid_plane_path_exists += 1;
-	  plane_path_exists  += path_plane;
+	  plane_path_exists += path_plane;
 	}
 
 	if (valid_plane_path_exists == 2 && plane_path_exists == 0 ) 

@@ -4,8 +4,8 @@
 #include "ShapeAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/PixelChunk.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
-#include "LArOpenCV/ImageCluster/AlgoData/InfoCollection.h"
 #include "Geo2D/Core/Geo2D.h"
+#include <cassert>
 
 namespace larocv {
   
@@ -262,8 +262,7 @@ namespace larocv {
 
 	  if (pchunk.mean_pixel_dist  < mean_pixel_dist_min)  mean_pixel_dist_min  = pchunk.mean_pixel_dist;
 	  if (pchunk.sigma_pixel_dist < sigma_pixel_dist_min) sigma_pixel_dist_min = pchunk.sigma_pixel_dist;
-	  
-	  
+	  	  
 	  
 	} // end plane
 	
@@ -336,7 +335,8 @@ namespace larocv {
 	auto shower_frac = _shower_frac_v[parid];
 
 	data::Info2D info2d;
-	
+	FillInfo2D(parid,info2d);
+
 	if (track_frac >= shower_frac) {
 	  par_type = 1;
 	  par_frac = track_frac;
@@ -436,6 +436,51 @@ namespace larocv {
     _vertex_type = kINVALID_INT;
   }
 
+  void ShapeAnalysis::FillInfo2D(size_t parid, data::Info2D& info) {
+
+    assert(parid < _nplanes_v.size());
+    
+    info.nplanes = _nplanes_v[parid];
+    info.length = _length_v[parid];
+    info.width = _width_v[parid];
+    info.perimeter = _perimeter_v[parid];
+    info.area = _area_v[parid];
+    info.npixel = _npixel_v[parid];
+    info.qsum = _qsum_v[parid];
+    info.track_frac = _track_frac_v[parid];
+    info.shower_frac = _shower_frac_v[parid];
+    info.mean_pixel_dist = _mean_pixel_dist_v[parid];
+    info.sigma_pixel_dist = _sigma_pixel_dist_v[parid];
+    info.angular_sum = _angular_sum_v[parid];
+    info.triangle_d_sum = _triangle_d_sum_v[parid];
+
+    info.length_max = _length_max_v[parid];
+    info.width_max = _width_max_v[parid];
+    info.perimeter_max = _perimeter_max_v[parid];
+    info.area_max = _area_max_v[parid];
+    info.npixel_max = _npixel_max_v[parid];
+    info.qsum_max = _qsum_max_v[parid];
+    info.track_frac_max = _track_frac_max_v[parid];
+    info.shower_frac_max = _shower_frac_max_v[parid];
+    info.mean_pixel_dist_max = _mean_pixel_dist_max_v[parid];
+    info.sigma_pixel_dist_max = _sigma_pixel_dist_max_v[parid];
+    info.angular_sum_max = _angular_sum_max_v[parid];
+    info.triangle_d_max = _triangle_d_max_v[parid];
+
+    info.length_min = _length_min_v[parid];
+    info.width_min = _width_min_v[parid];
+    info.perimeter_min = _perimeter_min_v[parid];
+    info.area_min = _area_min_v[parid];
+    info.npixel_min = _npixel_min_v[parid];
+    info.qsum_min = _qsum_min_v[parid];
+    info.track_frac_min = _track_frac_min_v[parid];
+    info.shower_frac_min = _shower_frac_min_v[parid];
+    info.mean_pixel_dist_min = _mean_pixel_dist_min_v[parid];
+    info.sigma_pixel_dist_min = _sigma_pixel_dist_min_v[parid];
+    info.angular_sum_min = _angular_sum_min_v[parid];
+    info.triangle_d_min = _triangle_d_min_v[parid];
+
+  }
   
 }
 #endif

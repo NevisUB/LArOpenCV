@@ -3,6 +3,7 @@
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
+#include "LArOpenCV/ImageCluster/AlgoData/InfoCollection.h"
 
 /*
   @brief: XXX
@@ -74,8 +75,6 @@ namespace larocv {
     std::vector<float> _sigma_pixel_dist_max_v;
     std::vector<float> _angular_sum_max_v;
     std::vector<float> _triangle_d_max_v;
-
-
     std::vector<float> _length_min_v;
     std::vector<float> _width_min_v;
     std::vector<float> _perimeter_min_v;
@@ -105,6 +104,8 @@ namespace larocv {
     
     void ClearEvent();
     void ClearVertex();
+    void FillInfo2D(size_t parid, data::Info2D& info);
+
   };
 
   class ShapeAnalysisFactory : public AlgoFactoryBase {
