@@ -62,6 +62,7 @@ namespace larocv {
     return (size_t)cv::countNonZero(img);
   }
 
+
   float
   SumNonZero(const cv::Mat& img) {
     auto pts_v = FindNonZero(img);

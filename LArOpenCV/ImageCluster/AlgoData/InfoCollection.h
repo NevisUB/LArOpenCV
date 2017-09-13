@@ -22,11 +22,50 @@ namespace larocv {
     public:
       Info2D()  { Clear(); }
       ~Info2D() {}
-      
-      /// attribute clear method
-      void _Clear_() { ptype = ParticleType_t::kUnknown; }
+
+      void _Clear_();
 
       ParticleType_t ptype;
+      
+      int   nplanes;
+      float length;
+      float width;
+      float perimeter;
+      float area;
+      float npixel;
+      float qsum;
+      float track_frac;
+      float shower_frac;
+      float mean_pixel_dist;
+      float sigma_pixel_dist;
+      float angular_sum;
+      float triangle_d_sum;
+
+      float length_max;
+      float width_max;
+      float perimeter_max;
+      float area_max;
+      float npixel_max;
+      float qsum_max;
+      float track_frac_max;
+      float shower_frac_max;
+      float mean_pixel_dist_max;
+      float sigma_pixel_dist_max;
+      float angular_sum_max;
+      float triangle_d_max;
+
+      float length_min;
+      float width_min;
+      float perimeter_min;
+      float area_min;
+      float npixel_min;
+      float qsum_min;
+      float track_frac_min;
+      float shower_frac_min;
+      float mean_pixel_dist_min;
+      float sigma_pixel_dist_min;
+      float angular_sum_min;
+      float triangle_d_min;
       
     };
 

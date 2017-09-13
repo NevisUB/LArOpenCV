@@ -82,8 +82,8 @@ namespace larocv {
     float VertexTimeResolution() const { return _xplane_tick_resolution; }
     float VertexWireResolution() const { return _xplane_wire_resolution; }
 
-    const float TimeBinMin() const { return _xplane_tick_min; }
-    const float TimeBinMax() const { return _xplane_tick_max; }
+    float TimeBinMin() const { return _xplane_tick_min; }
+    float TimeBinMax() const { return _xplane_tick_max; }
 
     const std::vector<float>&  TimeBinnedScore0()         const { return _time_binned_score0_v;        }
     const std::vector<float>&  TimeBinnedScore0Mean()     const { return _time_binned_score0_mean_v;   }
@@ -99,8 +99,8 @@ namespace larocv {
     const std::vector<size_t>& TimeBinnedScoreMinIndex() const { return _time_binned_minidx_v;  }
     const std::vector<std::pair<size_t,size_t> >& TimeBinnedScoreMinRange() const { return _time_binned_minrange_v;  }
 
-    const float WireBinMin(size_t plane) const { return _xplane_wire_min_v.at(plane); }
-    const float WireBinMax(size_t plane) const { return _xplane_wire_max_v.at(plane); }
+    float WireBinMin(size_t plane) const { return _xplane_wire_min_v.at(plane); }
+    float WireBinMax(size_t plane) const { return _xplane_wire_max_v.at(plane); }
     
     const std::vector<float>& WireBinnedScore         (size_t plane) const { return _wire_binned_score_vv.at(plane); }
     const std::vector<float>& WireBinnedScoreMean     (size_t plane) const { return _wire_binned_score_mean_vv.at(plane); }

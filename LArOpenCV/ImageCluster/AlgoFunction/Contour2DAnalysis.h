@@ -25,6 +25,10 @@ namespace larocv {
 
   double
   ContourArea(const GEO2D_Contour_t& ctor,bool oriented=false);
+
+  double
+  ContourArea(const cv::Mat& img,
+              const GEO2D_Contour_t& ctor);
   
   GEO2D_Contour_t
   ConvexHull(const GEO2D_Contour_t& ctor);

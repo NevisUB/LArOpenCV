@@ -50,6 +50,16 @@ namespace larocv {
     return cv::contourArea(ctor,oriented);
   }
   
+
+  double
+  ContourArea(const cv::Mat& img,
+	      const GEO2D_Contour_t& ctor){
+    auto white_img = BlankImage(img);
+    white_img = MaskImage(white_img,ctor,0,false);
+    return (double)CountNonZero(white_img);
+  }
+
+
   GEO2D_Contour_t
   ConvexHull(const GEO2D_Contour_t& ctor) {
     GEO2D_Contour_t hull_ctor;
@@ -421,7 +431,7 @@ namespace larocv {
     res = MaskImage(res,ctr0,0,false);
     res = MaskImage(res,ctr1,0,false);
 
-    return cv::countNonZero(res);
+    return (double)cv::countNonZero(res);
   }
 
   size_t

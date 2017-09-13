@@ -6,6 +6,54 @@
 namespace larocv {
   namespace data {
 
+      /// attribute clear method
+    void Info2D::_Clear_() { 
+      
+      ptype = ParticleType_t::kUnknown; 
+    
+      nplanes=kINVALID_INT;
+
+      length=kINVALID_FLOAT;
+      width=kINVALID_FLOAT;
+      perimeter=kINVALID_FLOAT;
+      area=kINVALID_FLOAT;
+      npixel=kINVALID_FLOAT;
+      qsum=kINVALID_FLOAT;
+      track_frac=kINVALID_FLOAT;
+      shower_frac=kINVALID_FLOAT;
+      mean_pixel_dist=kINVALID_FLOAT;
+      sigma_pixel_dist=kINVALID_FLOAT;
+      angular_sum=kINVALID_FLOAT;
+      triangle_d_sum=kINVALID_FLOAT;
+
+      length_max=kINVALID_FLOAT;
+      width_max=kINVALID_FLOAT;
+      perimeter_max=kINVALID_FLOAT;
+      area_max=kINVALID_FLOAT;
+      npixel_max=kINVALID_FLOAT;
+      qsum_max=kINVALID_FLOAT;
+      track_frac_max=kINVALID_FLOAT;
+      shower_frac_max=kINVALID_FLOAT;
+      mean_pixel_dist_max=kINVALID_FLOAT;
+      sigma_pixel_dist_max=kINVALID_FLOAT;
+      angular_sum_max=kINVALID_FLOAT;
+      triangle_d_max=kINVALID_FLOAT;
+
+      length_min=kINVALID_FLOAT;
+      width_min=kINVALID_FLOAT;
+      perimeter_min=kINVALID_FLOAT;
+      area_min=kINVALID_FLOAT;
+      npixel_min=kINVALID_FLOAT;
+      qsum_min=kINVALID_FLOAT;
+      track_frac_min=kINVALID_FLOAT;
+      shower_frac_min=kINVALID_FLOAT;
+      mean_pixel_dist_min=kINVALID_FLOAT;
+      sigma_pixel_dist_min=kINVALID_FLOAT;
+      angular_sum_min=kINVALID_FLOAT;
+      triangle_d_min=kINVALID_FLOAT;
+
+    }
+
     /// attribute clear method
     void Info3D::_Clear_() {
       static std::array<float,3> invalid_vec = {{kINVALID_FLOAT,
