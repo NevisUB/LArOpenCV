@@ -53,6 +53,17 @@ namespace larocv {
     float _shower_frac;
     float _shower_size;
     float _shower_impact;
+
+    int _secondshower;
+    int _shr_rad_pts;
+
+    float _shr_theta;
+    float _shr_phi;
+
+    float _shr_half_dist;
+    float _shr_min_dist;
+    float _shr_imp_dist;
+
   public:
     PixelScan3D _PixelScan3D;
     

@@ -171,6 +171,16 @@ namespace larocv {
 		       std::pow(vtx1.z-vtx2.z,2));
     }
 
+    double
+    Distance(const SpacePt& vtx1, const Vertex3D& vtx2) {
+      return Distance(vtx1.pt,vtx2);
+    }
+
+    double
+    Distance(const Vertex3D& vtx1, const SpacePt& vtx2) {
+      return Distance(vtx1,vtx2.pt);
+    }
+
     bool
     Equals(const Vertex3D& vtx1, const Vertex3D& vtx2) {
       if(vtx1.x          != vtx2.x)          return false;

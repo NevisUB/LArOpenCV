@@ -12,16 +12,20 @@ namespace larocv {
   {
     this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
 
-    _theta_base = 20;
+    float  _radius_min=5;
+    float  _radius_max=30;
+    float  _radius_step=2;
+
+    _theta_base = 10;
     _phi_base = 20;
 
-    _radius_v.resize(20);
-
-    for(float r=0; r<_radius_v.size(); ++r)  {
+    _radius_v.resize((size_t) _radius_max - (size_t) _radius_min);
+    
+    for(float r=0; r<_radius_v.size(); r+=_radius_step)  {
       
-      _radius_v[r] = r;
+      _radius_v[r] = r + _radius_min;
 
-      _theta_v.resize(_theta_base,kINVALID_FLOAT);
+      _theta_v.resize(r*_theta_base,kINVALID_FLOAT);
       _phi_v.resize(_phi_base  ,kINVALID_FLOAT);
       
       for(size_t tid=0; tid<_theta_v.size(); ++tid) 

@@ -34,7 +34,11 @@ namespace larocv {
 
     
     Vertex3D Difference(const Vertex3D& vtx1, const Vertex3D& vtx2);
+
     double Distance(const Vertex3D& vtx1, const Vertex3D& vtx2);    
+    double Distance(const SpacePt& vtx1, const Vertex3D& vtx2);
+    double Distance(const Vertex3D& vtx1, const SpacePt& vtx2);
+
     bool Equals(const Vertex3D& vtx1, const Vertex3D& vtx2);
 
     std::vector<Vertex2D> 
