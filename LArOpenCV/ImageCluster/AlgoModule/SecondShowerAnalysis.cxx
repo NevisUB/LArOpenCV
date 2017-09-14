@@ -7,6 +7,8 @@
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 #include "LArOpenCV/ImageCluster/AlgoData/InfoCollection.h"
 #include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
+#include "LArOpenCV/ImageCluster/AlgoFunction/VectorAnalysis.h"
 
 namespace larocv {
 
@@ -14,6 +16,10 @@ namespace larocv {
 
   void SecondShowerAnalysis::_Configure_(const Config_t &pset)
   {
+    
+    _shower_frac   = pset.get<float>("ShowerFrac",0.8);
+    _shower_size   = pset.get<float>("ShowerSize",40);
+    _shower_impact = pset.get<float>("ShowerImpact",4); // 4cm
 
     _PixelScan3D.set_verbosity(this->logger().level());
     _PixelScan3D.Configure(pset.get<Config_t>("PixelScan3D"));
@@ -69,8 +75,9 @@ namespace larocv {
 
     std::vector<GEO2D_ContourArray_t> ctor_vv;
     ctor_vv.reserve(3);
+
     for(size_t plane=0; plane<3; ++plane) {
-      auto ctor_v = FindContours(tadc_img_v[plane]); 
+      auto ctor_v  = FindContours(tadc_img_v[plane]); 
       ctor_vv.emplace_back(std::move(ctor_v));
     }
 
@@ -103,6 +110,12 @@ namespace larocv {
       _y = vtx3d.y;
       _z = vtx3d.z;
       
+      // don't scan on track like vertex
+      if (vtx3d.type == data::VertexType_t::kTrack) {
+	_tree->Fill();
+	continue;
+      }
+
       //
       //
       //
@@ -111,26 +124,85 @@ namespace larocv {
       std::vector<cv::Mat> simg_v;
       simg_v.resize(3);
       
+      std::array<size_t, 3> vtx_ctor_v;
+      for(auto& v : vtx_ctor_v) v = kINVALID_SIZE;
+
       for(size_t plane=0; plane<3; ++plane) {
+	LAROCV_DEBUG() << "@plane=" << plane << std::endl;
 	simg_v[plane] = tshr_img_v[plane].clone();
 
 	const auto& ctor_v = ctor_vv[plane];
 	const auto& vtx2d = vtx3d.vtx2d_v[plane];
 
+	LAROCV_DEBUG() << "2d pt=" << vtx2d.pt << std::endl;
+
 	if (vtx2d.pt.x == kINVALID_FLOAT) continue;
 
 	auto id = FindContainingContour(ctor_v, vtx2d.pt);
+
+	LAROCV_DEBUG() << "masking vertex contour @id=" << id << std::endl;
 	if (id == kINVALID_SIZE) continue;
 	const auto& ctor = ctor_v[id];
-	
+	vtx_ctor_v[plane] = id;
 	simg_v[plane] = MaskImage(simg_v[plane],ctor,0,true);
+      }
+
+      // Determine if there is a blob of shower charge large enough & mostly shower
+      std::vector<GEO2D_ContourArray_t> sctor_vv;
+      sctor_vv.reserve(3);
+      
+      for(size_t plane=0; plane<3; ++plane) {
+	auto sctor_v  = FindContours(simg_v[plane]); 
+	sctor_vv.emplace_back(std::move(sctor_v));
+      }
+      
+
+      std::vector<GEO2D_ContourArray_t> actor_vv;
+      actor_vv.resize(3);
+      
+      for(size_t plane = 0; plane<3; ++plane) {
+
+	const auto& sctor_v = sctor_vv[plane];
+
+	auto& ctor_v   = ctor_vv[plane];
+	auto& actor_v = actor_vv[plane];
+	actor_v.reserve(ctor_v.size());
+
+	for(size_t aid = 0 ; aid < ctor_v.size(); ++aid) {
+	  if (aid == vtx_ctor_v[plane]) continue; // its the vertex contour
+	  auto& ctor = ctor_v[aid];
+
+	  if(ContourArea(ctor) < _shower_size)  // it's to small
+	  { simg_v[plane] = MaskImage(simg_v[plane],ctor,0,true); continue; }
+
+	  auto sid = FindContainingContour(sctor_v,ctor);
+	  if (sid == kINVALID_SIZE) continue;
+
+	  double frac = AreaRatio(sctor_v.at(sid),ctor);
+	  if (frac > _shower_frac) actor_v.emplace_back(std::move(ctor));
+	  else simg_v[plane] = MaskImage(simg_v[plane],ctor,0,true); // it's not shower enough
+	}
+      }
+      
+
+      // not enough contours, continue
+      size_t cnt=0;
+      for(const auto& actor_v : actor_vv) 
+	{ if (!actor_v.empty()) cnt +=1; }
+      
+      if (cnt<2)  {
+	_tree->Fill();
+	continue;
       }
 
       // Register regions
       auto reg_vv = _PixelScan3D.RegionScan3D(simg_v,vtx3d);
-
+      
       // associate to contours
-      auto ass_vv = _PixelScan3D.AssociateContours(reg_vv,ctor_vv);
+      auto ass_vv = _PixelScan3D.AssociateContours(reg_vv,actor_vv);
+      
+      _reg_vv = reg_vv;
+      _actor_vv = actor_vv;
 
       // count the number of consistent 3D points per contour ID
       std::vector<std::array<size_t,3>> trip_v;
@@ -138,8 +210,6 @@ namespace larocv {
       std::vector<size_t> trip_cnt_v;
 
       bool found = false;
-      // for(const auto& ass_v : ass_vv) {
-      // 	for (const auto& ass : ass_v) {
       for(size_t assvid =0; assvid < ass_vv.size(); ++assvid) {
 	const auto& ass_v = ass_vv[assvid];
 	for(size_t assid =0; assid < ass_v.size(); ++assid) {
@@ -168,6 +238,46 @@ namespace larocv {
 		       << " {" << trip_v[tid][0] << "," << trip_v[tid][1]  << "," << trip_v[tid][2] << "} = " 
 		       << trip_cnt_v[tid] << std::endl;
       }
+      
+      // pick the most 3D consistent contours and do PCA
+      size_t maxid = std::distance(trip_cnt_v.begin(), std::max_element(trip_cnt_v.begin(), trip_cnt_v.end()));
+      LAROCV_DEBUG() << "Selected max element @pos=" << maxid;
+      const auto& trip           = trip_v.at(maxid);
+      const auto& trip_vtx_ptr_v = trip_vtx_ptr_vv.at(maxid);
+      
+      std::vector<data::SpacePt> sps_v;
+      sps_v.resize(trip_vtx_ptr_v.size());
+      for(size_t sid=0; sid<sps_v.size(); ++sid) {
+	auto& sps = sps_v[sid];
+	const auto vtx = trip_vtx_ptr_v[sid];
+	sps.pt = *vtx;
+      }
+
+      data::Vertex3D mean_pt;
+      auto angle = larocv::data::Angle3D(sps_v,vtx3d,mean_pt);
+      auto avector = larocv::AsVector(angle.first,angle.second);
+      auto mean_pos = larocv::AsVector(mean_pt.x,mean_pt.y,mean_pt.z);
+      auto vtx3d_vec = AsVector(vtx3d.x,vtx3d.y,vtx3d.z);
+
+      LAROCV_DEBUG() << "GOT angle = {" << angle.first << "," << angle.second << "}" << std::endl;
+      LAROCV_DEBUG() << std::endl;
+
+      // Determine the impact parameter
+      auto dist = larocv::Distance(ClosestPoint(mean_pos,Sum(mean_pos,Scale(avector,2)),vtx3d_vec),
+				   vtx3d_vec);
+      LAROCV_DEBUG() << "Impact parameter=" << dist << std::endl;
+
+      _angle = angle;
+      _avector = avector;
+      _mean_pos = mean_pos;
+      _dist = dist;
+
+      if (dist < _shower_impact) {
+	_tree->Fill();
+	continue;
+      }
+
+      LAROCV_DEBUG() << "Second shower candidate idenfitied" << std::endl;
 
       //
       //

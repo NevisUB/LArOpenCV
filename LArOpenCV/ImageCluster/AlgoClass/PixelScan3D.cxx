@@ -12,11 +12,28 @@ namespace larocv {
   {
     this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
 
-    _radius_v.resize(50);
-    for(float r=0; r<_radius_v.size(); ++r) _radius_v[r] = r;
-
     _theta_base = 20;
-    _phi_base = 40;
+    _phi_base = 20;
+
+    _radius_v.resize(20);
+
+    for(float r=0; r<_radius_v.size(); ++r)  {
+      
+      _radius_v[r] = r;
+
+      _theta_v.resize(_theta_base,kINVALID_FLOAT);
+      _phi_v.resize(_phi_base  ,kINVALID_FLOAT);
+      
+      for(size_t tid=0; tid<_theta_v.size(); ++tid) 
+	_theta_v[tid] = (float) tid * PI / ( (float) _theta_v.size() );
+
+      _theta_v.push_back(PI);
+      
+      for(size_t pid=0; pid<_phi_v.size(); ++pid) 
+	_phi_v[pid] = (float) pid * 2 * PI / ( (float) _phi_v.size() );
+
+    }
+
 
   }
 
@@ -26,26 +43,15 @@ namespace larocv {
     std::vector<std::vector<data::Vertex3D> > pts_vv;
     pts_vv.resize(_radius_v.size());
 
+    std::vector<data::Vertex3D> pts_v;
+    pts_v.reserve(_theta_v.size() * _phi_v.size());
 
     for(size_t rid = 0; rid < _radius_v.size(); ++rid) {
       
-      float radius = _radius_v[rid];
-      std::vector<float> theta_v(_theta_base,kINVALID_FLOAT);
-      std::vector<float> phi_v  (_phi_base  ,kINVALID_FLOAT);
-
-      for(size_t tid=0; tid<theta_v.size(); ++tid) 
-	theta_v[tid] = (float) tid * PI / ( (float) theta_v.size() );
-
-      theta_v.push_back(PI);
-
-      for(size_t pid=0; pid<phi_v.size(); ++pid) 
-	phi_v[pid] = (float) pid * 2 * PI / ( (float) phi_v.size() );
-    
-      std::vector<data::Vertex3D> pts_v;
-      pts_v.reserve(theta_v.size() * phi_v.size());
-      
-      for(auto theta : theta_v) {
-	for(auto phi :  phi_v) {
+      auto radius = _radius_v[rid];
+          
+      for(auto theta : _theta_v) {
+	for(auto phi :  _phi_v) {
 	  data::Vertex3D res;
 	  res.x = vtx.x + X(radius,theta,phi);
 	  res.y = vtx.y + Y(radius,theta,phi);
@@ -157,10 +163,13 @@ namespace larocv {
 	uint x_1 = x_0+1 < img.cols ? x_0+1 : x_0;
 	uint y_1 = y_0+1 < img.rows ? y_0+1 : y_0;
       
-	uint p00 = (uint)img.at<uchar>(y_0,x_0);
-	uint p10 = (uint)img.at<uchar>(y_1,x_0);
-	uint p01 = (uint)img.at<uchar>(y_0,x_1);
-	uint p11 = (uint)img.at<uchar>(y_1,x_1);
+	uint p00, p01, p10, p11;
+	p00 = p01 = p10 = p11 = 0;
+
+	p00 = (uint)img.at<uchar>(y_0,x_0);
+	p10 = (uint)img.at<uchar>(y_1,x_0);
+	p01 = (uint)img.at<uchar>(y_0,x_1);
+	p11 = (uint)img.at<uchar>(y_1,x_1);
 
 	if(0){}
 	else if (p00) { x = x_0; y = y_0; }

@@ -10,6 +10,7 @@ namespace larocv {
 
   std::array<float,3> Sum(const std::array<float,3>& p1,const std::array<float,3>& p2);
   std::array<float,3> Diff(const std::array<float,3>& p1,const std::array<float,3>& p2);
+  bool Equals(const std::array<float,3>& p1,const std::array<float,3>& p2);
   
   float QuadSum(const std::array<float,3>& p1,const std::array<float,3>& p2);
   float QuadDiff(const std::array<float,3>& p1,const std::array<float,3>& p2);

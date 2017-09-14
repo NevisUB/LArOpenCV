@@ -51,13 +51,16 @@ namespace larocv {
 			const std::vector<GEO2D_ContourArray_t>& ctor_vv);
 
 
-  private:
+    const LArPlaneGeo& geo() const { return _geo; }
 
+  private:
     LArPlaneGeo _geo;
     
     std::vector<float> _radius_v;
     size_t _theta_base;
     size_t _phi_base;
+    std::vector<float> _theta_v;
+    std::vector<float> _phi_v;
 
     inline float X(const float r, const float theta, const float phi) const { return r * sin(phi) * sin(theta); }
     inline float Y(const float r, const float theta, const float phi) const { return r * cos(phi) * sin(theta); }

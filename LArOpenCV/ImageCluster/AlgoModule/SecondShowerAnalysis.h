@@ -50,9 +50,19 @@ namespace larocv {
     void ClearVertex();
     void ResetVectors(size_t sz);
 
-    
+    float _shower_frac;
+    float _shower_size;
+    float _shower_impact;
   public:
     PixelScan3D _PixelScan3D;
+    
+    std::vector<std::vector<data::Vertex3D> > _reg_vv;
+    std::vector<GEO2D_ContourArray_t > _actor_vv;
+
+    std::pair<float,float> _angle;
+    std::array<float,3> _avector;
+    std::array<float,3> _mean_pos;
+    float _dist;
     
     inline bool CompareAsses(const std::array<size_t,3> & a1, const std::array<size_t,3> & a2)
     {  return (true ? (( a1[0] == a2[0]) && (a1[1] == a2[1]) && (a1[2] == a2[2])) : false); }

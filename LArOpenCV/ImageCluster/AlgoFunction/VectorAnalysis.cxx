@@ -51,6 +51,13 @@ namespace larocv {
     return Sum( p1, Scale(ab,t/denom) );
   }
 
+
+  std::array<float,3> ClosestPoint(const std::array<float,3>& vec,
+				   const std::array<float,3>& p3) 
+  {
+    return ClosestPoint(vec,Scale(vec,2),p3);
+  }
+
   
 }
 

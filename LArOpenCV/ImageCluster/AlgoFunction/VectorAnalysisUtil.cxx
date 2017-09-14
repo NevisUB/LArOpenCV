@@ -24,6 +24,10 @@ namespace larocv {
     return {{p1[0]-p2[0], p1[1]-p2[1], p1[2]-p2[2]}};
   }
 
+  bool Equals(const std::array<float,3>& p1,const std::array<float,3>& p2) {
+    return (true ? ((p1[0] == p2[0]) && (p1[1] == p2[1]) && (p1[2] == p2[2])) : false);
+  }
+
   float QuadSum2(const std::array<float,3>& p1,
 		 const std::array<float,3>& p2) {
 

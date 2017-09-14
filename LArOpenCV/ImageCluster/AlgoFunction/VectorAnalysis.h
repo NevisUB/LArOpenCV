@@ -14,6 +14,10 @@ namespace larocv {
   std::array<float,3> ClosestPoint(const std::array<float,3>& p1,  // point 1 on line
 				   const std::array<float,3>& p2,  // point 2 on line
 				   const std::array<float,3>& p3); // point 3 not on line
+
+
+  std::array<float,3> ClosestPoint(const std::array<float,3>& vec,
+				   const std::array<float,3>& p3); // point 3 not on line
 }
 
 #endif

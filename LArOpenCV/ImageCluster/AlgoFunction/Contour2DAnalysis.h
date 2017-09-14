@@ -122,6 +122,10 @@ namespace larocv {
   AreaOverlap(const GEO2D_Contour_t& ctr0,
 	      const GEO2D_Contour_t& ctr1);
 
+  double
+  AreaRatio(const GEO2D_Contour_t& ctr0,
+	    const GEO2D_Contour_t& ctr1);
+
   size_t
   FindContainingContour(const GEO2D_ContourArray_t& contour_v,
 			const GEO2D_Contour_t& ctr);

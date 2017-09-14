@@ -3,6 +3,9 @@
 
 #include "AlgoDataUtils.h"
 #include "LArOpenCV/Core/larbys.h"
+#include "LArOpenCV/ImageCluster/AlgoFunction/VectorAnalysis.h"
+#include <array>
+#include <cassert>
 
 namespace larocv {
   namespace data {
@@ -21,18 +24,18 @@ namespace larocv {
       const size_t num_planes = vtx3d_v.front().vtx2d_v.size();
       
       if(!super_cluster_array_v.empty() && num_planes != super_cluster_array_v.size()) {
-      	LAROCV_SCRITICAL() << "# planes " << num_planes << " != super_cluster_v array size " << super_cluster_array_v.size() << std::endl;
-      	throw larbys();
+	LAROCV_SCRITICAL() << "# planes " << num_planes << " != super_cluster_v array size " << super_cluster_array_v.size() << std::endl;
+	throw larbys();
       }
 
       if(!compound_array_v.empty() && num_planes != compound_array_v.size()) {
-      	LAROCV_SCRITICAL() << "# planes " << num_planes << " != compound_v array size " << compound_array_v.size() << std::endl;
-      	throw larbys();
+	LAROCV_SCRITICAL() << "# planes " << num_planes << " != compound_v array size " << compound_array_v.size() << std::endl;
+	throw larbys();
       }
       
       if(!particle_array_v.empty() && num_planes != particle_array_v.size()) {
-      	LAROCV_SCRITICAL() << "# planes " << num_planes << " != particle_v array size " << particle_array_v.size() << std::endl;
-      	throw larbys();
+	LAROCV_SCRITICAL() << "# planes " << num_planes << " != particle_v array size " << particle_array_v.size() << std::endl;
+	throw larbys();
       }
 
       LAROCV_SINFO() << "Organizing " << vtx3d_v.size() << " vertices" << std::endl;
@@ -211,6 +214,111 @@ namespace larocv {
       res.type = VertexType_t::kUnknown;
       return res;
     }
+
+    std::pair<float,float> Angle3D(const std::vector<data::SpacePt>& sps_v,
+				   const data::Vertex3D& start3d) {
+      
+      static data::Vertex3D mean_pt;
+      return Angle3D(sps_v,start3d,mean_pt);
+    }
+
+    std::pair<float,float> Angle3D(const std::vector<data::SpacePt>& sps_v,
+				   const data::Vertex3D& start3d,
+				   data::Vertex3D& mean_pt) {
+      
+    
+      cv::Mat vertex_mat(sps_v.size(), 3, CV_32FC1);
+    
+      for(size_t vtxid=0; vtxid<sps_v.size(); ++vtxid) {
+	vertex_mat.at<float>(vtxid, 0) = sps_v.at(vtxid).pt.x;
+	vertex_mat.at<float>(vtxid, 1) = sps_v.at(vtxid).pt.y;
+	vertex_mat.at<float>(vtxid, 2) = sps_v.at(vtxid).pt.z;
+      }
+
+      LAROCV_SDEBUG() << "Calculating PCA for " << vertex_mat.rows << " 3D points" << std::endl;
+      cv::PCA pca_ana(vertex_mat, cv::Mat(), CV_PCA_DATA_AS_ROW, 0);
+
+      std::array<float,3> mean_v;
+      std::array<float,3> eigen_v;
+
+      for(size_t plane=0; plane<3; ++plane) {
+	mean_v[plane] = pca_ana.mean.at<float>(0,plane);
+	eigen_v[plane]= pca_ana.eigenvectors.at<float>(0,plane);
+      }
+
+      auto eigen_len = std::sqrt( eigen_v[0] * eigen_v[0] +
+				  eigen_v[1] * eigen_v[1] +
+				  eigen_v[2] * eigen_v[2] );
+    
+    
+      LAROCV_SDEBUG() << "PCA @ ("<<mean_v[0]<<","<<mean_v[1]<<","<<mean_v[2]
+		     <<") dir: ("<<eigen_v[0]<<","<<eigen_v[1]<<","<<eigen_v[2]<<")"<<std::endl;
+    
+
+      // check if incoming start point is valid
+      if (start3d.x != kINVALID_DOUBLE) {
+	// determine if we should flip the eigen direction based on the 3D mean position
+	assert(start3d.x != kINVALID_DOUBLE);
+	assert(start3d.y != kINVALID_DOUBLE);
+	assert(start3d.z != kINVALID_DOUBLE);
+
+	std::array<float,3> mean_dir_v;
+	mean_dir_v[0] = mean_v[0] - start3d.x;
+	mean_dir_v[1] = mean_v[1] - start3d.y;
+	mean_dir_v[2] = mean_v[2] - start3d.z;
+	auto mean_dir_len = std::sqrt( mean_dir_v[0] * mean_dir_v[0] +
+				       mean_dir_v[1] * mean_dir_v[1] +
+				       mean_dir_v[2] * mean_dir_v[2] );
+	mean_dir_v[0] /= mean_dir_len;
+	mean_dir_v[1] /= mean_dir_len;
+	mean_dir_v[2] /= mean_dir_len;
+
+	//
+	// implement direction handling, negative dot product, flip the sign on eigen
+	//
+
+	auto dot_product = Dot(mean_dir_v,eigen_v);
+	if (dot_product < 0) {
+	  eigen_v[0] *= -1;
+	  eigen_v[1] *= -1;
+	  eigen_v[2] *= -1;
+	}
+      }
+
+      mean_pt.x = mean_v[0];
+      mean_pt.y = mean_v[1];
+      mean_pt.z = mean_v[2];
+    
+      auto cos = eigen_v[2] / eigen_len;
+      //auto tan = eigen_v[1] / eigen_v[0];
+
+      auto arccos = std::acos(cos);
+      auto arctan = std::atan2(eigen_v[1],eigen_v[0]);
+
+      LAROCV_SDEBUG() << "rad: theta="<<arccos<<" phi="<<arctan<<std::endl;
+      LAROCV_SDEBUG() << "deg: theta="<<arccos*180.0/3.14<<" phi="<<arctan*180.0/3.14<<std::endl;
+      return std::make_pair(arccos,arctan);
+    }
+
+    std::pair<float,float> Angle3D(const data::Vertex3D& vtx1,
+				   const data::Vertex3D& vtx2) {
+      
+      LAROCV_SDEBUG() << "Angle 3D from 2 vertex" << std::endl;
+      auto res_dist = Distance(vtx1,vtx2);
+      auto res_vtx  = Difference(vtx1,vtx2);
+      
+      if (res_dist == 0) throw larbys("Vertex1 and Vertex2 cannot be the same");
+      
+      auto cos = res_vtx.z / res_dist;
+      //auto tan = res_vtx.y / res_vtx.x;
+      
+      auto arccos = std::acos(cos);
+      auto arctan = std::atan2(res_vtx.y,res_vtx.x);
+      
+      LAROCV_SDEBUG() << "rad: theta="<<arccos<<" phi="<<arctan<<std::endl;
+      LAROCV_SDEBUG() << "deg: theta="<<arccos*180/3.14<<" phi="<<arctan*180/3.14<<std::endl;
+      return std::make_pair(arccos,arctan);
+    }  
 
   }
 }

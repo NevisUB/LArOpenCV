@@ -101,18 +101,12 @@ namespace larocv {
     
     void ResizeVectors(size_t npar);
     
-    std::pair<float,float> Angle3D(const data::Vertex3D& vtx1,
-				   const data::Vertex3D& vtx2);
-
     std::vector<data::SpacePt> SpacePtsEstimate(const data::Particle& particle,
 						      const std::vector<cv::Mat>& img_v,
 						      const std::vector<cv::Mat>& qimg_v,
 						      const float radius=0.0,
 						      const data::Vertex3D vertex = data::Vertex3D());
-
-    std::pair<float,float> Angle3D(const std::vector<data::SpacePt>& vtx3d_v,
-				   const data::Vertex3D& start3d);
-
+    
     std::pair<float,float> Angle3D(const data::Particle& particle,
 				   const std::vector<cv::Mat>& img_v,
 				   const std::vector<cv::Mat>& qimg_v,

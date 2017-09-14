@@ -434,6 +434,35 @@ namespace larocv {
     return (double)cv::countNonZero(res);
   }
 
+  double
+  AreaRatio(const GEO2D_Contour_t& ctr0,
+	    const GEO2D_Contour_t& ctr1)
+  {
+    int rows, cols;
+    rows = cols = 0;
+    for(auto const& pt : ctr0) {
+      if(rows < pt.y) rows = (int)(pt.y)+1;
+      if(cols < pt.x) cols = (int)(pt.x)+1;
+    }
+    for(auto const& pt : ctr1) {
+      if(rows < pt.y) rows = (int)(pt.y)+1;
+      if(cols < pt.x) cols = (int)(pt.x)+1;
+    }
+    cv::Mat res0(rows,cols,CV_8UC1,cv::Scalar(255));
+    cv::Mat res1(rows,cols,CV_8UC1,cv::Scalar(255));
+
+    res0 = MaskImage(res0,ctr0,0,false);
+    res1 = MaskImage(res1,ctr1,0,false);
+    auto res2 = MaskImage(res0,ctr1,0,false);
+
+    double cnz0 = (double)cv::countNonZero(res0);
+    double cnz1 = (double)cv::countNonZero(res1);
+    double cnz2 = (double)cv::countNonZero(res2);
+
+    auto ratio = cnz0 > cnz1 ? cnz2 / cnz0 : cnz2 / cnz1;
+    return ratio; 
+  }
+
   size_t
   FindContainingContour(const GEO2D_ContourArray_t& contour_v,
 			const GEO2D_Contour_t& ctr)

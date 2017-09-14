@@ -5,8 +5,8 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/VectorAnalysis.h"
-
 
 namespace larocv {
   
@@ -312,7 +312,7 @@ namespace larocv {
 	par_3d_segment_phi_estimate   = kINVALID_DOUBLE;
 	
 	if (edge_found) {
-	  auto segment_angle = Angle3D(vtx3d,end3d);
+	  auto segment_angle = larocv::data::Angle3D(vtx3d,end3d);
 	  par_3d_segment_theta_estimate = segment_angle.first;
 	  par_3d_segment_phi_estimate   = segment_angle.second;
 	}
@@ -333,7 +333,7 @@ namespace larocv {
 
 	if (par_pca_valid) {
 	
-	  pca_angle = Angle3D(overall_space_pts_v,vtx3d);
+	  pca_angle = larocv::data::Angle3D(overall_space_pts_v,vtx3d);
 	  par_pca_theta_estimate = pca_angle.first;
 	  par_pca_phi_estimate   = pca_angle.second;
 
@@ -389,7 +389,7 @@ namespace larocv {
 	float trunk_start_end_dist;
 	
 	if (par_trunk_pca_valid) {
-	  trunk_pca_angle = Angle3D(trunk_space_pts_v,vtx3d);
+	  trunk_pca_angle = larocv::data::Angle3D(trunk_space_pts_v,vtx3d);
 	  par_trunk_pca_theta_estimate = trunk_pca_angle.first;
 	  par_trunk_pca_phi_estimate   = trunk_pca_angle.second;
 	  
@@ -502,27 +502,6 @@ namespace larocv {
     _roid += 1;
     LAROCV_INFO() << "end" << std::endl;
   }
-
-
-  std::pair<float,float> MatchAnalysis::Angle3D(const data::Vertex3D& vtx1,
-						const data::Vertex3D& vtx2) {
-      
-    LAROCV_DEBUG() << "Angle 3D from 2 vertex" << std::endl;
-    auto res_dist = Distance(vtx1,vtx2);
-    auto res_vtx  = Difference(vtx1,vtx2);
-      
-    if (res_dist == 0) throw larbys("Vertex1 and Vertex2 cannot be the same");
-      
-    auto cos = res_vtx.z / res_dist;
-    //auto tan = res_vtx.y / res_vtx.x;
-      
-    auto arccos = std::acos(cos);
-    auto arctan = std::atan2(res_vtx.y,res_vtx.x);
-      
-    LAROCV_DEBUG() << "rad: theta="<<arccos<<" phi="<<arctan<<std::endl;
-    LAROCV_DEBUG() << "deg: theta="<<arccos*180/3.14<<" phi="<<arctan*180/3.14<<std::endl;
-    return std::make_pair(arccos,arctan);
-  }  
 
 
   std::vector<data::SpacePt> MatchAnalysis::SpacePtsEstimate(const data::Particle& particle,
@@ -643,83 +622,9 @@ namespace larocv {
 						const float radius) {
 
     auto space_pts_v = SpacePtsEstimate(particle,img_v,qimg_v,radius,start3d);
-    return Angle3D(space_pts_v,start3d);
+    return larocv::data::Angle3D(space_pts_v,start3d);
   }
   
-  std::pair<float,float> MatchAnalysis::Angle3D(const std::vector<data::SpacePt>& sps_v,
-						const data::Vertex3D& start3d) {
-    
-    
-    cv::Mat vertex_mat(sps_v.size(), 3, CV_32FC1);
-    
-    for(size_t vtxid=0; vtxid<sps_v.size(); ++vtxid) {
-      vertex_mat.at<float>(vtxid, 0) = sps_v.at(vtxid).pt.x;
-      vertex_mat.at<float>(vtxid, 1) = sps_v.at(vtxid).pt.y;
-      vertex_mat.at<float>(vtxid, 2) = sps_v.at(vtxid).pt.z;
-    }
-
-    LAROCV_DEBUG() << "Calculating PCA for " << vertex_mat.rows << " 3D points" << std::endl;
-    cv::PCA pca_ana(vertex_mat, cv::Mat(), CV_PCA_DATA_AS_ROW, 0);
-
-    std::array<float,3> mean_v;
-    std::array<float,3> eigen_v;
-
-    for(size_t plane=0; plane<3; ++plane) {
-      mean_v[plane] = pca_ana.mean.at<float>(0,plane);
-      eigen_v[plane]= pca_ana.eigenvectors.at<float>(0,plane);
-    }
-
-    auto eigen_len = std::sqrt( eigen_v[0] * eigen_v[0] +
-				eigen_v[1] * eigen_v[1] +
-				eigen_v[2] * eigen_v[2] );
-    
-    
-    LAROCV_DEBUG() << "PCA @ ("<<mean_v[0]<<","<<mean_v[1]<<","<<mean_v[2]
-		   <<") dir: ("<<eigen_v[0]<<","<<eigen_v[1]<<","<<eigen_v[2]<<")"<<std::endl;
-    
-
-    // check if incoming start point is valid
-    if (start3d.x != kINVALID_DOUBLE) {
-      // determine if we should flip the eigen direction based on the 3D mean position
-      assert(start3d.x != kINVALID_DOUBLE);
-      assert(start3d.y != kINVALID_DOUBLE);
-      assert(start3d.z != kINVALID_DOUBLE);
-
-      std::array<float,3> mean_dir_v;
-      mean_dir_v[0] = mean_v[0] - start3d.x;
-      mean_dir_v[1] = mean_v[1] - start3d.y;
-      mean_dir_v[2] = mean_v[2] - start3d.z;
-      auto mean_dir_len = std::sqrt( mean_dir_v[0] * mean_dir_v[0] +
-				     mean_dir_v[1] * mean_dir_v[1] +
-				     mean_dir_v[2] * mean_dir_v[2] );
-      mean_dir_v[0] /= mean_dir_len;
-      mean_dir_v[1] /= mean_dir_len;
-      mean_dir_v[2] /= mean_dir_len;
-
-      //
-      // implement direction handling, negative dot product, flip the sign on eigen
-      //
-
-      auto dot_product = Dot(mean_dir_v,eigen_v);
-      if (dot_product < 0) {
-	eigen_v[0] *= -1;
-	eigen_v[1] *= -1;
-	eigen_v[2] *= -1;
-      }
-    }
-      
-    
-    auto cos = eigen_v[2] / eigen_len;
-    //auto tan = eigen_v[1] / eigen_v[0];
-
-    auto arccos = std::acos(cos);
-    auto arctan = std::atan2(eigen_v[1],eigen_v[0]);
-
-    LAROCV_DEBUG() << "rad: theta="<<arccos<<" phi="<<arctan<<std::endl;
-    LAROCV_DEBUG() << "deg: theta="<<arccos*180.0/3.14<<" phi="<<arctan*180.0/3.14<<std::endl;
-    return std::make_pair(arccos,arctan);
-  }
-
 
   std::array<float,3> MatchAnalysis::EndPoint3D(const std::vector<data::SpacePt>& space_pts_v,
 						const float theta, const float phi,
