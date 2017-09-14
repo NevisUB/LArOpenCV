@@ -46,6 +46,8 @@ namespace larocv {
 
     AlgorithmID_t _particle_id;
     AlgorithmID_t _combined_id;
+    AlgorithmID_t _match_id;
+    AlgorithmID_t _shape_id;
 
     void ClearVertex();
     void ResetVectors(size_t sz);
@@ -53,7 +55,8 @@ namespace larocv {
     float _shower_frac;
     float _shower_size;
     float _shower_impact;
-
+    
+  public:
     int _secondshower;
     int _shr_rad_pts;
 
@@ -63,6 +66,8 @@ namespace larocv {
     float _shr_half_dist;
     float _shr_min_dist;
     float _shr_imp_dist;
+    float _shr_shr_angle; 
+    float _shr_start_angle; 
 
   public:
     PixelScan3D _PixelScan3D;

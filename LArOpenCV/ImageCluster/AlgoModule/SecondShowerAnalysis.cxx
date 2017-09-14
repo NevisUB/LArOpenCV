@@ -44,6 +44,28 @@ namespace larocv {
       }
     }
 
+
+    auto name_match = pset.get<std::string>("MatchAnalysisProducer");
+    _match_id=kINVALID_ALGO_ID;
+    if (!name_match.empty()) {
+      _match_id = this->ID(name_match);
+      if (_match_id == kINVALID_ALGO_ID) {
+	LAROCV_CRITICAL() << "MatchAnalysisProducer ID algorithm name does not exist!" << std::endl;
+	throw larbys();
+      }
+    }
+
+
+    auto name_shape = pset.get<std::string>("ShapeAnalysisProducer");
+    _shape_id=kINVALID_ALGO_ID;
+    if (!name_shape.empty()) {
+      _shape_id = this->ID(name_shape);
+      if (_shape_id == kINVALID_ALGO_ID) {
+	LAROCV_CRITICAL() << "ShapeAnalysisProducer ID algorithm name does not exist!" << std::endl;
+	throw larbys();
+      }
+    }
+
     _tree = new TTree("SecondShowerAnalysis","");
     AttachIDs(_tree);
     _tree->Branch("roid" , &_roid  , "roid/I");
@@ -55,13 +77,15 @@ namespace larocv {
     _tree->Branch("secondshower"  , &_secondshower  , "secondshower/I");
     _tree->Branch("shr_rad_pts"   , &_shr_rad_pts   , "shr_rad_pts/I");
 
-    _tree->Branch("shr_theta", &_shr_theta , "_shr_theta/F");
-    _tree->Branch("shr_phi"  , &_shr_phi   , "_shr_phi/F");
+    _tree->Branch("shr_theta", &_shr_theta , "shr_theta/F");
+    _tree->Branch("shr_phi"  , &_shr_phi   , "shr_phi/F");
 
-    _tree->Branch("shr_half_dist", &_shr_half_dist , "_shr_half_dist/F");
-    _tree->Branch("shr_min_dist" , &_shr_min_dist  , "_shr_min_dist/F");
-    _tree->Branch("shr_imp_dist" , &_shr_imp_dist  , "_shr_imp_dist/F");
-    
+    _tree->Branch("shr_min_dist"  , &_shr_min_dist  , "shr_min_dist/F");
+    _tree->Branch("shr_imp_dist"  , &_shr_imp_dist  , "shr_imp_dist/F");
+
+    _tree->Branch("shr_shr_angle"   , &_shr_shr_angle   , "shr_shr_angle/F");
+    _tree->Branch("shr_start_angle" , &_shr_start_angle , "shr_start_angle/F");
+
 
     _roid = 0;
   }
@@ -304,9 +328,11 @@ namespace larocv {
 
       // Get the radial point closest to the vertex in 3D
       double min_dist = kINVALID_DOUBLE;
-      for(const auto& sps : sps_v) {
-	auto d = Distance(sps,vtx3d);
-	if (d<min_dist) min_dist = d;
+      const data::SpacePt* min_sp = nullptr;
+      for(const auto& sp : sps_v) {
+	auto d = Distance(sp,vtx3d);
+	if (d<min_dist) 
+	  {min_dist = d; min_sp = &sp;}
       }
       
 
@@ -321,21 +347,43 @@ namespace larocv {
       _shr_imp_dist = imp_dist;
 
 
-      /*
       LAROCV_DEBUG() << "Got " << par_id_v.size() << " particles" << std::endl;
       LAROCV_DEBUG() << " & algo data particle vector sz " << particle_v.size() << std::endl;
 
-      ResetVectors(par_id_v.size());
+      //ResetVectors(par_id_v.size());
       
+      const auto& info2d_data = AlgoData<data::Info2DArray>(_shape_id,0);
+      const auto& info2d_v = info2d_data.as_vector();
+
+      const auto& info3d_data = AlgoData<data::Info3DArray>(_match_id,0);
+      const auto& info3d_v = info3d_data.as_vector();
+
       for(size_t par_idx=0; par_idx<par_id_v.size(); ++par_idx) {
 
 	auto par_id = par_id_v[par_idx];
 	const auto& par = particle_v[par_id];
 	
-	for(size_t plane=0; plane<3; ++plane) { }
-      }
-      */
+	const auto info2d_id = ass_man.GetOneAss(par,info2d_data.ID());
+	const auto& info2d = info2d_data.as_vector().at(info2d_id);
 
+	if (info2d.ptype != larocv::data::ParticleType_t::kShower) continue;
+
+	const auto info3d_id = ass_man.GetOneAss(par,info3d_data.ID());
+	const auto& info3d = info3d_data.as_vector().at(info2d_id);
+	
+	const auto& trunk_pca_dir = info3d.trunk_pca_dir;
+
+	auto dot = larocv::Dot(trunk_pca_dir,avector) / Norm(trunk_pca_dir) / Norm(avector);
+	_shr_shr_angle = std::acos(dot);
+
+	auto min_vec = Diff(AsVector(min_sp->pt.x,min_sp->pt.y,min_sp->pt.z),vtx3d_vec);
+
+	dot = larocv::Dot(min_vec,avector) / Norm(min_vec) / Norm(avector);
+	_shr_start_angle = std::acos(dot);
+
+	break;
+      }
+      
       _tree->Fill();
     } // end this vertex
     
@@ -362,6 +410,8 @@ namespace larocv {
     _shr_half_dist = kINVALID_FLOAT;
     _shr_min_dist = kINVALID_FLOAT;
     _shr_imp_dist = kINVALID_FLOAT;
+    _shr_shr_angle = kINVALID_FLOAT;
+    _shr_start_angle = kINVALID_FLOAT;
 
   }
 
