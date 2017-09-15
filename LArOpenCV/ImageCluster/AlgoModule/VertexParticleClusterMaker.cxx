@@ -44,14 +44,20 @@ namespace larocv {
 	throw larbys("Unknown ShowerVertexEstimateAlgo");
     }
     
-    auto const scluster_algo_name = pset.get<std::string>("SuperClusterAlgo");
-    _super_cluster_algo_id = this->ID(scluster_algo_name);
-    if(_super_cluster_algo_id==kINVALID_ALGO_ID)
-      throw larbys("Unknown SuperClusterAlgo");
+
+    // Configure the SuperCluster finding algorithm via pset
+    _SuperClusterer.Configure(pset.get<Config_t>("SuperClusterer"));
+
+    
 
     // Create a container for this algorithm data
     for(size_t plane=0; plane<3; ++plane) Register(new data::ParticleClusterArray);
-    
+
+
+    _patch = pset.get<bool>("PatchImage",false);
+    if(_patch)
+      _DeadWirePatch.Configure(pset.get<Config_t>("DeadWirePatch"));
+
   }
 
   void VertexParticleClusterMaker::_Process_()
@@ -60,11 +66,23 @@ namespace larocv {
     // 0) Prep
     //
     auto img_v = ImageArray();
-    auto const& meta_v = MetaArray();
+    std::vector<cv::Mat> dead_img_v;
+    if (_patch) dead_img_v = ImageArray(ImageSetID_t::kImageSetChStatus);
 
+    auto const& meta_v = MetaArray();
+    
     for(size_t img_idx=0; img_idx<img_v.size(); ++img_idx) {
 
-      auto& img = img_v[img_idx];
+      const auto& img = img_v[img_idx];
+
+      cv::Mat mod_img;
+      if (_patch)  {
+	const auto& dead_img = dead_img_v[img_idx];
+	mod_img = _DeadWirePatch.Patch(img,dead_img);
+      }
+
+      else { mod_img = img; }
+      
       auto const& meta = meta_v.at(img_idx);
       auto const plane = meta.plane();
       
@@ -91,9 +109,7 @@ namespace larocv {
       LAROCV_DEBUG() << "Got " << super_cluster_v.size() << " ADC super clusters on plane " << plane << std::endl;
 
       GEO2D_ContourArray_t super_ctor_v;
-      super_ctor_v.reserve(super_cluster_v.size());
-      for(const auto& super_cluster : super_cluster_v)
-	super_ctor_v.emplace_back(super_cluster._ctor);
+      _SuperClusterer.CreateSuperCluster(mod_img,super_ctor_v);
 
       //
       // 1) Find particle clusters with the VertexParticleCluster module
@@ -122,11 +138,11 @@ namespace larocv {
 	const auto& super_cluster = super_cluster_v[super_cluster_id];
 	
 	// This vertex is associated to this cluster
-	LAROCV_DEBUG() << "Associating vertex " << vertex_id << " with super cluster " << super_cluster_id << std::endl;
-	AssociateOne(*vertex3d,super_cluster_v[super_cluster_id]); 
+	// LAROCV_DEBUG() << "Associating vertex " << vertex_id << " with super cluster " << super_cluster_id << std::endl;
+	// AssociateOne(*vertex3d,super_cluster_v[super_cluster_id]); 
 	
 	// Create particle clusters @ this circle vertex and parent super cluster
-	auto contour_v = _VertexParticleCluster.CreateParticleCluster(img,circle_vertex,super_cluster);
+	auto contour_v = _VertexParticleCluster.CreateParticleCluster(mod_img,circle_vertex,super_cluster);
 	
 	LAROCV_DEBUG() << "Found " << contour_v.size() << " contours for vertex id " << vertex_id << std::endl;
 	for(size_t cidx=0; cidx<contour_v.size(); ++cidx) {

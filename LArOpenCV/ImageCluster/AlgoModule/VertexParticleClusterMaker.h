@@ -4,6 +4,8 @@
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/VertexParticleCluster.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/SuperClusterer.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/DeadWirePatch.h"
 
 /*
   @brief: given a vertex, cluster in polar coordinates tracks and showers coming from vertex
@@ -46,6 +48,9 @@ namespace larocv {
     
     float _pi_threshold;
     
+    SuperClusterer _SuperClusterer;
+    DeadWirePatch _DeadWirePatch;
+    bool _patch;
   };
 
   /**

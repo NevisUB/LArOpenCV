@@ -29,6 +29,7 @@
 #pragma link C++ class larocv::VertexParticleCluster+;
 #pragma link C++ class larocv::VertexScan3D+;
 #pragma link C++ class larocv::Voxel+;
+#pragma link C++ class larocv::DeadWirePatch+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

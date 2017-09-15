@@ -1,0 +1,88 @@
+#ifndef DEADWIREPATCH_H
+#define DEADWIREPATCH_H
+
+#include "LArOpenCV/Core/laropencv_base.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/SuperClusterer.h"
+#include "Geo2D/Core/Geo2D.h"
+/*
+@brief: i quit ub
+*/
+
+
+namespace larocv {
+
+  struct DeadEdgePatch {
+    std::vector<geo2d::Vector<float> > pt_v;
+    geo2d::Line<float> local_pca;
+    geo2d::Circle<float> circle;
+    size_t super_id;
+
+    void init() {
+      circle.radius = (float)pt_v.size();
+      circle.center.x = circle.center.y = 0;
+      for(const auto& pt : pt_v) {
+	circle.center.x += pt.x;
+	circle.center.y += pt.y;
+      }
+      circle.center.x /= circle.radius;
+      circle.center.y /= circle.radius;
+      if(circle.radius < 10) circle.radius = 10;
+    }
+
+  };
+
+  struct DeadWireChunk {
+    std::vector<geo2d::Vector<float> > lower_pt_v;
+    std::vector<geo2d::Vector<float> > upper_pt_v;
+  };
+
+  class DeadWirePatch : public laropencv_base {
+    
+  public:
+    
+    /// Default constructor
+    DeadWirePatch() : laropencv_base("DeadWirePatch") 
+      {}
+    
+    /// Default destructor
+    ~DeadWirePatch(){}
+
+    void Configure(const Config_t& pset);
+
+
+    cv::Mat Patch(const cv::Mat&img,
+		  const cv::Mat&dead_ch_img);
+
+    void FindWireEdges(const GEO2D_Contour_t& ctor,
+		       geo2d::Vector<float>& edge_low,
+		       geo2d::Vector<float>& edge_high);
+    
+    void FindWireEdges(const cv::Mat& img,
+		       geo2d::Vector<float>& edge_low,
+		       geo2d::Vector<float>& edge_high);
+
+    cv::Mat MakeDeadImage(const cv::Mat& img);
+    
+    cv::Mat WireBandaid(const cv::Mat& img,
+			const cv::Mat& dead_ch_img);
+    
+    cv::Mat WireBondage(const cv::Mat& img,
+			const cv::Mat& dead_ch_img);
+    
+    std::vector<DeadWireChunk> ScanEdgePixels(const cv::Mat& img,
+					      const std::vector<std::pair<int,int> >& dead_wire_v);
+
+    std::vector<std::pair<int,int> > GenDeadRows(const cv::Mat& dead_ch_img);
+    
+  private:
+    SuperClusterer _SuperClusterer;
+
+    bool _bandaid;
+    bool _bondage;
+
+  };
+}
+
+#endif
+/** @} */ // end of doxygen group 
+
