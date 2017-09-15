@@ -44,15 +44,11 @@ namespace larocv {
 	throw larbys("Unknown ShowerVertexEstimateAlgo");
     }
     
-
     // Configure the SuperCluster finding algorithm via pset
     _SuperClusterer.Configure(pset.get<Config_t>("SuperClusterer"));
-
     
-
     // Create a container for this algorithm data
     for(size_t plane=0; plane<3; ++plane) Register(new data::ParticleClusterArray);
-
 
     _patch = pset.get<bool>("PatchImage",false);
     if(_patch)
@@ -71,6 +67,7 @@ namespace larocv {
 
     auto const& meta_v = MetaArray();
     
+    
     for(size_t img_idx=0; img_idx<img_v.size(); ++img_idx) {
 
       const auto& img = img_v[img_idx];
@@ -80,9 +77,8 @@ namespace larocv {
 	const auto& dead_img = dead_img_v[img_idx];
 	mod_img = _DeadWirePatch.Patch(img,dead_img);
       }
-
       else { mod_img = img; }
-      
+
       auto const& meta = meta_v.at(img_idx);
       auto const plane = meta.plane();
       
@@ -104,16 +100,8 @@ namespace larocv {
 	  vertex_data_v.push_back(&vtx);
       }
 	    
-      // Get associated super clusters on this plane
-      const auto& super_cluster_v = AlgoData<data::ParticleClusterArray>(_super_cluster_algo_id,plane).as_vector();
-      LAROCV_DEBUG() << "Got " << super_cluster_v.size() << " ADC super clusters on plane " << plane << std::endl;
-
       GEO2D_ContourArray_t super_ctor_v;
       _SuperClusterer.CreateSuperCluster(mod_img,super_ctor_v);
-
-      //
-      // 1) Find particle clusters with the VertexParticleCluster module
-      //
       
       // For each vertex, get the 2D projection on this plane
       for(size_t vertex_id = 0; vertex_id < vertex_data_v.size(); ++vertex_id) {
@@ -135,12 +123,10 @@ namespace larocv {
 	const auto super_cluster_id = FindContainingContour(super_ctor_v, circle_vertex.center);
 	if(super_cluster_id == kINVALID_SIZE) continue;
 
-	const auto& super_cluster = super_cluster_v[super_cluster_id];
+	const auto& super_cluster = super_ctor_v[super_cluster_id];
 	
 	// This vertex is associated to this cluster
 	// LAROCV_DEBUG() << "Associating vertex " << vertex_id << " with super cluster " << super_cluster_id << std::endl;
-	// AssociateOne(*vertex3d,super_cluster_v[super_cluster_id]); 
-	
 	// Create particle clusters @ this circle vertex and parent super cluster
 	auto contour_v = _VertexParticleCluster.CreateParticleCluster(mod_img,circle_vertex,super_cluster);
 	

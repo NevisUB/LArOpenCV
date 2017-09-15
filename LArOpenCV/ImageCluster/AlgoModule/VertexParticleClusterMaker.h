@@ -44,7 +44,6 @@ namespace larocv {
 
     AlgorithmID_t _track_vertex_estimate_algo_id;
     AlgorithmID_t _shower_vertex_estimate_algo_id;
-    AlgorithmID_t _super_cluster_algo_id;
     
     float _pi_threshold;
     

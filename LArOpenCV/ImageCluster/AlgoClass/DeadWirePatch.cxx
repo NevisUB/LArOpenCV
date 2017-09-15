@@ -23,8 +23,10 @@ namespace larocv {
 
 
   void DeadWirePatch::Configure(const Config_t& pset) {
-    _bandaid = pset.get<bool>("Bandaid",false);
-    _bondage = pset.get<bool>("Bondage",false);
+    this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
+
+    _bandaid = pset.get<bool>("Bandaid");
+    _bondage = pset.get<bool>("Bondage");
     
     if (_bandaid && _bondage) throw larbys("Can't specify bandaid & bondage");
   }
@@ -252,6 +254,7 @@ namespace larocv {
       }
     }
     ////////////Rui above
+    return res_img;
   }
  
 
@@ -335,13 +338,13 @@ namespace larocv {
     auto dead_wire_v = GenDeadRows(dead_img);
 
     for(auto& dead_wire : dead_wire_v) 
-      LAROCV_SDEBUG() << "[" << dead_wire.first << "," << dead_wire.second << "]" << std::endl;
+      LAROCV_DEBUG() << "[" << dead_wire.first << "," << dead_wire.second << "]" << std::endl;
 
     auto edge_dwc_v  = ScanEdgePixels(timg,dead_wire_v);
     
 
     for(size_t dwc_id=0; dwc_id < edge_dwc_v.size(); ++dwc_id) {
-      LAROCV_SDEBUG() << "@dwc_id=" << dwc_id << std::endl;
+      LAROCV_DEBUG() << "@dwc_id=" << dwc_id << std::endl;
       auto& edge_dwc = edge_dwc_v[dwc_id];
       
       
@@ -352,7 +355,7 @@ namespace larocv {
       for(size_t uid=0; uid < edge_dwc.upper_pt_v.size(); ++uid) {
 
 	auto& pt = edge_dwc.upper_pt_v[uid];
-	LAROCV_SDEBUG() << "@uid=" << uid << " pt=" << pt << std::endl;
+	LAROCV_DEBUG() << "@uid=" << uid << " pt=" << pt << std::endl;
 	
 	auto id = larocv::FindContainingContour(ctor_v,pt);
 	if (id == kINVALID_SIZE) continue;
@@ -426,11 +429,11 @@ namespace larocv {
       std::vector<bool> used_v(lower_v.size(),false);
 
       for(size_t uid=0; uid<upper_v.size(); ++uid) {
-	LAROCV_SDEBUG() << "@uid=" << uid << std::endl;
+	LAROCV_DEBUG() << "@uid=" << uid << std::endl;
 
 	const auto& upper = upper_v[uid];
 	for(size_t lid=0; lid<lower_v.size(); ++lid) {
-	  LAROCV_SDEBUG() << "@lid=" << lid << std::endl;
+	  LAROCV_DEBUG() << "@lid=" << lid << std::endl;
 	  if (used_v[lid]) continue;
 
 	  const auto& lower = lower_v[lid];
@@ -439,7 +442,7 @@ namespace larocv {
 	  auto langle = geo2d::angle(lower.local_pca);
 
 	  auto dtheta_pca = std::abs(uangle - langle);
-	  LAROCV_SDEBUG() << "dtheta_pca="<<dtheta_pca << std::endl;
+	  LAROCV_DEBUG() << "dtheta_pca="<<dtheta_pca << std::endl;
 	  if (dtheta_pca > 15) continue;
 
 	  geo2d::LineSegment<float> ls(upper.circle.center,lower.circle.center);
@@ -449,14 +452,14 @@ namespace larocv {
 	  auto dtheta_upca = std::abs(uangle - ulangle);
 	  auto dtheta_lpca = std::abs(langle - ulangle);
 
-	  LAROCV_SDEBUG() << "dtheta_upca="<<dtheta_upca << std::endl;
-	  LAROCV_SDEBUG() << "dtheta_lpca="<<dtheta_lpca << std::endl;
-	  LAROCV_SDEBUG() << "now.." << std::endl;
+	  LAROCV_DEBUG() << "dtheta_upca="<<dtheta_upca << std::endl;
+	  LAROCV_DEBUG() << "dtheta_lpca="<<dtheta_lpca << std::endl;
+	  LAROCV_DEBUG() << "now.." << std::endl;
 	  dtheta_upca = dtheta_upca > 90 ? std::abs(dtheta_upca - 180) : dtheta_upca;
 	  dtheta_lpca = dtheta_lpca > 90 ? std::abs(dtheta_lpca - 180) : dtheta_lpca;
 
-	  LAROCV_SDEBUG() << "dtheta_upca="<<dtheta_upca << std::endl;
-	  LAROCV_SDEBUG() << "dtheta_lpca="<<dtheta_lpca << std::endl;
+	  LAROCV_DEBUG() << "dtheta_upca="<<dtheta_upca << std::endl;
+	  LAROCV_DEBUG() << "dtheta_lpca="<<dtheta_lpca << std::endl;
 	  if (dtheta_upca > 15) continue;
 	  if (dtheta_lpca > 15) continue;
 
@@ -464,7 +467,7 @@ namespace larocv {
 	  //
 	  // Connect them
 	  //
-	  LAROCV_SDEBUG() << "connect @patch_width=" << patch_width << std::endl;
+	  LAROCV_DEBUG() << "connect @patch_width=" << patch_width << std::endl;
 	  cv::line(res_img,
 		   cv::Point((int)(ls.pt1.x + 0.5),(int)(ls.pt1.y+0.5)),
 		   cv::Point((int)(ls.pt2.x + 0.5),(int)(ls.pt2.y+0.5)),
@@ -473,7 +476,7 @@ namespace larocv {
 	  
 	} // end lower
       } // end upper
-      LAROCV_SDEBUG() << "end this dwc" << std::endl;
+      LAROCV_DEBUG() << "end this dwc" << std::endl;
     } // end this block
 
     
