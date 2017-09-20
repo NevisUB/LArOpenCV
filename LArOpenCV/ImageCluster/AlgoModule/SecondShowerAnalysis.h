@@ -69,6 +69,10 @@ namespace larocv {
     float _shr_shr_angle; 
     float _shr_start_angle; 
 
+    float _shr_mean_x;
+    float _shr_mean_y;
+    float _shr_mean_z;
+
   public:
     PixelScan3D _PixelScan3D;
     
@@ -77,6 +81,7 @@ namespace larocv {
 
     std::pair<float,float> _angle;
     std::array<float,3> _avector;
+
     std::array<float,3> _mean_pos;
     float _dist;
     
