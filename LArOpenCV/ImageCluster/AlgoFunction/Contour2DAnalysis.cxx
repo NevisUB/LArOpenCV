@@ -358,7 +358,7 @@ namespace larocv {
     
     cv::Mat mat(ctor.size(), 2, CV_32FC1);
     
-    for (unsigned i = 0; i < mat.rows; ++i) {
+    for (int i = 0; i < mat.rows; ++i) {
       mat.at<float>(i, 0) = ctor[i].x;
       mat.at<float>(i, 1) = ctor[i].y;
     }
@@ -380,7 +380,7 @@ namespace larocv {
     
     cv::Mat mat(pts_v.size(), 2, CV_32FC1);
     
-    for (unsigned i = 0; i < mat.rows; ++i) {
+    for (int i = 0; i < mat.rows; ++i) {
       mat.at<float>(i, 0) = pts_v[i].x;
       mat.at<float>(i, 1) = pts_v[i].y;
     }
@@ -554,7 +554,7 @@ namespace larocv {
       throw larbys();
     }
 
-    uint last_id = ctor.size();
+    int last_id = ctor.size();
 
     if (isclosed) {
       last_id=-1;

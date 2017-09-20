@@ -62,7 +62,7 @@ namespace larocv {
   geo2d::VectorArray<float>
   RadialIntersections(const ::cv::Mat& polarimg,
 		      const geo2d::Circle<float>& circle,
-		      const size_t col,
+		      const int col,
 		      const float pi_threshold,
 		      const float supression=0);
 

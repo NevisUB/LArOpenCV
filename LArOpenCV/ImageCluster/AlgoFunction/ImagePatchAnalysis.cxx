@@ -175,7 +175,7 @@ namespace larocv {
   geo2d::VectorArray<float>
   RadialIntersections(const ::cv::Mat& polarimg,
 		      const geo2d::Circle<float>& circle,
-		      const size_t col,
+		      const int col,
 		      const float pi_threshold,
 		      const float supression)
   {
@@ -188,7 +188,7 @@ namespace larocv {
     std::vector<std::pair<int,int> > range_v;
     std::pair<int,int> range(-1,-1);
     
-    for(size_t row=0; row<polarimg.rows; ++row) {
+    for(int row=0; row<polarimg.rows; ++row) {
       
       float q = (float)(polarimg.at<unsigned char>(row, col));
       if(q < pi_threshold) {
@@ -399,8 +399,6 @@ namespace larocv {
     LAROCV_SDEBUG() << "Creating a mask for image (rows,cols) = (" << img.rows << "," << img.cols << ")"
 		    << " with are rect mask @ (" << rec.x << "," << rec.y << ") "
 		    << "w/ width " << rec.width << " height " << rec.height << std::endl;
-
-    LAROCV_SWARNING() << "tol argument unused" << std::endl;
     
     mask(rec).setTo(cv::Scalar::all(255));
 

@@ -270,10 +270,10 @@ namespace larocv {
 	auto const& meta = raw_meta_v.at(img_index);
 	auto& img  = copy_img_v.at(img_index);
 
-	if(meta.num_pixel_row()!=img.rows)
+	if(meta.num_pixel_row()!=(uint)img.rows)
 	  throw larbys("Provided metadata has incorrect # horizontal pixels w.r.t. image!");
 	
-	if(meta.num_pixel_column()!=img.cols)
+	if(meta.num_pixel_column()!=(uint)img.cols)
 	  throw larbys("Provided metadata has incorrect # vertical pixels w.r.t. image!");
       }
     }
