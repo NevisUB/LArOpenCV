@@ -72,13 +72,15 @@ namespace larocv {
     /* std::vector<float> _frac_stopmu_min_v; */
     /* std::vector<float> _frac_thrumu_min_v; */
 
-
-
     float _hull_area_overlap_avg;
     float _hull_area_overlap_min;
     float _hull_area_overlap_max;
     int _hull_nplanes;
     
+    std::vector<double> _shape_match_I1_v;
+    std::vector<double> _shape_match_I2_v;
+    std::vector<double> _shape_match_I3_v;
+
   };
 
   class CosmicAnalysisFactory : public AlgoFactoryBase {

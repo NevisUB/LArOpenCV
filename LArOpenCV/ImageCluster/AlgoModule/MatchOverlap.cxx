@@ -39,7 +39,6 @@ namespace larocv {
     _match_check_type          = pset.get<bool>("MatchCheckType",true);
     _match_weight_by_size      = pset.get<bool>("MatchWeightBySize",false);
 
-    
     _VertexAnalysis.Configure(pset.get<Config_t>("VertexAnalysis"));
 
     Register(new data::ParticleArray);

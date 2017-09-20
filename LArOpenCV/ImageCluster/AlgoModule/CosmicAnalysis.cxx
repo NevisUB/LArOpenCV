@@ -61,21 +61,21 @@ namespace larocv {
     _tree->Branch("npixel_asym_min_v" , &_npixel_asym_min_v);
     _tree->Branch("ctor_asym_min_v"   , &_ctor_asym_min_v);
     _tree->Branch("area_asym_min_v"   , &_area_asym_min_v);
-    // _tree->Branch("frac_stopmu_min_v" , &_frac_stopmu_min_v);
-    // _tree->Branch("frac_thrumu_min_v" , &_frac_thrumu_min_v);
 
     _tree->Branch("charge_asym_max_v" , &_charge_asym_max_v);
     _tree->Branch("npixel_asym_max_v" , &_npixel_asym_max_v);
     _tree->Branch("ctor_asym_max_v"   , &_ctor_asym_max_v);
     _tree->Branch("area_asym_max_v"   , &_area_asym_max_v);
-    // _tree->Branch("frac_stopmu_max_v" , &_frac_stopmu_max_v);
-    // _tree->Branch("frac_thrumu_max_v" , &_frac_thrumu_max_v);
 
     _tree->Branch("hull_area_overlap_avg" , &_hull_area_overlap_avg, "hull_area_overlap_avg/F");
     _tree->Branch("hull_area_overlap_min" , &_hull_area_overlap_min, "hull_area_overlap_min/F");
     _tree->Branch("hull_area_overlap_max" , &_hull_area_overlap_max, "hull_area_overlap_max/F");
     _tree->Branch("hull_nplanes", &_hull_nplanes, "hull_nplanes/I");
 
+    _tree->Branch("shape_match_I1_v",&_shape_match_I1_v);
+    _tree->Branch("shape_match_I2_v",&_shape_match_I2_v);
+    _tree->Branch("shape_match_I3_v",&_shape_match_I3_v);
+    
     _roid = 0;
   }
 
@@ -218,7 +218,10 @@ namespace larocv {
 	
       }
 
-
+      
+      //
+      // Two particle hull overlap
+      //
       size_t par_id1 = par_id_v.front();
       size_t par_id2 = par_id_v.back();
 
@@ -255,9 +258,45 @@ namespace larocv {
       }
       _hull_area_overlap_avg /= (float) _hull_nplanes;
 
+      //
+      // Two per particle pair cv::ShapeMatch
+      //
+      for(size_t par_idx=0; par_idx<par_id_v.size(); ++par_idx) {
+
+	auto par_id     = par_id_v[par_idx];
+	const auto& par = particle_v[par_id];
+		
+	// calculate 3 combinations, take the lowest of each 3?
+	std::array<std::pair<size_t,size_t>,3> comb_v;
+	comb_v[0] = std::make_pair(0,1);
+	comb_v[1] = std::make_pair(0,2);
+	comb_v[2] = std::make_pair(1,2);
+
+	double sum_shape_match = kINVALID_DOUBLE;
+	for(auto comb : comb_v) {
+	  const auto& ctor1 = par._par_v.at(comb.first)._ctor;
+	  const auto& ctor2 = par._par_v.at(comb.second)._ctor;
+
+	  if (ctor1.empty()) continue;
+	  if (ctor2.empty()) continue;
+
+	  auto shape_match_I1 = cv::matchShapes(ctor1,ctor2,CV_CONTOURS_MATCH_I1,0.0);
+	  auto shape_match_I2 = cv::matchShapes(ctor1,ctor2,CV_CONTOURS_MATCH_I2,0.0);
+	  auto shape_match_I3 = cv::matchShapes(ctor1,ctor2,CV_CONTOURS_MATCH_I3,0.0);
+
+	  auto total_shape_match = shape_match_I1 + shape_match_I2 + shape_match_I3;
+	  std::cout << "total_shape_match : " << total_shape_match << std::endl;
+	  if (total_shape_match > sum_shape_match) continue;
+	  sum_shape_match = total_shape_match;
+
+	  _shape_match_I1_v[par_idx] = shape_match_I1;
+	  _shape_match_I2_v[par_idx] = shape_match_I2;
+	  _shape_match_I3_v[par_idx] = shape_match_I3;
+	}
+      } // end this particle
       _tree->Fill();
     } // end this vertex
-    
+      
     _roid += 1;
     LAROCV_INFO() << "end" << std::endl;
   }
@@ -275,19 +314,19 @@ namespace larocv {
     _npixel_asym_min_v.resize(sz,kINVALID_FLOAT);
     _ctor_asym_min_v.resize(sz,kINVALID_FLOAT);
     _area_asym_min_v.resize(sz,kINVALID_FLOAT);
-    // _frac_stopmu_min_v.resize(sz,kINVALID_FLOAT);
-    // _frac_thrumu_min_v.resize(sz,kINVALID_FLOAT);
-
     _charge_asym_max_v.resize(sz,kINVALID_FLOAT);
     _npixel_asym_max_v.resize(sz,kINVALID_FLOAT);
     _ctor_asym_max_v.resize(sz,kINVALID_FLOAT);
     _area_asym_max_v.resize(sz,kINVALID_FLOAT);
-    // _frac_stopmu_max_v.resize(sz,kINVALID_FLOAT);
-    // _frac_thrumu_max_v.resize(sz,kINVALID_FLOAT);
     
     _hull_area_overlap_avg = kINVALID_FLOAT;
     _hull_area_overlap_min = kINVALID_FLOAT;
     _hull_area_overlap_max = kINVALID_FLOAT;
+
+    _shape_match_I1_v.resize(sz,kINVALID_DOUBLE);
+    _shape_match_I2_v.resize(sz,kINVALID_DOUBLE);
+    _shape_match_I3_v.resize(sz,kINVALID_DOUBLE);
+
   }
 
   void CosmicAnalysis::ClearVertex() {
@@ -306,20 +345,21 @@ namespace larocv {
     _npixel_asym_min_v.clear();
     _ctor_asym_min_v.clear();
     _area_asym_min_v.clear();
-    // _frac_stopmu_min_v.clear();
-    // _frac_thrumu_min_v.clear();
 
     _charge_asym_max_v.clear();
     _npixel_asym_max_v.clear();
     _ctor_asym_max_v.clear();
     _area_asym_max_v.clear();
-    // _frac_stopmu_max_v.clear();
-    // _frac_thrumu_max_v.clear();
     
     _hull_area_overlap_avg = kINVALID_FLOAT;
     _hull_area_overlap_min = kINVALID_FLOAT;
     _hull_area_overlap_max = kINVALID_FLOAT;
     _hull_nplanes = kINVALID_INT;
+
+    _shape_match_I1_v.clear();
+    _shape_match_I2_v.clear();
+    _shape_match_I3_v.clear();
+    
   }
 
 }
