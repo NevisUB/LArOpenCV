@@ -80,6 +80,10 @@ namespace larocv {
     _tree->Branch("shr_theta", &_shr_theta , "shr_theta/F");
     _tree->Branch("shr_phi"  , &_shr_phi   , "shr_phi/F");
 
+    _tree->Branch("shr_mean_x"  , &_shr_mean_x , "shr_mean_x/F");
+    _tree->Branch("shr_mean_y"  , &_shr_mean_y , "shr_mean_y/F");
+    _tree->Branch("shr_mean_z"  , &_shr_mean_z , "shr_mean_z/F");
+
     _tree->Branch("shr_min_dist"  , &_shr_min_dist  , "shr_min_dist/F");
     _tree->Branch("shr_imp_dist"  , &_shr_imp_dist  , "shr_imp_dist/F");
 
@@ -156,11 +160,11 @@ namespace larocv {
 	continue;
       }
 
-      //
-      //
-      //
 
-      // Mask the vertex out of the shower image
+      //
+      // Mask the vertex and associated super contour
+      // out of the shower image
+      //
       std::vector<cv::Mat> simg_v;
       simg_v.resize(3);
       
@@ -189,8 +193,24 @@ namespace larocv {
 	vtx_ctor_v[plane] = id;
 	simg_v[plane] = MaskImage(simg_v[plane],ctor,0,true);
       }
+      
 
+      //
+      // Mask the particle contours
+      //
+      for(size_t par_idx=0; par_idx<par_id_v.size(); ++par_idx) {
+	auto par_id = par_id_v[par_idx];
+	const auto& par = particle_v[par_id];
+	for(size_t plane=0; plane<3; ++plane) {
+	  const auto& pcluster = par._par_v.at(plane);
+	  const auto& pctor = pcluster._ctor;
+	  simg_v[plane] = MaskImage(simg_v[plane],pctor,0,true);
+	}
+      }
+      
+      //
       // Determine if there is a blob of shower charge large enough & mostly shower
+      //
       std::vector<GEO2D_ContourArray_t> sctor_vv;
       sctor_vv.reserve(3);
       
@@ -199,7 +219,6 @@ namespace larocv {
 	sctor_vv.emplace_back(std::move(sctor_v));
       }
       
-
       std::vector<GEO2D_ContourArray_t> actor_vv;
       actor_vv.resize(3);
       
@@ -229,8 +248,9 @@ namespace larocv {
 	}
       }
       
-
+      //
       // not enough contours, continue
+      //
       size_t cnt=0;
       for(const auto& actor_v : actor_vv) 
 	{ if (!actor_v.empty()) cnt +=1; }
@@ -240,13 +260,19 @@ namespace larocv {
 	continue;
       }
 
-      // Register regions
+      //
+      // Register regions for the scan (spheres)
+      //
       auto reg_vv = _PixelScan3D.RegionScan3D(simg_v,vtx3d);
       
-      // associate to contours
+      //
+      // associate to contours to valid 3D points on sphere
+      //
       auto ass_vv = _PixelScan3D.AssociateContours(reg_vv,actor_vv);
       
+      //
       // count the number of consistent 3D points per contour ID
+       //
       std::vector<std::array<size_t,3>> trip_v;
       std::vector<std::vector<const data::Vertex3D*> > trip_vtx_ptr_vv;
       std::vector<size_t> trip_cnt_v;
@@ -286,7 +312,9 @@ namespace larocv {
 	continue;
       }
       
+      //
       // pick the most 3D consistent contours and do PCA
+      //
       size_t maxid = std::distance(trip_cnt_v.begin(), std::max_element(trip_cnt_v.begin(), trip_cnt_v.end()));
       LAROCV_DEBUG() << "Selected max element @pos=" << maxid << std::endl;
       const auto& trip           = trip_v.at(maxid);
@@ -304,17 +332,22 @@ namespace larocv {
       auto angle = larocv::data::Angle3D(sps_v,vtx3d,mean_pt);
       auto avector = larocv::AsVector(angle.first,angle.second);
       auto mean_pos = larocv::AsVector(mean_pt.x,mean_pt.y,mean_pt.z);
+      _shr_mean_x = mean_pos[0];
+      _shr_mean_y = mean_pos[1];
+      _shr_mean_z = mean_pos[2];
       auto vtx3d_vec = AsVector(vtx3d.x,vtx3d.y,vtx3d.z);
 
       LAROCV_DEBUG() << "GOT angle = {" << angle.first << "," << angle.second << "}" << std::endl;
       LAROCV_DEBUG() << std::endl;
 
+      //
       // Determine the impact parameter
+      //
       auto imp_dist = larocv::Distance(ClosestPoint(mean_pos,Sum(mean_pos,Scale(avector,2)),vtx3d_vec),
 				       vtx3d_vec);
       LAROCV_DEBUG() << "Impact parameter=" << imp_dist << std::endl;
       
-      bool _debug = false;
+      bool _debug = true;
       if(_debug) {
 	_reg_vv = reg_vv;
 	_actor_vv = actor_vv;
@@ -326,7 +359,9 @@ namespace larocv {
 
       LAROCV_DEBUG() << "Second shower candidate idenfitied" << std::endl;
 
+      //
       // Get the radial point closest to the vertex in 3D
+      //
       double min_dist = kINVALID_DOUBLE;
       const data::SpacePt* min_sp = nullptr;
       for(const auto& sp : sps_v) {
@@ -413,6 +448,9 @@ namespace larocv {
     _shr_shr_angle = kINVALID_FLOAT;
     _shr_start_angle = kINVALID_FLOAT;
 
+    _shr_mean_x = kINVALID_FLOAT;
+    _shr_mean_y = kINVALID_FLOAT;
+    _shr_mean_z = kINVALID_FLOAT;
   }
 
 }

@@ -5,7 +5,7 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/SuperClusterer.h"
 #include "Geo2D/Core/Geo2D.h"
 /*
-@brief: i quit ub
+  @brief: i quit ub
 */
 
 
@@ -41,8 +41,11 @@ namespace larocv {
   public:
     
     /// Default constructor
-    DeadWirePatch() : laropencv_base("DeadWirePatch") 
-      {}
+  DeadWirePatch() : 
+    laropencv_base("DeadWirePatch"),
+      _bandaid(false), 
+      _bondage(false)
+	{}
     
     /// Default destructor
     ~DeadWirePatch(){}
@@ -74,11 +77,13 @@ namespace larocv {
 
     std::vector<std::pair<int,int> > GenDeadRows(const cv::Mat& dead_ch_img);
     
+    bool _bandaid;
+    bool _bondage;
+
   private:
     SuperClusterer _SuperClusterer;
 
-    bool _bandaid;
-    bool _bondage;
+
 
   };
 }
