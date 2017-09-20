@@ -7,7 +7,7 @@ endif
 #
 # Define directories to be compile upon a global "make"...
 #
-SUBDIRS := Base AlgoData AlgoFunction AlgoClass AlgoModule 
+SUBDIRS := Base AlgoFunction AlgoData AlgoClass AlgoModule 
 
 #####################################################################################
 #
