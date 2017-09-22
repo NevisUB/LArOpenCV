@@ -76,7 +76,7 @@ namespace larocv {
     
   private:
 
-    double CircleWeight(const larocv::data::CircleVertex& cvtx) const;
+    double CircleWeight(larocv::data::CircleVertex& cvtx) const;
 
     void MergeVoxels(std::vector<VoxelArray>& voxel_v);
 

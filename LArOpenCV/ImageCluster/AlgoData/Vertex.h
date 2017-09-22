@@ -65,6 +65,7 @@ namespace larocv {
       float radius;                       ///< 2D radius inspected around the vertex
       std::vector<larocv::data::PointPCA> xs_v; ///< List of charge deposit point on the circumference
       std::vector<float> dtheta_v;        ///< List of dtheta = angle between center=>cs vs. PCA @ xs
+      float dtheta_xs;
       float weight;                       ///< A floating point "score", an indicator for how good this 2D vertex is
       
       /// Attribute clear method

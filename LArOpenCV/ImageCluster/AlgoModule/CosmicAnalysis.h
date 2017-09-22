@@ -88,6 +88,10 @@ namespace larocv {
     float _dtheta_mean_p0;
     float _dtheta_mean_p1;
     float _dtheta_mean_p2;
+    
+    float _dtheta_xs_p0;
+    float _dtheta_xs_p1;
+    float _dtheta_xs_p2;
 
   };
 

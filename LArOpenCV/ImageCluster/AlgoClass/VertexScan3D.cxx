@@ -96,12 +96,12 @@ namespace larocv {
     return true;
   }
 
-  double VertexScan3D::CircleWeight(const data::CircleVertex& cvtx) const
+  double VertexScan3D::CircleWeight(data::CircleVertex& cvtx) const
   {
     double dtheta_sum = cvtx.sum_dtheta();
     // check angular resolution
     double dtheta_sigma = 1. / cvtx.radius * 180 / M_PI ;
-    dtheta_sigma = sqrt(pow(dtheta_sigma, 2) * cvtx.xs_v.size());
+    dtheta_sigma = sqrt(pow(dtheta_sigma, 2) * (double) cvtx.xs_v.size());
 
     if (cvtx.xs_v.size() < 2) return dtheta_sigma;
     
@@ -110,6 +110,7 @@ namespace larocv {
       auto center_line0 = geo2d::Line<float>(cvtx.xs_v[0].pt, cvtx.xs_v[0].pt - cvtx.center);
       auto center_line1 = geo2d::Line<float>(cvtx.xs_v[1].pt, cvtx.xs_v[1].pt - cvtx.center);
       auto dtheta = fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
+      cvtx.dtheta_xs = dtheta;
       LAROCV_DEBUG() << "dtheta=" << dtheta << std::endl;
       if (dtheta < _dtheta_cut) {
 	return -1;
@@ -431,7 +432,9 @@ namespace larocv {
     std::array<geo2d::Vector<float>,3> plane_pt_v;
     std::array<bool,3> valid_v;
     geo2d::Vector<float> invalid_pt(kINVALID_FLOAT,kINVALID_FLOAT);
-    
+    std::array<double,3> weight_v;
+    std::vector<data::CircleVertex> circle_v;    
+
     double best_weight = kINVALID_DOUBLE;
 
     LAROCV_DEBUG() << "Scanning (" << voxel_v.nx() << "," << voxel_v.ny() << "," << voxel_v.nz() << ") region sz " << voxel_v.size() << std::endl;
@@ -458,7 +461,7 @@ namespace larocv {
 	  
 	    if (valid_ctr < 2) continue;
 
-	    std::vector<data::CircleVertex> circle_v;
+	    circle_v.clear();
 	    circle_v.resize(_geo._num_planes);
 
 	    for (auto& v : num_xspt_count_v) v = 0;
@@ -490,12 +493,11 @@ namespace larocv {
 	      continue;
 	    }
 
-	    std::array<double,3> weight_v;
 	    for(auto& w : weight_v) w=kINVALID_DOUBLE;
 	  
 	    for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
 	      if(!valid_v[plane]) continue;
-	      auto const& circle = circle_v[plane];
+	      auto & circle = circle_v[plane];
 	      if (circle.xs_v.size() != num_xspt) continue;
 
 	      double weight = 0.0;

@@ -15,6 +15,7 @@ namespace larocv {
       xs_v.clear();
       dtheta_v.clear();
       weight = -1;
+      dtheta_xs = kINVALID_FLOAT;
     }
     
     float CircleVertex::sum_dtheta() const

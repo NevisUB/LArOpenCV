@@ -57,7 +57,11 @@ namespace larocv {
     _tree->Branch("dtheta_mean_p0",&_dtheta_mean_p0,"dtheta_mean_p0/F");
     _tree->Branch("dtheta_mean_p1",&_dtheta_mean_p1,"dtheta_mean_p1/F");
     _tree->Branch("dtheta_mean_p2",&_dtheta_mean_p2,"dtheta_mean_p2/F");
-    
+  
+    _tree->Branch("dtheta_xs_p0",&_dtheta_xs_p0,"dtheta_xs_p0/F");
+    _tree->Branch("dtheta_xs_p1",&_dtheta_xs_p1,"dtheta_xs_p1/F");
+    _tree->Branch("dtheta_xs_p2",&_dtheta_xs_p2,"dtheta_xs_p2/F");
+  
     _tree->Branch("charge_asym_v" , &_charge_asym_v);
     _tree->Branch("npixel_asym_v" , &_npixel_asym_v);
     _tree->Branch("ctor_asym_v"   , &_ctor_asym_v);
@@ -141,12 +145,23 @@ namespace larocv {
       for(size_t plane=0; plane<3; ++plane) {
 	const auto& cvtx = vtx3d.cvtx2d_v.at(plane);
 	if (cvtx.xs_v.empty()) continue;
-	if (plane==0) 
-	  { _dtheta_sum_p0 = cvtx.sum_dtheta(); _dtheta_mean_p0 = cvtx.mean_dtheta(); }
-	else if (plane==1) 
-	  { _dtheta_sum_p1 = cvtx.sum_dtheta(); _dtheta_mean_p1 = cvtx.mean_dtheta(); }
-	else if (plane==2) 
-	  { _dtheta_sum_p2 = cvtx.sum_dtheta(); _dtheta_mean_p2 = cvtx.mean_dtheta(); }
+	if (plane==0) { 
+	  _dtheta_sum_p0  = cvtx.sum_dtheta(); 
+	  _dtheta_mean_p0 = cvtx.mean_dtheta(); 
+	  _dtheta_xs_p0   = cvtx.dtheta_xs;
+	}
+
+	else if (plane==1) { 
+	  _dtheta_sum_p1  = cvtx.sum_dtheta(); 
+	  _dtheta_mean_p1 = cvtx.mean_dtheta(); 
+	  _dtheta_xs_p1   = cvtx.dtheta_xs;
+	}
+	
+	else if (plane==2) { 
+	  _dtheta_sum_p2  = cvtx.sum_dtheta(); 
+	  _dtheta_mean_p2 = cvtx.mean_dtheta(); 
+	  _dtheta_xs_p2   = cvtx.dtheta_xs;
+	}
       }
 
       //
@@ -386,6 +401,10 @@ namespace larocv {
     _dtheta_mean_p0 = kINVALID_FLOAT;
     _dtheta_mean_p1 = kINVALID_FLOAT;
     _dtheta_mean_p2 = kINVALID_FLOAT;
+
+    _dtheta_xs_p0 = kINVALID_FLOAT;
+    _dtheta_xs_p1 = kINVALID_FLOAT;
+    _dtheta_xs_p2 = kINVALID_FLOAT;
 
   }
 
