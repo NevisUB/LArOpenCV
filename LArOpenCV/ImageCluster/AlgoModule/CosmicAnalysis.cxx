@@ -49,7 +49,15 @@ namespace larocv {
     _tree->Branch("x" , &_x , "x/D");
     _tree->Branch("y" , &_y , "y/D");
     _tree->Branch("z" , &_z , "z/D");
+    
+    _tree->Branch("dtheta_sum_p0",&_dtheta_sum_p0,"dtheta_sum_p0/F");
+    _tree->Branch("dtheta_sum_p1",&_dtheta_sum_p1,"dtheta_sum_p1/F");
+    _tree->Branch("dtheta_sum_p2",&_dtheta_sum_p2,"dtheta_sum_p2/F");
 
+    _tree->Branch("dtheta_mean_p0",&_dtheta_mean_p0,"dtheta_mean_p0/F");
+    _tree->Branch("dtheta_mean_p1",&_dtheta_mean_p1,"dtheta_mean_p1/F");
+    _tree->Branch("dtheta_mean_p2",&_dtheta_mean_p2,"dtheta_mean_p2/F");
+    
     _tree->Branch("charge_asym_v" , &_charge_asym_v);
     _tree->Branch("npixel_asym_v" , &_npixel_asym_v);
     _tree->Branch("ctor_asym_v"   , &_ctor_asym_v);
@@ -130,6 +138,17 @@ namespace larocv {
 
       ResetVectors(par_id_v.size());
       
+      for(size_t plane=0; plane<3; ++plane) {
+	const auto& cvtx = vtx3d.cvtx2d_v.at(plane);
+	if (cvtx.xs_v.empty()) continue;
+	if (plane==0) 
+	  { _dtheta_sum_p0 = cvtx.sum_dtheta(); _dtheta_mean_p0 = cvtx.mean_dtheta(); }
+	else if (plane==1) 
+	  { _dtheta_sum_p1 = cvtx.sum_dtheta(); _dtheta_mean_p1 = cvtx.mean_dtheta(); }
+	else if (plane==2) 
+	  { _dtheta_sum_p2 = cvtx.sum_dtheta(); _dtheta_mean_p2 = cvtx.mean_dtheta(); }
+      }
+
       //
       // Store the hull contour
       //
@@ -359,7 +378,15 @@ namespace larocv {
     _shape_match_I1_v.clear();
     _shape_match_I2_v.clear();
     _shape_match_I3_v.clear();
-    
+
+    _dtheta_sum_p0 = kINVALID_FLOAT;
+    _dtheta_sum_p1 = kINVALID_FLOAT;
+    _dtheta_sum_p2 = kINVALID_FLOAT;
+
+    _dtheta_mean_p0 = kINVALID_FLOAT;
+    _dtheta_mean_p1 = kINVALID_FLOAT;
+    _dtheta_mean_p2 = kINVALID_FLOAT;
+
   }
 
 }
