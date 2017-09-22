@@ -669,7 +669,7 @@ namespace larocv {
     return res;
   }
   
-  void FindEdges(const cv::Mat& img,
+  void FindEdges(const cv::Mat img,
 		 geo2d::Vector<float>& edge1,
 		 geo2d::Vector<float>& edge2)
   {
