@@ -164,8 +164,6 @@ namespace larocv {
 	  
 	  _CalcAngle.AngleWithCircleResolution( angle, img_v.at(plane), par._ctor, circle_vertex );
 	  
-	  std::cout<<"pid "<<pid<<" angle is "<<angle<<std::endl;
-	  
 	  if(pid == 0){
 	    angle0 = angle;
 	    _angle_0_v.at(plane) = angle; 
