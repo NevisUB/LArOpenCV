@@ -30,6 +30,8 @@
 #pragma link C++ class larocv::VertexScan3D+;
 #pragma link C++ class larocv::Voxel+;
 #pragma link C++ class larocv::DeadWirePatch+;
+#pragma link C++ class larocv::ClustersPatch+;
+#pragma link C++ class larocv::CalcAngle+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

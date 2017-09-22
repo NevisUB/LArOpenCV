@@ -3,6 +3,7 @@
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/CalcAngle.h"
 #include "Geo2D/Core/Circle.h"
 
 /*
@@ -38,11 +39,12 @@ namespace larocv {
 
   private:
 
+    CalcAngle _CalcAngle;
+    
     void ClearEvent();
     void ClearVertex();
     
     int _nplanes;
-    int _pixels_number;
     
     double _angle_cut;
     AlgorithmID_t _combined_vertex_analysis_algo_id;
@@ -62,23 +64,11 @@ namespace larocv {
     double _anglediff_straight;
     double _anglediff_max;
 
-    std::vector<double> _angle_0_v;
-    std::vector<double> _angle_1_v;
-    
+    std::vector<double> _angle_0_v;//Per plane
+    std::vector<double> _angle_1_v;//Per plane
     std::vector<double> _anglediff_v;//Per plane
-    std::vector<double> _angle_particles;
     int _straightness;
-
-    
-  public:
-    void ParticleAngle(GEO2D_Contour_t ctor_origin, 
-		       GEO2D_Contour_t ctor, 
-		       geo2d::Circle<float> circle, 
-		       double& pct, double& angle);
-    
-    double Getx2vtxmean(GEO2D_Contour_t ctor, float x2d, float y2d, double& pct);
-    double Gety2vtxmean(GEO2D_Contour_t ctor, float x2d, float y2d, double& pct);
-    
+                  
   };
 
   class AngleAnalysisFactory : public AlgoFactoryBase {

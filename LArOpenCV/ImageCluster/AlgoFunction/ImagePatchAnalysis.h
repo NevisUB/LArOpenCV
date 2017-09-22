@@ -74,7 +74,7 @@ namespace larocv {
 	    float pi_threshold=0);
 
   void
-  FindEdges(const GEO2D_Contour_t& ctor,
+  FindEdges(const cv::Mat img,
 	    geo2d::Vector<float>& edge1,
 	    geo2d::Vector<float>& edge2);
 
