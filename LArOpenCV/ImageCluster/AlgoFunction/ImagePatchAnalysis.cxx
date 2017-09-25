@@ -674,6 +674,9 @@ namespace larocv {
 		 geo2d::Vector<float>& edge2)
   {
     // cheap trick assuming this is a linear, linear track cluster
+    
+    geo2d::Vector<float> edge_tmp_1;
+    geo2d::Vector<float> edge_tmp_2;
     geo2d::Vector<float> mean_pt, ctor_pt;
     mean_pt.x = mean_pt.y = 0.;
     auto pts_v = FindNonZero(img);
@@ -690,21 +693,25 @@ namespace larocv {
       ctor_pt.y = pt.y;
       dist = geo2d::dist(mean_pt,ctor_pt);
       if(dist > dist_max) {
-	edge1 = pt;
+	edge_tmp_1 = pt;
 	dist_max = dist;
       }
     }
-    // find the furthest point from edge1
+    // find the furthest point from edge_tmp_1
     dist_max=0;
     for(auto const& pt : pts_v) {
       ctor_pt.x = pt.x;
       ctor_pt.y = pt.y;
-      dist = geo2d::dist(edge1,ctor_pt);
+      dist = geo2d::dist(edge_tmp_1,ctor_pt);
       if(dist > dist_max) {
-	edge2 = pt;
+	edge_tmp_2 = pt;
 	dist_max = dist;
       }
     }
+    
+    edge1 = (edge_tmp_1.y <= edge_tmp_2.y) ? edge_tmp_1 : edge_tmp_2 ;
+    edge2 = (edge_tmp_1.y > edge_tmp_2.y) ? edge_tmp_1 : edge_tmp_2 ;
+    
   }
   
 }

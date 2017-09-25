@@ -6,6 +6,7 @@
 #include "LArOpenCV/ImageCluster/AlgoClass/VertexParticleCluster.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/SuperClusterer.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/DeadWirePatch.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/ClustersPatch.h"
 
 /*
   @brief: given a vertex, cluster in polar coordinates tracks and showers coming from vertex
@@ -49,7 +50,9 @@ namespace larocv {
     
     SuperClusterer _SuperClusterer;
     DeadWirePatch _DeadWirePatch;
-    bool _patch;
+    ClustersPatch _ClustersPatch;
+    bool _patch_dead_wire;
+    bool _patch_linearity;
   };
 
   /**

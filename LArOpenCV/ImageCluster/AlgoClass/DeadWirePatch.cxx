@@ -115,6 +115,33 @@ namespace larocv {
     
   }
 
+  cv::Mat DeadWirePatch::FillImageGap(cv::Mat img, 
+				      const geo2d::Vector<float> edge_low,
+				      const geo2d::Vector<float> edge_high,
+				      const GEO2D_ContourArray_t ctor_v,
+				      const int upper_ctor_idx, 
+				      const int lower_ctor_idx){
+    cv::Mat res;
+    //geo2d::LineSegment<float>(higher_pt_in_img_ref, lower_pt_in_img_ref);
+    auto ls = geo2d::LineSegment<float>(edge_high, edge_low);
+    
+    auto counts_1 = CountNonZero(MaskImage(img,ctor_v[upper_ctor_idx],0, false));
+    auto counts_2 = CountNonZero(MaskImage(img,ctor_v[lower_ctor_idx],0, false));
+    
+    auto Qsum_1 = SumNonZero(MaskImage(img,ctor_v[upper_ctor_idx],0, false));
+    auto Qsum_2 = SumNonZero(MaskImage(img,ctor_v[lower_ctor_idx],0, false));
+    
+    auto filling = (Qsum_1+Qsum_2) / (counts_1 + counts_2);
+    
+    for (size_t ls_idx = ls.pt2.y; ls_idx <= ls.pt1.y ; ++ls_idx){
+      geo2d::Vector<int> pt(ls.x(ls_idx), ls_idx);
+      img.at<uchar>(pt.y, pt.x) = filling;
+    }
+    res = img;
+    
+    return img;
+  }
+  
   cv::Mat DeadWirePatch::WireBandaid(const cv::Mat& img,
 				     const cv::Mat& dead_ch_img) {
     
@@ -193,7 +220,10 @@ namespace larocv {
 	      used_ctor_idx.push_back(wire_edge_idx1);
 	      used_ctor_idx.push_back(wire_edge_idx2);
 		
-	      auto ls = geo2d::LineSegment<float>(ctor1_low, ctor2_high);
+	      res_img = FillImageGap(res_img, ctor2_high, ctor1_low,
+				     ctor_v, wire_edge_idx1, wire_edge_idx2);
+	      
+	      /*auto ls = geo2d::LineSegment<float>(ctor1_low, ctor2_high);
 		
 	      GEO2D_Contour_t ls_ctor;
 	      ls_ctor.clear();
@@ -212,51 +242,44 @@ namespace larocv {
 		ls_ctor.push_back(pt);
 		  
 		res_img.at<uchar>(pt.y, pt.x) = filling;
-		    
-		// { 
-		//   //if(this->logger().level() == ::larocv::msg::kDEBUG) {
-		//   std::stringstream ss0;
-		//   ss0 << "img_tmp_ls_added_"<<plane<<".png";
-		//   cv::imwrite(std::string(ss0.str()).c_str(), img);
-		// }
-
-	      }
-
-	      GEO2D_ContourArray_t tmp;
+	      }*/
+	      
+		 /*GEO2D_ContourArray_t tmp;
 	      tmp.resize(3);
 	      tmp[0] = ctor_v[wire_edge_idx1];
 	      tmp[1] = ctor_v[wire_edge_idx2];
 	      tmp[2] = ls_ctor;
 
-	      // { 
-	      // 	//if(this->logger().level() == ::larocv::msg::kDEBUG) {
-	      // 	auto img = dead_img;
-	      // 	auto img_rest = MaskImage(img, tmp, 0, false);
-	      // 	std::stringstream ss0;
-	      // 	ss0 << "img_tmp_dead_"<<plane<<".png";
-	      // 	cv::imwrite(std::string(ss0.str()).c_str(), img_rest);
-	      // }
-	      // { 
-	      // 	//if(this->logger().level() == ::larocv::msg::kDEBUG) {
-	      // 	//auto img = dead_img;
-	      // 	auto img = img_v[img_idx];
-	      // 	auto img_rest = MaskImage(img, tmp, 0, false);
-	      // 	std::stringstream ss0;
-	      // 	ss0 << "img_tmp_"<<plane<<".png";
-	      // 	cv::imwrite(std::string(ss0.str()).c_str(), img_rest);
-	      // }
-	      //auto merge_tmp = MergeByMask(tmp[0], tmp[1], img);
-	      //auto test_ctor = Merge(merge_tmp, tmp[2]);
-	      //test_ctor_v.push_back(test_ctor);
-	    }
+	       { 
+	       	if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	       	auto img = dead_img;
+	       	auto img_rest = MaskImage(img, tmp, 0, false);
+	       	std::stringstream ss0;
+	       	ss0 << "img_tmp_dead_"<<plane<<".png";
+	       	cv::imwrite(std::string(ss0.str()).c_str(), img_rest);
+	       }
+	        
+	       	if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	       	auto img = dead_img;
+	       	auto img = img_v[img_idx];
+	       	auto img_rest = MaskImage(img, tmp, 0, false);
+	       	std::stringstream ss0;
+	       	ss0 << "img_tmp_"<<plane<<".png";
+	       	cv::imwrite(std::string(ss0.str()).c_str(), img_rest);
+	       }
+	      auto merge_tmp = MergeByMask(tmp[0], tmp[1], img);
+	      auto test_ctor = Merge(merge_tmp, tmp[2]);
+	      test_ctor_v.push_back(test_ctor);
+	      */
 	  }
-	} 
+	}
+      } 
       }
     }
     ////////////Rui above
     return res_img;
   }
- 
+  
 
   std::vector<std::pair<int,int> > 
   DeadWirePatch::GenDeadRows(const cv::Mat& dead_ch_img) {
@@ -266,7 +289,7 @@ namespace larocv {
     std::vector<std::pair<int,int> > dead_row_v;
     int dstart = kINVALID_INT;
     int dend   = kINVALID_INT;
-    int prev_dead = 0;
+    //int prev_dead = 0;
     for(int drow = 0; drow < dead_ch_img.rows; ++drow) {
       int dead = (int)dead_ch_img.at<uchar>(drow,0);
       if(!dead) {

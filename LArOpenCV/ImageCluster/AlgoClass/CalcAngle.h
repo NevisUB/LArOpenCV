@@ -36,11 +36,13 @@ namespace larocv {
     
     double Gety2vtxmean(GEO2D_Contour_t ctor, float x2d, float y2d, double& pct);
     
+    //Need the full image
     void AngleWithCircleResolution( double & angle,  
 				    const cv::Mat img,
 				    const GEO2D_Contour_t par_ctor,
 				    data::CircleVertex circle_vertex );
-
+    
+    //Need the full image
     void AngleWithCircleResolution( double & angle,  
 				    const cv::Mat img,
 				    const GEO2D_Contour_t par_ctor,

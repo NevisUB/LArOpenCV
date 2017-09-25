@@ -50,10 +50,14 @@ namespace larocv {
     // Create a container for this algorithm data
     for(size_t plane=0; plane<3; ++plane) Register(new data::ParticleClusterArray);
 
-    _patch = pset.get<bool>("PatchImage",false);
-    if(_patch)
+    _patch_dead_wire = pset.get<bool>("PatchImageDeadWire",false);
+    _patch_linearity = pset.get<bool>("PatchClusters",false);
+
+    if(_patch_dead_wire)
       _DeadWirePatch.Configure(pset.get<Config_t>("DeadWirePatch"));
 
+    if(_patch_linearity)
+      _ClustersPatch.Configure(pset.get<Config_t>("ClustersPatch"));
   }
 
   void VertexParticleClusterMaker::_Process_()
@@ -63,7 +67,7 @@ namespace larocv {
     //
     auto img_v = ImageArray();
     std::vector<cv::Mat> dead_img_v;
-    if (_patch) dead_img_v = ImageArray(ImageSetID_t::kImageSetChStatus);
+    if (_patch_dead_wire) dead_img_v = ImageArray(ImageSetID_t::kImageSetChStatus);
 
     auto const& meta_v = MetaArray();
     
@@ -72,16 +76,40 @@ namespace larocv {
 
       const auto& img = img_v[img_idx];
 
+      auto const& meta = meta_v.at(img_idx);
+      auto const plane = meta.plane();
+
       cv::Mat mod_img;
-      if (_patch)  {
+
+      if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	std::stringstream ss0;
+	ss0 << "orig_plane_"<<plane<<"_input.png";
+	cv::imwrite(std::string(ss0.str()).c_str(), img);
+      }
+      
+      if (_patch_dead_wire)  { 
 	const auto& dead_img = dead_img_v[img_idx];
 	mod_img = _DeadWirePatch.Patch(img,dead_img);
       }
       else { mod_img = img; }
 
-      auto const& meta = meta_v.at(img_idx);
-      auto const plane = meta.plane();
-      
+      if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	std::stringstream ss0;
+	ss0 << "fill_dead_plane_"<<plane<<"_output.png";
+	cv::imwrite(std::string(ss0.str()).c_str(), mod_img);
+      }
+
+      if(_patch_linearity) {
+	auto clusters_img = _ClustersPatch.AnglePatch(mod_img);
+	mod_img = clusters_img;
+      }
+
+      if(this->logger().level() == ::larocv::msg::kDEBUG) {
+	std::stringstream ss0;
+	ss0 << "fill_clusters_plane_"<<plane<<"_output.png";
+	cv::imwrite(std::string(ss0.str()).c_str(), mod_img);
+      }
+            
       // This algorithm data
       auto& par_data = AlgoData<data::ParticleClusterArray>(plane);
 

@@ -76,14 +76,19 @@ namespace larocv {
 					      const std::vector<std::pair<int,int> >& dead_wire_v);
 
     std::vector<std::pair<int,int> > GenDeadRows(const cv::Mat& dead_ch_img);
+
+    cv::Mat FillImageGap(cv::Mat img, 
+			 const geo2d::Vector<float> edge_low,
+			 const geo2d::Vector<float> edge_high,
+			 const GEO2D_ContourArray_t ctor_v,
+			 const int upper_ctor_idx, 
+			 const int lower_ctor_idx);
     
     bool _bandaid;
     bool _bondage;
 
   private:
     SuperClusterer _SuperClusterer;
-
-
 
   };
 }
