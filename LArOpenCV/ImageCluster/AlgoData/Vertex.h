@@ -67,7 +67,8 @@ namespace larocv {
       std::vector<float> dtheta_v;        ///< List of dtheta = angle between center=>cs vs. PCA @ xs
       float dtheta_xs;
       float weight;                       ///< A floating point "score", an indicator for how good this 2D vertex is
-      
+      float mdist;
+
       /// Attribute clear method
       void Clear();
       /// Sum of dtheta_v

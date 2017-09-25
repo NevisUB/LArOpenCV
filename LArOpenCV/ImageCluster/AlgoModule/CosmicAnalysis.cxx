@@ -62,6 +62,10 @@ namespace larocv {
     _tree->Branch("dtheta_xs_p0",&_dtheta_xs_p0,"dtheta_xs_p0/F");
     _tree->Branch("dtheta_xs_p1",&_dtheta_xs_p1,"dtheta_xs_p1/F");
     _tree->Branch("dtheta_xs_p2",&_dtheta_xs_p2,"dtheta_xs_p2/F");
+
+    _tree->Branch("mdist_p0",&_mdist_p0,"mdist_p0/F");
+    _tree->Branch("mdist_p1",&_mdist_p1,"mdist_p1/F");
+    _tree->Branch("mdist_p2",&_mdist_p2,"mdist_p2/F");
   
     _tree->Branch("charge_asym_v" , &_charge_asym_v);
     _tree->Branch("npixel_asym_v" , &_npixel_asym_v);
@@ -150,18 +154,21 @@ namespace larocv {
 	  _dtheta_sum_p0  = cvtx.sum_dtheta(); 
 	  _dtheta_mean_p0 = cvtx.mean_dtheta(); 
 	  _dtheta_xs_p0   = cvtx.dtheta_xs;
+	  _mdist_p0       = cvtx.mdist;
 	}
 
 	else if (plane==1) { 
 	  _dtheta_sum_p1  = cvtx.sum_dtheta(); 
 	  _dtheta_mean_p1 = cvtx.mean_dtheta(); 
 	  _dtheta_xs_p1   = cvtx.dtheta_xs;
+	  _mdist_p1       = cvtx.mdist;
 	}
 	
 	else if (plane==2) { 
 	  _dtheta_sum_p2  = cvtx.sum_dtheta(); 
 	  _dtheta_mean_p2 = cvtx.mean_dtheta(); 
 	  _dtheta_xs_p2   = cvtx.dtheta_xs;
+	  _mdist_p2       = cvtx.mdist;
 	}
       }
 
@@ -406,6 +413,10 @@ namespace larocv {
     _dtheta_xs_p0 = kINVALID_FLOAT;
     _dtheta_xs_p1 = kINVALID_FLOAT;
     _dtheta_xs_p2 = kINVALID_FLOAT;
+
+    _mdist_p0 = kINVALID_FLOAT;
+    _mdist_p1 = kINVALID_FLOAT;
+    _mdist_p2 = kINVALID_FLOAT;
 
   }
 
