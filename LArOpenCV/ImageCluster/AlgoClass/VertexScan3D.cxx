@@ -93,9 +93,6 @@ namespace larocv {
       res.radius = _min_radius;
     }
     
-    auto mean_pt = MeanPixel(img,plane_pt,4,4,10);
-    res.mdist = geo2d::dist(mean_pt,plane_pt);
-    
     std::swap(res,cvtx);
     return true;
   }
@@ -114,6 +111,7 @@ namespace larocv {
       auto center_line0 = geo2d::Line<float>(cvtx.xs_v[0].pt, cvtx.xs_v[0].pt - cvtx.center);
       auto center_line1 = geo2d::Line<float>(cvtx.xs_v[1].pt, cvtx.xs_v[1].pt - cvtx.center);
       auto dtheta = fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
+      if (dtheta > 90) dtheta = fabs(180-dtheta);
       cvtx.dtheta_xs = dtheta;
       LAROCV_DEBUG() << "dtheta=" << dtheta << std::endl;
       if (dtheta < _dtheta_cut) {
@@ -515,7 +513,7 @@ namespace larocv {
 	    std::sort(std::begin(weight_v), std::end(weight_v));
 	    auto weight1 = weight_v[0];
 	    auto weight2 = weight_v[1];
-	  
+	    
 	    if ((weight1 * weight2) < best_weight) {
 	      best_weight  = weight1 * weight2;
 	      res.x = trial_vtx3d.x;

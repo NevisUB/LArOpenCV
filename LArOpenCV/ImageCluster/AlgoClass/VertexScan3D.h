@@ -84,6 +84,11 @@ namespace larocv {
 
     std::vector<VoxelArray> _voxel_vv;
     
+  public:
+    const std::vector<VoxelArray>& Voxels() const { return  _voxel_vv; }
+
+    const larocv::LArPlaneGeo& Geo() const { return  _geo; }
+
   };
 }
 
