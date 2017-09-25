@@ -46,6 +46,7 @@ namespace larocv {
     }
 
     _tree = new TTree("CosmicAnalysis","");
+    AttachIDs(_tree);
     _tree->Branch("x" , &_x , "x/D");
     _tree->Branch("y" , &_y , "y/D");
     _tree->Branch("z" , &_z , "z/D");
