@@ -47,9 +47,9 @@ namespace larocv {
     
     try {
       auto x = _geo.x2col(vtx3d.x, plane);
-      auto y = _geo.yz2row(vtx3d.y, vtx3d.z, plane);
-
       if (x >= img.cols or x < 0) return false;
+
+      auto y = _geo.yz2row(vtx3d.y, vtx3d.z, plane);
       if (y >= img.rows or y < 0) return false;
 
       uint x_0 = std::floor(x);
@@ -92,6 +92,10 @@ namespace larocv {
       res.center = plane_pt;
       res.radius = _min_radius;
     }
+    
+    auto mean_pt = MeanPixel(img,plane_pt,4,4,10);
+    res.mdist = geo2d::dist(mean_pt,plane_pt);
+    
     std::swap(res,cvtx);
     return true;
   }
@@ -115,6 +119,7 @@ namespace larocv {
       if (dtheta < _dtheta_cut) {
 	return -1;
       }
+
       /*
       bool _check_stability=true;
       if(_check_stability) {
@@ -245,6 +250,7 @@ namespace larocv {
 	temp_res.weight = temp_res.mean_dtheta();
       
       if (temp_res.weight < 0) { LAROCV_DEBUG() << "bad weight" << std::endl; continue;}
+
 
       // if this is the 1st loop, set the result
       if (res.xs_v.empty()) {
