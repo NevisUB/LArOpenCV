@@ -3,9 +3,8 @@
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
-#include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
-
+#include "LArOpenCV/ImageCluster/AlgoClass/ReCreateVertex.h"
 
 /*
   @brief: An VertexCheater
@@ -17,33 +16,27 @@ namespace larocv {
   public:
     
     VertexCheater(const std::string name = "VertexCheater") :
-      ImageAnaBase(name),
-      _geo()
-    {}
+      ImageAnaBase(name)
+      {}
     
     virtual ~VertexCheater(){}
     
     void Finalize(TFile*) {}
-
     void Reset() {}
-
     void SetTrueVertex(const data::Vertex3D& true_vertex);
     
   protected:
 
     void _Configure_(const Config_t &pset);
-    
     void _Process_();
-    
     bool _PostProcess_() const { return true; }
 
   private:
 
-    LArPlaneGeo _geo;
-
     data::Vertex3D _true_vertex;
-
     float _default_radius;
+    ReCreateVertex _ReCreateVertex;
+
   };
 
   class VertexCheaterFactory : public AlgoFactoryBase {
