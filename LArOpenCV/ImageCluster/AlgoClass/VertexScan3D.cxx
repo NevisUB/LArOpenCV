@@ -380,6 +380,9 @@ namespace larocv {
       LAROCV_DEBUG() << "Region ID " << region_id << " sz " << voxel_v.size() << std::endl;
 
       auto vtx3d = ScanRegion(voxel_v,image_v);
+      if (vtx3d.x == kINVALID_DOUBLE) continue;
+      if (vtx3d.y == kINVALID_DOUBLE) continue;
+      if (vtx3d.z == kINVALID_DOUBLE) continue;
 
       size_t num_good_plane = 0;
       int plane = -1;
@@ -430,6 +433,9 @@ namespace larocv {
 			   const std::vector<cv::Mat>& image_v,
 			   size_t num_xspt) const {
     data::Vertex3D res;
+    res.x = kINVALID_DOUBLE;
+    res.y = kINVALID_DOUBLE;
+    res.z = kINVALID_DOUBLE;
     
     if (image_v.size() > _geo._num_planes) {
       LAROCV_CRITICAL() << "Provided image array length " << image_v.size()
@@ -530,6 +536,12 @@ namespace larocv {
 	    auto weight1 = weight_v[0];
 	    auto weight2 = weight_v[1];
 	    
+	    assert (weight1 != kINVALID_DOUBLE);
+	    assert (weight2 != kINVALID_DOUBLE);
+
+	    assert (weight1 > 0);
+	    assert (weight2 > 0);
+
 	    if ((weight1 * weight2) < best_weight) {
 	      best_weight  = weight1 * weight2;
 	      res.x = trial_vtx3d.x;
