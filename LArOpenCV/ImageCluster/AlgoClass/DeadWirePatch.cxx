@@ -31,7 +31,7 @@ namespace larocv {
     if (_bandaid && _bondage) throw larbys("Can't specify bandaid & bondage");
   }
 
-  cv::Mat DeadWirePatch::Patch(const cv::Mat&img,
+  cv::Mat DeadWirePatch::DeadPatch(const cv::Mat&img,
 			       const cv::Mat&dead_ch_img) {
 
     if (_bandaid) return WireBandaid(img,dead_ch_img);

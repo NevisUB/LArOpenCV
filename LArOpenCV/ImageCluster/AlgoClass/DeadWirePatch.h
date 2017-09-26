@@ -53,8 +53,8 @@ namespace larocv {
     void Configure(const Config_t& pset);
 
 
-    cv::Mat Patch(const cv::Mat&img,
-		  const cv::Mat&dead_ch_img);
+    cv::Mat DeadPatch(const cv::Mat&img,
+		      const cv::Mat&dead_ch_img);
 
     void FindWireEdges(const GEO2D_Contour_t& ctor,
 		       geo2d::Vector<float>& edge_low,

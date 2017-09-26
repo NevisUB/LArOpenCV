@@ -89,7 +89,7 @@ namespace larocv {
       
       if (_patch_dead_wire)  { 
 	const auto& dead_img = dead_img_v[img_idx];
-	mod_img = _DeadWirePatch.Patch(img,dead_img);
+	mod_img = _DeadWirePatch.DeadPatch(img,dead_img);
       }
       else { mod_img = img; }
 
