@@ -3,9 +3,7 @@
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
-#include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
-#include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
-#include "LArOpenCV/ImageCluster/AlgoClass/VertexScan3D.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/ReCreateVertex.h"
 
 namespace larocv {
 
@@ -28,12 +26,9 @@ namespace larocv {
 
   private:
     void Clear();
-
-    LArPlaneGeo _geo;
+    ReCreateVertex _ReCreateVertex;
     size_t _nplanes;
-    float _default_radius;
-    bool _scan_radius;
-    VertexScan3D _VertexScan3D;
+
   };
   
   class ReAnaVertexFactory : public AlgoFactoryBase {

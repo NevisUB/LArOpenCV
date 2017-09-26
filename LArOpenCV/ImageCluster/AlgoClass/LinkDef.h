@@ -29,6 +29,7 @@
 #pragma link C++ class larocv::VertexParticleCluster+;
 #pragma link C++ class larocv::VertexScan3D+;
 #pragma link C++ class larocv::Voxel+;
+#pragma link C++ class larocv::VoxelArray+;
 #pragma link C++ class larocv::DeadWirePatch+;
 #pragma link C++ class larocv::ClustersPatch+;
 #pragma link C++ class larocv::CalcAngle+;

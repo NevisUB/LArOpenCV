@@ -81,6 +81,18 @@ namespace larocv {
     std::vector<double> _shape_match_I2_v;
     std::vector<double> _shape_match_I3_v;
 
+    float _dtheta_sum_p0;
+    float _dtheta_sum_p1;
+    float _dtheta_sum_p2;
+
+    float _dtheta_mean_p0;
+    float _dtheta_mean_p1;
+    float _dtheta_mean_p2;
+    
+    float _dtheta_xs_p0;
+    float _dtheta_xs_p1;
+    float _dtheta_xs_p2;
+
   };
 
   class CosmicAnalysisFactory : public AlgoFactoryBase {

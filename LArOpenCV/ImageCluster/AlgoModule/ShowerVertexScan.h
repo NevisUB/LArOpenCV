@@ -43,14 +43,15 @@ namespace larocv {
     
     LArPlaneGeo _geo;
     VertexAnalysis _vtxana;
-    VertexScan3D  _VertexScan3D;
 
+    VertexScan3D  _VertexScan3D;
     float _allowed_radius;
     float _merge_distance;
     bool _require_3planes_charge;
     bool _merge_nearby;
 
-
+  public:
+    const VertexScan3D& algo() const { return _VertexScan3D; }
     
   };
 

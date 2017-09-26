@@ -285,12 +285,11 @@ namespace larocv {
     
     LAROCV_SDEBUG() << "rows cols " << img.rows
 		    << "," << img.cols << " and rect " << rect << std::endl;
-    auto small_img = ::cv::Mat(img,rect);
-    ::cv::Mat thresh_small_img;
-    ::cv::threshold(small_img,thresh_small_img,pi_threshold,1,CV_THRESH_BINARY);
+    auto small_img = cv::Mat(img,rect);
+
+    auto thresh_small_img = Threshold(small_img,pi_threshold,1);
     
-    geo2d::VectorArray<int> points;
-    ::cv::findNonZero(thresh_small_img, points);
+    auto points = FindNonZero(thresh_small_img);
     
     geo2d::Vector<float> trial_pt(-1,-1);
     if(points.empty()) return trial_pt;
