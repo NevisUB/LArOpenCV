@@ -91,6 +91,7 @@ namespace larocv {
     if(res.weight < 0) {
       res.center = plane_pt;
       res.radius = _min_radius;
+      return false;
     }
     
     std::swap(res,cvtx);
@@ -110,8 +111,8 @@ namespace larocv {
     if (cvtx.xs_v.size() == 2) {
       auto center_line0 = geo2d::Line<float>(cvtx.xs_v[0].pt, cvtx.xs_v[0].pt - cvtx.center);
       auto center_line1 = geo2d::Line<float>(cvtx.xs_v[1].pt, cvtx.xs_v[1].pt - cvtx.center);
-      auto dtheta = fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
-      if (dtheta > 90) dtheta = fabs(180-dtheta);
+      auto dtheta = std::fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
+      if (dtheta > 90) dtheta = std::fabs(180 - dtheta);
       cvtx.dtheta_xs = dtheta;
       LAROCV_DEBUG() << "dtheta=" << dtheta << std::endl;
       if (dtheta < _dtheta_cut) {
@@ -236,7 +237,9 @@ namespace larocv {
 	}
       }
       
-      if (dtheta_v.empty())  { LAROCV_DEBUG() << "empty dtheta" << std::endl; continue;}
+      if (dtheta_v.empty())  
+	{ LAROCV_DEBUG() << "empty dtheta" << std::endl; continue;}
+
       temp_res.center   = pt;
       temp_res.radius   = radius;
       temp_res.xs_v     = xs_v;
@@ -247,11 +250,12 @@ namespace larocv {
       else 
 	temp_res.weight = temp_res.mean_dtheta();
       
-      if (temp_res.weight < 0) { LAROCV_DEBUG() << "bad weight" << std::endl; continue;}
-
+      if (temp_res.weight < 0) 
+	{ LAROCV_DEBUG() << "bad weight" << std::endl; continue;}
 
       // if this is the 1st loop, set the result
       if (res.xs_v.empty()) {
+	LAROCV_DEBUG() << "set result" << std::endl;
 	min_weight = temp_res.weight;
 	res = temp_res;
 	continue;
@@ -261,6 +265,7 @@ namespace larocv {
       // cross something else other than particle trajectory from the circle's center
       // then we break
       if (temp_res.xs_v.size() != xs_v.size()) {
+	LAROCV_DEBUG() << "more xs pt found break" << std::endl;
 	break;
       }
 
@@ -269,7 +274,8 @@ namespace larocv {
 	min_weight = temp_res.weight;
 	res = temp_res;
       }
-    }
+
+    } // end radius
 
     return res;
   }
@@ -463,8 +469,10 @@ namespace larocv {
 	      valid_ctr++;
 	    }
 	  
+	    // no valid plane point, continue
 	    if (valid_ctr < 2) continue;
 
+	    valid_ctr = 0;
 	    circle_v.clear();
 	    circle_v.resize(_geo._num_planes);
 
@@ -474,13 +482,21 @@ namespace larocv {
 	      if (!valid_v[plane]) continue;
 	      auto& cvtx = circle_v[plane];
 	      const auto& plane_pt = plane_pt_v[plane];
-	      auto res = CreateCircleVertex(image_v[plane], trial_vtx3d, plane_pt,cvtx);
+	      auto valid = CreateCircleVertex(image_v[plane], trial_vtx3d, plane_pt, cvtx);
+	      valid_v[plane] = valid;
+	      if (!valid) continue;
+	      valid_ctr++;
+
 	      auto const& xs_pts = cvtx.xs_v;
 	      if (xs_pts.size() >= num_xspt_count_v.size())
 		num_xspt_count_v.resize(xs_pts.size() + 1);
+
 	      num_xspt_count_v[xs_pts.size()] += 1;
 	    }
 	    
+	    // no valid circle vertex, continue
+	    if (valid_ctr < 2) continue;
+
 	    // Decide which plane to use
 	    if (!num_xspt) {
 	      size_t num_valid_plane = 0;
