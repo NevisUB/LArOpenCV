@@ -323,7 +323,7 @@ namespace larocv {
 	  auto shape_match_I3 = cv::matchShapes(ctor1,ctor2,CV_CONTOURS_MATCH_I3,0.0);
 
 	  auto total_shape_match = shape_match_I1 + shape_match_I2 + shape_match_I3;
-	  std::cout << "total_shape_match : " << total_shape_match << std::endl;
+	  LAROCV_DEBUG() << "total_shape_match : " << total_shape_match << std::endl;
 	  if (total_shape_match > sum_shape_match) continue;
 	  sum_shape_match = total_shape_match;
 
