@@ -65,6 +65,21 @@ namespace larocv {
     _tree->Branch("dtheta_xs_p1",&_dtheta_xs_p1,"dtheta_xs_p1/F");
     _tree->Branch("dtheta_xs_p2",&_dtheta_xs_p2,"dtheta_xs_p2/F");
 
+    _tree->Branch("dtheta_xs0_p0",&_dtheta_xs0_p0,"dtheta_xs0_p0/F");
+    _tree->Branch("dtheta_xs0_p1",&_dtheta_xs0_p1,"dtheta_xs0_p1/F");
+    _tree->Branch("dtheta_xs0_p2",&_dtheta_xs0_p2,"dtheta_xs0_p2/F");
+
+    _tree->Branch("dtheta_xs1_p0",&_dtheta_xs1_p0,"dtheta_xs1_p0/F");
+    _tree->Branch("dtheta_xs1_p1",&_dtheta_xs1_p1,"dtheta_xs1_p1/F");
+    _tree->Branch("dtheta_xs1_p2",&_dtheta_xs1_p2,"dtheta_xs1_p2/F");
+
+    _tree->Branch("dtheta_xs2_p0",&_dtheta_xs2_p0,"dtheta_xs2_p0/F");
+    _tree->Branch("dtheta_xs2_p1",&_dtheta_xs2_p1,"dtheta_xs2_p1/F");
+    _tree->Branch("dtheta_xs2_p2",&_dtheta_xs2_p2,"dtheta_xs2_p2/F");
+
+    _tree->Branch("cvtx_weight_p0",&_cvtx_weight_p0,"cvtx_weight_p0/F");
+    _tree->Branch("cvtx_weight_p1",&_cvtx_weight_p1,"cvtx_weight_p1/F");
+    _tree->Branch("cvtx_weight_p2",&_cvtx_weight_p2,"cvtx_weight_p2/F");
   
     _tree->Branch("charge_asym_v" , &_charge_asym_v);
     _tree->Branch("npixel_asym_v" , &_npixel_asym_v);
@@ -153,18 +168,30 @@ namespace larocv {
 	  _dtheta_sum_p0  = cvtx.sum_dtheta(); 
 	  _dtheta_mean_p0 = cvtx.mean_dtheta(); 
 	  _dtheta_xs_p0   = cvtx.dtheta_xs;
+	  _dtheta_xs0_p0  = cvtx.dtheta_mxs0;
+	  _dtheta_xs1_p0  = cvtx.dtheta_mxs1;
+	  _dtheta_xs2_p0  = cvtx.dtheta_mxs2;
+	  _cvtx_weight_p0 = cvtx.weight;
 	}
 
 	else if (plane==1) { 
 	  _dtheta_sum_p1  = cvtx.sum_dtheta(); 
 	  _dtheta_mean_p1 = cvtx.mean_dtheta(); 
 	  _dtheta_xs_p1   = cvtx.dtheta_xs;
+	  _dtheta_xs0_p1  = cvtx.dtheta_mxs0;
+	  _dtheta_xs1_p1  = cvtx.dtheta_mxs1;
+	  _dtheta_xs2_p1  = cvtx.dtheta_mxs2;
+	  _cvtx_weight_p1 = cvtx.weight;
 	}
 	
 	else if (plane==2) { 
 	  _dtheta_sum_p2  = cvtx.sum_dtheta(); 
 	  _dtheta_mean_p2 = cvtx.mean_dtheta(); 
 	  _dtheta_xs_p2   = cvtx.dtheta_xs;
+	  _dtheta_xs0_p2  = cvtx.dtheta_mxs0;
+	  _dtheta_xs1_p2  = cvtx.dtheta_mxs1;
+	  _dtheta_xs2_p2  = cvtx.dtheta_mxs2;
+	  _cvtx_weight_p2 = cvtx.weight;
 	}
       }
 
@@ -410,7 +437,22 @@ namespace larocv {
     _dtheta_xs_p1 = kINVALID_FLOAT;
     _dtheta_xs_p2 = kINVALID_FLOAT;
 
+    _dtheta_xs0_p0 = kINVALID_FLOAT;
+    _dtheta_xs0_p1 = kINVALID_FLOAT;
+    _dtheta_xs0_p2 = kINVALID_FLOAT;
 
+    _dtheta_xs1_p0 = kINVALID_FLOAT;
+    _dtheta_xs1_p1 = kINVALID_FLOAT;
+    _dtheta_xs1_p2 = kINVALID_FLOAT;
+
+    _dtheta_xs2_p0 = kINVALID_FLOAT;
+    _dtheta_xs2_p1 = kINVALID_FLOAT;
+    _dtheta_xs2_p2 = kINVALID_FLOAT;
+
+    _cvtx_weight_p0 = kINVALID_FLOAT;
+    _cvtx_weight_p1 = kINVALID_FLOAT;
+    _cvtx_weight_p2 = kINVALID_FLOAT;
+    
   }
 
 }

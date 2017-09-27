@@ -93,6 +93,22 @@ namespace larocv {
     float _dtheta_xs_p1;
     float _dtheta_xs_p2;
 
+    float _dtheta_xs0_p0;
+    float _dtheta_xs0_p1;
+    float _dtheta_xs0_p2;
+
+    float _dtheta_xs1_p0;
+    float _dtheta_xs1_p1;
+    float _dtheta_xs1_p2;
+
+    float _dtheta_xs2_p0;
+    float _dtheta_xs2_p1;
+    float _dtheta_xs2_p2;
+
+    float _cvtx_weight_p0;
+    float _cvtx_weight_p1;
+    float _cvtx_weight_p2;
+
   };
 
   class CosmicAnalysisFactory : public AlgoFactoryBase {

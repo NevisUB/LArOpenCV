@@ -133,7 +133,7 @@ namespace larocv {
     //
     std::vector<cv::Mat> img_thresh_v;
     img_thresh_v.reserve(3);
-    for(auto& im : img_v)
+    for(const auto& im : img_v)
       img_thresh_v.emplace_back(larocv::Threshold(im,10,255));
 
     _VertexScan3D.RegisterRegions(cand_vtx_v);

@@ -617,55 +617,71 @@ namespace larocv {
 
   geo2d::Vector<float>
   EstimateMidPoint(const cv::Mat& img,
-		   const geo2d::Vector<float>& pt) {
+		   const geo2d::Vector<float>& pt,
+		   const int direction) {
     
-    geo2d::Vector<float> res;
 
     std::array<geo2d::VectorArray<float>,4> cross_vv;
-    std::array<geo2d::Vector<float>,4> dir_v;
-    dir_v[0] = geo2d::Vector<float>( 1,  0);
-    dir_v[1] = geo2d::Vector<float>( 0,  1);
-    dir_v[2] = geo2d::Vector<float>(-1,  0);
-    dir_v[3] = geo2d::Vector<float>( 0, -1);
-      
+    static std::array<geo2d::Vector<float>,4> dir_v = {
+      geo2d::Vector<float>( 1,  0),
+      geo2d::Vector<float>( 0,  1),
+      geo2d::Vector<float>(-1,  0),
+      geo2d::Vector<float>( 0, -1),
+    };
+
     for(size_t dir_id=0; dir_id<4; ++dir_id) {
       auto& cross_v = cross_vv[dir_id];
 	
       auto dir = dir_v[dir_id];
       auto dir_pt = pt;
+      dir_pt.x += 0.5;
+      dir_pt.y += 0.5;
+
       int dir_ctr = 0;
       
       uint px = kINVALID_UINT;
 
-      while(px and Contained(img,dir_pt)) {
+      while(px and dir_ctr < 10 and Contained(img,dir_pt)) {
 	cross_v.push_back(dir_pt);
 	px = (uint) img.at<uchar>(dir_pt.y,dir_pt.x);
-	dir_ctr += 1;
+	dir_ctr++;
 	dir_pt = pt + dir_ctr * dir;
       }
     }
     
-    size_t min_dir_id = kINVALID_SIZE;
-    size_t min_size = kINVALID_SIZE;
-    for(size_t dir_id=0;dir_id<4;++dir_id) {
-      const auto& cross_v = cross_vv[dir_id];
-      if (cross_v.empty()) throw larbys("Cross should have initial pt");
-      if (cross_v.size() == 1) continue;
-      if (cross_v.size() < min_size) {
-	min_size = cross_v.size();
-	min_dir_id = dir_id;
-      }
-    }
+    // size_t min_dir_id = kINVALID_SIZE;
+    // size_t min_size   = kINVALID_SIZE;
+    // for(size_t dir_id=0;dir_id<2;++dir_id) {
+    //   const auto& cross0_v = cross_vv[dir_id];
+    //   const auto& cross1_v = cross_vv[dir_id+2];
+    //   auto cross_sz = cross0_v.size() + cross1_v.size();
+    //   if (cross_sz == 1) continue;
+    //   if (cross_sz < min_size) {
+    // 	min_size   = cross_sz;
+    // 	min_dir_id = dir_id;
+    //   }
+    // }
 
-    if (min_dir_id == kINVALID_SIZE)
-      return pt;
+    // if (min_dir_id == kINVALID_SIZE)
+    //   return pt;
       
-    // get the mid point
-    size_t mid_id = std::ceil((float) min_size / (float) 2.0);
+    // get average pt in this direction
+    auto res_cross0 = std::move(cross_vv[0]);
+    res_cross0     += std::move(cross_vv[2]);
+    auto res0 = res_cross0.mean();
 
-    res = cross_vv.at(min_dir_id).at(mid_id);
-      
-    return res;
+    auto res_cross1 = std::move(cross_vv[1]);
+    res_cross1     += std::move(cross_vv[3]);
+    auto res1 = res_cross1.mean();
+
+    auto res2 = geo2d::mean(res0,res1);
+
+    if (!direction)  return res0;
+    if (direction>0) return res1;
+    if (direction<0) return res2;
+    
+    throw larbys("unspecified direction?");
+    return res2;
   }
   
 }

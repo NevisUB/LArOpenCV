@@ -146,7 +146,8 @@ namespace larocv {
 
   geo2d::Vector<float>
   EstimateMidPoint(const cv::Mat& img,
-		   const geo2d::Vector<float>& pt);
+		   const geo2d::Vector<float>& pt,
+		   const int direction);
 
   
 }

@@ -66,7 +66,13 @@ namespace larocv {
       std::vector<larocv::data::PointPCA> xs_v; ///< List of charge deposit point on the circumference
       std::vector<float> dtheta_v;        ///< List of dtheta = angle between center=>cs vs. PCA @ xs
       float dtheta_xs;
+      float dtheta_mxs0;
+      float dtheta_mxs1;
+      float dtheta_mxs2;
       float weight;                       ///< A floating point "score", an indicator for how good this 2D vertex is
+      geo2d::Vector<float> mid_pt0;
+      geo2d::Vector<float> mid_pt1;
+      geo2d::Vector<float> mid_pt2;
 
       /// Attribute clear method
       void Clear();
