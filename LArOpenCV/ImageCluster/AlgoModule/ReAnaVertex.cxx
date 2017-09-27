@@ -47,8 +47,24 @@ namespace larocv {
       vertex.cvtx2d_v.resize(3);   
       
       _ReCreateVertex.ReCreate(vertex,thresh_img_v);
-
+      
+      
+      //
+      // ...hack for now...
+      //
+      bool bad = false;
       auto& ctor_vv = _ctor_vvv[vid];
+      for(size_t plane=0; plane < 3; ++plane) {
+	const auto& ctor_v   = ctor_vv[plane];
+	for(const auto& ctor : ctor_v) {
+	  if (ctor.empty()) continue;
+	  if (vertex.cvtx2d_v.at(plane).radius == -1) {
+	    bad = true;
+	  }
+	}
+      }
+      if(bad) continue;
+
       vertex_data.emplace_back(std::move(vertex));
       const auto& vtx3d = vertex_data.as_vector().back();
 
@@ -60,7 +76,7 @@ namespace larocv {
 	LAROCV_DEBUG() << "@plane=" << plane << " with " << ctor_v.size() << " contours" << std::endl;
 	for(auto& ctor : ctor_v) {
 	  if (ctor.empty()) continue;
-	  if ( vtx3d.cvtx2d_v.at(plane).radius == -1) {
+	  if (vtx3d.cvtx2d_v.at(plane).radius == -1) {
 	    LAROCV_CRITICAL() << "d=" << Pt2PtDistance(vtx3d.cvtx2d_v.at(plane).center,ctor) << std::endl;
 	    auto thresh = thresh_img_v[plane].clone();
 	    cv::drawContours(thresh,std::vector<GEO2D_Contour_t>(1,ctor),-1,cv::Scalar(150));
