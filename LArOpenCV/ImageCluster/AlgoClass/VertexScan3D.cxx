@@ -43,28 +43,59 @@ namespace larocv {
 				   const data::VertexSeed3D& vtx3d,
 				   const size_t plane,
 				   geo2d::Vector<float>& plane_pt) const {
-
     
+    // try {
+    //   auto x = _geo.x2col(vtx3d.x, plane);
+    //   if (x >= img.cols or x < 0) return false;
+
+    //   auto y = _geo.yz2row(vtx3d.y, vtx3d.z, plane);
+    //   if (y >= img.rows or y < 0) return false;
+
+    //   uint x_0 = x + 0.5;
+    //   uint y_0 = y + 0.5;
+
+    //   uint p = (uint)img.at<uchar>(y_0,x_0);
+    //   if(!p) return false;
+      
+    //   plane_pt.x = (float)x_0;
+    //   plane_pt.y = (float)y_0;
+    // }
+    // catch(const larbys& err) {
+    //   return false;
+    // }
+
     try {
       auto x = _geo.x2col(vtx3d.x, plane);
-      if (x >= img.cols or x < 0) return false;
-
       auto y = _geo.yz2row(vtx3d.y, vtx3d.z, plane);
+
+      if (x >= img.cols or x < 0) return false;
       if (y >= img.rows or y < 0) return false;
 
-      uint x_0 = x + 0.5;
-      uint y_0 = y + 0.5;
-
-      uint p = (uint)img.at<uchar>(y_0,x_0);
-      if(!p) return false;
+      uint x_0 = std::floor(x);
+      uint y_0 = std::floor(y);
       
-      plane_pt.x = (float)x_0;
-      plane_pt.y = (float)y_0;
+      uint x_1 = x_0+1 < img.cols ? x_0+1 : x_0;
+      uint y_1 = y_0+1 < img.rows ? y_0+1 : y_0;
+      
+      uint p00 = (uint)img.at<uchar>(y_0,x_0);
+      uint p10 = (uint)img.at<uchar>(y_1,x_0);
+      uint p01 = (uint)img.at<uchar>(y_0,x_1);
+      uint p11 = (uint)img.at<uchar>(y_1,x_1);
+
+      if(0){}
+      else if (p00) { x = x_0; y = y_0; }
+      else if (p11) { x = x_1; y = y_1; }
+      else if (p10) { x = x_0; y = y_1; }
+      else if (p01) { x = x_1; y = y_0; }
+
+      else { return false; }
+      
+      plane_pt.x = x;
+      plane_pt.y = y;
     }
     catch(const larbys& err) {
       return false;
     }
-
     return true;
   }
 
