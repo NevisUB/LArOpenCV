@@ -85,6 +85,9 @@ namespace larocv {
       geo2d::Circle<float> as_circle() const
       { return geo2d::Circle<float>(center,radius); }
 
+      geo2d::VectorArray<float> xs_as_array() const
+      { geo2d::VectorArray<float> res; res.reserve(xs_v.size()); for(const auto& xs:xs_v) res.emplace_back(xs.pt); return res;}
+      
     };
 
 

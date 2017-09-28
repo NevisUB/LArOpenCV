@@ -72,6 +72,7 @@ namespace larocv {
     bool _merge_voxels;
     bool _require_3planes_charge;
     float _allowed_radius;
+    bool _polar_qpoint;
     std::vector<float> _radius_v;
     
     std::vector<std::vector<data::CircleVertex> > _history_vv;
@@ -88,6 +89,20 @@ namespace larocv {
     const std::vector<VoxelArray>& Voxels() const { return  _voxel_vv; }
 
     const larocv::LArPlaneGeo& Geo() const { return  _geo; }
+    
+    inline geo2d::Line<float> draw_line(const geo2d::Vector<float>& pt1,
+					const geo2d::Vector<float>& pt2) const
+    { return geo2d::Line<float>(pt1, pt1 - pt2); }
+
+    inline float make_dtheta(const geo2d::Line<float>& l1, 
+			     const geo2d::Line<float>& l2) const
+    { 
+      auto dtheta = std::fabs(geo2d::angle(l1) - geo2d::angle(l2));
+      if (dtheta > 90) dtheta = std::fabs(180 - dtheta);      
+      return dtheta;
+    }
+
+
 
   };
 }

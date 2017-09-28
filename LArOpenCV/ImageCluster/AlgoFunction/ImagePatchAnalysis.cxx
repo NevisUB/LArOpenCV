@@ -46,7 +46,7 @@ namespace larocv {
 	      geo2d::Vector<float> pt,
 	      float radius) {
     cv::Mat res;
-    cv::linearPolar(img, res, pt, radius, ::cv::WARP_FILL_OUTLIERS);
+    cv::linearPolar(img, res, pt, radius, cv::WARP_FILL_OUTLIERS);
     return res;
   }
   
@@ -113,7 +113,7 @@ namespace larocv {
   }
   
   geo2d::VectorArray<float>
-  QPointOnCircle(const ::cv::Mat& img,
+  QPointOnCircle(const cv::Mat& img,
 		 const geo2d::Circle<float>& circle,
 		 const float pi_threshold,
 		 const float asup,
@@ -137,8 +137,10 @@ namespace larocv {
     return tmp_v;
   }
 
+  
+
   std::vector<geo2d::VectorArray<float> >
-  QPointArrayOnCircleArray(const ::cv::Mat& img,
+  QPointArrayOnCircleArray(const cv::Mat& img,
 			   const geo2d::Vector<float>& center,
 			   const std::vector<float>& radius_v,
 			   const float pi_threshold,
@@ -198,7 +200,7 @@ namespace larocv {
 
   
   geo2d::VectorArray<float>
-  RadialIntersections(const ::cv::Mat& polarimg,
+  RadialIntersections(const cv::Mat& polarimg,
 		      const geo2d::Circle<float>& circle,
 		      const int col,
 		      const float pi_threshold,
@@ -323,7 +325,7 @@ namespace larocv {
 				 size_t range_x, size_t range_y, float pi_threshold)
   {
     // Make a better guess
-    ::cv::Rect rect(center.x - range_x, center.y - range_y, range_x*2+1,range_y*2+1);
+    cv::Rect rect(center.x - range_x, center.y - range_y, range_x*2+1,range_y*2+1);
     CorrectEdgeRectangle(img,rect,range_x*2+1,range_y*2+1);
     
     LAROCV_SDEBUG() << "rows cols " << img.rows
@@ -352,7 +354,7 @@ namespace larocv {
   }
   
 
-  geo2d::Line<float> SquarePCA(const ::cv::Mat& img,
+  geo2d::Line<float> SquarePCA(const cv::Mat& img,
 			       geo2d::Vector<float> pt,
 			       float width, float height)
   {
@@ -378,7 +380,7 @@ namespace larocv {
   }
 
   double
-  SquareR(const ::cv::Mat& img,
+  SquareR(const cv::Mat& img,
 	  geo2d::Vector<float> pt,
 	  float width, float height) {
     
@@ -415,7 +417,7 @@ namespace larocv {
   
   
   void
-  CorrectEdgeRectangle(const ::cv::Mat& img,
+  CorrectEdgeRectangle(const cv::Mat& img,
 		       cv::Rect& rect,
 		       int w, int h)
   {
@@ -665,16 +667,18 @@ namespace larocv {
 		   const int direction) {
     
 
-    std::array<geo2d::VectorArray<float>,4> cross_vv;
+    static std::array<geo2d::VectorArray<float>,4> cross_vv;
     static std::array<geo2d::Vector<float>,4> dir_v = {
       geo2d::Vector<float>( 1,  0),
       geo2d::Vector<float>( 0,  1),
       geo2d::Vector<float>(-1,  0),
       geo2d::Vector<float>( 0, -1),
     };
+    
 
     for(size_t dir_id=0; dir_id<4; ++dir_id) {
       auto& cross_v = cross_vv[dir_id];
+      cross_v.clear();
 	
       auto dir = dir_v[dir_id];
       auto dir_pt = pt;
@@ -712,5 +716,54 @@ namespace larocv {
     return res2;
   }
   
+  geo2d::VectorArray<float> 
+  OnCircleGroups(const cv::Mat& img,
+		 const geo2d::Circle<float>& c) {
+    
+    auto ret_img = OnCircleImage(img,c);
+    auto pts_v   = FindNonZero(ret_img);
+    auto ctor_v  = FindContours(ret_img);
+
+    std::vector<bool> used_v(pts_v.size(),false);
+
+    static geo2d::VectorArray<float> res_v;
+    res_v.clear();
+    res_v.resize(ctor_v.size());
+    geo2d::VectorArray<float> in_v;
+    
+    for(size_t cid=0; cid<ctor_v.size(); ++cid) {
+      in_v.clear();
+      in_v.reserve(pts_v.size() / 2);
+      for(size_t pid=0; pid<pts_v.size(); ++pid) {
+	if (used_v[pid]) continue;
+	if (PointPolygonTest(ctor_v[cid],pts_v[pid])) {
+	  in_v.emplace_back(pts_v[pid].x,pts_v[pid].y);
+	  used_v[pid] = true;
+	}
+      }
+
+      if (in_v.size() == 1) continue;
+
+      res_v[cid] = geo2d::AngularAverage(c,in_v);
+    }
+    return res_v;
+  }
+    
+  std::vector<geo2d::VectorArray<float> >
+  OnCircleGroupsOnCircleArray(const cv::Mat& img,
+			      const geo2d::Vector<float>& center,
+			      const std::vector<float>& radius_v)
+  {
+
+    std::vector<geo2d::VectorArray<float> > res_v;
+    res_v.resize(radius_v.size());
+    
+    for(size_t rid=0; rid<radius_v.size(); ++rid) 
+      res_v[rid] = OnCircleGroups(img,geo2d::Circle<float>(center,radius_v[rid]));
+    
+    return res_v;
+  }
+
+
 }
 #endif

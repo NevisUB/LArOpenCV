@@ -16,6 +16,14 @@ namespace larocv {
 
   bool
   PointPolygonTest(const GEO2D_Contour_t& ctor,
+		   const cv::Point_<int>& pt) {
+
+    static double dist;
+    return PointPolygonTest(ctor,pt,dist);
+  }
+
+  bool
+  PointPolygonTest(const GEO2D_Contour_t& ctor,
 		   const geo2d::Vector<float>& pt) {
 
     static double dist;
@@ -25,6 +33,19 @@ namespace larocv {
   bool
   PointPolygonTest(const GEO2D_Contour_t& ctor,
 		   const geo2d::Vector<float>& pt,
+		   double& dist) {
+    dist = cv::pointPolygonTest(ctor,pt,true);
+    if (dist >= 0)
+      return true;
+
+    dist *= -1;
+    return false;
+  }
+
+
+  bool
+  PointPolygonTest(const GEO2D_Contour_t& ctor,
+		   const cv::Point_<int>& pt,
 		   double& dist) {
     dist = cv::pointPolygonTest(ctor,pt,true);
     if (dist >= 0)
@@ -146,15 +167,59 @@ namespace larocv {
 
     return dst_img;
   }
-  
+
+  GEO2D_Contour_t OnCircle(const cv::Mat& img,
+			   const geo2d::Circle<float>& c) {
+    return FindNonZero(OnCircleImage(img,c));
+  }
+
+
+  cv::Mat OnCircleImage(const cv::Mat& img,
+			const geo2d::Circle<float>& c) {
+    
+    cv::Mat dst_img(img.size(),img.type(),cv::Scalar(0));
+    cv::Mat mask(img.size(), img.type(),cv::Scalar(0));
+    cv::circle(mask,
+	       cv::Point( (int)(c.center.x+0.5),(int(c.center.y+0.5))),
+	       (int)(c.radius),
+	       cv::Scalar(255),
+	       1,
+	       cv::LINE_8,
+	       0);    
+
+    img.copyTo(dst_img,mask);
+
+    return dst_img;
+  }
+
+
+  std::vector<geo2d::VectorArray<float> >  
+  Associate(const GEO2D_Contour_t& pts_v,
+	    const geo2d::VectorArray<float>& target_v) {
+
+    static std::vector<geo2d::VectorArray<float> >  res_v;
+    res_v.clear();
+    res_v.resize(target_v.size());
+    float dist = kINVALID_FLOAT;
+    size_t cid = kINVALID_SIZE;
+    for(const auto& pt : pts_v) {
+      dist = kINVALID_FLOAT;  
+      cid = kINVALID_SIZE;
+      for(size_t tid=0; tid<target_v.size(); ++tid) {
+	auto d = std::sqrt(std::pow(target_v[tid].x - (float)pt.x,2) + 
+			   std::pow(target_v[tid].y - (float)pt.y,2));
+	if (d<dist) { dist = d; cid = tid;}
+      }
+      res_v[cid].emplace_back(pt.x,pt.y);
+    }
+    return res_v;
+  }
+
   cv::Mat MaskImage(const cv::Mat& img,
 		    const geo2d::Circle<float>& c,
 		    int  tol,
 		    bool  maskout)
   {
-    // cv::Mat dst_img(img.size(),img.type(), CV_8UC1);
-    // cv::Mat mask = cv::Mat(img.size(),img.type(),CV_8UC1);
-
     cv::Mat dst_img(img.size(),img.type(),cv::Scalar(0));
     cv::Mat mask(img.size(), img.type(),cv::Scalar(0));
 
@@ -565,7 +630,7 @@ namespace larocv {
     double circum = 0.0;
     double angle_sum = 0.0;
     double weight_sum = 0.0;
-    double rad2deg = 57.2957795131;
+    static double rad2deg = 57.2957795131;
     
     for(int cid=0; cid < last_id; ++cid) {
       int id1=cid;

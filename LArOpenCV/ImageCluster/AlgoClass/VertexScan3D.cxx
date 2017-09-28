@@ -34,7 +34,7 @@ namespace larocv {
     _prohibit_one_xs   = pset.get<bool> ("ProhibitOneXs",false); 
     _dtheta_cut        = pset.get<float>("dThetaCut"); // 10
     _merge_voxels      = pset.get<bool> ("MergeVoxels",false);
-
+    _polar_qpoint      = pset.get<bool> ("UsePolarQPoint",true);
     _require_3planes_charge = pset.get<bool>("Require3PlanesCharge",false);
     if(_require_3planes_charge)
       _allowed_radius = pset.get<float>("AllowedRadius",0.0);
@@ -93,38 +93,111 @@ namespace larocv {
     
     // special handling for 2-crossing 180 degree guy
     cvtx.dtheta_xs = kINVALID_FLOAT;
-    if (cvtx.xs_v.size() == 2) {
-      auto center_line0 = geo2d::Line<float>(cvtx.xs_v[0].pt, cvtx.xs_v[0].pt - cvtx.center);
-      auto center_line1 = geo2d::Line<float>(cvtx.xs_v[1].pt, cvtx.xs_v[1].pt - cvtx.center);
-      auto dtheta = std::fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
-      if (dtheta > 90) dtheta = std::fabs(180 - dtheta);
-      cvtx.dtheta_xs = dtheta;
-      LAROCV_DEBUG() << "dtheta=" << dtheta << std::endl;
-      if (cvtx.dtheta_xs < _dtheta_cut) return -1;
-      if (img.rows>0 & img.cols>0) {
-	//
-	// both axis mid point
-	//
-	cvtx.mid_pt2 = EstimateMidPoint(img,cvtx.center,-1);
-	center_line0 = geo2d::Line<float>(cvtx.xs_v[0].pt, cvtx.xs_v[0].pt - cvtx.mid_pt2);
-	center_line1 = geo2d::Line<float>(cvtx.xs_v[1].pt, cvtx.xs_v[1].pt - cvtx.mid_pt2);
-	dtheta = std::fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
-	if (dtheta > 90) dtheta = std::fabs(180 - dtheta);
-	cvtx.dtheta_mxs2 = dtheta;
-	if (cvtx.dtheta_mxs2 < _dtheta_cut) return -1;
+    cvtx.mid_pt2   = EstimateMidPoint(img,cvtx.center,-1);
 
-	//
-	// point pca
-	//
-	center_line0 = cvtx.xs_v.front().line;
-	center_line1 = cvtx.xs_v.back().line;
-	dtheta = std::fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
-	if (dtheta > 90) dtheta = std::fabs(180 - dtheta);
-	cvtx.dtheta_mxs3 = dtheta;
-	if (cvtx.dtheta_mxs3 < _dtheta_cut) return -1;
+    if (cvtx.xs_v.size() == 2) { 
+      auto center_line0 = draw_line(cvtx.xs_v[0].pt,cvtx.center);
+      auto center_line1 = draw_line(cvtx.xs_v[1].pt,cvtx.center);
+      cvtx.dtheta_xs = make_dtheta(center_line0,center_line1);
+      if (cvtx.dtheta_xs < _dtheta_cut) return -1;
+      assert (img.rows>0 and img.cols>0);
+      //
+      // both axis mid point
+      //
+      center_line0 = draw_line(cvtx.xs_v[0].pt,cvtx.mid_pt2);
+      center_line1 = draw_line(cvtx.xs_v[1].pt,cvtx.mid_pt2);
+      cvtx.dtheta_mxs2 = make_dtheta(center_line0,center_line1);
+      if (cvtx.dtheta_mxs2 < _dtheta_cut) return -1;
+
+      //
+      // point pca
+      //
+      cvtx.dtheta_mxs3 = make_dtheta(cvtx.xs_v.front().line,
+				     cvtx.xs_v.back().line);
+      if (cvtx.dtheta_mxs3 < _dtheta_cut) return -1;
+	
+      //
+      // stability 
+      //
+      auto pts_c_v = OnCircle(img,cvtx.as_circle());
+      auto ass_v = Associate(pts_c_v,cvtx.xs_as_array());
+      for(size_t aid0=0; aid0<ass_v.size(); ++aid0) { // group 1
+	for(size_t aid1=aid0+1; aid1<ass_v.size(); ++aid1) { // group2
+	  for(const auto& pt0 : ass_v[aid0]) {
+	    for(const auto& pt1 : ass_v[aid1]) {
+	      center_line0 = draw_line(pt0,cvtx.mid_pt2);
+	      center_line1 = draw_line(pt1,cvtx.mid_pt2);
+	      auto dtheta = make_dtheta(center_line0,center_line1);
+	      if (dtheta < _dtheta_cut) return -1;
+	    }
+	  }
+	}
       }
-    }
+
+    } // end cvtx.size==2
     
+    else if (cvtx.xs_v.size() == 3) { 
+      auto center_line0 = draw_line(cvtx.xs_v[0].pt,cvtx.center);
+      auto center_line1 = draw_line(cvtx.xs_v[1].pt,cvtx.center);
+      auto center_line2 = draw_line(cvtx.xs_v[2].pt,cvtx.center);
+
+      auto dtheta0      = make_dtheta(center_line0,center_line1);
+      if (dtheta0<_dtheta_cut) return -1;
+      auto dtheta1      = make_dtheta(center_line0,center_line2);
+      if (dtheta1<_dtheta_cut) return -1;
+      auto dtheta2      = make_dtheta(center_line1,center_line2);
+      if (dtheta2<_dtheta_cut) return -1;
+
+      //
+      // both axis mid point
+      //
+      center_line0 = draw_line(cvtx.xs_v[0].pt,cvtx.mid_pt2);
+      center_line1 = draw_line(cvtx.xs_v[1].pt,cvtx.mid_pt2);
+      center_line2 = draw_line(cvtx.xs_v[2].pt,cvtx.mid_pt2);
+      dtheta0      = make_dtheta(center_line0,center_line1);
+      if (dtheta0<_dtheta_cut) return -1;
+      dtheta1      = make_dtheta(center_line0,center_line2);
+      if (dtheta1<_dtheta_cut) return -1;
+      dtheta2      = make_dtheta(center_line1,center_line2);
+      if (dtheta2<_dtheta_cut) return -1;
+
+
+      //
+      // point pca
+      //
+      center_line0 = cvtx.xs_v[0].line;
+      center_line1 = cvtx.xs_v[1].line;
+      center_line2 = cvtx.xs_v[2].line;
+
+      dtheta0      = make_dtheta(center_line0,center_line1);
+      if (dtheta0<_dtheta_cut) return -1;
+      dtheta1      = make_dtheta(center_line0,center_line2);
+      if (dtheta1<_dtheta_cut) return -1;
+      dtheta2      = make_dtheta(center_line1,center_line2);
+      if (dtheta2<_dtheta_cut) return -1;
+	
+      //
+      // stability 
+      //
+      auto pts_c_v = OnCircle(img,cvtx.as_circle());
+      auto ass_v = Associate(pts_c_v,cvtx.xs_as_array());
+      for(size_t aid0=0; aid0<ass_v.size(); ++aid0) { // group 1
+	for(size_t aid1=aid0+1; aid1<ass_v.size(); ++aid1) { // group2
+	  for(const auto& pt0 : ass_v[aid0]) {
+	    for(const auto& pt1 : ass_v[aid1]) {
+	      center_line0 = draw_line(pt0,cvtx.mid_pt2);
+	      center_line1 = draw_line(pt1,cvtx.mid_pt2);
+	      auto dtheta = make_dtheta(center_line0,center_line1);
+	      if (dtheta < _dtheta_cut) return -1;
+	    }
+	  }
+	}
+      }
+
+    } // end cvtx.size==3
+
+
+
     LAROCV_DEBUG() << "ret=" << dtheta_sum << std::endl;
     if (dtheta_sum > dtheta_sigma) return dtheta_sum;
     
@@ -187,30 +260,32 @@ namespace larocv {
     res.center = pt;
 
     // apply 2 degrees angular supression
-    LAROCV_DEBUG() <<  "..." << _pi_threshold << " " << _angle_supression << " " << _width_supression << std::endl;
-    const auto temp_xs_vv = QPointArrayOnCircleArray(img, pt,
-						     _radius_v, _pi_threshold, 
-						     _angle_supression, _width_supression);
-
+    std::vector<geo2d::VectorArray<float> > temp_xs_vv;
+    if (_polar_qpoint)  
+      temp_xs_vv = QPointArrayOnCircleArray(img, pt,
+					    _radius_v, _pi_threshold, 
+					    _angle_supression, _width_supression);
+    else
+      temp_xs_vv = OnCircleGroupsOnCircleArray(img,pt,_radius_v);
+    
+    std::vector<std::vector<data::PointPCA> > xs_vv(temp_xs_vv.size());
     double min_weight = kINVALID_DOUBLE;
     data::CircleVertex temp_res;
     std::vector<float> dtheta_v;
-    std::vector<data::PointPCA> xs_v;
 
+    bool first = true;
     for (size_t r_idx = 0; r_idx < _radius_v.size(); ++r_idx) {
       auto const& radius = _radius_v[r_idx];
       auto temp_xs_v = temp_xs_vv[r_idx];
+      auto& xs_v = xs_vv[r_idx];
+      xs_v.reserve(temp_xs_v.size());
+
       LAROCV_DEBUG() << "@r=" << radius << " & nxs=" << temp_xs_v.size() << std::endl;
-      if (temp_xs_v.empty()) { 
+
+      if (temp_xs_v.size() < 2) { 
 	LAROCV_DEBUG() << "...empty xs" << std::endl;
 	continue;
       }
-      if (_prohibit_one_xs && temp_xs_v.size()==1) {
-	LAROCV_DEBUG() << "...prohibit one xs" << std::endl;
-	continue;
-      }
-      xs_v.clear();
-      xs_v.reserve(temp_xs_v.size());
 
       dtheta_v.clear();
       dtheta_v.reserve(temp_xs_v.size());
@@ -221,17 +296,32 @@ namespace larocv {
 	// Line that connects center to xs
 	try {
 	  auto local_pca   = SquarePCA(img, xs_pt, _pca_box_size, _pca_box_size);
-	  auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
+	  auto center_line = draw_line(xs_pt,pt);
 	  xs_v.push_back(data::PointPCA(xs_pt, local_pca));
-	  auto theta = std::fabs(geo2d::angle(center_line) - geo2d::angle(local_pca));
-	  if (theta>90) theta = std::fabs(180-theta);
-	  dtheta_v.push_back(theta);
+	  dtheta_v.push_back(make_dtheta(center_line,local_pca));
 	} catch (const larbys& err) {
 	  continue;
 	}
       }
+
+      if (xs_v.size() < 2) { 
+	LAROCV_DEBUG() << "...empty xs" << std::endl;
+	continue;
+      }
       
-      if (dtheta_v.empty()) {
+      if(!first and (temp_res.xs_v.size() < xs_v.size()) ) {
+	LAROCV_DEBUG() << "...more xs pt found break" << std::endl;
+	break;
+      }
+    
+      if(r_idx) {
+	if(xs_vv[r_idx-1].size() < xs_v.size()) {
+	  LAROCV_DEBUG() << "...more xs pt found break" << std::endl;
+	  break;
+	}
+      }
+      
+      if (dtheta_v.size() != xs_v.size()) {
 	LAROCV_DEBUG() << "...no dtheta" << std::endl;
 	continue;
       }
@@ -256,21 +346,14 @@ namespace larocv {
       assert(temp_res.weight != kINVALID_FLOAT);
 
       // if this is the 1st loop, set the result
-      if (res.xs_v.empty()) {
+      if (first) {
 	LAROCV_DEBUG() << "...set result" << std::endl;
 	min_weight = temp_res.weight;
 	res        = temp_res;
+	first = false;
 	continue;
       }
       
-      // if this (new) radius has more crossing point, that means we started to
-      // cross something else other than particle trajectory from the circle's center
-      // then we break
-      if (temp_res.xs_v.size() != xs_v.size()) {
-	LAROCV_DEBUG() << "...more xs pt found break" << std::endl;
-	break;
-      }
-
       // else check if this circle is more preferable than the last one
       if (temp_res.weight < min_weight) {
 	min_weight = temp_res.weight;
@@ -280,6 +363,7 @@ namespace larocv {
     } // end radius
     if (res.weight>0)
       LAROCV_DEBUG() << "return @pt="<<pt<<" res.rad=" << res.radius << " res.wei=" << res.weight<<std::endl;
+
     return res;
   }
 

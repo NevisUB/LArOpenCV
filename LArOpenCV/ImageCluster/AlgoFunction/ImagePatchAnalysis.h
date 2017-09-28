@@ -47,14 +47,14 @@ namespace larocv {
 	    double max_val);
 
   geo2d::VectorArray<float>
-  QPointOnCircle(const ::cv::Mat& img,
+  QPointOnCircle(const cv::Mat& img,
 		 const geo2d::Circle<float>& circle,
 		 const float pi_threshold=0.1,
 		 const float asup=0,
 		 const float wsup=0);
   
   std::vector<geo2d::VectorArray<float> >
-  QPointArrayOnCircleArray(const ::cv::Mat& img,
+  QPointArrayOnCircleArray(const cv::Mat& img,
 			   const geo2d::Vector<float>& center,
 			   const std::vector<float>& radius_v,
 			   const float pi_threshold=0.1,
@@ -62,7 +62,7 @@ namespace larocv {
 			   const float wsup=0);
   
   geo2d::VectorArray<float>
-  RadialIntersections(const ::cv::Mat& polarimg,
+  RadialIntersections(const cv::Mat& polarimg,
 		      const geo2d::Circle<float>& circle,
 		      const int col,
 		      const float pi_threshold,
@@ -82,17 +82,17 @@ namespace larocv {
 	    geo2d::Vector<float>& edge2);
 
   geo2d::Line<float>
-  SquarePCA(const ::cv::Mat& img,
+  SquarePCA(const cv::Mat& img,
 	    geo2d::Vector<float> pt,
 	    float width, float height);
 
   double
-  SquareR(const ::cv::Mat& img,
+  SquareR(const cv::Mat& img,
 	  geo2d::Vector<float> pt,
 	  float width, float height);
   
   void
-  CorrectEdgeRectangle(const ::cv::Mat& img,
+  CorrectEdgeRectangle(const cv::Mat& img,
 		       cv::Rect& rect,
 		       int w,
 		       int h);
@@ -152,6 +152,15 @@ namespace larocv {
   EstimateMidPoint(const cv::Mat& img,
 		   const geo2d::Vector<float>& pt,
 		   const int direction);
+
+  geo2d::VectorArray<float> 
+  OnCircleGroups(const cv::Mat& img,
+		 const geo2d::Circle<float>& c);
+
+  std::vector<geo2d::VectorArray<float> >
+  OnCircleGroupsOnCircleArray(const cv::Mat& img,
+			      const geo2d::Vector<float>& center,
+			      const std::vector<float>& radius_v);
 
   
 }

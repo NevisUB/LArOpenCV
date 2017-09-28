@@ -16,6 +16,14 @@ namespace larocv {
   PointPolygonTest(const GEO2D_Contour_t& ctor,
 		   const geo2d::Vector<float>& pt,
 		   double& dist);
+  bool
+  PointPolygonTest(const GEO2D_Contour_t& ctor,
+		   const cv::Point_<int>& pt);
+
+  bool
+  PointPolygonTest(const GEO2D_Contour_t& ctor,
+		   const cv::Point_<int>& pt,
+		   double& dist);
   
   cv::RotatedRect
   MinAreaRect(const GEO2D_Contour_t& ctor);
@@ -45,6 +53,18 @@ namespace larocv {
 	     const GEO2D_ContourArray_t& veto_ctor_v,
 	     float pi_threshold=0);
 
+  GEO2D_Contour_t 
+  OnCircle(const cv::Mat& img,
+           const geo2d::Circle<float>& c);
+
+  cv::Mat 
+  OnCircleImage(const cv::Mat& img,
+                const geo2d::Circle<float>& c);
+
+  std::vector<geo2d::VectorArray<float> >  
+  Associate(const GEO2D_Contour_t& pts_v,
+            const geo2d::VectorArray<float>& target_v);
+    
   cv::Mat
   MaskImage(const cv::Mat& img,
 	    const GEO2D_ContourArray_t& veto_ctor_v,
