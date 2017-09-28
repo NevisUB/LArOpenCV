@@ -35,14 +35,13 @@ namespace larocv {
     void Configure(const Config_t &pset);
     
     bool CreateCircleVertex(cv::Mat img,
-			   const data::VertexSeed3D& vtx3d,
 			    const geo2d::Vector<float>& plane_pt,
-			    data::CircleVertex& cvtx) const;
+			    data::CircleVertex& cvtx);
     
     bool SetPlanePoint(cv::Mat img,
 		       const data::VertexSeed3D& vtx3d,
 		       const size_t plane,
-		       geo2d::Vector<float>& plane_pt) const;
+		       geo2d::Vector<float>& plane_pt);
     
     const larocv::LArPlaneGeo& geo() const { return _geo; }
 
@@ -50,11 +49,11 @@ namespace larocv {
 
     void RegisterRegions(const std::vector<data::Vertex3D>& vtx3d_v);
     
-    data::Vertex3D ScanRegion(const VoxelArray& voxel, const std::vector<cv::Mat>& image_v, size_t num_xspt=0) const;
+    data::Vertex3D ScanRegion(const VoxelArray& voxel, const std::vector<cv::Mat>& image_v, size_t num_xspt=0);
     
-    std::vector<data::Vertex3D> RegionScan3D(const std::vector<cv::Mat>& image_v) const;
+    std::vector<data::Vertex3D> RegionScan3D(const std::vector<cv::Mat>& image_v);
 
-    data::CircleVertex RadialScan2D(const cv::Mat& img, const geo2d::Vector<float>& pt) const;
+    data::CircleVertex RadialScan2D(const cv::Mat& img, const geo2d::Vector<float>& pt);
 
     float _dx;
     float _dy;
@@ -65,6 +64,7 @@ namespace larocv {
     float _max_radius;
     float _pi_threshold;
     float _angle_supression;
+    float _width_supression;
     size_t _pca_box_size;
     bool _use_circle_weight;
     bool _prohibit_one_xs;
@@ -74,10 +74,10 @@ namespace larocv {
     float _allowed_radius;
     std::vector<float> _radius_v;
     
-  private:
+    std::vector<std::vector<data::CircleVertex> > _history_vv;
 
-    double CircleWeight(data::CircleVertex& cvtx,const cv::Mat& img) const;
-    double CircleWeight(larocv::data::CircleVertex& cvtx) const;
+    double CircleWeight(data::CircleVertex& cvtx, const cv::Mat& img);
+    double CircleWeight(larocv::data::CircleVertex& cvtx);
 
     void MergeVoxels(std::vector<VoxelArray>& voxel_v);
 
@@ -85,7 +85,6 @@ namespace larocv {
 
     std::vector<VoxelArray> _voxel_vv;
     
-  public:
     const std::vector<VoxelArray>& Voxels() const { return  _voxel_vv; }
 
     const larocv::LArPlaneGeo& Geo() const { return  _geo; }

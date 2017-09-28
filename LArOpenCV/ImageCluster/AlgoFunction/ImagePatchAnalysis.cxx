@@ -17,7 +17,7 @@
 #include <cmath>
 #include <array>
 #include <cassert>
-
+#define T2R 0.0175
 namespace larocv {
 
   cv::Mat
@@ -116,12 +116,25 @@ namespace larocv {
   QPointOnCircle(const ::cv::Mat& img,
 		 const geo2d::Circle<float>& circle,
 		 const float pi_threshold,
-		 const float supression)
+		 const float asup,
+		 const float wsup)
   {
+    bool inside = false;
     auto polarimg = LinearPolar(img,circle.center,circle.radius*2);
-    
     size_t col = (size_t)(polarimg.cols / 2);
-    return RadialIntersections(polarimg,circle,col,pi_threshold,supression);
+
+    auto ret_v = RadialIntersections(polarimg,circle,col,pi_threshold,asup,wsup);
+
+    geo2d::VectorArray<float> tmp_v;
+    tmp_v.reserve(ret_v.size());
+    for(auto& ret : ret_v) {
+      inside  = true;
+      inside &= ((ret.y>0) and (ret.x>0));
+      inside &= ((ret.y<img.rows) and (ret.x<img.cols));
+      if (inside and img.at<uchar>(ret.y,ret.x)) 
+	tmp_v.emplace_back(std::move(ret));
+    }
+    return tmp_v;
   }
 
   std::vector<geo2d::VectorArray<float> >
@@ -129,14 +142,18 @@ namespace larocv {
 			   const geo2d::Vector<float>& center,
 			   const std::vector<float>& radius_v,
 			   const float pi_threshold,
-			   const float supression)
+			   const float asup,
+			   const float wsup)
   {
     LAROCV_SDEBUG() << " called with center " << center
 		    << ", " << radius_v.size()
 		    << " radii, px thresh " << pi_threshold
-		    << ", & sup " << supression << std::endl;
+		    << ", & sup " << asup << std::endl;
     
     std::vector<geo2d::VectorArray<float> > res_v;
+    geo2d::VectorArray<float> tmp_v;
+    bool inside=false;
+    
     if(radius_v.empty()) return res_v;
     float max_radi = 0;
     float min_radi = -1;
@@ -164,9 +181,17 @@ namespace larocv {
       auto const& radius = radius_v[col_idx];
       LAROCV_SDEBUG() << "... @ radius " << radius << std::endl;
 	
-      auto res = RadialIntersections(polarimg,geo2d::Circle<float>(center,radius),col,pi_threshold,supression);
-	
-      res_v.emplace_back(std::move(res));
+      auto ret_v = RadialIntersections(polarimg,geo2d::Circle<float>(center,radius),col,pi_threshold,asup,wsup);
+      tmp_v.clear();
+      tmp_v.reserve(ret_v.size());
+      for(auto& ret : ret_v) {
+	inside  = true;
+	inside &= ((ret.y>0) and (ret.x>0));
+	inside &= ((ret.y<img.rows) and (ret.x<img.cols));
+	if (inside and img.at<uchar>(ret.y,ret.x)) 
+	  tmp_v.emplace_back(std::move(ret));
+      }
+      res_v.emplace_back(std::move(tmp_v));
     }
     return res_v;
   }
@@ -177,7 +202,8 @@ namespace larocv {
 		      const geo2d::Circle<float>& circle,
 		      const int col,
 		      const float pi_threshold,
-		      const float supression)
+		      const float asup,
+		      const float wsup)
   {
 
     if (col > polarimg.cols) {
@@ -199,11 +225,11 @@ namespace larocv {
 	continue;
       }
       if(range.first < 0) range.first = range.second = row;
-      
       else range.second = row;
-      
     }
+
     if(range.first>=0 && range.second>=0) range_v.push_back(range);
+
     // Check if end should be combined w/ start
     if(range_v.size() >= 2) {
       if(range_v[0].first == 0 && (range_v.back().second+1) == polarimg.rows) {
@@ -217,23 +243,34 @@ namespace larocv {
     
     for(auto const& r : range_v) {
       float angle = ((float)(r.first + r.second))/2.;
+      float width = std::fabs(r.second - r.first);
+
       if(angle < 0) angle += (float)(polarimg.rows);
-      angle = angle * M_PI * 2. / ((float)(polarimg.rows));
-      float width = std::abs(r.second - r.first);
+
+      angle *= (M_PI * 2. / ((float)(polarimg.rows)));
+      width *= (M_PI * 2. / ((float)(polarimg.rows)));
+
       range_a_w_v.emplace_back(angle,width);
     }
 
     auto npts = range_a_w_v.size();
     
-    if(supression>0 and npts>1) {
-      LAROCV_SDEBUG() << "Applying angular supression" << std::endl;
+    if(asup>0 and npts>1) {
       
+      auto dasup = asup * T2R;
+      auto dwsup = wsup * T2R;
+      LAROCV_SDEBUG() << "dasup=" << dasup << " dwsup=" << dwsup << std::endl;
       std::vector<std::pair<float,float> > tmp_v;
       tmp_v.reserve(range_a_w_v.size());
 
       if (npts==2) {
-	if (std::abs(range_a_w_v[0].first - range_a_w_v[1].first) < supression) {
-	  tmp_v.emplace_back(range_a_w_v[0].second > range_a_w_v[1].second ? range_a_w_v[0] : range_a_w_v[1]);
+	LAROCV_SDEBUG() << "@(r1,r2)=("<<0<<","<<1<<") ";
+	LAROCV_SDEBUG() << "(a1,a2)="<<range_a_w_v.front().first<<","<<range_a_w_v.back().first<<" ";
+	LAROCV_SDEBUG() << "diff="<<std::fabs(range_a_w_v.front().first - range_a_w_v.back().first)<<std::endl;
+	LAROCV_SDEBUG() << "(w1,w2)="<<range_a_w_v.front().second<<","<<range_a_w_v.back().second<<std::endl;
+	auto da = std::fabs(range_a_w_v.front().first  - range_a_w_v.back().first);
+	if (da < dasup) {
+	  tmp_v.emplace_back(range_a_w_v.front().second > range_a_w_v.back().second ? range_a_w_v.front() : range_a_w_v.back());
 	  std::swap(tmp_v,range_a_w_v);
 	}
       }
@@ -241,10 +278,15 @@ namespace larocv {
 	std::set<size_t> preserved_s;
 	std::set<size_t> modified_s;
 	
-	LAROCV_SDEBUG() << "Applying angular supression" << std::endl;
-	for(size_t r1=0;r1<npts;r1++) { 
-	  for(size_t r2=r1+1;r2<npts;r2++) {
-	    if (std::abs(range_a_w_v[r1].first-range_a_w_v[r2].first) < supression) {
+	for(size_t r1=0; r1<npts; r1++) { 
+	  for(size_t r2=r1+1; r2<npts; r2++) {
+	    LAROCV_SDEBUG() << "@(r1,r2)=("<<r1<<","<<r2<<") ";
+	    LAROCV_SDEBUG() << "(a1,a2)="<<range_a_w_v[r1].first<<","<<range_a_w_v[r2].first<<" ";
+	    LAROCV_SDEBUG() << "diff="<<std::fabs(range_a_w_v[r1].first - range_a_w_v[r2].first)<<std::endl;
+	    LAROCV_SDEBUG() << "(w1,w2)="<<range_a_w_v[r1].second<<","<<range_a_w_v[r2].second<<std::endl;
+	    auto da = std::fabs(range_a_w_v[r1].first  - range_a_w_v[r2].first);
+	    //auto dw = std::fabs(range_a_w_v[r1].second - range_a_w_v[r2].second);
+	    if (da < dasup) {
 	      size_t pidx = range_a_w_v[r1].second > range_a_w_v[r2].second ? r1 : r2;
 	      size_t ridx = pidx == r1 ? r2 : r1;
 	      preserved_s.insert(pidx);
@@ -253,12 +295,13 @@ namespace larocv {
 	    }
 	  }
 	}
-	for(auto pidx : preserved_s) tmp_v.emplace_back(range_a_w_v[pidx]);
-	for(size_t r1=0;r1<npts;r1++) {
+	for(auto pidx : preserved_s) 
+	  tmp_v.emplace_back(range_a_w_v[pidx]);
+
+	for(size_t r1=0; r1<npts; r1++) {
 	  if (modified_s.find(r1) != modified_s.end()) continue;
 	  tmp_v.emplace_back(range_a_w_v[r1]);
 	}
-	LAROCV_SDEBUG() << "Supressed " << npts << " to " << tmp_v.size() << std::endl; 
 	std::swap(tmp_v,range_a_w_v);
       }
       
@@ -271,8 +314,8 @@ namespace larocv {
       pt.x = circle.center.x + circle.radius * cos(aw.first);
       pt.y = circle.center.y + circle.radius * sin(aw.first);
       res.push_back(pt);
+      LAROCV_SDEBUG() << "..." << pt << std::endl;
     }
-    
     return res;
   }
 
@@ -422,7 +465,7 @@ namespace larocv {
       ss << "img_"<<num1<<"_0_p1_"<<pt1.x<<"_"<<pt1.y<<"_p2_"<<pt2.x<<"_"<<pt2.y<<".png";
       cv::imwrite(ss.str(),Threshold(img,10,255));
       num1+=1;
-      std::cout << "Wrote: " << ss.str() << std::endl;
+      LAROCV_SDEBUG() << "Wrote: " << ss.str() << std::endl;
     }
     
     GEO2D_ContourArray_t ctor_v;
@@ -441,7 +484,7 @@ namespace larocv {
       ss << "img_"<<num2<<"_1_p1_"<<pt1.x<<"_"<<pt1.y<<"_p2_"<<pt2.x<<"_"<<pt2.y<<".png";
       cv::imwrite(ss.str(),img_copy);
       num2+=1;
-      std::cout << "Wrote: " << ss.str() << std::endl;
+      LAROCV_SDEBUG() << "Wrote: " << ss.str() << std::endl;
     }
     
     LAROCV_SDEBUG()<<"p1 ("<<pt1.x<<","<<pt1.y<<") & p2("<<pt2.x<<","<<pt2.y<<")"<<std::endl;
@@ -597,9 +640,10 @@ namespace larocv {
 		       const geo2d::Circle<float>& circle,
 		       const float mask_inner,
 		       const float pi_threshold,
-		       const float supression) {
+		       const float asup,
+		       const float wsup) {
     
-    auto xs_v = QPointOnCircle(img,circle,pi_threshold,supression);
+    auto xs_v = QPointOnCircle(img,circle,pi_threshold,asup,wsup);
     return QPointOnCircleRefine(img,circle,xs_v,mask_inner);
   }
 
@@ -648,22 +692,6 @@ namespace larocv {
 	dir_pt = pt + dir_ctr * dir;
       }
     }
-    
-    // size_t min_dir_id = kINVALID_SIZE;
-    // size_t min_size   = kINVALID_SIZE;
-    // for(size_t dir_id=0;dir_id<2;++dir_id) {
-    //   const auto& cross0_v = cross_vv[dir_id];
-    //   const auto& cross1_v = cross_vv[dir_id+2];
-    //   auto cross_sz = cross0_v.size() + cross1_v.size();
-    //   if (cross_sz == 1) continue;
-    //   if (cross_sz < min_size) {
-    // 	min_size   = cross_sz;
-    // 	min_dir_id = dir_id;
-    //   }
-    // }
-
-    // if (min_dir_id == kINVALID_SIZE)
-    //   return pt;
       
     // get average pt in this direction
     auto res_cross0 = std::move(cross_vv[0]);

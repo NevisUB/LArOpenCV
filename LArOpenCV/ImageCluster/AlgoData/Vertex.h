@@ -69,6 +69,7 @@ namespace larocv {
       float dtheta_mxs0;
       float dtheta_mxs1;
       float dtheta_mxs2;
+      float dtheta_mxs3;
       float weight;                       ///< A floating point "score", an indicator for how good this 2D vertex is
       geo2d::Vector<float> mid_pt0;
       geo2d::Vector<float> mid_pt1;

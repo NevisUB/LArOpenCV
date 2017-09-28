@@ -28,6 +28,7 @@ namespace larocv {
     
     _pi_threshold      = pset.get<float>("PIThreshold",10);
     _angle_supression  = pset.get<float>("AngleSupression",0);
+    _width_supression  = pset.get<float>("WidthSupression",0);
     _pca_box_size      = pset.get<float>("PCABoxSize",2);
     _use_circle_weight = pset.get<bool> ("CircleWeight"); // true
     _prohibit_one_xs   = pset.get<bool> ("ProhibitOneXs",false); 
@@ -42,56 +43,23 @@ namespace larocv {
   bool VertexScan3D::SetPlanePoint(cv::Mat img,
 				   const data::VertexSeed3D& vtx3d,
 				   const size_t plane,
-				   geo2d::Vector<float>& plane_pt) const {
+				   geo2d::Vector<float>& plane_pt) {
     
-    // try {
-    //   auto x = _geo.x2col(vtx3d.x, plane);
-    //   if (x >= img.cols or x < 0) return false;
-
-    //   auto y = _geo.yz2row(vtx3d.y, vtx3d.z, plane);
-    //   if (y >= img.rows or y < 0) return false;
-
-    //   uint x_0 = x + 0.5;
-    //   uint y_0 = y + 0.5;
-
-    //   uint p = (uint)img.at<uchar>(y_0,x_0);
-    //   if(!p) return false;
-      
-    //   plane_pt.x = (float)x_0;
-    //   plane_pt.y = (float)y_0;
-    // }
-    // catch(const larbys& err) {
-    //   return false;
-    // }
-
     try {
       auto x = _geo.x2col(vtx3d.x, plane);
-      auto y = _geo.yz2row(vtx3d.y, vtx3d.z, plane);
-
       if (x >= img.cols or x < 0) return false;
+
+      auto y = _geo.yz2row(vtx3d.y, vtx3d.z, plane);
       if (y >= img.rows or y < 0) return false;
 
-      uint x_0 = std::floor(x);
-      uint y_0 = std::floor(y);
-      
-      uint x_1 = x_0+1 < img.cols ? x_0+1 : x_0;
-      uint y_1 = y_0+1 < img.rows ? y_0+1 : y_0;
-      
-      uint p00 = (uint)img.at<uchar>(y_0,x_0);
-      uint p10 = (uint)img.at<uchar>(y_1,x_0);
-      uint p01 = (uint)img.at<uchar>(y_0,x_1);
-      uint p11 = (uint)img.at<uchar>(y_1,x_1);
+      uint x_0 = x + 0.5;
+      uint y_0 = y + 0.5;
 
-      if(0){}
-      else if (p00) { x = x_0; y = y_0; }
-      else if (p11) { x = x_1; y = y_1; }
-      else if (p10) { x = x_0; y = y_1; }
-      else if (p01) { x = x_1; y = y_0; }
-
-      else { return false; }
+      uint p = (uint)img.at<uchar>(y_0,x_0);
+      if(!p) return false;
       
-      plane_pt.x = x;
-      plane_pt.y = y;
+      plane_pt.x = (float)x_0;
+      plane_pt.y = (float)y_0;
     }
     catch(const larbys& err) {
       return false;
@@ -101,27 +69,20 @@ namespace larocv {
 
   
   bool VertexScan3D::CreateCircleVertex(cv::Mat img,
-					const data::VertexSeed3D& vtx3d,
 					const geo2d::Vector<float>& plane_pt,
-					data::CircleVertex& cvtx) const
+					data::CircleVertex& cvtx)
   {
-    auto res = RadialScan2D(img, plane_pt);
-    if(res.weight < 0) {
-      res.center = plane_pt;
-      res.radius = _min_radius;
-      return false;
-    }
-    
-    std::swap(res,cvtx);
+    cvtx = RadialScan2D(img, plane_pt);
+    if(cvtx.weight < 0) return false;
     return true;
   }
 
-  double VertexScan3D::CircleWeight(data::CircleVertex& cvtx) const {
+  double VertexScan3D::CircleWeight(data::CircleVertex& cvtx) {
     const cv::Mat empty_img;
     return CircleWeight(cvtx,empty_img);
   }
 
-  double VertexScan3D::CircleWeight(data::CircleVertex& cvtx,const cv::Mat& img) const
+  double VertexScan3D::CircleWeight(data::CircleVertex& cvtx,const cv::Mat& img)
   {
     double dtheta_sum = cvtx.sum_dtheta();
     // check angular resolution
@@ -139,30 +100,10 @@ namespace larocv {
       if (dtheta > 90) dtheta = std::fabs(180 - dtheta);
       cvtx.dtheta_xs = dtheta;
       LAROCV_DEBUG() << "dtheta=" << dtheta << std::endl;
-      if (dtheta < _dtheta_cut) { return -1; }
+      if (cvtx.dtheta_xs < _dtheta_cut) return -1;
       if (img.rows>0 & img.cols>0) {
 	//
-	// This axis
-	//
-	cvtx.mid_pt0 = EstimateMidPoint(img,cvtx.center,0);
-	center_line0 = geo2d::Line<float>(cvtx.xs_v[0].pt, cvtx.xs_v[0].pt - cvtx.mid_pt0);
-	center_line1 = geo2d::Line<float>(cvtx.xs_v[1].pt, cvtx.xs_v[1].pt - cvtx.mid_pt0);
-	dtheta = std::fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
-	if (dtheta > 90) dtheta = std::fabs(180 - dtheta);
-	cvtx.dtheta_mxs0 = dtheta;
-
-	//
-	// That axis
-	//
-	cvtx.mid_pt1 = EstimateMidPoint(img,cvtx.center,1);
-	center_line0 = geo2d::Line<float>(cvtx.xs_v[0].pt, cvtx.xs_v[0].pt - cvtx.mid_pt1);
-	center_line1 = geo2d::Line<float>(cvtx.xs_v[1].pt, cvtx.xs_v[1].pt - cvtx.mid_pt1);
-	dtheta = std::fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
-	if (dtheta > 90) dtheta = std::fabs(180 - dtheta);
-	cvtx.dtheta_mxs1 = dtheta;
-
-	//
-	// both axis
+	// both axis mid point
 	//
 	cvtx.mid_pt2 = EstimateMidPoint(img,cvtx.center,-1);
 	center_line0 = geo2d::Line<float>(cvtx.xs_v[0].pt, cvtx.xs_v[0].pt - cvtx.mid_pt2);
@@ -170,27 +111,18 @@ namespace larocv {
 	dtheta = std::fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
 	if (dtheta > 90) dtheta = std::fabs(180 - dtheta);
 	cvtx.dtheta_mxs2 = dtheta;
-      }
+	if (cvtx.dtheta_mxs2 < _dtheta_cut) return -1;
 
-      /*
-      bool _check_stability=true;
-      if(_check_stability) {
-	auto mid_pt = EstimateMidPoint(img,cvtx.center);
-	if (mid_pt != cvtx.center) {
-	  auto xs_v = QPointOnCircle(img,geo2d::Circle<float>(mid_pt,cvtx.radius));
-	  if (xs_v.size() == 2) {
-	    auto cl0 = geo2d::Line<float>(xs_v[0], xs_v[0] - mid_pt);
-	    auto cl1 = geo2d::Line<float>(xs_v[1], xs_v[1] - mid_pt);
-	    dtheta = fabs(geo2d::angle(cl0) - geo2d::angle(cl1));
-	    if (dtheta < 10) {
-	      std::cout << "Estimated mid_pt " << mid_pt << " from " << cvtx.center << std::endl;
-	      return -1;
-	    }
-	  }
-	}
+	//
+	// point pca
+	//
+	center_line0 = cvtx.xs_v.front().line;
+	center_line1 = cvtx.xs_v.back().line;
+	dtheta = std::fabs(geo2d::angle(center_line0) - geo2d::angle(center_line1));
+	if (dtheta > 90) dtheta = std::fabs(180 - dtheta);
+	cvtx.dtheta_mxs3 = dtheta;
+	if (cvtx.dtheta_mxs3 < _dtheta_cut) return -1;
       }
-      */
-
     }
     
     LAROCV_DEBUG() << "ret=" << dtheta_sum << std::endl;
@@ -223,15 +155,16 @@ namespace larocv {
 	//Dumb isnan check;
 	assert(theta_loc == theta_loc);
 	
-	if (rel_pt.x < 0 && rel_pt.y > 0) theta_loc = 180 - theta_loc;
+	if (rel_pt.x < 0 && rel_pt.y > 0)  theta_loc  = 180 - theta_loc;
 	if (rel_pt.x < 0 && rel_pt.y <= 0) theta_loc += 180;
-	if (rel_pt.x > 0 && rel_pt.y <= 0) theta_loc = 360 - theta_loc;
+	if (rel_pt.x > 0 && rel_pt.y <= 0) theta_loc  = 360 - theta_loc;
       }
 
       theta_loc_s.insert(theta_loc);
     }
 
     std::vector<double> theta_loc_v;
+    theta_loc_v.reserve(theta_loc_s.size());
     for (auto const& theta_loc : theta_loc_s)
       theta_loc_v.push_back(theta_loc);
 
@@ -248,34 +181,38 @@ namespace larocv {
   }
 
 
-  data::CircleVertex VertexScan3D::RadialScan2D(const cv::Mat& img, const geo2d::Vector<float>& pt) const
+  data::CircleVertex VertexScan3D::RadialScan2D(const cv::Mat& img, const geo2d::Vector<float>& pt)
   {
     data::CircleVertex res;
     res.center = pt;
 
     // apply 2 degrees angular supression
-    auto const temp_xs_vv = QPointArrayOnCircleArray(img, pt, _radius_v, _pi_threshold, _angle_supression);
-    
-    LAROCV_DEBUG() << "@pt="<<pt<<" ret sz=" << temp_xs_vv.size() << std::endl;
+    LAROCV_DEBUG() <<  "..." << _pi_threshold << " " << _angle_supression << " " << _width_supression << std::endl;
+    const auto temp_xs_vv = QPointArrayOnCircleArray(img, pt,
+						     _radius_v, _pi_threshold, 
+						     _angle_supression, _width_supression);
 
     double min_weight = kINVALID_DOUBLE;
     data::CircleVertex temp_res;
+    std::vector<float> dtheta_v;
+    std::vector<data::PointPCA> xs_v;
+
     for (size_t r_idx = 0; r_idx < _radius_v.size(); ++r_idx) {
       auto const& radius = _radius_v[r_idx];
-      LAROCV_DEBUG() << "@r=" << radius << std::endl;
       auto temp_xs_v = temp_xs_vv[r_idx];
-      
-      if (temp_xs_v.empty()) { LAROCV_DEBUG() << "empty" << std::endl; continue; }
-      if (_prohibit_one_xs && temp_xs_v.size()==1) continue;
-      
-      /*
-      temp_xs_v = QPointOnCircleRefine(img,geo2d::Circle<float>(pt,radius),temp_xs_v,3);
-      if (temp_xs_v.empty()) throw larbys();
-      */
-      
-      std::vector<data::PointPCA> xs_v;
-      std::vector<float> dtheta_v;
+      LAROCV_DEBUG() << "@r=" << radius << " & nxs=" << temp_xs_v.size() << std::endl;
+      if (temp_xs_v.empty()) { 
+	LAROCV_DEBUG() << "...empty xs" << std::endl;
+	continue;
+      }
+      if (_prohibit_one_xs && temp_xs_v.size()==1) {
+	LAROCV_DEBUG() << "...prohibit one xs" << std::endl;
+	continue;
+      }
+      xs_v.clear();
       xs_v.reserve(temp_xs_v.size());
+
+      dtheta_v.clear();
       dtheta_v.reserve(temp_xs_v.size());
 
       // Estimate a local PCA and center-to-xs line's angle diff
@@ -286,20 +223,24 @@ namespace larocv {
 	  auto local_pca   = SquarePCA(img, xs_pt, _pca_box_size, _pca_box_size);
 	  auto center_line = geo2d::Line<float>(xs_pt, xs_pt - pt);
 	  xs_v.push_back(data::PointPCA(xs_pt, local_pca));
-	  dtheta_v.push_back(fabs(geo2d::angle(center_line) - geo2d::angle(local_pca)));
+	  auto theta = std::fabs(geo2d::angle(center_line) - geo2d::angle(local_pca));
+	  if (theta>90) theta = std::fabs(180-theta);
+	  dtheta_v.push_back(theta);
 	} catch (const larbys& err) {
 	  continue;
 	}
       }
       
-      if (dtheta_v.empty())  
-	{ LAROCV_DEBUG() << "empty dtheta" << std::endl; continue;}
+      if (dtheta_v.empty()) {
+	LAROCV_DEBUG() << "...no dtheta" << std::endl;
+	continue;
+      }
 
       temp_res.center   = pt;
       temp_res.radius   = radius;
       temp_res.xs_v     = xs_v;
       temp_res.dtheta_v = dtheta_v;
-      temp_res.weight   = kINVALID_FLOAT;
+      temp_res.weight   = -1;
 
       if (_use_circle_weight) {
 	temp_res.weight = CircleWeight(temp_res,img);
@@ -307,14 +248,16 @@ namespace larocv {
 	temp_res.weight = temp_res.mean_dtheta();
       }
       
-      if (temp_res.weight < 0) 
-	{ LAROCV_DEBUG() << "bad weight" << std::endl; continue; }
+      if (temp_res.weight < 0) {
+	LAROCV_DEBUG() << "...bad weight" << std::endl;
+	continue;
+      }
 
       assert(temp_res.weight != kINVALID_FLOAT);
 
       // if this is the 1st loop, set the result
       if (res.xs_v.empty()) {
-	LAROCV_DEBUG() << "set result" << std::endl;
+	LAROCV_DEBUG() << "...set result" << std::endl;
 	min_weight = temp_res.weight;
 	res        = temp_res;
 	continue;
@@ -324,7 +267,7 @@ namespace larocv {
       // cross something else other than particle trajectory from the circle's center
       // then we break
       if (temp_res.xs_v.size() != xs_v.size()) {
-	LAROCV_DEBUG() << "more xs pt found break" << std::endl;
+	LAROCV_DEBUG() << "...more xs pt found break" << std::endl;
 	break;
       }
 
@@ -335,7 +278,8 @@ namespace larocv {
       }
 
     } // end radius
-
+    if (res.weight>0)
+      LAROCV_DEBUG() << "return @pt="<<pt<<" res.rad=" << res.radius << " res.wei=" << res.weight<<std::endl;
     return res;
   }
 
@@ -426,9 +370,10 @@ namespace larocv {
   }
   
   std::vector<data::Vertex3D> 
-  VertexScan3D::RegionScan3D(const std::vector<cv::Mat>& image_v) const
+  VertexScan3D::RegionScan3D(const std::vector<cv::Mat>& image_v)
   {
     
+    // _history_vv.clear();
     LAROCV_DEBUG() << "See " << _voxel_vv.size() << " registered regions" << std::endl;
     std::vector<data::Vertex3D> vtx3d_v;
     vtx3d_v.reserve(_voxel_vv.size());
@@ -490,7 +435,7 @@ namespace larocv {
   data::Vertex3D
   VertexScan3D::ScanRegion(const VoxelArray& voxel_v,
 			   const std::vector<cv::Mat>& image_v,
-			   size_t num_xspt) const {
+			   size_t num_xspt) {
     data::Vertex3D res;
     res.x = kINVALID_DOUBLE;
     res.y = kINVALID_DOUBLE;
@@ -542,25 +487,31 @@ namespace larocv {
 	    circle_v.resize(_geo._num_planes);
 
 	    for (auto& v : num_xspt_count_v) v = 0;
+	    for (auto& w : weight_v) w=kINVALID_DOUBLE;
 	    
+	    bool dtheta_valid = false;
 	    for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
 	      if (!valid_v[plane]) continue;
 	      auto& cvtx = circle_v[plane];
 	      const auto& plane_pt = plane_pt_v[plane];
-	      auto valid = CreateCircleVertex(image_v[plane], trial_vtx3d, plane_pt, cvtx);
+	      LAROCV_DEBUG() << "@plane="<<plane<<" @pt="<<plane_pt<<std::endl;
+	      auto valid = CreateCircleVertex(image_v[plane], plane_pt, cvtx);
 	      valid_v[plane] = valid;
 	      if (!valid) continue;
 	      valid_ctr++;
-
 	      auto const& xs_pts = cvtx.xs_v;
 	      if (xs_pts.size() >= num_xspt_count_v.size())
 		num_xspt_count_v.resize(xs_pts.size() + 1);
 
 	      num_xspt_count_v[xs_pts.size()] += 1;
+	      weight_v[plane] = cvtx.weight;
 	    }
 	    
 	    // no valid circle vertex, continue
-	    if (valid_ctr < 2) continue;
+	    if (valid_ctr < 2) {
+	      LAROCV_DEBUG() << "valid_ctr < 2" << std::endl;
+	      continue;
+	    }
 
 	    // Decide which plane to use
 	    if (!num_xspt) {
@@ -575,20 +526,12 @@ namespace larocv {
 
 	    // If num_xspt == 0, or it's not valid, skip this point
 	    if (!num_xspt || num_xspt_count_v.size() <= num_xspt || num_xspt_count_v[num_xspt] < 2) {
+	      LAROCV_DEBUG() << "!num_xspt:"<<!num_xspt
+			     << " num_xspt_count_v.size() <=num_xspt:" << (num_xspt_count_v.size() <= num_xspt)
+			     << " num_xspt_count_v[num_xspt] < 2:" << (num_xspt_count_v[num_xspt] < 2) << std::endl;
 	      continue;
 	    }
 
-	    for(auto& w : weight_v) w=kINVALID_DOUBLE;
-	  
-	    for (size_t plane = 0; plane < _geo._num_planes; ++plane) {
-	      if(!valid_v[plane]) continue;
-	      auto & circle = circle_v[plane];
-	      if (circle.xs_v.size() != num_xspt) continue;
-	      if (_use_circle_weight)
-		weight_v[plane] = CircleWeight(circle);
-	      else
-		weight_v[plane] = circle.mean_dtheta();
-	    }
 	    std::sort(std::begin(weight_v), std::end(weight_v));
 	    auto weight1 = weight_v[0];
 	    auto weight2 = weight_v[1];
@@ -598,6 +541,8 @@ namespace larocv {
 
 	    assert (weight1 > 0);
 	    assert (weight2 > 0);
+
+	    // _history_vv.emplace_back(circle_v);
 
 	    if ((weight1 * weight2) < best_weight) {
 	      best_weight  = weight1 * weight2;

@@ -50,21 +50,24 @@ namespace larocv {
   QPointOnCircle(const ::cv::Mat& img,
 		 const geo2d::Circle<float>& circle,
 		 const float pi_threshold=0.1,
-		 const float supression=0);
+		 const float asup=0,
+		 const float wsup=0);
   
   std::vector<geo2d::VectorArray<float> >
   QPointArrayOnCircleArray(const ::cv::Mat& img,
 			   const geo2d::Vector<float>& center,
 			   const std::vector<float>& radius_v,
 			   const float pi_threshold=0.1,
-			   const float supression=0);
+			   const float asup=0,
+			   const float wsup=0);
   
   geo2d::VectorArray<float>
   RadialIntersections(const ::cv::Mat& polarimg,
 		      const geo2d::Circle<float>& circle,
 		      const int col,
 		      const float pi_threshold,
-		      const float supression=0);
+		      const float asup=0,
+		      const float wsup=0);
 
   geo2d::Vector<float>
   MeanPixel(const cv::Mat& img,
@@ -137,7 +140,8 @@ namespace larocv {
 		       const geo2d::Circle<float>& circle,
 		       const float mask_inner,
 		       const float pi_threshold,
-		       const float supression);
+		       const float asup,
+		       const float wsup);
 
 
   bool

@@ -15,7 +15,14 @@ namespace larocv {
       xs_v.clear();
       dtheta_v.clear();
       weight = -1;
-      dtheta_xs = kINVALID_FLOAT;
+      dtheta_xs = -1;
+      dtheta_mxs0 = -1;
+      dtheta_mxs1 = -1;
+      dtheta_mxs2 = -1;
+      dtheta_mxs3 = -1;
+      mid_pt0.x = mid_pt0.y = 1;
+      mid_pt1.x = mid_pt1.y = 1;
+      mid_pt2.x = mid_pt2.y = 1;
     }
     
     float CircleVertex::sum_dtheta() const
