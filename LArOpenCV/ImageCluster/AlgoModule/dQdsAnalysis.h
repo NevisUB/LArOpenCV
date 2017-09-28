@@ -143,6 +143,17 @@ namespace larocv {
     std::vector<float> _image_particle1_plane2_tmp_x;
     std::vector<float> _image_particle1_plane2_tmp_y;
     std::vector<float> _image_particle1_plane2_tmp_v;
+
+    std::vector<float> _par1_0_qden_scan_v;
+    std::vector<float> _par1_1_qden_scan_v;
+    std::vector<float> _par1_2_qden_scan_v;
+    std::vector<float> _par2_0_qden_scan_v;
+    std::vector<float> _par2_1_qden_scan_v;
+    std::vector<float> _par2_2_qden_scan_v;
+
+    std::vector<float> _npx_in_vtx_circ_v;
+    std::vector<float> _npx_on_vtx_circ_v;
+
     
     
     //Variables for truncated mean
@@ -176,6 +187,13 @@ namespace larocv {
     float _showerp_dedx;
     float _long_trackp_dedx;
     float _short_trackp_dedx;
+
+    float _chi2_par1_0;
+    float _chi2_par1_1;
+    float _chi2_par1_2;
+    float _chi2_par2_0;
+    float _chi2_par2_1;
+    float _chi2_par2_2;
     
   };
 
