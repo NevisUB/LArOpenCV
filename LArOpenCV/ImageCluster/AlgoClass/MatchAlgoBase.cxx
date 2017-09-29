@@ -6,26 +6,33 @@
 namespace larocv {
 
   void MatchAlgoBase::ClearMatch() {
+    LAROCV_DEBUG() << "start" << std::endl;
     for(auto& v : _pcluster_vv)
       v.clear();
 
     _MatchBookKeeper.Reset();
     _seed_v.clear();
     for(auto& v : _clusters_per_plane_vv) v.clear();
+    for(auto& v : _valid_plane_v) v = false;
 
     _particle_ptr_v.clear();
     _particle_id_to_plane_v.clear();
     _match_v.clear();
+    LAROCV_DEBUG() << "end" << std::endl;
   }
 
   void MatchAlgoBase::ClearEvent() {
+    LAROCV_DEBUG() << "start" << std::endl;
     ClearMatch();
     for(auto& v : _img_v)  v = nullptr;
     for(auto& v : _meta_v) v = nullptr;
+    LAROCV_DEBUG() << "end" << std::endl;
   }
 
   void MatchAlgoBase::Register(const data::ParticleCluster& pc,size_t plane) {
     _pcluster_vv.at(plane).push_back(&pc);
+    _valid_plane_v[plane] = true;
+    LAROCV_DEBUG() << "@plane=" << plane << " have " << _pcluster_vv.at(plane).size() << " clusters" << std::endl;
   }
 
   void MatchAlgoBase::Register(const cv::Mat& img, size_t plane) {
@@ -42,18 +49,20 @@ namespace larocv {
 
   std::vector<std::vector<std::pair<size_t,size_t> > >
   MatchAlgoBase::Match() {
-      
 
     std::vector<std::vector<std::pair<size_t,size_t> > > match_vv;
 
+    assert(_seed_v.empty());
     _seed_v.resize(3);
-    for(size_t plane = 0; plane < 3; ++plane) 
-      _seed_v[plane] = _pcluster_vv[plane].size();
+    for(size_t plane = 0; plane < 3; ++plane)  {
+      _seed_v[plane] = _pcluster_vv.at(plane).size();
+      LAROCV_DEBUG() << "@plane=" << plane << " sz=" << _seed_v[plane] << std::endl;
+    }
 
     size_t offset=0;
     for(size_t plane=0;plane<3;++plane) {
       auto& clusters_per_plane_v = _clusters_per_plane_vv[plane];
-      const auto& pars_v = _pcluster_vv[plane];
+      const auto& pars_v = _pcluster_vv.at(plane);
       for(size_t parid=0; parid<pars_v.size(); ++parid) {
 	const auto par = pars_v[parid];
 	clusters_per_plane_v.push_back(parid+offset);
@@ -62,15 +71,33 @@ namespace larocv {
       }
       offset += pars_v.size();
     }
-    	
-    auto comb_vv = PlaneClusterCombinations(_seed_v);
-    LAROCV_DEBUG()<<"----> Calculated " << comb_vv.size() << " combinations" << std::endl;
 
+    std::vector<std::vector<std::pair<size_t,size_t>>> temp_comb_vv, comb_vv;
+    
+    temp_comb_vv = PlaneClusterCombinations(_seed_v);
+    comb_vv.reserve(temp_comb_vv.size());
+
+    for(auto& temp_comb_v : temp_comb_vv) {
+      if (temp_comb_v.size()==2) {
+	if (!_valid_plane_v[temp_comb_v[0].first]) continue;
+	if (!_valid_plane_v[temp_comb_v[1].first]) continue;
+      }
+
+      if (temp_comb_v.size()==3) {
+	if (!_valid_plane_v[temp_comb_v[0].first]) continue;
+	if (!_valid_plane_v[temp_comb_v[1].first]) continue;
+	if (!_valid_plane_v[temp_comb_v[2].first]) continue;
+      }
+      comb_vv.emplace_back(std::move(temp_comb_v));
+    }
+    
+
+    LAROCV_DEBUG()<<"--> Calculated " << comb_vv.size() << " combinations" << std::endl;
+    
     for(const auto& comb_v : comb_vv) {
-      LAROCV_DEBUG() << "comb size... "<< comb_v.size() << std::endl;
-      
+      LAROCV_DEBUG() << "@comb sz= "<< comb_v.size() << std::endl;
       if (comb_v.size()==2) {
-
+	LAROCV_DEBUG() << "@2" << std::endl;
 	auto plane0=comb_v[0].first;
 	auto plane1=comb_v[1].first;
 	
@@ -79,7 +106,7 @@ namespace larocv {
 
 	auto id0 = _clusters_per_plane_vv[plane0][cid0];
 	auto id1 = _clusters_per_plane_vv[plane1][cid1];
-
+	
 	auto score = this->Match(*(_img_v.at(plane0)),
 				 *(_img_v.at(plane1)),
 				 *(_meta_v.at(plane0)),
@@ -92,11 +119,14 @@ namespace larocv {
 	_match_v[0] = id0;
 	_match_v[1] = id1;
 	
+	LAROCV_DEBUG() << "score=" << score << std::endl;
 	if (score<_threshold) continue;
-
+	LAROCV_DEBUG() << "...pass" << std::endl;
+	
 	_MatchBookKeeper.Match(_match_v,score);
       }
       else if (comb_v.size()==3) {
+	LAROCV_DEBUG() << "@3" << std::endl;
 
 	auto plane0 = comb_v[0].first;
 	auto plane1 = comb_v[1].first;
@@ -126,8 +156,10 @@ namespace larocv {
 	_match_v[1] = id1;
 	_match_v[2] = id2;
 
+	LAROCV_DEBUG() << "score=" << score << std::endl;
 	if (score<_threshold) continue;
-	
+	LAROCV_DEBUG() << "...pass" << std::endl;
+
 	_MatchBookKeeper.Match(_match_v,score);
       }
       else {

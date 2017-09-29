@@ -1,17 +1,16 @@
-#ifndef __MATCHALGOOVERLAP_H__
-#define __MATCHALGOOVERLAP_H__
+#ifndef __MATCHALGOTIMEIOU_H__
+#define __MATCHALGOTIMEIOU_H__
 
 #include "LArOpenCV/ImageCluster/AlgoClass/MatchAlgoBase.h"
-#include "LArOpenCV/ImageCluster/AlgoClass/LArPlaneGeo.h"
 
 namespace larocv {
 
-  class MatchAlgoOverlap : public MatchAlgoBase {
+  class MatchAlgoTimeIOU : public MatchAlgoBase {
 
   public:
 
-     MatchAlgoOverlap() : MatchAlgoBase("MatchAlgoOverlap") {}
-    ~MatchAlgoOverlap() {}
+     MatchAlgoTimeIOU() : MatchAlgoBase("MathAlgoTimeIOU") {}
+    ~MatchAlgoTimeIOU() {}
     
     void Configure(const Config_t &pset);
 
@@ -33,15 +32,13 @@ namespace larocv {
 		const data::ParticleCluster& par0,
 		const data::ParticleCluster& par1,
 		const data::ParticleCluster& par2);
+    
+  protected:
 
-    float Overlap(const geo2d::VectorArray<float>& pts0_v, const size_t plane0,
-		  const geo2d::VectorArray<float>& pts1_v, const size_t plane1,
-		  bool overcover) const;
+    std::array<const cv::Mat*,3>   _img_v;
+    std::array<const ImageMeta*,3> _meta_v;
     
   private:
-
-    LArPlaneGeo _geo;
-    bool _match_weight_by_size;
 
   };
   

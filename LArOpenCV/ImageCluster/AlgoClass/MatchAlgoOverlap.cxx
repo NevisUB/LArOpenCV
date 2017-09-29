@@ -4,19 +4,21 @@
 #include "MatchAlgoOverlap.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
+#include <cassert>
 
 namespace larocv {
 
   void MatchAlgoOverlap::Configure(const Config_t &pset) {
     this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
     _match_weight_by_size = pset.get<bool>("MatchWeightBySize",false);
+    _threshold = pset.get<float>("Threshold",0.1);
   }
     
   void MatchAlgoOverlap::Initialize() {
-
-    for(size_t plane=0; plane<3; ++plane) 
+    for(size_t plane=0; plane<3; ++plane) { 
+      assert(_meta_v.at(plane));
       _geo.ResetPlaneInfo(*(_meta_v.at(plane)));
-    
+    }
   }
 
   float MatchAlgoOverlap::Match(const cv::Mat& img0, 
@@ -73,6 +75,7 @@ namespace larocv {
     }	
 	
     score = overlap;
+    LAROCV_DEBUG() << "ret=" << score << std::endl;
     return score;
   }
     
@@ -127,6 +130,9 @@ namespace larocv {
     auto overlap02 = Overlap(nzero0_f,meta0.plane(),nzero2_f,meta2.plane(),false);
     auto overlap12 = Overlap(nzero1_f,meta1.plane(),nzero2_f,meta2.plane(),false);
 
+    if (overlap01 == 0.0) return score;
+    if (overlap02 == 0.0) return score;
+    if (overlap12 == 0.0) return score;
 
     if (_match_weight_by_size) {
 	  
@@ -155,6 +161,7 @@ namespace larocv {
     overlap /= 3.0;
 
     score = overlap;
+    LAROCV_DEBUG() << "ret=" << score << std::endl;
     return score;
   }
 

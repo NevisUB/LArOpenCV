@@ -37,7 +37,7 @@ namespace larocv {
     _alg = nullptr;
     if (match_name == "MatchAlgoOverlap") {
       _alg = new MatchAlgoOverlap();
-      _alg->Configure(pset.get<Config_t>("MatchOverlap"));
+      _alg->Configure(pset.get<Config_t>("MatchAlgoOverlap"));
     }
     if (!_alg) throw larbys("Could not find match algo name");
 
@@ -71,7 +71,6 @@ namespace larocv {
     const auto& vtx3d_v = vtx3d_arr.as_vector();
 
     LAROCV_DEBUG() << "Matching " << vtx3d_v.size() << " vertices" << std::endl;
-    
     for(const auto& vtx3d : vtx3d_v) {
       _alg->ClearMatch();
       for(size_t plane=0; plane<3; ++plane) {
@@ -88,13 +87,12 @@ namespace larocv {
 	}
       } // end plane
 
+      LAROCV_DEBUG() << "_alg->Match()" << std::endl;
       auto match_vv = _alg->Match();
-
-      LAROCV_DEBUG() << "... found " << match_vv.size() << " matched particles" << std::endl;
+      LAROCV_DEBUG() << "& recieved " << match_vv.size() << " matched particles" << std::endl;
 
       if (match_vv.empty()) continue;
       
-
       for( auto match_v : match_vv ) {
 	for(auto& v : match_pcluster_v) v = nullptr;
 
@@ -102,7 +100,9 @@ namespace larocv {
 	for (auto match : match_v) {
 	  auto plane = match.first;
 	  auto id    = match.second;
+	  LAROCV_DEBUG() << "@plane=" << plane << " id=" << id << std::endl;
 	  match_pcluster_v[plane] = _alg->Particle(plane,id);
+	  LAROCV_DEBUG() << "...store ParticleCluster @" << match_pcluster_v[plane] << std::endl;
 	}
 
 	data::Particle particle;
@@ -114,6 +114,7 @@ namespace larocv {
 	}
 
 	// Associate
+	LAROCV_DEBUG() << "associating" << std::endl;
 	particle_data.emplace_back(std::move(particle));
 	AssociateMany(vtx3d,particle_data.as_vector().back());
 
@@ -124,7 +125,7 @@ namespace larocv {
 	} // end plane
 
       } // end this match
-      
+      LAROCV_DEBUG () << "next vertex" << std::endl;
     } // end this vertex    
     LAROCV_DEBUG() << "end" << std::endl;
   } // end process

@@ -63,9 +63,9 @@ namespace larocv {
 
     std::array<const cv::Mat*,3>   _img_v;
     std::array<const ImageMeta*,3> _meta_v;
-    
+    float _threshold;
+
   private:
-    
     MatchBookKeeper _MatchBookKeeper;
     std::vector<size_t> _seed_v;
 
@@ -74,10 +74,8 @@ namespace larocv {
     std::vector<std::pair<size_t,size_t> > _particle_id_to_plane_v;
 
     std::vector<uint> _match_v;
-    
-    float _threshold;
-
     std::array<std::vector<const data::ParticleCluster*>,3> _pcluster_vv;
+    std::array<bool,3> _valid_plane_v;
 
   };
 
