@@ -31,6 +31,7 @@
 #pragma link C++ class larocv::Voxel+;
 #pragma link C++ class larocv::VoxelArray+;
 #pragma link C++ class larocv::DeadWirePatch+;
+#pragma link C++ class larocv::MatchAlgoBase+;
 
 //ADD_NEW_CLASS ... do not change this line
 #endif

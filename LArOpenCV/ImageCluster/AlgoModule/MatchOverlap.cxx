@@ -33,13 +33,13 @@ namespace larocv {
     _vertex_algo_offset           = pset.get<size_t>("VertexAlgoOffset");
     _particle_cluster_algo_offset = pset.get<size_t>("ParticleClusterAlgoOffset");
 
-    _match_coverage            = pset.get<float>("MatchCoverage",0.5);
-    _match_particles_per_plane = pset.get<float>("MatchParticlesPerPlane",2);
-    _match_min_number          = pset.get<float>("MatchMinimumNumber",2);
-    _match_check_type          = pset.get<bool>("MatchCheckType",true);
-    _match_weight_by_size      = pset.get<bool>("MatchWeightBySize",false);
-
-    _VertexAnalysis.Configure(pset.get<Config_t>("VertexAnalysis"));
+    auto match_name = pset.get<std::string>("MatchAlgoName");
+    _alg = nullptr;
+    if (match_name == "MatchAlgoOverlap") {
+      _alg = new MatchAlgoOverlap();
+      _alg->Configure(pset.get<Config_t>("MatchOverlap"));
+    }
+    if (!_alg) throw larbys("Could not find match algo name");
 
     Register(new data::ParticleArray);
   }
@@ -51,10 +51,18 @@ namespace larocv {
     LAROCV_DEBUG() << "start" << std::endl;
     auto wire_img_v  = ImageArray(ImageSetID_t::kImageSetWire);
     auto meta_v      = MetaArray(ImageSetID_t::kImageSetWire);
-    
-    for(size_t plane=0; plane<3; ++plane) 
-      _VertexAnalysis.ResetPlaneInfo(meta_v.at(plane));    
 
+    _alg->ClearEvent();
+
+    for(size_t plane=0; plane<3; ++plane) {
+      _alg->Register(wire_img_v[plane],plane);
+      _alg->Register(meta_v[plane],plane);
+    }
+
+    _alg->Initialize();
+
+    std::array<const larocv::data::ParticleCluster*, 3> match_pcluster_v;
+		   
     auto& assman = AssManager();
     
     auto& particle_data = AlgoData<data::ParticleArray>(0);
@@ -65,15 +73,8 @@ namespace larocv {
     LAROCV_DEBUG() << "Matching " << vtx3d_v.size() << " vertices" << std::endl;
     
     for(const auto& vtx3d : vtx3d_v) {
-      data::VertexTrackInfoCollection vtx_trk_info;
-      vtx_trk_info.vtx3d = &vtx3d;
-      LAROCV_DEBUG() << "Vertex: " << &vtx3d << std::endl;
-
-      vtx_trk_info.particle_vv.resize(3);
-
+      _alg->ClearMatch();
       for(size_t plane=0; plane<3; ++plane) {
-	auto& particle_v = vtx_trk_info.particle_vv[plane];
-	
 	const auto& par_data = AlgoData<data::ParticleClusterArray>(_particle_cluster_algo_id,
 								    _particle_cluster_algo_offset+plane);
 	const auto& par_v = par_data.as_vector();
@@ -83,42 +84,30 @@ namespace larocv {
 
 	for(auto par_ass_id : par_ass_id_v) {
 	  if (par_ass_id==kINVALID_SIZE) throw larbys();
-	  particle_v.push_back(&par_v.at(par_ass_id));
+	  _alg->Register(par_v.at(par_ass_id),plane);
 	}
-      }
+      } // end plane
 
-      auto match_vv = _VertexAnalysis.MatchClusters(vtx_trk_info.particle_vv,
-						    wire_img_v,
-						    _match_coverage,              // required coverage
-						    _match_particles_per_plane,   // requires # particles per plane
-						    _match_min_number,            // min number of matches
-						    _match_check_type,            // ensure particle type is same
-						    _match_weight_by_size);       // weight match by particle n pixels)
+      auto match_vv = _alg->Match();
 
       LAROCV_DEBUG() << "... found " << match_vv.size() << " matched particles" << std::endl;
+
       if (match_vv.empty()) continue;
       
+
       for( auto match_v : match_vv ) {
-	
-	std::array<size_t,3> plane_arr, id_arr;
-	plane_arr = id_arr = {{kINVALID_SIZE, kINVALID_SIZE, kINVALID_SIZE}};
-	
-	std::array<const larocv::data::ParticleCluster*, 3> pcluster_v {{nullptr,nullptr,nullptr}};
-	
+	for(auto& v : match_pcluster_v) v = nullptr;
+
 	// Fill the match
 	for (auto match : match_v) {
-	  
 	  auto plane = match.first;
 	  auto id    = match.second;
-	  plane_arr[plane] = plane;
-	  id_arr[plane]    = id;
-	  
-	  pcluster_v[plane] = vtx_trk_info.particle_vv[plane][id];
+	  match_pcluster_v[plane] = _alg->Particle(plane,id);
 	}
 
 	data::Particle particle;
 	for(size_t plane=0; plane<3; ++plane) {
-	  const auto& par = pcluster_v[plane];
+	  const auto& par = match_pcluster_v[plane];
 	  if(!par) continue;
 	  LAROCV_DEBUG() << " @ plane " << plane << " insert particle sz " << par->_ctor.size() << std::endl;
 	  particle._par_v[plane] = *par;
@@ -129,11 +118,12 @@ namespace larocv {
 	AssociateMany(vtx3d,particle_data.as_vector().back());
 
 	for(size_t plane=0; plane<3; ++plane) {
-	  const auto& par = pcluster_v[plane];
+	  const auto& par = match_pcluster_v[plane];
 	  if(!par) continue;
 	  AssociateMany(*par,particle_data.as_vector().back());
-	}	
-      }
+	} // end plane
+
+      } // end this match
       
     } // end this vertex    
     LAROCV_DEBUG() << "end" << std::endl;

@@ -61,35 +61,6 @@ namespace larocv {
 		    uint nplanes,
 		    uint nxs) const;
 
-    std::vector<std::vector<std::pair<size_t,size_t> > >
-    MatchClusters(const std::vector<std::vector<data::ParticleCluster> >& pars_vv,
-		  const std::vector<cv::Mat>& img_v,
-		  float threshold,
-		  size_t required_per_plane,
-		  size_t required_matches,
-		  bool check_type=true,
-		  bool weight_by_size=false) const;
-    
-    
-    std::vector<std::vector<std::pair<size_t,size_t> > >
-    MatchClusters(const std::vector<std::vector<const data::ParticleCluster* > >& pars_ptr_vv,
-		  const std::vector<cv::Mat>& img_v,
-		  float threshold,
-		  size_t required_per_plane,
-		  size_t required_matches,
-		  bool check_type=true,
-		  bool weight_by_size=false) const;
-    
-    bool
-    MatchExists(const std::vector<std::vector<const data::ParticleCluster*> >& pars_ptr_vv,
-		const std::vector<cv::Mat>& img_v,
-		float threshold,
-		size_t required_per_plane,
-		size_t required_matches,
-		std::vector<std::vector<std::pair<size_t,size_t> > >& match_vv,
-		bool check_type=true,
-		bool weight_by_size=false) const;
-
     bool
     CheckFiducial(const data::Vertex3D& vtx3d,
 		  float edge_x=10.0, float edge_y=10.0, float edge_z=10.0) const;

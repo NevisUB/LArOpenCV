@@ -38,6 +38,7 @@ namespace larocv {
     _require_3planes_charge = pset.get<bool>("Require3PlanesCharge",false);
     if(_require_3planes_charge)
       _allowed_radius = pset.get<float>("AllowedRadius",0.0);
+
   }
 
   bool VertexScan3D::SetPlanePoint(cv::Mat img,

@@ -3,8 +3,12 @@
 
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
-#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
-#include "LArOpenCV/ImageCluster/AlgoClass/VertexAnalysis.h"
+
+//
+// Match algos
+//
+#include "LArOpenCV/ImageCluster/AlgoClass/MatchAlgoOverlap.h"
+
 
 /*
   @brief: An MatchOverlap
@@ -17,8 +21,7 @@ namespace larocv {
   public:
     
     MatchOverlap(const std::string name = "MatchOverlap") :
-      ImageAnaBase(name),
-      _VertexAnalysis()
+      ImageAnaBase(name)
     {}
     
     virtual ~MatchOverlap(){}
@@ -42,14 +45,8 @@ namespace larocv {
     size_t _vertex_algo_offset;
     size_t _particle_cluster_algo_offset;
 
-    float _match_coverage;
-    float _match_particles_per_plane;
-    float _match_min_number;
-    bool _match_check_type;
-    bool _match_weight_by_size;
+    MatchAlgoBase *_alg;
 
-    VertexAnalysis _VertexAnalysis;
-    
   };
 
   class MatchOverlapFactory : public AlgoFactoryBase {
