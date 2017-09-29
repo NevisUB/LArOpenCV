@@ -35,10 +35,16 @@ namespace larocv {
 
     auto match_name = pset.get<std::string>("MatchAlgoName");
     _alg = nullptr;
+
     if (match_name == "MatchAlgoOverlap") {
       _alg = new MatchAlgoOverlap();
       _alg->Configure(pset.get<Config_t>("MatchAlgoOverlap"));
+    } 
+    else if (match_name == "MatchAlgoTimeIOU") {
+      _alg = new MatchAlgoTimeIOU();
+      _alg->Configure(pset.get<Config_t>("MatchAlgoTimeIOU"));
     }
+
     if (!_alg) throw larbys("Could not find match algo name");
 
     Register(new data::ParticleArray);

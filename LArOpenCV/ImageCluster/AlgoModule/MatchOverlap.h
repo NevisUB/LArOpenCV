@@ -8,6 +8,7 @@
 // Match algos
 //
 #include "LArOpenCV/ImageCluster/AlgoClass/MatchAlgoOverlap.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/MatchAlgoTimeIOU.h"
 
 
 /*
