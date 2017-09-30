@@ -73,6 +73,8 @@ namespace larocv {
     bool _require_3planes_charge;
     float _allowed_radius;
     bool _polar_qpoint;
+    bool _ignore_four;
+
     std::vector<float> _radius_v;
     
     std::vector<std::vector<data::CircleVertex> > _history_vv;

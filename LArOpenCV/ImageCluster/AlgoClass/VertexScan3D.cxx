@@ -35,6 +35,7 @@ namespace larocv {
     _dtheta_cut        = pset.get<float>("dThetaCut"); // 10
     _merge_voxels      = pset.get<bool> ("MergeVoxels",false);
     _polar_qpoint      = pset.get<bool> ("UsePolarQPoint",true);
+    _ignore_four       = pset.get<bool> ("IgnoreFour",false);
     _require_3planes_charge = pset.get<bool>("Require3PlanesCharge",false);
     if(_require_3planes_charge)
       _allowed_radius = pset.get<float>("AllowedRadius",0.0);
@@ -196,6 +197,9 @@ namespace larocv {
       }
 
     } // end cvtx.size==3
+    else {
+      if (_ignore_four) return -1;
+    }
 
 
 
