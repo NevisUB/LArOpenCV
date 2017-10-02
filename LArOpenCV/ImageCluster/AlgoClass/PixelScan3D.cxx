@@ -150,44 +150,28 @@ namespace larocv {
   bool PixelScan3D::SetPlanePoint(cv::Mat img,
 				  const data::Vertex3D& vtx3d,
 				  const size_t plane,
-				  geo2d::Vector<float>& plane_pt,
-				  bool check_img) const {
-
+				  geo2d::Vector<float>& plane_pt) const 
+  {
+    
     try {
       auto x = _geo.x2col(vtx3d.x, plane);
-      auto y = _geo.yz2row(vtx3d.y, vtx3d.z, plane);
-
       if (x >= img.cols or x < 0) return false;
+
+      auto y = _geo.yz2row(vtx3d.y, vtx3d.z, plane);
       if (y >= img.rows or y < 0) return false;
-    
-      if (check_img) {
-	uint x_0 = std::floor(x);
-	uint y_0 = std::floor(y);
+
+      uint x_0 = x + 0.5;
+      uint y_0 = y + 0.5;
+
+      uint p = (uint)img.at<uchar>(y_0,x_0);
+      if(!p) return false;
       
-	uint x_1 = x_0+1 < img.cols ? x_0+1 : x_0;
-	uint y_1 = y_0+1 < img.rows ? y_0+1 : y_0;
-      
-	uint p00, p01, p10, p11;
-	p00 = p01 = p10 = p11 = 0;
-
-	p00 = (uint)img.at<uchar>(y_0,x_0);
-	p10 = (uint)img.at<uchar>(y_1,x_0);
-	p01 = (uint)img.at<uchar>(y_0,x_1);
-	p11 = (uint)img.at<uchar>(y_1,x_1);
-
-	if(0){}
-	else if (p00) { x = x_0; y = y_0; }
-	else if (p11) { x = x_1; y = y_1; }
-	else if (p10) { x = x_0; y = y_1; }
-	else if (p01) { x = x_1; y = y_0; }
-
-	else { return false; }
-      }
-
-      plane_pt.x = x;
-      plane_pt.y = y;
-    } 
-    catch(const larbys& err) { return false; }
+      plane_pt.x = (float)x_0;
+      plane_pt.y = (float)y_0;
+    }
+    catch(const larbys& err) {
+      return false;
+    }
     return true;
   }
 }

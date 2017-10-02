@@ -36,8 +36,8 @@ namespace larocv {
     bool SetPlanePoint(cv::Mat img,
 		       const data::Vertex3D& vtx3d,
 		       const size_t plane,
-		       geo2d::Vector<float>& plane_pt,
-		       bool check_img=true) const;
+		       geo2d::Vector<float>& plane_pt) const;
+
     
     std::vector<std::vector<data::Vertex3D> > 
       RegionScan3D(const std::vector<cv::Mat>& image_v, 
