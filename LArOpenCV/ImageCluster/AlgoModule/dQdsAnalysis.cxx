@@ -148,6 +148,22 @@ namespace larocv {
     _tree->Branch("dedx_showerp"            , &_showerp_dedx);
     _tree->Branch("dedx_long_trackp"        , &_long_trackp_dedx);
     _tree->Branch("dedx_short_trackp"       , &_short_trackp_dedx);
+
+    _tree->Branch("par1_0_qden_scan_v" , &_par1_0_qden_scan_v);
+    _tree->Branch("par2_0_qden_scan_v" , &_par2_0_qden_scan_v);
+    _tree->Branch("par1_1_qden_scan_v" , &_par1_1_qden_scan_v);
+    _tree->Branch("par2_1_qden_scan_v" , &_par2_1_qden_scan_v);
+    _tree->Branch("par1_2_qden_scan_v" , &_par1_2_qden_scan_v);
+    _tree->Branch("par2_2_qden_scan_v" , &_par2_2_qden_scan_v);
+    _tree->Branch("chi2_par1_0"        , &_chi2_par1_0);
+    _tree->Branch("chi2_par1_1"        , &_chi2_par1_1);
+    _tree->Branch("chi2_par1_2"        , &_chi2_par1_2);
+    _tree->Branch("chi2_par2_0"        , &_chi2_par2_0);
+    _tree->Branch("chi2_par2_1"        , &_chi2_par2_1);
+    _tree->Branch("chi2_par2_2"        , &_chi2_par2_2);
+    _tree->Branch("npx_in_vtx_circ_v"  , &_npx_in_vtx_circ_v);
+    _tree->Branch("npx_on_vtx_circ_v"  , &_npx_on_vtx_circ_v);
+
     
     // may be removed if larcv data product file works
     // _tree->Branch("vertex_v"                  , &_vertex_v);
@@ -329,6 +345,26 @@ namespace larocv {
     _showerp_totq = kINVALID_FLOAT;
     _trackp_cosz = kINVALID_FLOAT;
     _showerp_cosz = kINVALID_FLOAT;
+
+    _par1_0_qden_scan_v.clear();
+    _par2_0_qden_scan_v.clear();
+    _par1_1_qden_scan_v.clear();
+    _par2_1_qden_scan_v.clear();
+    _par1_2_qden_scan_v.clear();
+    _par2_2_qden_scan_v.clear();
+
+    _chi2_par1_0 = kINVALID_FLOAT;
+    _chi2_par1_1 = kINVALID_FLOAT;
+    _chi2_par1_2 = kINVALID_FLOAT;
+    _chi2_par2_0 = kINVALID_FLOAT;
+    _chi2_par2_1 = kINVALID_FLOAT;
+    _chi2_par2_2 = kINVALID_FLOAT;
+
+    _npx_in_vtx_circ_v.clear();
+    _npx_in_vtx_circ_v.resize(3,-9999);
+
+    _npx_on_vtx_circ_v.clear();
+    _npx_on_vtx_circ_v.resize(3,-9999);
     
   }
 
@@ -640,8 +676,100 @@ namespace larocv {
 	  std::vector<float> par_dqds;
 	  par_dqds.clear();
 	  par_dqds = _AtomicAnalysis.AtomdQdX(masked_ctor, thisatom, this_pca, start_point, angle_scan_end_point);
+
+	  // Do bragg search
+	  cv::Mat this_raw_ctor;
+	  cv::Mat vtxCirc_ctor;
+	  cv::Mat vtxRing_ctor;
+	  this_raw_ctor = MaskImage(img_v.at(plane),par._ctor,0,false);
+
+	  geo2d::Circle<float> vtxCirc;
+	  geo2d::Circle<float> vtxCircSmall;
+	  int npxInVtxCirc;
+	  int npxOnVtxCirc;
+	  vtxCirc.center      = start_point;
+	  vtxCirc.radius      = 6;
+	  vtxCircSmall.center = start_point;
+	  vtxCircSmall.radius = 5;
+
+	  vtxCirc_ctor   = MaskImage(this_raw_ctor,vtxCirc,0,false);
+	  vtxRing_ctor   = MaskImage(vtxCirc_ctor,vtxCircSmall,0,true);
+	  npxInVtxCirc   = CountNonZero(vtxCirc_ctor);
+	  npxOnVtxCirc   = CountNonZero(vtxRing_ctor);
 	  
+	  if (_npx_in_vtx_circ_v.at(plane) == -9999) {
+	    _npx_in_vtx_circ_v.at(plane)  = npxInVtxCirc;
+	  } else {
+	    _npx_in_vtx_circ_v.at(plane) += npxInVtxCirc;
+	  }
+
+	  if (_npx_on_vtx_circ_v.at(plane) == -9999) {
+	    _npx_on_vtx_circ_v.at(plane)  = npxOnVtxCirc;
+	  } else {
+	    _npx_on_vtx_circ_v.at(plane) += npxOnVtxCirc;
+	  }
+
+
+	  auto this_track_atom = FindNonZero(this_raw_ctor);
+	  auto this_track_pca  = CalcPCA(this_track_atom);
+	  float this_slope     = std::tan(angle(this_track_pca)*3.14159/180);
+	  float this_offset    = this_track_pca.y(0.0);
+	  float stndA          = 1.0;
+	  float stndB          = -1.0/this_slope;
+	  float stndC          = this_offset/this_slope;
 	  
+	  float this_chi2  = 0;
+	  float atm_points = 0;
+	  for (auto pt : this_track_atom) {
+	    atm_points++;
+	  }
+
+	  for (auto pt : this_track_atom) {
+	    //auto pt_dist = Distance(this_track_pca, pt);
+	    float pt_x = (float) pt.x;
+	    float pt_y = (float) pt.y;
+
+	    float distToLine = std::abs(pt_x + stndB*pt_y + stndC) / std::sqrt(1.0+stndB*stndB);
+
+	    this_chi2+=distToLine/atm_points;
+	  }
+
+	  int circleRad   = 5;
+	  int circleStep  = 2;
+
+	  std::vector<float>trackDensities;
+
+	  int skipCounter = 0;
+	  for (auto pt : this_track_atom) {
+
+	    if (skipCounter%circleStep != 0){
+	      skipCounter++;
+	      continue;
+	    }
+	    skipCounter++;
+
+	    geo2d::Circle<float> scan_circle;
+	    scan_circle.center = pt;
+	    scan_circle.radius = circleRad;
+
+	    cv::Mat inCirc_ctor;
+	    inCirc_ctor = MaskImage(this_raw_ctor,scan_circle,0,false);
+
+	    size_t qInCirc;
+	    float  npxInCirc;
+	    float  density;
+
+	    qInCirc   = SumNonZero(inCirc_ctor);
+	    npxInCirc = CountNonZero(inCirc_ctor);
+	    density   = qInCirc / npxInCirc;
+
+	    if (std::isnan(density)) {
+	      trackDensities.push_back(-1.0);
+	    } else {
+	      trackDensities.push_back(density);
+	    }
+
+	  }
 	  
 	  // For end dqds
 	  // Get the image again
@@ -769,6 +897,8 @@ namespace larocv {
 		  _image_particle0_plane0_tmp_y.push_back(_image_array_tmp.at(plane).at(idx).Y());
 		  _image_particle0_plane0_tmp_v.push_back(_image_array_tmp.at(plane).at(idx).Z());
 	      }
+	      _par1_0_qden_scan_v = trackDensities;
+	      _chi2_par1_0 = this_chi2;
 	    }
 	    if(plane == 1){
 	      for(size_t idx = 0; idx < _image_array_tmp.at(plane).size(); ++idx){
@@ -776,6 +906,8 @@ namespace larocv {
 		_image_particle0_plane1_tmp_y.push_back(_image_array_tmp.at(plane).at(idx).Y());
 		_image_particle0_plane1_tmp_v.push_back(_image_array_tmp.at(plane).at(idx).Z());
 	      }
+	      _par1_1_qden_scan_v = trackDensities;
+	      _chi2_par1_1 = this_chi2;
 	    }
 	    if(plane == 2){
 	      for(size_t idx = 0; idx < _image_array_tmp.at(plane).size(); ++idx){
@@ -783,6 +915,8 @@ namespace larocv {
 		_image_particle0_plane2_tmp_y.push_back(_image_array_tmp.at(plane).at(idx).Y());
 		_image_particle0_plane2_tmp_v.push_back(_image_array_tmp.at(plane).at(idx).Z());
 	      }
+	      _par1_2_qden_scan_v = trackDensities;
+	      _chi2_par1_2 = this_chi2;
 	    }
 	    _particle0_pixels_v.at(plane).clear();
 	    _particle0_pixels_v.at(plane).resize(par._atom.size());
@@ -818,6 +952,8 @@ namespace larocv {
 		_image_particle1_plane0_tmp_y.push_back(_image_array_tmp.at(plane).at(idx).Y());
 		_image_particle1_plane0_tmp_v.push_back(_image_array_tmp.at(plane).at(idx).Z());
 	      }
+	      _par2_0_qden_scan_v = trackDensities;
+	      _chi2_par2_0 = this_chi2;
 	    }
 	    if(plane == 1){
 	      for(size_t idx = 0; idx < _image_array_tmp.at(plane).size(); ++idx){
@@ -825,6 +961,8 @@ namespace larocv {
 		_image_particle1_plane1_tmp_y.push_back(_image_array_tmp.at(plane).at(idx).Y());
 		_image_particle1_plane1_tmp_v.push_back(_image_array_tmp.at(plane).at(idx).Z());
 	      }
+	      _par2_1_qden_scan_v = trackDensities;
+	      _chi2_par2_1 = this_chi2;
 	    }
 	    if(plane == 2){
 	      for(size_t idx = 0; idx < _image_array_tmp.at(plane).size(); ++idx){
@@ -832,6 +970,8 @@ namespace larocv {
 		_image_particle1_plane2_tmp_y.push_back(_image_array_tmp.at(plane).at(idx).Y());
 		_image_particle1_plane2_tmp_v.push_back(_image_array_tmp.at(plane).at(idx).Z());
 	      }
+	      _par2_2_qden_scan_v = trackDensities;
+	      _chi2_par2_2 = this_chi2;
 	    }
 	    _particle1_pixels_v.at(plane).clear();
 	    _particle1_pixels_v.at(plane).resize(par._atom.size());
