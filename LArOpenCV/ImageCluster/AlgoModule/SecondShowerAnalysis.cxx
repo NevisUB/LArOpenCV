@@ -179,6 +179,8 @@ namespace larocv {
 	simg_v[plane] = tshr_img_v[plane].clone();
 
 	const auto& ctor_v = ctor_vv[plane];
+	if (ctor_v.empty()) continue;
+
 	const auto& vtx2d = vtx3d.vtx2d_v[plane];
 
 	LAROCV_DEBUG() << "2d pt=" << vtx2d.pt << std::endl;
