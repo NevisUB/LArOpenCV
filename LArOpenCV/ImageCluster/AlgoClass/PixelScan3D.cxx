@@ -71,7 +71,7 @@ namespace larocv {
   }
   
   std::vector<std::vector<data::Vertex3D> > 
-  PixelScan3D::RegionScan3D(const std::vector<cv::Mat>& image_v, 
+  PixelScan3D::RegionScan3D(const std::array<cv::Mat,3>& image_v, 
 			    const data::Vertex3D& vtx3d) const {
 
     auto res_vv = RegisterRegions(vtx3d);
@@ -117,7 +117,7 @@ namespace larocv {
   
   std::vector<std::vector<std::array<size_t,3> > > 
   PixelScan3D::AssociateContours(const std::vector<std::vector<data::Vertex3D> >& reg_vv,
-				 const std::vector<GEO2D_ContourArray_t>& ctor_vv) {
+				 const std::array<GEO2D_ContourArray_t,3>& ctor_vv) {
     
     std::vector<std::vector<std::array<size_t,3> > > ass_vv;
     ass_vv.resize(reg_vv.size());

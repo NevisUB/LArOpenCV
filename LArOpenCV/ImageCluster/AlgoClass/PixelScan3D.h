@@ -40,15 +40,15 @@ namespace larocv {
 
     
     std::vector<std::vector<data::Vertex3D> > 
-      RegionScan3D(const std::vector<cv::Mat>& image_v, 
+    RegionScan3D(const std::array<cv::Mat,3>& image_v, 
 		   const data::Vertex3D& vtx3d) const;
     
     std::vector<std::vector<data::Vertex3D> >
-      RegisterRegions(const data::Vertex3D& vtx) const;
+    RegisterRegions(const data::Vertex3D& vtx) const;
     
     std::vector<std::vector<std::array<size_t,3> > > 
-      AssociateContours(const std::vector<std::vector<data::Vertex3D> >& reg_vv,
-			const std::vector<GEO2D_ContourArray_t>& ctor_vv);
+    AssociateContours(const std::vector<std::vector<data::Vertex3D> >& reg_vv,
+		      const std::array<GEO2D_ContourArray_t,3>& ctor_vv);
 
 
     const LArPlaneGeo& geo() const { return _geo; }

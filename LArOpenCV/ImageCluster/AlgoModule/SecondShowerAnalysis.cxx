@@ -116,11 +116,18 @@ namespace larocv {
       img = Threshold(img,10,255);
 
     std::vector<GEO2D_ContourArray_t> ctor_vv;
-    ctor_vv.reserve(3);
+    ctor_vv.resize(3);
 
     for(size_t plane=0; plane<3; ++plane) {
-      auto ctor_v  = FindContours(tadc_img_v[plane]); 
-      ctor_vv.emplace_back(std::move(ctor_v));
+      auto ctor_v  = FindContours(tadc_img_v.at(plane)); 
+      // GEO2D_ContourArray_t tmp_ctor_v;
+      // tmp_ctor_v.reserve(ctor_v.size());
+      // for(auto& ctor : ctor_v)  {
+      // 	if (ctor.size()<3) continue;
+      // 	tmp_ctor_v.emplace_back(std::move(ctor));
+      // }
+      //ctor_vv[plane] = std::move(tmp_ctor_v);
+      ctor_vv[plane] = std::move(ctor_v);
     }
 
     const auto& meta_v = MetaArray();
@@ -137,8 +144,16 @@ namespace larocv {
     
     _vtxid = -1;
     
+
+    std::array<size_t, 3> vtx_ctor_v;
+    std::array<bool,3> valid_plane_v;
+    std::array<cv::Mat,3> simg_v;
+    std::array<GEO2D_ContourArray_t,3> sctor_vv;
+    std::array<GEO2D_ContourArray_t,3> actor_vv;
+
     LAROCV_DEBUG() << "Got " << vtx3d_v.size() << " vertices" << std::endl;
     for(size_t vtxid = 0; vtxid < vtx3d_v.size(); ++vtxid) {
+      LAROCV_DEBUG() << "@vtxid=" << vtxid << std::endl;
       ClearVertex();
 
       const auto& vtx3d = vtx3d_v[vtxid];
@@ -160,43 +175,38 @@ namespace larocv {
 	continue;
       }
 
-
       //
       // Mask the vertex and associated super contour
       // out of the shower image
       //
-      std::vector<cv::Mat> simg_v;
-      simg_v.resize(3);
-      
-      std::array<size_t, 3> vtx_ctor_v;
-      for(auto& v : vtx_ctor_v) v = kINVALID_SIZE;
-
-      std::array<bool,3> valid_plane_v;
+      for(auto& v : simg_v)        v.release();
+      for(auto& v : vtx_ctor_v)    v = kINVALID_SIZE;
       for(auto& v : valid_plane_v) v = false;
 
       for(size_t plane=0; plane<3; ++plane) {
 	LAROCV_DEBUG() << "@plane=" << plane << std::endl;
-	simg_v[plane] = tshr_img_v[plane].clone();
+	simg_v[plane] = tshr_img_v.at(plane).clone();
 
-	const auto& ctor_v = ctor_vv[plane];
-	if (ctor_v.empty()) continue;
-
-	const auto& vtx2d = vtx3d.vtx2d_v[plane];
+	const auto& ctor_v = ctor_vv.at(plane);
+	const auto& vtx2d = vtx3d.vtx2d_v.at(plane);
 
 	LAROCV_DEBUG() << "2d pt=" << vtx2d.pt << std::endl;
 
 	if (vtx2d.pt.x < 0) continue;
-	valid_plane_v[plane] = true;
+	if (vtx2d.pt.y < 0) continue;
+
 	auto id = FindContainingContour(ctor_v, vtx2d.pt);
+
+	valid_plane_v[plane] = true;
 
 	LAROCV_DEBUG() << "masking vertex contour @id=" << id << std::endl;
 	if (id == kINVALID_SIZE) continue;
-	const auto& ctor = ctor_v[id];
+
+	const auto& ctor = ctor_v.at(id);
 	vtx_ctor_v[plane] = id;
 	simg_v[plane] = MaskImage(simg_v[plane],ctor,0,true);
       }
       
-
       //
       // Mask the particle contours
       //
@@ -209,20 +219,22 @@ namespace larocv {
 	  simg_v[plane] = MaskImage(simg_v[plane],pctor,0,true);
 	}
       }
-      
-      //
-      // Determine if there is a blob of shower charge large enough & mostly shower
-      //
-      std::vector<GEO2D_ContourArray_t> sctor_vv;
-      sctor_vv.reserve(3);
-      
+
+      for(auto& v : sctor_vv) v.clear();
+
       for(size_t plane=0; plane<3; ++plane) {
 	auto sctor_v  = FindContours(simg_v[plane]); 
-	sctor_vv.emplace_back(std::move(sctor_v));
+	// GEO2D_ContourArray_t tmp_sctor_v;
+	// tmp_sctor_v.reserve(sctor_v.size());
+	// for(auto& ctor : sctor_v) {
+	//   if (ctor.size()<3) continue;
+	//   tmp_sctor_v.emplace_back(std::move(ctor));
+	// }
+	//sctor_vv[plane] = std::move(tmp_sctor_v);
+	sctor_vv[plane] = std::move(sctor_v);
       }
       
-      std::vector<GEO2D_ContourArray_t> actor_vv;
-      actor_vv.resize(3);
+      for(auto& v : actor_vv) v.clear();
       
       for(size_t plane = 0; plane<3; ++plane) {
 
@@ -230,22 +242,22 @@ namespace larocv {
 
 	const auto& sctor_v = sctor_vv[plane];
 
-	auto& ctor_v   = ctor_vv[plane];
+	const auto& ctor_v   = ctor_vv[plane];
 	auto& actor_v = actor_vv[plane];
 	actor_v.reserve(ctor_v.size());
 
 	for(size_t aid = 0 ; aid < ctor_v.size(); ++aid) {
 	  if (aid == vtx_ctor_v[plane]) continue; // its the vertex contour
-	  auto& ctor = ctor_v[aid];
-
-	  if(ContourArea(ctor) < _shower_size)  // it's to small
+	  const auto& ctor = ctor_v[aid];
+	  
+	  if(ContourArea(ctor) < _shower_size)
 	  { simg_v[plane] = MaskImage(simg_v[plane],ctor,0,true); continue; }
 
 	  auto sid = FindContainingContour(sctor_v,ctor);
 	  if (sid == kINVALID_SIZE) continue;
 
 	  double frac = AreaRatio(sctor_v.at(sid),ctor);
-	  if (frac > _shower_frac) actor_v.emplace_back(std::move(ctor));
+	  if (frac > _shower_frac) actor_v.emplace_back(ctor);
 	  else simg_v[plane] = MaskImage(simg_v[plane],ctor,0,true); // it's not shower enough
 	}
       }
@@ -294,6 +306,7 @@ namespace larocv {
 	    trip_vtx_ptr_vv[tid].emplace_back(&reg);
 	    break;
 	  }
+
 	  if (found) continue;
 	  trip_v.emplace_back(ass);
 	  trip_cnt_v.emplace_back(1);
@@ -349,15 +362,15 @@ namespace larocv {
 				       vtx3d_vec);
       LAROCV_DEBUG() << "Impact parameter=" << imp_dist << std::endl;
       
-      bool _debug = true;
-      if(_debug) {
-	_reg_vv = reg_vv;
-	_actor_vv = actor_vv;
-	_angle = angle;
-	_avector = avector;
-	_mean_pos = mean_pos;
-	_dist = imp_dist;
-      }
+      // bool _debug = false;
+      // if(_debug) {
+      // 	_reg_vv = reg_vv;
+      // 	_actor_vv = actor_vv;
+      // 	_angle = angle;
+      // 	_avector = avector;
+      // 	_mean_pos = mean_pos;
+      // 	_dist = imp_dist;
+      // }
 
       LAROCV_DEBUG() << "Second shower candidate idenfitied" << std::endl;
 
@@ -372,7 +385,6 @@ namespace larocv {
 	  {min_dist = d; min_sp = &sp;}
       }
       
-
       _secondshower = 1;
       _shr_rad_pts = (int)sps_v.size();
 
@@ -405,6 +417,7 @@ namespace larocv {
 
 	if (info2d.ptype != larocv::data::ParticleType_t::kShower) continue;
 
+	LAROCV_DEBUG() << "shower par @id=" << par_idx << std::endl;
 	const auto info3d_id = ass_man.GetOneAss(par,info3d_data.ID());
 	const auto& info3d = info3d_data.as_vector().at(info2d_id);
 	
@@ -421,6 +434,7 @@ namespace larocv {
 	break;
       }
       
+      LAROCV_DEBUG() << "...fill" << std::endl;
       _tree->Fill();
     } // end this vertex
     
