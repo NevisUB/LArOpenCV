@@ -4,7 +4,6 @@
 #include "LArOpenCV/ImageCluster/Base/ImageAnaBase.h"
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 #include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
-#include "TVector3.h"
 
 /*
   @brief: R. An dQdsAnalysis
@@ -39,12 +38,15 @@ namespace larocv {
     
     std::vector<float> PeakFinder  (std::vector<float> input_dqds, double frac); //Find the first peak in dqds and stop
 
-    std::vector<float> dQdsDropper (std::vector<float> input_dqds);
-
     float Correct3D ( float dqds_mean, float theta, float phi);
 
     std::vector<float> Sort01 (const std::vector<float> input_dqds);
+
+    void AssignRatio (const std::vector<float> input, float& output);
     
+    void AssignDiff (const std::vector<float> input, float& output);
+  
+      
   private:
 
     void ClearEvent();
@@ -68,82 +70,58 @@ namespace larocv {
     double _x;
     double _y;
     double _z;
-    double _particle0_end_x;
-    double _particle0_end_y;
-    double _particle0_end_z;
-    double _particle1_end_x;
-    double _particle1_end_y;
-    double _particle1_end_z;
     
-    std::vector<float> _dqds_0_v;//dqds mean per vtx, per plane, particle 0
-    std::vector<float> _dqds_1_v;//dqds mean per vtx, per plane, particle 1
-    std::vector<float> _dqds_diff_v;//diff of mean dqds between particle 0&1
-    std::vector<float> _dqds_ratio_v;//diff of mean dqds between particle 0&1
-    float _dqds_diff_01;//smaller dqds diff of plane 0&1
-    float _dqds_ratio_01;//smaller dqds diff of plane 0&1
-        
-    std::vector<float> _t_dqds_0_v;//dqds mean per vtx, per plane, particle 0
-    std::vector<float> _t_dqds_1_v;//dqds mean per vtx, per plane, particle 1
-    std::vector<float> _t_dqds_diff_v;//diff of mean dqds between particle 0&1
-    std::vector<float> _t_dqds_ratio_v;//diff of mean dqds between particle 0&1
-    float _t_dqds_diff_01;//smaller dqds diff of plane 0&1
-    float _t_dqds_ratio_01;//smaller dqds diff of plane 0&1
+    // raw dqds in the vertex circle
+    std::vector<float> _dqds_0_v;    // trunk dqds mean per vtx, per plane, particle 0
+    std::vector<float> _dqds_1_v;    // trunk dqds mean per vtx, per plane, particle 1
+    std::vector<float> _dqds_diff_v; // diff of mean trunk dqds between particle 0&1
+    std::vector<float> _dqds_ratio_v;// ratio of mean trunk dqds between particle 0&1
+    float _dqds_diff_01;             // larger mean trunk dqds diff of plane 0&1
+    float _dqds_ratio_01;            // smaller mean trunk dqds diff of plane 0&1
+    
+    std::vector<float> _r_dqds_0_v;
+    std::vector<float> _r_dqds_1_v;
+    std::vector<float> _r_dqds_diff_v;
+    std::vector<float> _r_dqds_ratio_v;
+    float _r_dqds_diff_01;
+    float _r_dqds_ratio_01;
+    
+    std::vector<float> _s_dqds_0_v;
+    std::vector<float> _s_dqds_1_v;
+    std::vector<float> _s_dqds_diff_v;
+    std::vector<float> _s_dqds_ratio_v;
+    float _s_dqds_diff_01;
+    float _s_dqds_ratio_01;
 
-    std::vector<float> _r_dqds_0_v;//dqds spectrum per vtx, per plane, particle 0
-    std::vector<float> _r_dqds_1_v;//dqds spectrum per vtx, per plane, particle 1
-    std::vector<float> _r_dqds_diff_v;//diff of mean dqds between particle 0&1
-    std::vector<float> _r_dqds_ratio_v;//diff of mean dqds between particle 0&1
-    float _r_dqds_diff_01;//smaller dqds diff of plane 0&1
-    float _r_dqds_ratio_01;//smaller dqds diff of plane 0&1
+    std::vector<float> _t_dqds_0_v;   
+    std::vector<float> _t_dqds_1_v;
+    std::vector<float> _t_dqds_diff_v;
+    std::vector<float> _t_dqds_ratio_v;
+    float _t_dqds_diff_01;
+    float _t_dqds_ratio_01;
     
-    std::vector<float> _dqdx_0_v_3dc;//per vtx, per plane, particle 0
-    std::vector<float> _dqdx_1_v_3dc;//per vtx, per plane, particle 1
-    std::vector<float> _dqdx_diff_v_3dc;//diff of mean dqds between particle 0&1
-    std::vector<float> _dqdx_ratio_v_3dc;//diff of mean dqds between particle 0&1
+    std::vector<float> _dqdx_0_v_3dc;
+    std::vector<float> _dqdx_1_v_3dc;
+    std::vector<float> _dqdx_diff_v_3dc;
+    std::vector<float> _dqdx_ratio_v_3dc;
+    float _dqdx_diff_01_3dc;
+    float _dqdx_ratio_01_3dc;
 
-    std::vector<float> _dqdx_0_end_v_3dc;//per vtx, per plane, particle 0
-    std::vector<float> _dqdx_1_end_v_3dc;//per vtx, per plane, particle 1
-    std::vector<float> _dqdx_diff_end_v_3dc;//diff of mean dqds between particle 0&1
-    std::vector<float> _dqdx_ratio_end_v_3dc;//diff of mean dqds between particle 0&1
+    std::vector<float> _dqdx_0_end_v_3dc;
+    std::vector<float> _dqdx_1_end_v_3dc;
+    std::vector<float> _dqdx_diff_end_v_3dc;
+    std::vector<float> _dqdx_ratio_end_v_3dc;
     
-    std::vector<float> _trackp_dqds_v;//per vtx, per plane, track particle
-    std::vector<float> _showerp_dqds_v;//per vtx, per plane, shower particle
-    std::vector<float> _trackp_dqdx_3dc_v;//per vtx, per plane, track particle
-    std::vector<float> _showerp_dqdx_3dc_v;//per vtx, per plane, shower particle
+    std::vector<float> _trackp_dqds_v;
+    std::vector<float> _showerp_dqds_v;
+    std::vector<float> _trackp_dqdx_3dc_v;
+    std::vector<float> _showerp_dqdx_3dc_v;
 
-    std::vector<float> _long_trackp_dqds_v;//per vtx, per plane, long track particle
-    std::vector<float> _short_trackp_dqds_v;//per vtx, per plane, short particle
-    std::vector<float> _long_trackp_dqdx_3dc_v;//per vtx, per plane, long track particle
-    std::vector<float> _short_trackp_dqdx_3dc_v;//per vtx, per plane, short particle
+    std::vector<float> _long_trackp_dqds_v;
+    std::vector<float> _short_trackp_dqds_v;
+    std::vector<float> _long_trackp_dqdx_3dc_v;
+    std::vector<float> _short_trackp_dqdx_3dc_v;
     
-    std::vector<std::pair<float, float> > _vertex_v;
-    std::vector<std::pair<float, float> > _particle0_end_point;
-    std::vector<std::pair<float, float> > _particle1_end_point;
-    std::vector<std::vector<std::pair<float, float> > > _particle0_pixels_v;
-    std::vector<std::vector<std::pair<float, float> > > _particle1_pixels_v;
-    
-    std::vector<std::vector<TVector3> > _image_array_tmp;
-    
-    std::vector<float> _image_particle0_plane0_tmp_x;
-    std::vector<float> _image_particle0_plane0_tmp_y;
-    std::vector<float> _image_particle0_plane0_tmp_v;
-    std::vector<float> _image_particle0_plane1_tmp_x;
-    std::vector<float> _image_particle0_plane1_tmp_y;
-    std::vector<float> _image_particle0_plane1_tmp_v;
-    std::vector<float> _image_particle0_plane2_tmp_x;
-    std::vector<float> _image_particle0_plane2_tmp_y;
-    std::vector<float> _image_particle0_plane2_tmp_v;
-    
-    std::vector<float> _image_particle1_plane0_tmp_x;
-    std::vector<float> _image_particle1_plane0_tmp_y;
-    std::vector<float> _image_particle1_plane0_tmp_v;
-    std::vector<float> _image_particle1_plane1_tmp_x;
-    std::vector<float> _image_particle1_plane1_tmp_y;
-    std::vector<float> _image_particle1_plane1_tmp_v;
-    std::vector<float> _image_particle1_plane2_tmp_x;
-    std::vector<float> _image_particle1_plane2_tmp_y;
-    std::vector<float> _image_particle1_plane2_tmp_v;
-
     std::vector<float> _par1_0_qden_scan_v;
     std::vector<float> _par1_1_qden_scan_v;
     std::vector<float> _par1_2_qden_scan_v;
@@ -153,16 +131,13 @@ namespace larocv {
 
     std::vector<float> _npx_in_vtx_circ_v;
     std::vector<float> _npx_on_vtx_circ_v;
-
-    
     
     //Variables for truncated mean
     double _window_size;
     int _window_size_thre;
+    double _window_frac;
     double _head_frac;
     double _tail_frac;
-    
-    size_t _drop_location; //drop the first x data points on dqds spectrum
     
     float _dqds_scan_thre;
     
@@ -170,9 +145,6 @@ namespace larocv {
     float _phi_0;
     float _theta_1;
     float _phi_1;
-
-    float _dqdx_diff_01_3dc;//smaller dqds diff of plane 0&1 [3D corrected]
-    float _dqdx_ratio_01_3dc;//smaller dqds diff of plane 0&1 [3D corrected]
 
     float _trackp_totq;
     float _showerp_totq;

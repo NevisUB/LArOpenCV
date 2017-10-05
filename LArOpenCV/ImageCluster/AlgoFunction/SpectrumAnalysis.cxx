@@ -8,8 +8,7 @@
 
 namespace larocv {
 
-  //Methods for Truncated Mean removing numbers based on mean,sigma
-
+  //Truncated Mean Method
   float 
   Calc_truncated_mean(std::vector<float> input, float thre) {
     
@@ -76,9 +75,7 @@ namespace larocv {
     
   }
 
-  //Above are Methods for Truncated Mean removing numbers based on mean,sigma
-
-  //Methods for Smoothing 
+  //Smooth Mean Method
   std::vector<float> 
   Calc_smooth_mean(const std::vector<float>& dq,
 		   const double _n_window_size,
@@ -214,10 +211,6 @@ namespace larocv {
 		return a < b;	      
 	      });
 
-    // erase all elements after the last one to be kept
-    //data.erase(data.begin(), data.begin() + to_stay);
-    //data.erase(data.end() - to_stay, data.end());
-    
     for (size_t idx=0; idx < data.size() ; ++idx){
       if (data[idx] < copy[copy.size()-to_stay_tail] && data[idx] > copy[to_stay_head]) res.push_back(data[idx]);
     }
@@ -231,12 +224,9 @@ namespace larocv {
 
     if (res.size()<3) {
       res.clear();
-      for (size_t idx=0; idx < data.size() ; ++idx){
-	res.push_back(data[idx]);
-      } 
-    }
+      res = data; 
+    } 
     
-    //data.erase(data.begin() + to_stay, data.end());
     return res;
   }
 
