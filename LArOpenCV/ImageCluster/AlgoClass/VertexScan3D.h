@@ -70,10 +70,10 @@ namespace larocv {
     bool _prohibit_one_xs;
     double _dtheta_cut;
     bool _merge_voxels;
-    bool _require_3planes_charge;
     float _allowed_radius;
     bool _polar_qpoint;
     bool _ignore_four;
+    int _req_n_planes;
 
     std::vector<float> _radius_v;
     

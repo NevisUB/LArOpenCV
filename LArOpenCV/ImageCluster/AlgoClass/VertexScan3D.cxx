@@ -36,10 +36,7 @@ namespace larocv {
     _merge_voxels      = pset.get<bool> ("MergeVoxels",false);
     _polar_qpoint      = pset.get<bool> ("UsePolarQPoint",true);
     _ignore_four       = pset.get<bool> ("IgnoreFour",false);
-    _require_3planes_charge = pset.get<bool>("Require3PlanesCharge",false);
-    if(_require_3planes_charge)
-      _allowed_radius = pset.get<float>("AllowedRadius",0.0);
-
+    _req_n_planes      = pset.get<int>  ("ReqNPlanes",2);
   }
 
   bool VertexScan3D::SetPlanePoint(cv::Mat img,
@@ -494,24 +491,6 @@ namespace larocv {
 	continue;
       }
       
-      // Optional: require there to be some charge in vincinity of projected vertex on 3 planes
-      uint nvalid=0;
-      if(_require_3planes_charge) {
-	LAROCV_DEBUG() << "Requiring 3 planes charge in circle... " << std::endl;
-	for(size_t plane=0; plane<3; ++plane)  {
-	  auto vtx2d= vtx3d.vtx2d_v[plane];
-	  auto npx = CountNonZero(image_v[plane],geo2d::Circle<float>(vtx2d.pt,_allowed_radius));
-	  LAROCV_DEBUG() << "@ (" << vtx2d.pt.x << "," << vtx2d.pt.y
-			 << ") w/ rad " << _allowed_radius
-			 << " see " << npx << " nonzero pixels" << std::endl;
-	  if(npx) nvalid++;
-	}
-	if(nvalid!=3) {
-	  LAROCV_DEBUG() << "... invalid, SKIP!" << std::endl;
-	  continue;
-	}
-      }
-      
       // Move seed into the output
       vtx3d_v.emplace_back(std::move(vtx3d));
     } // end candidate vertex seed
@@ -569,7 +548,7 @@ namespace larocv {
 	    }
 	  
 	    // no valid plane point, continue
-	    if (valid_ctr < 2) continue;
+	    if (valid_ctr < _req_n_planes) continue;
 
 	    valid_ctr = 0;
 	    circle_v.clear();
