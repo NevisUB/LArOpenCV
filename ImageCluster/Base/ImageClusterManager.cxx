@@ -346,11 +346,10 @@ namespace larocv {
 
       for( auto const & img : meta_per_plane ){
 
-	// If there are no clusters in a plane, don't do this part.
-	if( img.size() == 0 ){
-	  lowest_plane = -1;
-	  break;
-	  }
+	//if( img.size() == 0 ){
+	//  lowest_plane = -1;
+	//  break;
+	//  }
 
         for(auto const & m : img ){
 	   
@@ -364,17 +363,6 @@ namespace larocv {
            }
 	 }
         }
-
-      
-//      if ( lowest_plane != -1 ){
-//        auto middle_score = lowest_plane == 0 ? meta_per_plane[1][0]->score() : meta_per_plane[0][0]->score() ;
-//
-//        // If the scores are both pretty decent and aren't that different
-//        if (lowest_plane_score > 0.825 && fabs(middle_score - lowest_plane_score) > 0.075) {
-//          lowest_plane_score = 10;
-//          lowest_plane = -1;
-//          }
-//	}
 
       //std::cout<<" lower plane score and plane : "<<lowest_plane_score<<", "<<lowest_plane<<std::endl ;
 
