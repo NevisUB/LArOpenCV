@@ -18,6 +18,7 @@
 #include <array>
 #include <cassert>
 #define T2R 0.0175
+
 namespace larocv {
 
   cv::Mat
@@ -662,6 +663,22 @@ namespace larocv {
   }
 
   geo2d::Vector<float>
+  Centroid(const cv::Mat& mat) {
+    auto ctor_v = FindContours(mat);
+    size_t largest = Largest(ctor_v);
+    return Centroid(ctor_v[largest]);
+  }	   
+
+  geo2d::Vector<float>
+  Centroid(const GEO2D_Contour_t& ctor) {
+    auto M = cv::moments(ctor);
+    geo2d::Vector<float> res;
+    res.x = (float) ((int)(M.m10 / M.m00));
+    res.y = (float) ((int)(M.m01 / M.m00));
+    return res;
+  }
+
+  geo2d::Vector<float>
   EstimateMidPoint(const cv::Mat& img,
 		   const geo2d::Vector<float>& pt,
 		   const int direction) {
@@ -764,6 +781,29 @@ namespace larocv {
     return res_v;
   }
 
+  bool Connected(const cv::Mat& img,
+		 geo2d::Vector<float> pt1,
+		 geo2d::Vector<float> pt2,
+		 int thickness) {
+
+    auto white_img = BlankImage(img,0);
+
+    cv::Mat dst_img(img.size(),img.type(),cv::Scalar(0));
+
+    cv::line(white_img,
+	     cv::Point((int)(pt1.x + 0.5),(int)(pt1.y+0.5)),
+	     cv::Point((int)(pt2.x + 0.5),(int)(pt2.y+0.5)),
+	     cv::Scalar(255),
+	     thickness);
+    
+    img.copyTo(dst_img,white_img);    
+
+    auto ctor_v = FindContours(dst_img);
+
+    if (ctor_v.size() == 1 ) return true;
+    
+    return false;
+  }
 
 }
 #endif

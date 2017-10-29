@@ -149,6 +149,12 @@ namespace larocv {
 	    const geo2d::Vector<float>& pt);
 
   geo2d::Vector<float>
+  Centroid(const cv::Mat& mat);
+
+  geo2d::Vector<float>
+  Centroid(const GEO2D_Contour_t& ctor);
+
+  geo2d::Vector<float>
   EstimateMidPoint(const cv::Mat& img,
 		   const geo2d::Vector<float>& pt,
 		   const int direction);
@@ -162,6 +168,10 @@ namespace larocv {
 			      const geo2d::Vector<float>& center,
 			      const std::vector<float>& radius_v);
 
-  
+  bool 
+  Connected(const cv::Mat& img,
+	    geo2d::Vector<float> pt1,
+	    geo2d::Vector<float> pt2,
+	    int thickness=1);
 }
 #endif

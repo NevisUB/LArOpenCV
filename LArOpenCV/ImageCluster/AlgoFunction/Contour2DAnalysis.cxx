@@ -81,6 +81,19 @@ namespace larocv {
   }
 
 
+  size_t
+  Largest(const GEO2D_ContourArray_t& ctor_v){
+    double max_area = -1.0*kINVALID_DOUBLE;
+    size_t idx = kINVALID_SIZE;
+    for(size_t ctorid=0; ctorid<ctor_v.size(); ++ctorid) {
+      auto area = ContourArea(ctor_v[ctorid]);
+      if (area > max_area) { max_area = area; idx = ctorid;}
+    }
+    if (idx == kINVALID_SIZE) 
+      throw larbys("ctor array empty or area cannot be calculated");
+    return idx;
+  }
+
   GEO2D_Contour_t
   ConvexHull(const GEO2D_Contour_t& ctor) {
     GEO2D_Contour_t hull_ctor;

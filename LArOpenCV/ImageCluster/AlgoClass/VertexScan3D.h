@@ -74,7 +74,8 @@ namespace larocv {
     bool _polar_qpoint;
     bool _ignore_four;
     int _req_n_planes;
-
+    bool _connect;
+    bool _connect_xs;
     std::vector<float> _radius_v;
     
     std::vector<std::vector<data::CircleVertex> > _history_vv;

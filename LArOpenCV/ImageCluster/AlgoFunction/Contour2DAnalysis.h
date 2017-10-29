@@ -32,12 +32,16 @@ namespace larocv {
   ArcLength(const GEO2D_Contour_t& ctor, bool closed=false);
 
   double
-  ContourArea(const GEO2D_Contour_t& ctor,bool oriented=false);
+  ContourArea(const GEO2D_Contour_t& ctor,
+	      bool oriented=false);
 
   double
   ContourArea(const cv::Mat& img,
               const GEO2D_Contour_t& ctor);
   
+  size_t
+  Largest(const GEO2D_ContourArray_t& ctor_v);
+
   GEO2D_Contour_t
   ConvexHull(const GEO2D_Contour_t& ctor);
   

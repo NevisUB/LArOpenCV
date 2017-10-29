@@ -37,6 +37,9 @@ namespace larocv {
     _polar_qpoint      = pset.get<bool> ("UsePolarQPoint",true);
     _ignore_four       = pset.get<bool> ("IgnoreFour",false);
     _req_n_planes      = pset.get<int>  ("ReqNPlanes",2);
+    _connect           = pset.get<bool> ("Connect",false);
+    _connect_xs        = pset.get<bool> ("ConnectXs",false);
+
   }
 
   bool VertexScan3D::SetPlanePoint(cv::Mat img,
@@ -100,6 +103,7 @@ namespace larocv {
       cvtx.dtheta_xs = make_dtheta(center_line0,center_line1);
       if (cvtx.dtheta_xs < _dtheta_cut) return -1;
       assert (img.rows>0 and img.cols>0);
+
       //
       // both axis mid point
       //
@@ -263,16 +267,17 @@ namespace larocv {
 
     // apply 2 degrees angular supression
     std::vector<geo2d::VectorArray<float> > temp_xs_vv;
-    if (_polar_qpoint)  
+    if (_polar_qpoint)  {
       temp_xs_vv = QPointArrayOnCircleArray(img, pt,
 					    _radius_v, _pi_threshold, 
 					    _angle_supression, _width_supression);
-    else
+    } else {
       temp_xs_vv = OnCircleGroupsOnCircleArray(img,pt,_radius_v);
+    }
     
     std::vector<std::vector<data::PointPCA> > xs_vv(temp_xs_vv.size());
     double min_weight = kINVALID_DOUBLE;
-    data::CircleVertex temp_res;
+    static data::CircleVertex temp_res;
     std::vector<float> dtheta_v;
 
     bool first = true;
@@ -289,6 +294,26 @@ namespace larocv {
 	continue;
       }
 
+      static bool connected = true;
+
+      if(_connect) {
+	connected = true;
+	for(const auto& xs : temp_xs_v) {
+	  connected &= Connected(img,pt,xs,2);
+	}
+	if(!connected) continue;
+      }
+
+      if(_connect_xs) {
+	connected = true;
+	for(size_t xsid1=0;xsid1<temp_xs_v.size();++xsid1) {
+	  for(size_t xsid2=xsid1+1;xsid2<temp_xs_v.size();++xsid2) {
+	    connected &= Connected(img,temp_xs_v[xsid1],temp_xs_v[xsid2],1);
+	  }
+	}
+	if(connected) continue;
+      }
+      
       dtheta_v.clear();
       dtheta_v.reserve(temp_xs_v.size());
 
@@ -315,7 +340,7 @@ namespace larocv {
 	LAROCV_DEBUG() << "...more xs pt found break" << std::endl;
 	break;
       }
-    
+      
       if(r_idx) {
 	if(xs_vv[r_idx-1].size() < xs_v.size()) {
 	  LAROCV_DEBUG() << "...more xs pt found break" << std::endl;
