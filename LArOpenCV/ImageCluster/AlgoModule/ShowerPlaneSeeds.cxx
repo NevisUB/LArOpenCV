@@ -15,10 +15,12 @@ namespace larocv {
   {
 
     _threshold = pset.get<float>("Threshold");
-    // Set algo verbosity
+
     _OneTrackOneShower.set_verbosity(this->logger().level());
-    // Get algo config
     _OneTrackOneShower.Configure(pset.get<Config_t>("OneTrackOneShower"));
+    
+    _valid_new = pset.get<bool>("ValidateUpdate",false);
+
     // Prep output data rep
     for(short plane=0;plane<3;++plane)
       Register(new data::VertexSeed2DArray);
@@ -53,15 +55,17 @@ namespace larocv {
       auto& vertexseed2darray = AlgoData<data::VertexSeed2DArray>(img_idx);
 
       // Track/shower image on this plane
-      auto& track_img  = track_img_v  [img_idx];
-      auto& shower_img = shower_img_v [img_idx];
+      auto& track_img  = track_img_v[img_idx];
+      auto& shower_img = shower_img_v[img_idx];
+      
+      auto thresh_track_img = Threshold(track_img,_threshold,255); // threshold
+      auto thresh_shower_img = Threshold(shower_img,_threshold,255); // threshold
 
       // 2D vertex seed list to be filled 
       std::vector<data::VertexSeed2D> vertexseed_v;
 
       LAROCV_DEBUG() << "No input seed given, determine track edges" << std::endl;
-      auto thresh_img = Threshold(track_img,_threshold,255); // threshold
-      auto ctor_v     = FindContours(thresh_img); // and find contours
+      auto ctor_v     = FindContours(thresh_track_img); // and find contours
       LAROCV_DEBUG() << "Found " << ctor_v.size() << " contours in track img (thresh:"<<_threshold<<")"<<std::endl;
       // Loop over contours and find 2 edge points
       // they are 2D track edge points == shower/track vertex candidate (to be filled in vertexseed_v)
@@ -94,18 +98,27 @@ namespace larocv {
 
 	// Get seed: writeable ref to modify, then possibly std::move later into output data rep
 	auto& seed = vertexseed_v[seed_idx];
-	data::CircleVertex cvtx;
-	cvtx.center.x = seed.x;
-	cvtx.center.y = seed.y;
-	cvtx.radius   = _OneTrackOneShower.circle_default_size();
-	seed.radius   = cvtx.radius;
 
+	  
 	// Inspect the possibility of being shower/track vtx point
-	_OneTrackOneShower.ValidateCircleVertex(shower_img,cvtx);
-	if (cvtx.xs_v.empty()) continue;
+	if (_valid_new) {
+	  bool valid_edge = _OneTrackOneShower.ValidateTrackEdge(thresh_shower_img,seed);
+	  if (!valid_edge) continue;
+	}
+	else {
+	  data::CircleVertex cvtx;
+	  cvtx.center.x = seed.x;
+	  cvtx.center.y = seed.y;
+	  cvtx.radius   = _OneTrackOneShower.circle_default_size();
+	  seed.radius   = cvtx.radius;
+	  
+	  _OneTrackOneShower.ValidateCircleVertex(thresh_shower_img,cvtx);
+	
+	  if (cvtx.xs_v.empty()) continue;
 
-	// To be track/shower vtx require only 1 xs point, else ignore
-	if (cvtx.xs_v.size()!=1) continue;
+	  // To be track/shower vtx require only 1 xs point, else ignore
+	  if (cvtx.xs_v.size()!=1) continue;
+	}
 	
 	LAROCV_DEBUG() << "... saved" << std::endl;
 	

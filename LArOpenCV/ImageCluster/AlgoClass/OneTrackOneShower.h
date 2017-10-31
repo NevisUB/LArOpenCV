@@ -66,6 +66,10 @@ namespace larocv {
 			     const geo2d::Circle<float>& circle,
 			     const std::vector<geo2d::Vector<float> >& xs_pts) const;
     
+
+    bool ValidateTrackEdge(const cv::Mat& img, 
+			   const geo2d::Vector<float>& pt);
+    
   private:
 
     // Helper class to convert between image & physical coordinates

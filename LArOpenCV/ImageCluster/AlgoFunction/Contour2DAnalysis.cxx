@@ -181,12 +181,21 @@ namespace larocv {
     return dst_img;
   }
 
-  GEO2D_Contour_t OnCircle(const cv::Mat& img,
-			   const geo2d::Circle<float>& c) {
-    return FindNonZero(OnCircleImage(img,c));
+  GEO2D_ContourArray_t OnCircle(const cv::Mat& img,
+				const geo2d::Circle<float>& c,
+				GEO2D_Contour_t& pts_v) {
+    auto cimg = OnCircleImage(img,c);
+    pts_v = FindNonZero(cimg);
+    return FindContours(cimg);
   }
 
 
+  GEO2D_Contour_t OnCircle(const cv::Mat& img,
+			   const geo2d::Circle<float>& c) {
+    auto cimg = OnCircleImage(img,c);
+    return FindNonZero(cimg);
+  }
+  
   cv::Mat OnCircleImage(const cv::Mat& img,
 			const geo2d::Circle<float>& c) {
     
@@ -199,9 +208,7 @@ namespace larocv {
 	       1,
 	       cv::LINE_8,
 	       0);    
-
     img.copyTo(dst_img,mask);
-
     return dst_img;
   }
 
@@ -209,7 +216,7 @@ namespace larocv {
   std::vector<geo2d::VectorArray<float> >  
   Associate(const GEO2D_Contour_t& pts_v,
 	    const geo2d::VectorArray<float>& target_v) {
-
+    
     static std::vector<geo2d::VectorArray<float> >  res_v;
     res_v.clear();
     res_v.resize(target_v.size());

@@ -122,8 +122,12 @@ namespace larocv {
       //
       // stability 
       //
-      auto pts_c_v = OnCircle(img,cvtx.as_circle());
+      GEO2D_Contour_t pts_c_v;
+      auto ctor_c_v = OnCircle(img,cvtx.as_circle(),pts_c_v);
+      if (ctor_c_v.size() == 1) return -1;
+      
       auto ass_v = Associate(pts_c_v,cvtx.xs_as_array());
+
       for(size_t aid0=0; aid0<ass_v.size(); ++aid0) { // group 1
 	for(size_t aid1=aid0+1; aid1<ass_v.size(); ++aid1) { // group2
 	  for(const auto& pt0 : ass_v[aid0]) {
@@ -182,7 +186,9 @@ namespace larocv {
       //
       // stability 
       //
-      auto pts_c_v = OnCircle(img,cvtx.as_circle());
+      GEO2D_Contour_t pts_c_v;
+      auto ctor_c_v = OnCircle(img,cvtx.as_circle(),pts_c_v);
+      if (ctor_c_v.size() == 1) return -1;
       auto ass_v = Associate(pts_c_v,cvtx.xs_as_array());
       for(size_t aid0=0; aid0<ass_v.size(); ++aid0) { // group 1
 	for(size_t aid1=aid0+1; aid1<ass_v.size(); ++aid1) { // group2

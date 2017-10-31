@@ -60,6 +60,14 @@ namespace larocv {
   GEO2D_Contour_t 
   OnCircle(const cv::Mat& img,
            const geo2d::Circle<float>& c);
+  
+  GEO2D_ContourArray_t OnCircle(const cv::Mat& img,
+				const geo2d::Circle<float>& c,
+				GEO2D_Contour_t& pts_v);
+  
+  GEO2D_Contour_t OnCircle(const cv::Mat& img,
+			   const geo2d::Circle<float>& c);
+
 
   cv::Mat 
   OnCircleImage(const cv::Mat& img,

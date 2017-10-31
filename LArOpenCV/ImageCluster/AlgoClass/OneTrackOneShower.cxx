@@ -73,6 +73,22 @@ namespace larocv {
     _geo_algo.Configure(pset.get<Config_t>("LArPlaneGeo"));
   }
 
+  bool OneTrackOneShower::ValidateTrackEdge(const cv::Mat& img, 
+					    const geo2d::Vector<float>& pt) {
+    
+    if (_grad_circle_rad_v.empty()) throw larbys("grad circle not configured");
+
+    auto xs_pt_vv = QPointArrayOnCircleArray(img,pt,_grad_circle_rad_v);
+    
+    for(size_t rad_id=0; rad_id < xs_pt_vv.size(); ++rad_id) {
+      const auto& xs_pt_v = xs_pt_vv[rad_id];
+      if (xs_pt_v.empty()) return false;
+    }
+
+    return true;
+  }
+
+
   void OneTrackOneShower::SetPlaneInfo(const ImageMeta& meta)
   { _geo_algo.ResetPlaneInfo(meta); }
 
@@ -290,6 +306,7 @@ namespace larocv {
       }
       
     } // end graduate circle
+
     else {
       LAROCV_DEBUG() << "Finding crossing points using regular QPoint method" << std::endl;
       
@@ -322,7 +339,6 @@ namespace larocv {
       cvtx.xs_v.push_back(pca_pt);
     }
 
-    
   }
 
   // Given an image, use internal vertex seeds to generate true vertices

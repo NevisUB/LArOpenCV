@@ -19,26 +19,21 @@ namespace larocv {
     {}
     
     virtual ~ShowerPlaneSeeds(){}
-    
     void Finalize(TFile*) {}
 
   protected:
 
-    void Reset()
-    {  _OneTrackOneShower.Reset(); }
-    
+    void Reset() { _OneTrackOneShower.Reset(); }
     void _Configure_(const Config_t &pset);
-    
     void _Process_();
-    
-    bool _PostProcess_() const
-    { return true; }
+    bool _PostProcess_() const { return true; }
 
   private:
     
     float _threshold;
     OneTrackOneShower _OneTrackOneShower;
-    
+    bool _valid_new;
+
   };
 
   class ShowerPlaneSeedsFactory : public AlgoFactoryBase {
