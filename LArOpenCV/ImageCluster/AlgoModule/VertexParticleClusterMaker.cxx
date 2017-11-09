@@ -66,8 +66,7 @@ namespace larocv {
     if (_patch) dead_img_v = ImageArray(ImageSetID_t::kImageSetChStatus);
 
     auto const& meta_v = MetaArray();
-    
-    
+        
     for(size_t img_idx=0; img_idx<img_v.size(); ++img_idx) {
 
       const auto& img = img_v[img_idx];

@@ -63,6 +63,11 @@ namespace larocv {
 
     std::array<const cv::Mat*,3>   _img_v;
     std::array<const ImageMeta*,3> _meta_v;
+
+    bool  _match_three_planes;
+    float _three_planes_boost;
+    float _plane_two_boost;
+
     float _threshold;
 
   private:

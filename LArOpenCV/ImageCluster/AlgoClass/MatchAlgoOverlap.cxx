@@ -12,6 +12,11 @@ namespace larocv {
     this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
     _match_weight_by_size = pset.get<bool>("MatchWeightBySize",false);
     _threshold = pset.get<float>("Threshold",0.1);
+
+    _match_three_planes = pset.get<bool>  ("MatchThreePlanes",false);
+    _three_planes_boost = pset.get<float> ("ThreePlanesBoost",1.0);
+    _plane_two_boost    = pset.get<float> ("PlaneTwoBoost", 1.0);
+
   }
     
   void MatchAlgoOverlap::Initialize() {

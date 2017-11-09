@@ -10,6 +10,10 @@ namespace larocv {
   void MatchAlgoTimeIOU::Configure(const Config_t &pset) {
     this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
     _threshold = pset.get<float>("Threshold",0.1);
+
+    _match_three_planes = pset.get<bool>  ("MatchThreePlanes",false);
+    _three_planes_boost = pset.get<float> ("ThreePlanesBoost",1.0);
+    _plane_two_boost    = pset.get<float> ("PlaneTwoBoost", 1.0);
   }
     
   void MatchAlgoTimeIOU::Initialize() { }
@@ -50,11 +54,11 @@ namespace larocv {
       if (px.x > max_time_tick1) max_time_tick1 = px.x;
     }
 
-    auto min_time0 = min_time_tick0;//meta0.XtoTimeTick(min_time_tick0);
-    auto min_time1 = min_time_tick1;//meta1.XtoTimeTick(min_time_tick1);
+    auto min_time0 = min_time_tick0;
+    auto min_time1 = min_time_tick1;
 
-    auto max_time0 = max_time_tick0;//meta0.XtoTimeTick(max_time_tick0);
-    auto max_time1 = max_time_tick1;//meta1.XtoTimeTick(max_time_tick1);
+    auto max_time0 = max_time_tick0;
+    auto max_time1 = max_time_tick1;
 
     //which one is higher in time?
     float max_time_top = kINVALID_FLOAT;
@@ -91,6 +95,7 @@ namespace larocv {
     float timeiou = (com_max_time - com_min_time)  / (max_time - min_time);
     
     score = timeiou;
+    
     return score;
   }
     
@@ -106,10 +111,31 @@ namespace larocv {
 				const data::ParticleCluster& par2) {
 
     float score = -1.0 * kINVALID_FLOAT;
+    
+    auto m01  = Match(img0 ,img1,
+		      meta0,meta1,
+		      par0 ,par1);
+
+    auto m02  = Match(img0 ,img2,
+		      meta0,meta2,
+		      par0 ,par2);
+    
+    auto m12  = Match(img1 ,img2,
+		      meta1,meta2,
+		      par1 ,par2);
+    
+    LAROCV_DEBUG() << "(m00,m01,m12)=("<<m01<<","<<m02<<","<<m12<<")" << std::endl;
+    
+    auto m_max = std::max({m01, m02, m12});
+    auto m_min = std::min({m01, m02, m12});
+    
+    if ((m_max - m_min) > 0.1)
+      return score;
+  
+    score = m_max;
+
     return score;
   }
 
 }
-
-
 #endif

@@ -641,8 +641,6 @@ namespace larocv {
 	    assert (weight1 > 0);
 	    assert (weight2 > 0);
 
-	    // _history_vv.emplace_back(circle_v);
-
 	    if ((weight1 * weight2) < best_weight) {
 	      best_weight  = weight1 * weight2;
 	      res.x = trial_vtx3d.x;

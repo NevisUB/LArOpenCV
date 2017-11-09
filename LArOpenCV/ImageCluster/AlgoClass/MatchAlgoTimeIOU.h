@@ -32,13 +32,6 @@ namespace larocv {
 		const data::ParticleCluster& par0,
 		const data::ParticleCluster& par1,
 		const data::ParticleCluster& par2);
-    
-  protected:
-
-    std::array<const cv::Mat*,3>   _img_v;
-    std::array<const ImageMeta*,3> _meta_v;
-    
-  private:
 
   };
   

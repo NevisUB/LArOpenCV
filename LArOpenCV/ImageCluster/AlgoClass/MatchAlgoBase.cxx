@@ -97,10 +97,13 @@ namespace larocv {
     for(const auto& comb_v : comb_vv) {
       LAROCV_DEBUG() << "@comb sz= "<< comb_v.size() << std::endl;
       if (comb_v.size()==2) {
+
 	LAROCV_DEBUG() << "@2" << std::endl;
 	auto plane0=comb_v[0].first;
 	auto plane1=comb_v[1].first;
 	
+	LAROCV_DEBUG() << "planes=(" << plane0 << "," << plane1 << ")" << std::endl;
+
 	auto cid0 = comb_v[0].second;
 	auto cid1 = comb_v[1].second;
 
@@ -119,18 +122,23 @@ namespace larocv {
 	_match_v[0] = id0;
 	_match_v[1] = id1;
 	
+	if (plane0 == 2 or plane1 == 2)
+	  score *= _plane_two_boost;
+
 	LAROCV_DEBUG() << "score=" << score << std::endl;
 	if (score<_threshold) continue;
 	LAROCV_DEBUG() << "...pass" << std::endl;
 	
 	_MatchBookKeeper.Match(_match_v,score);
       }
-      else if (comb_v.size()==3) {
+      else if (comb_v.size()==3 && _match_three_planes) {
 	LAROCV_DEBUG() << "@3" << std::endl;
 
 	auto plane0 = comb_v[0].first;
 	auto plane1 = comb_v[1].first;
 	auto plane2 = comb_v[2].first;
+
+	LAROCV_DEBUG() << "planes=(" << plane0 << "," << plane1 << "," << plane2 << ")" << std::endl;
 
 	auto cid0 = comb_v[0].second;
 	auto cid1 = comb_v[1].second;
@@ -139,6 +147,8 @@ namespace larocv {
 	auto id0 = _clusters_per_plane_vv[plane0][cid0];
 	auto id1 = _clusters_per_plane_vv[plane1][cid1];
 	auto id2 = _clusters_per_plane_vv[plane2][cid2];
+
+	LAROCV_DEBUG() << "ids=(" << id0 << "," << id1 << "," << id2 << ")" << std::endl;
 
 	auto score = this->Match(*(_img_v.at(plane0)),
 				 *(_img_v.at(plane1)),
@@ -155,6 +165,8 @@ namespace larocv {
 	_match_v[0] = id0;
 	_match_v[1] = id1;
 	_match_v[2] = id2;
+
+	score *= _three_planes_boost;
 
 	LAROCV_DEBUG() << "score=" << score << std::endl;
 	if (score<_threshold) continue;
