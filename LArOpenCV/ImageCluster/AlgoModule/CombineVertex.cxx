@@ -46,7 +46,8 @@ namespace larocv {
     _nplanes=3;
     Register(new data::Vertex3DArray);
     for(size_t plane=0;plane<_nplanes;++plane) Register(new data::ParticleClusterArray);
-    for(size_t plane=0;plane<_nplanes;++plane) Register(new data::TrackClusterCompoundArray);
+    for(size_t plane=0;plane<_nplanes;++plane) Register(new data::ParticleClusterArray);
+
   }
   
   void CombineVertex::_Process_()
@@ -87,29 +88,47 @@ namespace larocv {
       auto& vtx3d_copy = vertex_data.as_vector().back();
 
       for(size_t plane=0; plane<_nplanes; ++plane) {
+
+	// Input particle data
+	const auto& par_data = AlgoData<data::ParticleClusterArray>(_particle_cluster_algo_id,plane);
+
+	// Input super particle
+	const auto& super_par_data = AlgoData<data::ParticleClusterArray>(_particle_cluster_algo_id,plane+3);
 	
-	// This module AlgoData
-	auto& this_par_data = AlgoData<data::ParticleClusterArray>(plane+1);
+	// This module ParticleCluster AlgoData
+	auto& this_par_data = AlgoData<data::ParticleClusterArray>(1+plane);
 
-	// Input algo data
-	const auto& par_data   = AlgoData<data::ParticleClusterArray>(_particle_cluster_algo_id,plane);
+	// This module SuperParticleCluster AlgoData
+	auto& this_super_par_data = AlgoData<data::ParticleClusterArray>(1+plane+3);
 
-	// Get the associated track particles to this vertex, copy them to this algo data
+	// Get the associated super contour to this vertex, copy them into this algo data 
+	auto super_par_ass_id_v = ass_man.GetManyAss(vtx3d,super_par_data.ID());
+	std::cout << "@plane= " << plane << " vtxid= " << vertex_id << " sz== " << super_par_data.as_vector().size() << std::endl;
+	for(auto super_par_id : super_par_ass_id_v) {
+	  auto super_par = super_par_data.as_vector().at(super_par_id);
+	  super_par.type = data::ParticleType_t::kUnknown;
+	  this_super_par_data.emplace_back(std::move(super_par));
+	  AssociateMany(vtx3d_copy,this_super_par_data.as_vector().back());
+	}
+
+	// Get the associated particles to this vertex, copy them to this algo data
 	auto par_ass_id_v = ass_man.GetManyAss(vtx3d,par_data.ID());
 	for(auto par_id : par_ass_id_v) {
 	  auto par = par_data.as_vector().at(par_id);
-
-	  // All particles are unknown type at the moment until we look at the relative pixel fractions
 	  par.type = data::ParticleType_t::kUnknown;
-	  
+
 	  LAROCV_DEBUG() << "Inserting particle @ plane " << plane << " sz " << par._ctor.size() << std::endl;
 	  if(par._ctor.empty()) {
 	    LAROCV_DEBUG() << "... not inserting" << std::endl;
 	    continue;
 	  }
-	  this_par_data.push_back(par);
+
+	  this_par_data.emplace_back(std::move(par));
 	  AssociateMany(vtx3d_copy,this_par_data.as_vector().back());
+
+	  // AssociateMany(this_super_par_data.as_vector().back(),this_par_data.as_vector().back());
 	}
+
 
       } // end this plane
     } // end this vertex

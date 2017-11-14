@@ -82,6 +82,7 @@ namespace larocv {
       for(size_t plane=0; plane<3; ++plane) {
 	const auto& par_data = AlgoData<data::ParticleClusterArray>(_particle_cluster_algo_id,
 								    _particle_cluster_algo_offset+plane);
+
 	const auto& par_v = par_data.as_vector();
 
 	auto par_ass_id_v = assman.GetManyAss(vtx3d,par_data.ID());

@@ -50,6 +50,9 @@ namespace larocv {
     // Create a container for this algorithm data
     for(size_t plane=0; plane<3; ++plane) Register(new data::ParticleClusterArray);
 
+    // Create a container for this algorithm super contour data
+    for(size_t plane=0; plane<3; ++plane) Register(new data::ParticleClusterArray);
+
     _patch = pset.get<bool>("PatchImage",false);
     if(_patch)
       _DeadWirePatch.Configure(pset.get<Config_t>("DeadWirePatch"));
@@ -82,7 +85,8 @@ namespace larocv {
       auto const plane = meta.plane();
       
       // This algorithm data
-      auto& par_data = AlgoData<data::ParticleClusterArray>(plane);
+      auto& par_data       = AlgoData<data::ParticleClusterArray>(plane);
+      auto& super_par_data = AlgoData<data::ParticleClusterArray>(plane+3);
 
       // Previous algorithm vertex data
       std::vector<const data::Vertex3D*> vertex_data_v;
@@ -122,13 +126,22 @@ namespace larocv {
 	const auto super_cluster_id = FindContainingContour(super_ctor_v, circle_vertex.center);
 	if(super_cluster_id == kINVALID_SIZE) continue;
 
-	const auto& super_cluster = super_ctor_v[super_cluster_id];
-	
+	const auto& super_cluster = super_ctor_v.at(super_cluster_id);
+
+	// Make a new (Super)ParticleCluster
+	data::ParticleCluster super_par_cluster;
+	super_par_cluster._ctor = super_cluster;
+	super_par_data.emplace_back(std::move(super_par_cluster));
+	AssociateMany(*vertex3d,super_par_data.as_vector().back());
+
+	std::cout << "@plane= " << plane << " vtxid " << vertex_id << " sz " << super_par_data.as_vector().size() << std::endl;
+
 	// This vertex is associated to this cluster
-	// LAROCV_DEBUG() << "Associating vertex " << vertex_id << " with super cluster " << super_cluster_id << std::endl;
 	// Create particle clusters @ this circle vertex and parent super cluster
 	auto contour_v = _VertexParticleCluster.CreateParticleCluster(mod_img,circle_vertex,super_cluster);
-	
+
+	std::cout << "... contour_v sz=" << contour_v.size() << std::endl;
+
 	LAROCV_DEBUG() << "Found " << contour_v.size() << " contours for vertex id " << vertex_id << std::endl;
 	for(size_t cidx=0; cidx<contour_v.size(); ++cidx) {
 	  auto& contour = contour_v[cidx];
@@ -138,10 +151,15 @@ namespace larocv {
 	  data::ParticleCluster cluster;
 	  cluster._ctor = std::move(contour);
 	  
-	  // Store & make association to this vertex
+	  // Store
 	  par_data.emplace_back(std::move(cluster));
+
+	  // Make association to this vertex
 	  AssociateMany(*vertex3d,par_data.as_vector().back());
-	   
+
+	  //Make association to this super cluster
+	  AssociateMany(super_par_data.as_vector().back(),par_data.as_vector().back());
+
 	} // end this particle cluster
       } // end input vertex
 
