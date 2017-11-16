@@ -103,7 +103,6 @@ namespace larocv {
 
 	// Get the associated super contour to this vertex, copy them into this algo data 
 	auto super_par_ass_id_v = ass_man.GetManyAss(vtx3d,super_par_data.ID());
-	std::cout << "@plane= " << plane << " vtxid= " << vertex_id << " sz== " << super_par_data.as_vector().size() << std::endl;
 	for(auto super_par_id : super_par_ass_id_v) {
 	  auto super_par = super_par_data.as_vector().at(super_par_id);
 	  super_par.type = data::ParticleType_t::kUnknown;

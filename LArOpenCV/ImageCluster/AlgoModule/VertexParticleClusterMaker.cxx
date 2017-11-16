@@ -134,13 +134,9 @@ namespace larocv {
 	super_par_data.emplace_back(std::move(super_par_cluster));
 	AssociateMany(*vertex3d,super_par_data.as_vector().back());
 
-	std::cout << "@plane= " << plane << " vtxid " << vertex_id << " sz " << super_par_data.as_vector().size() << std::endl;
-
 	// This vertex is associated to this cluster
 	// Create particle clusters @ this circle vertex and parent super cluster
 	auto contour_v = _VertexParticleCluster.CreateParticleCluster(mod_img,circle_vertex,super_cluster);
-
-	std::cout << "... contour_v sz=" << contour_v.size() << std::endl;
 
 	LAROCV_DEBUG() << "Found " << contour_v.size() << " contours for vertex id " << vertex_id << std::endl;
 	for(size_t cidx=0; cidx<contour_v.size(); ++cidx) {
