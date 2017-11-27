@@ -120,7 +120,9 @@ namespace larocv {
     float _pi_tol;
     // Distance threshold between point and contour to claim contour is "inside"
     float _d_thresh;
-    
+
+    bool _try_groups;
+
   };
 
 }

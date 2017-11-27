@@ -101,7 +101,8 @@ namespace larocv {
       auto center_line0 = draw_line(cvtx.xs_v[0].pt,cvtx.center);
       auto center_line1 = draw_line(cvtx.xs_v[1].pt,cvtx.center);
       cvtx.dtheta_xs = make_dtheta(center_line0,center_line1);
-      if (cvtx.dtheta_xs < _dtheta_cut) return -1;
+      if (cvtx.dtheta_xs < _dtheta_cut) 
+	{ LAROCV_DEBUG() << "center dtheta=" << cvtx.dtheta_xs << std::endl; return -1;}
       assert (img.rows>0 and img.cols>0);
 
       //
@@ -110,21 +111,25 @@ namespace larocv {
       center_line0 = draw_line(cvtx.xs_v[0].pt,cvtx.mid_pt2);
       center_line1 = draw_line(cvtx.xs_v[1].pt,cvtx.mid_pt2);
       cvtx.dtheta_mxs2 = make_dtheta(center_line0,center_line1);
-      if (cvtx.dtheta_mxs2 < _dtheta_cut) return -1;
-
+      if (cvtx.dtheta_mxs2 < _dtheta_cut) 
+	{ LAROCV_DEBUG() << "center midpoint=" << cvtx.dtheta_mxs2 << std::endl; return -1;}
+      
       //
       // point pca
       //
       cvtx.dtheta_mxs3 = make_dtheta(cvtx.xs_v.front().line,
 				     cvtx.xs_v.back().line);
-      if (cvtx.dtheta_mxs3 < _dtheta_cut) return -1;
+
+      if (cvtx.dtheta_mxs3 < _dtheta_cut) 
+	{ LAROCV_DEBUG() << "point pca=" << cvtx.dtheta_mxs3 << std::endl; return -1;}
 	
       //
       // stability 
       //
       GEO2D_Contour_t pts_c_v;
       auto ctor_c_v = OnCircle(img,cvtx.as_circle(),pts_c_v);
-      if (ctor_c_v.size() == 1) return -1;
+      if (ctor_c_v.size() == 1) 
+	{ LAROCV_DEBUG() << "only 1 ass ctor" << std::endl; return -1;}
       
       auto ass_v = Associate(pts_c_v,cvtx.xs_as_array());
 
@@ -135,7 +140,8 @@ namespace larocv {
 	      center_line0 = draw_line(pt0,cvtx.mid_pt2);
 	      center_line1 = draw_line(pt1,cvtx.mid_pt2);
 	      auto dtheta = make_dtheta(center_line0,center_line1);
-	      if (dtheta < _dtheta_cut) return -1;
+	      if (dtheta < _dtheta_cut) 
+		{ LAROCV_DEBUG() << "aid0=" << aid0 << " & aid1=" << aid1 << " @dtheta= " << dtheta << std::endl; return -1;}
 	    }
 	  }
 	}

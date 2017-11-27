@@ -98,7 +98,6 @@ namespace larocv {
 
 	// Get seed: writeable ref to modify, then possibly std::move later into output data rep
 	auto& seed = vertexseed_v[seed_idx];
-
 	  
 	// Inspect the possibility of being shower/track vtx point
 	if (_valid_new) {
@@ -110,10 +109,11 @@ namespace larocv {
 	  cvtx.center.x = seed.x;
 	  cvtx.center.y = seed.y;
 	  cvtx.radius   = _OneTrackOneShower.circle_default_size();
+	  LAROCV_DEBUG() << "set rad=" << cvtx.radius << std::endl;
 	  seed.radius   = cvtx.radius;
 	  
 	  _OneTrackOneShower.ValidateCircleVertex(thresh_shower_img,cvtx);
-	
+
 	  if (cvtx.xs_v.empty()) continue;
 
 	  // To be track/shower vtx require only 1 xs point, else ignore

@@ -241,8 +241,9 @@ namespace larocv {
       }
     }
 
-    std::vector<std::pair<float,float> > range_a_w_v;
-    range_a_w_v.reserve(range_a_w_v.size());
+    static std::vector<std::pair<float,float> > range_a_w_v;
+    range_a_w_v.clear();
+    range_a_w_v.reserve(range_v.size());
     
     for(auto const& r : range_v) {
       float angle = ((float)(r.first + r.second))/2.;
@@ -310,8 +311,9 @@ namespace larocv {
       
     }
     // Compute xs points
-    geo2d::VectorArray<float> res;
-    res.reserve(range_a_w_v.size());
+    static geo2d::VectorArray<float> res;
+    res.clear();
+    res.reserve(range_v.size());
     for(auto const& aw : range_a_w_v) {
       geo2d::Vector<float> pt;
       pt.x = circle.center.x + circle.radius * cos(aw.first);
@@ -758,11 +760,15 @@ namespace larocv {
 	  used_v[pid] = true;
 	}
       }
-
-      if (in_v.size() == 1) continue;
-
+      
+      if (in_v.size()==1) {
+	res_v[cid] = in_v.front();
+	continue;
+      }
+      
       res_v[cid] = geo2d::AngularAverage(c,in_v);
     }
+
     return res_v;
   }
     

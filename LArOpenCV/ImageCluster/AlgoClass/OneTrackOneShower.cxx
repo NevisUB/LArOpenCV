@@ -27,7 +27,7 @@ namespace larocv {
     this->set_verbosity(this_verbosity);
 
     // Pixel intensity threshold for the image
-    _pi_threshold = pset.get<float>("PiThreshold",5);
+    _pi_threshold = pset.get<float>("PiThreshold",10);
     // Default radius size to determine a crossing point
     _circle_default_radius = pset.get<float>("CircleDefaultRadius",10);
     // Use the radius stored in the VertexSeed2D to determine a crossing point
@@ -71,6 +71,9 @@ namespace larocv {
     
     // Configure LArPlaneGeo class
     _geo_algo.Configure(pset.get<Config_t>("LArPlaneGeo"));
+
+    _try_groups = pset.get<bool>("TryGroups",false);
+
   }
 
   bool OneTrackOneShower::ValidateTrackEdge(const cv::Mat& img, 
@@ -120,11 +123,16 @@ namespace larocv {
 
     // Dont check for a gap, but require significant # pixels to have a charge
     // when drawing a line from the center to the xs point
-    std::vector<geo2d::Vector<int> > check_pt_v;
-    geo2d::VectorArray<float> res_v;
+    static std::vector<geo2d::Vector<int> > check_pt_v;
+    check_pt_v.clear();
+
+    static geo2d::VectorArray<float> res_v;
+    res_v.clear();
+
     geo2d::Vector<int> pt;
     
     for(auto const& xs_pt : xs_pts) {
+      LAROCV_DEBUG() << "@xs_pt=" << xs_pt << std::endl;
       auto const dir = geo2d::dir(circle.center,xs_pt);
       if(dir.x == 0 && dir.y ==0) throw larbys("No direction found!");
       check_pt_v.clear();
@@ -309,8 +317,13 @@ namespace larocv {
 
     else {
       LAROCV_DEBUG() << "Finding crossing points using regular QPoint method" << std::endl;
-      
-      auto xs_pt_v = QPointOnCircle(img,cvtx.as_circle(),_pi_threshold);
+      LAROCV_DEBUG() << "@cvtx pt=" << cvtx.center  << " rad=" << cvtx.radius << " pth=" << _pi_threshold << std::endl;
+      geo2d::VectorArray<float> xs_pt_v;
+
+      if (_try_groups)
+	xs_pt_v = OnCircleGroups(img,cvtx.as_circle());
+      else
+	xs_pt_v = QPointOnCircle(img,cvtx.as_circle(),_pi_threshold);
 
       LAROCV_DEBUG() << "... " << xs_pt_v.size() << " xs found" << std::endl;
       if(_refine_qpoint && !xs_pt_v.empty()) {
