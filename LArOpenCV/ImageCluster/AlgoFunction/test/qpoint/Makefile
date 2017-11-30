@@ -23,6 +23,8 @@ CXXLIBS += $(BASIC_ROOTLIBS)
 ##larlite
 ##laropencv
 CXXLIBS += -L$(LARLITE_LIBDIR)
+CXXLIBS += -lLArOpenCV_Core
+CXXLIBS += -lLArOpenCV_ImageClusterBase
 CXXLIBS += -lLArOpenCV_ImageClusterAlgoFunction
 ##geo2d
 CXXLIBS += -L$(GEO2D_LIBDIR)

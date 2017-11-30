@@ -104,6 +104,7 @@ namespace larocv {
   {
 
     // Check for a gap in pixels between center of the circle and crossing point
+    // Check for a gap in pixels between center of the circle and crossing point
     if(_path_exists_check) {
       LAROCV_DEBUG() << "User opted to check path existence" << std::endl;
       geo2d::VectorArray<float> res_v;
@@ -130,7 +131,7 @@ namespace larocv {
     res_v.clear();
 
     geo2d::Vector<int> pt;
-    
+
     for(auto const& xs_pt : xs_pts) {
       LAROCV_DEBUG() << "@xs_pt=" << xs_pt << std::endl;
       auto const dir = geo2d::dir(circle.center,xs_pt);
@@ -320,10 +321,14 @@ namespace larocv {
       LAROCV_DEBUG() << "@cvtx pt=" << cvtx.center  << " rad=" << cvtx.radius << " pth=" << _pi_threshold << std::endl;
       geo2d::VectorArray<float> xs_pt_v;
 
-      if (_try_groups)
+      if (_try_groups) {
+	LAROCV_DEBUG() << "groups..." << std::endl;
 	xs_pt_v = OnCircleGroups(img,cvtx.as_circle());
-      else
+      }
+      else {
+	LAROCV_DEBUG() << "polar..." << std::endl;
 	xs_pt_v = QPointOnCircle(img,cvtx.as_circle(),_pi_threshold);
+      }
 
       LAROCV_DEBUG() << "... " << xs_pt_v.size() << " xs found" << std::endl;
       if(_refine_qpoint && !xs_pt_v.empty()) {

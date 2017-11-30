@@ -16,7 +16,6 @@ int main() {
   mat.setTo(cv::Scalar(0));
   matc.setTo(cv::Scalar(0,0,0));
 
-
   geo2d::Vector<float> center(256,228);
   
   for(uint thickness=10; thickness<400; thickness+=10) {

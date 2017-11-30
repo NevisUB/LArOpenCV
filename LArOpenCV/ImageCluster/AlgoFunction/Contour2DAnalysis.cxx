@@ -172,7 +172,6 @@ namespace larocv {
     if (tol > 0) 
       cv::drawContours(mask, veto_ctor_v, -1, cv::Scalar(255), tol, cv::LINE_8); // make the edges thicker to mask outwards
 
-
     //invert mask
     if(maskout) cv::bitwise_not(mask,mask);
 

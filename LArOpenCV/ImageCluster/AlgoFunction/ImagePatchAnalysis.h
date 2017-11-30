@@ -46,6 +46,12 @@ namespace larocv {
 	    double thresh,
 	    double max_val);
 
+  cv::Mat 
+  SmallImg(const cv::Mat& img,
+	   const geo2d::Vector<float>& pt,
+	   const float dx,
+	   const float dy);
+
   geo2d::VectorArray<float>
   QPointOnCircle(const cv::Mat& img,
 		 const geo2d::Circle<float>& circle,
@@ -142,7 +148,9 @@ namespace larocv {
 		       const float pi_threshold,
 		       const float asup,
 		       const float wsup);
-
+  bool
+  NonZero(const cv::Mat& img,
+          const geo2d::Vector<float>& pt);
 
   bool
   Contained(const cv::Mat& img,

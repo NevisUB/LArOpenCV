@@ -23,6 +23,8 @@ CXXLIBS += $(BASIC_ROOTLIBS)
 ##larlite
 ##laropencv
 CXXLIBS += -L$(LARLITE_LIBDIR)
+CXXLIBS += -lLArOpenCV_Core
+CXXLIBS += -lLArOpenCV_ImageClusterBase
 CXXLIBS += -lLArOpenCV_ImageClusterAlgoFunction
 ##geo2d
 CXXLIBS += -L$(GEO2D_LIBDIR)
@@ -33,9 +35,9 @@ OPENCV_LIBS=-lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc
 CXXLIBS += $(OPENCV_LIBS)
 
 #############OUTPUT
-SWFILE=QPoint.cxx
-OWFILE=q_point.o
-BWFILE=q_point
+SWFILE=QPointArray.cxx
+OWFILE=q_point_array.o
+BWFILE=q_point_array
 
 all:
 	$(CXX) $(CXXFLAGS) $(CXXINCS) -c $(SWFILE) -o $(OWFILE)

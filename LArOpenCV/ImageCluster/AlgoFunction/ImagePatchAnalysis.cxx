@@ -77,10 +77,9 @@ namespace larocv {
   double
   MeanDistanceToLine(const cv::Mat& img,
 		     const geo2d::Line<float>& line) {
-    GEO2D_Contour_t pts_v;
-    std::vector<float> dist_v;
-    cv::findNonZero(img,pts_v);
+    auto pts_v = FindNonZero(img);
     if (pts_v.empty()) throw larbys("No points found");
+    std::vector<float> dist_v;
     dist_v.reserve(pts_v.size());
     for(const auto& pt : pts_v) {
       geo2d::Vector<float> pt_f(pt);
@@ -92,10 +91,9 @@ namespace larocv {
   double
   SigmaDistanceToLine(const cv::Mat& img,
 		      const geo2d::Line<float>& line) {
-    GEO2D_Contour_t pts_v;
-    std::vector<float> dist_v;
-    cv::findNonZero(img,pts_v);
+    auto pts_v = FindNonZero(img);
     if (pts_v.empty()) throw larbys("No points found");
+    std::vector<float> dist_v;
     dist_v.reserve(pts_v.size());
     for(const auto& pt : pts_v) {
       geo2d::Vector<float> pt_f(pt);
@@ -112,7 +110,24 @@ namespace larocv {
     cv::threshold(mat,mat_copy,thresh,max_val,0);
     return mat_copy;
   }
-  
+
+
+  cv::Mat SmallImg(const cv::Mat& img,
+		   const geo2d::Vector<float>& pt,
+		   const float dx,
+		   const float dy) {
+
+    auto ddx = dx*2+1;
+    auto ddy = dy*2+1;
+    
+    cv::Rect rect(pt.x - dx,pt.y - dy,ddx,ddy);
+    CorrectEdgeRectangle(img,rect,ddx,ddy);
+    
+    LAROCV_SDEBUG() << "rows cols " << img.rows
+		    << "," << img.cols << " and rect " << rect << std::endl;
+    return cv::Mat(img,rect);
+  }
+
   geo2d::VectorArray<float>
   QPointOnCircle(const cv::Mat& img,
 		 const geo2d::Circle<float>& circle,
@@ -120,19 +135,23 @@ namespace larocv {
 		 const float asup,
 		 const float wsup)
   {
+        
+    auto small_img = SmallImg(img,circle.center,circle.radius,circle.radius);
+
+    geo2d::Circle<float> small_circle(circle.radius,circle.radius,circle.radius);
+
     bool inside = false;
-    auto polarimg = LinearPolar(img,circle.center,circle.radius*2);
+    auto polarimg = LinearPolar(small_img,small_circle.center,small_circle.radius*2);
     size_t col = (size_t)(polarimg.cols / 2);
 
-    auto ret_v = RadialIntersections(polarimg,circle,col,pi_threshold,asup,wsup);
+    auto ret_v = RadialIntersections(polarimg,small_circle,col,pi_threshold,asup,wsup);
 
     geo2d::VectorArray<float> tmp_v;
     tmp_v.reserve(ret_v.size());
     for(auto& ret : ret_v) {
-      inside  = true;
-      inside &= ((ret.y>0) and (ret.x>0));
-      inside &= ((ret.y<img.rows) and (ret.x<img.cols));
-      if (inside and img.at<uchar>(ret.y,ret.x)) 
+      ret.x += circle.center.x - circle.radius;
+      ret.y += circle.center.y - circle.radius;
+      if (Contained(img,ret) and NonZero(img,ret))
 	tmp_v.emplace_back(std::move(ret));
     }
     return tmp_v;
@@ -153,8 +172,12 @@ namespace larocv {
 		    << " radii, px thresh " << pi_threshold
 		    << ", & sup " << asup << std::endl;
     
-    std::vector<geo2d::VectorArray<float> > res_v;
-    geo2d::VectorArray<float> tmp_v;
+    static std::vector<geo2d::VectorArray<float> > res_v;
+    res_v.clear();
+
+    static geo2d::VectorArray<float> tmp_v;
+    tmp_v.clear();
+
     bool inside=false;
     
     if(radius_v.empty()) return res_v;
@@ -168,11 +191,18 @@ namespace larocv {
     }
     if(max_radi == min_radi) max_radi *= 1.1;
     else max_radi += (max_radi - min_radi);
-    
-    // Find crossing point
-    auto polarimg = LinearPolar(img, center, max_radi);
 
-    std::vector<size_t> col_v(radius_v.size(),0);
+    // Find crossing point
+
+    auto small_img = SmallImg(img,center,max_radi,max_radi);
+    geo2d::Circle<float> max_circle(max_radi,max_radi,max_radi);
+
+    auto polarimg = LinearPolar(small_img, max_circle.center, max_radi);
+
+    static std::vector<size_t> col_v;
+    col_v.clear();
+    col_v.resize(radius_v.size(),0);
+
     for(size_t r_idx=0; r_idx<radius_v.size(); ++r_idx) {
       auto const& radius = radius_v[r_idx];
       col_v[r_idx] = (size_t)(radius / max_radi * (float)(polarimg.cols) + 0.5);
@@ -184,14 +214,19 @@ namespace larocv {
       auto const& radius = radius_v[col_idx];
       LAROCV_SDEBUG() << "... @ radius " << radius << std::endl;
 	
-      auto ret_v = RadialIntersections(polarimg,geo2d::Circle<float>(center,radius),col,pi_threshold,asup,wsup);
+      auto ret_v = RadialIntersections(polarimg,
+				       geo2d::Circle<float>(max_circle.center,radius),
+				       col,
+				       pi_threshold,
+				       asup,
+				       wsup);
       tmp_v.clear();
       tmp_v.reserve(ret_v.size());
       for(auto& ret : ret_v) {
-	inside  = true;
-	inside &= ((ret.y>0) and (ret.x>0));
-	inside &= ((ret.y<img.rows) and (ret.x<img.cols));
-	if (inside and img.at<uchar>(ret.y,ret.x)) 
+	ret.x += center.x - max_radi;
+	ret.y += center.y - max_radi;
+
+	if (Contained(img,ret) and NonZero(img,ret)) 
 	  tmp_v.emplace_back(std::move(ret));
       }
       res_v.emplace_back(std::move(tmp_v));
@@ -395,8 +430,7 @@ namespace larocv {
 
     auto small_img = cv::Mat(img,rect);
     
-    GEO2D_Contour_t nonzero;
-    cv::findNonZero(small_img, nonzero);
+    auto nonzero = FindNonZero(small_img);
 
     //lets keep the same type as pixel location
     std::vector<float> x_v;
@@ -653,6 +687,17 @@ namespace larocv {
   }
 
   bool
+  NonZero(const cv::Mat& img,
+          const geo2d::Vector<float>& pt) {
+
+    uint ret = (uint)img.at<uchar>((int)(pt.y+0.5),(int)(pt.x+0.5));
+
+    if (ret>0) return true;
+
+    return false;
+  }
+
+  bool
   Contained(const cv::Mat& img,
 	    const geo2d::Vector<float>& pt) {
 
@@ -739,11 +784,18 @@ namespace larocv {
   OnCircleGroups(const cv::Mat& img,
 		 const geo2d::Circle<float>& c) {
     
-    auto ret_img = OnCircleImage(img,c);
+    
+    auto small_img = SmallImg(img,c.center,c.radius,c.radius);
+    geo2d::Circle<float> small_circle(c.radius,c.radius,c.radius);
+
+    auto ret_img = OnCircleImage(small_img,small_circle);
     auto pts_v   = FindNonZero(ret_img);
     auto ctor_v  = FindContours(ret_img);
 
-    std::vector<bool> used_v(pts_v.size(),false);
+    static std::vector<bool> used_v;
+    used_v.clear();
+    used_v.resize(pts_v.size());
+    std::fill(std::begin(used_v),std::end(used_v),false);
 
     static geo2d::VectorArray<float> res_v;
     res_v.clear();
@@ -763,10 +815,14 @@ namespace larocv {
       
       if (in_v.size()==1) {
 	res_v[cid] = in_v.front();
+	res_v[cid].x += c.center.x - c.radius;
+	res_v[cid].y += c.center.y - c.radius;
 	continue;
       }
       
-      res_v[cid] = geo2d::AngularAverage(c,in_v);
+      res_v[cid] = geo2d::AngularAverage(small_circle,in_v);
+      res_v[cid].x += c.center.x - c.radius;
+      res_v[cid].y += c.center.y - c.radius;
     }
 
     return res_v;
@@ -792,9 +848,22 @@ namespace larocv {
 		 geo2d::Vector<float> pt2,
 		 int thickness) {
 
-    auto white_img = BlankImage(img,0);
+    float min_x = std::min(pt1.x,pt2.x);
+    float min_y = std::min(pt1.y,pt2.y);
 
-    cv::Mat dst_img(img.size(),img.type(),cv::Scalar(0));
+    float dx = std::abs(pt1.x - pt2.x)/2.0;
+    float dy = std::abs(pt1.y - pt2.y)/2.0;
+
+    auto small_img = SmallImg(img,geo2d::Vector<float>(min_x+dx,min_y+dy),dx,dy);
+    
+    pt1.x -= min_x;
+    pt1.y -= min_y;
+    
+    pt2.x -= min_x;
+    pt2.y -= min_y;
+
+    auto white_img = BlankImage(small_img,0);
+    auto dst_img   = BlankImage(small_img,0);
 
     cv::line(white_img,
 	     cv::Point((int)(pt1.x + 0.5),(int)(pt1.y+0.5)),
@@ -802,11 +871,11 @@ namespace larocv {
 	     cv::Scalar(255),
 	     thickness);
     
-    img.copyTo(dst_img,white_img);    
+    small_img.copyTo(dst_img,white_img);    
 
     auto ctor_v = FindContours(dst_img);
 
-    if (ctor_v.size() == 1 ) return true;
+    if (ctor_v.size() == 1) return true;
     
     return false;
   }
