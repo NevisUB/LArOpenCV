@@ -110,6 +110,7 @@ namespace larocv {
     res_v.clear();
 
     for(auto const& xs_pt : xs_pts) {
+      LAROCV_DEBUG() << "@xs_pt=" << xs_pt << std::endl;
       if(!Connected(img,xs_pt,circle.center,_connected_width)) continue;
       res_v.push_back(xs_pt);    
     }

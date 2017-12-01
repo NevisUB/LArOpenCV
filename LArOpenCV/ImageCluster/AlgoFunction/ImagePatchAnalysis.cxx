@@ -197,9 +197,10 @@ namespace larocv {
     else max_radi += (max_radi - min_radi);
 
     // Find crossing point
-
-    auto small_img = SmallImg(img,center,max_radi,max_radi);
+    static int row_scale = 20;
+    auto small_img = SmallImg(img,center,max_radi,max_radi+row_scale);
     geo2d::Circle<float> max_circle(max_radi,max_radi,max_radi);
+    max_circle.center.y += row_scale;
 
     auto polarimg = LinearPolar(small_img, max_circle.center, max_radi);
 
@@ -228,7 +229,7 @@ namespace larocv {
       tmp_v.reserve(ret_v.size());
       for(auto& ret : ret_v) {
 	ret.x += center.x - max_radi;
-	ret.y += center.y - max_radi;
+	ret.y += center.y - max_radi - row_scale;
 
 	if (Contained(img,ret) and NonZeroFloor(img,ret)) 
 	  tmp_v.emplace_back(std::move(ret));
