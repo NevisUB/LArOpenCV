@@ -62,6 +62,12 @@ namespace larocv {
 
     ///  Validate crossing points for a given circle on an image
     geo2d::VectorArray<float>
+    ConnectedShowerPointOnCircle(::cv::Mat& img,
+				 const geo2d::Circle<float>& circle,
+				 const std::vector<geo2d::Vector<float> >& xs_pts) const;
+
+
+    geo2d::VectorArray<float>
     ValidShowerPointOnCircle(::cv::Mat& img,
 			     const geo2d::Circle<float>& circle,
 			     const std::vector<geo2d::Vector<float> >& xs_pts) const;
@@ -122,7 +128,8 @@ namespace larocv {
     float _d_thresh;
 
     bool _try_groups;
-
+    bool _try_connected;
+    int _connected_width;
   };
 
 }

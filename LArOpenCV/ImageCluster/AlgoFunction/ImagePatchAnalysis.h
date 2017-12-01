@@ -149,8 +149,11 @@ namespace larocv {
 		       const float asup,
 		       const float wsup);
   bool
-  NonZero(const cv::Mat& img,
-          const geo2d::Vector<float>& pt);
+  NonZeroFloor(const cv::Mat& img,
+               const geo2d::Vector<float>& pt);
+  bool
+  NonZeroCiel(const cv::Mat& img,
+              const geo2d::Vector<float>& pt);
 
   bool
   Contained(const cv::Mat& img,

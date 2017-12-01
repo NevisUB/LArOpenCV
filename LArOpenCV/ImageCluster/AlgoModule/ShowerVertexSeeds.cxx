@@ -105,7 +105,7 @@ namespace larocv {
 
     // Return valid seeds
     auto vtx3d_seed_v = _ElectronShowerVertexSeed.CreateSeed();
-
+    
     // Write 3D seeds to the output
     auto& data = AlgoData<data::VertexSeed3DArray>(0);
     for(size_t i=0; i<vtx3d_seed_v.size(); ++i)

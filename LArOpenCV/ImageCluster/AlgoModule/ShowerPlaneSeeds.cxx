@@ -50,6 +50,8 @@ namespace larocv {
     //
 
     for(size_t img_idx=0; img_idx<nplanes; ++img_idx) {
+      
+      LAROCV_DEBUG() << "@img_idx=" << img_idx << std::endl;
 
       // Get data rep to be filled per plane
       auto& vertexseed2darray = AlgoData<data::VertexSeed2DArray>(img_idx);
@@ -95,6 +97,7 @@ namespace larocv {
 
       // Loop over found track-edge 2D seed point, see if shower's coming out of it (if yes, then vtx candidate)
       for(size_t seed_idx=0; seed_idx<vertexseed_v.size(); ++seed_idx) {
+	LAROCV_DEBUG() << "@seed_idx=" << seed_idx << std::endl;
 
 	// Get seed: writeable ref to modify, then possibly std::move later into output data rep
 	auto& seed = vertexseed_v[seed_idx];
@@ -115,7 +118,7 @@ namespace larocv {
 	  _OneTrackOneShower.ValidateCircleVertex(thresh_shower_img,cvtx);
 
 	  if (cvtx.xs_v.empty()) continue;
-
+	  
 	  // To be track/shower vtx require only 1 xs point, else ignore
 	  if (cvtx.xs_v.size()!=1) continue;
 	}
@@ -124,7 +127,9 @@ namespace larocv {
 	
 	// Reaching here means condition satisfied: move to output data rep
 	vertexseed2darray.emplace_back(std::move(seed));
+
       }// end seed filter
+
     LAROCV_DEBUG() << "Determined " << vertexseed2darray.as_vector().size() << " vertex seeds" << std::endl;
     }// end plane
 

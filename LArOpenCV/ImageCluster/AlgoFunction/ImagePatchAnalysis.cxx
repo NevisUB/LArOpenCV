@@ -122,9 +122,7 @@ namespace larocv {
     
     cv::Rect rect(pt.x - dx,pt.y - dy,ddx,ddy);
     CorrectEdgeRectangle(img,rect,ddx,ddy);
-    
-    LAROCV_SDEBUG() << "rows cols " << img.rows
-		    << "," << img.cols << " and rect " << rect << std::endl;
+
     return cv::Mat(img,rect);
   }
 
@@ -135,25 +133,31 @@ namespace larocv {
 		 const float asup,
 		 const float wsup)
   {
-        
-    auto small_img = SmallImg(img,circle.center,circle.radius,circle.radius);
 
+    static int row_scale = 20;
+
+    auto small_img = SmallImg(img,circle.center,circle.radius,circle.radius + row_scale);
     geo2d::Circle<float> small_circle(circle.radius,circle.radius,circle.radius);
+    small_circle.center.y += row_scale;
 
     bool inside = false;
     auto polarimg = LinearPolar(small_img,small_circle.center,small_circle.radius*2);
-    size_t col = (size_t)(polarimg.cols / 2);
+
+    size_t col = (size_t)(polarimg.cols/2);
 
     auto ret_v = RadialIntersections(polarimg,small_circle,col,pi_threshold,asup,wsup);
 
-    geo2d::VectorArray<float> tmp_v;
+    static geo2d::VectorArray<float> tmp_v;
+    tmp_v.clear();
     tmp_v.reserve(ret_v.size());
+
     for(auto& ret : ret_v) {
-      ret.x += circle.center.x - circle.radius;
-      ret.y += circle.center.y - circle.radius;
-      if (Contained(img,ret) and NonZero(img,ret))
-	tmp_v.emplace_back(std::move(ret));
+      ret.x += (circle.center.x - circle.radius);
+      ret.y += (circle.center.y - circle.radius - row_scale);
+      if (Contained(img,ret) and NonZeroFloor(img,ret))
+      	tmp_v.emplace_back(std::move(ret));
     }
+
     return tmp_v;
   }
 
@@ -226,7 +230,7 @@ namespace larocv {
 	ret.x += center.x - max_radi;
 	ret.y += center.y - max_radi;
 
-	if (Contained(img,ret) and NonZero(img,ret)) 
+	if (Contained(img,ret) and NonZeroFloor(img,ret)) 
 	  tmp_v.emplace_back(std::move(ret));
       }
       res_v.emplace_back(std::move(tmp_v));
@@ -243,18 +247,21 @@ namespace larocv {
 		      const float asup,
 		      const float wsup)
   {
-
     if (col > polarimg.cols) {
       LAROCV_SCRITICAL() << "Requested column " << col
 			 << " outside max column " << polarimg.cols << std::endl;
       throw larbys();
     }
-    std::vector<std::pair<int,int> > range_v;
+    static std::vector<std::pair<int,int> > range_v;
+    range_v.clear();
+
     std::pair<int,int> range(-1,-1);
     
+    
     for(int row=0; row<polarimg.rows; ++row) {
-      
+
       float q = (float)(polarimg.at<unsigned char>(row, col));
+
       if(q < pi_threshold) {
 	if(range.first >= 0) {
 	  range_v.push_back(range);
@@ -262,12 +269,13 @@ namespace larocv {
 	}
 	continue;
       }
+
       if(range.first < 0) range.first = range.second = row;
       else range.second = row;
     }
 
     if(range.first>=0 && range.second>=0) range_v.push_back(range);
-
+    
     // Check if end should be combined w/ start
     if(range_v.size() >= 2) {
       if(range_v[0].first == 0 && (range_v.back().second+1) == polarimg.rows) {
@@ -281,9 +289,10 @@ namespace larocv {
     range_a_w_v.reserve(range_v.size());
     
     for(auto const& r : range_v) {
+      
       float angle = ((float)(r.first + r.second))/2.;
       float width = std::fabs(r.second - r.first);
-
+      
       if(angle < 0) angle += (float)(polarimg.rows);
 
       angle *= (M_PI * 2. / ((float)(polarimg.rows)));
@@ -343,12 +352,13 @@ namespace larocv {
 	}
 	std::swap(tmp_v,range_a_w_v);
       }
-      
-    }
+    } // end angle supression
+
     // Compute xs points
     static geo2d::VectorArray<float> res;
     res.clear();
     res.reserve(range_v.size());
+    
     for(auto const& aw : range_a_w_v) {
       geo2d::Vector<float> pt;
       pt.x = circle.center.x + circle.radius * cos(aw.first);
@@ -687,7 +697,19 @@ namespace larocv {
   }
 
   bool
-  NonZero(const cv::Mat& img,
+  NonZeroFloor(const cv::Mat& img,
+          const geo2d::Vector<float>& pt) {
+
+    uint ret = (uint)img.at<uchar>((int)(pt.y),(int)(pt.x));
+
+    if (ret>0) return true;
+
+    return false;
+  }
+
+
+  bool
+  NonZeroCiel(const cv::Mat& img,
           const geo2d::Vector<float>& pt) {
 
     uint ret = (uint)img.at<uchar>((int)(pt.y+0.5),(int)(pt.x+0.5));

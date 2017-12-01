@@ -72,7 +72,10 @@ namespace larocv {
     // Configure LArPlaneGeo class
     _geo_algo.Configure(pset.get<Config_t>("LArPlaneGeo"));
 
-    _try_groups = pset.get<bool>("TryGroups",false);
+    _try_groups    = pset.get<bool>("TryGroups",false);
+    _try_connected = pset.get<bool>("TryConnected",false);
+    if(_try_connected) 
+      _connected_width = pset.get<int>("ConnectedWidth");
 
   }
 
@@ -95,6 +98,25 @@ namespace larocv {
   void OneTrackOneShower::SetPlaneInfo(const ImageMeta& meta)
   { _geo_algo.ResetPlaneInfo(meta); }
 
+  // Determine if the crossing point is valid
+  geo2d::VectorArray<float>
+  OneTrackOneShower::ConnectedShowerPointOnCircle(::cv::Mat& img,
+						  const geo2d::Circle<float>& circle,
+						  const std::vector<geo2d::Vector<float> >& xs_pts) const
+  {
+    
+    // Check connected
+    static geo2d::VectorArray<float> res_v; 
+    res_v.clear();
+
+    for(auto const& xs_pt : xs_pts) {
+      if(!Connected(img,xs_pt,circle.center,_connected_width)) continue;
+      res_v.push_back(xs_pt);    
+    }
+    
+    return res_v;
+  }
+
 
   // Determine if the crossing point is valid
   geo2d::VectorArray<float>
@@ -102,25 +124,6 @@ namespace larocv {
 					      const geo2d::Circle<float>& circle,
 					      const std::vector<geo2d::Vector<float> >& xs_pts) const
   {
-
-    // Check for a gap in pixels between center of the circle and crossing point
-    // Check for a gap in pixels between center of the circle and crossing point
-    if(_path_exists_check) {
-      LAROCV_DEBUG() << "User opted to check path existence" << std::endl;
-      geo2d::VectorArray<float> res_v;
-      for(auto const& xs_pt : xs_pts) {
-	// 2 pixel tolerance outside the circle
-	auto pathexists = PathExists(MaskImage(img,circle,_pi_tol,false),
-				     circle.center,  // pt1
-				     xs_pt,          // pt2
-				     _d_thresh,      // threshold pt to contour distance
-				     _pi_thr,        // pixel intensity threshold
-				     _min_ctor_size);// minimum contour size
-	if (pathexists) res_v.push_back(xs_pt);
-      }
-      LAROCV_DEBUG() << "... " << xs_pts.size() << " crossing points reduced to " << res_v.size() << std::endl;
-      return res_v;
-    }
 
     // Dont check for a gap, but require significant # pixels to have a charge
     // when drawing a line from the center to the xs point
@@ -215,6 +218,7 @@ namespace larocv {
 
       if(!skip_xs_pt) res_v.push_back(xs_pt);
     }
+
     return res_v;
   }
 
@@ -319,25 +323,26 @@ namespace larocv {
     else {
       LAROCV_DEBUG() << "Finding crossing points using regular QPoint method" << std::endl;
       LAROCV_DEBUG() << "@cvtx pt=" << cvtx.center  << " rad=" << cvtx.radius << " pth=" << _pi_threshold << std::endl;
-      geo2d::VectorArray<float> xs_pt_v;
-
+      static geo2d::VectorArray<float> xs_pt_v;
+      xs_pt_v.clear();
+      
       if (_try_groups) {
 	LAROCV_DEBUG() << "groups..." << std::endl;
 	xs_pt_v = OnCircleGroups(img,cvtx.as_circle());
       }
       else {
 	LAROCV_DEBUG() << "polar..." << std::endl;
+	LAROCV_DEBUG() << "circle center=" << cvtx.as_circle().center << " rad=" << cvtx.as_circle().radius << " pthresh=" << _pi_threshold << std::endl;
 	xs_pt_v = QPointOnCircle(img,cvtx.as_circle(),_pi_threshold);
+	LAROCV_DEBUG() << "...ret=" << xs_pt_v.size() << std::endl;
       }
 
-      LAROCV_DEBUG() << "... " << xs_pt_v.size() << " xs found" << std::endl;
-      if(_refine_qpoint && !xs_pt_v.empty()) {
-	LAROCV_DEBUG() << "Refining qpoint" << std::endl;
-	xs_pt_v = QPointOnCircleRefine(img,cvtx.as_circle(),xs_pt_v,_refine_qpoint_maskout);
-	LAROCV_DEBUG() << "... "<< xs_pt_v.size() << " xs refined" << std::endl;
-      }
-      
-      xs_pt_v = this->ValidShowerPointOnCircle(img, cvtx.as_circle(), xs_pt_v);
+      if (_try_connected)
+	xs_pt_v = this->ConnectedShowerPointOnCircle(img, cvtx.as_circle(), xs_pt_v);
+      else
+	xs_pt_v = this->ValidShowerPointOnCircle(img, cvtx.as_circle(), xs_pt_v);
+
+
       LAROCV_DEBUG() << "... " << xs_pt_v.size() << " xs validated"  << std::endl;
 
       res_xs_pt_v = xs_pt_v;
