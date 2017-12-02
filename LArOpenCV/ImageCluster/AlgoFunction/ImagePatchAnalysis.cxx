@@ -152,6 +152,7 @@ namespace larocv {
     tmp_v.reserve(ret_v.size());
 
     if (circle.center.x == 255 and circle.center.y == 508) {
+      std::cout << "center= " << circle.center << " rad=" << circle.radius << std::endl;
       cv::imwrite("/tmp/aaa_img.png",img);
       cv::imwrite("/tmp/aaa_small.png",small_img);
       cv::imwrite("/tmp/aaa_polar.png",polarimg);
