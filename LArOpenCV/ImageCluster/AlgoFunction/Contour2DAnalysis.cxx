@@ -105,9 +105,15 @@ namespace larocv {
   FindContours(const cv::Mat& img)
   {
     auto img_copy = img.clone();
-    GEO2D_ContourArray_t result_v;
-    std::vector<cv::Vec4i> cv_hierarchy_v;
+
+    static GEO2D_ContourArray_t result_v;
+    result_v.clear();
+
+    static std::vector<cv::Vec4i> cv_hierarchy_v;
+    cv_hierarchy_v.clear();
+
     cv::findContours(img_copy,result_v,cv_hierarchy_v,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
+    
     return result_v;
   }
 

@@ -907,6 +907,8 @@ namespace larocv {
 
     small_img.copyTo(dst_img,white_img);    
 
+    cv::copyMakeBorder(dst_img,dst_img,1,1,1,1,cv::BORDER_CONSTANT,cv::Scalar(0));
+
     auto ctor_v = FindContours(dst_img);
 
     if ((ppt1.x == 255 and ppt1.y == 508) or
