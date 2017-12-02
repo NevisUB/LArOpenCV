@@ -37,8 +37,7 @@ namespace larocv {
   
   cv::Mat
   BlankImage(const cv::Mat& img,uint val){
-    cv::Mat dst_img(img.size(),img.type(),cv::Scalar(0));    
-    dst_img.setTo(val);
+    cv::Mat dst_img(img.size(),img.type(),cv::Scalar(val));    
     return dst_img;
   }
 
@@ -878,12 +877,16 @@ namespace larocv {
 		 geo2d::Vector<float> pt1,
 		 geo2d::Vector<float> pt2,
 		 int thickness) {
+    
 
     float min_x = std::min(pt1.x,pt2.x);
     float min_y = std::min(pt1.y,pt2.y);
 
     float dx = std::abs(pt1.x - pt2.x)/2.0;
     float dy = std::abs(pt1.y - pt2.y)/2.0;
+
+    auto ppt1 = pt1;
+    auto ppt2 = pt2;
 
     auto small_img = SmallImg(img,geo2d::Vector<float>(min_x+dx,min_y+dy),dx,dy);
     
@@ -896,21 +899,24 @@ namespace larocv {
     auto white_img = BlankImage(small_img,0);
     auto dst_img   = BlankImage(small_img,0);
 
-    // cv::line(white_img,
-    // 	     cv::Point((int)(pt1.x + 0.5),(int)(pt1.y+0.5)),
-    // 	     cv::Point((int)(pt2.x + 0.5),(int)(pt2.y+0.5)),
-    // 	     cv::Scalar(255),
-    // 	     thickness);
-
     cv::line(white_img,
-	     cv::Point((int)(pt1.x),(int)(pt1.y)),
-	     cv::Point((int)(pt2.x),(int)(pt2.y)),
-	     cv::Scalar(255),
-	     thickness);
-    
+    	     cv::Point((int)(pt1.x + 0.5),(int)(pt1.y+0.5)),
+    	     cv::Point((int)(pt2.x + 0.5),(int)(pt2.y+0.5)),
+    	     cv::Scalar(255),
+    	     thickness);
+
     small_img.copyTo(dst_img,white_img);    
 
     auto ctor_v = FindContours(dst_img);
+
+    if ((ppt1.x == 255 and ppt1.y == 508) or
+	(ppt2.x == 255 and ppt2.y == 508)) {
+      cv::imwrite("/tmp/bbb_img.png",img);
+      cv::imwrite("/tmp/bbb_small.png",small_img);
+      cv::imwrite("/tmp/bbb_white.png",white_img);
+      cv::imwrite("/tmp/bb_dst.png",dst_img);
+      std::cout << ctor_v.size() << std::endl;
+    }
 
     if (ctor_v.size() == 1) return true;
     
