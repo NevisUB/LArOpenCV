@@ -46,7 +46,7 @@ namespace larocv {
   LinearPolar(const cv::Mat& img,
 	      geo2d::Vector<float> pt,
 	      float radius) {
-    cv::Mat res;
+    cv::Mat res(img.size(),img.type(),cv::Scalar(0));    
     cv::linearPolar(img, res, pt, radius, cv::WARP_FILL_OUTLIERS);
     return res;
   }
@@ -135,7 +135,6 @@ namespace larocv {
   {
 
     static int row_scale = 20;
-
 
     auto small_img = SmallImg(img,circle.center,circle.radius,circle.radius + row_scale);
     geo2d::Circle<float> small_circle(circle.radius,circle.radius,circle.radius);
