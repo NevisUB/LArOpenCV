@@ -136,6 +136,7 @@ namespace larocv {
 
     static int row_scale = 20;
 
+
     auto small_img = SmallImg(img,circle.center,circle.radius,circle.radius + row_scale);
     geo2d::Circle<float> small_circle(circle.radius,circle.radius,circle.radius);
     small_circle.center.y += row_scale;
@@ -150,6 +151,13 @@ namespace larocv {
     static geo2d::VectorArray<float> tmp_v;
     tmp_v.clear();
     tmp_v.reserve(ret_v.size());
+
+    if (circle.center.x == 255 and circle.center.y == 508) {
+      cv::imwrite("/tmp/aaa_img.png",img);
+      cv::imwrite("/tmp/aaa_small.png",small_img);
+      cv::imwrite("/tmp/aaa_polar.png",small_img);
+      std::cout << "col=" << col << std::endl;
+    }
 
     for(auto& ret : ret_v) {
       ret.x += (circle.center.x - circle.radius);
