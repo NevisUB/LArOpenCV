@@ -896,9 +896,15 @@ namespace larocv {
     auto white_img = BlankImage(small_img,0);
     auto dst_img   = BlankImage(small_img,0);
 
+    // cv::line(white_img,
+    // 	     cv::Point((int)(pt1.x + 0.5),(int)(pt1.y+0.5)),
+    // 	     cv::Point((int)(pt2.x + 0.5),(int)(pt2.y+0.5)),
+    // 	     cv::Scalar(255),
+    // 	     thickness);
+
     cv::line(white_img,
-	     cv::Point((int)(pt1.x + 0.5),(int)(pt1.y+0.5)),
-	     cv::Point((int)(pt2.x + 0.5),(int)(pt2.y+0.5)),
+	     cv::Point((int)(pt1.x),(int)(pt1.y)),
+	     cv::Point((int)(pt2.x),(int)(pt2.y)),
 	     cv::Scalar(255),
 	     thickness);
     
