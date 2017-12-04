@@ -150,13 +150,13 @@ namespace larocv {
     tmp_v.clear();
     tmp_v.reserve(ret_v.size());
 
-    if (circle.center.x == 255 and circle.center.y == 508) {
-      std::cout << "center= " << circle.center << " rad=" << circle.radius << std::endl;
-      cv::imwrite("/tmp/aaa_img.png",img);
-      cv::imwrite("/tmp/aaa_small.png",small_img);
-      cv::imwrite("/tmp/aaa_polar.png",polarimg);
-      std::cout << "col=" << col << std::endl;
-    }
+    // if (circle.center.x == 255 and circle.center.y == 508) {
+    //   std::cout << "center= " << circle.center << " rad=" << circle.radius << std::endl;
+    //   cv::imwrite("/tmp/aaa_img.png",img);
+    //   cv::imwrite("/tmp/aaa_small.png",small_img);
+    //   cv::imwrite("/tmp/aaa_polar.png",polarimg);
+    //   std::cout << "col=" << col << std::endl;
+    // }
 
     for(auto& ret : ret_v) {
       ret.x += (circle.center.x - circle.radius);
@@ -885,8 +885,8 @@ namespace larocv {
     float dx = std::abs(pt1.x - pt2.x)/2.0;
     float dy = std::abs(pt1.y - pt2.y)/2.0;
 
-    auto ppt1 = pt1;
-    auto ppt2 = pt2;
+    // auto ppt1 = pt1;
+    // auto ppt2 = pt2;
 
     auto small_img = SmallImg(img,geo2d::Vector<float>(min_x+dx,min_y+dy),dx,dy);
     
@@ -911,14 +911,14 @@ namespace larocv {
 
     auto ctor_v = FindContours(dst_img);
 
-    if ((ppt1.x == 255 and ppt1.y == 508) or
-	(ppt2.x == 255 and ppt2.y == 508)) {
-      cv::imwrite("/tmp/bbb_img.png",img);
-      cv::imwrite("/tmp/bbb_small.png",small_img);
-      cv::imwrite("/tmp/bbb_white.png",white_img);
-      cv::imwrite("/tmp/bb_dst.png",dst_img);
-      std::cout << ctor_v.size() << std::endl;
-    }
+    // if ((ppt1.x == 255 and ppt1.y == 508) or
+    // 	(ppt2.x == 255 and ppt2.y == 508)) {
+    //   cv::imwrite("/tmp/bbb_img.png",img);
+    //   cv::imwrite("/tmp/bbb_small.png",small_img);
+    //   cv::imwrite("/tmp/bbb_white.png",white_img);
+    //   cv::imwrite("/tmp/bb_dst.png",dst_img);
+    //   std::cout << ctor_v.size() << std::endl;
+    // }
 
     if (ctor_v.size() == 1) return true;
     
