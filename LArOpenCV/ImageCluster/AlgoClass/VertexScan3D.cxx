@@ -214,8 +214,6 @@ namespace larocv {
       if (_ignore_four) return -1;
     }
 
-
-
     LAROCV_DEBUG() << "ret=" << dtheta_sum << std::endl;
     if (dtheta_sum > dtheta_sigma) return dtheta_sum;
     
@@ -268,6 +266,7 @@ namespace larocv {
     weight *= dtheta_sigma;
 
     LAROCV_DEBUG() << "weight="<<weight<<std::endl;
+    
     return weight;
   }
 
@@ -379,6 +378,11 @@ namespace larocv {
       
       if (temp_res.weight < 0) {
 	LAROCV_DEBUG() << "...bad weight" << std::endl;
+	continue;
+      }
+      
+      if (std::isnan(temp_res.weight)) {
+	LAROCV_WARNING() << "NaN weight encountered" << std::endl;
 	continue;
       }
 
