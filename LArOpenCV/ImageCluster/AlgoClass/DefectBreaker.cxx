@@ -819,6 +819,10 @@ namespace larocv {
 			<< "Size of hullpts: " << hullpts.size() << std::endl
 			<< "Size of defects: " << defects.size() << std::endl
 			<< "Size of contour: " << ctor.size() << std::endl;
+
+	for (const auto& pt : ctor){
+	  LAROCV_NORMAL() << pt << std::endl;
+	}
 	deprecate_ctor_v[target_ctor_idx] = true;
 	//ctor.clear();
 	continue;
