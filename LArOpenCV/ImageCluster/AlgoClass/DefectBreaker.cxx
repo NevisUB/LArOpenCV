@@ -785,9 +785,6 @@ namespace larocv {
       if (ctor.size() <= 2) {
 	LAROCV_CRITICAL() << "Contour too small (size<=2)... should not appear!" << std::endl;
 	throw larbys();
-	//deprecate_ctor_v[target_ctor_idx] = true;
-	//ctor.clear();
-	//continue;
       }
       
       //this contour cannot have a defect by definition
@@ -802,7 +799,6 @@ namespace larocv {
 		      << " ... # defects = " << cluscomp.get_defects().size()
 		      << std::endl;
 	deprecate_ctor_v[target_ctor_idx] = true;
-	//ctor.clear();
 	continue;
       }
       
@@ -820,11 +816,14 @@ namespace larocv {
 			<< "Size of defects: " << defects.size() << std::endl
 			<< "Size of contour: " << ctor.size() << std::endl;
 
-	for (const auto& pt : ctor){
-	  LAROCV_NORMAL() << pt << std::endl;
-	}
+	for (const auto& pt : ctor) LAROCV_NORMAL() << pt << std::endl;
+
+	auto& atomic = cluscomp.make_atom();
+	for(auto const& defect_id : a_ctor.associated_defects())
+	  atomic.associate(defect_id);
+	atomic = ctor;
+
 	deprecate_ctor_v[target_ctor_idx] = true;
-	//ctor.clear();
 	continue;
       }
       
