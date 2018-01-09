@@ -811,12 +811,14 @@ namespace larocv {
       try{
 	fill_hull_and_defects(ctor,hullpts,defects,defects_d);
       }catch(...) {
-	LAROCV_NORMAL() << "Failed to compute defects point (cv::convexityDefects)" << std::endl
-			<< "Size of hullpts: " << hullpts.size() << std::endl
-			<< "Size of defects: " << defects.size() << std::endl
-			<< "Size of contour: " << ctor.size() << std::endl;
-
-	for (const auto& pt : ctor) LAROCV_NORMAL() << pt << std::endl;
+	LAROCV_WARNING() << "Failed to compute defects point (cv::convexityDefects)" << std::endl
+			 << "Size of hullpts: " << hullpts.size() << std::endl
+			 << "Size of defects: " << defects.size() << std::endl
+			 << "Size of contour: " << ctor.size() << std::endl;
+	
+	LAROCV_WARNING() << "[" << std::endl;
+	for (const auto& pt : ctor) LAROCV_WARNING() << pt << std::endl;
+	LAROCV_WARNING() << "]" << std::endl;
 
 	auto& atomic = cluscomp.make_atom();
 	for(auto const& defect_id : a_ctor.associated_defects())
