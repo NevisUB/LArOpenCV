@@ -8,9 +8,11 @@
 
 namespace larocv {
 
-  void PixelScan3D::Configure(const Config_t &pset)
+  void PixelScan3D::Configure(const Config_t &pset) { Configure(); }
+
+  void PixelScan3D::Configure()
   {
-    this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
+    //this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity", (unsigned short)(this->logger().level()))));
 
     float  _radius_min=5;
     float  _radius_max=30;
@@ -37,14 +39,15 @@ namespace larocv {
 	_phi_v[pid] = (float) pid * 2 * PI / ( (float) _phi_v.size() );
 
     }
-
-
+    return;
   }
 
   std::vector<std::vector<data::Vertex3D> > 
   PixelScan3D::RegisterRegions(const data::Vertex3D& vtx) const{
-    
+    LAROCV_DEBUG() << "start" << std::endl;
     std::vector<std::vector<data::Vertex3D> > pts_vv;
+    if (_radius_v.empty()) throw larbys("No radii specified");
+
     pts_vv.resize(_radius_v.size());
 
     std::vector<data::Vertex3D> pts_v;
@@ -66,7 +69,7 @@ namespace larocv {
       }
       pts_vv[rid] = std::move(pts_v);
     }
-
+    LAROCV_DEBUG() << "end" << std::endl;
     return pts_vv;
   }
   
@@ -84,9 +87,9 @@ namespace larocv {
 
     size_t nvalid = kINVALID_SIZE;
 
+    if (_radius_v.empty()) throw larbys("No radii specified");
+
     for(size_t rid = 0; rid < _radius_v.size(); ++rid) {
-      auto radius = _radius_v[rid];
-      LAROCV_DEBUG() << "@rid=" << rid << " radius=" << radius << std::endl;
 
       auto& shell_v = res_vv[rid];
       auto& ret_v   = ret_vv[rid];
@@ -118,7 +121,8 @@ namespace larocv {
   std::vector<std::vector<std::array<size_t,3> > > 
   PixelScan3D::AssociateContours(const std::vector<std::vector<data::Vertex3D> >& reg_vv,
 				 const std::array<GEO2D_ContourArray_t,3>& ctor_vv) {
-    
+
+    LAROCV_DEBUG() << "start" << std::endl;
     std::vector<std::vector<std::array<size_t,3> > > ass_vv;
     ass_vv.resize(reg_vv.size());
     
@@ -144,6 +148,7 @@ namespace larocv {
 	} // end plane
       } // end this scan
     } // end this radii
+    LAROCV_DEBUG() << "start" << std::endl;
     return ass_vv;
   }
 

@@ -32,6 +32,7 @@ namespace larocv {
     { _geo.ResetPlaneInfo(meta); }
 
     void Configure(const Config_t &pset);
+    void Configure();
     
     bool SetPlanePoint(cv::Mat img,
 		       const data::Vertex3D& vtx3d,
