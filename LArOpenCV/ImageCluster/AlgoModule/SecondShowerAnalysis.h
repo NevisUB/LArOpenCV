@@ -55,6 +55,8 @@ namespace larocv {
     float _shower_frac;
     float _shower_size;
     float _shower_impact;
+
+    bool _skip_track_alg;
     
   public:
     int _secondshower;

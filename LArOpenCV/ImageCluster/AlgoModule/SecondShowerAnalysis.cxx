@@ -21,6 +21,8 @@ namespace larocv {
     _shower_size   = pset.get<float>("ShowerSize",40);
     _shower_impact = pset.get<float>("ShowerImpact",4); // 4cm
 
+    _skip_track_alg = pset.get<bool>("SkipTrackAlgo",false);
+    
     _PixelScan3D.set_verbosity(this->logger().level());
     _PixelScan3D.Configure(pset.get<Config_t>("PixelScan3D"));
 
@@ -169,8 +171,8 @@ namespace larocv {
       
       LAROCV_DEBUG() << "@vtx3d=(" << _x << "," << _y << "," << _z << ")" << std::endl;
 
-      // don't scan on track like vertex
-      if (vtx3d.type == data::VertexType_t::kTrack) {
+      // Scan on track like vertices?
+      if (vtx3d.type == data::VertexType_t::kTrack && _skip_track_alg) {
 	_tree->Fill();
 	continue;
       }
