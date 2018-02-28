@@ -94,6 +94,51 @@ namespace larocv {
     _tree->Branch("par1_frac", &_par1_frac, "par1_frac/F");
     _tree->Branch("par2_frac", &_par2_frac, "par2_frac/F");
 
+    //
+    // per plane
+
+    // U
+    _tree->Branch("length_U_v"          , &_length_U_v);
+    _tree->Branch("width_U_v"           , &_width_U_v);
+    _tree->Branch("perimeter_U_v"       , &_perimeter_U_v);
+    _tree->Branch("area_U_v"            , &_area_U_v);
+    _tree->Branch("npixel_U_v"          , &_npixel_U_v);
+    _tree->Branch("qsum_U_v"            , &_qsum_U_v);  
+    _tree->Branch("track_frac_U_v"      , &_track_frac_U_v);
+    _tree->Branch("shower_frac_U_v"     , &_shower_frac_U_v);
+    _tree->Branch("mean_pixel_dist_U_v" , &_mean_pixel_dist_U_v);
+    _tree->Branch("sigma_pixel_dist_U_v", &_sigma_pixel_dist_U_v);
+    _tree->Branch("angular_sum_U_v"     , &_angular_sum_U_v);
+    _tree->Branch("triangle_d_U_v"  , &_triangle_d_U_v);
+    
+    // V
+    _tree->Branch("length_V_v"          , &_length_V_v);
+    _tree->Branch("width_V_v"           , &_width_V_v);
+    _tree->Branch("perimeter_V_v"       , &_perimeter_V_v);
+    _tree->Branch("area_V_v"            , &_area_V_v);
+    _tree->Branch("npixel_V_v"          , &_npixel_V_v);
+    _tree->Branch("qsum_V_v"            , &_qsum_V_v);  
+    _tree->Branch("track_frac_V_v"      , &_track_frac_V_v);
+    _tree->Branch("shower_frac_V_v"     , &_shower_frac_V_v);
+    _tree->Branch("mean_pixel_dist_V_v" , &_mean_pixel_dist_V_v);
+    _tree->Branch("sigma_pixel_dist_V_v", &_sigma_pixel_dist_V_v);
+    _tree->Branch("angular_sum_V_v"     , &_angular_sum_V_v);
+    _tree->Branch("triangle_d_V_v"  , &_triangle_d_V_v);
+
+    // Y
+    _tree->Branch("length_Y_v"          , &_length_Y_v);
+    _tree->Branch("width_Y_v"           , &_width_Y_v);
+    _tree->Branch("perimeter_Y_v"       , &_perimeter_Y_v);
+    _tree->Branch("area_Y_v"            , &_area_Y_v);
+    _tree->Branch("npixel_Y_v"          , &_npixel_Y_v);
+    _tree->Branch("qsum_Y_v"            , &_qsum_Y_v);  
+    _tree->Branch("track_frac_Y_v"      , &_track_frac_Y_v);
+    _tree->Branch("shower_frac_Y_v"     , &_shower_frac_Y_v);
+    _tree->Branch("mean_pixel_dist_Y_v" , &_mean_pixel_dist_Y_v);
+    _tree->Branch("sigma_pixel_dist_Y_v", &_sigma_pixel_dist_Y_v);
+    _tree->Branch("angular_sum_Y_v"     , &_angular_sum_Y_v);
+    _tree->Branch("triangle_d_Y_v"  , &_triangle_d_Y_v);
+
     _tree->Branch("vertex_type",&_vertex_type,"vertex_type/I");
     
     _roid = 0;
@@ -192,13 +237,53 @@ namespace larocv {
 	float angular_sum_min      =  1.0*kINVALID_FLOAT;
 	float triangle_d_min       =  1.0*kINVALID_FLOAT;
 	
-	int nplanes = 0;
-	for(size_t plane=0; plane<3; ++plane) {
+	float width_U            = -1.0*kINVALID_FLOAT;
+	float length_U           = -1.0*kINVALID_FLOAT;
+	float perimeter_U        = -1.0*kINVALID_FLOAT;
+	float area_U             = -1.0*kINVALID_FLOAT;
+	float npixel_U           = -1.0*kINVALID_FLOAT;
+	float qsum_U             = -1.0*kINVALID_FLOAT;
+	float track_frac_U       = -1.0*kINVALID_FLOAT;
+	float shower_frac_U      = -1.0*kINVALID_FLOAT;
+	float mean_pixel_dist_U  = -1.0*kINVALID_FLOAT;
+	float sigma_pixel_dist_U = -1.0*kINVALID_FLOAT;
+	float angular_sum_U      = -1.0*kINVALID_FLOAT;
+	float triangle_d_U       = -1.0*kINVALID_FLOAT;
 
+	float width_V            = -1.0*kINVALID_FLOAT;
+	float length_V           = -1.0*kINVALID_FLOAT;
+	float perimeter_V        = -1.0*kINVALID_FLOAT;
+	float area_V             = -1.0*kINVALID_FLOAT;
+	float npixel_V           = -1.0*kINVALID_FLOAT;
+	float qsum_V             = -1.0*kINVALID_FLOAT;
+	float track_frac_V       = -1.0*kINVALID_FLOAT;
+	float shower_frac_V      = -1.0*kINVALID_FLOAT;
+	float mean_pixel_dist_V  = -1.0*kINVALID_FLOAT;
+	float sigma_pixel_dist_V = -1.0*kINVALID_FLOAT;
+	float angular_sum_V      = -1.0*kINVALID_FLOAT;
+	float triangle_d_V       = -1.0*kINVALID_FLOAT;
+
+	float width_Y            = -1.0*kINVALID_FLOAT;
+	float length_Y           = -1.0*kINVALID_FLOAT;
+	float perimeter_Y        = -1.0*kINVALID_FLOAT;
+	float area_Y             = -1.0*kINVALID_FLOAT;
+	float npixel_Y           = -1.0*kINVALID_FLOAT;
+	float qsum_Y             = -1.0*kINVALID_FLOAT;
+	float track_frac_Y       = -1.0*kINVALID_FLOAT;
+	float shower_frac_Y      = -1.0*kINVALID_FLOAT;
+	float mean_pixel_dist_Y  = -1.0*kINVALID_FLOAT;
+	float sigma_pixel_dist_Y = -1.0*kINVALID_FLOAT;
+	float angular_sum_Y      = -1.0*kINVALID_FLOAT;
+	float triangle_d_Y       = -1.0*kINVALID_FLOAT;
+	
+	int nplanes = 0;
+	
+	for(size_t plane=0; plane<3; ++plane) {
+	  
 	  const auto& pcluster = par._par_v[plane];
 	  const auto& pctor = pcluster._ctor;
 	  if (pctor.empty()) continue;
-
+	  
 	  nplanes += 1;
 	  
 	  auto& adc_img    = adc_img_v[plane];
@@ -217,6 +302,7 @@ namespace larocv {
 	  mean_pixel_dist  += pchunk.mean_pixel_dist;
 	  sigma_pixel_dist += pchunk.sigma_pixel_dist;
 	  angular_sum      += pchunk.angular_sum;
+
 
 	  // Estimate linearity from 3 point triangle
 	  const auto& vtx2d = vtx3d.vtx2d_v.at(plane).pt;
@@ -263,6 +349,57 @@ namespace larocv {
 	  if (pchunk.mean_pixel_dist  < mean_pixel_dist_min)  mean_pixel_dist_min  = pchunk.mean_pixel_dist;
 	  if (pchunk.sigma_pixel_dist < sigma_pixel_dist_min) sigma_pixel_dist_min = pchunk.sigma_pixel_dist;
 	  	  
+	  switch(plane) {
+	    
+	  case 0:
+	    width_U            = pchunk.width;
+	    length_U           = pchunk.length;
+	    perimeter_U        = pchunk.perimeter;
+	    area_U             = pchunk.area;
+	    npixel_U           = pchunk.npixel;
+	    qsum_U             = pchunk.qsum;
+	    track_frac_U       = pchunk.track_frac;
+	    shower_frac_U      = pchunk.shower_frac;
+	    mean_pixel_dist_U  = pchunk.mean_pixel_dist;
+	    sigma_pixel_dist_U = pchunk.sigma_pixel_dist;
+	    angular_sum_U      = pchunk.angular_sum;
+	    triangle_d_U       = dist;
+	    break;
+
+	  case 1:
+	    width_V            = pchunk.width;
+	    length_V           = pchunk.length;
+	    perimeter_V        = pchunk.perimeter;
+	    area_V             = pchunk.area;
+	    npixel_V           = pchunk.npixel;
+	    qsum_V             = pchunk.qsum;
+	    track_frac_V       = pchunk.track_frac;
+	    shower_frac_V      = pchunk.shower_frac;
+	    mean_pixel_dist_V  = pchunk.mean_pixel_dist;
+	    sigma_pixel_dist_V = pchunk.sigma_pixel_dist;
+	    angular_sum_V      = pchunk.angular_sum;
+	    triangle_d_V       = dist;
+	    break;
+
+	  case 2:
+	    width_Y            = pchunk.width;
+	    length_Y           = pchunk.length;
+	    perimeter_Y        = pchunk.perimeter;
+	    area_Y             = pchunk.area;
+	    npixel_Y           = pchunk.npixel;
+	    qsum_Y             = pchunk.qsum;
+	    track_frac_Y       = pchunk.track_frac;
+	    shower_frac_Y      = pchunk.shower_frac;
+	    mean_pixel_dist_Y  = pchunk.mean_pixel_dist;
+	    sigma_pixel_dist_Y = pchunk.sigma_pixel_dist;
+	    angular_sum_Y      = pchunk.angular_sum;
+	    triangle_d_Y       = dist;
+	    break;
+	    
+	  default:
+	    throw larbys("plane not handled, die");
+	  }
+
 	  
 	} // end plane
 	
@@ -292,7 +429,6 @@ namespace larocv {
 	_angular_sum_min_v      . push_back(angular_sum_min);
 	_triangle_d_min_v       . push_back(triangle_d_min);
 
-
 	_length_max_v           . push_back(length_max);
 	_width_max_v            . push_back(width_max);
 	_perimeter_max_v        . push_back(perimeter_max);
@@ -305,6 +441,45 @@ namespace larocv {
 	_sigma_pixel_dist_max_v . push_back(sigma_pixel_dist_max);
 	_angular_sum_max_v      . push_back(angular_sum_max);
 	_triangle_d_max_v       . push_back(triangle_d_max);
+
+	_length_U_v           . push_back(length_U);
+	_width_U_v            . push_back(width_U);
+	_perimeter_U_v        . push_back(perimeter_U);
+	_area_U_v             . push_back(area_U);
+	_npixel_U_v           . push_back(npixel_U);
+	_qsum_U_v             . push_back(qsum_U);
+	_track_frac_U_v       . push_back(track_frac_U);
+	_shower_frac_U_v      . push_back(shower_frac_U);
+	_mean_pixel_dist_U_v  . push_back(mean_pixel_dist_U);
+	_sigma_pixel_dist_U_v . push_back(sigma_pixel_dist_U);
+	_angular_sum_U_v      . push_back(angular_sum_U);
+	_triangle_d_U_v       . push_back(triangle_d_U);
+
+	_length_V_v           . push_back(length_V);
+	_width_V_v            . push_back(width_V);
+	_perimeter_V_v        . push_back(perimeter_V);
+	_area_V_v             . push_back(area_V);
+	_npixel_V_v           . push_back(npixel_V);
+	_qsum_V_v             . push_back(qsum_V);
+	_track_frac_V_v       . push_back(track_frac_V);
+	_shower_frac_V_v      . push_back(shower_frac_V);
+	_mean_pixel_dist_V_v  . push_back(mean_pixel_dist_V);
+	_sigma_pixel_dist_V_v . push_back(sigma_pixel_dist_V);
+	_angular_sum_V_v      . push_back(angular_sum_V);
+	_triangle_d_V_v       . push_back(triangle_d_V);
+
+	_length_Y_v           . push_back(length_Y);
+	_width_Y_v            . push_back(width_Y);
+	_perimeter_Y_v        . push_back(perimeter_Y);
+	_area_Y_v             . push_back(area_Y);
+	_npixel_Y_v           . push_back(npixel_Y);
+	_qsum_Y_v             . push_back(qsum_Y);
+	_track_frac_Y_v       . push_back(track_frac_Y);
+	_shower_frac_Y_v      . push_back(shower_frac_Y);
+	_mean_pixel_dist_Y_v  . push_back(mean_pixel_dist_Y);
+	_sigma_pixel_dist_Y_v . push_back(sigma_pixel_dist_Y);
+	_angular_sum_Y_v      . push_back(angular_sum_Y);
+	_triangle_d_Y_v       . push_back(triangle_d_Y);
 
 	_nplanes_v.push_back(nplanes);
 	
@@ -327,7 +502,7 @@ namespace larocv {
       std::vector<int> par_type_v(_nparticles,-1.0 * kINVALID_INT);
       std::vector<float> par_frac_v(_nparticles,-1.0 * kINVALID_FLOAT);
 
-      for(size_t parid=0; parid< _nparticles; parid++) {
+      for(size_t parid=0; parid< (size_t)_nparticles; parid++) {
 	auto& par_type = par_type_v[parid];
 	auto& par_frac = par_frac_v[parid];
 
@@ -368,7 +543,6 @@ namespace larocv {
 
   void ShapeAnalysis::ClearEvent() {
     _vtxid = kINVALID_INT;
-    
     ClearVertex();
   }
   
@@ -420,6 +594,45 @@ namespace larocv {
     _sigma_pixel_dist_min_v.clear();
     _angular_sum_min_v.clear();
     _triangle_d_min_v.clear();
+
+    _length_U_v.clear();
+    _width_U_v.clear();
+    _perimeter_U_v.clear();
+    _area_U_v.clear();
+    _npixel_U_v.clear();
+    _qsum_U_v.clear();
+    _track_frac_U_v.clear();
+    _shower_frac_U_v.clear();
+    _mean_pixel_dist_U_v.clear();
+    _sigma_pixel_dist_U_v.clear();
+    _angular_sum_U_v.clear();
+    _triangle_d_U_v.clear();
+
+    _length_V_v.clear();
+    _width_V_v.clear();
+    _perimeter_V_v.clear();
+    _area_V_v.clear();
+    _npixel_V_v.clear();
+    _qsum_V_v.clear();
+    _track_frac_V_v.clear();
+    _shower_frac_V_v.clear();
+    _mean_pixel_dist_V_v.clear();
+    _sigma_pixel_dist_V_v.clear();
+    _angular_sum_V_v.clear();
+    _triangle_d_V_v.clear();
+
+    _length_Y_v.clear();
+    _width_Y_v.clear();
+    _perimeter_Y_v.clear();
+    _area_Y_v.clear();
+    _npixel_Y_v.clear();
+    _qsum_Y_v.clear();
+    _track_frac_Y_v.clear();
+    _shower_frac_Y_v.clear();
+    _mean_pixel_dist_Y_v.clear();
+    _sigma_pixel_dist_Y_v.clear();
+    _angular_sum_Y_v.clear();
+    _triangle_d_Y_v.clear();
     
     _track_par_max_id = kINVALID_INT;
     _shower_par_max_id = kINVALID_INT;
@@ -479,7 +692,6 @@ namespace larocv {
     info.sigma_pixel_dist_min = _sigma_pixel_dist_min_v[parid];
     info.angular_sum_min = _angular_sum_min_v[parid];
     info.triangle_d_min = _triangle_d_min_v[parid];
-
   }
   
 }
