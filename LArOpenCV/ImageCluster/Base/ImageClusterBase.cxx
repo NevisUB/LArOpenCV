@@ -85,10 +85,10 @@ namespace larocv {
 
 
   void ImageClusterBase::AttachIDs(TTree* tree) {
-    tree->Branch("run"    , &_dataman_ptr->_run    , "run/i");
-    tree->Branch("subrun" , &_dataman_ptr->_subrun , "subrun/i");
-    tree->Branch("event"  , &_dataman_ptr->_event  , "event/i");
-    tree->Branch("entry"  , &_dataman_ptr->_entry  , "entry/i");
+    tree->Branch("run"    , &_dataman_ptr->_run    , "run/I");
+    tree->Branch("subrun" , &_dataman_ptr->_subrun , "subrun/I");
+    tree->Branch("event"  , &_dataman_ptr->_event  , "event/I");
+    tree->Branch("entry"  , &_dataman_ptr->_entry  , "entry/I");
   }
 
   bool ImageClusterBase::NextEvent() {

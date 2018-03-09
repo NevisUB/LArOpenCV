@@ -166,10 +166,10 @@ namespace larocv {
 
     std::vector<std::vector<larocv::ImageMeta> > _meta_vv; ///< meta data container
 
-    uint _run;    ///< a copy of the current run number
-    uint _subrun; ///< a copy of the current subrun number
-    uint _event;  ///< a copy of the current event number
-    uint _entry;  ///< a copy of the current entry number
+    int _run;    ///< a copy of the current run number
+    int _subrun; ///< a copy of the current subrun number
+    int _event;  ///< a copy of the current event number
+    int _entry;  ///< a copy of the current entry number
     
   };
 
