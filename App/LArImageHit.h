@@ -42,6 +42,7 @@ namespace larlite {
       , _time_offset(800)
       , _t_window_max(6399.)
       , _t_window_min(0.)
+      , _use_data(false)
     {}
 
     /// Default destructor
