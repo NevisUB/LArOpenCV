@@ -165,23 +165,22 @@ namespace larlite {
 	  nwires = wire_range.second - wire_range.first + 2;
 	}
       }
-      
-      ::larocv::ImageMeta meta((double)nwires, (double)nticks, nwires, nticks,
-			       wire_range.first, tick_range.first, plane);
-      
-      if (_debug) meta.set_debug(true);
-      if (_crop_w_roi) meta.set_roi_cropped(true);
 
-      orig_img_v.emplace_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)) );
-
-      // no matter what we have to send ROI... it can go to the algorithm blank, that's fine
+     // no matter what we have to send ROI... it can go to the algorithm blank, that's fine
       // If we don't want to use ROI, need to pass blanks
-      if (nwires >= 1e10 || nticks >= 1e10)
-	_img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta(),::larocv::ROI());
-      else 
-	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,roi);
-	
+      if (nwires >= 1e10 || nticks >= 1e10){
+        _img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta(),::larocv::ROI());
+        orig_img_v.emplace_back(::cv::Mat() );
+      }   
+      else{ 
+        ::larocv::ImageMeta meta((double)nwires, (double)nticks, nwires, nticks, wire_range.first, tick_range.first, plane);
+        if (_debug) meta.set_debug(true);
+        if (_crop_w_roi) meta.set_roi_cropped(true);
+        _img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,roi);
+        orig_img_v.emplace_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)) );
+      }   
     }   
+
 
     for (auto const& h : *ev_hit) {
 
