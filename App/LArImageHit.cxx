@@ -288,14 +288,26 @@ namespace larlite {
 	    for ( int j = 0; j < ch_v.status().size(); j++){
 	      auto ch = ch_v.status().at(j);
 	      if ( ch !=4 ){
-	        status_v.emplace_back(ch) ;
+	        status_v.emplace_back(j) ;
 	      }
 	    }
 
-	    for ( int k = 0; k < status_v.size() - 1; k++){
-	      std::cout<<"Making pair: "<<status_v.at(k)<<", "<<status_v.at(k+1) <<std::endl;
-	      auto p = std::make_pair(status_v.at(k),status_v.at(k+1));
-	      wires_v.emplace_back(p);
+            int lower_bound = status_v.at(0);
+	    int upper_bound = status_v.at(0);
+	    for ( int k = 1; k < status_v.size(); k++){
+
+              int ch_k = status_v.at(k) ;
+
+	      if ( ch_k != upper_bound + 1 ){
+	        //std::cout<<"Making pair: "<<lower_bound<<", "<<upper_bound<<std::endl;
+
+	        auto p = std::make_pair(lower_bound,upper_bound);
+	        wires_v.emplace_back(p);
+	        lower_bound = ch_k ;
+	      }
+
+	      upper_bound = ch_k ;
+
 	    }
 	  }
 	  meta.set_wires(wires_v) ;
