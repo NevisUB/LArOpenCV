@@ -119,6 +119,14 @@ namespace larocv {
     void add_pool_meta( const ::cv::Mat& mat ){ _pool_meta = mat ; }
 
     const ::cv::Mat get_pool_meta() { return _pool_meta ; }
+
+    void set_wires( std::vector<std::pair<int,int>> wires_v ) { _wires_v = wires_v ; }
+
+    std::vector<std::pair<int,int>> get_wires() { return _wires_v ; } 
+
+    bool is_data() { return _isdata ; }
+
+    void set_is_data( bool isdata ) { _isdata = isdata ; }
     
    protected:
 
@@ -142,6 +150,11 @@ namespace larocv {
 
     // Adding info about pooling
     ::cv::Mat _pool_meta ;
+
+    std::vector<std::pair<int,int> > _wires_v;
+
+    bool _isdata ;
+
     
   };
 

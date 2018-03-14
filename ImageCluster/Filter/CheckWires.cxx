@@ -43,6 +43,8 @@ namespace larocv{
 					larocv::ImageMeta& meta,
 					larocv::ROI& roi)
   { 
+
+    
   
     //Wire loading code from Vic's DeadWireCombine Merge algorithm
     auto const & l_w = roi.roibounds_in_image(meta,0).y;
@@ -86,7 +88,7 @@ namespace larocv{
     //std::cout<<"Range is :" <<range <<", "<<roi.width()<<", score: "<<score<<std::endl ;
 
   meta.set_score(score) ;
-  std::cout<<"Meta score :" <<meta.score() <<std::endl ;
+  //std::cout<<"Meta score :" <<meta.score() <<std::endl ;
   
   return clusters; 
 }
@@ -94,21 +96,28 @@ namespace larocv{
   std::vector<std::pair<int,int> > CheckWires::LoadWires(ImageMeta& meta)
   {
 
-    auto& dead_wires = _wires_v[ meta.plane() ];
+    std::vector<std::pair<int,int> > dead_wires_px; 
 
-    std::vector<std::pair<int,int> > dead_wires_px; dead_wires_px.reserve(dead_wires.size());
+    if ( meta.is_data() ){
+      dead_wires_px = meta.get_wires() ;
+    }
+    else{
 
-    for( unsigned j=0; j < dead_wires.size(); ++j ) {
+      auto& dead_wires = _wires_v[ meta.plane() ];
+      dead_wires_px.reserve(dead_wires.size());
 
-      auto& dwr = dead_wires[j];
+      for( unsigned j=0; j < dead_wires.size(); ++j ) {
 
-      auto df = float(dwr.first  - meta.origin().x)/meta.pixel_width();
-      auto ds = float(dwr.second - meta.origin().x)/meta.pixel_width();
+        auto& dwr = dead_wires[j];
 
-      //outside wire range, ignore
-      if ( df < 0 || ds < 0  ) continue;
+        auto df = float(dwr.first  - meta.origin().x)/meta.pixel_width();
+        auto ds = float(dwr.second - meta.origin().x)/meta.pixel_width();
 
-      dead_wires_px.emplace_back(df,ds);
+        //outside wire range, ignore
+        if ( df < 0 || ds < 0  ) continue;
+
+        dead_wires_px.emplace_back(df,ds);
+      }
     }
 
     return dead_wires_px;

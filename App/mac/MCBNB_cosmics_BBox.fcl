@@ -8,11 +8,12 @@ LArImageHit: {
   ChainModules: false
 
   UseHitRemoval: true 
+  UseData : true 
 
   # LArImageHit config
   PoolTimeTick: 6 
   
-  VertexProducer: numuCC_vertex #mcvertex#numuCC_vertex 
+  VertexProducer: numuCC_vertex #mcvertex #numuCC_vertex 
   Debug: true
 
   MakeROI: true
@@ -25,7 +26,7 @@ LArImageHit: {
   QMin: 0 #5
 
   TimeOffset : 800
-  WindowTMax : 9599 #9599MC #6399Data
+  WindowTMax : 6399 #9599MC #6399Data
   WindowTMin : 0
 
   MatchPlaneWeights : [1,1,1] #plane 0,1,2
