@@ -39,6 +39,8 @@ namespace larlite {
     _plane_weights = pset.get<std::vector<float>>("MatchPlaneWeights");
 
     _hit_removal = pset.get<bool>("UseHitRemoval");
+
+    _use_data = pset.get<bool>("UseData");
   }
   
   void LArImageHit::_Report_() const {
@@ -74,11 +76,13 @@ namespace larlite {
 
     auto ev_hit = storage->get_data<event_hit>(producer());
 
-    if (ev_hit == nullptr)
+    if (ev_hit == nullptr )
       throw DataFormatException("Could not locate hit data product!");
 
     std::vector<std::pair<size_t, size_t>> wire_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
     std::vector<std::pair<size_t, size_t>> tick_range_v(nplanes, std::pair<size_t, size_t>(1e12, 0));
+
+
 
     for (auto const& h : *ev_hit) {
       if (h.Integral() < _charge_threshold) continue;
@@ -112,6 +116,7 @@ namespace larlite {
 
       size_t nticks = tick_range.second - tick_range.first + 2;
       size_t nwires = wire_range.second - wire_range.first + 2;
+      //std::cout<<"nticks: "<<nticks<<", "<<nwires<<std::endl ;
       
       ::larocv::ROI roi;
 
@@ -165,21 +170,22 @@ namespace larlite {
 	  nwires = wire_range.second - wire_range.first + 2;
 	}
       }
-      
-      ::larocv::ImageMeta meta((double)nwires, (double)nticks, nwires, nticks,
-			       wire_range.first, tick_range.first, plane);
-      
-      if (_debug) meta.set_debug(true);
-      if (_crop_w_roi) meta.set_roi_cropped(true);
 
-      orig_img_v.emplace_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)) );
+
 
       // no matter what we have to send ROI... it can go to the algorithm blank, that's fine
       // If we don't want to use ROI, need to pass blanks
-      if (nwires >= 1e10 || nticks >= 1e10)
+      if (nwires >= 1e10 || nticks >= 1e10){
 	_img_mgr.push_back(::cv::Mat(), ::larocv::ImageMeta(),::larocv::ROI());
-      else 
+        orig_img_v.emplace_back(::cv::Mat() );
+      }
+      else{ 
+        ::larocv::ImageMeta meta((double)nwires, (double)nticks, nwires, nticks, wire_range.first, tick_range.first, plane);
+        if (_debug) meta.set_debug(true);
+        if (_crop_w_roi) meta.set_roi_cropped(true);
 	_img_mgr.push_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)),meta,roi);
+        orig_img_v.emplace_back(::cv::Mat(nwires, nticks, CV_8UC1, cvScalar(0.)) );
+      }
 	
     }   
 
@@ -224,8 +230,16 @@ namespace larlite {
 
     }
 
+    auto ev_chstatus = storage->get_data<event_chstatus>("chstatus");
+    if ( !ev_chstatus || ev_chstatus->size() == 0 ) { 
+      std::cout<<" Not finding channel statuses...problem for data only ... "<<std::endl ;
+    }
+
     // normalize the tick range
     if (_pool_time_tick > 1) {
+
+      // Status pair vector
+      std::vector<std::pair<int,int>> wires_v ;
 
       for (size_t plane = 0; plane < nplanes; ++plane) {
 
@@ -263,6 +277,29 @@ namespace larlite {
        	  }
 	}
 
+	meta.set_is_data(_use_data);
+
+	if ( _use_data ){ 
+	
+	  if ( ev_chstatus->size() == 3 ){
+	    //std::cout<<"Channel stat has 3 planes! "<<std::endl; 
+	    auto ch_v = ev_chstatus->at(plane);
+	    std::vector<int> status_v ;
+	    for ( int j = 0; j < ch_v.status().size(); j++){
+	      auto ch = ch_v.status().at(j);
+	      if ( ch !=4 ){
+	        status_v.emplace_back(ch) ;
+	      }
+	    }
+
+	    for ( int k = 0; k < status_v.size() - 1; k++){
+	      std::cout<<"Making pair: "<<status_v.at(k)<<", "<<status_v.at(k+1) <<std::endl;
+	      auto p = std::make_pair(status_v.at(k),status_v.at(k+1));
+	      wires_v.emplace_back(p);
+	    }
+	  }
+	  meta.set_wires(wires_v) ;
+	}
 
 	// old parameters
 	auto const& wire_range = wire_range_v[plane];
