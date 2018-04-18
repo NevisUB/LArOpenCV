@@ -21,6 +21,12 @@ namespace larocv {
     int log_level         = pset.get<int>("Verbosity",2);
     this->set_verbosity((msg::Level_t)log_level);
   }
+
+  void DefectBreaker::Configure(int min_defect_size, int hull_edge_pts_split, int n_allowed_breaks) {
+    _min_defect_size      = min_defect_size;
+    _hull_edge_pts_split  = hull_edge_pts_split;
+    _n_allowed_breaks     = n_allowed_breaks;
+  }
   
   cv::Vec4i DefectBreaker::max_hull_edge(const GEO2D_Contour_t& ctor,
 					 std::vector<cv::Vec4i> defects) const {

@@ -31,6 +31,8 @@ namespace larocv {
     
     void Configure(const Config_t &pset);
 
+    void Configure(int min_defect_size, int hull_edge_pts_split, int n_allowed_breaks);
+
     //break contour --> create atomics
     larocv::data::TrackClusterCompound
     BreakContour(const GEO2D_Contour_t& in_ctor) const;
