@@ -42,11 +42,17 @@ namespace larocv {
 		     float phi_min,
 		     float phi_max);
     
-    bool SetPlanePoint(cv::Mat img,
+    bool SetPlanePoint(const cv::Mat& img,
 		       const data::Vertex3D& vtx3d,
 		       const size_t plane,
 		       geo2d::Vector<float>& plane_pt) const;
-
+    
+    int SetPlanePoint(const cv::Mat& img,
+		      const data::Vertex3D& vtx3d,
+		      const size_t plane,
+		      geo2d::Vector<float>& plane_pt,
+		      const cv::Mat& dead) const;
+    
     
     //
     // For DetachedShower
@@ -67,6 +73,7 @@ namespace larocv {
     //
     std::vector<data::Vertex3D>
       SphereScan3D(const std::array<cv::Mat,3>& image_v, 
+		   const std::vector<cv::Mat*>& dead_v,
 		   const data::Vertex3D& vtx3d,
 		   const size_t nplanes=2) const;
     

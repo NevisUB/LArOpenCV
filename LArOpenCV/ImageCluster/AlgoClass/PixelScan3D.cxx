@@ -68,8 +68,6 @@ namespace larocv {
       auto& theta_v = _theta_vv.back();
       auto& phi_v   = _phi_vv.back();
       
-      float rad2 = rad * rad;
-
       float theta_step = 1.0 / (4*rad);
       float phi_step   = 1.0 / (2*rad);
       
@@ -231,8 +229,11 @@ namespace larocv {
 
   std::vector<data::Vertex3D>
   PixelScan3D::SphereScan3D(const std::array<cv::Mat,3>& image_v, 
+			    const std::vector<cv::Mat*>& dead_v,
 			    const data::Vertex3D& vtx3d,
 			    const size_t nplanes) const {
+
+    assert(nplanes==3);
 
     auto res_v = RegisterSpheres(vtx3d);
 
@@ -245,35 +246,45 @@ namespace larocv {
     if (_radius_v.empty()) 
       throw larbys("No radii specified");
     
-    size_t nvalid = kINVALID_SIZE;
+    int ndead  = 0;
+    int nvalid = 0;
+    int nempty = 0;
     
     for(auto& shell_pt : res_v) { 
-
-	nvalid = 0;
-	for(size_t plane=0; plane<3; ++plane) {
-	  auto valid = SetPlanePoint(image_v[plane],shell_pt,plane,plane_pt);
-	  if (!valid) {
-	    shell_pt.vtx2d_v[plane].pt = inv_plane_pt; 
-	    continue;
-	  }
-	  nvalid++;
-	  shell_pt.vtx2d_v[plane].pt = plane_pt;
+      
+      ndead  = 0;
+      nvalid = 0;
+      nempty = 0;
+      
+      for(size_t plane=0; plane<3; ++plane) {
+	auto valid = SetPlanePoint(image_v[plane],shell_pt,plane,plane_pt,*(dead_v[plane]));
+	
+	if (valid == 0) {
+	  shell_pt.vtx2d_v[plane].pt = inv_plane_pt; 
+	  nempty++;
+	  continue;
 	}
 	
-	if (nvalid<nplanes) continue;
+	shell_pt.vtx2d_v[plane].pt = plane_pt;
 	
+	if (valid==-1) ndead++;
+	if (valid== 1) nvalid++;
+	
+      }
+      
+      if ((nvalid==2 and ndead==1) or nvalid==3)
 	ret_v.emplace_back(std::move(shell_pt));
-	
+      
     } // end this shell point
     
     return ret_v;
   }
   
 
-  bool PixelScan3D::SetPlanePoint(cv::Mat img,
+  bool PixelScan3D::SetPlanePoint(const cv::Mat& img,
 				  const data::Vertex3D& vtx3d,
 				  const size_t plane,
-				  geo2d::Vector<float>& plane_pt) const 
+				  geo2d::Vector<float>& plane_pt) const
   {
     
     try {
@@ -294,12 +305,58 @@ namespace larocv {
       
       plane_pt.x = (float)x_0;
       plane_pt.y = (float)y_0;
+      
     }
     catch(const larbys& err) {
       return false;
     }
     return true;
   }
+
+  int PixelScan3D::SetPlanePoint(const cv::Mat& img,
+				 const data::Vertex3D& vtx3d,
+				 const size_t plane,
+				 geo2d::Vector<float>& plane_pt,
+				 const cv::Mat& dead) const
+  {
+    
+    try {
+      auto x = _geo.x2col(vtx3d.x, plane);
+
+      if (x >= img.cols or x < 0) return false;
+
+      auto y = _geo.yz2row(vtx3d.y, vtx3d.z, plane);
+
+      if (y >= img.rows or y < 0) return false;
+
+      uint x_0 = x + 0.5;
+      uint y_0 = y + 0.5;
+
+      plane_pt.x = (float)x_0;
+      plane_pt.y = (float)y_0;
+
+      uint p = (uint)img.at<uchar>(y_0,x_0);
+
+      if(!p) { 
+	uint d = (uint)dead.at<uchar>(y_0,x_0);
+	
+	// invalid
+	if (d) 
+	  return 0;
+	
+	// in dead
+	else
+	  return -1;
+      }
+
+    }
+    // invalid
+    catch(const larbys& err) { return 0; }
+    
+    // valid & not in dead
+    return 1; 
+  }
+
 }
 
 #endif
