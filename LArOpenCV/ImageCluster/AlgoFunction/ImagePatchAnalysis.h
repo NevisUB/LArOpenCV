@@ -184,5 +184,11 @@ namespace larocv {
 	    geo2d::Vector<float> pt1,
 	    geo2d::Vector<float> pt2,
 	    int thickness=1);
-}
+
+  bool 
+  Broken(const cv::Mat& img,
+         geo2d::Vector<float> pt1,
+         geo2d::Vector<float> pt2,
+         int thickness);
+  }
 #endif

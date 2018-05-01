@@ -53,7 +53,7 @@ namespace larocv {
 		      geo2d::Vector<float>& plane_pt,
 		      const cv::Mat& dead) const;
     
-    
+
     //
     // For DetachedShower
     //
@@ -74,12 +74,21 @@ namespace larocv {
     std::vector<data::Vertex3D>
       SphereScan3D(const std::array<cv::Mat,3>& image_v, 
 		   const std::vector<cv::Mat*>& dead_v,
-		   const data::Vertex3D& vtx3d,
-		   const size_t nplanes=2) const;
+		   const data::Vertex3D& vtx3d) const;
+
+    std::vector<data::Vertex3D>
+      SphereScan3D(const std::array<cv::Mat,3>& image_v, 
+		   const data::Vertex3D& vtx3d) const;
+    
+    std::vector<const data::Vertex3D*>
+      ProjectAndDistance(cv::Mat& image,
+			 const size_t plane,
+			 const std::vector<data::Vertex3D>& pts_v,
+			 const std::vector<float>& distance_v) const;
     
     std::vector<data::Vertex3D>
       RegisterSpheres(const data::Vertex3D& vtx) const;
-    
+
 
     const LArPlaneGeo& geo() const { return _geo; }
 

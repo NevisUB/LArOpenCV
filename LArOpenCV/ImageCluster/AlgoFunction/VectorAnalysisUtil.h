@@ -26,8 +26,10 @@ namespace larocv {
   std::array<float,3> Scale(float a, const std::array<float,3>& p1);
   std::array<float,3> Scale(const std::array<float,3>& p1,float a);
 
+  std::array<float,3> AsVector(const std::array<float,3>& p1);
   std::array<float,3> AsVector(const float theta, const float phi);
   std::array<float,3> AsVector(const float x, const float y, const float z);
+  
 }
 
 #endif

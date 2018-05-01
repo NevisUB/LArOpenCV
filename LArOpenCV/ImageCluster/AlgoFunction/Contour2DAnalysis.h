@@ -39,6 +39,9 @@ namespace larocv {
   ContourArea(const cv::Mat& img,
               const GEO2D_Contour_t& ctor);
   
+  double
+  ContourPixelArea(const GEO2D_Contour_t& ctor);
+
   size_t
   Largest(const GEO2D_ContourArray_t& ctor_v);
 

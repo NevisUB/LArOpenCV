@@ -230,10 +230,8 @@ namespace larocv {
   std::vector<data::Vertex3D>
   PixelScan3D::SphereScan3D(const std::array<cv::Mat,3>& image_v, 
 			    const std::vector<cv::Mat*>& dead_v,
-			    const data::Vertex3D& vtx3d,
-			    const size_t nplanes) const {
+			    const data::Vertex3D& vtx3d) const {
 
-    assert(nplanes==3);
 
     auto res_v = RegisterSpheres(vtx3d);
 
@@ -279,6 +277,93 @@ namespace larocv {
     
     return ret_v;
   }
+
+  std::vector<data::Vertex3D>
+  PixelScan3D::SphereScan3D(const std::array<cv::Mat,3>& image_v, 
+			    const data::Vertex3D& vtx3d) const {
+    
+    
+    auto res_v = RegisterSpheres(vtx3d);
+    
+    std::vector<data::Vertex3D> ret_v;
+    ret_v.reserve(res_v.size());
+    
+    geo2d::Vector<float> plane_pt(kINVALID_FLOAT,kINVALID_FLOAT);
+    const auto inv_plane_pt = plane_pt;
+    
+    if (_radius_v.empty()) 
+      throw larbys("No radii specified");
+    
+    int nvalid = 0;
+    
+    for(auto& shell_pt : res_v) { 
+      
+      nvalid = 0;
+      
+      for(size_t plane=0; plane<3; ++plane) {
+	auto valid = SetPlanePoint(image_v[plane],shell_pt,plane,plane_pt);
+	
+	if (!valid) {
+	  shell_pt.vtx2d_v[plane].pt = inv_plane_pt; 
+	  continue;
+	}
+	
+	shell_pt.vtx2d_v[plane].pt = plane_pt;
+	nvalid++;
+      }
+      
+      if (nvalid==3) 
+	ret_v.emplace_back(std::move(shell_pt));
+      
+    } // end this shell point
+    
+    return ret_v;
+  }
+
+  std::vector<const data::Vertex3D*>
+  PixelScan3D::ProjectAndDistance(cv::Mat& image,
+				  const size_t plane,
+				  const std::vector<data::Vertex3D>& pts_v,
+				  const std::vector<float>& distance_v) const {
+    
+    std::vector<const data::Vertex3D*> ret_v;
+    std::unordered_map<int, size_t> pt_m;
+
+    for(size_t pid=0; pid < pts_v.size(); ++pid) {
+      const auto& pt = pts_v[pid];
+
+      int px_x = pt.vtx2d_v[plane].pt.x;
+      int px_y = pt.vtx2d_v[plane].pt.y;
+      
+      if (px_x < 0) continue;
+      if (px_y < 0) continue;
+      
+      if (px_x >= image.rows) continue;
+      if (px_y >= image.cols) continue;
+      
+      int px = (int) image.at<uchar>(px_y,px_x);
+      if (px==0) continue;
+      
+      int idx = px_y*image.cols + px_x;
+      
+      auto iter = pt_m.find(idx);
+      if (iter == pt_m.end()) {
+	pt_m[idx] = pid;
+	continue;
+      }
+      
+      if (distance_v[(*iter).second] < distance_v[pid])
+	continue;
+
+      (*iter).second = pid;
+    }
+    
+    ret_v.reserve(pt_m.size());
+    for(auto pt : pt_m)
+      ret_v.emplace_back(&(pts_v[pt.second]));
+    
+    return ret_v;
+  }
   
 
   bool PixelScan3D::SetPlanePoint(const cv::Mat& img,
@@ -310,6 +395,7 @@ namespace larocv {
     catch(const larbys& err) {
       return false;
     }
+
     return true;
   }
 

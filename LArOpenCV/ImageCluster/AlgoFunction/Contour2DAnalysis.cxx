@@ -80,6 +80,20 @@ namespace larocv {
     return (double)CountNonZero(white_img);
   }
 
+  double
+  ContourPixelArea(const GEO2D_Contour_t& ctor) {
+    int rows, cols;
+    rows = cols = 0;
+    for(const auto& pt : ctor) {
+      if(rows < pt.y) rows = (int)(pt.y)+1;
+      if(cols < pt.x) cols = (int)(pt.x)+1;
+    }
+    cv::Mat res(rows,cols,CV_8UC1,cv::Scalar(255));
+    res = MaskImage(res,ctor,-1,false);
+    
+    return (double)cv::countNonZero(res);
+  }
+
 
   size_t
   Largest(const GEO2D_ContourArray_t& ctor_v){
@@ -296,7 +310,7 @@ namespace larocv {
 		       const GEO2D_Contour_t& ctor,
 		       geo2d::Vector<float>& closest_pt)
   {
-    double min_dist=1.e20;
+    double min_dist = kINVALID_DOUBLE;
     double dist,dx,dy;
     for(auto const& cand_pt : ctor) {
       dx = cand_pt.x - pt.x;

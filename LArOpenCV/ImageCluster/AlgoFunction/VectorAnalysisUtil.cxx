@@ -77,6 +77,14 @@ namespace larocv {
     return Scale(a,p1);
   }
 
+  std::array<float,3> AsVector(const std::array<float,3>& p1) {
+    std::array<float,3> res;
+    res[0] = kINVALID_FLOAT;
+    res[1] = kINVALID_FLOAT;
+    res[2] = kINVALID_FLOAT;
+    return res;
+  }
+
   std::array<float,3> AsVector(float theta, float phi) {
     std::array<float,3> res;
     res[0] = std::sin(theta) * std::cos(phi);

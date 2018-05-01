@@ -878,7 +878,6 @@ namespace larocv {
 		 geo2d::Vector<float> pt2,
 		 int thickness) {
     
-
     float min_x = std::min(pt1.x,pt2.x);
     float min_y = std::min(pt1.y,pt2.y);
 
@@ -912,6 +911,50 @@ namespace larocv {
     
     return false;
   }
+
+  bool Broken(const cv::Mat& img,
+	      geo2d::Vector<float> pt1,
+	      geo2d::Vector<float> pt2,
+	      int thickness) {
+    
+    float min_x = std::min(pt1.x,pt2.x);
+    float min_y = std::min(pt1.y,pt2.y);
+
+    float dx = std::abs(pt1.x - pt2.x)/2.0;
+    float dy = std::abs(pt1.y - pt2.y)/2.0;
+
+    auto small_img = SmallImg(img,geo2d::Vector<float>(min_x+dx,min_y+dy),dx,dy);
+    
+    pt1.x -= min_x;
+    pt1.y -= min_y;
+    
+    pt2.x -= min_x;
+    pt2.y -= min_y;
+
+    auto white_img = BlankImage(small_img,0);
+    auto dst_img   = BlankImage(small_img,0);
+
+    cv::line(white_img,
+    	     cv::Point((int)(pt1.x + 0.5),(int)(pt1.y+0.5)),
+    	     cv::Point((int)(pt2.x + 0.5),(int)(pt2.y+0.5)),
+    	     cv::Scalar(255),
+    	     thickness);
+
+    small_img = larocv::Threshold(small_img,10,255);
+
+    cv::bitwise_not(small_img,small_img);
+
+    white_img.copyTo(dst_img,small_img);
+
+    cv::copyMakeBorder(dst_img,dst_img,1,1,1,1,cv::BORDER_CONSTANT,cv::Scalar(0));
+
+    auto ctor_v = FindContours(dst_img);
+    
+    if (ctor_v.size() != 1) return true;
+    
+    return false;
+  }
+
 
 }
 #endif
