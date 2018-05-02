@@ -6,6 +6,7 @@
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 
 #define PI 3.1415926
+#include <unordered_map>
 
 namespace larocv {
 
