@@ -26,9 +26,12 @@ namespace larocv {
 
     /// Method to get result
     std::vector<std::vector<unsigned int> > GetResult() const;
+    std::vector<std::vector<unsigned int> > GetResultAndScore(std::vector<float>& score_v) const; 
 
     /// Method to pass result
     void PassResult(std::vector<std::vector<unsigned int> >& result) const;
+    void PassResultAndScore(std::vector<std::vector<unsigned int> >& result, std::vector<float>& score_v) const;
+
 
   protected:
 
