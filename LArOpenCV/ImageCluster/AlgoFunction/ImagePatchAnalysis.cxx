@@ -881,8 +881,8 @@ namespace larocv {
     float min_x = std::min(pt1.x,pt2.x);
     float min_y = std::min(pt1.y,pt2.y);
 
-    float dx = std::abs(pt1.x - pt2.x)/2.0;
-    float dy = std::abs(pt1.y - pt2.y)/2.0;
+    float dx = std::abs(pt1.x - pt2.x)/2.0+1;
+    float dy = std::abs(pt1.y - pt2.y)/2.0+1;
 
     auto small_img = SmallImg(img,geo2d::Vector<float>(min_x+dx,min_y+dy),dx,dy);
     
@@ -911,7 +911,7 @@ namespace larocv {
     
     return false;
   }
-
+  
   bool Broken(const cv::Mat& img,
 	      geo2d::Vector<float> pt1,
 	      geo2d::Vector<float> pt2,
@@ -920,8 +920,8 @@ namespace larocv {
     float min_x = std::min(pt1.x,pt2.x);
     float min_y = std::min(pt1.y,pt2.y);
 
-    float dx = std::abs(pt1.x - pt2.x)/2.0;
-    float dy = std::abs(pt1.y - pt2.y)/2.0;
+    float dx = std::abs(pt1.x - pt2.x)/2.0+1;
+    float dy = std::abs(pt1.y - pt2.y)/2.0+1;
 
     auto small_img = SmallImg(img,geo2d::Vector<float>(min_x+dx,min_y+dy),dx,dy);
     
