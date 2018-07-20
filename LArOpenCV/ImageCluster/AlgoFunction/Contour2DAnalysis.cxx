@@ -604,17 +604,17 @@ namespace larocv {
     double dist2vtx = -1e9;
     for(size_t ctor_id=0; ctor_id < contour_v.size(); ++ctor_id){
       auto const& ctor = contour_v[ctor_id];
-      LAROCV_SDEBUG() << "ctor id: " << ctor_id << std::endl;
+      //LAROCV_SDEBUG() << "ctor id: " << ctor_id << std::endl;
       auto dist = cv::pointPolygonTest(ctor, pt, true);
-      LAROCV_SDEBUG() << "    dist: " << dist << std::endl;
+      //LAROCV_SDEBUG() << "    dist: " << dist << std::endl;
       if(dist < dist2vtx) continue;
       if(dist2vtx >= 0 && parent_ctor_size > ctor.size()) continue;
       parent_ctor_id = ctor_id;
       parent_ctor_size = ctor.size();
       dist2vtx = dist;
-      LAROCV_SDEBUG() << "    size: " << ctor.size() << std::endl;
+      //LAROCV_SDEBUG() << "    size: " << ctor.size() << std::endl;
     }
-    LAROCV_SINFO() << "Vertex @ " << pt << " belongs to super cluster id " << parent_ctor_id << std::endl;
+    //LAROCV_SINFO() << "Vertex @ " << pt << " belongs to super cluster id " << parent_ctor_id << std::endl;
     return parent_ctor_id;
   }  
 

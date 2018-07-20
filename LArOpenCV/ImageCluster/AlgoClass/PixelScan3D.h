@@ -89,7 +89,6 @@ namespace larocv {
     std::vector<data::Vertex3D>
       RegisterSpheres(const data::Vertex3D& vtx) const;
 
-
     const LArPlaneGeo& geo() const { return _geo; }
 
   private:
