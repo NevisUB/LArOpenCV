@@ -54,10 +54,6 @@ namespace larocv {
     }
     _time_comp_factor_v.at(meta.plane()) = meta.pixel_height();
     _wire_comp_factor_v.at(meta.plane()) = meta.pixel_width();
-    std::cout  << " Plane " << meta.plane()
-		   << " wire comp factor: " << _wire_comp_factor_v[meta.plane()]
-		   << " time comp factor: " << _time_comp_factor_v[meta.plane()]
-		   << std::endl;
     
     _origin_v.at(meta.plane()).x = meta.origin().x;
     _origin_v.at(meta.plane()).y = meta.origin().y;
