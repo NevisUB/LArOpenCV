@@ -24,10 +24,10 @@ OSNAME          = $(shell uname -s)
 HOST            = $(shell uname -n)
 OSNAMEMODE      = $(OSNAME)
 
-LDFLAGS += -L$(shell python-config --prefix)/lib/
+LDFLAGS += -L$(shell ${LAROPENCV_PYTHON}-config --prefix)/lib/
 LDFLAGS += $(shell basictool-config --libs)
 LDFLAGS += $(shell larlite-config --libs)
-LDFLAGS += $(shell python-config --ldflags)
+LDFLAGS += $(shell ${LAROPENCV_PYTHON}-config --ldflags)
 LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc
 LDFLAGS += -L$(LARLITE_LIBDIR)
 LDFLAGS += -lLArOpenCV_ImageClusterBase

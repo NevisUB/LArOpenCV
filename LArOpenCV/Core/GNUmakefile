@@ -13,8 +13,8 @@ OBJECTS = $(SOURCES:.cxx=.o)
 # include options for this package
 INCFLAGS  = -I.                       #Include itself
 INCFLAGS += $(shell larlite-config --includes)
-INCFLAGS += $(shell python-config --includes)
-INCFLAGS += -I$(shell python -c "import numpy; print numpy.get_include()")
+INCFLAGS += $(shell ${LAROPENCV_PYTHON}-config --includes)
+INCFLAGS += -I$(shell ${LAROPENCV_PYTHON} -c "from __future__ import print_function; import numpy; print(numpy.get_include())")
 INCFLAGS += -I$(LAROPENCV_BASEDIR)/LArOpenCV
 INCFLAGS += -I$(OPENCV_INCDIR)
 
@@ -24,8 +24,8 @@ HOST            = $(shell uname -n)
 OSNAMEMODE      = $(OSNAME)
 
 LDFLAGS += $(shell larlite-config --libs)
-LDFLAGS += -L$(shell python-config --prefix)/lib/
-LDFLAGS += $(shell python-config --ldflags)
+LDFLAGS += -L$(shell ${LAROPENCV_PYTHON}-config --prefix)/lib/
+LDFLAGS += $(shell ${LAROPENCV_PYTHON}-config --ldflags)
 LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_highgui -lopencv_imgcodecs
 
 # call kernel specific compiler setup
