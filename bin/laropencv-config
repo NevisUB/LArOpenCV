@@ -12,7 +12,8 @@ while test $# -gt 0; do
 	  out="-I${LAROPENCV_BASEDIR} "
 	  ;;
       --libs)
-	  out="-L${LARLITE_LIBDIR} -lLArOpenCV_Core -lLArOpenCV_ImageClusterAlgoClass -lLArOpenCV_ImageClusterAlgoFunction -lLArOpenCV_ImageClusterAlgoData -lLArOpenCV_ImageClusterBase"
+	  out="-L${LARLITE_LIBDIR} -lLArOpenCV_Core -lLArOpenCV_ImageClusterAlgoClass -lLArOpenCV_ImageClusterAlgoFunction "
+          out+="-lLArOpenCV_ImageClusterAlgoData -lLArOpenCV_ImageClusterBase -lLArOpenCV_ImageClusterAlgoModule"
 	  ;;
       --help)
 	  ### Print a help message
