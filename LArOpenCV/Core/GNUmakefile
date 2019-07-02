@@ -26,7 +26,7 @@ OSNAMEMODE      = $(OSNAME)
 LDFLAGS += $(shell larlite-config --libs)
 LDFLAGS += -L$(shell ${LAROPENCV_PYTHON}-config --prefix)/lib/
 LDFLAGS += $(shell ${LAROPENCV_PYTHON}-config --ldflags)
-LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_imgcodecs
+LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core
 
 # call kernel specific compiler setup
 include $(LARLITE_BASEDIR)/Makefile/Makefile.${OSNAME}

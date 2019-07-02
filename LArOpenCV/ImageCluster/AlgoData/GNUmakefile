@@ -22,7 +22,7 @@ OSNAMEMODE      = $(OSNAME)
 
 LDFLAGS += -L$(LARLITE_LIBDIR) -lLArOpenCV_Core -lLArOpenCV_ImageClusterBase -lLArOpenCV_ImageClusterAlgoFunction
 LDFLAGS += -L$(GEO2D_LIBDIR) -lGeo2D_Core
-LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_imgcodecs -lopencv_imgproc
+LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_imgproc
 
 # call kernel specific compiler setup
 include $(LARLITE_BASEDIR)/Makefile/Makefile.${OSNAME}

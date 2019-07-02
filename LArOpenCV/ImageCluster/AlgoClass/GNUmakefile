@@ -33,7 +33,7 @@ LDFLAGS += $(shell ${LAROPENCV_PYTHON}-config --ldflags)
 LDFLAGS += $(shell basictool-config --libs)
 LDFLAGS += -L$(LARLITE_LIBDIR) -lLArOpenCV_Core -lLArOpenCV_ImageClusterAlgoFunction -lLArOpenCV_ImageClusterAlgoData -lLArOpenCV_ImageClusterBase
 LDFLAGS += -L$(GEO2D_LIBDIR) -lGeo2D_Core -lGeo2D_PyUtil
-LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_imgcodecs -lopencv_imgproc
+LDFLAGS += -L$(OPENCV_LIBDIR) -lopencv_core -lopencv_imgproc
 
 # call kernel specific compiler setup
 include $(LARLITE_BASEDIR)/Makefile/Makefile.${OSNAME}
