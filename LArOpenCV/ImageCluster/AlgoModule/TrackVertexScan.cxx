@@ -53,7 +53,7 @@ namespace larocv {
       _vertex_seed_algo_id = this->ID(vtx_seed_algo_name);
 
       if(_vertex_seed_algo_id == kINVALID_ALGO_ID)
-	throw larbys("Count not find specified VertexSeedAlgo");
+				throw larbys("Count not find specified VertexSeedAlgo");
       
       has_input = true;
     }
@@ -96,6 +96,7 @@ namespace larocv {
       // Use the 3D vertices from shower scan
       //
       const auto& cand_vtx_v = AlgoData<data::Vertex3DArray>(_vertex_estimate_algo_id,0).as_vector();
+			std::cout << "Candidate Verts: " << cand_vtx_v.size() << std::endl;
       _VertexScan3D.RegisterRegions(cand_vtx_v);
       
     }
@@ -109,19 +110,19 @@ namespace larocv {
 		   
       for(size_t plane=0; plane<nplanes; ++plane) {
 
-	// Access AlgoData vertex seeds from previous algorithm
-	const auto& vertexseed2darray = AlgoData<data::VertexSeed2DArray>(_vertex_seed_algo_id,plane);
-	const auto& vertexseed2d_v = vertexseed2darray.as_vector();
+				// Access AlgoData vertex seeds from previous algorithm
+				const auto& vertexseed2darray = AlgoData<data::VertexSeed2DArray>(_vertex_seed_algo_id,plane);
+				const auto& vertexseed2d_v = vertexseed2darray.as_vector();
       
-	auto& seed_v = seed_vv[plane];
-	seed_v.reserve(vertexseed2d_v.size());
+				auto& seed_v = seed_vv[plane];
+				seed_v.reserve(vertexseed2d_v.size());
+	
+				// Insert a pointer to this seed into vector
+				for(const auto& vertexseed2d : vertexseed2d_v) 
+				  seed_v.push_back(&vertexseed2d);
 
-	// Insert a pointer to this seed into vector
-	for(const auto& vertexseed2d : vertexseed2d_v) 
-	  seed_v.push_back(&vertexseed2d);
-
-	LAROCV_DEBUG() << "Got " << seed_v.size() << " seed @ plane " << plane << std::endl;
-      }
+				LAROCV_DEBUG() << "Got " << seed_v.size() << " seed @ plane " << plane << std::endl;
+			}
 
       //
       // Compute pairwire 3D verticies with a generous time allowance
@@ -130,28 +131,29 @@ namespace larocv {
       std::vector<data::Vertex3D> cand_vtx_v;
     
       for(size_t plane0=0;plane0<nplanes;++plane0) {
-	const auto& seed0_v = seed_vv[plane0];
-	for(size_t plane1=plane0+1;plane1<nplanes;++plane1) {
-	  const auto& seed1_v = seed_vv[plane1];
+				const auto& seed0_v = seed_vv[plane0];
+				for(size_t plane1=plane0+1;plane1<nplanes;++plane1) {
+				  const auto& seed1_v = seed_vv[plane1];
 
-	  for(size_t seed0_id=0;seed0_id<seed0_v.size();++seed0_id) {
-	    const auto seed0 = seed0_v[seed0_id];
-	    for(size_t seed1_id=0;seed1_id<seed1_v.size();++seed1_id) {
-	      const auto seed1 = seed1_v[seed1_id];
+				  for(size_t seed0_id=0;seed0_id<seed0_v.size();++seed0_id) {
+				    const auto seed0 = seed0_v[seed0_id];
+				    for(size_t seed1_id=0;seed1_id<seed1_v.size();++seed1_id) {
+				      const auto seed1 = seed1_v[seed1_id];
 	    
-	      data::Vertex3D vtx;
-	      auto res = _geo.YZPoint(*seed0,plane0,*seed1,plane1,vtx);
+				      data::Vertex3D vtx;
+				      auto res = _geo.YZPoint(*seed0,plane0,*seed1,plane1,vtx);
 
-	      // could vertex be made?
-	      if(!res) continue;
-
-	      cand_vtx_v.emplace_back(std::move(vtx));
-	    } //seed1
-	  } //seed0
-	} //plane1
+				      // could vertex be made?
+				      if(!res) continue;
+	
+	  			    cand_vtx_v.emplace_back(std::move(vtx));
+				    } //seed1
+				  } //seed0
+				} //plane1
       } //plane0
       
-
+			std::cout << "We've got " << cand_vtx_v.size() << " vertices which pass the 2-planes comparison." << std::endl;
+			
       _VertexScan3D.RegisterRegions(cand_vtx_v);
     }
     else
@@ -165,7 +167,8 @@ namespace larocv {
     auto& vertex3darr = AlgoData<data::Vertex3DArray>(0);
     for(auto& vertex3d : vertex3d_v)
       vertex3darr.emplace_back(std::move(vertex3d));
-    
+   
+		std::cout << "Verts after 3d scan: " << vertex3d_v.size() << std::endl; 
   }
 }
 #endif

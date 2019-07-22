@@ -15,11 +15,8 @@ namespace larocv {
 
     _tick_offset_v.clear();
     _tick_offset_v.resize(_num_planes);
-    _tick_offset_v[0] = 0.;
-    _tick_offset_v[1] = 4.54;
-    _tick_offset_v[2] = 7.78;
-    //_tick_offset_v[1] = 0.;
-    //_tick_offset_v[2] = 0.;
+		
+		// Tick offset is changed in MCC9! Timing is lined up with the collection plane. Variables changed to configurables.
 
     Reset();
   }
@@ -41,8 +38,11 @@ namespace larocv {
     this->set_verbosity((msg::Level_t)(pset.get<unsigned short>("Verbosity",2)));
     _xplane_tick_resolution=pset.get<float>("XPlaneTickResolution",3);
     _trigger_tick=pset.get<float>("TriggerTick",3200);
+    _tick_offset_v[0] = pset.get<float>("TickOffset0",0.);
+		_tick_offset_v[1] = pset.get<float>("TickOffset1",4.54);
+		_tick_offset_v[2] = pset.get<float>("TickOffset2",7.78);
     
-    Reset();
+		Reset();
   }
 
   
@@ -160,11 +160,11 @@ namespace larocv {
       auto& vtx2d = result.vtx2d_v[plane].pt;
       double wire = kINVALID_DOUBLE;
       try {
-	wire = larocv::WireCoordinate(result.y, result.z, plane);
+				wire = larocv::WireCoordinate(result.y, result.z, plane);
       } catch(::larutil::LArUtilException& lare) {
-	LAROCV_WARNING() << lare.what() << "... bad wire coordinate requested "
-			 << "@ ("<<result.y<<","<<result.z<<") plane " << plane << std::endl;
-	return false;
+				LAROCV_WARNING() << lare.what() << "... bad wire coordinate requested "
+						 << "@ ("<<result.y<<","<<result.z<<") plane " << plane << std::endl;
+				return false;
       }
       vtx2d.y = wire2row(wire,plane);
       vtx2d.x = (pt0.x + pt1.x)/2.;

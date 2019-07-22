@@ -53,6 +53,8 @@ namespace larocv {
     DefectBreaker _DefectBreaker;
     PCACrossing   _PCACrossing;
     SimpleKink    _SimpleKink;
+
+		int _dead_wire_adc;
   };
 
   

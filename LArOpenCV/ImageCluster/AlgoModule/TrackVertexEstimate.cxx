@@ -31,19 +31,22 @@ namespace larocv {
   
   void TrackVertexEstimate::_Process_()
   {
-    // Read the track images (configured in cfg file)
+    // Read the track images (configured in cfg file
     auto img_v = ImageArray();
     auto const& meta_v = MetaArray();
 
+		//   Run trackvertexseeds algomodule and get a full list of 2d vertex seeds. These are all done per plane. 
+		// As far as it seems, nothing leaves this loop? Ah, not quite. The PCA scan is done within the AnalyzePlane function 
+		// in TrackVertexScan2D.cxx. That fills up an array elsewhere with all the 2d seeds.
+		//
     for(size_t img_idx=0; img_idx<img_v.size(); ++img_idx) {
-
       auto& img = img_v[img_idx];
       auto const& meta = meta_v.at(img_idx);
       // Read in VertexSeeds
       const auto& vertex_seeds_v = AlgoData<data::VertexSeed2DArray>(_vertex_seed_algo_id,meta.plane());
       std::vector<geo2d::Vector<float> > seeds_v;    
       for(const auto& seed : vertex_seeds_v.as_vector())
-	seeds_v.emplace_back(seed);
+				seeds_v.emplace_back(seed);
       
       LAROCV_DEBUG() << "Scanning " << seeds_v.size() << " seeds on plane " << meta.plane() << std::endl;
 
@@ -55,6 +58,9 @@ namespace larocv {
       _algo.AnalyzePlane(img,meta,seeds_v);
     }
 
+		
+
+
     std::vector<data::Vertex3D> vtx3d_v;
     std::vector<std::vector<data::CircleVertex> > vtx2d_vv;
     
@@ -65,6 +71,7 @@ namespace larocv {
     
     auto& vertex3d_v  = AlgoData<data::Vertex3DArray>(0);
     
+		// build a 3d vertex from each 2d vertex in time
     for(uint idx=0;idx<vtx3d_v.size();++idx) {
       auto& vtx2d_v=vtx2d_vv[idx];
       auto& vtx3d=vtx3d_v[idx];
@@ -72,6 +79,7 @@ namespace larocv {
       vtx3d.cvtx2d_v=std::move(vtx2d_v);
       vertex3d_v.emplace_back(std::move(vtx3d));
     }
+		std::cout << "Time Scan: " << vtx3d_v.size() << std::endl;
     
     //
     //1) Find 2D Vertices from wire scanning
@@ -87,6 +95,7 @@ namespace larocv {
       vtx3d.cvtx2d_v=std::move(vtx2d_v);
       vertex3d_v.emplace_back(std::move(vtx3d));
     }
+		std::cout << "Wire Scan: " << vtx3d_v.size() << std::endl;
 
     LAROCV_DEBUG() << "Inferred " << vertex3d_v.as_vector().size() << std::endl;
     // Print out the vertex index for fun(I lied, for debugging).

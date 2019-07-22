@@ -70,11 +70,11 @@ namespace larocv {
       auto const& line1 = line_v[i];
       
       for(size_t j=i+1; j<line_v.size(); ++j) {
-	auto const& line2 = line_v[j];
+				auto const& line2 = line_v[j];
 	
-	auto ipoint = geo2d::IntersectionPoint(line1,line2);
+				auto ipoint = geo2d::IntersectionPoint(line1,line2);
 
-	intersections_v.emplace_back(std::move(ipoint));
+				intersections_v.emplace_back(std::move(ipoint));
 	
       }
     }
@@ -118,13 +118,14 @@ namespace larocv {
     
     std::vector<geo2d::Vector<float> > pts_tmp_v;
     pts_tmp_v.reserve(pts_v.size());
-    
+
     auto thresh_img = img.clone();
     if (_filter_px_val_thresh > 0)
       cv::threshold(img,thresh_img,_filter_px_val_thresh,255,CV_THRESH_BINARY);
     
     //get the nonzero pixel values
     GEO2D_Contour_t nonzero_v;
+
     findNonZero(thresh_img,nonzero_v);
     
     LAROCV_DEBUG() << "Found " << nonzero_v.size() << " non zero points" << std::endl;
@@ -132,12 +133,12 @@ namespace larocv {
     for(const auto& ipoint : pts_v ) {
       LAROCV_DEBUG() << "Examining pt: " << ipoint << std::endl;
       for(const auto& pt : nonzero_v) {
-	geo2d::Vector<float> pt_f = pt;
-	if ( geo2d::dist(pt_f,ipoint) < _dist_to_pixel  ) {
-	  LAROCV_DEBUG() << "Matched with " << pt_f << std::endl;
-	  pts_tmp_v.emplace_back(std::move(ipoint));
-	  break;
-	} 
+				geo2d::Vector<float> pt_f = pt;
+				if ( geo2d::dist(pt_f,ipoint) < _dist_to_pixel  ) {
+				  LAROCV_DEBUG() << "Matched with " << pt_f << std::endl;
+				  pts_tmp_v.emplace_back(std::move(ipoint));
+				  break;
+				} 
       }
     }
     
