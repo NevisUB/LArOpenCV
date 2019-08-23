@@ -8,6 +8,7 @@
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 #include <array>
+#include <opencv2/imgproc.hpp>
 
 namespace larocv {
 

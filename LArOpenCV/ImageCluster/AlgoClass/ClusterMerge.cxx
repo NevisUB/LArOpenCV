@@ -8,7 +8,7 @@
 #include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
 #ifndef __CLING__
 #ifndef __CINT__
-#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
 #endif
 #endif
 #include <opencv2/core/core.hpp>

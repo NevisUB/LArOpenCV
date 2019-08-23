@@ -7,6 +7,7 @@
 #include "LArOpenCV/ImageCluster/AlgoData/Vertex.h"
 #include "LArOpenCV/ImageCluster/AlgoData/InfoCollection.h"
 #include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
+#include <opencv2/imgproc.hpp>
 
 namespace larocv {
 

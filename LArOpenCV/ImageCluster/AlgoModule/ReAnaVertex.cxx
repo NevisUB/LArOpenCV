@@ -1,6 +1,8 @@
 #ifndef __REANAVERTEX_CXX__
 #define __REANAVERTEX_CXX__
 
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
 #include "ReAnaVertex.h"
 #include "LArOpenCV/ImageCluster/AlgoData/ParticleCluster.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"

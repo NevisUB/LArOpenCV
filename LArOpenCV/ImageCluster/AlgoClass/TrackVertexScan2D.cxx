@@ -12,6 +12,7 @@
 #include <array>
 #include <map>
 #include <set>
+#include <opencv2/imgproc.hpp>
 
 namespace larocv{
 
