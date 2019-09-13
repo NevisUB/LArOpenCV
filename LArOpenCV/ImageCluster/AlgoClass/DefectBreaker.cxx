@@ -902,7 +902,7 @@ namespace larocv {
       }
       
       if(!broken) {
-	LAROCV_NORMAL() << "Registering un-breakable contour into an atomic contour list..." << std::endl;
+	LAROCV_INFO() << "Registering un-breakable contour into an atomic contour list..." << std::endl;
 	auto& atomic = cluscomp.make_atom();
 	for(auto const& defect_id : a_ctor.associated_defects())
 	  atomic.associate(defect_id);
@@ -1003,7 +1003,7 @@ namespace larocv {
       if(deprecate_ctor_v[target_ctor_idx]) continue;
       if(candidate_ctor.size() <= 2) continue;
       
-      LAROCV_NORMAL() << "Putting defect ctor of size : " << candidate_ctor.size() << " into atomic_atomic_ctor_v "<< std::endl;
+      LAROCV_INFO() << "Putting defect ctor of size : " << candidate_ctor.size() << " into atomic_atomic_ctor_v "<< std::endl;
       auto& atomic = cluscomp.make_atom();
       for(auto const& defect_id : candidate_ctor.associated_defects())
 	atomic.associate(defect_id);
