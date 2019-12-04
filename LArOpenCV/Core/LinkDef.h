@@ -18,9 +18,9 @@
 #pragma link C++ class larocv::Point2D+;
 #pragma link C++ class larocv::Point2DArray+;
 #pragma link C++ class larocv::ImageMeta+;
-#pragma link C++ class larocv::Image2D+;
+//#pragma link C++ class larocv::Image2D+;
 #pragma link C++ class larocv::ImageManager+;
-#pragma link C++ class larocv::ROI+;
+//#pragma link C++ class larocv::ROI+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
 
