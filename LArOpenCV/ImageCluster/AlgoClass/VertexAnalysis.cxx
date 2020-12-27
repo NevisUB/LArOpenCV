@@ -1,6 +1,7 @@
 #ifndef __VERTEXANALYSIS_CXX__
 #define __VERTEXANALYSIS_CXX__
 
+#include <set>
 #include "VertexAnalysis.h"
 #ifndef __CLING__
 #ifndef __CINT__

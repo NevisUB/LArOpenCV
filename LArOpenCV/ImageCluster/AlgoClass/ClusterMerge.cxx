@@ -1,6 +1,7 @@
 #ifndef __CLUSTERMERGE_CXX__
 #define __CLUSTERMERGE_CXX__
 
+#include <set>
 #include "ClusterMerge.h"
 #include "LArOpenCV/Core/larbys.h"
 #include "Geo2D/Core/Vector.h"
