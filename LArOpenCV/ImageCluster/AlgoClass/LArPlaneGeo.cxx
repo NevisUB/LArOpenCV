@@ -2,7 +2,7 @@
 #define __LARPLANEGEO_CXX__
 
 #include "LArOpenCV/ImageCluster/Base/ImageClusterFMWKInterface.h"
-#include "LArUtil/LArUtilException.h"
+#include "larlite/LArUtil/LArUtilException.h"
 #include "LArPlaneGeo.h"
 
 namespace larocv {

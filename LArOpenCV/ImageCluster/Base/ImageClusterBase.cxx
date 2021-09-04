@@ -92,10 +92,10 @@ namespace larocv {
   }
 
   bool ImageClusterBase::NextEvent() {
-    if (_run    == _dataman_ptr->_run    and
-	_subrun == _dataman_ptr->_subrun and
-	_event  == _dataman_ptr->_event  and
-	_entry  == _dataman_ptr->_entry) return false;
+    if (_run    == (int)_dataman_ptr->_run    and
+	_subrun == (int)_dataman_ptr->_subrun and
+	_event  == (int)_dataman_ptr->_event  and
+	_entry  == (int)_dataman_ptr->_entry) return false;
 
     _run    = _dataman_ptr->_run;
     _subrun = _dataman_ptr->_subrun;

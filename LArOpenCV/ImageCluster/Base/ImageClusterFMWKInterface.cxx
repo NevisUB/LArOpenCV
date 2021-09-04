@@ -2,11 +2,12 @@
 #define IMAGECLUSTERFMWKINTERFACE_CXX
 
 #include "ImageClusterFMWKInterface.h"
-#include "LArUtil/Geometry.h"
-#include "LArUtil/GeometryHelper.h"
-#include "LArUtil/LArProperties.h"
-#include "LArUtil/TimeService.h"
+#include "larlite/LArUtil/Geometry.h"
+#include "larlite/LArUtil/GeometryHelper.h"
+#include "larlite/LArUtil/LArProperties.h"
+#include "larlite/LArUtil/TimeService.h"
 #include "LArOpenCV/Core/larbys.h"
+
 namespace larocv {
 
   Config_t CreatePSetFromFile(std::string fname, std::string cfg_name)

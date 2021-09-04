@@ -10,7 +10,7 @@
 #include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
 #include "LArOpenCV/ImageCluster/AlgoData/InfoCollection.h"
 #include "LArOpenCV/ImageCluster/AlgoFunction/VectorAnalysis.h"
-#include "LArUtil/LArProperties.h"
+#include "larlite/LArUtil/LArProperties.h"
 #include <cassert>
 
 namespace larocv {

@@ -5,8 +5,8 @@
 //#define USE_LARCV_PSET 1
 
 #ifdef USE_LARLITE_PSET
-#include "BasicTool/FhiclLite/PSet.h"
-#include "BasicTool/FhiclLite/FhiclLiteUtilFunc.h"
+#include "larlite/BasicTool/FhiclLite/PSet.h"
+#include "larlite/BasicTool/FhiclLite/FhiclLiteUtilFunc.h"
 namespace larocv{
   typedef ::fcllite::PSet Config_t;
   Config_t CreatePSetFromFile(std::string fname, std::string cfg_name="noname");

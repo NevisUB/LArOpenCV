@@ -14,8 +14,8 @@
 #include "LArOpenCV/ImageCluster/Base/BaseUtil.h"
 
 #include "LArOpenCV/ImageCluster/Base/ImageClusterTypes.h"
-#include "LArUtil/Geometry.h"
-#include "LArUtil/LArProperties.h"
+#include "larlite/LArUtil/Geometry.h"
+#include "larlite/LArUtil/LArProperties.h"
 
 using larocv::larbys;
 
