@@ -121,7 +121,7 @@ namespace larocv {
     
     auto thresh_img = img.clone();
     if (_filter_px_val_thresh > 0)
-      cv::threshold(img,thresh_img,_filter_px_val_thresh,255,CV_THRESH_BINARY);
+      cv::threshold(img,thresh_img,_filter_px_val_thresh,255,cv::THRESH_BINARY);
     
     //get the nonzero pixel values
     GEO2D_Contour_t nonzero_v;

@@ -246,7 +246,7 @@ namespace larocv {
       }
 
       LAROCV_SDEBUG() << "Calculating PCA for " << vertex_mat.rows << " 3D points" << std::endl;
-      cv::PCA pca_ana(vertex_mat, cv::Mat(), CV_PCA_DATA_AS_ROW, 0);
+      cv::PCA pca_ana(vertex_mat, cv::Mat(), cv::PCA::DATA_AS_ROW, 0);
 
       std::array<float,3> mean_v;
       std::array<float,3> eigen_v;

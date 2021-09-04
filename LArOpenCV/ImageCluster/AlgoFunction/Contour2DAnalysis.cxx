@@ -126,7 +126,7 @@ namespace larocv {
     static std::vector<cv::Vec4i> cv_hierarchy_v;
     cv_hierarchy_v.clear();
 
-    cv::findContours(img_copy,result_v,cv_hierarchy_v,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
+    cv::findContours(img_copy,result_v,cv_hierarchy_v,cv::RETR_EXTERNAL,cv::CHAIN_APPROX_SIMPLE);
     
     return result_v;
   }
@@ -496,7 +496,7 @@ namespace larocv {
 				  float EPS) {
 
     if (EPS<=0) throw larbys("Function called w/o EPS specified. Consider calling CalcPCA(...)!");
-    cv::PCA pca_ana(row_mat, cv::Mat(), CV_PCA_DATA_AS_ROW,0);
+    cv::PCA pca_ana(row_mat, cv::Mat(), cv::PCA::DATA_AS_ROW,0);
     
     auto meanx=pca_ana.mean.at<float>(0,0);
     auto meany=pca_ana.mean.at<float>(0,1);

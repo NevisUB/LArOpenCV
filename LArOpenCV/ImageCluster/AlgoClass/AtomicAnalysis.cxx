@@ -442,7 +442,7 @@ namespace larocv {
 
   void AtomicAnalysis::RefineAtomicEndPoint(const cv::Mat& img, data::AtomicContour& atom) const {
     cv::Mat thresh_img;
-    ::cv::threshold(img, thresh_img, _pi_threshold, 1, CV_THRESH_BINARY);
+    ::cv::threshold(img, thresh_img, _pi_threshold, 1, cv::THRESH_BINARY);
     std::vector<geo2d::Vector<int> > nonzero_pts;
     cv::findNonZero(thresh_img, nonzero_pts);
     double min_dist=1e20;

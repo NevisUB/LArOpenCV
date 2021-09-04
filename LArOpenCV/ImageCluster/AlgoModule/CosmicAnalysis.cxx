@@ -346,9 +346,9 @@ namespace larocv {
 	  if (ctor1.empty()) continue;
 	  if (ctor2.empty()) continue;
 
-	  auto shape_match_I1 = cv::matchShapes(ctor1,ctor2,CV_CONTOURS_MATCH_I1,0.0);
-	  auto shape_match_I2 = cv::matchShapes(ctor1,ctor2,CV_CONTOURS_MATCH_I2,0.0);
-	  auto shape_match_I3 = cv::matchShapes(ctor1,ctor2,CV_CONTOURS_MATCH_I3,0.0);
+	  auto shape_match_I1 = cv::matchShapes(ctor1,ctor2,cv::CONTOURS_MATCH_I1,0.0);
+	  auto shape_match_I2 = cv::matchShapes(ctor1,ctor2,cv::CONTOURS_MATCH_I2,0.0);
+	  auto shape_match_I3 = cv::matchShapes(ctor1,ctor2,cv::CONTOURS_MATCH_I3,0.0);
 
 	  auto total_shape_match = shape_match_I1 + shape_match_I2 + shape_match_I3;
 	  LAROCV_DEBUG() << "total_shape_match : " << total_shape_match << std::endl;

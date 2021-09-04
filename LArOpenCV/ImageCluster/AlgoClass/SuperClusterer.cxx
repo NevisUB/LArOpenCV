@@ -75,7 +75,7 @@ namespace larocv {
 
     super_cluster_v.clear();
     std::vector<::cv::Vec4i> cv_hierarchy_v;
-    ::cv::findContours(blur_img, super_cluster_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    ::cv::findContours(blur_img, super_cluster_v, cv_hierarchy_v, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
     LAROCV_INFO() << "Created " << super_cluster_v.size()
 		  << " super-set contours from image (rows,cols) = (" << blur_img.rows << "," << blur_img.cols << ")" << std::endl;
     if(this->logger().level() == msg::kDEBUG) {

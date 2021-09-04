@@ -313,13 +313,13 @@ namespace larocv{
       
       auto small_img1 = ::cv::Mat(polarimg,box1);
       ::cv::Mat thresh_small_img1;
-      ::cv::threshold(small_img1,thresh_small_img1,_pi_threshold,1,CV_THRESH_BINARY);
+      ::cv::threshold(small_img1,thresh_small_img1,_pi_threshold,1,cv::THRESH_BINARY);
       geo2d::VectorArray<int> points1;
       findNonZero(thresh_small_img1, points1);
 
       auto small_img2 = ::cv::Mat(polarimg,box2);
       ::cv::Mat thresh_small_img2;
-      ::cv::threshold(small_img2,thresh_small_img2,_pi_threshold,1,CV_THRESH_BINARY);
+      ::cv::threshold(small_img2,thresh_small_img2,_pi_threshold,1,cv::THRESH_BINARY);
       geo2d::VectorArray<int> points2;
       findNonZero(thresh_small_img2, points2);
 
@@ -344,13 +344,13 @@ namespace larocv{
 
       auto small_img1 = ::cv::Mat(polarimg,box1);
       ::cv::Mat thresh_small_img1;
-      ::cv::threshold(small_img1,thresh_small_img1,_pi_threshold,1,CV_THRESH_BINARY);
+      ::cv::threshold(small_img1,thresh_small_img1,_pi_threshold,1,cv::THRESH_BINARY);
       geo2d::VectorArray<int> points1;
       findNonZero(thresh_small_img1, points1);
 
       auto small_img2 = ::cv::Mat(polarimg,box2);
       ::cv::Mat thresh_small_img2;
-      ::cv::threshold(small_img2,thresh_small_img2,_pi_threshold,1,CV_THRESH_BINARY);
+      ::cv::threshold(small_img2,thresh_small_img2,_pi_threshold,1,cv::THRESH_BINARY);
       geo2d::VectorArray<int> points2;
       findNonZero(thresh_small_img2, points2);
 
@@ -374,7 +374,7 @@ namespace larocv{
 						     angle_width * yfactor)
 				 );
       ::cv::Mat thresh_small_img;
-      ::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,CV_THRESH_BINARY);
+      ::cv::threshold(small_img,thresh_small_img,_pi_threshold,1,cv::THRESH_BINARY);
       geo2d::VectorArray<int> points;
       findNonZero(thresh_small_img, points);
       for (unsigned i = 0; i < points.size(); ++i)
@@ -395,11 +395,11 @@ namespace larocv{
     // Threshold image initializer
     cv::Mat thresh_img;
     // Set all pixel values = 1 if above _pi_threshold value
-    ::cv::threshold(img,thresh_img,_pi_threshold,1,CV_THRESH_BINARY);
+    ::cv::threshold(img,thresh_img,_pi_threshold,1,cv::THRESH_BINARY);
     // Find contours
     GEO2D_ContourArray_t ctor_v;
     std::vector<::cv::Vec4i> cv_hierarchy_v;
-    ::cv::findContours(thresh_img, ctor_v, cv_hierarchy_v, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    ::cv::findContours(thresh_img, ctor_v, cv_hierarchy_v, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
     // Select too-small contours
     GEO2D_ContourArray_t res_v;
     res_v.reserve(ctor_v.size());
