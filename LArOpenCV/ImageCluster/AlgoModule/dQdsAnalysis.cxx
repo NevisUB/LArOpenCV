@@ -486,12 +486,12 @@ namespace larocv {
 	    tot_q +=q;
 	  }
 	  
-	  if (this_info2d.ptype == data::ParticleType_t::kTrack){
+	  if (this_info2d.ptype == data::ParticleCluster::ParticleType_t::kTrack){
 	    _trackp_totq = tot_q;
 	    _trackp_cosz = cosz;
 	    _trackp_dedx = converted_dedx;
 	  }
-	  if (this_info2d.ptype == data::ParticleType_t::kShower){
+	  if (this_info2d.ptype == data::ParticleCluster::ParticleType_t::kShower){
 	    _showerp_totq = tot_q;
 	    _showerp_cosz = cosz;
 	    _showerp_dedx = converted_dedx;
@@ -762,11 +762,11 @@ namespace larocv {
 	    }
 	  }
 	  
-	  if (this_info2d.ptype == data::ParticleType_t::kTrack){
+	  if (this_info2d.ptype == data::ParticleCluster::ParticleType_t::kTrack){
 	    _trackp_dqds_v.at(plane)  = remove_mean_dqds;//Correct3D(par._dqds_mean, theta, phi);
 	    _trackp_dqdx_3dc_v.at(plane)  = mean_dqds_3dc;//Correct3D(par._dqds_mean, theta, phi);
 	  }
-	  if (this_info2d.ptype == data::ParticleType_t::kShower){
+	  if (this_info2d.ptype == data::ParticleCluster::ParticleType_t::kShower){
 	    _showerp_dqds_v.at(plane) = remove_mean_dqds;//Correct3D(par._dqds_mean, theta, phi);
 	    _showerp_dqdx_3dc_v.at(plane) = mean_dqds_3dc;//Correct3D(par._dqds_mean, theta, phi);
 	  }

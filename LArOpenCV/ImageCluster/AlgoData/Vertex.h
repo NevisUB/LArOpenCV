@@ -31,14 +31,16 @@ namespace larocv {
       float score;
     };
 
-    enum class PointPCAType_t : unsigned
-    { kUnknown, kTrack, kShower };
     /*
       \class PointPCA
       @brief Represent a line (actually not PCA...) approximated using PCA at a particular point
     */
     class PointPCA {
     public:
+
+      enum PointPCAType_t : unsigned
+      { kUnknown, kTrack, kShower };
+
       PointPCA(){}      
       PointPCA(const geo2d::Vector<float>& in_pt,
 	       const geo2d::Line<float>& in_line)
@@ -48,8 +50,6 @@ namespace larocv {
       geo2d::Line<float>   line; ///< long PCA axis of the neighboring pixels
     };
 
-    enum class CircleVertexType_t : unsigned
-    { kUnknown, kTrack, kShower, kBoth };
     /**
        \class CircleVertex
        @brief Vertex estimated by Refine2DVertex and its family (carries extra information about vertex)
@@ -59,6 +59,9 @@ namespace larocv {
       CircleVertex() { Clear(); }
       ~CircleVertex() {}
       
+      enum CircleVertexType_t : unsigned
+      { kUnknown, kTrack, kShower, kBoth };
+
       // Attribute variables
       geo2d::Vector<float> center;        ///< 2D vertex point
       geo2d::Vector<float> error;         ///< 2D vertex point error
@@ -91,9 +94,6 @@ namespace larocv {
     };
 
 
-    enum class VertexType_t : unsigned 
-    { kUnknown, kTime, kWire, kTrack, kShower, kEndOfTrack, kEdge };
-    
     /**
        \class Vertex3D
        @brief A simple 3D vertex class with a colleciton of 2D projections
@@ -103,9 +103,13 @@ namespace larocv {
       Vertex3D()  { Clear(); }
       ~Vertex3D() {}
       
+      enum VertexType_t : unsigned 
+      { kUnknown, kTime, kWire, kTrack, kShower, kEndOfTrack, kEdge };
+
       /// attribute clear method
-      void _Clear_()
-      { vtx2d_v.clear(); cvtx2d_v.clear(); x = y = z = kINVALID_DOUBLE; num_planes=0; type=VertexType_t::kUnknown;}
+      void _Clear_();
+      //{ vtx2d_v.clear(); cvtx2d_v.clear(); x = y = z = kINVALID_DOUBLE; num_planes=0; type=Vertex3D::VertexType_t::kUnknown;}
+
       /// distance calculator
       double dist(const Vertex3D& pt) const;
       /// Plane-wise 2D vertex point

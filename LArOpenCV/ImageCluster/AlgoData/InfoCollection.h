@@ -25,7 +25,7 @@ namespace larocv {
 
       void _Clear_();
 
-      ParticleType_t ptype;
+      ParticleCluster::ParticleType_t ptype;
       
       int   nplanes;
       float length;

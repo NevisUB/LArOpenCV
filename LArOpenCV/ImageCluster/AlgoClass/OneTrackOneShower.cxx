@@ -275,7 +275,7 @@ namespace larocv {
       vtx3d.z = cand_vtx.z;
       vtx3d.vtx2d_v = Seed2Vertex(cand_vtx.vtx2d_v);
       vtx3d.cvtx2d_v = cvtx_v;
-      vtx3d.type = data::VertexType_t::kShower;
+      vtx3d.type = data::Vertex3D::VertexType_t::kShower;
       res_vtx3d_v.emplace_back(std::move(vtx3d));
 
     } // end vertex

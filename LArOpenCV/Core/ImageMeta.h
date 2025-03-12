@@ -28,7 +28,7 @@
 
 namespace larocv {
 
-  class Image2D;
+  //class Image2D;
   /**
      \class ImageMeta
      A simple class to store image's meta data including\n
@@ -42,7 +42,7 @@ namespace larocv {
   */
   class ImageMeta{
 
-    friend class Image2D;
+    //friend class Image2D;
 
   public:
     

@@ -65,18 +65,18 @@ namespace larocv {
     auto& vertex_data = AlgoData<data::Vertex3DArray>(0);
     
     std::vector<const data::Vertex3D*> vertex_v;
-    std::vector<data::VertexType_t> vertex_type_v;
+    std::vector<data::Vertex3D::VertexType_t> vertex_type_v;
       
     if (_shower_vertex_algo_id!=kINVALID_ALGO_ID) {
       const auto& shower_vertex_data = AlgoData<data::Vertex3DArray>(_shower_vertex_algo_id,0);
       for(const auto& vtx : shower_vertex_data.as_vector())
-	{ vertex_v.push_back(&vtx); vertex_type_v.push_back(data::VertexType_t::kShower); }
+	{ vertex_v.push_back(&vtx); vertex_type_v.push_back(data::Vertex3D::VertexType_t::kShower); }
     }
 
     if (_track_vertex_algo_id!=kINVALID_ALGO_ID) {
       const auto& track_vertex_data  = AlgoData<data::Vertex3DArray>(_track_vertex_algo_id,0);
       for(const auto& vtx : track_vertex_data.as_vector())
-	{ vertex_v.push_back(&vtx); vertex_type_v.push_back(data::VertexType_t::kTrack); }
+	{ vertex_v.push_back(&vtx); vertex_type_v.push_back(data::Vertex3D::VertexType_t::kTrack); }
     }
 
     for(size_t vertex_id=0; vertex_id < vertex_v.size(); ++vertex_id) {
@@ -105,7 +105,7 @@ namespace larocv {
 	auto super_par_ass_id_v = ass_man.GetManyAss(vtx3d,super_par_data.ID());
 	for(auto super_par_id : super_par_ass_id_v) {
 	  auto super_par = super_par_data.as_vector().at(super_par_id);
-	  super_par.type = data::ParticleType_t::kUnknown;
+	  super_par.type = data::ParticleCluster::ParticleType_t::kUnknown;
 	  this_super_par_data.emplace_back(std::move(super_par));
 	  AssociateMany(vtx3d_copy,this_super_par_data.as_vector().back());
 	}
@@ -114,7 +114,7 @@ namespace larocv {
 	auto par_ass_id_v = ass_man.GetManyAss(vtx3d,par_data.ID());
 	for(auto par_id : par_ass_id_v) {
 	  auto par = par_data.as_vector().at(par_id);
-	  par.type = data::ParticleType_t::kUnknown;
+	  par.type = data::ParticleCluster::ParticleType_t::kUnknown;
 
 	  LAROCV_DEBUG() << "Inserting particle @ plane " << plane << " sz " << par._ctor.size() << std::endl;
 	  if(par._ctor.empty()) {

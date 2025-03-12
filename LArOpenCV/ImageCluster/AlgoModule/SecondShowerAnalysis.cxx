@@ -172,7 +172,7 @@ namespace larocv {
       LAROCV_DEBUG() << "@vtx3d=(" << _x << "," << _y << "," << _z << ")" << std::endl;
 
       // Scan on track like vertices?
-      if (vtx3d.type == data::VertexType_t::kTrack && _skip_track_alg) {
+      if (vtx3d.type == data::Vertex3D::VertexType_t::kTrack && _skip_track_alg) {
 	_tree->Fill();
 	continue;
       }
@@ -417,7 +417,7 @@ namespace larocv {
 	const auto info2d_id = ass_man.GetOneAss(par,info2d_data.ID());
 	const auto& info2d = info2d_data.as_vector().at(info2d_id);
 
-	if (info2d.ptype != larocv::data::ParticleType_t::kShower) continue;
+	if (info2d.ptype != larocv::data::ParticleCluster::ParticleType_t::kShower) continue;
 
 	LAROCV_DEBUG() << "shower par @id=" << par_idx << std::endl;
 	const auto info3d_id = ass_man.GetOneAss(par,info3d_data.ID());

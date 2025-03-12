@@ -68,7 +68,7 @@ namespace larocv {
     for(uint idx=0;idx<vtx3d_v.size();++idx) {
       auto& vtx2d_v=vtx2d_vv[idx];
       auto& vtx3d=vtx3d_v[idx];
-      vtx3d.type=data::VertexType_t::kTime;
+      vtx3d.type=data::Vertex3D::VertexType_t::kTime;
       vtx3d.cvtx2d_v=std::move(vtx2d_v);
       vertex3d_v.emplace_back(std::move(vtx3d));
     }
@@ -83,7 +83,7 @@ namespace larocv {
     for(uint idx=0;idx<vtx3d_v.size();++idx) {
       auto& vtx2d_v=vtx2d_vv[idx];
       auto& vtx3d=vtx3d_v[idx];
-      vtx3d.type=data::VertexType_t::kWire;
+      vtx3d.type=data::Vertex3D::VertexType_t::kWire;
       vtx3d.cvtx2d_v=std::move(vtx2d_v);
       vertex3d_v.emplace_back(std::move(vtx3d));
     }

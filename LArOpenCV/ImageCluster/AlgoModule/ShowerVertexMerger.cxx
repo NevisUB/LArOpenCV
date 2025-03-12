@@ -117,7 +117,7 @@ namespace larocv {
       LAROCV_DEBUG() << "Observed vertex of type " << (uint) shower_vtx.type << std::endl;
 
       // Handle end of track vertex first
-      if (shower_vtx.type==data::VertexType_t::kEndOfTrack) {
+      if (shower_vtx.type==data::Vertex3D::VertexType_t::kEndOfTrack) {
 	
 	// Get associated track vertex
 	auto track_vertex_ass_id = ass_man.GetOneAss(shower_vtx,track_vtx_data.ID());
@@ -215,7 +215,7 @@ namespace larocv {
 	  // Put in the shower cluster
 	  data::ParticleCluster shower_cluster;
 	  shower_cluster._ctor = std::move(merged_ctor);
-	  shower_cluster.type  = data::ParticleType_t::kShower;
+	  shower_cluster.type  = data::ParticleCluster::ParticleType_t::kShower;
 	  pars_v.emplace_back(std::move(shower_cluster));
 	  
 	  // Get the other associated track particles to this vertex
@@ -229,7 +229,7 @@ namespace larocv {
 	    
 	    const auto& track_cluster = track_vtx_par_data.as_vector()[other_track_particle_id];
 	    auto track_cluster_copy = track_cluster;
-	    track_cluster_copy.type  = data::ParticleType_t::kTrack;
+	    track_cluster_copy.type  = data::ParticleCluster::ParticleType_t::kTrack;
 	    pars_v.emplace_back(std::move(track_cluster_copy));
 	    
 	    auto track_comp_id = ass_man.GetOneAss(track_cluster,track_vtx_comp_data.ID());
@@ -248,7 +248,7 @@ namespace larocv {
 
 	// Make this track vertex a shower vertex
 	auto shower_vertex = track_vtx;
-	shower_vertex.type = data::VertexType_t::kEndOfTrack;
+	shower_vertex.type = data::Vertex3D::VertexType_t::kEndOfTrack;
 	vtx_data.emplace_back(std::move(shower_vertex));
 	AssociateOne(vtx_data.as_vector().back(),track_vtx);
 	
@@ -328,7 +328,7 @@ namespace larocv {
 	      if (super_to_shower_vv[super_id].empty()) continue;
 	      data::ParticleCluster shower_cluster;
 	      shower_cluster._ctor = super_ctor_v[super_id];
-	      shower_cluster.type  = data::ParticleType_t::kShower;
+	      shower_cluster.type  = data::ParticleCluster::ParticleType_t::kShower;
 	      par_data.emplace_back(std::move(shower_cluster));
 	      AssociateMany(vtx_data.as_vector().back(),par_data.as_vector().back());
 	      LAROCV_DEBUG() << "Associated shower vertex id " << vtx_data.as_vector().back().ID()
@@ -339,7 +339,7 @@ namespace larocv {
 	    // Decided not to merge, get the showers one by one and copy them into my algo data
 	    for(auto shower_par_ass_id : shower_particle_ass_id_v) {
 	      auto shower_cluster = shower_vtx_shower_par_data.as_vector()[shower_par_ass_id];
-	      shower_cluster.type = data::ParticleType_t::kShower;
+	      shower_cluster.type = data::ParticleCluster::ParticleType_t::kShower;
 	      par_data.emplace_back(std::move(shower_cluster));
 	      AssociateMany(vtx_data.as_vector().back(),par_data.as_vector().back());
 	      LAROCV_DEBUG() << "Associated shower vertex id " << vtx_data.as_vector().back().ID()
@@ -353,7 +353,7 @@ namespace larocv {
 	    const auto& track_cluster = shower_vtx_track_par_data.as_vector()[track_par_ass_id];
 	    auto track_cluster_copy   = track_cluster;
 
-	    track_cluster_copy.type   = data::ParticleType_t::kTrack;
+	    track_cluster_copy.type   = data::ParticleCluster::ParticleType_t::kTrack;
 	    par_data.emplace_back(std::move(track_cluster_copy));
 	    AssociateMany(vtx_data.as_vector().back(),par_data.as_vector().back());
 	    

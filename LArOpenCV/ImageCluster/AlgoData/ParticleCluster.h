@@ -15,9 +15,6 @@
 namespace larocv {
   namespace data {
     
-    enum class ParticleType_t : unsigned
-    { kUnknown=0, kTrack, kShower };
-    
     /**
        \class ParticleCluster
        @brief A cluster associated with a vertex and hence represents a particle
@@ -28,21 +25,26 @@ namespace larocv {
       ParticleCluster() : AlgoDataArrayElementBase()
       { Clear(); }
       ~ParticleCluster() {}
+
+      enum ParticleType_t : unsigned
+      { kUnknown=0, kTrack, kShower };
+    
       
-      void _Clear_() {
-	type=ParticleType_t::kUnknown;
-	_ctor.clear();
-	_vertex_dqds.clear();
-	_truncated_dqds.clear();
-	_angle_scan_end_point.x = -9999;
-	_angle_scan_end_point.y = -9999;
-	_atom_end_point.x = -9999;
-	_atom_end_point.y = -9999;
-	_atom.clear();
-	_supercluster_v.clear();
-      }
+      void _Clear_();
+      /* void _Clear_() { */
+      /* 	type=ParticleType_t::kUnknown; */
+      /* 	_ctor.clear(); */
+      /* 	_vertex_dqds.clear(); */
+      /* 	_truncated_dqds.clear(); */
+      /* 	_angle_scan_end_point.x = -9999; */
+      /* 	_angle_scan_end_point.y = -9999; */
+      /* 	_atom_end_point.x = -9999; */
+      /* 	_atom_end_point.y = -9999; */
+      /* 	_atom.clear(); */
+      /* 	_supercluster_v.clear(); */
+      /* } */
       
-      ParticleType_t type;    ///< particle type from enum
+      ParticleCluster::ParticleType_t type;    ///< particle type from enum
       GEO2D_Contour_t _ctor;  ///< contour to define a cluster
 
       //
@@ -85,9 +87,10 @@ namespace larocv {
       Particle() : AlgoDataArrayElementBase()
       { Clear(); }
       ~Particle() {}
-      void _Clear_() { type = ParticleType_t::kUnknown; _par_v.clear(); _par_v.resize(3);}
+      void _Clear_();
+      //{ type = ParticleType_t::kUnknown; _par_v.clear(); _par_v.resize(3);}
 
-      ParticleType_t type; //< type of particle
+      ParticleCluster::ParticleType_t type; //< type of particle
       
       std::vector<ParticleCluster> _par_v; ///< Particle cluster per plane, can be empty
       float score; ///< score

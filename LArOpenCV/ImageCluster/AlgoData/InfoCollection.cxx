@@ -9,7 +9,7 @@ namespace larocv {
       /// attribute clear method
     void Info2D::_Clear_() { 
       
-      ptype = ParticleType_t::kUnknown; 
+      ptype = ParticleCluster::ParticleType_t::kUnknown; 
     
       nplanes=kINVALID_INT;
 

@@ -515,12 +515,12 @@ namespace larocv {
 	if (track_frac >= shower_frac) {
 	  par_type = 1;
 	  par_frac = track_frac;
-	  info2d.ptype = data::ParticleType_t::kTrack;
+	  info2d.ptype = data::ParticleCluster::ParticleType_t::kTrack;
 	}
 	else {
 	  par_type = 2;
 	  par_frac = shower_frac;
-	  info2d.ptype = data::ParticleType_t::kShower;
+	  info2d.ptype = data::ParticleCluster::ParticleType_t::kShower;
 	}
 
 	info2d_arr.emplace_back(std::move(info2d));

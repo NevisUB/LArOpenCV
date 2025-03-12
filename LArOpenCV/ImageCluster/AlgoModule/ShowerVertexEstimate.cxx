@@ -94,7 +94,7 @@ namespace larocv {
       auto res_v = _OneTrackOneShower.ListShowerVertex(img_v,scan_seed_v.as_vector());
       LAROCV_DEBUG() << "and " << res_v.size() << " returned" << std::endl;
       for(auto res : res_v) {
-	res.type= data::VertexType_t::kShower;
+	res.type= data::Vertex3D::VertexType_t::kShower;
 
 	for(size_t plane=0; plane<3; ++plane) {
 	  auto& cvtx = res.cvtx2d_v.at(plane);

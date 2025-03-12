@@ -8,7 +8,7 @@
 namespace larocv {
 
   enum ParticleType_t {
-    kUnknown,
+    kUnknownParticleType,
     kPi0,
     kParticleTypeMax
   };
@@ -28,7 +28,7 @@ namespace larocv {
   /// A generic type for an "index of an array"
   typedef size_t Index_t;
   /// A unique identifier for a set of images
-  enum class ImageSetID_t {
+  enum ImageSetID_t {
     kImageSetWire,    ///< wire waveform image
     kImageSetTrack,   ///< track image
     kImageSetShower,  ///< shower image

@@ -10,6 +10,11 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ enum larocv::data::PointPCA::PointPCAType_t+;
+#pragma link C++ enum larocv::data::CircleVertex::CircleVertexType_t+;
+#pragma link C++ enum larocv::data::ParticleCluster::ParticleType_t+;
+#pragma link C++ enum larocv::data::Vertex3D::VertexType_t+;
+
 #pragma link C++ class larocv::data::Vertex2D+;
 #pragma link C++ class std::vector<larocv::data::Vertex2D>+;
 
@@ -81,11 +86,6 @@
 
 #pragma link C++ class larocv::data::CircleVertex+;
 #pragma link C++ class std::vector<larocv::data::CircleVertex>+;
-
-#pragma link C++ enum class larocv::data::PointPCAType_t+;
-#pragma link C++ enum class larocv::data::CircleVertexType_t+;
-#pragma link C++ enum class larocv::data::ParticleType_t+;
-#pragma link C++ enum class larocv::data::VertexType_t+;
 
 #pragma link C++ class larocv::data::AlgoDataArrayTemplate<larocv::data::Info2D>+;
 #pragma link C++ class larocv::data::AlgoDataArrayTemplate<larocv::data::Info3D>+;

@@ -9,6 +9,8 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ enum ChunkType_t;
+#pragma link C++ class larocv::PixelChunk+;
 
 #pragma link C++ class larocv::AtomicAnalysis+;
 #pragma link C++ class larocv::ClusterHIPMIP+;
@@ -19,7 +21,6 @@
 #pragma link C++ class larocv::OneTrackOneShower+;
 #pragma link C++ class larocv::PCACrossing+;
 #pragma link C++ class larocv::PiRange+;
-#pragma link C++ class larocv::PixelChunk+;
 #pragma link C++ class larocv::PixelScan3D+;
 #pragma link C++ class larocv::SimpleKink+;
 #pragma link C++ class larocv::SingleLinearTrack+;

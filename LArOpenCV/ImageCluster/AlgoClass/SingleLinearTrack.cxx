@@ -388,10 +388,10 @@ namespace larocv {
 			   << (cand22_ok ? 1 : 0) << ")"
 			   << std::endl;
 
-	    if (cand11_ok) cand11.type = data::VertexType_t::kEdge;
-	    if (cand12_ok) cand12.type = data::VertexType_t::kEdge;
-	    if (cand21_ok) cand21.type = data::VertexType_t::kEdge;
-	    if (cand22_ok) cand22.type = data::VertexType_t::kEdge;
+	    if (cand11_ok) cand11.type = data::Vertex3D::VertexType_t::kEdge;
+	    if (cand12_ok) cand12.type = data::Vertex3D::VertexType_t::kEdge;
+	    if (cand21_ok) cand21.type = data::Vertex3D::VertexType_t::kEdge;
+	    if (cand22_ok) cand22.type = data::Vertex3D::VertexType_t::kEdge;
 	    
 	    // Loop over other planes and find possible combination strack
 	    std::array<double,4> sum_min_dist_v;

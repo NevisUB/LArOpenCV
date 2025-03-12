@@ -96,7 +96,7 @@ namespace larocv {
       vertex_data.push_back(vtx3d);
       auto& vtx3d_copy = vertex_data.as_vector().back();
       
-      if (vtx3d.type==data::VertexType_t::kEndOfTrack) {
+      if (vtx3d.type==data::Vertex3D::VertexType_t::kEndOfTrack) {
 	// Get the association between track vtx and this id of this shower at end of track 
 	auto ass_vtx_id = ass_man.GetOneAss(vtx3d,track_vertex_data.ID());
 	if (ass_vtx_id==kINVALID_SIZE) {
@@ -130,7 +130,7 @@ namespace larocv {
 	  //1) Merger shower ctors and update the associations
 	  //
 	  
-	  if (par.type==data::ParticleType_t::kShower) {
+	  if (par.type==data::ParticleCluster::ParticleType_t::kShower) {
 	    auto merged_par = par;
 	    if (_merge) {
 
@@ -166,7 +166,7 @@ namespace larocv {
 	  // 2) If a track ctor, update the associations.
 	  //
 	  
-	  else if (par.type==data::ParticleType_t::kTrack) {
+	  else if (par.type==data::ParticleCluster::ParticleType_t::kTrack) {
 	    par_data.push_back(par);
 	    auto track_comp_id = ass_man.GetOneAss(par,shower_comp_data.ID());
 	    if (track_comp_id==kINVALID_SIZE) throw larbys("Invalid comp id requested");

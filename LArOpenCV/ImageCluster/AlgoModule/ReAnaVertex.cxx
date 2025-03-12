@@ -89,7 +89,7 @@ namespace larocv {
 	  LAROCV_DEBUG() << "... inserting sz " << ctor.size() << std::endl;
 	  data::ParticleCluster par;
 	  par._ctor = std::move(ctor);
-	  par.type  = data::ParticleType_t::kUnknown;
+	  par.type  = data::ParticleCluster::ParticleType_t::kUnknown;
 	  par_data.emplace_back(std::move(par));
 	  AssociateMany(vtx3d,par_data.as_vector().back());
 	} // end particle

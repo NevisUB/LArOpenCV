@@ -35,6 +35,8 @@ namespace larocv {
 
     enum Level_t { kDEBUG, kINFO, kNORMAL, kWARNING, kERROR, kCRITICAL, kMSG_TYPE_MAX };
 
+#ifndef __CINT__
+#ifndef __CLING__
     const std::string kStringPrefix[kMSG_TYPE_MAX] =
       {
 	"     \033[94m[DEBUG]\033[00m ",  ///< kDEBUG message prefix
@@ -45,6 +47,8 @@ namespace larocv {
 	"  \033[5;1;33;41m[CRITICAL]\033[00m "  ///< kCRITICAL message prefix
       };
     ///< Prefix of message
+#endif
+#endif
   }
   
 }

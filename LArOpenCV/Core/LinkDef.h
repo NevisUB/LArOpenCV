@@ -9,13 +9,16 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ namespace larocv+;
+#pragma link C++ namespace larocv;
 #pragma link C++ namespace larocv::msg;
+#pragma link C++ struct larocv::Point2D+;
+#pragma link C++ enum larocv::msg::Level_t;
+
 #pragma link C++ class larocv::larbys+;
 #pragma link C++ class larocv::logger+;
 #pragma link C++ class std::map<std::string,larocv::logger>+;
 #pragma link C++ class larocv::laropencv_base+;
-#pragma link C++ class larocv::Point2D+;
+
 #pragma link C++ class larocv::Point2DArray+;
 #pragma link C++ class larocv::ImageMeta+;
 //#pragma link C++ class larocv::Image2D+;

@@ -31,6 +31,16 @@ namespace larocv {
     float CircleVertex::mean_dtheta() const
     { float res=0; for(auto const& d : dtheta_v) res += d; return (res / (float) dtheta_v.size()) ; }
 
+    void Vertex3D::_Clear_()
+    { 
+      vtx2d_v.clear(); 
+      cvtx2d_v.clear(); 
+      x = y = z = kINVALID_DOUBLE; 
+      num_planes=0; 
+      type=Vertex3D::VertexType_t::kUnknown;
+    }
+    
+
     double Vertex3D::dist(const Vertex3D& pt) const
     { return sqrt(pow(x-pt.x,2)+pow(y-pt.y,2)+pow(z-pt.z,2)); }
     
