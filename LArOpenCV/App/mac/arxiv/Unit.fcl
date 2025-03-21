@@ -1,0 +1,78 @@
+LArImageHit: {
+
+Verbosity: 0
+  # LArImageClusterBase config
+
+  Profile: true
+  StoreOriginalImage: false
+  Producer: fake_pi0
+
+  # LArImageHit config
+  PoolTimeTick: 0
+  
+  VertexProducer: fake_vertex
+
+  ROIBufferW : 100
+  ROIBufferT : 100
+  
+  Q2Gray: 10
+  QMin: 5
+
+  Debug: true
+  MakeROI: false
+  
+  TimeOffset : 800
+  WindowTMax : 6399
+  WindowTMin : 0
+
+}
+
+ImageClusterManager: {
+
+  Verbosity: 0
+  Profile:   true
+  ClusterAlgoType:  [SBCluster,SimpleCuts,PCAOverall,ClusterWriteOut]
+  ClusterAlgoName:  [sbc,sc,pcao,cwo]
+
+  ShowImage: false
+
+  MatchAlgoType: ""
+  MatchAlgoName: ""
+
+  ReClusterAlgoType: ""
+  ReClusterAlgoName: ""
+
+ ImageClusterViewer: {
+
+   Verbosity: 0
+   Width:  800
+   Height: 800
+   MinContourArea: 0
+   
+ }
+
+ sbc : {
+   Verbosity: 0
+   DilationSize : 5
+   DilationIterations : 2
+   BlurSize : 5
+   Thresh : 1
+   ThreshMaxVal : 255
+  }
+
+  pcao: { }
+
+  sc : {
+
+   MinHits : 3
+   MinArea : -1
+   MinPerimieter : -1
+   MinCharge :-1
+   MinLength : -1
+   MinWidth : -1
+   
+  }
+
+  cwo : { }
+
+}

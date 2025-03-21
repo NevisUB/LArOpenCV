@@ -1,0 +1,102 @@
+ProcessDriver: {
+  Verbosity:    2
+  EnableFilter: true
+  RandomAccess: false
+  ProcessType:  ["LArbysImage"]
+  ProcessName:  ["LArbysImage"]
+  AnaFile:     ""
+  IOManager: {
+    Verbosity:   2
+    Name:        "IOManager"
+    IOMode:      0
+    OutFileName: ""
+    InputFiles:  []
+    InputDirs:   []
+    StoreOnlyType: []
+    StoreOnlyName: []
+  }
+  ProcessList: {
+    LArbysImage: {
+      Verbosity: 0
+      Profile: true
+      ADCImageProducer: "trk_test"
+      TrackImageProducer: "trk_test"
+      ShowerImageProducer: "shr_test"
+      Debug: true
+      Q2Gray: 2
+      QMin: 0.1
+      QMax: 500
+      MatchPlaneWeights: [1.,1.,1.]
+      ImageClusterManager: {
+        StoreAlgoData: false  
+        Verbosity: 0
+        Profile:   true
+        ClusterAlgoType: ["LinearTrackFinder","SuperClusterMaker","ShowerVertexSeeds","ShowerVertexEstimate","VertexParticleClusterMaker"]
+        ClusterAlgoName: ["lineartrackfinder","shower_superclustermaker","showervertexseeds","showervertexestimate","shower_vertexparticleclustermaker"]
+        EnableWireCheck: false
+        ShowImage: false
+        MatchAlgoType: ""
+        MatchAlgoName: ""
+        ReClusterAlgoType: ""
+        ReClusterAlgoName: ""
+        UseOnlyTwoPlanes: false
+        RequirePlane: 2
+        ImageClusterViewer: {
+          Verbosity: 2
+          Width:  800
+          Height: 800
+          MinContourArea: 0
+        }
+        lineartrackfinder: {
+         ImageSetID: 1
+	 TrackVertexEstimate: ""
+         SingleLinearTrack : {
+          TrackContourSizeMin : 10
+          TrackContourLengthMin : 6.
+          SeedPlane : [2,0,1]
+	  EdgesFromMean: true
+          }
+        }
+        shower_superclustermaker: {
+           ImageSetID: 2
+	   SuperClusterer : {}
+        }
+	showervertexseeds: {
+          ImageSetID: 1 # I think it's track image... to find end points?
+          Vertex3DName: ""
+          SuperClusterName: "shower_superclustermaker"
+          LinearTrackName: "lineartrackfinder"
+          TrackParticleName: ""
+	  ElectronShowerVertexSeed: {
+	  PixelFracThreshold: 0.8
+         }
+       }
+       showervertexestimate: {
+         ImageSetID: 2
+         ShowerVertexSeed: "showervertexseeds"
+         OneTrackOneShower: {}
+       }
+       shower_vertexparticleclustermaker: {
+           Verbosity: 0
+	   ImageSetID: 2
+           VertexEstimateAlgo: "showervertexestimate"
+           SuperClusterAlgo: "shower_superclustermaker"
+	   CreateCompound: false
+           VertexParticleCluster: {
+                ThetaHi: 10
+                ThetaLo: 10
+                PIThreshold: 10
+                ContourMinDist: 5
+                UseHalfAngle : true
+                RefinePolarCluster: true
+                RefineCartesianCluster: true
+                MaskFractionRadius: -1
+                MaskMinRadius: 3
+		RefineMerge: true
+          }
+        }
+      }
+    }
+  }
+}
+

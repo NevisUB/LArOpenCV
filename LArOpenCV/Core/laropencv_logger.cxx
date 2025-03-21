@@ -1,0 +1,80 @@
+#ifndef __LAROCVLOGGER_CXX__
+#define __LAROCVLOGGER_CXX__
+
+#include "laropencv_logger.h"
+
+namespace larocv {
+
+  std::map<std::string,logger> *logger::_logger_m = nullptr;
+
+<<<<<<< HEAD:Core/laropencv_logger.cxx
+  logger& logger::get(const std::string name)
+  {
+    if(!_logger_m) _logger_m = new std::map<std::string,larocv::logger>();
+    auto iter = _logger_m->find(name);
+    if(iter == _logger_m->end()) {
+      iter = _logger_m->emplace(name,logger(name)).first;
+      iter->second.set(msg::kNORMAL);
+    }
+    return iter->second;
+  };
+=======
+  logger* logger::_shared_logger = nullptr;
+>>>>>>> dlgen2:LArOpenCV/Core/laropencv_logger.cxx
+  
+  std::ostream& logger::send(const msg::Level_t level) const
+  {
+    (*_ostrm)  << msg::kStringPrefix[level].c_str()
+	       << "\033[0m ";
+    return (*_ostrm);
+  }
+  
+  std::ostream& logger::send(const msg::Level_t level,
+			     const std::string& function ) const
+  {
+    auto& strm(send(level));
+    strm << "\033[94m<" << _name << "::" << function.c_str() << ">\033[00m ";
+    return strm;
+  }
+  
+  std::ostream& logger::send(const msg::Level_t level,
+			     const std::string& function,
+			     const unsigned int line_num ) const
+  {
+    auto& strm(send(level));
+    strm << "\033[94m<" << _name << "::" << function.c_str() << "::L" << line_num << ">\033[00m ";
+    return strm;
+  }
+  
+  std::ostream& logger::send(const msg::Level_t level,
+			     const std::string& function,
+			     const unsigned int line_num,
+			     const std::string& file_name) const
+  {
+    auto& strm(send(level,function));
+    strm << file_name.c_str() << "::L" << line_num << " ";
+    return strm;
+  }
+  
+  /// Getter of a message instance 
+  logger& logger::get(const std::string name)
+  {
+    if(!_logger_m) _logger_m = new std::map<std::string,larocv::logger>();
+    auto iter = _logger_m->find(name);
+    if(iter == _logger_m->end()) {
+      iter = _logger_m->emplace(name,logger(name)).first;
+      iter->second.set(msg::kNORMAL);
+    }
+    return iter->second;
+  };
+  
+  /// Getter for a shared logger
+  logger& logger::get_shared()
+  {
+    if(!_shared_logger) _shared_logger = new logger("GLOBAL");
+    return *_shared_logger;
+  }
+  
+}
+
+#endif

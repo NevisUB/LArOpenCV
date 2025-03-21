@@ -1,0 +1,753 @@
+#ifndef __MATCHANALYSIS_CXX__
+#define __MATCHANALYSIS_CXX__
+
+#include "MatchAnalysis.h"
+#include "LArOpenCV/ImageCluster/AlgoClass/AtomicAnalysis.h"
+#include "LArOpenCV/ImageCluster/AlgoFunction/ImagePatchAnalysis.h"
+#include "LArOpenCV/ImageCluster/AlgoFunction/Contour2DAnalysis.h"
+#include "LArOpenCV/ImageCluster/AlgoData/AlgoDataUtils.h"
+#include "LArOpenCV/ImageCluster/AlgoFunction/VectorAnalysis.h"
+
+namespace larocv {
+  
+  static MatchAnalysisFactory __global_MatchAnalysisFactory__;
+  
+  void MatchAnalysis::_Configure_(const Config_t &pset)
+  {
+    auto name_combined = pset.get<std::string>("VertexProducer");
+    _combined_id=kINVALID_ALGO_ID;
+    if (!name_combined.empty()) {
+      _combined_id = this->ID(name_combined);
+      if (_combined_id == kINVALID_ALGO_ID) {
+	LAROCV_CRITICAL() << "Seed ID algorithm name does not exist!" << std::endl;
+	throw larbys();
+      }
+    }
+
+    auto name_particle = pset.get<std::string>("ParticleProducer");
+    _particle_id=kINVALID_ALGO_ID;
+    if (!name_particle.empty()) {
+      _particle_id = this->ID(name_particle);
+      if (_particle_id == kINVALID_ALGO_ID) {
+	LAROCV_CRITICAL() << "Seed ID algorithm name does not exist!" << std::endl;
+	throw larbys();
+      }
+    }
+
+    _vertex_charge_radius = 0.0;
+    _vertex_charge_radius = pset.get<float>("VertexChargeRadius",6.0);
+    
+    _break_contours = pset.get<bool>("BreakContours");
+    
+    if(_break_contours)
+      _DefectBreaker.Configure(pset.get<Config_t>("DefectBreaker"));
+    
+    _AtomicAnalysis.Configure(pset.get<Config_t>("AtomicAnalysis"));
+    _VertexAnalysis.Configure(pset.get<Config_t>("VertexAnalysis"));
+
+    _trunk_radius = 0.0;
+    _trunk_radius = pset.get<float>("TrunkRadius");
+  
+    _tree = new TTree("MatchAnalysis","");
+    AttachIDs(_tree);
+    _tree->Branch("roid" , &_roid  , "roid/I");
+    _tree->Branch("vtxid", &_vtxid , "vtxid/I");
+    _tree->Branch("x"    , &_x     , "x/D");
+    _tree->Branch("y"    , &_y     , "y/D");
+    _tree->Branch("z"    , &_z     , "z/D");
+
+    _tree->Branch("par_pixel_ratio_v",&_par_pixel_ratio_v);
+    _tree->Branch("par_valid_end_pt_v",&_par_valid_end_pt_v);
+    _tree->Branch("par_end_pt_x_v",&_par_end_pt_x_v);
+    _tree->Branch("par_end_pt_y_v",&_par_end_pt_y_v);
+    _tree->Branch("par_end_pt_z_v",&_par_end_pt_z_v);
+    _tree->Branch("par_n_planes_charge_v",&_par_n_planes_charge_v);
+
+    _tree->Branch("vertex_n_planes_charge",&_vertex_n_planes_charge,"vertex_n_planes_charge/I");
+    _tree->Branch("vertex_n_planes_near_dead",&_vertex_n_planes_near_dead,"vertex_n_planes_near_dead/I");
+    _tree->Branch("vertex_n_planes_on_dead",&_vertex_n_planes_on_dead,"vertex_n_planes_on_dead/I");
+    
+    _tree->Branch("par_3d_segment_theta_estimate_v",&_par_3d_segment_theta_estimate_v);
+    _tree->Branch("par_3d_segment_phi_estimate_v",&_par_3d_segment_phi_estimate_v);
+
+    _tree->Branch("par_pca_theta_estimate_v",&_par_pca_theta_estimate_v);
+    _tree->Branch("par_pca_phi_estimate_v",&_par_pca_phi_estimate_v);
+    _tree->Branch("par_pca_end_x_v",&_par_pca_end_x_v);
+    _tree->Branch("par_pca_end_y_v",&_par_pca_end_y_v);
+    _tree->Branch("par_pca_end_z_v",&_par_pca_end_z_v);
+    _tree->Branch("par_pca_end_in_fiducial_v",&_par_pca_end_in_fiducial_v);
+    _tree->Branch("par_pca_end_len_v",&_par_pca_end_len_v);
+    _tree->Branch("par_pca_valid_v",&_par_pca_valid_v);
+    
+    _tree->Branch("par_trunk_pca_theta_estimate_v",&_par_trunk_pca_theta_estimate_v);
+    _tree->Branch("par_trunk_pca_phi_estimate_v",&_par_trunk_pca_phi_estimate_v);
+    _tree->Branch("par_trunk_pca_end_x_v",&_par_trunk_pca_end_x_v);
+    _tree->Branch("par_trunk_pca_end_y_v",&_par_trunk_pca_end_y_v);
+    _tree->Branch("par_trunk_pca_end_z_v",&_par_trunk_pca_end_z_v);
+    _tree->Branch("par_trunk_pca_end_in_fiducial_v",&_par_trunk_pca_end_in_fiducial_v);
+    _tree->Branch("par_trunk_pca_end_len_v",&_par_trunk_pca_end_len_v);
+    _tree->Branch("par_trunk_pca_valid_v",&_par_trunk_pca_valid_v);
+    _tree->Branch("trunk_length",&_trunk_length,"trunk_length/F");
+
+    Register(new data::Info3DArray);
+    
+    _roid = 0;
+  }
+  
+  void MatchAnalysis::_Process_() {
+    LAROCV_INFO() << "start" << std::endl;
+    ClearEvent();
+    
+    if(NextEvent()) _roid=0;
+
+    auto& ass_man = AssManager();
+    
+    // Get images
+    auto adc_img_v = ImageArray(ImageSetID_t::kImageSetWire);
+    auto thresh_img_v = adc_img_v;
+    for(auto& img : thresh_img_v)
+      img = Threshold(img,10,255);
+
+    std::vector<cv::Mat> inv_ch_img_v;
+    try {
+      auto ch_img_v = ImageArray(ImageSetID_t::kImageSetChStatus);
+      inv_ch_img_v = ch_img_v;
+      for(auto& img : inv_ch_img_v) {
+	img = Threshold(img,1.0,255);
+	cv::bitwise_not(img,img);
+      }
+    } catch (const larbys& err) {
+      LAROCV_INFO() << "No channel status image available" << std::endl;
+    }
+    
+    const auto& meta_v = MetaArray();
+    for(const auto& meta : meta_v)
+      _VertexAnalysis.ResetPlaneInfo(meta);
+    
+    // Get the particle clusters from the previous module, go vertex-by-vertex
+    const auto& vtx3d_arr = AlgoData<data::Vertex3DArray>(_combined_id,0);
+    const auto& vtx3d_v = vtx3d_arr.as_vector();
+    
+    const auto& particle_arr = AlgoData<data::ParticleArray>(_particle_id,0);
+    const auto& particle_v = particle_arr.as_vector();
+
+    // store info3d array for PCA information
+    auto& info3d_arr = AlgoData<data::Info3DArray>(0);
+    
+    _vtxid = -1;
+    LAROCV_DEBUG() << "Got " << vtx3d_v.size() << " vertices" << std::endl;
+    for(size_t vtxid = 0; vtxid < vtx3d_v.size(); ++vtxid) {
+
+      ClearVertex();
+      
+      const auto& vtx3d = vtx3d_v[vtxid];
+      
+      auto par_id_v = ass_man.GetManyAss(vtx3d,particle_arr.ID());
+      if (par_id_v.empty()) continue;
+
+      _vtxid += 1;
+
+      _x = vtx3d.x;
+      _y = vtx3d.y;
+      _z = vtx3d.z;
+
+      size_t npar = par_id_v.size();
+      
+      ResizeVectors(npar);
+		    
+      LAROCV_DEBUG() << "Got " << par_id_v.size() << " particles" << std::endl;
+      LAROCV_DEBUG() << " & algo data particle vector sz " << particle_v.size() << std::endl;
+      for(size_t par_idx=0; par_idx<par_id_v.size(); ++par_idx) {
+
+	auto par_id = par_id_v[par_idx];
+	const auto& par = particle_v[par_id];
+
+	LAROCV_DEBUG() << "At particle id " << par_idx << " @ " << par_id << std::endl;
+	
+	//
+	// do something with this particle
+	//
+	auto& par_pixel_ratio = _par_pixel_ratio_v[par_idx];
+	auto& par_valid_end_pt = _par_valid_end_pt_v[par_idx];
+	auto& par_end_pt_x = _par_end_pt_x_v[par_idx];
+	auto& par_end_pt_y = _par_end_pt_y_v[par_idx];
+	auto& par_end_pt_z = _par_end_pt_z_v[par_idx];
+	auto& par_n_planes_charge = _par_n_planes_charge_v[par_idx];
+
+	auto& par_3d_segment_theta_estimate = _par_3d_segment_theta_estimate_v[par_idx];
+	auto& par_3d_segment_phi_estimate = _par_3d_segment_phi_estimate_v[par_idx];
+
+	auto& par_pca_theta_estimate  = _par_pca_theta_estimate_v[par_idx];
+	auto& par_pca_phi_estimate    = _par_pca_phi_estimate_v[par_idx];
+	auto& par_pca_end_x           = _par_pca_end_x_v[par_idx];
+	auto& par_pca_end_y           = _par_pca_end_y_v[par_idx];
+	auto& par_pca_end_z           = _par_pca_end_z_v[par_idx];
+	auto& par_pca_end_in_fiducial = _par_pca_end_in_fiducial_v[par_idx];
+	auto& par_pca_valid           = _par_pca_valid_v[par_idx];
+	auto& par_pca_end_len         = _par_pca_end_len_v[par_idx];
+
+	auto& par_trunk_pca_theta_estimate  = _par_trunk_pca_theta_estimate_v[par_idx];
+	auto& par_trunk_pca_phi_estimate    = _par_trunk_pca_phi_estimate_v[par_idx];
+
+	auto& par_trunk_pca_end_x           = _par_trunk_pca_end_x_v[par_idx];
+	auto& par_trunk_pca_end_y           = _par_trunk_pca_end_y_v[par_idx];
+	auto& par_trunk_pca_end_z           = _par_trunk_pca_end_z_v[par_idx];
+	auto& par_trunk_pca_end_in_fiducial = _par_trunk_pca_end_in_fiducial_v[par_idx];
+	auto& par_trunk_pca_valid           = _par_trunk_pca_valid_v[par_idx];
+	auto& par_trunk_pca_end_len         = _par_trunk_pca_end_len_v[par_idx];
+	
+	//
+	// compute the number of planes this particle is on
+	//
+	par_n_planes_charge = 0;
+	
+	//
+	// compute the pixel ratio
+	// for 2 particles ratio small/large
+	// for (small/large + middle/large) / 2
+	//
+	std::array<double,3> pixel_arr;
+	for(auto& v : pixel_arr) v=kINVALID_DOUBLE;
+	
+	//
+	// determine the end point of track clusters
+	//
+	std::array<data::TrackClusterCompound,3> cluscomp_arr;
+	std::array<const data::TrackClusterCompound*,3> cluscomp_ptr_arr;
+	for(auto& v : cluscomp_ptr_arr) v=nullptr;
+
+	//
+	// particle cluster loop
+	//
+	for(size_t plane=0; plane<3; ++plane) {
+	LAROCV_DEBUG() << "@ plane " << plane <<std::endl;
+
+	  const auto& pcluster = par._par_v[plane];
+	  const auto& ctor = pcluster._ctor;
+
+	  if(ctor.empty()) continue;
+	  
+	  par_n_planes_charge += 1;
+	  
+	  //
+	  // compute the pixel ratio
+	  //
+	  pixel_arr[plane] = CountNonZero(adc_img_v.at(plane),ctor,0);
+	  
+	  //
+	  // determine the end point of track clusters
+	  //
+	  auto& cluscomp = cluscomp_arr[plane]; 
+	  cluscomp_ptr_arr[plane] = &cluscomp_arr[plane];
+	  
+	  if (_break_contours) {
+	    LAROCV_DEBUG() << "Chose to break ctor sz " << ctor.size() << std::endl;
+	    cluscomp = _DefectBreaker.BreakContour(ctor);
+	  } else {
+	    LAROCV_DEBUG() << "Chose _not_ to break ctor sz " << ctor.size() << std::endl;
+	    data::AtomicContour atomic_ctor(ctor,0);
+	    cluscomp.emplace_back(std::move(atomic_ctor));
+	  }
+	  
+	  LAROCV_DEBUG() << "Broke 1 contour sz " << ctor.size()
+			 << " into " << cluscomp.size()
+			 << " atomics" << std::endl;
+
+	  auto vtx2d = vtx3d.cvtx2d_v.at(plane);
+
+	  LAROCV_DEBUG() << " @ 2d vtx " << vtx2d.center << std::endl;
+	  auto ordered_atom_id_v = _AtomicAnalysis.OrderAtoms(cluscomp,vtx2d.center);
+	  cluscomp.set_atomic_order(ordered_atom_id_v);
+	  
+	  auto atom_edges_v = _AtomicAnalysis.AtomsEdge(cluscomp, vtx2d.center, ordered_atom_id_v);
+	  
+	  for (size_t atom_id=0; atom_id<cluscomp.size(); ++atom_id) {
+ 	    auto& atomic = cluscomp.at(atom_id);
+	    auto& start_end = atom_edges_v.at(atom_id);
+	    LAROCV_DEBUG() << "@ atom " << atom_id
+			   << " (start & end) (" << start_end.first << " & " << start_end.second << ")" << std::endl;
+	    atomic.add_edge(start_end.first);
+	    atomic.add_edge(start_end.second);
+	    if (atomic.id() == ordered_atom_id_v.back()) {
+	      //_AtomicAnalysis.RefineAtomicEndPoint(adc_img_v[plane],atomic);
+	      cluscomp.set_end_pt(atomic.edges()[1]);
+	    }
+	  } // end this atomic
+	} // end this plane cluster
+
+	//
+	// compute the pixel ratio 
+	//
+	std::sort(pixel_arr.begin(),pixel_arr.end());
+
+	auto largest = pixel_arr.back();
+
+	if (largest == kINVALID_DOUBLE) 
+	  par_pixel_ratio = pixel_arr[0] / pixel_arr[1];
+	else
+	  par_pixel_ratio = (pixel_arr[0] + pixel_arr[1]) / (2 * largest);
+
+	//
+	// determine the end point of track clusters
+	//
+	data::Vertex3D end3d;
+	auto edge_found = _VertexAnalysis.MatchEdge(cluscomp_ptr_arr,end3d);
+	par_valid_end_pt = edge_found;
+	
+	if(edge_found) {
+	  par_end_pt_x = end3d.x;
+	  par_end_pt_y = end3d.y;
+	  par_end_pt_z = end3d.z;
+	}
+
+	//
+	// determine the 3D angle for this particle in 3 ways
+	//
+
+	//
+	// using the line segment between vertex
+	// and contour end point
+	//
+	par_3d_segment_theta_estimate = kINVALID_DOUBLE;
+	par_3d_segment_phi_estimate   = kINVALID_DOUBLE;
+	
+	if (edge_found) {
+	  auto segment_angle = larocv::data::Angle3D(vtx3d,end3d);
+	  par_3d_segment_theta_estimate = segment_angle.first;
+	  par_3d_segment_phi_estimate   = segment_angle.second;
+	}
+
+	//
+	// using the overall PCA of the cluster
+	//
+	par_pca_theta_estimate = kINVALID_DOUBLE;
+	par_pca_phi_estimate   = kINVALID_DOUBLE;
+	
+	auto overall_space_pts_v = SpacePtsEstimate(par,thresh_img_v,adc_img_v);
+
+	par_pca_valid = overall_space_pts_v.empty() ? 0 : 1;
+
+	std::pair<double,double> pca_angle;
+	std::array<float,3> end_pt_3d;
+	float start_end_dist;
+
+	if (par_pca_valid) {
+	
+	  pca_angle = larocv::data::Angle3D(overall_space_pts_v,vtx3d);
+	  par_pca_theta_estimate = pca_angle.first;
+	  par_pca_phi_estimate   = pca_angle.second;
+
+
+	  end_pt_3d = EndPoint3D(overall_space_pts_v,
+				 pca_angle.first,pca_angle.second,
+				 vtx3d);
+	
+	  start_end_dist = Distance3D(end_pt_3d,vtx3d);
+	  par_pca_end_x = end_pt_3d[0];
+	  par_pca_end_y = end_pt_3d[1];
+	  par_pca_end_z = end_pt_3d[2];
+	  par_pca_end_len = start_end_dist;
+
+	  data::Vertex3D end_pca;
+	  end_pca.x = end_pt_3d[0];
+	  end_pca.y = end_pt_3d[1];
+	  end_pca.z = end_pt_3d[2];
+
+	  par_pca_end_in_fiducial = _VertexAnalysis.CheckFiducial(end_pca);
+	  
+	} else {
+	  
+	  pca_angle = std::make_pair(kINVALID_DOUBLE,kINVALID_DOUBLE);
+	  par_pca_theta_estimate = kINVALID_DOUBLE;
+	  par_pca_phi_estimate = kINVALID_DOUBLE;
+	  
+	  end_pt_3d = AsVector(kINVALID_FLOAT,kINVALID_FLOAT,kINVALID_FLOAT);
+	  
+	  par_pca_end_x = kINVALID_FLOAT;
+	  par_pca_end_y = kINVALID_FLOAT;
+	  par_pca_end_z = kINVALID_FLOAT;
+	  par_pca_end_len = kINVALID_FLOAT;
+
+	  start_end_dist = kINVALID_FLOAT;
+	  
+	  par_pca_end_in_fiducial = false;
+
+	}
+	
+	par_trunk_pca_theta_estimate = kINVALID_DOUBLE;
+	par_trunk_pca_phi_estimate   = kINVALID_DOUBLE;
+
+	//
+	// using the trunk of the PCA (radius = configuration)
+	//
+	_trunk_length = _trunk_radius;
+	auto trunk_space_pts_v = SpacePtsEstimate(par,thresh_img_v,adc_img_v,_trunk_length,vtx3d);
+	par_trunk_pca_valid = trunk_space_pts_v.empty() ? 0 : 1;
+
+	std::pair<double,double> trunk_pca_angle;
+	std::array<float,3> trunk_end_pt_3d;
+	float trunk_start_end_dist;
+	
+	if (par_trunk_pca_valid) {
+	  trunk_pca_angle = larocv::data::Angle3D(trunk_space_pts_v,vtx3d);
+	  par_trunk_pca_theta_estimate = trunk_pca_angle.first;
+	  par_trunk_pca_phi_estimate   = trunk_pca_angle.second;
+	  
+	  
+	  trunk_end_pt_3d = EndPoint3D(trunk_space_pts_v,
+				       trunk_pca_angle.first,trunk_pca_angle.second,
+				       vtx3d);
+	  
+	  trunk_start_end_dist = Distance3D(trunk_end_pt_3d,vtx3d);
+	  par_trunk_pca_end_x = trunk_end_pt_3d[0];
+	  par_trunk_pca_end_y = trunk_end_pt_3d[1];
+	  par_trunk_pca_end_z = trunk_end_pt_3d[2];
+	  par_trunk_pca_end_len = trunk_start_end_dist;
+
+	  data::Vertex3D trunk_end_pca;
+	  trunk_end_pca.x = trunk_end_pt_3d[0];
+	  trunk_end_pca.y = trunk_end_pt_3d[1];
+	  trunk_end_pca.z = trunk_end_pt_3d[2];
+	
+	  par_trunk_pca_end_in_fiducial = _VertexAnalysis.CheckFiducial(trunk_end_pca);
+	  
+	} else {
+
+	  trunk_pca_angle = std::make_pair(kINVALID_DOUBLE,kINVALID_DOUBLE);
+	  par_trunk_pca_theta_estimate = kINVALID_DOUBLE;
+	  par_trunk_pca_phi_estimate = kINVALID_DOUBLE;
+	  
+	  trunk_end_pt_3d = AsVector(kINVALID_FLOAT,kINVALID_FLOAT,kINVALID_FLOAT);
+	  
+	  par_trunk_pca_end_x = kINVALID_FLOAT;
+	  par_trunk_pca_end_y = kINVALID_FLOAT;
+	  par_trunk_pca_end_z = kINVALID_FLOAT;
+	  par_trunk_pca_end_len = kINVALID_FLOAT;
+
+	  trunk_start_end_dist = kINVALID_FLOAT;
+	  
+	  par_trunk_pca_end_in_fiducial = false;
+	}
+
+	//
+	// Write out the PCA info @ Info3D Producer
+	//
+	data::Info3D pca_info;
+	pca_info.overall_pca_theta    = par_pca_theta_estimate;
+	pca_info.overall_pca_phi      = par_pca_phi_estimate;
+	pca_info.overall_pca_dir      = AsVector(par_pca_theta_estimate,
+						 par_pca_phi_estimate);
+	pca_info.overall_pca_start_pt = AsVector(vtx3d.x,vtx3d.y,vtx3d.z);
+	pca_info.overall_pca_end_pt   = end_pt_3d;
+	pca_info.overall_pca_length   = start_end_dist;
+	pca_info.overall_pca_valid            = par_pca_valid;
+
+	pca_info.overall_space_pts_v = std::move(overall_space_pts_v);
+	
+	pca_info.trunk_pca_theta    = par_trunk_pca_theta_estimate;
+	pca_info.trunk_pca_phi      = par_trunk_pca_phi_estimate;
+	pca_info.trunk_pca_dir      = AsVector(par_trunk_pca_theta_estimate,
+					       par_trunk_pca_phi_estimate);
+	pca_info.trunk_pca_start_pt = AsVector(vtx3d.x,vtx3d.y,vtx3d.z);
+	pca_info.trunk_pca_end_pt   = trunk_end_pt_3d;
+	pca_info.trunk_pca_length   = trunk_start_end_dist;
+	pca_info.trunk_pca_valid = par_trunk_pca_valid;
+	pca_info.pixel_radius = _trunk_length;
+
+	pca_info.trunk_space_pts_v = std::move(trunk_space_pts_v);
+	
+	info3d_arr.emplace_back(std::move(pca_info));
+	AssociateOne(info3d_arr.as_vector().back(),par);
+	  
+	LAROCV_DEBUG() << "End particle " << par_idx << " @ " << par_id  << std::endl;
+      } // end this particle
+      
+      //
+      // determine n planes charge @ vertex
+      //
+
+      _vertex_n_planes_charge = 0;
+      _vertex_n_planes_near_dead = 0;
+      _vertex_n_planes_on_dead = 0;
+      
+      for(size_t plane=0; plane<3; ++plane) {
+	const auto& pt2d = vtx3d.vtx2d_v[plane];
+	geo2d::Circle<float> circle(pt2d.pt,_vertex_charge_radius);
+
+	auto npx = CountNonZero(MaskImage(thresh_img_v[plane],circle,0,false));
+
+	if(npx)
+	  _vertex_n_planes_charge += 1;
+
+	if (inv_ch_img_v.empty()) continue;
+
+	npx = CountNonZero(MaskImage(inv_ch_img_v[plane],circle,0,false));
+
+	if(npx) _vertex_n_planes_near_dead += 1;
+
+	if (pt2d.pt.x >= inv_ch_img_v[plane].cols) continue;
+	if (pt2d.pt.y >= inv_ch_img_v[plane].rows) continue;
+	if (pt2d.pt.x < 0) continue;
+	if (pt2d.pt.y < 0) continue;
+	
+	int vtx_pt = (int)(inv_ch_img_v.at(plane).at<uchar>(pt2d.pt.y,pt2d.pt.x));
+
+	if(vtx_pt) _vertex_n_planes_on_dead += 1;
+	
+      }
+
+      _tree->Fill();
+    } // end this vertex
+    
+    _roid += 1;
+    LAROCV_INFO() << "end" << std::endl;
+  }
+
+
+  std::vector<data::SpacePt> MatchAnalysis::SpacePtsEstimate(const data::Particle& particle,
+								   const std::vector<cv::Mat>& img_v,
+								   const std::vector<cv::Mat>& qimg_v,
+								   const float radius,
+								   const data::Vertex3D vertex) {
+    // get the two largest particles clusters
+
+    std::array<float,3> area_v;
+
+    for(size_t plane=0; plane<particle._par_v.size(); ++plane) {
+      const auto& pcluster = particle._par_v[plane];
+      if (pcluster._ctor.empty()) {
+	area_v[plane] = kINVALID_FLOAT;
+	continue;
+      }
+      area_v[plane] = ContourArea(pcluster._ctor);
+    }
+    
+    float plane0_sz, plane1_sz;
+    plane0_sz = plane1_sz = -1.0*kINVALID_FLOAT;
+    
+    size_t plane0, plane1;
+    plane0 = plane1 = kINVALID_SIZE;
+    
+    // get the largest
+    for(size_t plane=0; plane<particle._par_v.size(); ++plane) {
+      if (area_v[plane] == kINVALID_FLOAT) continue;
+      if (area_v[plane] > plane0_sz) {
+	plane0 = plane;
+	plane0_sz = area_v[plane];
+      }
+    }
+    
+    // get the second largest
+    for(size_t plane=0; plane<particle._par_v.size(); ++plane) {
+      if (plane==plane0) continue;
+      if (area_v[plane] == kINVALID_FLOAT) continue;
+      if (area_v[plane] > plane1_sz) {
+	plane1 = plane;
+	plane1_sz = area_v[plane];
+      }
+    }
+    
+    assert(plane0_sz != -1.0*kINVALID_FLOAT);
+    assert(plane1_sz != -1.0*kINVALID_FLOAT);
+	   
+    assert(plane0 != kINVALID_SIZE);
+    assert(plane1 != kINVALID_SIZE);
+
+    assert(plane0_sz >= plane1_sz);
+    assert(plane0 != plane1);
+    assert(plane0 < particle._par_v.size());
+    assert(plane1 < particle._par_v.size());
+
+    const auto& ctor0 = particle._par_v.at(plane0)._ctor;
+    const auto& ctor1 = particle._par_v.at(plane1)._ctor;
+
+    // get the list of points inside
+    auto mask0 = MaskImage(img_v.at(plane0),ctor0,0,false);
+    auto mask1 = MaskImage(img_v.at(plane1),ctor1,0,false);
+  
+    if (radius != 0.0) {
+      const auto& vtx2d_v = vertex.vtx2d_v;
+      mask0 = MaskImage(mask0,
+			geo2d::Circle<float>(vtx2d_v[plane0].pt.x,vtx2d_v[plane0].pt.y,radius),
+			0,
+			false);
+      
+      mask1 = MaskImage(mask1,
+			geo2d::Circle<float>(vtx2d_v[plane1].pt.x,vtx2d_v[plane1].pt.y,radius),
+			0,
+			false);
+    }
+  
+    auto pxpts0_v = FindNonZero(mask0);
+    auto pxpts1_v = FindNonZero(mask1);
+    LAROCV_DEBUG() << "Found " << pxpts0_v.size() << " pts @ mask0" << std::endl;
+    LAROCV_DEBUG() << "Found " << pxpts1_v.size() << " pts @ mask1" << std::endl;
+    
+    // make 3D point and store in cv::Mat for PCA
+    const auto& geo = _VertexAnalysis.Geo();
+    std::vector<bool> used_v(pxpts1_v.size(),false);
+    
+    std::vector<data::SpacePt> sps_v;
+    sps_v.reserve(pxpts1_v.size());
+      
+    for(size_t pxid0=0; pxid0 < pxpts0_v.size(); ++pxid0) {
+      for(size_t pxid1=0; pxid1 < pxpts1_v.size(); ++pxid1) {
+	if (used_v[pxid1]) continue;
+	data::Vertex3D res;
+
+	auto pt0 = pxpts0_v.at(pxid0);
+	auto pt1 = pxpts1_v.at(pxid1);
+	
+	if (!geo.YZPoint(pt0,plane0,
+			 pt1,plane1,
+			 res)) continue;
+
+	float q0 = (float) ((uchar)qimg_v.at(plane0).at<uchar>(pt0.y,pt0.x));
+	float q1 = (float) ((uchar)qimg_v.at(plane1).at<uchar>(pt1.y,pt1.x));
+
+	float q = q0 + q1 / 2.0;
+	sps_v.emplace_back(std::move(res),q);
+	used_v.at(pxid1) = true;
+      }
+    }
+
+    LAROCV_DEBUG() << "Returned " << sps_v.size() << " 3D space pts" << std::endl;
+    return sps_v;
+  }
+
+  std::pair<float,float> MatchAnalysis::Angle3D(const data::Particle& particle,
+						const std::vector<cv::Mat>& img_v,
+						const std::vector<cv::Mat>& qimg_v,
+						const data::Vertex3D& start3d,
+						const float radius) {
+
+    auto space_pts_v = SpacePtsEstimate(particle,img_v,qimg_v,radius,start3d);
+    return larocv::data::Angle3D(space_pts_v,start3d);
+  }
+  
+
+  std::array<float,3> MatchAnalysis::EndPoint3D(const std::vector<data::SpacePt>& space_pts_v,
+						const float theta, const float phi,
+						const data::Vertex3D& start_pt) {
+    auto pca_dir   = AsVector(theta,phi);
+    auto vertex_pt = AsVector(start_pt.x, start_pt.y, start_pt.z);
+    auto pca_pt    = Sum(vertex_pt,pca_dir);
+    
+    std::vector<std::array<float,3> > projected_v;
+    projected_v.reserve(space_pts_v.size());
+    
+    for(const auto& sps : space_pts_v) {
+      auto pt = AsVector(sps.pt.x,sps.pt.y,sps.pt.z);
+      projected_v.emplace_back(ClosestPoint(vertex_pt,pca_pt,pt));
+    }
+
+    // get the projected point that is farthest away
+    float max_dist = -1.0*kINVALID_FLOAT;
+    const std::array<float,3>* far_ptr = nullptr;
+    for(const auto& pt : projected_v) {
+      auto distance = Distance(pt,vertex_pt); 
+      if ( distance > max_dist) {
+	max_dist = distance;
+	far_ptr = &pt;
+      }
+    }
+    
+    // project all points onto the PCA line
+    if (far_ptr == nullptr) {
+      LAROCV_WARNING() << "End point 3D could not be estimated" << std::endl;
+      return {{kINVALID_FLOAT,kINVALID_FLOAT,kINVALID_FLOAT}};
+    }
+
+    return *far_ptr;
+  }
+
+
+  float MatchAnalysis::Distance3D(const std::array<float,3>& pt1,
+				  const data::Vertex3D& vtx) {
+    auto pt2 = AsVector(vtx.x,vtx.y,vtx.z);
+    return Distance(pt1,pt2);
+  }
+  
+  float MatchAnalysis::Distance3D(const data::Vertex3D& vtx,
+				  const std::array<float,3>& pt1) {
+    return Distance3D(pt1,vtx);
+  }
+
+  void MatchAnalysis::ResizeVectors(size_t npar) {
+
+    _par_pixel_ratio_v.resize(npar);
+    _par_valid_end_pt_v.resize(npar);
+    _par_end_pt_x_v.resize(npar);
+    _par_end_pt_y_v.resize(npar);
+    _par_end_pt_z_v.resize(npar);
+    _par_n_planes_charge_v.resize(npar);
+    _par_3d_segment_theta_estimate_v.resize(npar);
+    _par_3d_segment_phi_estimate_v.resize(npar);
+      
+    _par_pca_theta_estimate_v.resize(npar);
+    _par_pca_phi_estimate_v.resize(npar);
+    _par_pca_end_x_v.resize(npar);
+    _par_pca_end_y_v.resize(npar);
+    _par_pca_end_z_v.resize(npar);
+    _par_pca_end_in_fiducial_v.resize(npar);
+    _par_pca_end_len_v.resize(npar);
+    _par_pca_valid_v.resize(npar);
+
+    _par_trunk_pca_theta_estimate_v.resize(npar);
+    _par_trunk_pca_phi_estimate_v.resize(npar);
+    _par_trunk_pca_end_x_v.resize(npar);
+    _par_trunk_pca_end_y_v.resize(npar);
+    _par_trunk_pca_end_z_v.resize(npar);
+    _par_trunk_pca_end_in_fiducial_v.resize(npar);
+    _par_trunk_pca_valid_v.resize(npar);
+    _par_trunk_pca_end_len_v.resize(npar);
+  }
+
+  void MatchAnalysis::ClearEvent() {
+    _vtxid = kINVALID_INT;
+    ClearVertex();
+  }
+  
+  void MatchAnalysis::ClearVertex() {
+        
+    _x = kINVALID_DOUBLE;
+    _y = kINVALID_DOUBLE;
+    _z = kINVALID_DOUBLE;
+
+    _par_pixel_ratio_v.clear();
+    _par_valid_end_pt_v.clear();
+    _par_end_pt_x_v.clear();
+    _par_end_pt_y_v.clear();
+    _par_end_pt_z_v.clear();
+    _par_n_planes_charge_v.clear();
+
+    _par_3d_segment_theta_estimate_v.clear();
+    _par_3d_segment_phi_estimate_v.clear();
+
+    _vertex_n_planes_charge = kINVALID_INT;
+    _vertex_n_planes_near_dead = kINVALID_INT;
+    _vertex_n_planes_on_dead = kINVALID_INT;
+    
+    _par_pca_theta_estimate_v.clear();
+    _par_pca_phi_estimate_v.clear();
+    _par_pca_end_x_v.clear();
+    _par_pca_end_y_v.clear();
+    _par_pca_end_z_v.clear();
+    _par_pca_end_in_fiducial_v.clear();
+    _par_pca_valid_v.clear();
+    _par_pca_end_len_v.clear();
+
+    _par_trunk_pca_theta_estimate_v.clear();
+    _par_trunk_pca_phi_estimate_v.clear();
+    _par_trunk_pca_end_x_v.clear();
+    _par_trunk_pca_end_y_v.clear();
+    _par_trunk_pca_end_z_v.clear();
+    _par_trunk_pca_end_in_fiducial_v.clear();
+    _par_trunk_pca_valid_v.clear();
+    _par_trunk_pca_end_len_v.clear();
+
+    _trunk_length = kINVALID_FLOAT;
+  }
+  
+}
+#endif
