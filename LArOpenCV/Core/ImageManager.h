@@ -39,22 +39,32 @@ namespace larocv  {
     ~ImageManager(){}
 
     /// Returns # images currently registered
-    size_t size() const { return _mat_v.size(); }
+    size_t size() const;// { return _mat_v.size(); }
+    /// Metadata getter
+    larocv::ImageMeta& meta_at(size_t index=0);
+    /// Clear data
+    void clear();
+
+#ifndef __CINT__
+#ifndef __CLING__
     /// Register image by copying header
     void push_back(const cv::Mat& img, const larocv::ImageMeta& meta);
     /// Register image + meta via move
     void emplace_back(cv::Mat&& img, larocv::ImageMeta&& meta);
     /// Image getter
     cv::Mat& img_at(size_t index=0);
-    /// Metadata getter
-    larocv::ImageMeta& meta_at(size_t index=0);
-    /// Clear data
-    void clear();
+#endif
+#endif
 
   protected:
     //public:
+#ifndef __CINT__
+#ifndef __CLING__
     /// Image container
     std::vector<cv::Mat> _mat_v;
+#endif
+#endif
+
     /// Metadata container
     std::vector<larocv::ImageMeta> _meta_v;
     

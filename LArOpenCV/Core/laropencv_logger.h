@@ -32,20 +32,14 @@ namespace larocv {
     /// Name
     std::string _name;
     
-<<<<<<< HEAD:Core/laropencv_logger.h
     /// Set of loggers
 #ifndef __CINT__
 #ifndef __CLING__
     static std::map<std::string,larocv::logger> *_logger_m;
 #endif
 #endif
-=======
-    //#ifndef __CLING__
-    static std::map<std::string,larocv::logger> *_logger_m;
-
     /// Shared logger for functions
     static larocv::logger* _shared_logger;
->>>>>>> dlgen2:LArOpenCV/Core/laropencv_logger.h
     
   public:
 
@@ -68,24 +62,9 @@ namespace larocv {
     
     /// Getter of a message instance 
     static logger& get(const std::string name);
-<<<<<<< HEAD:Core/laropencv_logger.h
-    /*
-    {
-      if(!_logger_m) _logger_m = new std::map<std::string,larocv::logger>();
-      auto iter = _logger_m->find(name);
-      if(iter == _logger_m->end()) {
-	iter = _logger_m->emplace(name,logger(name)).first;
-	iter->second.set(msg::kNORMAL);
-      }
-      return iter->second;
-    };
-    */
-=======
-
     /// Getter for a shared logger
     static logger& get_shared();
 
->>>>>>> dlgen2:LArOpenCV/Core/laropencv_logger.h
     //
     // Verbosity level checker
     //

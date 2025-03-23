@@ -34,5 +34,10 @@ namespace larocv {
   void ImageManager::clear()
   { _mat_v.clear(); _meta_v.clear(); }
 
+  size_t ImageManager::size() const
+  { 
+    return _mat_v.size();
+  }
+
 }
 #endif

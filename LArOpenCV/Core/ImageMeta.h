@@ -18,13 +18,13 @@
 
 #ifndef __CLING__
 #ifndef __CINT__
-//#include <opencv2/opencv.hpp>
-#endif
-#endif
 #include <opencv2/core/core.hpp>
+#endif
+#endif
 
 #include "larbys.h"
 #include "LArOCVTypes.h"
+#include "larlite/DataFormat/user_info.h"
 
 namespace larocv {
 
@@ -59,7 +59,11 @@ namespace larocv {
       if( width  < 0. ) throw larbys("Width must be a positive floating point!");
       if( height < 0. ) throw larbys("Height must be a positive floating point!");
       update(width_npixel,height_npixel);
+#ifndef __CINT__
+#ifndef __CLING__
       _all_locations.reserve(_height * _width);
+#endif
+#endif
     }
     
     /// Default destructor
@@ -89,28 +93,40 @@ namespace larocv {
       _width_npixel  = width_npixel;
       _height_npixel = height_npixel;
     }
-    /// Change # of vertical/horizontal pixels in meta data with cv::Mat as an input
-    void update(const cv::Mat& mat)
-    { update(mat.rows,mat.cols); }
 
     /// convert from X variable to Time-Tick
     double XtoTimeTick(double x) const { return  ( (x + 0.5 ) * pixel_height() ) + _origin.y ; }
     /// convert from y variable to Wire
     double YtoWire(double y) const { return ( (y + 0.5)* pixel_width() ) + _origin.x ; }
-<<<<<<< HEAD:Core/ImageMeta.h
 
     float score() const { return _score; }
 
     void set_debug(bool d) { _debug = d; }
-    const bool debug() const { return _debug; }
+    bool debug() const { return _debug; }
 
     void set_ev_user(::larlite::event_user* ui) { EVUSERINFO = ui; }
     ::larlite::event_user* ev_user() { return EVUSERINFO; } //all caps to remind you this is a global instance
 
     void set_roi_cropped(bool d) { _roi_cropped = d; }
-    const bool roi_cropped() const { return _roi_cropped; }
+    bool roi_cropped() const { return _roi_cropped; }
 
     void set_score(float the_score) { _score = the_score ; }
+
+    void set_wires( std::vector<std::pair<int,int>> wires_v ) { _wires_v = wires_v ; }
+
+    std::vector<std::pair<int,int>> get_wires() { return _wires_v ; } 
+
+    bool is_data() { return _isdata ; }
+
+    void set_is_data( bool isdata ) { _isdata = isdata ; }
+
+#ifndef __CINT__
+#ifndef __CLING__
+    // Hide functions that reference opencv 
+
+    /// Change # of vertical/horizontal pixels in meta data with cv::Mat as an input
+    void update(const cv::Mat& mat)
+    { update(mat.rows,mat.cols); }
 
     void add_location( ::cv::Point loc ) { _all_locations.emplace_back(loc) ; } 
 
@@ -122,27 +138,31 @@ namespace larocv {
     void add_pool_meta( const ::cv::Mat& mat ){ _pool_meta = mat ; }
 
     const ::cv::Mat get_pool_meta() { return _pool_meta ; }
-
-    void set_wires( std::vector<std::pair<int,int>> wires_v ) { _wires_v = wires_v ; }
-
-    std::vector<std::pair<int,int>> get_wires() { return _wires_v ; } 
-
-    bool is_data() { return _isdata ; }
-
-    void set_is_data( bool isdata ) { _isdata = isdata ; }
-=======
->>>>>>> dlgen2:LArOpenCV/Core/ImageMeta.h
+#endif
+#endif
     
-   protected:
+  protected:
 
     larocv::Point2D _origin; ///< Absolute coordinate of the left bottom corner of an image
+
+    std::vector<std::pair<int,int> > _wires_v;
+
+#ifndef __CINT__
+#ifndef __CLING__
+    std::vector<::cv::Point> _all_locations ;
+
+    // Adding info about pooling
+    ::cv::Mat _pool_meta ;
+    
+#endif
+#endif
+    
     double _width;             ///< Horizontal size of an image in double floating precision (in original coordinate unit size)
     double _height;            ///< Vertical size of an image in double floating precision (in original coordinate unit size)
     size_t _width_npixel;      ///< # of pixels in horizontal axis
     size_t _height_npixel;     ///< # of pixels in vertical axis
     size_t _plane;             ///< unique plane ID number
 
-<<<<<<< HEAD:Core/ImageMeta.h
     bool _debug;
 
     ::larlite::event_user* EVUSERINFO;
@@ -152,18 +172,8 @@ namespace larocv {
     // Score per plane that represents ROI overlap with dead wires
     float _score ;
 
-    std::vector<::cv::Point> _all_locations ;
-
-    // Adding info about pooling
-    ::cv::Mat _pool_meta ;
-
-    std::vector<std::pair<int,int> > _wires_v;
-
     bool _isdata ;
 
-    
-=======
->>>>>>> dlgen2:LArOpenCV/Core/ImageMeta.h
   };
 
 }
