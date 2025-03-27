@@ -5,7 +5,7 @@
 #include "LArOpenCV/ImageCluster/Base/AlgoFactory.h"
 
 /*
-  @brief: An YourTrumpExample
+  @brief: An Example
 */
 namespace larocv {
  
