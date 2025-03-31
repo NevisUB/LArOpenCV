@@ -24,7 +24,7 @@ export PATH=${LAROPENCV_BASEDIR}/bin:${PATH}
 
 # Python version
 if [[ -z $LAROPENCV_PYTHON_VERSION ]]; then
-    export LAROPENCV_PYTHON_VERSION=`python -V 2>&1 | awk '{ print $2 }' | sed 's/\./\ /g' | awk '{ print $1 }'`
+    export LAROPENCV_PYTHON_VERSION=`python3 -V 2>&1 | awk '{ print $2 }' | sed 's/\./\ /g' | awk '{ print $1 }'`
     echo "LAROPENCV_PYTHON_VERSION =  ${LAROPENCV_PYTHON_VERSION}"
     export LAROPENCV_PYTHON="python${LAROPENCV_PYTHON_VERSION}"
 else
